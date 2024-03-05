@@ -1,0 +1,11 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Declare
+Bundle-SymbolicName: nl.esi.comma.automata
+Bundle-Version: 4.2.0.qualifier
+Automatic-Module-Name: nl.esi.comma.automata
+Bundle-RequiredExecutionEnvironment: JavaSE-11
+Export-Package: dk.brics.automaton,
+ nl.esi.comma.automata
+Bundle-ActivationPolicy: lazy
+Bundle-ClassPath: .

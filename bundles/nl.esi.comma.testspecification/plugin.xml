@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.emf.ecore.generated_package">
+      <package
+            class="nl.esi.comma.testspecification.testspecification.TestspecificationPackage"
+            genModel="model/generated/Testspecification.genmodel"
+            uri="http://www.esi.nl/comma/testspecification/Testspecification">
+      </package>
+   </extension>
+
+</plugin>

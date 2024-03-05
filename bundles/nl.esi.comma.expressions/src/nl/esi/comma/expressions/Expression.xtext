@@ -1,0 +1,243 @@
+grammar nl.esi.comma.expressions.Expression with nl.esi.comma.types.Types
+
+generate expression "http://www.esi.nl/comma/expressions/Expression"
+
+import "http://www.eclipse.org/emf/2002/Ecore" as ecore
+import "http://www.esi.nl/comma/types/Types" as types
+import "http://www.esi.nl/comma/signature/InterfaceSignature" as signature
+
+Variable: type = Type name= ID ;
+
+@Override
+NamedElement returns types::NamedElement:
+	super::NamedElement | Variable
+;
+
+Expression: ExpressionLevel1;
+
+ExpressionLevel1 returns Expression:		// Left associativity
+	ExpressionLevel2
+	( ({ExpressionAnd.left=current}			("AND" | "and")	right=ExpressionLevel2)  
+	| ({ExpressionOr.left=current}			("OR" | "or")	right=ExpressionLevel2)	
+	)*
+;
+
+ExpressionLevel2 returns Expression:		// Left associativity
+	ExpressionLevel3
+	( ({ExpressionEqual.left=current}		"=="	right=ExpressionLevel3) 
+	| ({ExpressionNEqual.left=current}		"!="	right=ExpressionLevel3)	
+	)*
+;
+
+ExpressionLevel3 returns Expression:		// Left associativity
+	ExpressionLevel4
+	( ({ExpressionGeq.left    =current}		">="	right=ExpressionLevel4) 
+	| ({ExpressionGreater.left=current}		">"		right=ExpressionLevel4) 
+	| ({ExpressionLeq.left    =current}		"<="	right=ExpressionLevel4) 
+	| ({ExpressionLess.left   =current}		"<"		right=ExpressionLevel4)
+	)*
+;
+
+ExpressionLevel4 returns Expression:		// Left associativity
+	ExpressionLevel5
+	( ({ExpressionAddition.left   =current}	"+"		right=ExpressionLevel5) 
+	| ({ExpressionSubtraction.left=current}	"-"		right=ExpressionLevel5) 
+	)*
+;
+
+ExpressionLevel5 returns Expression:		// Left associativity
+	ExpressionLevel6
+	( ({ExpressionMultiply.left=current}	"*"		right=ExpressionLevel6) 
+	| ({ExpressionDivision.left=current}	"/"		right=ExpressionLevel6)
+	| ({ExpressionMaximum.left =current}	"max"	right=ExpressionLevel6)
+	| ({ExpressionMinimum.left =current}	"min"	right=ExpressionLevel6)
+	| ({ExpressionModulo.left  =current}	"mod"	right=ExpressionLevel6)
+	)*
+;
+
+ExpressionLevel6 returns Expression:		// Right associativity
+	ExpressionLevel7
+	( ({ExpressionPower.left=current}		"^"     right=ExpressionLevel6)
+	)?
+;
+
+ExpressionLevel7 returns Expression:
+	ExpressionNot | ExpressionMinus | ExpressionPlus | ExpressionLevel8
+;
+
+ExpressionNot: 
+	("NOT" | "not") sub=ExpressionLevel8
+;
+
+ExpressionMinus: 
+	"-" sub=ExpressionLevel8
+;
+
+ExpressionPlus: 
+	"+" sub=ExpressionLevel8
+;
+
+ExpressionLevel8 returns Expression:
+	ExpressionLevel9 (({ExpressionRecordAccess.record = current} '.' field = [types::RecordField | ID]) |
+					  ({ExpressionMapRW.map = current} '[' key = Expression ('->' value = Expression)? ']'))*
+;
+
+
+
+ExpressionLevel9 returns Expression:
+	ExpressionBracket |
+	ExpressionConstantBool |
+	ExpressionConstantInt |
+	ExpressionConstantReal |
+	ExpressionConstantString |
+	ExpressionEnumLiteral |
+	ExpressionVariable |
+	ExpressionRecord |
+	ExpressionAny |
+	ExpressionBulkData |
+	ExpressionFunctionCall |
+	ExpressionQuantifier |
+	ExpressionTypeAnnotated
+;
+
+ExpressionBracket:
+	"(" sub=Expression ")"
+;
+
+ExpressionConstantBool:
+	value=BOOL_LITERAL
+;
+
+ExpressionConstantInt: 
+	value=Long
+;
+
+ExpressionConstantReal: 
+	value=FLOAT
+;
+
+ExpressionConstantString: 
+	value = STRING
+;
+
+ExpressionEnumLiteral: 
+	(interface = [signature::Signature|ID] '::')? type = [types::EnumTypeDecl] "::" literal = [types::EnumElement] 
+;
+
+ExpressionVariable: 
+	variable=[Variable | ID]
+;
+
+ExpressionRecord: 
+	(interface = [signature::Signature|ID] '::')? type = [types::RecordTypeDecl] '{' fields+=Field (',' fields+=Field)* '}'
+;
+
+Field:
+	recordField = [types::RecordField | ID] '=' exp = Expression
+;
+
+ExpressionBulkData : {ExpressionBulkData}
+	'Bulkdata' '<' (size = Int)? '>'
+;
+
+ExpressionAny :
+	{ExpressionAny} "*"
+;
+
+// We assume a library of functions. They can be provided in a separate model.
+// At the moment we have just a check of the function name and then a dedicated check for the types of the arguments
+// TODO: consider an expression (or function) Expression in Interval
+ExpressionFunctionCall: 
+	functionName = ID '(' (args += Expression (',' args += Expression)*)? ')'
+;
+
+//TODO rename to iterator? after adding 'delete' the expression is not a pure quantifier any more
+ExpressionQuantifier: 
+	quantifier = QUANTIFIER '(' iterator = Variable 'in' collection = Expression ':' condition = Expression ')'
+;
+
+ExpressionTypeAnnotated returns Expression:
+	TypeAnnotation( ({ExpressionVector.typeAnnotation = current} '[' (elements += Expression (',' elements += Expression)*)? ']') |
+		            ({ExpressionMap.typeAnnotation = current} '{' (pairs += Pair (',' pairs += Pair)*)? '}'))
+;
+
+TypeAnnotation :
+	'<'type = Type '>'
+;
+
+Pair:
+	key = Expression '->' value = Expression
+;
+
+enum QUANTIFIER :
+	EXISTS = 'exists' |
+	FORALL = 'forAll' |
+	DELETE = 'delete'
+;
+
+// --- add extra superclasses in metamodel -------
+
+ExpressionBinary returns Expression:           
+	{ExpressionBinary}
+;
+
+ConcreteExpressionBinary returns ExpressionBinary:
+	  {ExpressionAnd}
+	| {ExpressionOr}
+	| {ExpressionEqual}
+	| {ExpressionNEqual}
+	| {ExpressionGeq}
+	| {ExpressionGreater}
+	| {ExpressionLeq}
+	| {ExpressionLess}
+	| {ExpressionAddition}
+	| {ExpressionSubtraction}
+	| {ExpressionMultiply}
+	| {ExpressionDivision}
+	| {ExpressionMaximum}
+	| {ExpressionMinimum}
+	| {ExpressionModulo}
+	| {ExpressionPower}
+;
+
+ExpressionUnary returns Expression:
+	{ExpressionUnary}
+;
+
+ConcreteExpressionUnary returns ExpressionUnary:
+	  {ExpressionNot}
+	| {ExpressionMinus}
+	| {ExpressionPlus}
+	| {ExpressionBracket}	
+;
+
+
+//Extensions to the Types language
+
+@Override 
+TypeReference: InterfaceAwareType type = [types::TypeDecl] ;
+
+@Override 
+VectorTypeConstructor:
+	InterfaceAwareType type = [types::TypeDecl] (dimensions += Dimension)+
+;
+
+@Override 
+MapTypeConstructor: 
+	'map' '<' InterfaceAwareType type = [types::TypeDecl] ',' valueType = Type '>'
+;
+
+fragment InterfaceAwareType:
+	(interface = [signature::Signature|ID] '::')?
+;
+
+// === Terminals =======
+terminal BOOL_LITERAL returns ecore::EBoolean:
+	'true' | 'false' | 'TRUE' | 'FALSE' | 'True' | 'False'
+;	
+
+terminal FLOAT returns ecore::EDouble:
+	NUMBER '.' NUMBER (('E' | 'e') ('-')? NUMBER)?
+;
+
+Long returns ecore::ELong: NUMBER;

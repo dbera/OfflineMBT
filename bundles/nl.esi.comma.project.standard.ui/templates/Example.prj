@@ -1,0 +1,14 @@
+import "Example.interface"
+
+Project NewProject {
+
+	Generate Documentations {
+
+		documentation for interface Example {
+			template = "Template.docx"
+			targetFile = "documentation.docx"
+			author = "John Smith"
+			role = "Designer"
+		}
+	}
+}

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+   <description name="ComMA">
+      ComMA DSLs and analysis tools.
+   </description>
+   <feature id="org.apache.poi.feature" version="0.0.0">
+      <category name="ComMA"/>
+   </feature>
+   <feature id="net.sourceforge.plantuml.ecore.feature" version="0.0.0">
+      <category name="ComMA"/>
+   </feature>
+   <feature id="net.sourceforge.plantuml.feature" version="0.0.0">
+      <category name="ComMA"/>
+   </feature>
+   <feature id="net.sourceforge.plantuml.lib.feature" version="0.0.0">
+      <category name="ComMA"/>
+   </feature>
+   <feature id="nl.esi.comma.standard.feature" version="0.0.0">
+      <category name="ComMA"/>
+   </feature>
+   <feature id="nl.esi.comma.examples.standard.feature" version="0.0.0">
+      <category name="ComMA"/>
+   </feature>
+   <feature id="org.obeonetwork.m2doc.feature">
+      <category name="ComMA"/>
+   </feature>
+   <feature id="org.eclipse.acceleo.query">
+      <category name="ComMA"/>
+   </feature>
+   <bundle id="org.eclipse.xtext.xbase.lib" version="0.0.0">
+      <category name="ComMA"/>
+   </bundle>
+   <bundle id="org.eclipse.xtend.lib" version="0.0.0">
+      <category name="ComMA"/>
+   </bundle>
+   <category-def name="ComMA" label="ComMA">
+      <description>
+         ComMA framework with examples.
+      </description>
+   </category-def>
+</site>

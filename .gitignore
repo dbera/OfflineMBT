@@ -1,0 +1,31 @@
+.idea/*
+__pycache__/
+*.pyc
+
+# Xtext #
+generated/
+src-gen/
+xtend-gen/
+
+# Ignore plugin.xm_gen and feature.xml_gen files, when build Eclipse Plugine.
+*.xml_gen
+
+# Eclipse #
+.metadata
+bin/
+tmp/
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+.antlr-generator-*-patch.jar
+
+# .settings/ #
+.loadpath
+.recommenders
+
+# maven #
+target/
+.polyglot.build.properties
+.m2/

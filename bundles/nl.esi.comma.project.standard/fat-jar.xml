@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project default="create_run_jar" name="Create Runnable ComMA CLI Jar">
+    <target name="plugin.properties">
+        <!--
+            Add properties to prevent exception during jar run:
+            (java.util.MissingResourceException: The string resource '_UI_DiagnosticRoot_diagnostic' could not be located)
+        -->
+        <propertyfile file="${project.build.directory}/libs/plugin.properties">
+            <entry key="_UI_DiagnosticRoot_diagnostic" value="_UI_DiagnosticRoot_diagnostic"/>
+            <entry key="_UI_UnresolvedProxy_diagnostic" value="_UI_UnresolvedProxy_diagnostic"/>
+        </propertyfile>
+    </target>
+
+    <target name="create_run_jar" depends="plugin.properties">
+       <jar destfile="${project.build.directory}/comma-core-${project.version}.jar" filesetmanifest="mergewithoutmain">
+            <manifest>
+                <attribute name="Main-Class" value="nl.esi.comma.project.standard.generator.Main"/>
+                <attribute name="Class-Path" value="."/>
+            </manifest>
+            <fileset excludes="META-INF/*.SF" dir="${project.build.directory}/libs"/>
+            <fileset dir="${project.build.directory}/classes" />
+        </jar>
+    </target>
+</project>

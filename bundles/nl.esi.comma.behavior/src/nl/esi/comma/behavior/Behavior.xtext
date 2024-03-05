@@ -1,0 +1,293 @@
+grammar nl.esi.comma.behavior.Behavior with nl.esi.comma.actions.Actions 
+
+generate behavior "http://www.esi.nl/comma/behavior/Behavior"
+
+import "http://www.esi.nl/comma/signature/InterfaceSignature" as signature
+import "http://www.esi.nl/comma/expressions/Expression" as expr
+import "http://www.esi.nl/comma/types/Types" as types
+import "http://www.esi.nl/comma/actions/Actions" as act
+
+/*
+ * The Behavior language is an intermediate ComMA language that provides useful constructs
+ * used in various behavioral specifications. Intermediate here means that the 
+ * language is expected to be extended further. Currently, it is extended by the 
+ * languages for specifying interfaces and components.
+ * 
+ * Note: the language is defined with an initial expectation that component
+ * and interface specifications will have a lot of commonalities. Since the 
+ * language for components is still under development it may turn out that the
+ * initial expectation does not hold any longer. In this case, Behavior language
+ * needs to be refactored.
+ */
+
+AbstractBehavior : {AbstractBehavior}
+	('variables' vars+=Variable+)? 
+	('init' initActions+=(AssignmentAction | RecordFieldAssignmentAction)+)?
+	('event' 'fragments' fragments += PCFragmentDefinition+	)?
+	machines += StateMachine*
+	(timeConstraintsBlock = TimeConstraintsBlock)?
+	(dataConstraintsBlock = DataConstraintsBlock )?
+	(genericConstraintsBlock = GenericConstraintsBlock)?
+;
+
+@Override
+VariableDeclBlock returns act::VariableDeclBlock :
+	{AbstractBehavior} | {DataConstraintsBlock} | {GenericConstraintsBlock}
+;
+
+@Override 
+NamedElement returns types::NamedElement :
+	{StateMachine} | {State} | {TimeConstraint} | {DataConstraint} | {GenericConstraint} | {Block} | {Port}
+;
+
+StateMachine:
+	'machine' name = ID '{'
+	
+	inAllStates += InAllStatesBlock*
+	
+	(states += State) +
+	
+	'}'
+;
+
+/*
+ * InAllStatesBlock is a construct that groups transitions which appear in more than one state.
+ * The primary purpose is to avoid code repetition and to reduce the size of specifications.
+ * The transitions listed in a block are inserted in all machine states without those listed
+ * in the possibly empty list of excluded states (after keyword 'except')
+ */
+InAllStatesBlock : {InAllStatesBlock}
+	'in' 'all' 'states' ('except' excludedStates += [State | ID] (',' excludedStates += [State | ID])*)? '{' transitions += Transition*  '}'
+;
+
+State:
+	initial?= 'initial'? 'state' name = ID '{'
+				
+		(transitions += Transition)*
+	'}'
+;
+
+Transition:
+	TriggeredTransition | NonTriggeredTransition
+;
+
+/*
+ * Both kinds of transitions (triggered and non-triggered) admit non-determinism by allowing multiple
+ * clauses that possibly lead to different target states.
+ */
+TriggeredTransition:
+	'transition' 'trigger:' trigger=[signature::InterfaceEvent |ID] ('(' parameters+=Variable (',' parameters+=Variable)* ')')?
+			('guard:' guard=Expression)? (configs = FeatureExpression)? clauses += Clause ('OR' clauses += Clause)*
+;
+
+NonTriggeredTransition:
+	'transition' ('guard:' guard=Expression)? (configs = FeatureExpression)? clauses += Clause ('OR' clauses += Clause)*
+;
+
+Clause: {Clause}
+	('do:' (configs = FeatureExpression)? actions = ActionList)? ('next' 'state:' target = [State | ID])? ( '(' 'tag' name = ID ')')? 
+;
+
+FeatureExpression:
+	'feature-expr:' featureExpr = Expression
+;
+/*
+ * Time constraints language
+ */
+
+TimeConstraintsBlock:
+    'timing' 'constraints' 
+	timeConstraints += TimeConstraint+
+;
+
+TimeConstraint:
+	SingleTimeConstraint | GroupTimeConstraint
+;
+
+/*
+ * This constraint specifies a sequence of events that should be observed within a given 
+ * interval (follow up events). The sequence can be triggered by one of the single
+ * time constraint expressions (given in attribute 'first').
+ * 
+ * Note: it is unclear if a periodic event as a trigger makes any sense
+ */
+
+GroupTimeConstraint:
+	'group' name = ID
+	first = TimeConstraintExpression
+	followups += FollowUpEvent+
+	'end' 'group'
+;
+	
+SingleTimeConstraint:
+	name = ID constraint = TimeConstraintExpression
+;
+
+/*
+ * The semantics of the expressions is given in the ComMA publications.
+ * A rough summary:
+ *  - EventInterval: if two events are observed then they are separated in time by the given interval
+ *  - ConditionedEvent: if an event is observed then another event is expected in the given interval
+ *  - ConditionedAbsenceOfEvent: if an event is observed than another event will not be observed in the 
+ *    given interval
+ *  - PeriodicEvent: if an event is observed then a second event is expected in regular intervals
+ *    (determined by the period and jitter) until an optional stop event is observed.
+ */
+TimeConstraintExpression:
+	 EventInState(({EventInterval.condition = current} 'and' event = EventInState '->' interval = TimeInterval 'between' 'events') |
+		 ({ConditionedEvent.condition = current} '-'  interval = TimeInterval '->' event = EventInState) |
+		 ({ConditionedAbsenceOfEvent.condition = current} '->'  'absent' event = EventInState 'in' interval = TimeInterval) |
+		 ({PeriodicEvent.condition = current} 'then' event = EventPattern 'with' 'period'
+			period = Expression "ms" 'jitter' jitter = Expression "ms" ('until' stopEvent = EventInState)? )) 
+;
+
+FollowUpEvent:
+	'-'  interval = TimeInterval '->' event = EventInState
+;
+
+EventInState:
+	('in' 'state' state += [State | ID] (',' state += [State | ID])*)? event = EventPattern
+;
+
+TimeInterval: {TimeInterval}
+	"[" ((begin = Expression "ms" ".." (end = Expression "ms")?) | (".." end = Expression "ms")) "]" 
+;
+
+/*
+ * Data constraints language
+ */
+
+DataConstraintsBlock :
+	'data' 'constraints' 
+	('variables' vars+=Variable+)? 
+	dataConstraints += DataConstraint+
+;
+
+/*
+ * A data constraint is a sequence of steps that define a pattern to be matched on a 
+ * sequence of observed messages. The process of matching can result in binding values
+ * to declared variables. If the pattern is matched the condition is checked. 
+ * Users can define named expressions as values to be observed.
+ * They are evaluated when the constraint value is determined and are stored
+ * for further analysis. Consult ComMA help for more details.
+ */
+DataConstraint:
+	name = ID
+	steps += DataConstraintStep (';' steps += DataConstraintStep)*
+	'where'
+	condition = Expression ('observe' observedValues += ObservedValue+)?
+;
+
+ObservedValue:
+	name = ID ':=' value = Expression
+;
+
+/*
+ * A step is either an event pattern or 'until' operator. The until operator
+ * has the semantics of LTL strong until. For the exact semantics consult ComMA 
+ * publications.
+ */
+DataConstraintStep:
+	DataConstraintEvent ({DataConstraintUntilOperator.body = current} 'until' stop = DataConstraintEvent)?
+;
+
+DataConstraintEvent:
+	(negated = 'no' '['event = EventInState ']') | (event = EventInState)
+;
+
+/*
+ * Generic constraints language
+ */
+
+GenericConstraintsBlock : 
+	'generic' 'constraints' 
+	('variables' vars+=Variable+)? 
+	genericConstraints += GenericConstraint+ 
+;
+
+GenericConstraint:
+	name = ID
+	formula = Formula
+;
+
+//Constraint:
+// - in case of ConditionalFollow, left must be a sequence
+
+/*
+ * The generic constraint language is not expected to be directly used by engineers.
+ * Time and data constraints are translated to generic constraints and evaluated.
+ * Consult ComMA publications about the formal semantics of the language.
+ */
+
+Formula:
+	FormulaLevel1
+	( ({Conjunction.left=current}	"AND"	right=FormulaLevel1)
+	| ({Disjunction.left=current}	"OR"	right=FormulaLevel1)		
+	| ({Implication.left=current}	"->"	right=FormulaLevel1)
+	| ({ConditionalFollow.left=current}	"CF"	right=FormulaLevel1)
+	| ({ConstraintSequence.left=current}	"where"	cond = Expression)
+	)*
+;
+
+FormulaLevel1 returns Formula:
+	NegationFormula | FormulaLevel2
+;
+
+NegationFormula:
+	'NOT' sub = FormulaLevel2
+;
+
+FormulaLevel2 returns Formula:
+	Sequence | BracketFormula
+;
+
+BracketFormula:
+	'{' sub = Formula '}'
+;
+
+Sequence:
+	steps += SequenceElement (';' steps += SequenceElement)* ('&' condition = Expression)?
+;
+
+SequenceElement:
+	Step ({Connector.left = current} conOperator = ConnectorOperator right = Step)?
+;
+
+Step:
+	EventSelector ({ESDisjunction.left = current} '|' right = EventSelector)*
+;
+
+enum ConnectorOperator:
+	U = 'until' |
+	WU = 'wuntil'
+;
+
+//Constraint: 
+// - expression cannot contain forward references in variables. 
+//This means that all the variables must be used in a preceding or the current step
+
+EventSelector:
+	'<' timestamp = ExpressionVariable ',' (counter = ExpressionVariable ',')? (negated = '!')? event = EventInState (',' condition = Expression)? '>'
+;
+
+Port:
+	ProvidedPort | RequiredPort
+;
+
+ProvidedPort:
+	"provided" "port" interface = [signature::Signature | ID] name = ID
+;
+
+RequiredPort:
+	"required" "port" interface = [signature::Signature | ID] name = ID
+;
+
+/*
+ * Construct to be reused in other languages.
+ * 
+ * Note: dropping Systems language may draw it as obsolete
+ */
+Block:
+	name = ID
+	ports += Port+
+;

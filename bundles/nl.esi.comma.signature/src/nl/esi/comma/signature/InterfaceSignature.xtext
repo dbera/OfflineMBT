@@ -1,0 +1,75 @@
+/*
+ * Language for interface signatures.
+ * Signatures define interface events and may define types.
+ */
+grammar nl.esi.comma.signature.InterfaceSignature with nl.esi.comma.types.Types
+
+generate interfaceSignature "http://www.esi.nl/comma/signature/InterfaceSignature"
+
+import "http://www.esi.nl/comma/types/Types" as types
+
+/*
+ * Signature definitions may optionally and transitively import type models
+ */
+InterfaceSignatureDefinition:
+	imports += Import*
+	signature = Signature
+;
+
+@Override
+ModelContainer returns types::ModelContainer:
+	super::ModelContainer | InterfaceSignatureDefinition
+;
+
+Signature:
+	'signature' name = ID 
+		('types' types += TypeDecl+)?
+		("commands" commands += Command+) ?
+		('signals' signals+= Signal+) ?
+		("notifications" notifications += Notification+) ?
+;
+
+@Override
+NamedElement returns types::NamedElement :
+ super::NamedElement | Parameter | Signature
+;
+
+InterfaceEvent returns types::NamedElement:
+	{InterfaceEvent}
+;
+
+ConcreteInterfaceEvent returns InterfaceEvent:
+	{Command} | {Signal} | {Notification}
+;
+
+Parameter:
+	(direction = DIRECTION)? type = Type name = ID
+;
+
+enum DIRECTION :
+	IN = 'in' |
+	OUT = 'out' |
+	INOUT = 'inout'
+;
+
+/*
+ * Commands are synchronous calls from a client to a server.
+ * Return type can be void
+ */
+Command:
+	type = Type name = ID ("(" parameters+=Parameter (',' parameters+=Parameter)* ")")?
+;
+
+/*
+ * Notifications are asynchronous events from a server to its clients
+ */
+Notification:
+	name = ID ("(" parameters+=Parameter (',' parameters+=Parameter)* ")")?
+;
+
+/*
+ * Signals are asynchronous calls from a client to a server
+ */
+Signal:
+	name = ID ("(" parameters+=Parameter (',' parameters+=Parameter)* ")")?
+;

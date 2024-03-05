@@ -1,0 +1,34 @@
+Manifest-Version: 1.0
+Automatic-Module-Name: nl.asml.matala.product
+Bundle-ManifestVersion: 2
+Bundle-Name: nl.asml.matala.product
+Bundle-Vendor: My Company
+Bundle-Version: 1.0.0.qualifier
+Bundle-SymbolicName: nl.asml.matala.product; singleton:=true
+Bundle-ActivationPolicy: lazy
+Require-Bundle: org.eclipse.xtext,
+ org.eclipse.xtext.xbase,
+ org.eclipse.equinox.common;bundle-version="3.5.0",
+ org.eclipse.emf.ecore,
+ org.eclipse.xtext.xbase.lib;bundle-version="2.14.0",
+ org.eclipse.xtext.util,
+ org.eclipse.emf.common,
+ org.antlr.runtime;bundle-version="[3.2.0,3.2.1)",
+ nl.esi.comma.types;bundle-version="4.2.0",
+ nl.esi.comma.actions;bundle-version="4.2.0",
+ nl.esi.comma.signature;bundle-version="4.2.0",
+ nl.esi.comma.expressions;bundle-version="4.2.0",
+ nl.esi.comma.behavior;bundle-version="4.2.0"
+Bundle-RequiredExecutionEnvironment: JavaSE-17
+Export-Package: nl.asml.matala.product.product.util,
+ nl.asml.matala.product.parser.antlr.internal,
+ nl.asml.matala.product.services,
+ nl.asml.matala.product.serializer,
+ nl.asml.matala.product.product,
+ nl.asml.matala.product.parser.antlr,
+ nl.asml.matala.product.scoping,
+ nl.asml.matala.product,
+ nl.asml.matala.product.validation,
+ nl.asml.matala.product.generator,
+ nl.asml.matala.product.product.impl
+Import-Package: org.apache.log4j

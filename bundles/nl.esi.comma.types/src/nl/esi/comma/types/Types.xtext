@@ -1,0 +1,145 @@
+/*
+ * This is the root grammar of ComMA. Almost all other languages extend it (directly or indirectly).
+ * It defines the language for type definitions and some generic constructs reused in other 
+ * languages (e.g. NamedElement, ModelContainer).
+ */
+grammar nl.esi.comma.types.Types hidden(WS, ML_COMMENT, SL_COMMENT)
+
+generate types "http://www.esi.nl/comma/types/Types"
+
+import "http://www.eclipse.org/emf/2002/Ecore" as ecore
+
+/*
+ * Top level container element that holds type declarations.
+ * In addition, it may transitively import zero or more existing type models.
+ */
+TypesModel returns ModelContainer: {TypesModel}
+	imports += Import*
+	types += TypeDecl+
+;
+
+/*
+ * Abstract class for all ComMA model containers.
+ * In this grammar, it is extended by the class TypesModel (see above)
+ */
+ModelContainer:
+	{ModelContainer} imports += Import*
+;
+
+Import:
+	'import' importURI = STRING
+;
+
+/*
+ * Abstract class extended in the ComMA languages
+ */
+NamedElement:
+	EnumElement | RecordField | TypeDecl
+;
+
+/*
+ * The type declarations
+ */
+TypeDecl:
+	EnumTypeDecl | SimpleTypeDecl | RecordTypeDecl | VectorTypeDecl | MapTypeDecl
+;
+
+/*
+ * Simple types denote sets of values that are considered atomic.
+ * User-defined simple types has no interpretation by default. An interpretation can be given
+ * by providing a mapping to a type available in a target language (e.g. C++, POOSL).
+ * ComMA provides a set of built-in simple types: int, bool, string, real, void, any, bulkdata.
+ * These types are defined in the library types.types that is implicitly imported in all ComMA models.
+ * int, bool, string and real have the traditional meaning.
+ * void can only be used as a return type of synchronous calls.
+ * any has only one value: *. * can be used in place of any other value and is used
+ * to express non-determinism in parameter values. any type cannot be used directly 
+ * (e.g. in event declarations, variable and other type definitions). It is used, 
+ * however, in the ComMA type checker.
+ * bulkdata denotes uninterpreted byte arrays. The only operation on bulkdata values is
+ * obtaining their size.
+ * User-defined simple types can optionally be based on a built-in type. In this case
+ * the type being defined can be treated as a synonym of the base type. Values of the base type
+ * can be used as values of the type.
+ */
+SimpleTypeDecl :
+	'type' name = ID ('based' 'on' base = [SimpleTypeDecl])?
+;
+
+EnumTypeDecl:
+	'enum' name = ID '{' literals+=EnumElement+ '}'
+;
+
+EnumElement:
+	name = ID ('=' value = IntExp)?
+;
+
+IntExp:
+	value = Int
+;
+
+RecordTypeDecl:
+	'record' name = ID ('extends' parent = [RecordTypeDecl])? 
+	'{' fields+=RecordField ((',')? fields+=RecordField)* '}'
+;	
+
+RecordField: 
+	type = Type name = ID 
+;
+
+VectorTypeDecl:
+	'vector' name = ID '=' constructor = VectorTypeConstructor 
+;
+
+MapTypeDecl:
+	name = ID '=' constructor = MapTypeConstructor
+;
+
+/*
+ * Type denotes a syntactical construct (reference to a definition or an inline vector or map type)
+ */
+Type:
+	TypeReference | VectorTypeConstructor | MapTypeConstructor
+;
+
+fragment TypeFR returns Type:
+type = [TypeDecl | ID]
+;
+
+MapTypeConstructor :
+	 'map' '<' TypeFR ',' valueType = Type '>'
+;
+
+VectorTypeConstructor :
+	TypeFR (dimensions += Dimension)+
+;
+
+TypeReference :
+	TypeFR
+;
+
+Dimension:
+	{Dimension}'['(size = Int)?']'
+;
+
+/*
+ * TypeObject denotes semantic types. It is used in the ComMA type checker
+ */
+TypeObject:
+	{TypeDecl} | {VectorTypeConstructor} | {MapTypeConstructor}
+;
+
+Int returns ecore::EInt: NUMBER;
+
+terminal ID: '^'?('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'_'|'0'..'9')*;
+terminal NUMBER: ('0'..'9')+;
+terminal STRING:
+			'"' ( '\\' . /* 'b'|'t'|'n'|'f'|'r'|'u'|'"'|"'"|'\\' */ | !('\\'|'"') )* '"' |
+			"'" ( '\\' . /* 'b'|'t'|'n'|'f'|'r'|'u'|'"'|"'"|'\\' */ | !('\\'|"'") )* "'"
+		;
+terminal ML_COMMENT : '/*' -> '*/';
+terminal SL_COMMENT : '//' !('\n'|'\r')* ('\r'? '\n')?;
+
+terminal WS         : (' '|'\t'|'\r'|'\n')+;
+
+terminal ANY_OTHER: .;

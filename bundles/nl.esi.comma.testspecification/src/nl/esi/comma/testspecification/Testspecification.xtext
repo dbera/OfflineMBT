@@ -1,0 +1,195 @@
+grammar nl.esi.comma.testspecification.Testspecification with nl.esi.comma.actions.Actions // with org.eclipse.xtext.common.Terminals
+
+generate testspecification "http://www.esi.nl/comma/testspecification/Testspecification"
+
+import "http://www.esi.nl/comma/signature/InterfaceSignature" as sig 
+import "http://www.esi.nl/comma/types/Types" as types
+import "http://www.esi.nl/comma/expressions/Expression" as expr
+
+TSMain:
+	imports += Import*
+	model = ModelType
+;
+
+ModelType:
+	APIDefinition | TestDefinition | AbstractTestDefinition | ContextMap
+;
+
+APIDefinition:
+	('data-instances' vars+=Variable+)
+	('data-init' initActions+=(AssignmentAction | RecordFieldAssignmentAction)+)?
+;
+
+ContextMap:
+	{ContextMap} 'context-map'
+	tMap += TMap*
+;
+
+AbstractTestDefinition:
+	{AbstractTestDefinition} 'abstract-test-definition'
+	testSeq += AbstractTestSequence*
+	'generate-file' filePath = STRING
+;
+
+TestDefinition:
+	{TestDefinition}
+	('Test-Purpose' purpose = STRING)?
+	('Background' background = STRING)?
+	('Stakeholders' stakeholder += StakeHolder+)?
+	
+	testSeq += TestSequence* 
+	stepSeq += StepSequence*
+	'generate-file' filePath = STRING
+	('global-parameters' gparams+=Variable+)?
+	('step-parameters' stepparams+=Variable+)?
+	('sut-parameters' sutparams+=Variable+)?
+	('global-param-init' gparamsInitActions+=(AssignmentAction | RecordFieldAssignmentAction)+)?
+	('sut-param-init' sutInitActions+=(AssignmentAction | RecordFieldAssignmentAction)+ )?
+;
+
+StakeHolder:
+	'stakeholder-name' name = STRING 
+	'function' function = STRING 
+	'comments' comments = STRING
+;
+
+TMap:
+	'abstract-step' name = ID ('with')? (mode = STRING)? ('->' stepSeqId = [StepSequence|ID])?
+;
+
+/*********************************************************/
+AbstractTestSequence:
+	'Test-Scenario' ':' name = ID
+		// step += [TMap|ID]+
+		step += (AbstractStep | ConstraintStep | AssertStep)+
+		
+;
+
+ConstraintStep:
+	'symbolic-constraint' ':' name = ID
+	 ce += ConstraintElm+
+;
+
+AssertStep:
+	'output-assertion' ':' name = ID
+	ce += ConstraintElm+
+;
+
+ConstraintElm:
+	name = ID ':' val = STRING
+;
+
+AbstractStep:
+	'step-name' ':' name = ID
+	stepRef += StepReference*
+	'input-binding' ':' input += Binding+
+	'output-data' ':' output += Binding+ 
+;
+
+StepReference:
+	'consumes-from-step' ':' refStep = [AbstractStep|ID] '{' refData += [Binding|ID]+ '}'
+;
+
+Binding:
+	name = ID ':' '{'
+		kvPairs += (KVPair|NestedKeyValuesPair)+
+	'}'
+;
+
+NestedKeyValuesPair:
+	refVar = STRING ':' ( ('{' | '[')
+		(kvpl = KVPList)?
+		kvsp += NestedKeyValuesPair*
+	('}' | ']') (',')? )
+;
+
+KVPList:
+	kvp += (KVPair|ListElm)+
+;
+
+KVPair:
+	key = STRING ':' (intValue = Int | strValue = STRING | bValue = BOOL_LITERAL ) (',')?
+;
+
+// ('(' parameters+=Variable (',' parameters+=Variable)* ')')?
+ListElm:
+	lkey += STRING (',')?
+;
+
+/*********************************************************/
+
+TestSequence:
+	'test-sequence' name = ID '{'
+		stepSeqRef += [StepSequence|ID]+
+	'}'
+;
+
+StepSequence:
+	'step-sequence' name = ID '{'
+		step += Step+
+	'}'
+;
+
+
+Step:
+	//'step-id' identifier = ID
+	'step-id' inputVar = [expr::Variable|ID]
+	'step-type' type = [types::TypeDecl|ID]
+	'step-input' stepVar = [expr::Variable|ID]
+	('for-features' featuresForStep += [expr::Variable|ID]+ )?
+	refStep += RefStep*
+	//('ref-to-step-output' input = ActionList)?
+	//('output-data' output = ActionList)?
+	//('local-parameters' localParams += Param+)? 
+;
+
+RefStep:
+	'ref-to-step-output' input = ActionList 	('for-features' featuresToOutput += [expr::Variable|ID]+ )?
+;
+
+Param:
+	name=ID ':' value += STRING+
+;
+
+@Override
+ModelContainer returns types::ModelContainer:
+	super::ModelContainer | TSMain
+;
+
+/*Body:
+	'trigger:' event = [sig::InterfaceEvent] data += EventData+
+	(tags += TagText*)
+;
+
+TagText:
+	(command ?= 'command')? 'tag' tag += (EventTag | EventOutcomeTag)+
+;
+
+EventTag:
+	'action' eventTag = STRING
+;
+
+EventOutcomeTag:
+	'data' (value += Expression (',' value += Expression)*)? '->' eventOutcomeTag = STRING
+;
+
+/*EventData:
+	'state:' state = [sm::State] ('select-transition-clause-id:' evtInst += EventInstance+ )? params += EventParams*
+;
+
+Tail:
+	('non-trigger:' niEvent = [sig::InterfaceEvent])
+	(tags += TagText*)
+;
+
+EventInstance:
+	'(' instanceID = Int ':' '(' evtCl += EventClause+ ')' params += EventParams* ')'
+;
+
+EventClause:
+	clauseID = Int | ',' clauseID = Int
+;
+
+EventParams: {EventParams}
+	'params:' '(' (value += Expression (',' value += Expression)*)? ')' ('feature-expr:' config = Expression)?
+;*/

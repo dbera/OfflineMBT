@@ -1,0 +1,181 @@
+grammar nl.esi.comma.actions.Actions with nl.esi.comma.expressions.Expression
+
+generate actions "http://www.esi.nl/comma/actions/Actions"
+
+import "http://www.esi.nl/comma/expressions/Expression" as expr
+import "http://www.esi.nl/comma/types/Types" as types
+import "http://www.esi.nl/comma/signature/InterfaceSignature" as signature
+
+/*
+ * Actions are statements, acts of sending one or more events, or a declaration of 
+ * an expectation to observe a number of events that satisfy a pattern.
+ * Patterns can denote:
+ *  -replies to commands
+ *  -zero or more notifications
+ *  -parallel composition of replies and notifications
+ */
+Action:
+	AssignmentAction |
+	ForAction |
+	IfAction |
+	RecordFieldAssignmentAction |
+	CommandReply |
+	EventCall |
+	ParallelComposition
+;
+
+AssignmentAction:
+	 assignment =[expr::Variable | ID] ':=' exp=Expression
+;
+
+ForAction:
+	'for' var=Variable 'in' exp=Expression
+		'do' doList=ActionList
+	'end-for'
+;
+
+IfAction:
+	'if' guard=Expression 
+	'then' thenList=ActionList
+	('else' elseList=ActionList)?
+	'fi'
+;
+
+RecordFieldAssignmentAction:
+	fieldAccess = FieldAccessExp ':=' exp=Expression
+;
+
+/*
+ * In ComMA we can only change field values of records that are stored in a variable.
+ * Since we cannot access elements in collections, syntax like collection[i].a := v is not supported
+ */
+FieldAccessExp returns expr::Expression:
+	ExpressionVariable ({expr::ExpressionRecordAccess.record = current} '.' field = [types::RecordField | ID])+
+;
+
+/*
+ * The following fragments are reused in several grammar rules.
+ * They also result in metaclasses in the Actions metamodel.
+ */
+fragment ParameterizedEvent:
+	('(' parameters+=Expression (',' parameters+=Expression)* ')')?
+;
+
+fragment InterfaceEventInstance:
+	event = [signature::InterfaceEvent | ID] ParameterizedEvent
+;
+
+/*
+ * This construct is used in constraints defined in the scope of interface and component specifications
+ */
+EventPattern:
+	AnyEvent | CommandReply | SignalEvent | CommandEvent | NotificationEvent
+;
+
+/*
+ * Reply to a command (synchronous call).
+ * If the corresponding command cannot be inferred from the context, an indication
+ * can be given in the optional command parameter
+ */
+CommandReply: {CommandReply}
+	'reply' ParameterizedEvent ('to' command = CommandEvent)? 
+;
+
+/*
+ * In interface behavior models event calls are only notifications
+ * It is envisaged that event calls may also be sending signals and commands
+ * At the moment only notifications are used as event calls
+ * An event call can optionally be assigned with a multiplicity using the familiar notation:
+ * +, ?, *, [1-2], [1-*]
+ */
+EventCall:
+	InterfaceEventInstance ( (occurence = ("*" | "+" | "?")) | (multiplicity = Multiplicity))?
+;
+
+Multiplicity:
+	'[' lower = Long '-' ((upper = Long) | (upperInf = '*')) ']'
+;
+
+/*
+ * Reusable construct used in 'any order' action and in fragment definition
+ */
+fragment PCFragment:
+	components += PCElement  (',' components += PCElement )*
+;
+
+/*
+ * A named PCFragment. Fragment definitions can appear in interface definitions
+ * and possibly in component definitions
+ */
+PCFragmentDefinition:
+	name = ID '=' PCFragment
+;
+
+@Override 
+NamedElement returns types::NamedElement :
+	{PCFragmentDefinition}
+;
+
+PCFragmentReference:
+	'fragment'  ^fragment = [PCFragmentDefinition | ID]
+;
+
+/*
+ * List of replies and notifications (see definition of EventAction) that can happen in any order.
+ */
+ParallelComposition:
+	'any' 'order' '(' PCFragment ')'
+;
+
+/*
+ * This grammar rule does not cause creation of a metaclass.
+ * It is used to restrict the possible components in a parallel composition
+ */
+PCElement:
+	(EventCall | CommandReply | PCFragmentReference)
+;
+
+/*
+ * The following three constructs are event pattern that denotes a set of commands, notifications and 
+ * signals respectively that can be observed over client-server communication
+ * via a given interface. A parameter value may be the wildcard expression '*' (any value) 
+ */
+CommandEvent:
+	'command' InterfaceEventInstance
+;
+
+NotificationEvent:
+	'notification' InterfaceEventInstance
+;
+
+SignalEvent:
+	'signal' InterfaceEventInstance
+;
+
+/*
+ * Event pattern that does not specify the name of the event. It can denote
+ * all possible commands, signals, notifications, and events respectively
+ */
+AnyEvent:
+	'any' kind = EVENT_KIND
+;
+
+enum EVENT_KIND:
+	CALL = 'command' |
+	SIGNAL = 'signal' |
+	NOTIFICATION = 'notification' |
+	EVENT = 'event'
+;
+
+ActionList: {ActionList}
+	actions+=Action+
+;
+
+/*
+ * Construct reused in several ComMA languages.
+ * It groups a set of variable declarations and an initialization section
+ */
+VariableDeclBlock: {VariableDeclBlock}
+	('variables' vars+=Variable+)? 
+	('init' initActions+=(AssignmentAction | RecordFieldAssignmentAction)+)?
+;

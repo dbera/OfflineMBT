@@ -1,0 +1,238 @@
+grammar nl.esi.comma.behavior.scl.Scl with nl.esi.comma.actions.Actions // with nl.esi.comma.expressions.Expression
+
+generate scl "http://www.esi.nl/comma/behavior/scl/Scl"
+
+import "http://www.esi.nl/comma/signature/InterfaceSignature" as sig 
+import "http://www.esi.nl/comma/types/Types" as types
+import "http://www.esi.nl/comma/expressions/Expression" as expr
+
+Model:
+	imports += Import*
+	features += Features*
+	actions += Actions+
+	sequences += SequenceDef*
+	'Requirements'
+	composition += Composition*
+	('for-configurations' commonFeatures += [Feature|ID]+)?
+	templates += Templates*
+	useLabels?= 'use-provided-labels'?
+;
+
+Composition:
+    'constraint' name = ID 'is-composed-of' '{' templates += [Templates|ID]+ '}' 
+    ('description' descTxt = STRING)?
+    ('for-configurations' commonFeatures += [Feature|ID]+ ';')?
+    ('requirement-tags' tagStr += STRING* ';')?
+;
+
+SequenceDef:
+	'Sequence-Def' name = ID '{'
+		actList += ParamAct+ 
+	'}'
+;
+
+ParamAct:
+	act = [_Action|ID] ('['idx = Int']')?
+;
+
+Ref returns Ref:
+	RefSequence | RefStep
+;
+
+RefStep:
+	'act' step = [_Action|ID] ('['idx = Int']')?
+;
+
+RefSequence:
+	'seq' seq = [SequenceDef|ID]
+;
+
+Features:
+	'feature-list:' '{'
+		feature += Feature+
+	'}'
+;
+
+Feature:
+	name = ID
+;
+
+Actions:
+	'action-list:' '{'
+		('var' localvars+=Variable+ )?
+		act += _Action+
+	'}'
+;
+
+ActionParam:
+	// 'with' '(' parameters+=Expression (',' parameters+=Expression)* ')'
+	'init' initActions+=(AssignmentAction | RecordFieldAssignmentAction)+
+;
+
+// name is used as reference|ID by templates. In generator this must be changed
+_Action:
+	act = ActionType name = ID label = STRING (actParam += ActionParam+)? 
+;
+
+enum ActionType:
+	Observable = 'Observable' | Trigger = 'Trigger' | PreCondition = 'Pre-condition' | Conjunction = 'And'
+;
+
+/*
+	templates can be divided into two main groups: existence templates
+	and relation templates. The former is a set of unary templates. They can be
+	expressed as predicates over one variable. The latter comprises rules that are
+	imposed on target activities, when activation tasks occur. Relation templates
+	thus correspond to binary predicates over two variables.
+ */
+
+Templates:
+	// name = ID type += (Existential | Relation | Coupling | Negative | Choice)+ ('for-configurations' features += [Feature|ID]+)?
+	name = ID type += ( Dependencies | Past | Future | Choice | Existential)+ ('for-configurations' features += [Feature|ID]+)?
+;
+
+Past:
+	'P'
+	type += (Precedence | AlternatePrecedence | ChainPrecedence)+
+;
+
+Future:
+	'F'
+	type += (Response | AlternateResponse | ChainResponse)+
+;
+
+Dependencies:
+	'PF' 
+	type += (Succession  | CoExistance |AlternateSuccession  | ChainSuccession 
+			| RespondedExistence | NotSuccession | NotCoExistance | NotChainSuccession )+
+;
+
+Choice:
+	'C'
+	type += (SimpleChoice | ExclusiveChoice) +
+;
+
+Existential:
+	'E'
+	type += (AtLeast | AtMost | Init | End | Exact)+
+;
+
+// Choice
+ExclusiveChoice:
+	eitherA?= 'either'? refA += Ref+ 'or' eitherB?= 'either'? refB += Ref+ 'eventually-occur-but-not-together'
+;
+
+SimpleChoice:
+	refA += Ref+ 'eventually-occur'
+;
+
+// NEGATION //
+// A (or | and C..) occurs if and only if not followed immediately by B (or | and D..)
+NotChainSuccession: 
+	'!<>' eitherA?= 'either'? refA += Ref+ ('occurs')? 'if-and-only-if-not-followed-immediately-by' eitherB?= 'either'? refB += Ref+ 
+;
+
+//A and B (and C..) do not occur together (implies exclusive choice)
+NotCoExistance:
+	'!-'refA += Ref+ 'do-not-occur-together' 
+;
+
+// A (or | and C..) occurs if and only if not followed by B (or | and C..)
+NotSuccession:
+	'!<-->' eitherA?= 'either'? refA += Ref+ ('occurs')? 
+	'if-and-only-if-not-followed-by' eitherB?= 'either'? refB += Ref+
+;
+
+/// TOGETHER ////
+// A (or | and C..) occurs if and only if followed immediately by B (or | and D..)
+ChainSuccession:
+	'<>' eitherA?= 'either'? refA += Ref+ 'occurs-if-and-only-if-immediately-followed-by' 
+	 	 eitherB?= 'either'? refB += Ref+ ('within' minVal = Int ('-' maxVal = Int)? 'ms')?
+;
+
+// A occurs if and only if followed by B with no A and B (C, D…) in between
+AlternateSuccession:
+	'<!>' eitherA?= 'either'? refA += Ref+ ('occurs')? 'if-and-only-if-followed-by' 
+		  eitherB?= 'either'? refB += Ref+ 'with' 
+		  eitherC?= 'either'? negation?= 'no'? refC += Ref+ 'in-between'
+;
+
+// A (or | and C..) occurs if and only if followed by B (or | and D..) 
+Succession:
+	'<-->' eitherA?= 'either'? refA += Ref+ ('occurs')? 'if-and-only-if-followed-by' 
+		   eitherB?= 'either'? refB += Ref+ ('within' minVal = Int ('-' maxVal = Int)? 'ms')?
+;
+
+// A and B (and C..) occur together
+CoExistance:
+	'-' refA += Ref+ 'occur-together'
+;
+
+RespondedExistence:
+	'-|-' 'if' eitherA?= 'either'? refA += Ref+ ('occurs')? 'then' eitherB?= 'either'? refB += Ref+ 'occurs-as-well'
+;
+
+////// RELATION ////////
+
+// Whenever B (OR|AND D...) occurs then A (OR|AND C..) must (not) immediately precede it
+ChainPrecedence:
+	'<' 'whenever' eitherB?= 'either'? refB += Ref+ ('occurs')? 
+	'then' eitherA?= 'either'? refA += Ref+ 'must' not?= 'not'? 
+	'have-occurred-immediately-before' ('within' minVal = Int ('-' maxVal = Int)? 'ms')?
+;
+
+// If A (OR|AND C..) occurs then B (OR|AND D...) (does not) immediately follow
+ChainResponse:
+	'>' 'if' eitherA?= 'either'? refA += Ref+ ('occurs')? 
+	'then' eitherB?= 'either'? refB += Ref+ 'must' not?= 'not'? 
+	'immediately-follow' ('within' minVal = Int ('-' maxVal = Int)? 'ms')?
+;
+
+// If A (OR|AND X...) occurs then B (OR|AND Y...) must follow with no (only) A (OR|AND X...) and C (OR|AND Z...) in between
+AlternateResponse:
+	'!>' 'if' eitherA?= 'either'? refA += Ref+ ('occurs')? 
+	'then' eitherB?= 'either'? refB += Ref+ 'must-follow' ('within' minVal = Int ('-' maxVal = Int)? 'ms')? 
+	'with' not?= 'no'? eitherC?= 'either'? refC += Ref+ 'in-between'
+;
+
+// Whenever B (OR|AND Y...) occurs then A (OR|AND X...) must have occurred before with no B (OR|AND Y...) and C (OR|AND Z...) in between
+AlternatePrecedence:
+	'<!' 'whenever' eitherB?= 'either'? refB += Ref ('occurs')? 
+	'then' eitherA?= 'either'? refA += Ref 'must-have-occurred' ('within' minVal = Int ('-' maxVal = Int)? 'ms')? 
+	'with' not?= 'no'? eitherC?= 'either'? refC += Ref 'in-between'
+;
+
+Response:
+	'->' 'if' eitherA?= 'either'? refA += Ref+ ('occurs')? 
+	'then' eitherB?= 'either'? refB += Ref+ 'must' not?= 'not'?
+	'eventually-follow' ('within' minVal = Int ('-' maxVal = Int)? 'ms')?
+;
+
+// Whenever B (OR|AND D...) occurs then A (OR|AND C...) should (not) have occurred before
+Precedence:
+	'<-' 'whenever' eitherB?= 'either'? refB += Ref+ ('occurs')? 
+	'then' eitherA?= 'either'? refA += Ref+ 'must' not?= 'not'?
+	'have-occurred-before' ('within' minVal = Int ('-' maxVal = Int)? 'ms')?
+;
+
+// Existential //
+End:
+	ref += Ref+ 'occurs-last'
+;
+
+Init:
+	ref += Ref+ 'occurs-first'
+;
+
+AtMost:
+	 ref += Ref+ 'occurs-at-most' num = Int 'times'
+;
+
+Exact:
+	 ref += Ref+ 'occurs-exactly' num = Int 'times' consecutively?= 'consecutively'? ('with-periodicity-of' minVal = Int ('-' maxVal = Int)? 'ms')?
+;
+
+
+AtLeast:
+	ref += Ref+ 'occurs-at-least' num = Int 'times' ('with-periodicity-of' minVal = Int ('-' maxVal = Int)? 'ms')?
+;

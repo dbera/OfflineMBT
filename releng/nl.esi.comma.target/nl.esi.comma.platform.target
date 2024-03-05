@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?pde version="3.8"?>
+<target name="ESIComMA" sequenceNumber="84">
+  <locations>
+    <location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
+      <unit id="com.google.gson" version="0.0.0"/>
+      <unit id="org.apache.commons.cli" version="0.0.0"/>
+      <unit id="org.eclipse.acceleo.query.feature.group" version="0.0.0"/>
+      <unit id="org.eclipse.e4.rcp.feature.group" version="0.0.0"/>
+      <unit id="org.eclipse.ecf.core.feature.feature.group" version="0.0.0"/>
+      <unit id="org.eclipse.ecf.core.ssl.feature.feature.group" version="0.0.0"/>
+      <unit id="org.eclipse.ecf.filetransfer.feature.feature.group" version="0.0.0"/>
+      <unit id="org.eclipse.ecf.filetransfer.httpclient45.feature.feature.group" version="0.0.0"/>
+      <unit id="org.eclipse.ecf.filetransfer.ssl.feature.feature.group" version="0.0.0"/>
+      <unit id="org.eclipse.equinox.executable.feature.group" version="0.0.0"/>
+      <unit id="org.eclipse.equinox.p2.core.feature.feature.group" version="0.0.0"/>
+      <unit id="org.eclipse.equinox.p2.extras.feature.feature.group" version="0.0.0"/>
+      <unit id="org.eclipse.equinox.p2.rcp.feature.feature.group" version="0.0.0"/>
+      <unit id="org.eclipse.equinox.p2.user.ui.feature.group" version="0.0.0"/>
+      <unit id="org.eclipse.help.feature.group" version="0.0.0"/>
+      <unit id="org.eclipse.jdt.feature.group" version="0.0.0"/>
+      <unit id="org.eclipse.pde.feature.group" version="0.0.0"/>
+      <unit id="org.eclipse.platform.feature.group" version="0.0.0"/>
+      <unit id="org.eclipse.xtext.sdk.feature.group" version="0.0.0"/>
+      <repository location="http://download.eclipse.org/releases/2021-12"/>
+    </location>
+    <location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
+      <unit id="org.eclipse.justj.openjdk.hotspot.jre.full.feature.group" version="0.0.0"/>
+      <repository location="https://download.eclipse.org/justj/jres/11/updates/release/11.0.2"/>
+    </location>
+    <location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
+      <repository location="http://hallvard.github.io/plantuml"/>
+	    <unit id="net.sourceforge.plantuml.ecore.feature.feature.group" version="1.1.26"/>
+	    <unit id="net.sourceforge.plantuml.feature.feature.group" version="1.1.26"/>
+	    <unit id="net.sourceforge.plantuml.lib.feature.feature.group" version="1.2021.5"/>
+    </location>
+	  <location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
+		  <repository location="https://s3-eu-west-1.amazonaws.com/obeo-m2doc-releases/3.2.0/repository/"/>
+		  <unit id="org.obeonetwork.m2doc.feature.feature.group" version="3.2.0.202106291634"/>
+		  <unit id="org.apache.poi.feature.feature.group" version="4.1.0.202101261029"/>
+	  </location>
+  </locations>
+</target>

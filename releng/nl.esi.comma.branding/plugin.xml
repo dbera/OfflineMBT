@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+<plugin>
+ <extension
+       id="Comma_Eclipse"
+       point="org.eclipse.core.runtime.products">
+    <product
+          application="org.eclipse.ui.ide.workbench"
+          name="ComMA Eclipse">
+       <property
+             name="startupProgressRect"
+             value="5,275,445,15">
+       </property>
+       <property
+             name="ComMA Eclipse"
+             value="ComMA">
+       </property>
+       <property
+             name="aboutImage"
+             value="platform:/plugin/nl.esi.comma.branding/icons/if_eclipse_256.png">
+       </property>
+       <property
+             name="windowImages"
+             value="platform:/plugin/nl.esi.comma.branding/icons/if_eclipse_16.png,platform:/plugin/nl.esi.comma.branding/icons/if_eclipse_32.png,platform:/plugin/nl.esi.comma.branding/icons/if_eclipse_48.png,platform:/plugin/nl.esi.comma.branding/icons/if_eclipse_64.png,platform:/plugin/nl.esi.comma.branding/icons/if_eclipse_128.png,platform:/plugin/nl.esi.comma.branding/icons/if_eclipse_256.png">
+       </property>
+       <property
+             name="preferenceCustomization"
+             value="plugin_customization.ini">
+       </property>
+    </product>
+ </extension>
+</plugin>

@@ -1,0 +1,16 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: nl.esi.comma.types.ide
+Bundle-Vendor: TNO-ESI, Philips
+Bundle-Version: 4.2.0.qualifier
+Bundle-SymbolicName: nl.esi.comma.types.ide; singleton:=true
+Bundle-ActivationPolicy: lazy
+Require-Bundle: nl.esi.comma.types,
+ org.eclipse.xtext.ide,
+ org.eclipse.xtext.xbase.ide,
+ org.antlr.runtime;bundle-version="[3.2.0,3.2.1)"
+Bundle-RequiredExecutionEnvironment: JavaSE-11
+Export-Package: nl.esi.comma.types.ide.contentassist.antlr.internal,
+ nl.esi.comma.types.ide.contentassist.antlr
+Automatic-Module-Name: nl.esi.comma.types.ide
+

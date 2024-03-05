@@ -1,0 +1,10 @@
+import "Example.signature"
+
+interface Example version "1.0"
+
+machine StateMachine {
+	initial state initialState{
+		
+		
+	}	
+}

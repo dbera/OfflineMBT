@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<projectDescription>
+	<name>nl.asml.matala.parent</name>
+	<comment></comment>
+	<projects>
+		<project>nl.asml.matala.product</project>
+		<project>nl.asml.matala.product.ide</project>
+		<project>nl.asml.matala.product.ui</project>
+		<project>nl.esi.comma.actions</project>
+		<project>nl.esi.comma.actions.ide</project>
+		<project>nl.esi.comma.actions.ui</project>
+		<project>nl.esi.comma.behavior</project>
+		<project>nl.esi.comma.behavior.ide</project>
+		<project>nl.esi.comma.behavior.ui</project>
+		<project>nl.esi.comma.expressions</project>
+		<project>nl.esi.comma.expressions.ide</project>
+		<project>nl.esi.comma.expressions.ui</project>
+		<project>nl.esi.comma.inputspecification</project>
+		<project>nl.esi.comma.inputspecification.ide</project>
+		<project>nl.esi.comma.inputspecification.ui</project>
+		<project>nl.esi.comma.signature</project>
+		<project>nl.esi.comma.signature.ide</project>
+		<project>nl.esi.comma.signature.ui</project>
+		<project>nl.esi.comma.testspecification</project>
+		<project>nl.esi.comma.testspecification.ide</project>
+		<project>nl.esi.comma.testspecification.tests</project>
+		<project>nl.esi.comma.testspecification.ui</project>
+		<project>nl.esi.comma.testspecification.ui.tests</project>
+		<project>nl.esi.comma.types</project>
+		<project>nl.esi.comma.types.ide</project>
+		<project>nl.esi.comma.types.ui</project>
+		<project>TestSpecification</project>
+		<project>TestSpecificationV2</project>
+	</projects>
+	<buildSpec>
+	</buildSpec>
+	<natures>
+	</natures>
+</projectDescription>

@@ -1,0 +1,669 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+<plugin>
+	<extension
+		point="org.eclipse.ui.editors">
+		<editor
+			class="nl.esi.comma.project.standard.ui.StandardProjectExecutableExtensionFactory:org.eclipse.xtext.ui.editor.XtextEditor"
+			contributorClass="org.eclipse.ui.editors.text.TextEditorActionContributor"
+			default="true"
+			extensions="prj"
+			icon="platform:/plugin/nl.esi.comma.project.ui/icons/icon_file_project.png"
+			id="nl.esi.comma.project.standard.StandardProject"
+			name="StandardProject Editor">
+		</editor>
+	</extension>
+	<extension
+		point="org.eclipse.ui.handlers">
+		<handler
+			class="nl.esi.comma.project.standard.ui.StandardProjectExecutableExtensionFactory:org.eclipse.xtext.ui.editor.hyperlinking.OpenDeclarationHandler"
+			commandId="org.eclipse.xtext.ui.editor.hyperlinking.OpenDeclaration">
+			<activeWhen>
+				<reference
+					definitionId="nl.esi.comma.project.standard.StandardProject.Editor.opened">
+				</reference>
+			</activeWhen>
+		</handler>
+		<handler
+			class="nl.esi.comma.project.standard.ui.StandardProjectExecutableExtensionFactory:org.eclipse.xtext.ui.editor.handler.ValidateActionHandler"
+			commandId="nl.esi.comma.project.standard.StandardProject.validate">
+		<activeWhen>
+			<reference
+					definitionId="nl.esi.comma.project.standard.StandardProject.Editor.opened">
+			</reference>
+		</activeWhen>
+		</handler>
+		<!-- copy qualified name -->
+		<handler
+			class="nl.esi.comma.project.standard.ui.StandardProjectExecutableExtensionFactory:org.eclipse.xtext.ui.editor.copyqualifiedname.EditorCopyQualifiedNameHandler"
+			commandId="org.eclipse.xtext.ui.editor.copyqualifiedname.EditorCopyQualifiedName">
+			<activeWhen>
+				<reference definitionId="nl.esi.comma.project.standard.StandardProject.Editor.opened" />
+			</activeWhen>
+		</handler>
+		<handler
+			class="nl.esi.comma.project.standard.ui.StandardProjectExecutableExtensionFactory:org.eclipse.xtext.ui.editor.copyqualifiedname.OutlineCopyQualifiedNameHandler"
+			commandId="org.eclipse.xtext.ui.editor.copyqualifiedname.OutlineCopyQualifiedName">
+			<activeWhen>
+				<and>
+					<reference definitionId="nl.esi.comma.project.standard.StandardProject.XtextEditor.opened" />
+					<iterate>
+						<adapt type="org.eclipse.xtext.ui.editor.outline.IOutlineNode" />
+					</iterate>
+				</and>
+			</activeWhen>
+		</handler>
+		<!-- Generator context menu handler -->
+		<handler 
+			class="nl.esi.comma.project.standard.ui.StandardProjectExecutableExtensionFactory:nl.esi.comma.project.ui.handler.GenerationHandler" 
+			commandId = "nl.esi.comma.project.ui.handler.GenerationCommand">
+		</handler>
+	</extension>
+	<extension point="org.eclipse.core.expressions.definitions">
+		<definition id="nl.esi.comma.project.standard.StandardProject.Editor.opened">
+			<and>
+				<reference definitionId="isActiveEditorAnInstanceOfXtextEditor"/>
+				<with variable="activeEditor">
+					<test property="org.eclipse.xtext.ui.editor.XtextEditor.languageName"
+						value="nl.esi.comma.project.standard.StandardProject"
+						forcePluginActivation="true"/>
+				</with>
+			</and>
+		</definition>
+		<definition id="nl.esi.comma.project.standard.StandardProject.XtextEditor.opened">
+			<and>
+				<reference definitionId="isXtextEditorActive"/>
+				<with variable="activeEditor">
+					<test property="org.eclipse.xtext.ui.editor.XtextEditor.languageName"
+						value="nl.esi.comma.project.standard.StandardProject"
+						forcePluginActivation="true"/>
+				</with>
+			</and>
+		</definition>
+	</extension>
+	<extension
+			point="org.eclipse.ui.preferencePages">
+		<page
+			class="nl.esi.comma.project.standard.ui.StandardProjectExecutableExtensionFactory:org.eclipse.xtext.ui.editor.preferences.LanguageRootPreferencePage"
+			id="nl.esi.comma.project.standard.StandardProject"
+			name="StandardProject">
+			<keywordReference id="nl.esi.comma.project.standard.ui.keyword_StandardProject"/>
+		</page>
+		<page
+			category="nl.esi.comma.project.standard.StandardProject"
+			class="nl.esi.comma.project.standard.ui.StandardProjectExecutableExtensionFactory:org.eclipse.xtext.ui.editor.syntaxcoloring.SyntaxColoringPreferencePage"
+			id="nl.esi.comma.project.standard.StandardProject.coloring"
+			name="Syntax Coloring">
+			<keywordReference id="nl.esi.comma.project.standard.ui.keyword_StandardProject"/>
+		</page>
+		<page
+			category="nl.esi.comma.project.standard.StandardProject"
+			class="nl.esi.comma.project.standard.ui.StandardProjectExecutableExtensionFactory:org.eclipse.xtext.ui.editor.templates.XtextTemplatePreferencePage"
+			id="nl.esi.comma.project.standard.StandardProject.templates"
+			name="Templates">
+			<keywordReference id="nl.esi.comma.project.standard.ui.keyword_StandardProject"/>
+		</page>
+	</extension>
+	<extension
+			point="org.eclipse.ui.propertyPages">
+		<page
+			class="nl.esi.comma.project.standard.ui.StandardProjectExecutableExtensionFactory:org.eclipse.xtext.ui.editor.preferences.LanguageRootPreferencePage"
+			id="nl.esi.comma.project.standard.StandardProject"
+			name="StandardProject">
+			<keywordReference id="nl.esi.comma.project.standard.ui.keyword_StandardProject"/>
+			<enabledWhen>
+				<adapt type="org.eclipse.core.resources.IProject"/>
+			</enabledWhen>
+			<filter name="projectNature" value="org.eclipse.xtext.ui.shared.xtextNature"/>
+		</page>
+	</extension>
+	<extension
+		point="org.eclipse.ui.keywords">
+		<keyword
+			id="nl.esi.comma.project.standard.ui.keyword_StandardProject"
+			label="StandardProject"/>
+	</extension>
+	<extension
+		point="org.eclipse.ui.commands">
+	<command
+			description="Trigger expensive validation"
+			id="nl.esi.comma.project.standard.StandardProject.validate"
+			name="Validate">
+	</command>
+	<!-- copy qualified name -->
+	<command
+			id="org.eclipse.xtext.ui.editor.copyqualifiedname.EditorCopyQualifiedName"
+			categoryId="org.eclipse.ui.category.edit"
+			description="Copy the qualified name for the selected element"
+			name="Copy Qualified Name">
+	</command>
+	<command
+			id="org.eclipse.xtext.ui.editor.copyqualifiedname.OutlineCopyQualifiedName"
+			categoryId="org.eclipse.ui.category.edit"
+			description="Copy the qualified name for the selected element"
+			name="Copy Qualified Name">
+	</command>
+	</extension>
+	<extension point="org.eclipse.ui.menus">
+		<menuContribution
+			locationURI="popup:#TextEditorContext?after=group.edit">
+			 <command
+				 commandId="nl.esi.comma.project.standard.StandardProject.validate"
+				 style="push"
+				 tooltip="Trigger expensive validation">
+			<visibleWhen checkEnabled="false">
+				<reference
+					definitionId="nl.esi.comma.project.standard.StandardProject.Editor.opened">
+				</reference>
+			</visibleWhen>
+		</command>
+		</menuContribution>
+		<!-- copy qualified name -->
+		<menuContribution locationURI="popup:#TextEditorContext?after=copy">
+			<command commandId="org.eclipse.xtext.ui.editor.copyqualifiedname.EditorCopyQualifiedName"
+				style="push" tooltip="Copy Qualified Name">
+				<visibleWhen checkEnabled="false">
+					<reference definitionId="nl.esi.comma.project.standard.StandardProject.Editor.opened" />
+				</visibleWhen>
+			</command>
+		</menuContribution>
+		<menuContribution locationURI="menu:edit?after=copy">
+			<command commandId="org.eclipse.xtext.ui.editor.copyqualifiedname.EditorCopyQualifiedName"
+				style="push" tooltip="Copy Qualified Name">
+				<visibleWhen checkEnabled="false">
+					<reference definitionId="nl.esi.comma.project.standard.StandardProject.Editor.opened" />
+				</visibleWhen>
+			</command>
+		</menuContribution>
+		<menuContribution locationURI="popup:org.eclipse.xtext.ui.outline?after=additions">
+			<command commandId="org.eclipse.xtext.ui.editor.copyqualifiedname.OutlineCopyQualifiedName"
+				style="push" tooltip="Copy Qualified Name">
+				<visibleWhen checkEnabled="false">
+					<and>
+						<reference definitionId="nl.esi.comma.project.standard.StandardProject.XtextEditor.opened" />
+						<iterate>
+							<adapt type="org.eclipse.xtext.ui.editor.outline.IOutlineNode" />
+						</iterate>
+					</and>
+				</visibleWhen>
+			</command>
+		</menuContribution>
+	</extension>
+	<extension point="org.eclipse.ui.menus">
+		<menuContribution locationURI="popup:#TextEditorContext?endof=group.find">
+			<command commandId="org.eclipse.xtext.ui.editor.FindReferences">
+				<visibleWhen checkEnabled="false">
+					<reference definitionId="nl.esi.comma.project.standard.StandardProject.Editor.opened">
+					</reference>
+				</visibleWhen>
+			</command>
+		</menuContribution>
+	</extension>
+	<extension point="org.eclipse.ui.handlers">
+		<handler
+			class="nl.esi.comma.project.standard.ui.StandardProjectExecutableExtensionFactory:org.eclipse.xtext.ui.editor.findrefs.FindReferencesHandler"
+			commandId="org.eclipse.xtext.ui.editor.FindReferences">
+			<activeWhen>
+				<reference
+					definitionId="nl.esi.comma.project.standard.StandardProject.Editor.opened">
+				</reference>
+			</activeWhen>
+		</handler>
+	</extension>
+	<!-- adding resource factories -->
+	<extension
+		point="org.eclipse.emf.ecore.extension_parser">
+		<parser
+			class="nl.esi.comma.project.standard.ui.StandardProjectExecutableExtensionFactory:org.eclipse.xtext.resource.IResourceFactory"
+			type="prj">
+		</parser>
+	</extension>
+	<extension point="org.eclipse.xtext.extension_resourceServiceProvider">
+		<resourceServiceProvider
+			class="nl.esi.comma.project.standard.ui.StandardProjectExecutableExtensionFactory:org.eclipse.xtext.ui.resource.IResourceUIServiceProvider"
+			uriExtension="prj">
+		</resourceServiceProvider>
+	</extension>
+	<!-- marker definitions for nl.esi.comma.project.standard.StandardProject -->
+	<extension
+			id="standardproject.check.fast"
+			name="StandardProject Problem"
+			point="org.eclipse.core.resources.markers">
+		<super type="org.eclipse.xtext.ui.check.fast"/>
+		<persistent value="true"/>
+	</extension>
+	<extension
+			id="standardproject.check.normal"
+			name="StandardProject Problem"
+			point="org.eclipse.core.resources.markers">
+		<super type="org.eclipse.xtext.ui.check.normal"/>
+		<persistent value="true"/>
+	</extension>
+	<extension
+			id="standardproject.check.expensive"
+			name="StandardProject Problem"
+			point="org.eclipse.core.resources.markers">
+		<super type="org.eclipse.xtext.ui.check.expensive"/>
+		<persistent value="true"/>
+	</extension>
+	
+	
+	<!-- Popup menu -->
+	<extension
+       point="org.eclipse.ui.commands">
+		<command
+          id="nl.esi.comma.project.ui.handler.GenerationCommand"
+          name="Generate Code">
+		</command>
+	</extension>
+	<extension
+       point="org.eclipse.ui.menus">
+		<menuContribution
+          allPopups="false"
+          locationURI="popup:org.eclipse.ui.popup.any?after=additions">
+			<command
+             commandId="nl.esi.comma.project.ui.handler.GenerationCommand"
+
+             label="Execute ComMA Workflow"
+             style="push">
+				<visibleWhen checkEnabled = "false">
+					<with variable = "activeMenuSelection">
+						<iterate ifEmpty="false">
+							<adapt type="org.eclipse.core.resources.IResource">
+
+								<test property="org.eclipse.core.resources.extension" value="prj">
+								</test>
+
+							</adapt>
+						</iterate>
+					</with>
+				</visibleWhen>
+			</command>
+		</menuContribution>
+		<menuContribution
+        allPopups="false"
+         locationURI="popup:#TextEditorContext?after=additions">
+			<command
+              commandId="nl.esi.comma.project.ui.handler.GenerationCommand"
+              id="editorcommaworkflow"
+              label="Execute ComMA Workflow"
+              style="push"
+              tooltip="Starts the ComMA generation workflow">
+				<visibleWhen
+                 checkEnabled="false">
+					<with
+                    variable="activeEditorInput">
+						<reference
+                     	 	definitionId="nl.esi.comma.project.ui.visiblewhenprj">
+						</reference>
+					</with>
+				</visibleWhen>
+			</command>
+		</menuContribution>
+	</extension>
+	<extension
+       point="org.eclipse.ui.menus">
+		<menuContribution
+          allPopups="false"        
+          locationURI="popup:org.eclipse.ui.navigator.ModelExplorer#PopupMenu?after=additions">
+			<command
+             commandId="nl.esi.comma.project.ui.handler.GenerationCommand"
+
+             label="Execute ComMA Workflow"
+             style="push">
+				<visibleWhen checkEnabled = "false">
+					<with variable = "activeMenuSelection">
+						<iterate ifEmpty="false">
+							<adapt type="org.eclipse.core.resources.IResource">
+
+								<test property="org.eclipse.core.resources.extension" value="prj">
+								</test>
+
+							</adapt>
+						</iterate>
+					</with>
+				</visibleWhen>
+			</command>
+		</menuContribution>
+	</extension>
+
+	<extension
+       point="org.eclipse.ui.menus">
+		<menuContribution
+          allPopups="false"        
+          locationURI="popup:org.eclipse.ui.navigator.PackageExplorer#PopupMenu?after=additions">
+			<command
+             commandId="nl.esi.comma.project.ui.handler.GenerationCommand"
+
+             label="Execute ComMA Workflow"
+             style="push">
+				<visibleWhen checkEnabled = "false">
+					<with variable = "activeMenuSelection">
+						<iterate ifEmpty="false">
+							<adapt type="org.eclipse.core.resources.IResource">
+
+								<test property="org.eclipse.core.resources.extension" value="prj">
+								</test>
+
+							</adapt>
+						</iterate>
+					</with>
+				</visibleWhen>
+			</command>
+		</menuContribution>
+	</extension>
+	<extension point="org.eclipse.xtext.builder.participant">
+		<participant
+			class="nl.esi.comma.project.standard.ui.StandardProjectExecutableExtensionFactory:org.eclipse.xtext.builder.IXtextBuilderParticipant"
+			fileExtensions="prj"/>
+	</extension>
+	<extension point="org.eclipse.ui.preferencePages">
+		<page
+			category="nl.esi.comma.project.standard.StandardProject"
+			class="nl.esi.comma.project.standard.ui.StandardProjectExecutableExtensionFactory:org.eclipse.xtext.builder.preferences.BuilderPreferencePage"
+			id="nl.esi.comma.project.standard.StandardProject.compiler.preferencePage"
+			name="Compiler">
+			<keywordReference id="nl.esi.comma.project.standard.ui.keyword_StandardProject"/>
+		</page>
+	</extension>
+	<extension point="org.eclipse.ui.propertyPages">
+		<page
+			category="nl.esi.comma.project.standard.StandardProject"
+			class="nl.esi.comma.project.standard.ui.StandardProjectExecutableExtensionFactory:org.eclipse.xtext.builder.preferences.BuilderPreferencePage"
+			id="nl.esi.comma.project.standard.StandardProject.compiler.propertyPage"
+			name="Compiler">
+			<keywordReference id="nl.esi.comma.project.standard.ui.keyword_StandardProject"/>
+			<enabledWhen>
+				<adapt type="org.eclipse.core.resources.IProject"/>
+			</enabledWhen>
+			<filter name="projectNature" value="org.eclipse.xtext.ui.shared.xtextNature"/>
+		</page>
+	</extension>
+	<extension point="org.eclipse.ui.menus">
+		<menuContribution locationURI="popup:#TextEditorContext?after=xtext.ui.openDeclaration">
+			<command
+				commandId="org.eclipse.xtext.ui.OpenGeneratedFileCommand"
+				id="nl.esi.comma.project.standard.StandardProject.OpenGeneratedCode"
+				style="push">
+				<visibleWhen checkEnabled="false">
+					<reference definitionId="nl.esi.comma.project.standard.StandardProject.Editor.opened" />
+				</visibleWhen>
+			</command>
+		</menuContribution>
+	</extension>
+	<extension point="org.eclipse.ui.handlers">
+		<handler
+			class="nl.esi.comma.project.standard.ui.StandardProjectExecutableExtensionFactory:org.eclipse.xtext.ui.generator.trace.OpenGeneratedFileHandler"
+			commandId="org.eclipse.xtext.ui.OpenGeneratedFileCommand">
+			<activeWhen>
+				<reference definitionId="nl.esi.comma.project.standard.StandardProject.Editor.opened" />
+			</activeWhen>
+		</handler>
+	</extension>
+	<!-- Quick Outline -->
+	<extension
+		point="org.eclipse.ui.handlers">
+		<handler 
+			class="nl.esi.comma.project.standard.ui.StandardProjectExecutableExtensionFactory:org.eclipse.xtext.ui.editor.outline.quickoutline.ShowQuickOutlineActionHandler"
+			commandId="org.eclipse.xtext.ui.editor.outline.QuickOutline">
+			<activeWhen>
+				<reference
+					definitionId="nl.esi.comma.project.standard.StandardProject.Editor.opened">
+				</reference>
+			</activeWhen>
+		</handler>
+	</extension>
+	<extension
+		point="org.eclipse.ui.commands">
+		<command
+			description="Open the quick outline."
+			id="org.eclipse.xtext.ui.editor.outline.QuickOutline"
+			name="Quick Outline">
+		</command>
+	</extension>
+	<extension point="org.eclipse.ui.menus">
+		<menuContribution
+			locationURI="popup:#TextEditorContext?after=group.open">
+			<command commandId="org.eclipse.xtext.ui.editor.outline.QuickOutline"
+				style="push"
+				tooltip="Open Quick Outline">
+				<visibleWhen checkEnabled="false">
+					<reference definitionId="nl.esi.comma.project.standard.StandardProject.Editor.opened"/>
+				</visibleWhen>
+			</command>
+		</menuContribution>
+	</extension>
+	<!-- quickfix marker resolution generator for nl.esi.comma.project.standard.StandardProject -->
+	<extension
+			point="org.eclipse.ui.ide.markerResolution">
+		<markerResolutionGenerator
+			class="nl.esi.comma.project.standard.ui.StandardProjectExecutableExtensionFactory:org.eclipse.xtext.ui.editor.quickfix.MarkerResolutionGenerator"
+			markerType="nl.esi.comma.project.standard.ui.standardproject.check.fast">
+			<attribute
+				name="FIXABLE_KEY"
+				value="true">
+			</attribute>
+		</markerResolutionGenerator>
+		<markerResolutionGenerator
+			class="nl.esi.comma.project.standard.ui.StandardProjectExecutableExtensionFactory:org.eclipse.xtext.ui.editor.quickfix.MarkerResolutionGenerator"
+			markerType="nl.esi.comma.project.standard.ui.standardproject.check.normal">
+			<attribute
+				name="FIXABLE_KEY"
+				value="true">
+			</attribute>
+		</markerResolutionGenerator>
+		<markerResolutionGenerator
+			class="nl.esi.comma.project.standard.ui.StandardProjectExecutableExtensionFactory:org.eclipse.xtext.ui.editor.quickfix.MarkerResolutionGenerator"
+			markerType="nl.esi.comma.project.standard.ui.standardproject.check.expensive">
+			<attribute
+				name="FIXABLE_KEY"
+				value="true">
+			</attribute>
+		</markerResolutionGenerator>
+	</extension>
+	<!-- Rename Refactoring -->
+	<extension point="org.eclipse.ui.handlers">
+		<handler 
+			class="nl.esi.comma.project.standard.ui.StandardProjectExecutableExtensionFactory:org.eclipse.xtext.ui.refactoring.ui.DefaultRenameElementHandler"
+			commandId="org.eclipse.xtext.ui.refactoring.RenameElement">
+			<activeWhen>
+				<reference
+					definitionId="nl.esi.comma.project.standard.StandardProject.Editor.opened">
+				</reference>
+			</activeWhen>
+		</handler>
+	</extension>
+	<extension point="org.eclipse.ui.menus">
+		<menuContribution
+			locationURI="popup:#TextEditorContext?after=group.edit">
+			<command commandId="org.eclipse.xtext.ui.refactoring.RenameElement"
+				style="push">
+				<visibleWhen checkEnabled="false">
+					<reference
+						definitionId="nl.esi.comma.project.standard.StandardProject.Editor.opened">
+					</reference>
+				</visibleWhen>
+			</command>
+		</menuContribution>
+	</extension>
+	<extension point="org.eclipse.ui.preferencePages">
+		<page
+			category="nl.esi.comma.project.standard.StandardProject"
+			class="nl.esi.comma.project.standard.ui.StandardProjectExecutableExtensionFactory:org.eclipse.xtext.ui.refactoring.ui.RefactoringPreferencePage"
+			id="nl.esi.comma.project.standard.StandardProject.refactoring"
+			name="Refactoring">
+			<keywordReference id="nl.esi.comma.project.standard.ui.keyword_StandardProject"/>
+		</page>
+	</extension>
+	<extension point="org.eclipse.compare.contentViewers">
+		<viewer id="nl.esi.comma.project.standard.StandardProject.compare.contentViewers"
+			class="nl.esi.comma.project.standard.ui.StandardProjectExecutableExtensionFactory:org.eclipse.xtext.ui.compare.InjectableViewerCreator"
+			extensions="prj">
+		</viewer>
+	</extension>
+	<extension point="org.eclipse.compare.contentMergeViewers">
+		<viewer id="nl.esi.comma.project.standard.StandardProject.compare.contentMergeViewers"
+			class="nl.esi.comma.project.standard.ui.StandardProjectExecutableExtensionFactory:org.eclipse.xtext.ui.compare.InjectableViewerCreator"
+			extensions="prj" label="StandardProject Compare">
+		</viewer>
+	</extension>
+	<extension point="org.eclipse.ui.editors.documentProviders">
+		<provider id="nl.esi.comma.project.standard.StandardProject.editors.documentProviders"
+			class="nl.esi.comma.project.standard.ui.StandardProjectExecutableExtensionFactory:org.eclipse.xtext.ui.editor.model.XtextDocumentProvider"
+			extensions="prj">
+		</provider>
+	</extension>
+	<extension point="org.eclipse.team.core.fileTypes">
+		<fileTypes
+			extension="prj"
+			type="text">
+		</fileTypes>
+	</extension>
+	
+	<extension point="org.eclipse.core.expressions.definitions">
+		<definition id="nl.esi.comma.project.ui.visiblewhenprj">
+			<adapt type="org.eclipse.core.resources.IResource">
+				<test forcePluginActivation="true"
+                	property="org.eclipse.core.resources.extension"
+                	value="prj">
+				</test>
+			</adapt>
+		</definition>
+	</extension>	
+	
+		 <extension
+	     point="org.eclipse.debug.ui.launchShortcuts">
+		  <shortcut
+		        class="nl.esi.comma.project.standard.ui.StandardProjectExecutableExtensionFactory:nl.esi.comma.project.ui.handler.MonitorLaunchShortcut"
+		        icon="platform:/plugin/nl.esi.comma.project.ui/icons/comma_poosl_simulation.png"
+		        id="nl.esi.comma.launchShortcut.monitor"
+		        label="ComMA Generation and Monitoring"
+		        modes="run,debug">
+		     <configurationType
+		           id="nl.esi.poosl.rotalumisclient.PooslLaunchConfiguration">
+		     </configurationType>
+		     <contextualLaunch>
+		        <contextLabel
+		              label="ComMA Generation and Monitoring"
+		              mode="run">
+		        </contextLabel>
+		        <contextLabel
+		              label="ComMA Generation and Monitoring"
+		              mode="debug">
+		        </contextLabel>
+		        <enablement>
+		           <with
+		                 variable="selection">
+		           </with>
+		           <count
+		                 value="1">
+		           </count>
+		           <iterate>
+		              <adapt
+		                    type="org.eclipse.core.resources.IResource">
+		                 <test
+		                       property="org.eclipse.core.resources.name"
+		                       value="*prj">
+		                 </test>
+		              </adapt>
+		           </iterate>
+		        </enablement></contextualLaunch>
+		  </shortcut>
+	  </extension>
+	  
+	  <!--
+	   <extension
+	     point="org.eclipse.debug.ui.launchShortcuts">
+		  <shortcut
+		        class="nl.esi.comma.project.standard.ui.StandardProjectExecutableExtensionFactory:nl.esi.comma.project.ui.handler.SimulatorLaunchShortcut"
+		        icon="icons/comma_poosl_simulation.png"
+		        id="nl.esi.comma.launchShortcut.simulator"
+		        label="ComMA Generation and POOSL Simulation"
+		        modes="run,debug">
+		     <configurationType
+		           id="nl.esi.poosl.rotalumisclient.PooslLaunchConfiguration">
+		     </configurationType>
+		     <contextualLaunch>
+		        <contextLabel
+		              label="ComMA Generation and POOSL Simulation"
+		              mode="run">
+		        </contextLabel>
+		        <contextLabel
+		              label="ComMA Generation and POOSL Simulation"
+		              mode="debug">
+		        </contextLabel>
+		        <enablement>
+		           <with
+		                 variable="selection">
+		           </with>
+		           <count
+		                 value="1">
+		           </count>
+		           <iterate>
+		              <adapt
+		                    type="org.eclipse.core.resources.IResource">
+		                 <test
+		                       property="org.eclipse.core.resources.name"
+		                       value="*prj">
+		                 </test>
+		              </adapt>
+		           </iterate>
+		        </enablement></contextualLaunch>
+		  </shortcut>
+	  </extension>
+	  -->
+	  
+	  <extension
+       point="org.eclipse.ui.menus">
+		<menuContribution
+          allPopups="false"
+          locationURI="popup:org.eclipse.ui.popup.any?after=additions">    
+			<command
+             commandId="nl.esi.comma.doc.template.ImportTemplateCommand"             
+             label="Import Documentation Template"
+             style="push">
+				<visibleWhen checkEnabled = "false">
+					<with variable = "activeMenuSelection">
+						<iterate ifEmpty="false">
+							<adapt type="org.eclipse.core.resources.IResource">
+								<test property="org.eclipse.core.resources.extension" value="prj">
+								</test>
+							</adapt>
+						</iterate>
+					</with>
+				</visibleWhen>
+			</command>
+		</menuContribution>
+	</extension>
+	<extension
+		point="org.eclipse.ui.handlers">
+		<handler 
+			class="nl.esi.comma.doc.template.ImportTemplateHandler" 
+			commandId = "nl.esi.comma.doc.template.ImportTemplateCommand">
+		</handler>
+	</extension>
+	<extension
+       point="org.eclipse.ui.commands">
+	  <command
+          id="nl.esi.comma.doc.template.ImportTemplateCommand"          
+          name="Import Template">
+    </command>
+    </extension>
+	  
+	  <extension
+         point="org.eclipse.ui.newWizards">
+		<category
+            id="nl.esi.comma"
+            name="ComMA">
+		</category>
+		<wizard
+            category="nl.esi.comma"
+            class="nl.esi.comma.project.standard.ui.wizard.StandardProjectWizard"
+            hasPages="true"
+            icon="platform:/plugin/nl.esi.comma.project.ui/icons/icon_file_project.png"
+            id="nl.esi.comma.standard.project.ui.wizard.commaproject"
+            name="ComMA Project"
+            project="true">
+		</wizard>
+	</extension>
+</plugin>

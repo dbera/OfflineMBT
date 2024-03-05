@@ -1,0 +1,14 @@
+grammar nl.esi.comma.project.standard.StandardProject with nl.esi.comma.types.Types
+
+generate standardProject "http://www.esi.nl/comma/project/standard/StandardProject"
+
+Project:
+	'Project' name = ID 
+	'{'
+		'Generate' 'test-documentation' '{'
+			taskname = ID '{'
+				'test-specification-file' tspec = STRING
+			'}'
+		'}'
+	'}'
+;
