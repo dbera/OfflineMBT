@@ -823,6 +823,8 @@ class PetriNet {
 	
 	def toSnakesSimulation() {
 		'''
+		import json
+		
 		def simulate(n):
 		    stop = False
 		    while not stop:
@@ -841,7 +843,8 @@ class PetriNet {
 		                print(' Enabled-transition-name: ', t)
 		                print('    # with-input-modes: ')
 		                for key, value in mode.dict().items():
-		                    print('      - var: ', key, '  ->  value:', value)
+		                    json_data = json.loads(value)
+		                    print('      - var: ', key, '  ->  value:\n', json.dumps(json_data, indent=2))
 		                # print('     > with mode: ', mode.dict())
 		
 		        # print(enabled_transition_modes)
@@ -856,10 +859,13 @@ class PetriNet {
 		                choices[idx] = key, elm
 		                idx = idx + 1
 		
-		        for k, v in choices.items():
+		        for k1, v1 in choices.items():
 		            print('\n')
 		            print('Possible-choices: ')
-		            print('    + choice: ', k, ' with-mode: ', v)
+		            print('    + choice: ', k1, ':')
+		            for k2, v2 in v1[1].items():
+		                json_data = json.loads(v2)
+		                print('    + key: ', k2, ' with-mode:\n', json.dumps(json_data, indent=2))
 		
 		        if not dead_marking:
 		            print('\n')
@@ -873,7 +879,9 @@ class PetriNet {
 		            print('\n')
 		            print(' Resulting Marking: ')
 		            for k in n.get_marking():
-		                print('    + Place: ', k, ' has Token: ', n.get_marking()[k])
+		                ms = n.get_marking()[k]
+		                json_data = json.loads(ms.items()[0])
+		                print('    + Place: ', k, ' has Token:\n', json.dumps(json_data, indent=2))
 		            print('****************************************************************')
 		            # self.generatePlantUML(n, True)
 		        else:
