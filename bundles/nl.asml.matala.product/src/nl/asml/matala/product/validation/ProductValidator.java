@@ -12,7 +12,6 @@ import org.eclipse.xtext.validation.Check;
 
 import nl.asml.matala.product.product.Product;
 import nl.asml.matala.product.product.ProductPackage;
-import nl.asml.matala.product.product.VarConnection;
 
 /**
  * This class contains custom validation rules. 
@@ -21,15 +20,6 @@ import nl.asml.matala.product.product.VarConnection;
  */
 public class ProductValidator extends AbstractProductValidator {
 	
-	@Check
-	public void checkTypingAssignment(VarConnection conn){
-		var lhs = conn.getVarRefLHS();
-		var rhs = conn.getVarRefRHS();
-		if(!lhs.getVarRef().getType().getType().getName().
-				equals(rhs.getVarRef().getType().getType().getName()))
-			error("Type mismatch: The types do not match!", 
-					ProductPackage.Literals.VAR_CONNECTION__VAR_REF_LHS);
-	}
 	
 	/* STRANGE BUG: Output Vars are Empty. Appears in Input Vars. 
 	 * Not appearing as problem during product generation!
