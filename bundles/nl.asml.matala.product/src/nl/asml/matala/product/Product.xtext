@@ -6,18 +6,47 @@ import "http://www.esi.nl/comma/signature/InterfaceSignature" as sig
 import "http://www.esi.nl/comma/types/Types" as types
 import "http://www.esi.nl/comma/expressions/Expression" as expr
 
+@Override
+ModelContainer returns types::ModelContainer:
+	super::ModelContainer | Product
+;
+
 Product:
 	imports += Import*
-	'specification' name = ID '{'
+	(namespace += NameSpace)*
+	( systemDecl = SystemDecl	
+	| specification = Specification)
+;
+
+@Override
+NamedElement returns types::NamedElement:
+	name=QualifiedName | SystemDecl
+;
+
+SystemDecl:
+	'system' 'declarations' name = ID '{'
 		block += Block*
-		('environment-blocks' envBlock += [Block|ID]*)?
+		// if it works, make it recursive
+	'}'
+;
+
+Specification:
+	'specification' name = ID '{'
+		blocks += Blocks+
+		('environment-blocks' envBlock += [Block|QualifiedName]*)?
 		'depth-limits' limit = Int
 	'}'
 ;
 
-@Override
-ModelContainer returns types::ModelContainer:
-	super::ModelContainer | Product
+Blocks:
+	( block = Block
+	| refBlock = RefBlock
+	)
+;
+
+
+RefBlock:
+	'reference' 'system' system = [Block|QualifiedName]
 ;
 
 Block:

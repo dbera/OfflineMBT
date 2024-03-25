@@ -44,6 +44,18 @@ TypeDecl:
 	EnumTypeDecl | SimpleTypeDecl | RecordTypeDecl | VectorTypeDecl | MapTypeDecl
 ;
 
+NameSpace:
+	'using' importedNamespace=QualifiedNameWithWildcard
+;
+
+QualifiedName:
+    ID ('.' ID )*
+;
+
+QualifiedNameWithWildcard: QualifiedName '.*'? ;
+
+
+
 /*
  * Simple types denote sets of values that are considered atomic.
  * User-defined simple types has no interpretation by default. An interpretation can be given

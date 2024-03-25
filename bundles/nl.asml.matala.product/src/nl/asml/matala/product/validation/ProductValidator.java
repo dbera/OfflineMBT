@@ -8,10 +8,14 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
+import org.eclipse.emf.common.util.URI;
+import org.eclipse.xtext.EcoreUtil2;
 import org.eclipse.xtext.validation.Check;
 
 import nl.asml.matala.product.product.Product;
 import nl.asml.matala.product.product.ProductPackage;
+import nl.esi.comma.types.types.Import;
+import nl.esi.comma.types.types.TypesPackage;
 
 /**
  * This class contains custom validation rules. 
@@ -19,6 +23,21 @@ import nl.asml.matala.product.product.ProductPackage;
  * See https://www.eclipse.org/Xtext/documentation/303_runtime_concepts.html#validation
  */
 public class ProductValidator extends AbstractProductValidator {
+	
+	@Check @Override
+	public void checkImportForValidity(Import imp){
+		if(! EcoreUtil2.isValidUri(imp, URI.createURI(imp.getImportURI())))
+			error("Invalid resource", imp, TypesPackage.eINSTANCE.getImport_ImportURI());
+		else{
+			/*val Resource r = EcoreUtil2.getResource(imp.eResource, imp.importURI)
+			if(! (r.allContents.head instanceof InterfaceDefinition ||
+				r.allContents.head instanceof FeatureDefinition
+			))
+				error("The imported resource is not an interface definition or a feature definition.", imp, TypesPackage.eINSTANCE.import_ImportURI)
+		}*/
+		
+		}
+	}
 	
 	
 	/* STRANGE BUG: Output Vars are Empty. Appears in Input Vars. 
