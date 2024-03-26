@@ -21,7 +21,8 @@ Require-Bundle: org.eclipse.xtext,
  nl.esi.comma.actions;bundle-version="4.2.0",
  nl.esi.comma.expressions;bundle-version="4.2.0",
  nl.esi.comma.inputspecification;bundle-version="4.2.0",
- nl.esi.comma.testspecification;bundle-version="4.2.0"
+ nl.esi.comma.testspecification;bundle-version="4.2.0",
+ nl.asml.matala.product;bundle-version="1.0.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-11
 Export-Package: nl.esi.comma.project.standard.standardProject,
  nl.esi.comma.project.standard.parser.antlr.internal,

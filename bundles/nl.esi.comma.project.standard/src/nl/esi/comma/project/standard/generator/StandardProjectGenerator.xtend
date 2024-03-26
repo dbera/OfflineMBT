@@ -3,26 +3,17 @@
  */
 package nl.esi.comma.project.standard.generator
 
-import org.eclipse.xtext.generator.AbstractGenerator
+import java.io.FileInputStream
+import nl.asml.matala.product.generator.ProductGenerator
+import nl.asml.matala.product.product.Product
+import nl.esi.comma.project.standard.standardProject.Project
+import org.eclipse.emf.common.CommonPlugin
+import org.eclipse.emf.common.util.URI
 import org.eclipse.emf.ecore.resource.Resource
+import org.eclipse.xtext.EcoreUtil2
+import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
-import nl.esi.comma.testspecification.generator.TestDocumentationGenerator
-import nl.esi.comma.project.standard.standardProject.Project
-import org.eclipse.xtext.EcoreUtil2
-import nl.esi.comma.testspecification.testspecification.TSMain
-import nl.esi.comma.testspecification.testspecification.TestDefinition
-import nl.esi.comma.types.generator.TestSpecContext
-import org.eclipse.emf.ecore.resource.ResourceSet
-import org.eclipse.emf.common.util.URI
-import java.io.File
-import java.io.FileInputStream
-import nl.esi.comma.testspecification.generator.TestspecificationGenerator
-import org.eclipse.xtext.resource.XtextResource
-import com.google.inject.Inject
-import nl.esi.comma.types.types.TypesModel
-import java.nio.file.Path
-import java.io.FilenameFilter
 
 /**
  * Generates code from your model files on save.
@@ -30,91 +21,18 @@ import java.io.FilenameFilter
  * See https://www.eclipse.org/Xtext/documentation/303_runtime_concepts.html#code-generation
  */
 class StandardProjectGenerator extends AbstractGenerator {
-	var ResourceSet resourceSet
-	var Resource _res
-	var String rootPath
-
 	override doGenerate(Resource res, IFileSystemAccess2 fsa, IGeneratorContext context) {
-		System.out.println("Standard Generator - Auto generated stub")
-		
-		_res = res
-		resourceSet = res.resourceSet
-		if (context instanceof TestSpecContext) {
-			if(res.allContents.head instanceof Project) {
-				val prjInst = res.allContents.head as Project
-				val tspecPath = (context as TestSpecContext).tspecPath
-				rootPath = tspecPath.parent.toString
-				loadTSModel(tspecPath.toString, prjInst.tspec)
-				val inputResource = EcoreUtil2.getResource(_res, prjInst.tspec)
-				println("Input Model: " + inputResource.URI)
-				var input = inputResource.allContents.head
-				if( input instanceof TSMain) {
-					val tspec = input as TSMain
-					if( tspec.model instanceof TestDefinition) {
-						val td = tspec.model as TestDefinition
-						System.out.println(" Task Definition Found! ")
-						println(resourceSet)
-						loadImportsParams(input)
-					}
-				}
-				EcoreUtil2.resolveAll(_res)
-				_res = resourceSet.getResource(URI.createFileURI(prjInst.tspec), true)
-			}
-		} else {
-			//TODO call generator from eclipse
-		}
-		// Get resource of test specification from project file contents
-		(new TestspecificationGenerator).doGenerate(_res, fsa, context)
-//		(new TestDocumentationGenerator).generateDocumentationForAllVariants(_res, fsa)
-	}
-	
-	def loadTSModel(String tspecPath, String fileName) {
-		var file = new File(tspecPath.toString)
-        var fis = new FileInputStream(file)
-        resourceSet.createResource(URI.createURI(fileName)).load(fis, emptyMap)
-        val tsModel = resourceSet.getResource(URI.createFileURI(fileName), true)
-	}
-	
-	def loadImportsParams(TSMain ts) {
-		for(imp: ts.imports){
-			var uri = ""
-			if (imp.importURI.contains("/")) {
-				uri = imp.importURI.replace("/", "\\")
-			} else {
-				uri = imp.importURI
-			}
-			val inputPath = rootPath + "\\" + uri
-			var file = new File(inputPath)
-			var fis = new FileInputStream(file)
-			//println(inputPath)
-			resourceSet.createResource(URI.createURI(imp.importURI), "Main").load(fis, emptyMap)
-			val paramModel = resourceSet.getResource(URI.createFileURI(imp.importURI), true)
-			//println(paramModel)
-			if (paramModel.allContents.head instanceof nl.esi.comma.inputspecification.inputSpecification.Main) {
-				println("Parameters Model")
-				var inputParams = paramModel.allContents.head as nl.esi.comma.inputspecification.inputSpecification.Main
-				for (impTypes: inputParams.imports) {
-					loadImportsTypes(file.parentFile.absolutePath, impTypes.importURI)
-				}
-			}
-		}
-	}
-	
-	def loadImportsTypes(String root, String imp){
-		val inputPath = root + "\\" + imp.replace("/", "\\")
-		println("Types input " + inputPath)
-		var file = new File(inputPath)
-		var fis = new FileInputStream(file)
-		resourceSet.createResource(URI.createURI(imp), "TypesModel").load(fis, emptyMap)
-		val typeResource = resourceSet.getResource(URI.createFileURI(imp), true)
-		if (typeResource.allContents.head instanceof TypesModel){
-			var typeModel = typeResource.allContents.head as TypesModel
-			if (typeModel.imports.size > 0){
-				for (impTypes : typeModel.imports) {
-					if (resourceSet.getResource(URI.createFileURI(impTypes.importURI), false) === null){
-						loadImportsTypes(file.parentFile.absolutePath, impTypes.importURI)
-					}
-				}
+		if (res.allContents.head instanceof Project) {
+            val resourceSet = res.resourceSet
+            val project = res.contents.head as Project
+            val inputFileURI = res.URI.trimSegments(1).appendSegment(project.product)
+            val absFilePath = CommonPlugin.resolve(inputFileURI).toFileString
+            val fis = new FileInputStream(absFilePath)
+            resourceSet.createResource(URI.createURI(project.product)).load(fis, emptyMap)
+			val inputResource = EcoreUtil2.getResource(res, project.product)
+			val input = inputResource.allContents.head
+			if (input instanceof Product) {
+				(new ProductGenerator).doGenerate(inputResource, fsa, context)
 			}
 		}
 	}

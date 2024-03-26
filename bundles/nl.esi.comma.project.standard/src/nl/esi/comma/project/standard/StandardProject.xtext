@@ -5,10 +5,11 @@ generate standardProject "http://www.esi.nl/comma/project/standard/StandardProje
 Project:
 	'Project' name = ID 
 	'{'
-		'Generate' 'test-documentation' '{'
+		'Generate' 'product' '{'
 			taskname = ID '{'
-				'test-specification-file' tspec = STRING
+				'product-file' product = STRING
 			'}'
 		'}'
 	'}'
 ;
+
