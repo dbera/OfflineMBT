@@ -537,18 +537,18 @@
 		        class="nl.esi.comma.project.standard.ui.StandardProjectExecutableExtensionFactory:nl.esi.comma.project.standard.ui.handler.LaunchShortcut"
 		        icon="platform:/plugin/nl.esi.comma.project.ui/icons/comma_poosl_simulation.png"
 		        id="nl.esi.comma.launchShortcut.monitor"
-		        label="ASML Project Generation"
+		        label="MBT Project Generation"
 		        modes="run,debug">
 		     <configurationType
 		           id="nl.esi.poosl.rotalumisclient.PooslLaunchConfiguration">
 		     </configurationType>
 		     <contextualLaunch>
 		        <contextLabel
-		      		  label="ASML Project Generation"
+		      		  label="MBT Project Generation"
 		              mode="run">
 		        </contextLabel>
 		        <contextLabel
-			          label="ASML Project Generation"
+			          label="MBT Project Generation"
 		              mode="debug">
 		        </contextLabel>
 		        <enablement>
