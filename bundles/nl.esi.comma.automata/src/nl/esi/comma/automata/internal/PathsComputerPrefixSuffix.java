@@ -3,10 +3,13 @@ package nl.esi.comma.automata.internal;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import dk.brics.automaton.Automaton;
@@ -19,29 +22,97 @@ public class PathsComputerPrefixSuffix {
 
 	private final boolean minimize;
 	private final Automaton automaton;
-
-	public PathsComputerPrefixSuffix(Automaton automaton, boolean minimize) {
+	private final List<Character> skipCharacters;
+	private final boolean skipSelfLoop;
+	private final boolean suffix;
+	private final Consumer<String> stageChanged;
+	
+	private PathsComputerPrefixSuffix(Automaton automaton, boolean suffix, boolean minimize, List<Character> skipCharacters, 
+			boolean skipSelfLoop, Consumer<String> stateChanged) {
 		this.automaton = automaton;
 		this.minimize = minimize;
+		this.skipCharacters = skipCharacters;
+		this.suffix = suffix;
+		this.stageChanged = stateChanged;
+		this.skipSelfLoop = skipSelfLoop;
 	}
 	
-	public static List<Path> compute(Automaton automaton, boolean minimize) {
-		return new PathsComputerPrefixSuffix(automaton, minimize).compute();
+	public static List<Path> compute(Automaton automaton, boolean suffix, boolean minimize, List<Character> skipCharacters, 
+			boolean skipSelfLoop, Consumer<String> stageChanged) {
+		return new PathsComputerPrefixSuffix(automaton, suffix, minimize, skipCharacters, skipSelfLoop, stageChanged).compute();
 	}
 	
 	public List<Path> compute() {
-		if (!automaton.getInitialState().isAccept()) {
-			computeLookup(automaton.getInitialState());
-		}
+		stageChanged.accept("ComputeLookup");
+		this.computeLookup();
+		
+		stageChanged.accept("StateSort");
 		var acceptStatesSorted = new ArrayList<>(automaton.getAcceptStates());
 		acceptStatesSorted.sort((State a, State b) -> a.compareTo(b));
-
-		for (var s : acceptStatesSorted) computeLookup(s);
 		
+		stageChanged.accept("ComputePrefix");
 		for (var s : acceptStatesSorted) prefixes.put(s, findPaths(automaton.getInitialState(), s, true));
-		for (var s : acceptStatesSorted) suffixes.put(s, findPaths(s, s, false));
+		if (suffix) {
+			stageChanged.accept("ComputeSuffix");
+			for (var s : acceptStatesSorted) suffixes.put(s, findPaths(s, s, false));
+		}
 		
-		return computePaths();
+		stageChanged.accept("ComputePaths");
+		var paths = computePaths();
+		
+		stageChanged.accept("Done");
+		return paths;
+	}
+	
+	private void computeLookup() {
+		automaton.getAcceptStates().forEach(s -> lookup.put(s, new LinkedHashMap<State, List<Path>>()));
+		lookup.put(automaton.getInitialState(), new LinkedHashMap<State, List<Path>>());
+		
+		var visitedAcceptStates = new HashSet<State>();
+		var incompletePaths = new ArrayDeque<Path>();
+		visitedAcceptStates.add(automaton.getInitialState());
+		var visitedStates = new HashSet<State>();
+		var stack = new ArrayDeque<Tuple<State, Path>>();
+		stack.add(new Tuple<State, Path>(automaton.getInitialState(), new Path()));
+		stageChanged.accept("ComputeLookup:GraphWalk");
+		while (!stack.isEmpty()) {
+			var entry = stack.removeFirst();
+			var state = entry.b.transitions.isEmpty() ? entry.a : entry.b.getTarget();
+			for (var t : state.getTransitions()) {
+				var transition = new Transition(state, t);
+				if (entry.b.transitions.contains(transition)) continue;
+				if (Utils.shouldSkipTransition(skipCharacters, skipSelfLoop, state, t)) continue;
+				var newPath = entry.b.combine(transition);
+				if (transition.target.isAccept()) {
+					if (!lookup.get(entry.a).containsKey(transition.target)) {
+						lookup.get(entry.a).put(transition.target, new ArrayList<Path>());
+					}
+					lookup.get(entry.a).get(transition.target).add(newPath);
+					if (!visitedAcceptStates.contains(transition.target)) {
+						visitedAcceptStates.add(transition.target);
+						stack.add(new Tuple<State, Path>(transition.target, new Path()));
+					}
+				} else if (minimize && visitedStates.contains(transition.target)) {
+					incompletePaths.add(newPath);
+				} else {
+					stack.add(new Tuple<State, Path>(entry.a, newPath));
+				}
+				visitedStates.add(transition.target);
+			}
+		}
+		
+		if (minimize) {
+			stageChanged.accept("PathCompletion");
+			var paths = lookup.values().stream().map(v -> v.values().stream()
+					.flatMap(List::stream).collect(Collectors.toList()))
+					.flatMap(List::stream).collect(Collectors.toList());
+			for (var path : PathsCompleter.complete(paths, incompletePaths)) {
+				if (!lookup.get(path.getSource()).containsKey(path.getTarget())) {
+					lookup.get(path.getSource()).put(path.getTarget(), new ArrayList<Path>());
+				}
+				lookup.get(path.getSource()).get(path.getTarget()).add(path);
+			}
+		}
 	}
 	
 	private List<Path> computePaths() {
@@ -67,105 +138,39 @@ public class PathsComputerPrefixSuffix {
         
         return paths;
     }
-	
-	private List<Path> findPaths(State from, State to, boolean emptyForSelfLoop) {
-		if (emptyForSelfLoop && from == to) return Arrays.asList(new Path());
 
-		var stack = new ArrayDeque<List<Path>>(Arrays.asList(new ArrayList<>()));
-		var visistedStates = new HashSet<State>();
+	private List<Path> findPaths(State from, State to, boolean prefix) {
+		if (prefix && from == to) return Arrays.asList(new Path());
+
+		var stack = new ArrayDeque<Tuple<List<Path>, Set<State>>>();
+		if (prefix) {
+			stack.add(new Tuple<List<Path>, Set<State>>(new ArrayList<>(), Collections.singleton(to)));
+		} else {
+			stack.add(new Tuple<List<Path>, Set<State>>(new ArrayList<>(), new HashSet<>()));
+		}
+		
 		var paths = new ArrayList<Path>();
-		var incompletePaths = new ArrayDeque<Path>();
 		while (!stack.isEmpty()) {
-			var pathList = stack.removeFirst();
-			var state = pathList.isEmpty() ? to : pathList.get(0).getSource();
-			for (var entry : lookup.entrySet()) {
-				if (minimize && entry.getKey() == state) continue;
-				if (entry.getValue().containsKey(state)) {
-					for (var path : entry.getValue().get(state)) {
-						if (!minimize && pathList.contains(path)) continue;
-						var newPathList = new ArrayList<Path>(pathList);
+			var entry = stack.removeFirst();
+			var state = entry.a.isEmpty() ? to : entry.a.get(0).getSource();
+			for (var l : lookup.entrySet()) {
+				if (l.getValue().containsKey(state)) {
+					for (var path : l.getValue().get(state)) {
+						if (entry.b.contains(path.getSource())) continue;
+						var newPathList = new ArrayList<Path>(entry.a);
 						newPathList.add(0, path);
-						if (entry.getKey() == from) {
+						if (l.getKey() == from) {
 							paths.add(new Path(newPathList));
-						} else if (minimize && visistedStates.contains(entry.getKey())) {
-							incompletePaths.add(new Path(newPathList));
 						} else {
-							stack.add(newPathList);
+							var newStateList = new HashSet<>(entry.b);
+							newStateList.add(path.getSource());
+							stack.add(new Tuple<>(newPathList, newStateList));
 						}
-						visistedStates.add(entry.getKey());
 					}
 				}
 			}
 		}
 		
-		// Note: incompletePaths only contains entries when minimize == true
-		var remainingIterations = incompletePaths.size();
-		while (!incompletePaths.isEmpty()) {
-			if (remainingIterations == 0) break;
-			var completed = false;
-	    	var incompletePath = incompletePaths.removeFirst();
-	    	var target = incompletePath.getSource();
-	    	for (var path : paths) {
-	    		var completionPath = path.pathTill(target);
-	    		if (completionPath != null) {
-	    			var completedPath = completionPath.combine(incompletePath);
-	    			paths.add(completedPath);
-	    			completed = true;
-	    			break;
-	    		}
-	    	}
-	    	if (!completed) {
-		    	remainingIterations = remainingIterations - 1;
-	    		incompletePaths.add(incompletePath);
-	    	} else {
-	    		remainingIterations = incompletePaths.size();
-	    	}	
-		}
-	    	
 		return paths;
-	}
-	
-	private void computeLookup(State startState) {
-		var map = new LinkedHashMap<State, List<Path>>();
-		lookup.put(startState, map);
-
-		var visistedStates = new HashSet<State>();
-		var incompletePaths = new ArrayDeque<Path>();
-		var stack = new ArrayDeque<Path>(Arrays.asList(new Path()));
-		while (!stack.isEmpty()) {
-			var path = stack.removeFirst();
-			var state = path.transitions.isEmpty() ? startState : path.lastTransition().target;
-			if (minimize) {
-				for (var t : state.getTransitions()) {
-					if (t.getDest() == state) {
-						path = path.combine(new Transition(state, t));
-					}
-				}
-			}
-			for (var t : state.getTransitions()) {
-				var transition = new Transition(state, t);
-				if (minimize && t.getDest() == state) continue;
-				if (!minimize && path.transitions.contains(transition)) continue;
-				var newPath = path.combine(transition);
-				if (transition.target.isAccept()) {
-					if (!map.containsKey(transition.target)) {
-						map.put(transition.target, new ArrayList<Path>());
-					}
-					map.get(transition.target).add(newPath);
-				} else if (minimize && visistedStates.contains(transition.target)) {
-					incompletePaths.add(newPath);
-				} else {
-					stack.add(newPath);
-				}
-				visistedStates.add(transition.target);
-			}
-		}
-		
-		if (minimize) {
-			var paths = map.values().stream().flatMap(List::stream).collect(Collectors.toList());
-			for (var completePath : PathsCompleter.complete(paths, incompletePaths)) {
-				map.get(completePath.getTarget()).add(completePath);
-			}
-		}
 	}
 }
