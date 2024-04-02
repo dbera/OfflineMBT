@@ -14,6 +14,21 @@ import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
+import org.eclipse.emf.common.util.EList
+import java.util.ArrayList
+import nl.esi.comma.constraints.constraints.Constraints
+import nl.esi.comma.project.standard.standardProject.FilePath
+import nl.esi.comma.automata.AlgorithmType
+import java.io.File
+import nl.esi.comma.scenarios.scenarios.Scenarios
+import nl.esi.comma.constraints.generator.ConstraintsAnalysisAndGeneration
+import org.eclipse.xtext.nodemodel.util.NodeModelUtils
+import java.util.List
+import org.eclipse.xtext.scoping.IScopeProvider
+import nl.esi.comma.project.standard.standardProject.StateMachineGenerationBlock
+import java.io.FilenameFilter
+import org.eclipse.core.resources.IResource
+import org.eclipse.core.resources.ResourcesPlugin
 
 /**
  * Generates code from your model files on save.
@@ -21,19 +36,173 @@ import org.eclipse.xtext.generator.IGeneratorContext
  * See https://www.eclipse.org/Xtext/documentation/303_runtime_concepts.html#code-generation
  */
 class StandardProjectGenerator extends AbstractGenerator {
+	var Resource resource
+	var StateMachineGenerationBlock task
+    List<Constraints> constraints
+	
+	
 	override doGenerate(Resource res, IFileSystemAccess2 fsa, IGeneratorContext context) {
 		if (res.allContents.head instanceof Project) {
             val resourceSet = res.resourceSet
             val project = res.contents.head as Project
-            val inputFileURI = res.URI.trimSegments(1).appendSegment(project.product)
-            val absFilePath = CommonPlugin.resolve(inputFileURI).toFileString
-            val fis = new FileInputStream(absFilePath)
-            resourceSet.createResource(URI.createURI(project.product)).load(fis, emptyMap)
-			val inputResource = EcoreUtil2.getResource(res, project.product)
-			val input = inputResource.allContents.head
-			if (input instanceof Product) {
-				(new ProductGenerator).doGenerate(inputResource, fsa, context)
+            for (product : project.products) { 
+	            val inputFileURI = res.URI.trimSegments(1).appendSegment(product.product)
+	            val absFilePath = CommonPlugin.resolve(inputFileURI).toFileString
+	            val fis = new FileInputStream(absFilePath)
+	            resourceSet.createResource(URI.createURI(product.product)).load(fis, emptyMap)
+				val inputResource = EcoreUtil2.getResource(res, product.product)
+				val input = inputResource.allContents.head
+				if (input instanceof Product) {
+					(new ProductGenerator).doGenerate(inputResource, fsa, context)
+				}
+			}
+            for (task : project.statemachines) {
+            	this.task = task
+            	this.resource = task.eResource
+    			setConstraints
+		        var Resource scnResource = null
+       	        var isCoCoGen = task.checkCoCo
+		        var isVisualize = task.isVisualizeSM
+		        
+		        var isTestGen = false
+		        var AlgorithmType algorithm;
+		        var Integer timeout = null;
+		        var Integer similarity = 75;
+		        if(task.testGen !== null) {
+		            isTestGen = true
+		            if (task.testGen.timeout != 0) timeout = task.testGen.timeout;
+		            if (task.testGen.algorithmBfs) algorithm = AlgorithmType.BFS;
+		            if (task.testGen.algorithmDfs) algorithm = AlgorithmType.DFS;
+		            if (task.testGen.algorithmPrefix) algorithm = AlgorithmType.PREFIX;
+		            if (task.testGen.algorithmPrefixMinimized) algorithm = AlgorithmType.PREFIX_MINIMIZED;
+		            if (task.testGen.algorithmPrefixSuffix) algorithm = AlgorithmType.PREFIX_SUFFIX;
+		            if (task.testGen.algorithmPrefixSuffixMinimized) algorithm = AlgorithmType.PREFIX_SUFFIX_MINIMIZED;
+		            if (task.testGen.similarity != 0) similarity = task.testGen.similarity 
+		        }
+            	
+            	if(task.scenarioFile !== null) {
+		            scnResource = EcoreUtil2.getResource(resource, task.scenarioFile)
+		            if(scnResource === null) {
+		                throw new Exception(task.scenarioFile + " Could not be resolved.")
+		            }
+		            var scn_head = scnResource.allContents.head
+		            if(scn_head !== null && scn_head instanceof Scenarios) {
+		                //System.out.println("Scenario File Found")
+		                if(!(scn_head as Scenarios).specFlowScenarios.isNullOrEmpty) {
+		                    if(task.testGen !== null) {
+		                        //System.out.println("SpecFlow Scenarios Found: " + scn_head.specFlowScenarios.size)
+		                        (new ConstraintsAnalysisAndGeneration).generateStateMachine(resource, fsa, constraints, 
+		                                                                task.taskname, scn_head as Scenarios, 0, isVisualize, isCoCoGen, 
+		                                                                isTestGen, algorithm, 
+		                                                                task.testGen.k, task.testGen.skipAny, 
+		                                                                task.testGen.skipDuplicateSelfLoop,
+		                                                                task.testGen.skipSelfLoop,
+		                                                                timeout, similarity, task.printConstraints)
+		                    } else
+		                        (new ConstraintsAnalysisAndGeneration).generateStateMachine(resource, fsa, constraints, 
+		                                                                task.taskname, scn_head as Scenarios, 0, isVisualize, isCoCoGen, 
+		                                                                isTestGen, algorithm, 1, false, false, false,
+		                                                                timeout, similarity, task.printConstraints)
+		                                                                
+		                } else { System.out.println("Did not find SpecFlow scenarios in Scenario file!") }
+		            } 
+		            else { System.out.println("Did not find Scenarios file!") }
+		        } 
+		        else {
+//		            if(constraints.isEmpty) throw createException("Could not find any constraints file", resource, StateMachineGenerationTask)
+		            if(task.testGen !== null)
+		                (new ConstraintsAnalysisAndGeneration).generateStateMachine(resource, fsa, constraints, 
+		                                                                task.taskname, null, 0, isVisualize, isCoCoGen, isTestGen, 
+		                                                                algorithm, task.testGen.k, task.testGen.skipAny, 
+		                                                                task.testGen.skipDuplicateSelfLoop,
+		                                                                task.testGen.skipSelfLoop,
+		                                                                timeout, similarity, task.printConstraints)
+		            else
+		                (new ConstraintsAnalysisAndGeneration).generateStateMachine(resource, fsa, constraints, 
+		                                                                task.taskname, null, 0, isVisualize, isCoCoGen, isTestGen, 
+		                                                                algorithm, 1, false, false, false,
+		                                                                timeout, similarity, task.printConstraints)
+		        }
+			}	
+		}
+	}
+	
+	
+	def setConstraints() {
+		constraints = new ArrayList<Constraints>
+		for (sourcePath : task.constraintsFiles) {
+			var constrResource = getConstraintsResource(sourcePath)
+			if (constrResource !== null){
+				constraints.add(constrResource)
+			} else {
+				throw new Exception("Constraints to StateMachine Task: Could not find file: " + NodeModelUtils.getNode(constrResource).text + "\n\n")
 			}
 		}
+		
+		getConstraintsResourcesFromDirs(task.constraintsDirs).forEach[addConstraints]
+	}
+	
+	def getConstraintsResourcesFromDirs(EList<FilePath> directories) {
+		val resources = new ArrayList<Resource>
+		for (location : directories) {
+			var uri = resource.resolveUri(location.path)	 		
+			if(uri.isPlatform) {
+				val platform = uri.toPlatformString(true)
+				val IResource eclipseResource = ResourcesPlugin.workspace.root.findMember(platform)				
+				uri =  URI.createFileURI(eclipseResource.rawLocation.toOSString);		
+			}
+			
+			val traceFiler = new FilenameFilter() {
+				override accept(File dir, String name) {
+					(name.endsWith(".constraints"))
+				}
+			}
+			
+			val dir = new File(uri.toFileString)
+			if (dir.exists && dir.isDirectory) {
+				for (file : dir.listFiles(traceFiler)) {
+					val res = resource.resourceSet.getResource(URI.createFileURI(file.path), true)				
+					if(res !== null) {
+						resources.add(res)
+					} else { 
+//						errors.add("Constraints resource could not be loaded: " + file.path +".")
+					}
+				}
+			} else {
+//				errors.add("Constraints dir did not exist or is not a directory. " + dir.path)
+			}
+		}
+		resources
+	}
+	
+	def addConstraints(Resource res) {
+		val head = res.allContents.head
+		if(head instanceof Constraints) {
+			constraints.add(head);
+		} else {
+			throw new Exception("Constraints to StateMachine Task: File did not contain the Constraints syntax" + res.URI + "\n\n")				
+		}
+	}
+	
+	def getConstraintsResource(String path) {
+		val constraintResource = EcoreUtil2.getResource(resource, path)
+		if(constraintResource === null){
+			throw new Exception(constraintResource + "Constraints File Could not be resolved.")
+		}
+		val head = constraintResource.allContents.head
+		if(head instanceof Constraints){
+			return head
+		} else {
+			throw new Exception(constraintResource + " Did not contain the expected 'Constraints' model.")
+		}
+	}
+	
+	def static resolveUri(Resource context, String path) {
+		val contextURI = context.getURI();
+		var uri = URI.createFileURI(path)
+		if (contextURI.isHierarchical() && !contextURI.isRelative() && (uri.isRelative() && !uri.isEmpty())) {
+			uri = uri.resolve(contextURI);
+		}		
+		return uri;
 	}
 }

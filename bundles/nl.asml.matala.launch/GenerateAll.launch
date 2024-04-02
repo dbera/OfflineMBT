@@ -10,6 +10,26 @@
     <booleanAttribute key="org.eclipse.debug.core.launchGroup.1.enabled" value="true"/>
     <stringAttribute key="org.eclipse.debug.core.launchGroup.1.mode" value="inherit"/>
     <stringAttribute key="org.eclipse.debug.core.launchGroup.1.name" value="GenerateInterfaceSignature.mwe2"/>
+    <stringAttribute key="org.eclipse.debug.core.launchGroup.10.action" value="WAIT_FOR_TERMINATION"/>
+    <booleanAttribute key="org.eclipse.debug.core.launchGroup.10.adoptIfRunning" value="false"/>
+    <booleanAttribute key="org.eclipse.debug.core.launchGroup.10.enabled" value="true"/>
+    <stringAttribute key="org.eclipse.debug.core.launchGroup.10.mode" value="inherit"/>
+    <stringAttribute key="org.eclipse.debug.core.launchGroup.10.name" value="Generate Configuration (config) Language Infrastructure"/>
+    <stringAttribute key="org.eclipse.debug.core.launchGroup.11.action" value="WAIT_FOR_TERMINATION"/>
+    <booleanAttribute key="org.eclipse.debug.core.launchGroup.11.adoptIfRunning" value="false"/>
+    <booleanAttribute key="org.eclipse.debug.core.launchGroup.11.enabled" value="true"/>
+    <stringAttribute key="org.eclipse.debug.core.launchGroup.11.mode" value="inherit"/>
+    <stringAttribute key="org.eclipse.debug.core.launchGroup.11.name" value="GenerateStep.mwe2"/>
+    <stringAttribute key="org.eclipse.debug.core.launchGroup.12.action" value="WAIT_FOR_TERMINATION"/>
+    <booleanAttribute key="org.eclipse.debug.core.launchGroup.12.adoptIfRunning" value="false"/>
+    <booleanAttribute key="org.eclipse.debug.core.launchGroup.12.enabled" value="true"/>
+    <stringAttribute key="org.eclipse.debug.core.launchGroup.12.mode" value="inherit"/>
+    <stringAttribute key="org.eclipse.debug.core.launchGroup.12.name" value="GenerateConstraints.mwe2"/>
+    <stringAttribute key="org.eclipse.debug.core.launchGroup.13.action" value="WAIT_FOR_TERMINATION"/>
+    <booleanAttribute key="org.eclipse.debug.core.launchGroup.13.adoptIfRunning" value="false"/>
+    <booleanAttribute key="org.eclipse.debug.core.launchGroup.13.enabled" value="true"/>
+    <stringAttribute key="org.eclipse.debug.core.launchGroup.13.mode" value="inherit"/>
+    <stringAttribute key="org.eclipse.debug.core.launchGroup.13.name" value="GenerateStandardProject.mwe2"/>
     <stringAttribute key="org.eclipse.debug.core.launchGroup.2.action" value="WAIT_FOR_TERMINATION"/>
     <booleanAttribute key="org.eclipse.debug.core.launchGroup.2.adoptIfRunning" value="false"/>
     <booleanAttribute key="org.eclipse.debug.core.launchGroup.2.enabled" value="true"/>
@@ -49,5 +69,5 @@
     <booleanAttribute key="org.eclipse.debug.core.launchGroup.9.adoptIfRunning" value="false"/>
     <booleanAttribute key="org.eclipse.debug.core.launchGroup.9.enabled" value="true"/>
     <stringAttribute key="org.eclipse.debug.core.launchGroup.9.mode" value="inherit"/>
-    <stringAttribute key="org.eclipse.debug.core.launchGroup.9.name" value="GenerateStandardProject.mwe2"/>
+    <stringAttribute key="org.eclipse.debug.core.launchGroup.9.name" value="GenerateScenarios.mwe2"/>
 </launchConfiguration>

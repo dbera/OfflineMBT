@@ -1,0 +1,68 @@
+{
+  "name": "commasuite-dashboard",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "@babel/plugin-transform-runtime": "^7.18.2",
+    "@dash14/svg-pan-zoom": "^3.6.8",
+    "@emotion/react": "^11.7.1",
+    "@emotion/styled": "^11.6.0",
+    "@material-ui/core": "^4.12.3",
+    "@material-ui/icons": "^4.11.2",
+    "@mui/material": "^5.2.3",
+    "@mui/styled-engine-sc": "^5.1.0",
+    "core-js": "^3.13.0",
+    "license-checker": "^25.0.1",
+    "mui-legacy": "^0.20.0",
+    "plotly.js": "^1.58.4",
+    "react": "^17.0.2",
+    "react-cookie": "^4.1.1",
+    "react-device-detect": "^1.17.0",
+    "react-dom": "^17.0.2",
+    "react-paginate": "^7.1.3",
+    "react-plotly.js": "^2.5.1",
+    "react-router-dom": "^5.3.0",
+    "styled-components": "^5.3.3"
+  },
+  "scripts": {
+    "start": "webpack serve --mode development --hot --inline",
+    "build": "webpack --mode production && node build.js",
+    "lint": "eslint .",
+    "maven-build": "npm install && npm run build && npm run license",
+    "license": "license-checker --production --json > dependencies.json",
+    "preinstall": "npx npm-force-resolutions"
+  },
+  "resolutions": {
+    "through2": "^3.0.0"
+  },
+  "browserslist": [
+    "ie 11"
+  ],
+  "devDependencies": {
+    "@babel/core": "^7.14.3",
+    "@babel/preset-env": "^7.14.2",
+    "@babel/preset-react": "^7.13.13",
+    "@babel/preset-typescript": "^7.13.0",
+    "@pmmmwh/react-refresh-webpack-plugin": "^0.5.3",
+    "@types/fork-ts-checker-webpack-plugin": "^0.4.5",
+    "@types/node": "^15.6.1",
+    "@types/react": "^17.0.8",
+    "@types/react-dom": "^17.0.5",
+    "@types/react-plotly.js": "^2.2.4",
+    "@types/react-router-dom": "^5.3.1",
+    "@types/webpack": "^5.28.0",
+    "@types/webpack-dev-server": "^3.11.4",
+    "@typescript-eslint/eslint-plugin": "^4.25.0",
+    "@typescript-eslint/parser": "^4.25.0",
+    "babel-loader": "^8.2.2",
+    "eslint": "^7.27.0",
+    "eslint-plugin-react": "^7.23.2",
+    "eslint-plugin-react-hooks": "^4.2.0",
+    "fork-ts-checker-webpack-plugin": "^6.2.10",
+    "react-refresh": "^0.10.0",
+    "typescript": "^4.2.4",
+    "webpack": "^5.51.1",
+    "webpack-cli": "^4.8.0",
+    "webpack-dev-server": "^3.11.2"
+  }
+}

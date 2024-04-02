@@ -1,0 +1,567 @@
+grammar nl.esi.comma.constraints.Constraints with org.eclipse.xtext.common.Terminals //nl.esi.comma.types.Types
+
+generate constraints "http://www.esi.nl/comma/constraints/Constraints"
+
+//import "http://www.esi.nl/comma/types/Types" as types
+import "http://www.esi.nl/comma/steps/Step" as step
+//import "http://www.esi.nl/comma/expressions/Expression" as expr
+
+Constraints:{Constraints}
+	imports += Import*
+	actors += ActorList*
+	actions += Actions*
+	ssequences += StepSequenceDef*
+	asequences += ActSequenceDef*
+	'Requirements'
+	composition += Composition*
+	genTests?= 'generate-tests'?
+	sclTemplates?= 'use-scl-templates'?
+	'Constraints'
+	('for-configurations' commonFeatures += [step::FeatureTag | ID]+ ';')?
+	templates += Templates*
+	useLabels?= 'use-provided-labels'?
+;
+
+
+Import:
+    'import' importURI = STRING
+;
+
+ActorList:{ActorList} 
+    'Actor' '{'
+        actor += Actor*
+    '}'
+;
+
+Actor:
+    name = ID
+;
+
+Actions:
+    'action-list:' '{'
+        act += Action+
+    '}'
+;
+
+Action returns Action:
+    act = ActionType name = ID label = STRING ( data += DataTable* )
+;
+
+DataTable:
+	// DATA_HEADING 
+	'with-data' (instances ?= 'instances')?
+	heading = ExampleRow
+	(rows += ExampleRow)*
+;
+
+ExampleRow:
+	cells += ExampleCell+ EXAMPLE_ROW_END
+;
+
+ExampleCell:
+	value = EXAMPLE_CELL
+;
+
+// terminal DATA_HEADING: 'with-data' SPACES '\r'? '\n'; // SPACES ':' 
+terminal EXAMPLE_ROW_END: '|' SPACES NL;
+terminal EXAMPLE_CELL: '|' !('\r' | '\n' | '|')+;
+
+terminal fragment SPACES: (' '|'\t')*;
+terminal fragment NL: '\r'? '\n'?;
+
+enum ActionType:
+    Observable = 'Observable' | Trigger = 'Trigger' | PreCondition = 'Pre-condition' | Conjunction = 'And'
+;
+
+StepSequenceDef:
+	'Step-Sequence-Def' name = ID '{'
+		stepList += [step::StepAction|ID]*
+	'}'
+;
+
+ActSequenceDef:
+    'Act-Sequence-Def' name = ID '{'
+        actList += Act*
+    '}'
+;
+
+Act returns Act:
+	act = [Action|ID] ('(' dataRow += ActionData (',' dataRow += ActionData )* ')')?
+;
+
+Ref returns Ref:
+	RefStepSequence | RefActSequence | RefStep | RefAction
+;
+
+RefAction:
+    'act' act = Act
+;
+
+ActionData:
+	name = ID ':' value = STRING
+;
+
+RefStep:
+	'step' step = [step::StepAction|ID]
+;
+
+RefStepSequence:
+	'step-seq' seq = [StepSequenceDef|ID]
+;
+
+RefActSequence:
+    'act-seq' seq = [ActSequenceDef|ID]
+;
+
+/*
+     templates can be divided into two main groups: existence templates
+     and relation templates. The former is a set of unary templates. They can be
+     expressed as predicates over one variable. The latter comprises rules that are
+     imposed on target activities, when activation tasks occur. Relation templates
+     thus correspond to binary predicates over two variables.
+*/
+
+Composition:
+    'constraint' name = ID 'is-composed-of' '{' templates += [Templates|ID]+ '}' 
+    ('description' descTxt = STRING)?
+    ('for-configurations' features += [step::FeatureTag | ID]+ ';')?
+    ('requirement-tags' tagStr += STRING* ';')?
+;
+
+Templates:
+     // 'constraint-id' name = ID type += (Existential | Relation | Coupling | Negative)+ //('for-configurations' features += [step::FeatureTag | ID]+ ';')?//[expr::Variable|ID]+)?
+     'constraint-id' name = ID type += ( Dependencies | Past | Future | Choice | Existential)+ // ('for-configurations' features += [Feature|ID]+)?
+;
+
+Past:
+    'P'
+    type += (Precedence | AlternatePrecedence | ChainPrecedence)+
+;
+
+Future:
+    'F'
+    type += (Response | AlternateResponse | ChainResponse)+
+;
+
+Dependencies:
+    'PF' 
+    type += (Succession  | CoExistance |AlternateSuccession  | ChainSuccession 
+            | RespondedExistence | NotSuccession | NotCoExistance | NotChainSuccession )+
+;
+
+Choice:
+    'C'
+    type += (SimpleChoice | ExclusiveChoice) +
+;
+
+Existential:
+    'E'
+    type += (AtLeast | AtMost | Init | End | Exact)+
+;
+
+// Choice
+// refA += Ref ((',' | 'or' | 'and') ref += Ref)*
+ExclusiveChoice:
+    (pca = PresentContAct)? 
+    eitherA?= 'either'? refA += Ref+ 'or' eitherB?= 'either'? refB += Ref+ ('eventually-occur'',' 'but-never-together' | 'eventually'',' 'but-never-in-the-same-context')
+;
+
+SimpleChoice:
+    (pca = PresentContAct)? 
+    refA += Ref+ ('eventually-occur' | 'eventually')
+;
+
+// NEGATION //
+// A (or | and C..) occurs if and only if not followed immediately by B (or | and D..)
+// vpc = VerbPresentContinous
+/*NotChainSuccession: 
+    '!<>' // eitherA?= 'either'? refA += Ref+ ('occurs')? 'if-and-only-if-not-followed-immediately-by' eitherB?= 'either'? refB += Ref+
+    (pa = PresentAct)?
+    eitherA?= 'either'? refA += Ref+ ('occurs')? 
+    'if-and-only-if' 'it-is-not' 'immediately-followed-by' 
+    (par = PresentRunningAct)?
+    eitherB?= 'either'? refB += Ref+ 
+;*/
+
+NotChainSuccession: 
+    '!<>' 'if' (pca = PresentContAct)? eitherA?= 'either'? refA += Ref+ ('occurs')? 
+    'then' eitherB?= 'either'? refB += Ref+ 
+    ('must-not' 'immediately-follow' | (oblPresent = ObligationPresent) 'not-be' (fa = FutureAct) 'immediately-after')
+    ',' 'and' 'vice-versa'
+;
+
+//A and B (and C..) do not occur together (implies exclusive choice)
+NotCoExistance:
+    '!-'
+    (pcan = PresentContActNot)?
+    refA += Ref+ ('do-not-occur-together' | 'in-the-same-context') 
+;
+
+// A (or | and C..) occurs if and only if not followed by B (or | and C..)
+/*NotSuccession:
+    '!<-->' 
+    (pa = PresentAct)?
+    eitherA?= 'either'? refA += Ref+ ('occurs')? 
+    'if-and-only-if' 'it-is-not' 'followed-by' 
+    (par = PresentRunningAct)?
+    eitherB?= 'either'? refB += Ref+
+;*/
+NotSuccession:
+    '!<-->' 'if' (pca = PresentContAct)? eitherA?= 'either'? refA += Ref+ ('occurs')? 
+    'then'  eitherB?= 'either'? refB += Ref+
+    ('must-not' 'eventually-follow' | (oblPresent = ObligationPresent) 'not-be' (fa = FutureAct) 'eventually')
+    ',' 'and' 'vice-versa'
+;
+
+/// TOGETHER ////
+// A (or | and C..) occurs if and only if followed immediately by B (or | and D..)
+/*ChainSuccession:
+    '<>' (pa = PresentAct)?
+         eitherA?= 'either'? refA += Ref+ ('occurs')? 'if-and-only-if' 'it-is-immediately-followed-by' 
+         (par = PresentRunningAct)?
+         eitherB?= 'either'? refB += Ref+ ('within' minVal = INT ('-' maxVal = INT)? 'ms')?
+;*/
+ChainSuccession:
+    '<>' 'if' (pca = PresentContAct)? eitherA?= 'either'? refA += Ref+ ('occurs')? 
+         'then' eitherB?= 'either'? refB += Ref+
+         ('must-immediately-follow' | (oblPresent = ObligationPresent) 'be' (fa = FutureAct) 'immediately-after')  
+         ('(' 'within' minVal = INT ('-' maxVal = INT)? 'ms' ')')?
+         ',' 'and' 'vice-versa'
+;
+
+// A occurs if and only if followed by B with no A and B (C, D…) in between
+/*AlternateSuccession:
+    '<!>' (pa = PresentAct)?
+          eitherA?= 'either'? refA += Ref+ ('occurs')? 'if-and-only-if' 'it-is-followed-by' 
+          (par = PresentRunningAct)?
+          eitherB?= 'either'? refB += Ref+ 'with' 
+          eitherC?= 'either'? negation?= 'no'? refC += Ref+ 'in-between'
+;*/
+AlternateSuccession:
+    '<!>' 'if' (pca = PresentContAct)? eitherA?= 'either'? refA += Ref+ ('occurs')? 
+          'then' eitherB?= 'either'? refB += Ref+
+          ('must-follow' | (oblPresent = ObligationPresent) 'be' (fa = FutureAct) 'eventually')
+          ('(' 'within' minVal = INT ('-' maxVal = INT)? 'ms' ')')?
+          ',' 'and' 'vice-versa' 
+          ',' 'with' negation?= 'no'? eitherC?= 'either'? refC += Ref+ 'in-between'
+;
+
+// A (or | and C..) occurs if and only if followed by B (or | and D..) 
+/*Succession:
+    '<-->' (pa = PresentAct)?
+           eitherA?= 'either'? refA += Ref+ ('occurs')? 'if-and-only-if' 'it-is-followed-by'
+           (par = PresentRunningAct)? 
+           eitherB?= 'either'? refB += Ref+ ('within' minVal = INT ('-' maxVal = INT)? 'ms')?
+;*/
+
+Succession:
+    '<-->' 'if' (pca = PresentContAct)? eitherA?= 'either'? refA += Ref+ ('occurs')? 
+           'then' eitherB?= 'either'? refB += Ref+
+           ('must-eventually-follow' | (oblPresent = ObligationPresent) 'be' (fa = FutureAct) 'eventually')  
+           ('(' 'within' minVal = INT ('-' maxVal = INT)? 'ms' ')')?
+           ',' 'and' 'vice-versa' 
+;
+
+// A and B (and C..) occur together
+CoExistance:
+    '-' (pca = PresentAct)? refA += Ref+ ('occur-together' | 'in-the-same-context')
+;
+
+RespondedExistence:
+    '-|-' 'if' (pca = PresentContAct)? eitherA?= 'either'? 
+           refA += Ref+ ('occurs')? 'then' (pa = PresentAct)? eitherB?= 'either'? 
+           refB += Ref+ ('occurs-as-well' | 'in-the-same-context-as-well') 
+;
+
+////// RELATION ////////
+
+// Whenever B (OR|AND D...) occurs then A (OR|AND C..) must (not) immediately precede it
+ChainPrecedence:
+    '<' 'whenever' (pca = PresentContAct)? eitherB?= 'either'? refB += Ref+ ('occurs')? 
+    'then' eitherA?= 'either'? refA += Ref+ ('must' not?= 'not'? 
+    'have-occurred-immediately-before' | (oblPast = ObligationPresent)? not?= 'not'? 'have-been' (pa = PastAct) 'immediately-before') 
+    ('(' 'within' minVal = INT ('-' maxVal = INT)? 'ms' ')')?
+;
+
+// If A (OR|AND C..) occurs then B (OR|AND D...) (does not) immediately follow
+ChainResponse:
+    '>' 'if' (pca = PresentContAct)? eitherA?= 'either'? refA += Ref+ ('occurs')? 
+    'then' eitherB?= 'either'? refB += Ref+ ('must' not?= 'not'? 
+    'immediately-follow' | (oblPresent = ObligationPresent)? not?= 'not'? 'be' (fa = FutureAct) 'immediately-after') 
+    ('(' 'within' minVal = INT ('-' maxVal = INT)? 'ms' ')')?
+;
+
+// If A (OR|AND X...) occurs then B (OR|AND Y...) must follow with no (only) A (OR|AND X...) and C (OR|AND Z...) in between
+AlternateResponse:
+    '!>' 'if' (pca = PresentContAct)? eitherA?= 'either'? refA += Ref+ ('occurs')? 
+    'then' eitherB?= 'either'? refB += Ref+ ('must-follow' | (oblPresent = ObligationPresent)? 'be' (fa = FutureAct) 'eventually') 
+    ('(' 'within' minVal = INT ('-' maxVal = INT)? 'ms' ')')? 
+    ',' 'with' not?= 'no'? eitherC?= 'either'? refC += Ref+ 'in-between'
+;
+
+// Whenever B (OR|AND Y...) occurs then A (OR|AND X...) must have occurred before with no B (OR|AND Y...) and C (OR|AND Z...) in between
+AlternatePrecedence:
+    '<!' 'whenever' (pca = PresentContAct)? eitherB?= 'either'? refB += Ref+ ('occurs')? 
+    'then' eitherA?= 'either'? refA += Ref+ ('must-have-occurred-before' | (oblPast = ObligationPresent)? 'have-been' (pa = PastAct) 'before') 
+    ('(' 'within' minVal = INT ('-' maxVal = INT)? 'ms' ')')? 
+    ',' 'with' not?= 'no'? eitherC?= 'either'? refC += Ref+ 'in-between'
+;
+
+Response:
+    '->' 'if' (pca = PresentContAct)? eitherA?= 'either'? refA += Ref+ ('occurs')? 
+    'then' eitherB?= 'either'? refB += Ref+ ('must' not?= 'not'?
+    'eventually-follow' | (oblPresent = ObligationPresent)? not?= 'not'? 'be' (fa = FutureAct) 'eventually') 
+    ('(' 'within' minVal = INT ('-' maxVal = INT)? 'ms' ')')?
+;
+
+// Whenever B (OR|AND D...) occurs then A (OR|AND C...) should (not) have occurred before
+Precedence:
+    '<-' 'whenever' (pca = PresentContAct)? eitherB?= 'either'? refB += Ref+ ('occurs')? 
+    'then' eitherA?= 'either'? refA += Ref+ ('must' not?= 'not'?
+    'have-occurred-before' | (oblPast = ObligationPresent)? not?= 'not'? 'have-been' (pa = PastAct) 'before') 
+    ('(' 'within' minVal = INT ('-' maxVal = INT)? 'ms' ')')?
+;
+
+// Existential //
+End:
+    (pca = PresentContAct)? ref += Ref+ ('occurs-last' | 'in-the-end')
+;
+
+Init:
+    (pca = PresentContAct)? ref += Ref+ ('occurs-first' | 'first')
+;
+
+AtMost:
+     (pca = PresentContAct)? 
+     ref += Ref+ ('occurs-at-most'|'at-most') num = INT ('times'|'time') 
+     ('with-periodicity-of' minVal = INT ('-' maxVal = INT)? 'ms')?
+;
+
+Exact:
+     (pca = PresentContAct)?
+     ref += Ref+ ('occurs-exactly'|'exactly') num = INT ('times'|'time') consecutively?= 'consecutively'? 
+     ('(' 'with-periodicity-of' minVal = INT ('-' maxVal = INT)? 'ms' ')')?
+;
+
+
+AtLeast:
+    (pca = PresentContAct)?
+    ref += Ref+ ('occurs-at-least'|'at-least') num = INT ('times'|'time') 
+    ('(' 'with-periodicity-of' minVal = INT ('-' maxVal = INT)? 'ms' ')')?
+;
+
+
+/* SYNTACTIC SUGAR */
+
+PresentContActNot:
+    (('The'|'the')? actor = Actors)? (not = Negation) (vbp = VerbPresent)
+;
+
+PresentContAct:
+    (('The'|'the')? actor = Actors)? (vpc = VerbPresentContinous) 
+;
+
+PresentAct:
+    (('The'|'the')? actor = Actors)? (oblPresent = ObligationPresent)? (vbp = VerbPresent)
+;
+
+FutureAct:
+    (vbp = VerbPast) (('by' 'the'?)? actor = Actors)?
+;
+
+PastAct:
+    (vp = VerbPast) (('by' 'the'?)? actor = Actors)? 
+;
+
+
+Actors:
+    actor += [Actor|ID] ((',' | 'or' | 'and') actor += [Actor|ID])*
+;
+
+enum VerbPresent:
+    do = 'do' | 
+    trigger = 'trigger' | 
+    observe = 'observe' | 
+    perform = 'perform' | 
+    select = 'select' | 
+    gen = 'generate' | 
+    show = 'show' | 
+    finish = 'finish' | 
+    produce = 'produce' | 
+    follow = 'notify'
+;
+
+enum VerbPresentContinous:
+    does = 'does' | 
+    triggers = 'triggers' | 
+    observes = 'observes' | 
+    performs = 'performs' | 
+    selects = 'selects' | 
+    generates = 'generates' | 
+    shows = 'shows' | 
+    finishes = 'finishes' | 
+    produces = 'produces' | 
+    follows = 'notifies'
+;
+
+enum VerbPast:
+    done = 'done' | 
+    triggered = 'triggered' | 
+    observed = 'observed' | 
+    performed = 'performed' | 
+    selected = 'selected' | 
+    generated = 'generated' | 
+    shown = 'shown' | 
+    finished = 'finished' | 
+    produced = 'produced' | 
+    followed = 'notified'
+;
+
+enum ObligationPresent:
+    must = 'must' |
+    should = 'should' | 
+    shall = 'shall' | 
+    will = 'will' |
+    can = 'can' 
+;
+
+enum Negation:
+    doesNot = 'does-not' |
+    cannot = 'cannot' |
+    mustNot = 'must-not' |
+    shouldNot = 'should-not' |
+    shallNot = 'shall-not' |
+    willNot = 'will-not'
+;
+
+
+/*Relation:
+    ('something-causes-another-thing' | 'causal') 
+     type += (RespondedExistence | Response | AlternateResponse | ChainResponse | Precedence | AlternatePrecedence | ChainPrecedence)+ 
+;
+
+Negative:
+     ('something-never-happens' | 'forbid')
+     type += (NotSuccession | NotCoExistance | NotChainSuccession)+
+;
+
+Coupling:
+     ('somethings-happens-together' | 'together')
+     type += (Succession | CoExistance | AlternateSuccession | ChainSuccession)+
+;
+
+Existential:
+     ('something-always-happens' | 'exist')
+     type += (Participation | AtMostOne | Init | End)+
+;
+
+NotChainSuccession:
+     refA = Ref 'and' refB = Ref 'occur-together' 'and' 'the-latter-does-not-directly-follow-the-former'
+
+;
+
+NotCoExistance:
+     //if a is executed, then b cannot be performed at all in the trace and vice versa.
+     // Event A and event B do not occur together in a trace
+     refA = Ref 'and' refB = Ref 'never-occur-together' 
+;
+
+NotSuccession:
+     // looser than not coexistance it requires that no b’s occur after a (and therefore no a’s before b).
+     //  Event B does not follow event A
+     //refB = [step::StepAction|ID] 'can-never-occur-before' refA = [step::StepAction|ID]
+     refA = Ref 'can-never-occur-before' refB = Ref
+     //   endExposure can never occur before startExposure
+;
+
+ChainSuccession:
+     // next activity after a is b
+     // chresp = ChainResponse 'and' chpre = ChainPrecedence
+     'Both' refA = Ref 'and' refB = Ref 'occur-together' 'and' 'the-latter-directly-follows-the-former' 
+     //occur-together-and-the-latter-directly-follows-the-former
+     //'occur-together-iff-the-latter-immediately-follows-the-former'
+     // startExposure and endExposure occur together if and only if the latter immediately follows the former
+;
+
+AlternateSuccession:
+     //Both alternate response(A, B) and alternate precedence(A, B) have to hold
+     //altresp = AlternateResponse 'and' altpre = AlternatePrecedence
+     'Both' refA = Ref 'and' refB = Ref 'occur-together' 'and' 'the-latter' 'and' 'former-follow-each-other-alternatively' 
+     //'occur-together-and-the-latter-follows-the-former-and-vice-versa-alternatively'
+     //'occur-together-iff-the-latter-follows-the-former-and-they-alternate-each-other'
+;
+
+Succession:
+     // stricter than coexistance it requires that b’s occur only after a (and therefore exists a before b).
+     // resp = Response 'and' pre = Precedence
+     refA = Ref 'occurs-iff-it-is-followed-by' refB = Ref 
+     // startExposure occurs if and only if it is followed by endExposure
+;
+
+CoExistance:
+     // 'if' refA = [step::SteppAction|ID] 'is-performed' 'then' refB = [step::StepAction|ID] 'must-be-performed-as-well-and-vice-versa'
+     //'if' refA = [step::StepAction|ID] 'occurs' 'then' refB = [step::StepAction|ID] 'should-also-happen-and-vice-versa'
+     'Both' refA = Ref 'and' refB = Ref 'occur-together'
+;
+
+
+ChainPrecedence:
+     //refA = [step::StepAction|ID] 'must-occur-before' refB = [step::StepAction|ID]
+     'whenever' refB = Ref 'occurs' 'then' refA = Ref 'should-have-occurred-directly-before'
+     //Each time endExposure occurs, then startExposure occurs immediately beforehand
+;
+
+AlternatePrecedence:
+     //refA = [step::StepAction|ID] 'must-occur-before' refB = [step::StepAction|ID] 'and-no-other-in-between'
+     //'should-have-occurred-before-with-no-recurrence'
+     'whenever' refB = Ref 'occurs' 'then' refA = Ref 'should-have-occurred-before-with-no-recurrence-of-former'
+;
+
+Precedence:
+     //'whenever' refB = [step::StepAction|ID] 'occurs' 'then' refA = [step::StepAction|ID] 'must-occur-immediately-before'
+     'whenever' refB = Ref 'occurs' 'then' refA = Ref 'should-have-occurred-before'
+     // endExposure occurs if preceded by startExposure
+;
+
+ChainResponse:
+     'if' refA = Ref 'occurs' 'then' refB = Ref 'should-directly-follow'
+     // Each time startExposure occurs, then endExposure occurs immediately afterwards
+;
+
+AlternateResponse:
+     //'if' refA = [step::StepAction|ID] 'occurs' 'then' refB = [step::StepAction|ID] 'must-occur-at-least-once-eventually-after-exclusive'
+     //'if' refA = [step::StepAction|ID] 'occurs' 'then' refB = [step::StepAction|ID] 'should-eventually-follow-before-recurrence-of-former'
+     //'should-eventually-follow-before-the-former-recurs'
+     'if' refA = Ref 'occurs' 'then' refB = Ref 'should-eventually-follow-before-the-former-recurs'
+;
+
+Response:
+     //'if' refA = [step::StepAction|ID] 'is-performed' 'then' refB = [step::StepAction|ID] 'must-occur-at-least-once-eventually-after'
+     'if' refA = Ref 'occurs' 'then' refB = Ref 'should-eventually-follow'
+;
+
+RespondedExistence:
+     //'if' refA = [step::StepAction|ID] 'is-performed-at-least-once' 'then' refB = [step::StepAction|ID] 'must-occur-at-least-once' //'as' 'well,'
+     'if' refA = Ref 'occurs' 'then' refB = Ref 'occurs-as-well' //-at-least-once' //'as' 'well,'
+     // 'if' refA = [step::StepAction|ID] 'happens' 'then' refB = [step::StepAction|ID] 'should-also-happen' //'as' 'well,' 
+      //'either' 'in' 'the' 'future' 'or' 'in' 'the' 'past,' 'with' 'respect' 'to' 'a.'
+     // If startExposure occurs then endExposure occurs as well
+;
+
+End:
+     ref = Ref 'occurs-last'
+;
+
+Init:
+     ref = Ref 'occurs-first'
+;
+
+// Absence: Event A can happen at most n times
+AtMostOne:
+     ref = Ref 'occurs-at-most-once'
+;
+
+// Existence: Event A has to happen at least n times
+Participation:
+     ref = Ref 'occurs-at-least-once'
+;*/

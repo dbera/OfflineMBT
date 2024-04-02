@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+<plugin>
+	<extension point="org.eclipse.emf.ecore.generated_package">
+		<package 
+			uri = "http://www.esi.nl/comma/steps/Step"
+			class = "nl.esi.comma.steps.step.StepPackage"
+			genModel = "model/generated/Step.genmodel" />
+	</extension>
+</plugin>

@@ -43,9 +43,7 @@ class ScenarioGenerator {
                 existingCases = scn.specFlowScenarios.map[s | s.events.map[e | map.get(e.name)].join("")]
             }*/
             
-//            val result = new EAutomaton(automata).computeScenarios(algorithmType, existingCases, 3)
-			// TODO: Check with Deb. Should 3 be 1 as in ComMA-Core?
-            val result = new EAutomaton(automata).computeScenarios(algorithmType, existingCases, 3, #[], false, false, null)
+            val result = new EAutomaton(automata).computeScenarios(algorithmType, existingCases, 1, #[], false, false, null)
 
             var listOfStrList = new ArrayList<List<String>>
             for(str : result.scenarios) {
