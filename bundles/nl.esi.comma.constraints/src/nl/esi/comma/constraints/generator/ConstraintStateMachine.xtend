@@ -46,6 +46,7 @@ class ConstraintStateMachine
     var Character terminalChar = null
     ////////////////////
     
+    var Map<String,String> actionToExprMap = new HashMap<String,String>(); // global for each constraint file
     var List<Automaton> automataList = new ArrayList<Automaton>
     var Automaton fa = new Automaton
    
@@ -57,6 +58,7 @@ class ConstraintStateMachine
         Map<String, List<List<String>>> _sequenceDefMap,
         Map<Character, List<List<Character>>> _compoundUnicodeMap,
         List<String> _listOfRegexes,
+        Map<String,String> _actionToExprMap,
         List<Automaton> _automataList, Character finalChar,
         List<String> _text, 
         List<String> _highlightedKeywords
@@ -98,6 +100,9 @@ class ConstraintStateMachine
 
             for(elm: _text) text.add(elm)
             for(elm : _highlightedKeywords) highlightedKeywords.add(elm)
+            
+            for(k : _actionToExprMap.keySet)
+                actionToExprMap.put(k ,_actionToExprMap.get(k))
             
             displayComputedMaps
     }
@@ -151,6 +156,7 @@ class ConstraintStateMachine
     
     def getName() { return name }
     def getUnicodeMap() { return unicodeMap }
+    def getActExprMap() { return actionToExprMap }
     def getCompoundUnicodeMap() { return compoundUnicodeMap }
     def getRegExList() { return listOfRegexes }
     def getAutomataList() { return automataList }

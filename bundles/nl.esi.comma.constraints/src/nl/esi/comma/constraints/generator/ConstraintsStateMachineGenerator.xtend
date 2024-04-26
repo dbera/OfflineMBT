@@ -46,11 +46,13 @@ import nl.esi.comma.constraints.constraints.Templates
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.generator.IFileSystemAccess2
+import nl.esi.comma.actions.generator.plantuml.ActionsUmlGenerator
 
 class ConstraintsStateMachineGenerator 
 {
     var Set<String> activityList = new HashSet<String>();
     var Map<String,Character> unicodeMap = new HashMap<String,Character>(); // global for each constraint file or constraint composition
+	var Map<String,String> actionToExprMap = new HashMap<String,String>(); // global for each constraint file
     
     // Support complex mapping of actions to sequences and non-determinism
     var stepDataMap = new HashMap<String, Set<String>>
@@ -127,6 +129,17 @@ class ConstraintsStateMachineGenerator
                     stepDataMap.put(act.label.replaceAll(" ", "_"), dataList)
                 }
             }
+            if (!act.actParam.nullOrEmpty) {
+				for(p : act.actParam) {
+                    var dataList = new HashSet<String>
+    				for(ia : p.initActions) {
+    					var label = (new ActionsUmlGenerator().generateAction(ia)).toString
+                    	label = label.replaceAll(" ", "_")
+                    	dataList.add(label)    					
+    				}
+					stepDataMap.put(act.label.replaceAll(" ", "_"),dataList)
+    			}
+            }
         }
     }
     /* 
@@ -170,12 +183,26 @@ class ConstraintsStateMachineGenerator
         System.out.println("Steps Data Map: " + stepDataMap)
     }*/
     
+    def computeActionToExpr(List<Actions> acts) {
+    	for(a : acts) {
+    		for(elm : a.act) {
+    			var ename = elm.name
+    			for(p : elm.actParam) {
+    				for(ia : p.initActions) {
+    					actionToExprMap.put(ename,(new ActionsUmlGenerator().generateAction(ia)).toString)
+    				}
+    			}
+    		}
+    	}
+    }
+    
     def generateStateMachine(Constraints model, Map<String, String> _stepsMapping, String path, String name, IFileSystemAccess2 fsa, boolean display, boolean printConstraints) 
     {
         symbol = INIT_CHAR
         fs = INIT_CHAR
         transformMap(_stepsMapping)
         computeActionMap(model)
+        computeActionToExpr(model.actions)
         if(model.composition.isNullOrEmpty) {
             computeUnicodeMaps(model.templates)
             computeCompoundUnicodeMap
@@ -688,6 +715,7 @@ class ConstraintsStateMachineGenerator
                                                                 sequenceDefMap, 
                                                                 compoundUnicodeMap,
                                                                 listOfRegexes, 
+                                                                actionToExprMap,
                                                                 automataList, fs,
                                                                 text, _highlightedKeywords)
         constraintSMInst.setTemplateText(choiceText, pastText, futureText, pastFutureText, existentialText)

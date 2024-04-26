@@ -53,18 +53,18 @@ class ConstraintsValidator extends AbstractConstraintsValidator {
 	Set<Act> refAct = new HashSet<Act>
 	Set<RefStep> refStep = new HashSet<RefStep>
 	
-	@Check
-	def checkImportForValidity(Import imp){
-		if (! EcoreUtil2.isValidUri(imp, URI.createURI(imp.importURI))){
-			error("Invalid resource", imp, ConstraintsPackage.eINSTANCE.import_ImportURI)
-		} else {
-			val Resource r = EcoreUtil2.getResource(imp.eResource, imp.importURI)
-			val root = r.allContents.head
-			if (! (root instanceof Steps || root instanceof Constraints) )
-				error("The imported resource is not a valid step or constraints definition.", imp,
-					ConstraintsPackage.eINSTANCE.import_ImportURI)
-		}
-	}
+//	@Check
+//	def checkImportForValidity(Import imp){
+//		if (! EcoreUtil2.isValidUri(imp, URI.createURI(imp.importURI))){
+//			error("Invalid resource", imp, ConstraintsPackage.eINSTANCE.import_ImportURI)
+//		} else {
+//			val Resource r = EcoreUtil2.getResource(imp.eResource, imp.importURI)
+//			val root = r.allContents.head
+//			if (! (root instanceof Steps || root instanceof Constraints) )
+//				error("The imported resource is not a valid step or constraints definition.", imp,
+//					ConstraintsPackage.eINSTANCE.import_ImportURI)
+//		}
+//	}
 	
 	@Check
 	def checkActionData(Act act) {

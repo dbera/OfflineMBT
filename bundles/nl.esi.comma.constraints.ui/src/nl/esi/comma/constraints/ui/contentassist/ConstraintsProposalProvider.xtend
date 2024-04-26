@@ -877,6 +877,7 @@ class ConstraintsProposalProvider extends AbstractConstraintsProposalProvider {
 		acceptor.accept(createTemplate("Choice Constraint Group", prop, "Choice Constraint Group", 0, context, TEMPLATE_DEFAULT_PRIORITY+500, -1, -1))
 	}
 	
+	override
 	protected def createTemplate(String name, String content, String additionalInfo, Integer nrIndents,
 		ContentAssistContext context, int priority, int selection, int length) {
 		if (nrIndents == 0) {

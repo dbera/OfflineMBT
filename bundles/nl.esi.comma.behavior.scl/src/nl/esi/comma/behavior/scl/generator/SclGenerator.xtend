@@ -26,7 +26,7 @@ class SclGenerator extends AbstractGenerator {
 			var file = ResourcesPlugin.getWorkspace().getRoot().getFile(new Path(uri.toPlatformString(true)));
 			var srcGenPath = file.getLocation().toOSString;	
 			val String path = "\\Constraints\\"
-			var Map<String, ConstraintStateMachine> mapContraintToAutomata = (new ConstraintsStateMachineGenerator()).generateStateMachine(constraints, srcGenPath, "spec") // + path
+			var Map<String, ConstraintStateMachine> mapContraintToAutomata = (new ConstraintsStateMachineGenerator()).generateStateMachine(constraints, srcGenPath + path, "spec") // + path
 			(new ScenarioGenerator).generateTestScenarios(mapContraintToAutomata, constraints.actions, constraints, 1, fsa, path, "task-name", "dfs")
 		}
 	}

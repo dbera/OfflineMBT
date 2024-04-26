@@ -96,8 +96,13 @@ class ScenarioGenerator {
                 System.out.println("Incomplete: " + str + " - > " + newStrList)
             }*/
             
+            var acts = constraintSource.actions.head
+            var exprMap = mapContraintToAutomata.get(constraint).actExprMap
+            
             if(listOfStrList.size > 0) {
-                fsa.generateFile(path + "GeneratedFeatures\\" + constraint + ".feature", generateFeatureFile(constraint, stepModel, constraintSource, listOfStrList))    
+                fsa.generateFile(path + "GeneratedFeatures\\" + constraint + ".recipe", generateRecipe(constraint, acts, exprMap, listOfStrList))
+                fsa.generateFile(path + "GeneratedFeatures\\" + constraint + ".PSrecipe", generatePSInit(constraint, acts, exprMap, listOfStrList))
+                // fsa.generateFile(path + "GeneratedFeatures\\" + constraint + ".feature", generateFeatureFile(constraint, acts, listOfStrList))    
                 fsa.generateFile(path + "GeneratedFeatures\\" + constraint + ".statistics.txt", result.statistics)
             }
         }           
@@ -227,5 +232,47 @@ class ScenarioGenerator {
         }       
         return paths;
     }
-    
+
+    def generatePSInit(String constraint, Actions acts, Map<String, String> exprMap, ArrayList<List<String>> SCNList) {
+   		var idx = 0
+        var stepIdx = 0
+        
+	'''
+		«FOR stepList : SCNList»
+			fab_chip_recipe := 
+			ChipRecipe { 
+				lots = <map<int, Lot>> { 
+			«{idx++ ""}»
+			«{stepIdx = 1 ""}»
+			«FOR step : stepList SEPARATOR ''','''»
+						// «step»
+						«IF !step.equals("ANY") && exprMap.containsKey(step)»«exprMap.get(step).replaceAll("lot :=", stepIdx + " ->")»«ENDIF»
+				«{stepIdx++ ""}»
+			«ENDFOR»
+				}
+			}
+		«ENDFOR»
+	'''
+    }
+
+   def generateRecipe(String constraint, Actions acts, Map<String, String> exprMap, ArrayList<List<String>> SCNList) {
+        var idx = 0
+        var stepIdx = 0
+                
+        '''
+			Recipe-Name: «constraint»
+			
+			«FOR stepList : SCNList»
+				Recipe: «constraint»_«idx»
+				«{idx++ ""}»
+				«{stepIdx = 0 ""}»
+				«FOR step : stepList»
+						«IF !step.equals("ANY")»«step» «IF exprMap.containsKey(step)» : «exprMap.get(step)»«ENDIF»«ENDIF»
+					«{stepIdx++ ""}»
+				«ENDFOR»
+				
+			«ENDFOR»
+		'''
+    }
+
 }

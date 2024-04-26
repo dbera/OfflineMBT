@@ -17,13 +17,17 @@ import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.generator.IFileSystemAccess
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IFileSystemAccessExtension2
+import nl.esi.comma.constraints.constraints.Actions
+import nl.esi.comma.actions.generator.plantuml.ActionsUmlGenerator
 import nl.esi.comma.constraints.generator.visualize.ConstraintsDependencyVizGenerator
+import java.util.HashSet
 
 class ConstraintsAnalysisAndGeneration 
 {
 	var Map<String, ConstraintStateMachine> mapContraintToAutomata = new HashMap<String, ConstraintStateMachine>
 	var Map<String, String> stepsMapping = new HashMap<String, String>
 	// var Map<String, ArrayList<String>> seqsMapping = new HashMap<String, ArrayList<String>>
+	var Map<String, String> actionToExprMap = new HashMap<String, String>
 	
 	def generateStateMachine(Resource res, IFileSystemAccess2 fsa, 
 	                         List<Constraints> constraints, 
@@ -49,6 +53,7 @@ class ConstraintsAnalysisAndGeneration
 		    var stepModel = getStepModel(constraintsSource) 
             computeStepsMapping(stepModel)
             // computeSequenceMapping(constraintsSource)
+            computeActionToExpr(constraintsSource.actions)
 			// fsa.generateFile(path + "constraints.decl", generateDeclareConstraints(constraintsSource, stepModel))
             mapContraintToAutomata = (new ConstraintsStateMachineGenerator()).generateStateMachine(constraintsSource, stepsMapping, srcGenPath + path, taskName, fsa, isVisualize, printConstraints)
             
@@ -79,10 +84,10 @@ class ConstraintsAnalysisAndGeneration
             }
             // Generate Tests. 
             if(isTestGen) {
-               /*(new ScenarioGenerator).generateTestScenarios(mapContraintToAutomata, stepModel, 
+               (new ScenarioGenerator).generateTestScenarios(mapContraintToAutomata, stepModel, 
                                                 constraintsSource,
                                                 numSCN, getConfigurationTags(constraintsSource), 
-                                                getRequirementTags(constraintsSource), getDescTxt(constraintsSource), fsa, path, taskName, algorithm, scn)*/
+                                                getRequirementTags(constraintsSource), getDescTxt(constraintsSource), fsa, path, taskName, algorithm.toString().toLowerCase(), scn)
 
                 var TGReport = (new TestGenerator).generateTestScenarios(mapContraintToAutomata, stepModel, 
                                                 constraintsSource, numSCN, getDescTxt(constraintsSource), 
@@ -114,6 +119,19 @@ class ConstraintsAnalysisAndGeneration
 		if (stepModel instanceof Steps && stepModel !== null) {
 			for (act : stepModel.actionList.acts){
 				stepsMapping.put(act.name, act.stepWithOutData.name)
+			}
+		}
+	}
+	
+	def computeActionToExpr(List<Actions> acts) {
+		for (a : acts) {
+			for (elm : a.act) {
+				var ename = elm.name
+				for (p : elm.actParam) {
+					for (ia : p.initActions) {
+						actionToExprMap.put(ename, (new ActionsUmlGenerator().generateAction(ia)).toString)
+					}
+				}
 			}
 		}
 	}
@@ -152,7 +170,7 @@ class ConstraintsAnalysisAndGeneration
         }
         return pathPrefix
     }
-}	
+
 
     // asequences cannot be used for conformance checking
     /*def computeSequenceMapping(Constraints constraints) {
@@ -168,7 +186,7 @@ class ConstraintsAnalysisAndGeneration
     // TODO deprecate following two funcions. Has moved to test scenario generation.
 	// TODO this aggregates all tags in a given constraint file. Does not generate scenarios with specific tags.
 	// move this and specialize it for given a composition find set of tags
-	/*def getRequirementTags(Constraints constraintsSource) {
+	def getRequirementTags(Constraints constraintsSource) {
 	    var tagList = new HashSet<String>
 	    for(elm : constraintsSource.composition) {
             for(f : elm.tagStr)
@@ -189,7 +207,7 @@ class ConstraintsAnalysisAndGeneration
 	           tagList.add(f.name)
 	    }
 	    tagList
-	}*/
+	}
 	
 	/*def generateDeclareConstraints(Constraints model, Steps stepModel) 
 	{
@@ -286,4 +304,5 @@ class ConstraintsAnalysisAndGeneration
 		}
 		stepModel
 	}*/
+}
 
