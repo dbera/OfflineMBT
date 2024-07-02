@@ -17,6 +17,10 @@ public class Macros {
 		macros.get(macroChar).add(macro);
 	}
 	
+	public boolean has (Character macroChar) {
+		return this.macros.containsKey(macroChar);
+	}
+	
 	private void detectCycle(char macroChar, char[] macro) {
 		var stack = new ArrayDeque<ArrayDeque<Character>>();
 		stack.add(new ArrayDeque<>(Arrays.asList(macroChar)));

@@ -6,35 +6,47 @@ import "http://www.esi.nl/comma/signature/InterfaceSignature" as sig
 import "http://www.esi.nl/comma/types/Types" as types
 import "http://www.esi.nl/comma/expressions/Expression" as expr
 
-Product:
-	imports += Import*
-	'specification' name = ID '{'
-		//topology += Topology*
-		block += Block*
-		('environment-blocks' envBlock += [Block|ID]*)?
-		'depth-limits' limit = Int
-	'}'
-;
-
 @Override
 ModelContainer returns types::ModelContainer:
 	super::ModelContainer | Product
 ;
 
-Topology:
-	'Topology-Def' name = ID '{'
-		flow += Flow*
+Product:
+	imports += Import*
+	(namespace += NameSpace)*
+	( systemDecl = SystemDecl	
+	| specification = Specification)
+;
+
+@Override
+NamedElement returns types::NamedElement:
+	name=QualifiedName | SystemDecl
+;
+
+SystemDecl:
+	'system' 'declarations' name = ID '{'
+		block += Block*
+		// if it works, make it recursive
 	'}'
 ;
 
-Flow:
-	'input-connections' name = [Block|ID] '{'
-		varConn += VarConnection*		
+Specification:
+	'specification' name = ID '{'
+		blocks += Blocks+
+		('environment-blocks' envBlock += [Block|QualifiedName]*)?
+		'depth-limits' limit = Int
 	'}'
 ;
 
-VarConnection:
-	varRefLHS = VarMap '<-' varRefRHS = VarMap
+Blocks:
+	( block = Block
+	| refBlock = RefBlock
+	)
+;
+
+
+RefBlock:
+	'reference' 'system' system = [Block|QualifiedName]
 ;
 
 Block:
@@ -58,8 +70,6 @@ Update:
 	('with-inputs' fnInp += VarRef (',' fnInp+=VarRef)*  )?
 	('with-guard' guard=Expression)?
 	updateOutputVar += UpdateOutVar*
-	// ('updates' act = ActionList)?
-	// ('produces-outputs'  fnOut += VarRef (',' fnOut+=VarRef)*)?
 ;
 
 UpdateOutVar:
@@ -81,89 +91,4 @@ DataConstraints:
 
 Constraint:
 	name=ID ':' symbExpr=Expression
-;
-
-VarMap:
-	blockRef = [Block|ID] '.' varRef = [expr::Variable|ID] 
-;
-
-
-/////////DEPRECATE//////////////
-/*
- * 		outIn += OutInConnector*
-		moutIn += MOutInConnector*
- 
- * 		('in' input += BInput*)?
-		('out' output += BOutput*)?
-		('mat-in' matIn += MInput*)?
-		('mat-out' matOut += MOutput*)?
-		operation += Operation*
- 
- */
-
-Operation:
-	'op' name=ID '{'
-		io += OpConnector*
-	'}'
-;
-
-
-MInOutConnector:
-	sbid = BlockMIn '->' tbid = BlockMOut
-;
-
-MOutInConnector:
-	sbid = BlockMOut '->' tbid = BlockMIn
-;
-
-BlockMIn:
-	'mat' bid = [Block|ID] '.' bin = [MInput|ID]
-;
-
-BlockMOut:
-	'mat' bid = [Block|ID] '.' bout = [MOutput|ID]
-;
-
-OpConnector:
-	name = ID '{' opPrefix += OpPrefix* '}' '->' '{' opPostFix += OpPostFix* '}'
-;
-
-OpPrefix:
-	BlockMIn | BlockIn
-;
-
-OpPostFix:
-	BlockMOut | BlockOut
-;
-
-InOutConnector:
-	sbid = BlockIn '->' tbid = BlockOut
-;
-
-OutInConnector:
-	sbid = BlockOut '->' tbid = BlockIn
-;
-
-BlockIn:
-	'data' bid = [Block|ID] '.' bin = [BInput|ID]
-;
-
-BlockOut:
-	'data' bid = [Block|ID] '.' bout = [BOutput|ID]
-;
-
-BInput:
-	name=ID
-;
-
-BOutput:
-	name=ID
-;
-
-MInput:
-	name=ID
-;
-
-MOutput:
-	name=ID
 ;

@@ -1,0 +1,58 @@
+grammar nl.esi.comma.steps.Step with org.eclipse.xtext.common.Terminals //nl.esi.comma.expressions.Expression
+
+generate step "http://www.esi.nl/comma/steps/Step"
+
+// import "http://www.esi.nl/comma/expressions/Expression" as expr
+// import "http://www.esi.nl/comma/types/Types" as types
+
+Steps:{Steps}
+	imports += Import* // for now we assume only one configuration file.
+	(featureList = FeatureList)? // this should be optional
+	actionList = ActionsList
+;
+
+Import:
+    'import' importURI = STRING
+;
+
+/* @Override
+ModelContainer returns types::ModelContainer:
+	super::ModelContainer | Steps
+;*/
+
+FeatureList: {FeatureList} 
+	'feature-list' '{'
+		featureList += FeatureTag*
+	'}'
+;
+
+FeatureTag:
+	name = ID
+;
+
+ActionsList:
+    'action-list:' '{'
+        acts += StepAction+
+    '}'
+;
+
+StepAction:
+	(act = ActionType)?
+    name = ID
+    ('{' label += StepType+ '}')?
+    ('{' text += STRING '}')?
+    ('{' stepWithOutData = StepAction '}')?
+    ('{' data += StepData (',' data += StepData)* '}')?
+;
+
+StepData:
+	key = STRING ':' value = STRING
+;
+
+enum ActionType:
+	Trigger = 'Trigger' | Observable = 'Observable' | PreCondition = 'Pre-condition'
+;
+
+enum StepType:
+	Given = 'Given' | When = 'When' | Then = 'Then' | And = 'And'
+;

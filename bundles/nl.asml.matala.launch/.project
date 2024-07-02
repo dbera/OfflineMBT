@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<projectDescription>
+	<name>nl.asml.matala.launch</name>
+	<comment></comment>
+	<projects>
+		<project>nl.asml.matala.product</project>
+		<project>nl.esi.comma.actions</project>
+		<project>nl.esi.comma.behavior</project>
+		<project>nl.esi.comma.behavior.scl</project>
+		<project>nl.esi.comma.expressions</project>
+		<project>nl.esi.comma.inputspecification</project>
+		<project>nl.esi.comma.product.standard</project>
+		<project>nl.esi.comma.project.standard.standalone</project>
+		<project>nl.esi.comma.signature</project>
+		<project>nl.esi.comma.testspecification</project>
+		<project>nl.esi.comma.types</project>
+	</projects>
+	<buildSpec>
+		<buildCommand>
+			<name>org.eclipse.xtext.ui.shared.xtextBuilder</name>
+			<arguments>
+			</arguments>
+		</buildCommand>
+	</buildSpec>
+	<natures>
+		<nature>org.eclipse.xtext.ui.shared.xtextNature</nature>
+	</natures>
+</projectDescription>

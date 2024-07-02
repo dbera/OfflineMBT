@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script>window.data = "%CAUSAL_GRAPH%"</script>
+        <script src="https://visjs.github.io/vis-network/standalone/umd/vis-network.min.js"></script>
+        <script>
+            function loadData() {
+                var nodes = new vis.DataSet(Object.keys(window.data.graph.nodes).map(function(key) { 
+                    var node = window.data.graph.nodes[key];
+                    var label = node.actionName;
+                    var title = node.actionName + "\n";
+                    if (node.data.length > 0) {
+                    	title += "data : ";
+                    	for (var i = 0; i < node.data.length; i++) {
+                    		for (var j = 0; j < node.data[i].dataMap.length; j++) {
+                    			title += "[" + node.data[i].dataMap[j].key +":"+ node.data[i].dataMap[j].value +"]"+ "\n";
+                    		}
+                    	}
+                    }
+                    if (node.productSet.length > 0) {
+                    	title += "product-set : [ ";
+                    	for (var i = 0; i < node.productSet.length; i++) {
+                    		title += node.productSet[i] + " ";
+                    	}
+                    	title += "]";
+                    }
+                    
+                    return {label: label, id: key, title: title, color: '#8FFC7A'};
+                }));
+
+                var edges = new vis.DataSet(window.data.graph.edges.map(function (edge) {
+                	var title = "";
+                	if (edge.productSet.length > 0) {
+                		title += "product-set : [ ";
+                    	for (var i = 0; i < edge.productSet.length; i++) {
+                    		title += edge.productSet[i] + " ";
+                    	}
+                    	title += "]";
+                	}
+                	return {from: edge.source, to: edge.target, arrows: 'to', title: title, color: '#8FFC7A'};
+                    
+                }));
+
+                var container = document.getElementById("network");
+                var data = {nodes: nodes, edges: edges};
+                var options = {};
+                var network = new vis.Network(container, data, options);
+                network.on("stabilizationIterationsDone", function () {
+                    network.setOptions({physics: false});
+                });
+            }
+        </script>
+    </head>
+    <body onload="loadData();">
+        <div id="network" style="position: absolute; width: 98%;height: 98%"></div>
+    </body>
+</html>

@@ -17,9 +17,8 @@ import nl.asml.matala.product.product.VarRef
 import nl.asml.matala.product.product.Block
 import java.util.Map
 import nl.esi.comma.types.types.RecordTypeDecl
-//import org.eclipse.core.resources.ResourcesPlugin
-import org.eclipse.core.runtime.Path
 import java.util.HashSet
+import org.eclipse.xtext.xbase.lib.Pair
 
 /**
  * Generates code from your *.ps model files on save.
@@ -27,225 +26,74 @@ import java.util.HashSet
  
 class ProductGenerator extends AbstractGenerator {
 	
-	var connections = new ArrayList<MapBlockPort>
-	
 	override void doGenerate(Resource resource, IFileSystemAccess2 fsa, IGeneratorContext context) {
 		var prod = resource.allContents.head
 		if(prod instanceof Product) {
-			generatePetriNet(prod,resource,fsa)
+			if (prod.specification !== null) {
+				generatePetriNet(prod,resource,fsa)
+			}
 		}
 	}
 	
 	def generatePetriNet(Product prod, Resource resource, IFileSystemAccess2 fsa) 
 	{	
 		var dataGetterTxt = (new TypesGenerator).generatePythonGetters(prod,resource)
-		var methodTxt = ''''''
-		
 		var pnet = new PetriNet
+		var methodTxt = ''''''		
+
 		var inout_places = new ArrayList<String>
 		var init_places = new ArrayList<String>
-		var map_output_input = new HashMap<String, List<String>>
-		var init_place_expression_map = new HashMap<String, List<String>>
 		
-		var depth_limit = prod.limit 
-
-		/*for(t : prod.topology) {
-			for(f : t.flow) {
-				for(conn : f.varConn) {
-					var src = conn.varRefLHS.blockRef.name + "_" + conn.varRefLHS.varRef.name
-					var dst = conn.varRefRHS.blockRef.name + "_" + conn.varRefRHS.varRef.name
-					if(map_output_input.keySet.contains(dst)) {
-						map_output_input.get(dst).add(src)
-					} else {
-						var lst = new ArrayList
-						lst.add(src)
-						map_output_input.put(dst,lst)
-					}
-				}	
-			}	
-		}*/
+		var depth_limit = prod.specification.limit 
 		
-		// parse each block to derive places and transitions
-		for(block : prod.block) {
-			// populate list of places
-			/* 23.01.24 */
-			for(invar : block.invars) {
-				// System.out.println(" Debug: " + invar.name)
-				// pnet.places.add(new Place(block.name, block.name+"_"+invar.name, PType.IN, invar.type.type))
-				pnet.places.add(new Place(block.name, invar.name, PType.IN, invar.type.type))
+		for(b : prod.specification.blocks) {
+			var Block block = null
+			// if it works make it recursive
+			if (b.block !== null) {
+				block = b.block
 			}
-			// since we will use the map_output_input to map directly to an input place while creating outgoing arcs
-			/* 23.01.24 */ // uncommented
-			for(outvar : block.outvars) {
-				pnet.places.add(new Place(block.name, outvar.name, PType.OUT, outvar.type.type))
+			if (b.refBlock !== null) {
+				block = b.refBlock.system
 			}
-			/* 23.01.24 */
-			for(localvar : block.localvars) {
-				// pnet.places.add(new Place(block.name, block.name+"_"+localvar.name, PType.LOCAL, localvar.type.type))
-				// pnet.internal_places.add(new Place(block.name, block.name+"_"+localvar.name, PType.LOCAL, localvar.type.type))
-				pnet.places.add(new Place(block.name, localvar.name, PType.LOCAL, localvar.type.type))
-				pnet.internal_places.add(new Place(block.name, localvar.name, PType.LOCAL, localvar.type.type))
-				// TODO add as class members in python class of this block
-			}
-			
-			//val (String) => String func = [s|block.name+"_"+s]
-			val (String) => String func = [s|s]
-						
-			for(act : block.initActions) {
-				System.out.println(" Init-Action LHS: " + SnakesHelper.action(act, func, "").split("=",2).get(0))
-				System.out.println(" Init-Action RHS: " + SnakesHelper.action(act, func, "").split("=",2).get(1))
-				
-				pnet.add_to_init_place_expression_map(
-					SnakesHelper.action(act, func,"").split("=",2).get(0), 
-					SnakesHelper.action(act, func,"").split("=",2).get(1)
-				)
-			}
-			
-			// populate transitions
-			for(f : block.functions) {
-				System.out.println(" Function-name: " + f.name)
-				for(update : f.updates) 
-				{
-					System.out.println("  > case: " + update.name)
-					var tname = f.name + "_" + update.name
-					var tr = new Transition(block.name, block.name+"_"+tname)
-					pnet.transitions.add(tr)
-					var input_var_list = new HashMap<String,TypeDecl> // ArrayList<String>
-					for(v : update.fnInp) 
-					{
-						// place is already added before
-						System.out.println("	> in-var-name: " + block.name + "_"+ v.ref.name)
-						//if(v.opt) inout_places.add(block.name+"_"+v.ref.name)
-						//if(v.init) init_places.add(block.name+"_"+v.ref.name)
-						
-						/* commenting out the use of opt and init places: 17.02.2024 */
-						/* if(v.opt) inout_places.add(v.ref.name)
-						if(v.init) init_places.add(v.ref.name) */
-						
-						/* 23.01.24 */
-						//input_var_list.put(block.name+"_"+v.ref.name, v.ref.type.type)
-						input_var_list.put(v.ref.name, v.ref.type.type)
-						pnet.add_input_arc(tr.name, v.ref.name)
-						/* 23.01.24 */
-						// pnet.add_expression(tr.name, block.name + "_" + v.ref.name, 
-						//						"Variable('v_" + block.name+"_" + v.ref.name + "')", PType.IN)
-						pnet.add_expression(tr.name, v.ref.name, 
-												"Variable('v_" + v.ref.name + "')", PType.IN, getConstraintTxt(v))
-					}
-					if(update.guard!==null) {
-						val (String) => String fn = [s|"json.loads(v_"+s+", object_pairs_hook=Data().int_keys)"]
-						System.out.println("	> guard: " + SnakesHelper.expression(update.guard, fn))
-						pnet.add_guard_expression(tr.name, "Expression('" + SnakesHelper.expression(update.guard, fn) + "')")	
-					}
-					if(update.updateOutputVar!==null) 
-					{
-						var isActionsPresent = false
-						for(outvar : update.updateOutputVar) 
-						{
-							/*var decTxt = 
-							'''
-								«FOR v : outvar.hiddenVars»
-									«v.name» = «SnakesHelper.defaultValue(v.type.type)»
-								«ENDFOR»
-							'''*/
-							var actTxt = ''''''
-							
-							isActionsPresent = false
-							if(outvar.act !== null) 
-							{
-								isActionsPresent = true // flag true: actions are present!
-								for(a : outvar.act.actions) 
-								{ 
-									System.out.println("	> act: " + SnakesHelper.action(a, func,""))
-									actTxt +=
-									'''
-									    «SnakesHelper.action(a, func, "")»
-									'''
-								}
-							}
-							for(v : outvar.fnOut) 
-							{
-								// logic for parsing output variables to Petri net places, arcs and their expressions
-								var place = new String
-								if(isActionsPresent)
-									place = parseOutVariablesWithActions(block, map_output_input, 
-											v, tr, pnet, f.name+"_"+update.name, input_var_list)
-								else
-									place = parseOutputVariables(block, map_output_input, v, tr, pnet)
-								
-								if(outvar.assert) pnet.add_to_map_transition_assertions(tr.name, place)
-								
-								var methodDef = 
-								'''
-									@staticmethod
-									def execute_«f.name»_«update.name»_«place»(«FOR elm : input_var_list.keySet SEPARATOR ''','''»«elm»«ENDFOR»):
-										«actTxt»
-										«IF v.ref.type.type instanceof RecordTypeDecl»
-											return json.dumps(«v.ref.name»)
-										«ELSE»
-											return «v.ref.name»
-										«ENDIF»
-								'''
-								if(!actTxt.isEmpty) methodTxt += methodDef.trim + "\n\n"
-							}
-						}
-					}
-				}
-			}
+			// parse each block to derive places and transitions
+			var tuple = populatePetriNet(pnet, block)
+			pnet = tuple.key
+			methodTxt += tuple.value		
 		}
 		
-		fsa.generateFile(prod.name + '_model.plantuml', pnet.toPlantUML(pnet, false))
-		fsa.generateFile(prod.name + '_system.plantuml', pnet.toPlantUML(pnet, true))
 		
-		// identify inout places and make all arcs to and from it, bi-directional
-		/* commenting out the use of opt and init places: 17.02.2024 */
-		/*for(place : inout_places) {
-			for(t : pnet.input_arcs.keySet) {
-				for(p : pnet.input_arcs.get(t)) {
-					if(place.equals(p)) {
-						pnet.add_output_arc(t,p)
-						//pnet.add_expression(t, p, "Expression('1')", PType.OUT)
-						pnet.add_expression(t, p, "Expression(\""+ "v_" + p +"\")", PType.OUT)
-					}	
-				}
-			}
-			for(t : pnet.output_arcs.keySet) {
-				for(p : pnet.output_arcs.get(t)) {
-					if(place.equals(p)) {
-						pnet.add_input_arc(t,p)
-						pnet.add_expression(t, p, "Variable('v_" + p + "')", PType.IN)
-					}	
-				}
-			}
-		}*/
+		fsa.generateFile(prod.specification.name + '_model.plantuml', pnet.toPlantUML(pnet, false))
+		fsa.generateFile(prod.specification.name + '_system.plantuml', pnet.toPlantUML(pnet, true))
 		
 		pnet.display
 		
-		// if(!prod.topology.isEmpty)
 		if(true)
 		{
 			var listOfEnvBlocks = new ArrayList<String>
-			for(b : prod.envBlock) listOfEnvBlocks.add(b.name)
+			for(b : prod.specification.envBlock) listOfEnvBlocks.add(b.name)
 			
 			var listOfAssertTransitions = new ArrayList<String>
-			for(b : prod.block) {
-				for(f : b.functions) {
-					for(u : f.updates) {
-						for(fi : u.fnInp) {
-							if(fi.dataConstraints !== null) listOfAssertTransitions.add(b.name+"_" + f.name + "_" + u.name)
-						}
-						for(ovar : u.updateOutputVar) {
-							for(fo : ovar.fnOut) {
-								if(fo.dataConstraints !== null) listOfAssertTransitions.add(b.name+"_" + f.name + "_" + u.name)
+			for(b : prod.specification.blocks) {
+				if (b.block !== null) {
+					val block = b.block
+					for(f : block.functions) {
+						for(u : f.updates) {
+							for(fi : u.fnInp) {
+								if(fi.dataConstraints !== null) listOfAssertTransitions.add(block.name+"_" + f.name + "_" + u.name)
+							}
+							for(ovar : u.updateOutputVar) {
+								for(fo : ovar.fnOut) {
+									if(fo.dataConstraints !== null) listOfAssertTransitions.add(block.name+"_" + f.name + "_" + u.name)
+								}
 							}
 						}
 					}
 				}
 			}
+			var name = prod.specification.name
+			fsa.generateFile(name + '.py', pnet.toSnakes(name, name, listOfEnvBlocks, listOfAssertTransitions, inout_places, init_places, depth_limit))
 			
-			fsa.generateFile(prod.name + '.py', pnet.toSnakes(prod.name, prod.name, listOfEnvBlocks, listOfAssertTransitions, inout_places, init_places, depth_limit))
-			
-			fsa.generateFile(prod.name + '_Simulation.py', pnet.toSnakesSimulation)
+			fsa.generateFile(name + '_Simulation.py', pnet.toSnakesSimulation)
 				
 			var data_container_class = 
 			'''
@@ -269,9 +117,9 @@ class ProductGenerator extends AbstractGenerator {
 				«dataGetterTxt»
 				«methodTxt»
 			'''
-			fsa.generateFile(prod.name + '_data.py', data_container_class)
+			fsa.generateFile(name + '_data.py', data_container_class)
 			
-			fsa.generateFile(prod.name + '_TestSCN.py', generateTestSCNTxt)
+			fsa.generateFile(name + '_TestSCN.py', generateTestSCNTxt)
 			
 			// execute python code
 			// val relativeFile = fsa.getURI(prod.name + '.py')
@@ -279,6 +127,137 @@ class ProductGenerator extends AbstractGenerator {
 			// System.out.println("Path-to-generated-python-file: " +  path)
 			// var p = Runtime.getRuntime().exec("python " + path);
 		}
+	}
+	
+	def Pair<PetriNet,String> populatePetriNet(PetriNet pnet, Block block) {
+		var methodTxt = ''''''		
+		var map_output_input = new HashMap<String, List<String>>
+		// populate list of places
+		/* 23.01.24 */
+		for(invar : block.invars) {
+			// System.out.println(" Debug: " + invar.name)
+			// pnet.places.add(new Place(block.name, block.name+"_"+invar.name, PType.IN, invar.type.type))
+			pnet.places.add(new Place(block.name, invar.name, PType.IN, invar.type.type))
+		}
+		// since we will use the map_output_input to map directly to an input place while creating outgoing arcs
+		/* 23.01.24 */ // uncommented
+		for(outvar : block.outvars) {
+			pnet.places.add(new Place(block.name, outvar.name, PType.OUT, outvar.type.type))
+		}
+		/* 23.01.24 */
+		for(localvar : block.localvars) {
+			// pnet.places.add(new Place(block.name, block.name+"_"+localvar.name, PType.LOCAL, localvar.type.type))
+			// pnet.internal_places.add(new Place(block.name, block.name+"_"+localvar.name, PType.LOCAL, localvar.type.type))
+			pnet.places.add(new Place(block.name, localvar.name, PType.LOCAL, localvar.type.type))
+			pnet.internal_places.add(new Place(block.name, localvar.name, PType.LOCAL, localvar.type.type))
+			// TODO add as class members in python class of this block
+		}
+		
+		//val (String) => String func = [s|block.name+"_"+s]
+		val (String) => String func = [s|s]
+					
+		for(act : block.initActions) {
+			System.out.println(" Init-Action LHS: " + SnakesHelper.action(act, func, "").split("=",2).get(0))
+			System.out.println(" Init-Action RHS: " + SnakesHelper.action(act, func, "").split("=",2).get(1))
+			
+			pnet.add_to_init_place_expression_map(
+				SnakesHelper.action(act, func,"").split("=",2).get(0), 
+				SnakesHelper.action(act, func,"").split("=",2).get(1)
+			)
+		}
+		
+		// populate transitions
+		for(f : block.functions) {
+			System.out.println(" Function-name: " + f.name)
+			for(update : f.updates) 
+			{
+				System.out.println("  > case: " + update.name)
+				var tname = f.name + "_" + update.name
+				var tr = new Transition(block.name, block.name+"_"+tname)
+				pnet.transitions.add(tr)
+				var input_var_list = new HashMap<String,TypeDecl> // ArrayList<String>
+				for(v : update.fnInp) 
+				{
+					// place is already added before
+					System.out.println("	> in-var-name: " + block.name + "_"+ v.ref.name)
+					//if(v.opt) inout_places.add(block.name+"_"+v.ref.name)
+					//if(v.init) init_places.add(block.name+"_"+v.ref.name)
+					
+					/* commenting out the use of opt and init places: 17.02.2024 */
+					/* if(v.opt) inout_places.add(v.ref.name)
+					if(v.init) init_places.add(v.ref.name) */
+					
+					/* 23.01.24 */
+					//input_var_list.put(block.name+"_"+v.ref.name, v.ref.type.type)
+					input_var_list.put(v.ref.name, v.ref.type.type)
+					pnet.add_input_arc(tr.name, v.ref.name)
+					/* 23.01.24 */
+					// pnet.add_expression(tr.name, block.name + "_" + v.ref.name, 
+					//						"Variable('v_" + block.name+"_" + v.ref.name + "')", PType.IN)
+					pnet.add_expression(tr.name, v.ref.name, 
+											"Variable('v_" + v.ref.name + "')", PType.IN, getConstraintTxt(v))
+				}
+				if(update.guard!==null) {
+					val (String) => String fn = [s|"json.loads(v_"+s+", object_pairs_hook=Data().int_keys)"]
+					System.out.println("	> guard: " + SnakesHelper.expression(update.guard, fn))
+					pnet.add_guard_expression(tr.name, "Expression('" + SnakesHelper.expression(update.guard, fn) + "')")	
+				}
+				if(update.updateOutputVar!==null) 
+				{
+					var isActionsPresent = false
+					for(outvar : update.updateOutputVar) 
+					{
+						/*var decTxt = 
+						'''
+							«FOR v : outvar.hiddenVars»
+								«v.name» = «SnakesHelper.defaultValue(v.type.type)»
+							«ENDFOR»
+						'''*/
+						var actTxt = ''''''
+						
+						isActionsPresent = false
+						if(outvar.act !== null) 
+						{
+							isActionsPresent = true // flag true: actions are present!
+							for(a : outvar.act.actions) 
+							{ 
+								System.out.println("	> act: " + SnakesHelper.action(a, func,""))
+								actTxt +=
+								'''
+								    «SnakesHelper.action(a, func, "")»
+								'''
+							}
+						}
+						for(v : outvar.fnOut) 
+						{
+							// logic for parsing output variables to Petri net places, arcs and their expressions
+							var place = new String
+							if(isActionsPresent)
+								place = parseOutVariablesWithActions(block, map_output_input, 
+										v, tr, pnet, f.name+"_"+update.name, input_var_list)
+							else
+								place = parseOutputVariables(block, map_output_input, v, tr, pnet)
+							
+							if(outvar.assert) pnet.add_to_map_transition_assertions(tr.name, place)
+							
+							var methodDef = 
+							'''
+								@staticmethod
+								def execute_«f.name»_«update.name»_«place»(«FOR elm : input_var_list.keySet SEPARATOR ''','''»«elm»«ENDFOR»):
+									«actTxt»
+									«IF v.ref.type.type instanceof RecordTypeDecl»
+										return json.dumps(«v.ref.name»)
+									«ELSE»
+										return «v.ref.name»
+									«ENDIF»
+							'''
+							if(!actTxt.isEmpty) methodTxt += methodDef.trim + "\n\n"
+						}
+					}
+				}
+			}
+		}
+		return new Pair(pnet, methodTxt)
 	}
 	
 	
@@ -823,6 +802,8 @@ class PetriNet {
 	
 	def toSnakesSimulation() {
 		'''
+		import json
+		
 		def simulate(n):
 		    stop = False
 		    while not stop:
@@ -841,7 +822,8 @@ class PetriNet {
 		                print(' Enabled-transition-name: ', t)
 		                print('    # with-input-modes: ')
 		                for key, value in mode.dict().items():
-		                    print('      - var: ', key, '  ->  value:', value)
+		                    json_data = json.loads(value)
+		                    print('      - var: ', key, '  ->  value:\n', json.dumps(json_data, indent=2))
 		                # print('     > with mode: ', mode.dict())
 		
 		        # print(enabled_transition_modes)
@@ -856,10 +838,13 @@ class PetriNet {
 		                choices[idx] = key, elm
 		                idx = idx + 1
 		
-		        for k, v in choices.items():
+		        for k1, v1 in choices.items():
 		            print('\n')
 		            print('Possible-choices: ')
-		            print('    + choice: ', k, ' with-mode: ', v)
+		            print('    + choice: ', k1, ':')
+		            for k2, v2 in v1[1].items():
+		                json_data = json.loads(v2)
+		                print('    + key: ', k2, ' with-mode:\n', json.dumps(json_data, indent=2))
 		
 		        if not dead_marking:
 		            print('\n')
@@ -873,7 +858,9 @@ class PetriNet {
 		            print('\n')
 		            print(' Resulting Marking: ')
 		            for k in n.get_marking():
-		                print('    + Place: ', k, ' has Token: ', n.get_marking()[k])
+		                ms = n.get_marking()[k]
+		                json_data = json.loads(ms.items()[0])
+		                print('    + Place: ', k, ' has Token:\n', json.dumps(json_data, indent=2))
 		            print('****************************************************************')
 		            # self.generatePlantUML(n, True)
 		        else:

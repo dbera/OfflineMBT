@@ -1,0 +1,30 @@
+grammar nl.esi.comma.systemconfig.Configuration with nl.esi.comma.expressions.Expression
+
+generate configuration "http://www.esi.nl/comma/systemconfig/Configuration"
+
+import "http://www.esi.nl/comma/expressions/Expression" as expr
+import "http://www.esi.nl/comma/types/Types" as types
+
+FeatureDefinition: {FeatureDefinition}
+    imports += Import*
+	('Feature-list' '{'
+		features += Variable+
+	'}')?
+	configurations += Configuration*
+;
+
+@Override
+ModelContainer returns types::ModelContainer:
+	super::ModelContainer | FeatureDefinition
+;
+
+Configuration:
+	'Configuration' name = ID '{'
+		(featureList += [expr::Variable | ID] (',' featureList += [expr::Variable | ID])*)?
+		fList += Feature*
+	'}'
+;
+
+Feature:
+    'feature' exp = Expression
+;

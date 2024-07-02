@@ -6,6 +6,7 @@ Bundle-Version: 4.2.0.qualifier
 Automatic-Module-Name: nl.esi.comma.automata
 Bundle-RequiredExecutionEnvironment: JavaSE-11
 Export-Package: dk.brics.automaton,
- nl.esi.comma.automata
+ nl.esi.comma.automata,
+ nl.esi.comma.automata.internal
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: .

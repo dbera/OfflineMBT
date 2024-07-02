@@ -5,10 +5,50 @@ generate standardProject "http://www.esi.nl/comma/project/standard/StandardProje
 Project:
 	'Project' name = ID 
 	'{'
-		'Generate' 'test-documentation' '{'
-			taskname = ID '{'
-				'test-specification-file' tspec = STRING
-			'}'
+		(
+			products += Product
+		|	statemachines += StateMachineGenerationBlock
+		)*
+	'}'
+;
+
+Product:
+	'Generate' 'product' '{'
+		taskname = ID '{'
+			'product-file' product = STRING
 		'}'
 	'}'
+;
+
+StateMachineGenerationBlock:
+	'Conformance-Coverage-And-Test-Generation' '{'
+		taskname = ID '{'
+			'constraints' ('files' constraintsFiles += STRING+ | 'directories' constraintsDirs += FilePath+)
+			(visualizeSM ?= 'visualize-constraints')?
+			(printConstraints ?= 'print-constraints')?
+			(testGen = TestGeneration)?
+			('use-scenario-file:' scenarioFile = STRING)?
+			(checkCoCo ?= 'check-conformance-and-coverage')?
+		'}'
+	'}'
+;
+
+TestGeneration:
+    'generate-test-scenarios' (numSCN = Int)? 'with-strategy' 
+            (algorithmPrefixSuffix ?= 'prefix-suffix' 
+            | algorithmPrefixSuffixMinimized ?= 'prefix-suffix-minimized'
+            | algorithmPrefix ?= 'prefix' 
+            | algorithmPrefixMinimized ?= 'prefix-minimized' 
+            | algorithmDfs ?= 'dfs' | algorithmBfs ?= 'bfs') ('{' (
+                    ('k:' k = Int)? &
+                    ('timeout:' timeout = Int)? &
+                    ('similarity-threshold(0-100):' similarity = Int)? &
+                    (skipDuplicateSelfLoop?='skip-duplicate-self-loop')? &
+                    (skipSelfLoop?='skip-self-loop')? &
+                    (skipAny?='skip-any')?
+                ) '}')?
+;
+
+FilePath:
+	path = STRING
 ;

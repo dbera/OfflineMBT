@@ -534,21 +534,21 @@
 		 <extension
 	     point="org.eclipse.debug.ui.launchShortcuts">
 		  <shortcut
-		        class="nl.esi.comma.project.standard.ui.StandardProjectExecutableExtensionFactory:nl.esi.comma.project.ui.handler.MonitorLaunchShortcut"
+		        class="nl.esi.comma.project.standard.ui.StandardProjectExecutableExtensionFactory:nl.esi.comma.project.standard.ui.handler.LaunchShortcut"
 		        icon="platform:/plugin/nl.esi.comma.project.ui/icons/comma_poosl_simulation.png"
 		        id="nl.esi.comma.launchShortcut.monitor"
-		        label="ComMA Generation and Monitoring"
+		        label="MBT Project Generation"
 		        modes="run,debug">
 		     <configurationType
 		           id="nl.esi.poosl.rotalumisclient.PooslLaunchConfiguration">
 		     </configurationType>
 		     <contextualLaunch>
 		        <contextLabel
-		              label="ComMA Generation and Monitoring"
+		      		  label="MBT Project Generation"
 		              mode="run">
 		        </contextLabel>
 		        <contextLabel
-		              label="ComMA Generation and Monitoring"
+			          label="MBT Project Generation"
 		              mode="debug">
 		        </contextLabel>
 		        <enablement>

@@ -12,7 +12,7 @@ import org.eclipse.xtext.scoping.IScope;
 import org.eclipse.xtext.scoping.Scopes;
 
 import nl.asml.matala.product.product.ProductPackage;
-import nl.asml.matala.product.product.VarMap;
+//import nl.asml.matala.product.product.VarMap;
 import nl.esi.comma.expressions.expression.Variable;
 
 /**
@@ -39,15 +39,16 @@ public class ProductScopeProvider extends AbstractProductScopeProvider {
 			return scope_BlockMOut(ctx, ref);
 		} 
 		else*/ 
-		if (ctx instanceof VarMap && 
-				ref == ProductPackage.Literals.VAR_MAP__VAR_REF) {
-			return scope_VarConn(ctx, ref);
-		}
+//		if (ctx instanceof VarMap && 
+//				ref == ProductPackage.Literals.VAR_MAP__VAR_REF) {
+//			return scope_VarConn(ctx, ref);
+//		}
 		/*else if (ctx instanceof ExpressionVariable && 
 				ref == ProductPackage.Literals.EXPRESSION_VARIABLE__BVARIABLE) {
 			return scope_variable(ctx, ref);
 		}*/
-		else return super.getScope(ctx, ref);
+//		else 
+		return super.getScope(ctx, ref);
 	}
 
 	/*IScope scope_variable(EObject context, EReference ref) {
@@ -61,16 +62,16 @@ public class ProductScopeProvider extends AbstractProductScopeProvider {
 		return super.getScope(context, ref);
 	}*/
 	
-	IScope scope_VarConn(EObject ctx, EReference ref) {
-		var outputList = new ArrayList<Variable>();
-		outputList.addAll(EcoreUtil2.
-			<VarMap>getContainerOfType(ctx, VarMap.class)
-				.getBlockRef().getInvars());
-		outputList.addAll(EcoreUtil2.
-				<VarMap>getContainerOfType(ctx, VarMap.class)
-					.getBlockRef().getOutvars());
-		return Scopes.scopeFor(outputList);
-	}
+//	IScope scope_VarConn(EObject ctx, EReference ref) {
+//		var outputList = new ArrayList<Variable>();
+//		outputList.addAll(EcoreUtil2.
+//			<VarMap>getContainerOfType(ctx, VarMap.class)
+//				.getBlockRef().getInvars());
+//		outputList.addAll(EcoreUtil2.
+//				<VarMap>getContainerOfType(ctx, VarMap.class)
+//					.getBlockRef().getOutvars());
+//		return Scopes.scopeFor(outputList);
+//	}
 	
 	/*IScope scope_BlockOut(EObject ctx, EReference ref) {
 		var outputList = EcoreUtil2.

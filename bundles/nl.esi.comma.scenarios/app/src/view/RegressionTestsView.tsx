@@ -1,0 +1,68 @@
+import React from 'react';
+import RegressionTest from '../model/RegressionTest';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import Paper from '@mui/material/Paper';
+import * as Constant from '../model/Constants';
+import FullDialog from './FullDialog';
+interface IRegressionTestProps {
+    regressionTests: RegressionTest[];
+}
+type RegressionTestState = {
+    isOpen: boolean;
+    content: string;
+}
+class RegressionTestsView extends React.Component<IRegressionTestProps, RegressionTestState> {
+    constructor(props:IRegressionTestProps){
+        super(props);
+        this.state = {
+            isOpen: false,
+            content: ''
+        };
+    }
+
+    render(): React.ReactNode {
+        const handleClickOpen = (open: boolean, content: string) => () => {
+            this.setState({ ...this.state, ['isOpen']: open , ['content'] : content});
+        };
+        return (
+            <div style={{ display: "block", padding: 80, width: '100%' }}>
+                <TableContainer component={Paper}>
+                <Table style={{width: '100%'}} size="small">
+                    <TableHead>
+                        <Constant.StyledTableRow>
+                            <Constant.StyledTableCell>Index</Constant.StyledTableCell>
+                            <Constant.StyledTableCell width="35%">Scenario Name</Constant.StyledTableCell>
+                            <Constant.StyledTableCell width="15%">Configuration</Constant.StyledTableCell>
+                            <Constant.StyledTableCell width="30%">Reason</Constant.StyledTableCell>
+                            <Constant.StyledTableCell>FilePath</Constant.StyledTableCell>
+                        </Constant.StyledTableRow>
+                    </TableHead>
+                    <TableBody>
+                    {
+                        this.props.regressionTests.map((test, index) => (
+                            <Constant.StyledTableRow key={index} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+                                <Constant.StyledTableCell align="left">{index}</Constant.StyledTableCell>
+                                <Constant.StyledTableCell align="left" style={{minWidth:'260px', maxWidth:'260px'}}>{test.scnID}</Constant.StyledTableCell>
+                                <Constant.StyledTableCell align="left">{test.configs.map((item:string) => (<li key={item} style={{ listStyleType: "none" }}>{item}</li>))}</Constant.StyledTableCell>
+                                <Constant.StyledTableCell align="left">{test.reason.map((item:string) => (<li key={item} style={{ listStyleType: "none" }}>{item}</li>))}</Constant.StyledTableCell>
+                                <Constant.StyledTableCell align="left" style={{minWidth:'200px', maxWidth:'200px'}}>{test.filePath}<button onClick={handleClickOpen(true, test.base64Content)}>...</button></Constant.StyledTableCell>
+                            </Constant.StyledTableRow>
+                        ))
+                    }
+                    </TableBody>
+                </Table>
+                </TableContainer>
+                <FullDialog
+                    open={this.state.isOpen}
+                    content={this.state.content}
+                    handleClickOpen={handleClickOpen}
+                />
+            </div>
+        )
+    }
+}
+
+export default RegressionTestsView;

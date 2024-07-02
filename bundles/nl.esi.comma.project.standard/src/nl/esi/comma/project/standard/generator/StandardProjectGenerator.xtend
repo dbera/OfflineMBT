@@ -3,26 +3,32 @@
  */
 package nl.esi.comma.project.standard.generator
 
-import org.eclipse.xtext.generator.AbstractGenerator
+import java.io.FileInputStream
+import nl.asml.matala.product.generator.ProductGenerator
+import nl.asml.matala.product.product.Product
+import nl.esi.comma.project.standard.standardProject.Project
+import org.eclipse.emf.common.CommonPlugin
+import org.eclipse.emf.common.util.URI
 import org.eclipse.emf.ecore.resource.Resource
+import org.eclipse.xtext.EcoreUtil2
+import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
-import nl.esi.comma.testspecification.generator.TestDocumentationGenerator
-import nl.esi.comma.project.standard.standardProject.Project
-import org.eclipse.xtext.EcoreUtil2
-import nl.esi.comma.testspecification.testspecification.TSMain
-import nl.esi.comma.testspecification.testspecification.TestDefinition
-import nl.esi.comma.types.generator.TestSpecContext
-import org.eclipse.emf.ecore.resource.ResourceSet
-import org.eclipse.emf.common.util.URI
+import org.eclipse.emf.common.util.EList
+import java.util.ArrayList
+import nl.esi.comma.constraints.constraints.Constraints
+import nl.esi.comma.project.standard.standardProject.FilePath
+import nl.esi.comma.automata.AlgorithmType
 import java.io.File
-import java.io.FileInputStream
-import nl.esi.comma.testspecification.generator.TestspecificationGenerator
-import org.eclipse.xtext.resource.XtextResource
-import com.google.inject.Inject
-import nl.esi.comma.types.types.TypesModel
-import java.nio.file.Path
+import nl.esi.comma.scenarios.scenarios.Scenarios
+import nl.esi.comma.constraints.generator.ConstraintsAnalysisAndGeneration
+import org.eclipse.xtext.nodemodel.util.NodeModelUtils
+import java.util.List
+import org.eclipse.xtext.scoping.IScopeProvider
+import nl.esi.comma.project.standard.standardProject.StateMachineGenerationBlock
 import java.io.FilenameFilter
+import org.eclipse.core.resources.IResource
+import org.eclipse.core.resources.ResourcesPlugin
 
 /**
  * Generates code from your model files on save.
@@ -30,92 +36,173 @@ import java.io.FilenameFilter
  * See https://www.eclipse.org/Xtext/documentation/303_runtime_concepts.html#code-generation
  */
 class StandardProjectGenerator extends AbstractGenerator {
-	var ResourceSet resourceSet
-	var Resource _res
-	var String rootPath
-
+	var Resource resource
+	var StateMachineGenerationBlock task
+    List<Constraints> constraints
+	
+	
 	override doGenerate(Resource res, IFileSystemAccess2 fsa, IGeneratorContext context) {
-		System.out.println("Standard Generator - Auto generated stub")
-		
-		_res = res
-		resourceSet = res.resourceSet
-		if (context instanceof TestSpecContext) {
-			if(res.allContents.head instanceof Project) {
-				val prjInst = res.allContents.head as Project
-				val tspecPath = (context as TestSpecContext).tspecPath
-				rootPath = tspecPath.parent.toString
-				loadTSModel(tspecPath.toString, prjInst.tspec)
-				val inputResource = EcoreUtil2.getResource(_res, prjInst.tspec)
-				println("Input Model: " + inputResource.URI)
-				var input = inputResource.allContents.head
-				if( input instanceof TSMain) {
-					val tspec = input as TSMain
-					if( tspec.model instanceof TestDefinition) {
-						val td = tspec.model as TestDefinition
-						System.out.println(" Task Definition Found! ")
-						println(resourceSet)
-						loadImportsParams(input)
-					}
+		if (res.allContents.head instanceof Project) {
+            val resourceSet = res.resourceSet
+            val project = res.contents.head as Project
+            for (product : project.products) { 
+	            val inputFileURI = res.URI.trimSegments(1).appendSegment(product.product)
+	            val absFilePath = CommonPlugin.resolve(inputFileURI).toFileString
+	            val fis = new FileInputStream(absFilePath)
+	            resourceSet.createResource(URI.createURI(product.product)).load(fis, emptyMap)
+				val inputResource = EcoreUtil2.getResource(res, product.product)
+				val input = inputResource.allContents.head
+				if (input instanceof Product) {
+					(new ProductGenerator).doGenerate(inputResource, fsa, context)
 				}
-				EcoreUtil2.resolveAll(_res)
-				_res = resourceSet.getResource(URI.createFileURI(prjInst.tspec), true)
 			}
-		} else {
-			//TODO call generator from eclipse
+            for (task : project.statemachines) {
+            	this.task = task
+            	this.resource = task.eResource
+    			setConstraints
+		        var Resource scnResource = null
+       	        var isCoCoGen = task.checkCoCo
+		        var isVisualize = task.isVisualizeSM
+		        
+		        var isTestGen = false
+		        var AlgorithmType algorithm;
+		        var Integer timeout = null;
+		        var Integer similarity = 75;
+		        if(task.testGen !== null) {
+		            isTestGen = true
+		            if (task.testGen.timeout != 0) timeout = task.testGen.timeout;
+		            if (task.testGen.algorithmBfs) algorithm = AlgorithmType.BFS;
+		            if (task.testGen.algorithmDfs) algorithm = AlgorithmType.DFS;
+		            if (task.testGen.algorithmPrefix) algorithm = AlgorithmType.PREFIX;
+		            if (task.testGen.algorithmPrefixMinimized) algorithm = AlgorithmType.PREFIX_MINIMIZED;
+		            if (task.testGen.algorithmPrefixSuffix) algorithm = AlgorithmType.PREFIX_SUFFIX;
+		            if (task.testGen.algorithmPrefixSuffixMinimized) algorithm = AlgorithmType.PREFIX_SUFFIX_MINIMIZED;
+		            if (task.testGen.similarity != 0) similarity = task.testGen.similarity 
+		        }
+            	
+            	if(task.scenarioFile !== null) {
+		            scnResource = EcoreUtil2.getResource(resource, task.scenarioFile)
+		            if(scnResource === null) {
+		                throw new Exception(task.scenarioFile + " Could not be resolved.")
+		            }
+		            var scn_head = scnResource.allContents.head
+		            if(scn_head !== null && scn_head instanceof Scenarios) {
+		                //System.out.println("Scenario File Found")
+		                if(!(scn_head as Scenarios).specFlowScenarios.isNullOrEmpty) {
+		                    if(task.testGen !== null) {
+		                        //System.out.println("SpecFlow Scenarios Found: " + scn_head.specFlowScenarios.size)
+		                        (new ConstraintsAnalysisAndGeneration).generateStateMachine(resource, fsa, constraints, 
+		                                                                task.taskname, scn_head as Scenarios, 0, isVisualize, isCoCoGen, 
+		                                                                isTestGen, algorithm, 
+		                                                                task.testGen.k, task.testGen.skipAny, 
+		                                                                task.testGen.skipDuplicateSelfLoop,
+		                                                                task.testGen.skipSelfLoop,
+		                                                                timeout, similarity, task.printConstraints)
+		                    } else
+		                        (new ConstraintsAnalysisAndGeneration).generateStateMachine(resource, fsa, constraints, 
+		                                                                task.taskname, scn_head as Scenarios, 0, isVisualize, isCoCoGen, 
+		                                                                isTestGen, algorithm, 1, false, false, false,
+		                                                                timeout, similarity, task.printConstraints)
+		                                                                
+		                } else { System.out.println("Did not find SpecFlow scenarios in Scenario file!") }
+		            } 
+		            else { System.out.println("Did not find Scenarios file!") }
+		        } 
+		        else {
+//		            if(constraints.isEmpty) throw createException("Could not find any constraints file", resource, StateMachineGenerationTask)
+		            if(task.testGen !== null)
+		                (new ConstraintsAnalysisAndGeneration).generateStateMachine(resource, fsa, constraints, 
+		                                                                task.taskname, null, 0, isVisualize, isCoCoGen, isTestGen, 
+		                                                                algorithm, task.testGen.k, task.testGen.skipAny, 
+		                                                                task.testGen.skipDuplicateSelfLoop,
+		                                                                task.testGen.skipSelfLoop,
+		                                                                timeout, similarity, task.printConstraints)
+		            else
+		                (new ConstraintsAnalysisAndGeneration).generateStateMachine(resource, fsa, constraints, 
+		                                                                task.taskname, null, 0, isVisualize, isCoCoGen, isTestGen, 
+		                                                                algorithm, 1, false, false, false,
+		                                                                timeout, similarity, task.printConstraints)
+		        }
+			}	
 		}
-		// Get resource of test specification from project file contents
-		(new TestspecificationGenerator).doGenerate(_res, fsa, context)
-//		(new TestDocumentationGenerator).generateDocumentationForAllVariants(_res, fsa)
 	}
 	
-	def loadTSModel(String tspecPath, String fileName) {
-		var file = new File(tspecPath.toString)
-        var fis = new FileInputStream(file)
-        resourceSet.createResource(URI.createURI(fileName)).load(fis, emptyMap)
-        val tsModel = resourceSet.getResource(URI.createFileURI(fileName), true)
-	}
 	
-	def loadImportsParams(TSMain ts) {
-		for(imp: ts.imports){
-			var uri = ""
-			if (imp.importURI.contains("/")) {
-				uri = imp.importURI.replace("/", "\\")
+	def setConstraints() {
+		constraints = new ArrayList<Constraints>
+		for (sourcePath : task.constraintsFiles) {
+			var constrResource = getConstraintsResource(sourcePath)
+			if (constrResource !== null){
+				constraints.add(constrResource)
 			} else {
-				uri = imp.importURI
+				throw new Exception("Constraints to StateMachine Task: Could not find file: " + NodeModelUtils.getNode(constrResource).text + "\n\n")
 			}
-			val inputPath = rootPath + "\\" + uri
-			var file = new File(inputPath)
-			var fis = new FileInputStream(file)
-			//println(inputPath)
-			resourceSet.createResource(URI.createURI(imp.importURI), "Main").load(fis, emptyMap)
-			val paramModel = resourceSet.getResource(URI.createFileURI(imp.importURI), true)
-			//println(paramModel)
-			if (paramModel.allContents.head instanceof nl.esi.comma.inputspecification.inputSpecification.Main) {
-				println("Parameters Model")
-				var inputParams = paramModel.allContents.head as nl.esi.comma.inputspecification.inputSpecification.Main
-				for (impTypes: inputParams.imports) {
-					loadImportsTypes(file.parentFile.absolutePath, impTypes.importURI)
+		}
+		
+		getConstraintsResourcesFromDirs(task.constraintsDirs).forEach[addConstraints]
+	}
+	
+	def getConstraintsResourcesFromDirs(EList<FilePath> directories) {
+		val resources = new ArrayList<Resource>
+		for (location : directories) {
+			var uri = resource.resolveUri(location.path)	 		
+			if(uri.isPlatform) {
+				val platform = uri.toPlatformString(true)
+				val IResource eclipseResource = ResourcesPlugin.workspace.root.findMember(platform)				
+				uri =  URI.createFileURI(eclipseResource.rawLocation.toOSString);		
+			}
+			
+			val traceFiler = new FilenameFilter() {
+				override accept(File dir, String name) {
+					(name.endsWith(".constraints"))
 				}
 			}
+			
+			val dir = new File(uri.toFileString)
+			if (dir.exists && dir.isDirectory) {
+				for (file : dir.listFiles(traceFiler)) {
+					val res = resource.resourceSet.getResource(URI.createFileURI(file.path), true)				
+					if(res !== null) {
+						resources.add(res)
+					} else { 
+//						errors.add("Constraints resource could not be loaded: " + file.path +".")
+					}
+				}
+			} else {
+//				errors.add("Constraints dir did not exist or is not a directory. " + dir.path)
+			}
+		}
+		resources
+	}
+	
+	def addConstraints(Resource res) {
+		val head = res.allContents.head
+		if(head instanceof Constraints) {
+			constraints.add(head);
+		} else {
+			throw new Exception("Constraints to StateMachine Task: File did not contain the Constraints syntax" + res.URI + "\n\n")				
 		}
 	}
 	
-	def loadImportsTypes(String root, String imp){
-		val inputPath = root + "\\" + imp.replace("/", "\\")
-		println("Types input " + inputPath)
-		var file = new File(inputPath)
-		var fis = new FileInputStream(file)
-		resourceSet.createResource(URI.createURI(imp), "TypesModel").load(fis, emptyMap)
-		val typeResource = resourceSet.getResource(URI.createFileURI(imp), true)
-		if (typeResource.allContents.head instanceof TypesModel){
-			var typeModel = typeResource.allContents.head as TypesModel
-			if (typeModel.imports.size > 0){
-				for (impTypes : typeModel.imports) {
-					if (resourceSet.getResource(URI.createFileURI(impTypes.importURI), false) === null){
-						loadImportsTypes(file.parentFile.absolutePath, impTypes.importURI)
-					}
-				}
-			}
+	def getConstraintsResource(String path) {
+		val constraintResource = EcoreUtil2.getResource(resource, path)
+		if(constraintResource === null){
+			throw new Exception(constraintResource + "Constraints File Could not be resolved.")
 		}
+		val head = constraintResource.allContents.head
+		if(head instanceof Constraints){
+			return head
+		} else {
+			throw new Exception(constraintResource + " Did not contain the expected 'Constraints' model.")
+		}
+	}
+	
+	def static resolveUri(Resource context, String path) {
+		val contextURI = context.getURI();
+		var uri = URI.createFileURI(path)
+		if (contextURI.isHierarchical() && !contextURI.isRelative() && (uri.isRelative() && !uri.isEmpty())) {
+			uri = uri.resolve(contextURI);
+		}		
+		return uri;
 	}
 }

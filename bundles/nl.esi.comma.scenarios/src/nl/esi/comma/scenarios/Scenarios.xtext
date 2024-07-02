@@ -1,0 +1,191 @@
+grammar nl.esi.comma.scenarios.Scenarios with nl.esi.comma.actions.Actions
+
+generate scenarios "http://www.esi.nl/comma/scenarios/Scenarios"
+
+//import "http://www.esi.nl/comma/signature/InterfaceSignature" as sig
+import "http://www.esi.nl/comma/types/Types" as types
+
+Scenarios: {Scenarios}
+	imports += Import*
+	(
+		'Generating' 'Sequence' 'Diagrams' 'for' '{'
+			'Filter' 'Type:' filterType = ( 'ALL' | 'ANY')
+			('commands' ':' incl_commands += STRING+)?
+			('signals' ':' incl_signals += STRING+)?
+			('notifications' ':' incl_notifications += STRING+)?
+		'}'
+	)?
+	scenarios+=Scenario* // this is obsolete
+	specFlowScenarios+=SpecFlowScenario*
+	extendedCG += ExtendedCausalGraph*
+;
+//////////////////////////////////////////////////////////////////////////////
+ExtendedCausalGraph:
+    acts += ActionsList*
+    'Causal-Graph' name= ID '{'
+        action += SourceAction*
+    '}'
+;
+
+ActionsList:
+    'action-list:' '{'
+        act += Actions+
+    '}'
+;
+
+Actions:
+    (act = ActionType)?
+    name = ID 
+    label = STRING
+    ('with' '(' parameters+=Expression (',' parameters+=Expression)* ')')? 
+;
+
+SourceAction:
+    'Action' actionName = [Actions|ID] ('[' label += CHANGE_TYPE ( label += CHANGE_TYPE)* ']')? '{'
+        isInit?= 'init'?
+        isTerminal?= 'term'?
+        data += PayLoad*
+        testset += TestSet*
+        events += InterfaceEvents*
+        config += Config*
+        product += Product*
+        mapIDToProduct += IDToProduct*
+        edge += EdgeSet*
+    '}'
+;
+
+EdgeSet:
+    'edge' (edgeName = ID)? ('[' label = CHANGE_TYPE ']')? '-{'
+        testset += TestSet*
+        config += Config*
+        product += Product*
+    '}' '->' actionSet += ActionSet+
+;
+
+TestSet:
+	'test-set' '[' value += STRING+ ']'
+;
+
+IDToProduct:
+    {IDToProduct} 'map' '[' (elm += MapEntry)* ']'
+;
+
+MapEntry:
+    key = STRING ':' (values += STRING)* ';'
+;
+
+ActionSet:
+	'leads-to' '[' (value += [Actions|ID])+ ']'
+;
+
+//////////////////////////////////////////////////////////////////////////////
+SpecFlowScenario:
+	featureAttributes += Attribute*
+    'Scenario' name= ID 'Hash' hID =STRING
+    scenarioAttributes += Attribute*
+    events += Activity+
+;
+
+Activity:
+	type = ActionType 'Action' name = ID 
+	data += PayLoad* 
+	events += InterfaceEvents* 
+	eventData += EventData*
+	config += Config* 
+	product += Product*
+;
+
+EventData:
+	'event-data' '[' key = STRING ':' value += STRING+ ']'
+;
+
+InterfaceEvents:
+	'event-set' '[' (value += STRING)+ ']'
+;
+
+Product:
+	'product-set' '[' (value += STRING)+ ']'
+;
+
+enum ActionType:
+	Given = 'Given' | When = 'When' | Then = 'Then' | And = 'And'
+;
+
+PayLoad:
+	'data' ('[' testID = STRING '-' index = STRING ']')? dataList += TestData+
+;
+
+TestData:
+	'[' key = STRING ':' value = STRING (':' scnID = STRING)? ']'
+;
+
+Config:
+	'config' '[' (value += STRING)+ ']'
+;
+
+///////////////////////////////////////////////////////////////////////////////////
+
+//Constraints:
+// - Scenario names are unique
+// - Replies do not refer to a command
+// - Replies are preceded by command
+// - Commands are followed by a reply or nothing
+// - Any event is not allowed
+Scenario:
+	attributes += Attribute*
+	'Scenario' name= ID 
+	events += (EventPattern | InfoResult | InfoArg)+
+;
+InfoResult:
+	'##' (elm += STRING)+ '##'
+;
+
+InfoArg:
+	'+' (elm += STRING)+
+;
+
+@Override
+ModelContainer returns types::ModelContainer:
+	super::ModelContainer | Scenario
+;
+
+@Override 
+NamedElement returns types::NamedElement :
+	{Scenario}
+;
+
+@Override 
+NotificationEvent:
+	periodic?= 'periodic'?  'notification' InterfaceEventInstance
+;
+
+Attribute:
+	key = KEY_ID (value += STRING)+
+;
+
+enum KEY_ID:
+	LOCATION = 'file-location' |
+	FEATURE_NAME = 'feature-name' |
+	FEATURE_TAG = 'feature-tag' |
+	SCN_NAME = 'scenario-name' |
+	SCN_TAG = 'scenario-tag' |
+	CONFIG_TAG = 'config-tag' |
+	NUM_CONFIGS = 'num-configs' |
+	TEST_CONFIG_PAIRS = 'num-test-config-pairs'
+;
+
+enum CHANGE_TYPE:
+	NODE_ADD = 'node_added' |
+	NODE_DELETE = 'node_deleted' |
+	NODE_UPDATE = 'node_updated' |
+	EDGE_ADD = 'edge_added' |
+	EDGE_DELETE = 'edge_deleted' |
+	EDGE_UPDATE = 'edge_updated' |
+	DATA_ADD = 'data_added' |
+	DATA_DELETE = 'data_deleted' |
+	DATA_UPDATE = 'data_updated' |
+	TESTSET_ADDED = 'testset_added' |
+	TESTSET_DELETED = 'testset_removed' |
+	PRODUCT_ADDED = 'product_added' |
+	PRODUCT_DELETED = 'product_removed'
+;
