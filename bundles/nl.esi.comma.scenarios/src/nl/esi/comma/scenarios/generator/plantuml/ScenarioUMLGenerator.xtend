@@ -27,7 +27,7 @@ class ScenarioUMLGenerator extends ActionsUmlGenerator {
 	//var niMap = new HashMap<String, ArrayList<String>>
 
 	new(String fileName, IFileSystemAccess fsa) {
-		super(fileName, fsa)
+		//super(fileName, fsa)
 	}
 	
 	//	ScenariosToSpecFlowTest\\feature
@@ -41,7 +41,7 @@ class ScenarioUMLGenerator extends ActionsUmlGenerator {
 					if(isAllNotificationsPresentInScenario(scenarios, s) &&
 						isAllCommandsPresentInScenario(scenarios, s) &&
 						isAllSignalsPresentInScenario(scenarios, s)) {
-							fsa.generateFile(path + "scenario" + s.name + ".plantuml", ScenarioToUML(s))
+							//fsa.generateFile(path + "scenario" + s.name + ".plantuml", ScenarioToUML(s))
 							//if(generateSpecFlow) fsa.generateFile(path + "ScenariosToSpecFlowTest\\scenario" + s.name + ".feature", ScenarioToSpecFlow(s))
 								//featureText += ScenarioToSpecFlow(s)
 							//fsa.generateFile(_path + s.name + ".feature", ScenarioToSpecFlow(s))
@@ -53,7 +53,7 @@ class ScenarioUMLGenerator extends ActionsUmlGenerator {
 				val filteredScenariosList = getFilterScenarioList(scenarios)
 				// if(generateSpecFlow) fsa.generateFile(_path + ".feature", ScenarioToSpecFlow(filteredScenariosList))
 				for(s : filteredScenariosList) {
-					fsa.generateFile(path + "scenario" + s.name + ".plantuml", ScenarioToUML(s))
+					//fsa.generateFile(path + "scenario" + s.name + ".plantuml", ScenarioToUML(s))
 					//if(generateSpecFlow) fsa.generateFile(_path + "ScenariosToSpecFlowTest\\scenario" + s.name + ".feature", ScenarioToSpecFlow(s)) 
 						//featureText += ScenarioToSpecFlow(s) 
 					//fsa.generateFile(_path + s.name + ".feature", ScenarioToSpecFlow(s))
@@ -202,7 +202,7 @@ class ScenarioUMLGenerator extends ActionsUmlGenerator {
 	
 	def ScenarioToUML(Scenario s)
 	{
-		var isNoteOpen = false;
+		/*var isNoteOpen = false;
 		'''
 		@startuml
 		title Scenario «s.name»
@@ -230,6 +230,7 @@ class ScenarioUMLGenerator extends ActionsUmlGenerator {
 		«ENDIF»
 		@enduml
 		'''
+		*/
 	}
 
 /*			«IF event instanceof InfoArg»
@@ -240,7 +241,7 @@ class ScenarioUMLGenerator extends ActionsUmlGenerator {
 			end note
 			«ENDIF» */
 
-	def dispatch toUML(CommandEvent e, boolean expected)'''
+	/*def dispatch toUML(CommandEvent e, boolean expected)'''
 						Client ->«IF ! expected»x«ENDIF» Server: command «e.event.name»«IF e.parameters.size() >0 »(«FOR p : e.parameters SEPARATOR ', '»«generateExpression(p)»«ENDFOR»)«ENDIF»
 					'''
 	def dispatch toUML(SignalEvent e, boolean expected)'''
@@ -254,7 +255,7 @@ class ScenarioUMLGenerator extends ActionsUmlGenerator {
 	def dispatch toUML(NotificationEvent e, boolean expected)'''
 						Client «IF ! expected»x«ENDIF»//- Server: notification «e.event.name»«IF e.parameters.size() >0 »(«FOR p : e.parameters SEPARATOR ', '»«generateExpression(p)»«ENDFOR»)«ENDIF»
 					'''
-
+	*/
 	
 	def dispatch eventToUML(NotificationEvent event, boolean expected) {
 		'''
