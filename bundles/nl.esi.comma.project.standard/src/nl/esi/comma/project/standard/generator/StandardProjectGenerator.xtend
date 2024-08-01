@@ -71,13 +71,10 @@ class StandardProjectGenerator extends AbstractGenerator {
 						if (_input instanceof Product) {
 							stubProductList.add(_input)
 							(new ProductGenerator).doGenerate(_inputResource, fsa, context)
-							System.out.println(" Stub Generated. ")
+							// System.out.println(" Stub Generated. ")
 						}
 					}
 					// generate online MBT controller
-					// input
-					// stubProductList 		
-					// generateOnlineMBTController
 					(new ProductGenerator).generateOnlineMBTController(envProduct, 
 							stubProductList.get(0), fsa, context)
 				}

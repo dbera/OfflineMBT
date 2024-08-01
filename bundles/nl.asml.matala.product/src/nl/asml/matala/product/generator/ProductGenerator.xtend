@@ -339,21 +339,23 @@ class ProductGenerator extends AbstractGenerator {
 		                txt += "input-binding:\n"
 		                for k, v in idata.items():
 		                    txt += "%s : %s\n" % (k, v)
+		                for k, v in idata.items():
 		                    if name.rsplit("_",1)[0] in self.constraint_dict:
 		                        for constr in self.constraint_dict[name.rsplit("_",1)[0]]:
 		                            if constr.var_ref == k and constr.dir == "IN":
-		                                txt += "symbolic-input-constraint: %s\n" % k
+		                                txt += "output-assertion: %s\n" % k
 		                                for entry in constr.centry:
-		                                    txt += "%s : %s\n" % (entry.name,entry.constr)
+		                                    txt += "%s : \"%s\"\n" % (entry.name, entry.constr.replace('"','\\"'))
 		                txt += "output-data:\n"
 		                for k, v in odata.items():
 		                    txt += "%s : %s\n" % (k, v)
+		                for k, v in odata.items():
 		                    if name.rsplit("_",1)[0] in self.constraint_dict:
 		                        for constr in self.constraint_dict[name.rsplit("_",1)[0]]:
 		                            if constr.var_ref == k and constr.dir == "OUT":
-		                                txt += "symbolic-output-constraint: %s\n" % k
+		                                txt += "symbolic-constraint: %s\n" % k
 		                                for entry in constr.centry:
-		                                    txt += "%s : %s\n" % (entry.name,entry.constr)
+		                                    txt += "%s : \"%s\"\n" % (entry.name, entry.constr.replace('"','\\"'))
 		            else:
 		                name = step.step_name
 		                idata = step.input_data
@@ -569,7 +571,6 @@ class ProductGenerator extends AbstractGenerator {
 	def generateOnlineMBTController(Product envModel, Product sutModel, 
 		IFileSystemAccess2 fsa, IGeneratorContext context
 	) {
-		var idx = 0
 		var txt =
 		'''
 		import asyncio
