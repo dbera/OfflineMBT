@@ -13,9 +13,10 @@ Project:
 ;
 
 Product:
-	'Generate' 'product' '{'
+	'Generate' 'Tests' '{'
 		taskname = ID '{'
 			'product-file' product = STRING
+			('sut-product-files' stubProducts += STRING*)?
 		'}'
 	'}'
 ;

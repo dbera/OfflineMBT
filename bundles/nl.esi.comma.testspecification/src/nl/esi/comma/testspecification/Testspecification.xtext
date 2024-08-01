@@ -99,7 +99,8 @@ Binding:
 NestedKeyValuesPair:
 	refVar = STRING ':' ( ('{' | '[')
 		(kvpl = KVPList)?
-		kvsp += NestedKeyValuesPair*
+		kvsp += (NestedKeyValuesPair)*
+		// (kvplpost = KVPList)?
 	('}' | ']') (',')? )
 ;
 
@@ -111,7 +112,6 @@ KVPair:
 	key = STRING ':' (intValue = Int | strValue = STRING | bValue = BOOL_LITERAL ) (',')?
 ;
 
-// ('(' parameters+=Variable (',' parameters+=Variable)* ')')?
 ListElm:
 	lkey += STRING (',')?
 ;

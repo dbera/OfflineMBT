@@ -880,17 +880,18 @@ class ConstraintsProposalProvider extends AbstractConstraintsProposalProvider {
 	override
 	protected def createTemplate(String name, String content, String additionalInfo, Integer nrIndents,
 		ContentAssistContext context, int priority, int selection, int length) {
-		if (nrIndents == 0) {
-			createProposal(name, content, additionalInfo, context, priority, selection, length)
-		} else {
-			var indent = "";
-			for (var i = 0; i < nrIndents; i++) {
-				indent += "\t";
-			}
-			var indentedContent = content.replace("\n", "\n" + indent)
-			indentedContent = "\n" + indent + indentedContent
-			createProposal(name, indentedContent, additionalInfo, context, priority, selection, length)
-		}
+// DB commented to remove error. 23.07.2024 
+//		if (nrIndents == 0) {
+//			createProposal(name, content, additionalInfo, context, priority, selection, length)
+//		} else {
+//			var indent = "";
+//			for (var i = 0; i < nrIndents; i++) {
+//				indent += "\t";
+//			}
+//			var indentedContent = content.replace("\n", "\n" + indent)
+//			indentedContent = "\n" + indent + indentedContent
+//			createProposal(name, indentedContent, additionalInfo, context, priority, selection, length)
+//		}
 
 	}
 

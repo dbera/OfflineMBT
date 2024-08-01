@@ -40,12 +40,14 @@ class StandardProjectGenerator extends AbstractGenerator {
 	var StateMachineGenerationBlock task
     List<Constraints> constraints
 	
-	
 	override doGenerate(Resource res, IFileSystemAccess2 fsa, IGeneratorContext context) {
 		if (res.allContents.head instanceof Project) {
             val resourceSet = res.resourceSet
             val project = res.contents.head as Project
-            for (product : project.products) { 
+            var Product envProduct
+            var stubProductList = new ArrayList<Product>
+            for (product : project.products) {
+            	// resolve environment product and generate petri net 
 	            val inputFileURI = res.URI.trimSegments(1).appendSegment(product.product)
 	            val absFilePath = CommonPlugin.resolve(inputFileURI).toFileString
 	            val fis = new FileInputStream(absFilePath)
@@ -53,7 +55,31 @@ class StandardProjectGenerator extends AbstractGenerator {
 				val inputResource = EcoreUtil2.getResource(res, product.product)
 				val input = inputResource.allContents.head
 				if (input instanceof Product) {
+					envProduct = input as Product
 					(new ProductGenerator).doGenerate(inputResource, fsa, context)
+				}
+				// check if there are SUT products
+				if(!product.stubProducts.nullOrEmpty) {
+					// resolve each SUT product and generate petri net
+					for(stubProd : product.stubProducts) {
+						val _inputFileURI = res.URI.trimSegments(1).appendSegment(stubProd)
+			            val _absFilePath = CommonPlugin.resolve(_inputFileURI).toFileString
+			            val _fis = new FileInputStream(_absFilePath)
+			            resourceSet.createResource(URI.createURI(stubProd)).load(_fis, emptyMap)
+						val _inputResource = EcoreUtil2.getResource(res, stubProd)
+						val _input = _inputResource.allContents.head
+						if (_input instanceof Product) {
+							stubProductList.add(_input)
+							(new ProductGenerator).doGenerate(_inputResource, fsa, context)
+							System.out.println(" Stub Generated. ")
+						}
+					}
+					// generate online MBT controller
+					// input
+					// stubProductList 		
+					// generateOnlineMBTController
+					(new ProductGenerator).generateOnlineMBTController(envProduct, 
+							stubProductList.get(0), fsa, context)
 				}
 			}
             for (task : project.statemachines) {

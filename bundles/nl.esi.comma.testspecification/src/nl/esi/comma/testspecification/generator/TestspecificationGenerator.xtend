@@ -66,9 +66,9 @@ class TestspecificationGenerator extends AbstractGenerator
 			_resource = resource
 			val modelInst = resource.allContents.head as TSMain
 			/*if(modelInst.model instanceof AbstractTestDefinition)
-				generateAbstractTest(fsa)
+				generateAbstractTest(fsa)*/
 			if(modelInst.model instanceof TestDefinition)
-				generateContents(fsa)*/ // Parsing and File Generation
+				generateContents(fsa) // Parsing and File Generation
 			
 			System.out.println("\n")
 			System.out.println(" ******* TEST DOCUMENTATION GENERATOR *********")

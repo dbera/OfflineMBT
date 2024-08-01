@@ -223,8 +223,8 @@ class PetriNet {
 		        for t in n.transition():
 		            tmodes = t.modes()
 		            # print(tmodes)
-		            enabled_transition_modes[t] = tmodes
 		            for mode in tmodes:
+		                enabled_transition_modes[t] = tmodes
 		                print('\n')
 		                print(' Enabled-transition-name: ', t)
 		                print('    # with-input-modes: ')
@@ -331,7 +331,7 @@ class PetriNet {
 		from nets import *
 		
 		
-		class PetriNetModel:
+		class «prod_name»Model:
 		    visitedList = set()
 		    visitedTList = [[]]
 		    visitedTProdList = [[]]
@@ -354,10 +354,27 @@ class PetriNet {
 		    def chunkstring(self, string, length):
 		        return (string[0+i:length+i] for i in range(0, len(string), length))
 		        
+		    def determineInterfacePlaces(self):
+		        intfP = InterfacePlaces()
+		        for p in self.n.place():
+		            if not self.n.pre([str(p)]):
+		                # print(" - " + str(p) + " -> source")
+		                intfP.input.append(str(p))
+		            if not self.n.post([str(p)]):
+		                # print(" - " + str(p) + " -> dest")
+		                intfP.output.append(str(p))
+		        return intfP
+		
+		
+		class InterfacePlaces:
+		    def __init__(self):
+		        self.input = []
+		        self.output = []
+		
 		
 		if __name__ == '__main__':
 		    a = datetime.datetime.now()
-		    pn = PetriNetModel()
+		    pn = «prod_name»Model()
 		    print("[INFO] Loaded CPN model.")
 		    # pn.n.draw('net-gv-graph.png')
 		    s = StateGraph(pn.n)

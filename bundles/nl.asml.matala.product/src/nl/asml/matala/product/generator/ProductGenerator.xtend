@@ -6,20 +6,17 @@ package nl.asml.matala.product.generator
 import java.util.ArrayList
 import java.util.HashMap
 import java.util.List
+import java.util.Map
+import nl.asml.matala.product.product.Block
 import nl.asml.matala.product.product.Product
+import nl.asml.matala.product.product.VarRef
+import nl.esi.comma.types.types.RecordTypeDecl
 import nl.esi.comma.types.types.SimpleTypeDecl
 import nl.esi.comma.types.types.TypeDecl
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
-import nl.asml.matala.product.product.VarRef
-import nl.asml.matala.product.product.Block
-import java.util.Map
-import nl.esi.comma.types.types.RecordTypeDecl
-import java.util.HashSet
-import org.eclipse.xtext.xbase.lib.Pair
-
 
 /**
  * Generates code from your *.ps model files on save.
@@ -27,7 +24,9 @@ import org.eclipse.xtext.xbase.lib.Pair
  
 class ProductGenerator extends AbstractGenerator {
 	
-	override void doGenerate(Resource resource, IFileSystemAccess2 fsa, IGeneratorContext context) {
+	override void doGenerate(Resource resource, 
+		IFileSystemAccess2 fsa, IGeneratorContext context
+	) {
 		var prod = resource.allContents.head
 		if(prod instanceof Product) {
 			if (prod.specification !== null) {
@@ -565,6 +564,117 @@ class ProductGenerator extends AbstractGenerator {
 		}
 		
 		return place
+	}
+	
+	def generateOnlineMBTController(Product envModel, Product sutModel, 
+		IFileSystemAccess2 fsa, IGeneratorContext context
+	) {
+		var idx = 0
+		var txt =
+		'''
+		import asyncio
+		import random
+		
+		from «envModel.specification.name» import «envModel.specification.name»Model
+		from «sutModel.specification.name» import «sutModel.specification.name»Model
+		
+		
+		class OnlineMBTController:
+		
+		    async def execute(self, pnMod, is_client):
+		        dead_marking = False
+		        while True:
+		            if is_client and dead_marking:
+		                # item = await self.ni_queue.get()
+		                try:
+		                    item = await asyncio.wait_for(self.ni_queue.get(), timeout=1)
+		                    print(f' [Test Client] Received Message: {item}')
+		                    self.cpn.n.place(item[0]).add(item[1])
+		                    self.ni_queue.task_done()
+		                except asyncio.TimeoutError:
+		                    print(' [INFO] Time-out')
+		            elif not is_client and dead_marking:
+		                # item = await self.rq_queue.get()
+		                try:
+		                    item = await asyncio.wait_for(self.rq_queue.get(), timeout=1)
+		                    print(f' [SUT] Received Message: {item}')
+		                    self.spn.n.place(item[0]).add(item[1])
+		                    self.rq_queue.task_done()
+		                except asyncio.TimeoutError:
+		                    print(' [INFO] Time-out')
+		            else:
+		                if is_client:
+		                    print(' [Test Client] Going to Fire a Transition!')
+		                else:
+		                    print(' [SUT] Going to Fire a Transition!')
+		            dead_marking = False
+		            enabled_transition_modes = {}
+		            for t in pnMod.n.transition():
+		                tmodes = t.modes()
+		                for mode in tmodes:
+		                    enabled_transition_modes[t] = tmodes
+		            if not enabled_transition_modes:
+		                dead_marking = True
+		                if is_client:
+		                    print(' [Test Client] Deadlock Marking Detected! Waiting for Message.. ')
+		                else:
+		                    print(' [SUT] Deadlock Marking Detected! Waiting for Message.. ')
+		            choices = {}
+		            idx = 0
+		            for key, value in enabled_transition_modes.items():
+		                for elm in value:
+		                    choices[idx] = key, elm
+		                    idx = idx + 1
+		            if not dead_marking:
+		                value = random.randint(0, idx - 1)
+		                if is_client:
+		                    print(' [Test Client] Selected Transition: ', choices.get(int(value)))
+		                else:
+		                    print(' [SUT] Selected Transition: ', choices.get(int(value)))
+		                t, m = choices.get(int(value))
+		                t.fire(m)
+		                if is_client:
+		                    print(' [Test Client] Transition Fired! ')
+		                else:
+		                    print(' [SUT] Transition Fired! ')
+		                if is_client:
+		                    for ch in self.ClientToSUTchannels:
+		                        if not pnMod.n.place(ch).is_empty():
+		                            m = pnMod.n.get_marking()
+		                            pnMod.n.place(ch).remove(m.get(ch))
+		                            print(' [Test Client] Sent Request')
+		                            await self.rq_queue.put((ch, m.get(ch)))
+		                else:
+		                    for ch in self.SUTToClientchannels:
+		                        if not pnMod.n.place(ch).is_empty():
+		                            m = pnMod.n.get_marking()
+		                            pnMod.n.place(ch).remove(m.get(ch))
+		                            print(' [SUT] Sent Notification')
+		                            await self.ni_queue.put((ch, m.get(ch)))
+		
+		    def __init__(self):
+		        self.rq_queue = asyncio.Queue(maxsize=2)  # single input queue
+		        self.ni_queue = asyncio.Queue(maxsize=2)  # single output queue
+		        self.cpn = «envModel.specification.name»Model()  # for each client component
+		        self.spn = «sutModel.specification.name»Model()  # for each SUT
+		        print(" [INFO] Loaded CPN models and Initialized Queues.")
+		        cIntfP = self.cpn.determineInterfacePlaces()  # create set, by iterating over each client component
+		        sIntfP = self.spn.determineInterfacePlaces()  # create set, by iterating over each SUT component
+		        # From the point of view of SUT
+		        self.SUTToClientchannels = [x for x in cIntfP.input if
+		                                    x in sIntfP.output]  # find common places between client and SUT
+		        self.ClientToSUTchannels = [x for x in cIntfP.output if
+		                                    x in sIntfP.input]  # find common places between client and SUT
+		
+		    async def run(self):
+		        await asyncio.gather(self.execute(self.spn, False),
+		                             self.execute(self.cpn, True))
+		
+		
+		if __name__ == '__main__':
+		    asyncio.run(OnlineMBTController().run())
+		'''
+		fsa.generateFile('OnlineMBT_Controller.py', txt)
 	}
 }
 
