@@ -17,6 +17,9 @@ import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
+import org.eclipse.xtext.EcoreUtil2
+import nl.esi.comma.types.types.TypesModel
+import nl.esi.comma.types.generator.TypesZ3Generator
 
 /**
  * Generates code from your *.ps model files on save.
@@ -45,6 +48,20 @@ class ProductGenerator extends AbstractGenerator {
 		var init_places = new ArrayList<String>
 		
 		var depth_limit = prod.specification.limit 
+		
+		/* Generate Z3 Data Types */
+		for(imp : prod.imports) {
+			// Assumption: At most one
+			val typeResource = EcoreUtil2.getResource(resource, imp.importURI)
+			var typeInst = typeResource.allContents.head
+			if(typeInst instanceof TypesModel) {
+				var txt = (new TypesZ3Generator).generateAllUserDefinedTypes(typeInst) 
+				fsa.generateFile('Z3//' + prod.specification.name + '_z3types.py', txt)
+			}
+		}
+
+		/* ****** Z3 Type Generation ********** */
+		
 		
 		for(b : prod.specification.blocks) {
 			var Block block = null
