@@ -260,6 +260,12 @@ class ExpressionValidator extends AbstractExpressionValidator {
 				}	
 				else null
 			}
+			case "get" : {
+				if(! e.args.empty) {
+					return e.args.get(0).typeOf.baseType
+				}
+				else null
+			}
 			default: null
 		}
 	}
@@ -434,6 +440,7 @@ class ExpressionValidator extends AbstractExpressionValidator {
 					case "length" : checkFunLength(e)
 					case "hasKey" : checkFunHasOrDeleteKey(e)
 					case "deleteKey" : checkFunHasOrDeleteKey(e)
+					case "get" : checkFunHasIntIndex(e)
 					default : error("Unknown function", ExpressionPackage.Literals.EXPRESSION_FUNCTION_CALL__FUNCTION_NAME)
 				}
 			}
@@ -448,6 +455,21 @@ class ExpressionValidator extends AbstractExpressionValidator {
 					error("Condition expression must be of type boolean", ExpressionPackage.Literals.EXPRESSION_QUANTIFIER__CONDITION)
 	
 			}
+		}
+	}
+	
+	def checkFunHasIntIndex(ExpressionFunctionCall e) {
+		if(e.args.size != 2){
+			error("Function get expects two arguments", ExpressionPackage.Literals.EXPRESSION_FUNCTION_CALL__FUNCTION_NAME)
+			return
+		}
+		val _t = e.args.get(0).typeOf
+		val t = e.args.get(1).typeOf
+		if(_t !== null && !isVectorType(_t)){
+			error("Function get expects first argument of type vector", ExpressionPackage.Literals.EXPRESSION_FUNCTION_CALL__ARGS, 0)
+		}
+		if(t !== null && t != intType){
+			error("Function get expects second argument of type integer", ExpressionPackage.Literals.EXPRESSION_FUNCTION_CALL__ARGS, 1)
 		}
 	}
 	

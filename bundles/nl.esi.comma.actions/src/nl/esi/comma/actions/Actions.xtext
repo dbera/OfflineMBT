@@ -25,7 +25,7 @@ Action:
 ;
 
 AssignmentAction:
-	 assignment =[expr::Variable | ID] ':=' exp=Expression
+	 assignment =[expr::Variable | ID] ':=' exp=Expression (symbolic?='symbolic-ref')?
 ;
 
 ForAction:
@@ -42,7 +42,7 @@ IfAction:
 ;
 
 RecordFieldAssignmentAction:
-	fieldAccess = FieldAccessExp ':=' exp=Expression
+	fieldAccess = FieldAccessExp ':=' exp=Expression (symbolic?='symbolic-ref')?
 ;
 
 /*

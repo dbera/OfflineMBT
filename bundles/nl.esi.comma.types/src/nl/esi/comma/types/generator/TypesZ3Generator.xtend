@@ -318,6 +318,8 @@ class TypesZ3Generator {
 //		'''<«typeToZ3Syntax(t)»>[]'''
 //	}
 //	
+
+	// TODO handle other data types!!!
 	def dispatch CharSequence generateDefaultValue(VectorTypeConstructor t){
 		'''K(IntSort(), «generateDefaultValue(t.type)»)'''
 	}
