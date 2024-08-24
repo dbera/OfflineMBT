@@ -38,6 +38,15 @@ class ProductGenerator extends AbstractGenerator {
 		}
 	}
 	
+	def toTypes(String class_name, ArrayList<String> import_list, HashMap<String,String> var_decl_map) {
+		'''
+		class Types:
+		    def __init__(self):
+		        self.import_list = ["«FOR elm : import_list SEPARATOR ''','''»«elm»«ENDFOR»"]
+		        self.var_decl_map = {«FOR k : var_decl_map.keySet SEPARATOR ''','''»"«k»" : "«var_decl_map.get(k)»"«ENDFOR»}
+		'''
+	}
+	
 	def generatePetriNet(Product prod, Resource resource, IFileSystemAccess2 fsa) 
 	{	
 		var dataGetterTxt = (new TypesGenerator).generatePythonGetters(prod,resource)
@@ -49,6 +58,9 @@ class ProductGenerator extends AbstractGenerator {
 		
 		var depth_limit = prod.specification.limit 
 		
+		var import_list = new ArrayList<String>
+		var var_decl_map = new HashMap<String,String>
+		
 		/* Generate Z3 Data Types */
 		for(imp : prod.imports) {
 			// Assumption: At most one
@@ -58,6 +70,7 @@ class ProductGenerator extends AbstractGenerator {
 				var txt = (new TypesZ3Generator).generateAllUserDefinedTypes(typeInst) 
 				fsa.generateFile('Z3//' + prod.specification.name + '_z3types.py', txt)
 			}
+			import_list.add(imp.importURI)
 		}
 
 		/* ****** Z3 Type Generation ********** */
@@ -72,12 +85,18 @@ class ProductGenerator extends AbstractGenerator {
 			if (b.refBlock !== null) {
 				block = b.refBlock.system
 			}
+			// populate var and its type decl in map
+			for(invar : block.invars) var_decl_map.put(block.name + "_" + invar.name, invar.type.type.name)
+			for(ovar : block.outvars) var_decl_map.put(block.name + "_" + ovar.name, ovar.type.type.name)
+			for(lvar : block.localvars) var_decl_map.put(block.name + "_" + lvar.name, lvar.type.type.name)
+			
 			// parse each block to derive places and transitions
 			var tuple = populatePetriNet(pnet, block)
 			pnet = tuple.key
 			methodTxt += tuple.value		
 		}
 		
+		fsa.generateFile(prod.specification.name + '_types.py', toTypes(prod.specification.name + "_types", import_list, var_decl_map))
 		
 		fsa.generateFile(prod.specification.name + '_model.plantuml', pnet.toPlantUML(pnet, false))
 		fsa.generateFile(prod.specification.name + '_system.plantuml', pnet.toPlantUML(pnet, true))
@@ -136,7 +155,7 @@ class ProductGenerator extends AbstractGenerator {
 			'''
 			fsa.generateFile(name + '_data.py', data_container_class)
 			
-			fsa.generateFile(name + '_TestSCN.py', generateTestSCNTxt)
+			fsa.generateFile(name + '_TestSCN.py', generateTestSCNTxt(prod.specification.name + "_types", import_list, var_decl_map))
 			
 			// execute python code
 			// val relativeFile = fsa.getURI(prod.name + '.py')
@@ -290,11 +309,15 @@ class ProductGenerator extends AbstractGenerator {
 		return constraints
 	}
 	
-	def generateTestSCNTxt() {
+	def generateTestSCNTxt(String name, 
+		ArrayList<String> import_list, HashMap<String,String> var_decl_map
+	) {
 		return
 		'''
 		import json
 		import os
+		
+		from «name» import Types
 		
 		
 		class Tests:
@@ -313,12 +336,16 @@ class ProductGenerator extends AbstractGenerator {
 		    step_dependencies = []
 		    map_transition_assert = {}
 		    constraint_dict = {}
+		    import_list = []
+		    var_decl_map = {}
 		
 		    def __init__(self, _mapTrAssert, _constraint_dict):
 		        self.step_list = []
 		        self.step_dependencies = []
 		        self.map_transition_assert = _mapTrAssert
 		        self.constraint_dict = _constraint_dict
+		        self.import_list = Types().import_list
+		        self.var_decl_map = Types().var_decl_map
 		
 		    def generate_viz(self, idx):
 		        txt = "@startuml\n"

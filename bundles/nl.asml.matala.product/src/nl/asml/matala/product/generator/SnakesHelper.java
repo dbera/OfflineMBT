@@ -20,6 +20,7 @@ import nl.esi.comma.actions.actions.EventCall;
 import nl.esi.comma.actions.actions.ForAction;
 import nl.esi.comma.actions.actions.IfAction;
 import nl.esi.comma.actions.actions.RecordFieldAssignmentAction;
+import nl.esi.comma.actions.generator.plantuml.ActionsUmlGenerator;
 import nl.esi.comma.behavior.behavior.TriggeredTransition;
 import nl.esi.comma.expressions.expression.Expression;
 import nl.esi.comma.expressions.expression.ExpressionAddition;
@@ -59,6 +60,7 @@ import nl.esi.comma.expressions.expression.ExpressionVariable;
 import nl.esi.comma.expressions.expression.ExpressionVector;
 import nl.esi.comma.expressions.expression.QUANTIFIER;
 import nl.esi.comma.expressions.expression.Variable;
+import nl.esi.comma.expressions.generator.ExpressionsCommaGenerator;
 import nl.esi.comma.signature.interfaceSignature.DIRECTION;
 import nl.esi.comma.types.types.EnumTypeDecl;
 import nl.esi.comma.types.types.MapTypeDecl;
@@ -325,23 +327,52 @@ class SnakesHelper {
 		throw new RuntimeException("Not supported");
 	}*/
 
+//	static boolean isSymbolicAction(Action action) {
+//		if (action instanceof AssignmentAction) {
+//			AssignmentAction a = (AssignmentAction) action;
+//			if(a.isSymbolic()) return true;
+//			
+//		} else if (action instanceof RecordFieldAssignmentAction) {
+//			RecordFieldAssignmentAction a = (RecordFieldAssignmentAction) action;
+//			ExpressionRecordAccess access = (ExpressionRecordAccess) a.getFieldAccess();
+//			
+//		} else if(action instanceof IfAction) {
+//			var act = (IfAction) action;
+//			if(act.getElseList()!= null) {
+//				
+//			}
+//		} else if(action instanceof ForAction) {
+//			
+//		}
+//		
+//		return false;
+//	}
+	
 	static String action(Action action, Function<String, String> variablePrefix, String indent) {
 		if (action instanceof AssignmentAction) {
 			AssignmentAction a = (AssignmentAction) action;
 			String QUOTE = "\"";
 			// String variable = String.format("%s%s", variablePrefix.apply(a.getAssignment().getName()), a.getAssignment().getName());
 			String variable = String.format("%s", variablePrefix.apply(a.getAssignment().getName()));
-			if(a.isSymbolic()) return String.format("%s = %s%s%s", variable, QUOTE, expression(a.getExp(), variablePrefix).replace("\"", "\\\""), QUOTE);
+			// if(a.isSymbolic()) return String.format("%s = %s%s%s", variable, QUOTE, expression(a.getExp(), variablePrefix).replace("\"", "\\\""), QUOTE);
+			if(a.isSymbolic()) return String.format("%s = %s%s%s", variable, QUOTE, (new ExpressionsCommaGenerator()).exprToComMASyntax(a.getExp()).toString().replace("\"", "\\\""), QUOTE);
 			else return String.format("%s = %s", variable, expression(a.getExp(), variablePrefix));
 		} else if (action instanceof RecordFieldAssignmentAction) {
 			RecordFieldAssignmentAction a = (RecordFieldAssignmentAction) action;
 			ExpressionRecordAccess access = (ExpressionRecordAccess) a.getFieldAccess();
 			String QUOTE = "\"";
-			String record = expression(access.getRecord(), variablePrefix);
-			String field = access.getField().getName();
-			String value = expression(a.getExp(), variablePrefix);
-			if(a.isSymbolic()) return String.format("%s[\"%s\"] = %s%s%s", record, field, QUOTE, value.replace("\"", "\\\""), QUOTE);
-			else return String.format("%s[\"%s\"] = %s", record, field, value);
+			if(a.isSymbolic()) {
+				String record = (new ExpressionsCommaGenerator()).exprToComMASyntax(access.getRecord()).toString();
+				String field = access.getField().getName();
+				String value = (new ExpressionsCommaGenerator()).exprToComMASyntax(a.getExp()).toString();
+				return String.format("%s.%s = %s%s%s", record, field, QUOTE, value.replace("\"", "\\\""), QUOTE);
+				// return QUOTE + (new ActionsUmlGenerator()).generateAction(a).toString() + QUOTE;
+			} else {
+				String record = expression(access.getRecord(), variablePrefix);
+				String field = access.getField().getName();
+				String value = expression(a.getExp(), variablePrefix);
+				return String.format("%s[\"%s\"] = %s", record, field, value);
+			}
 		} else if(action instanceof IfAction) {
 			var txt = new String();
 			var indent_level = indent + "	";

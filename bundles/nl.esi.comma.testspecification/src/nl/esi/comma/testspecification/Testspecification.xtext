@@ -82,12 +82,16 @@ ConstraintElm:
 AbstractStep:
 	'step-name' ':' name = ID
 	stepRef += StepReference*
-	'input-binding' ':' input += Binding+
-	'output-data' ':' output += Binding+ 
+	'input-binding' ':' input += (Binding | BINDINGSTR)+
+	'output-data' ':' output += (Binding | BINDINGSTR)+
 ;
 
 StepReference:
 	'consumes-from-step' ':' refStep = [AbstractStep|ID] '{' refData += [Binding|ID]+ '}'
+;
+
+BINDINGSTR:
+	name = ID ':' strvalue = STRING
 ;
 
 Binding:
