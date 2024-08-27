@@ -15,11 +15,6 @@ class FromAbstractToConcrete
 
 	def generateAbstractTest(AbstractTestDefinition atd) {
 		var tspec = ""
-		// TODO: import params
-//		tspec += 'Test-Purpose' + purpose + "\n"
-//		tspec += 'Background' + background + "\n"
-//		tspec += 'Stakeholders' + stakeholders + "\n"
-
 		tspec += '''
 		test-sequence from_abstract_to_concrete {
 			test_single_sequence
@@ -39,7 +34,6 @@ class FromAbstractToConcrete
 	}
 
 	def dispatch getStep(AbstractStep step) {
-//		step.g
 		return ""
 	} 
 	
@@ -50,7 +44,4 @@ class FromAbstractToConcrete
 	def dispatch getStep(AssertStep step) {
 		return ""
 	}
-	
-
-	
 }

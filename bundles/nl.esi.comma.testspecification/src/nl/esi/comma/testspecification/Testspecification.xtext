@@ -31,7 +31,6 @@ ContextMap:
 AbstractTestDefinition:
 	{AbstractTestDefinition} 'abstract-test-definition'
 	'imports' ':' '{' imp_list += STRING* '}'
-	'variable-declarations' ':' '{' kvp += KVPair* '}'
 	testSeq += AbstractTestSequence*
 	'generate-file' filePath = STRING
 ;
