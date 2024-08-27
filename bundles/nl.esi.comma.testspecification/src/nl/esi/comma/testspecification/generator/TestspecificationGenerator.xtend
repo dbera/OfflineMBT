@@ -70,6 +70,9 @@ class TestspecificationGenerator extends AbstractGenerator
 			if(modelInst.model instanceof TestDefinition)
 				generateContents(fsa) // Parsing and File Generation
 			
+			if(modelInst.model instanceof AbstractTestDefinition)
+				(new FromAbstractToConcrete).doGenerate(resource, fsa, context)
+			
 			System.out.println("\n")
 			System.out.println(" ******* TEST DOCUMENTATION GENERATOR *********")
 			System.out.println("\n")
