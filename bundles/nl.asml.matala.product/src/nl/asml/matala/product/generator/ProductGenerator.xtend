@@ -20,6 +20,7 @@ import org.eclipse.xtext.generator.IGeneratorContext
 import org.eclipse.xtext.EcoreUtil2
 import nl.esi.comma.types.types.TypesModel
 import nl.esi.comma.types.generator.TypesZ3Generator
+import nl.esi.comma.expressions.generator.ExpressionsCommaGenerator
 
 /**
  * Generates code from your *.ps model files on save.
@@ -303,7 +304,9 @@ class ProductGenerator extends AbstractGenerator {
 			for(c : v.dataConstraints.constr) {
 				// val (String) => String fn = [s|"json.loads(v_"+s+", object_pairs_hook=Data().int_keys)"]
 				val (String) => String fn = [s|s]
-				constraints.add(new Constraint(c.name, SnakesHelper.expression(c.symbExpr, fn)))
+				// constraints.add(new Constraint(c.name, SnakesHelper.expression(c.symbExpr, fn)))
+				// constraints to comma expression. 27.08.2024
+				constraints.add(new Constraint(c.name, (new ExpressionsCommaGenerator()).exprToComMASyntax(c.symbExpr).toString()))
 			}
 		}
 		return constraints
@@ -368,6 +371,14 @@ class ProductGenerator extends AbstractGenerator {
 		
 		    def generateTSpec(self, idx):
 		        txt = "abstract-test-definition\n\n"
+		        txt += "imports : {\n"
+		        for imp in self.import_list:
+		            txt += "\t" + f'"{imp}"' + "\n"
+		        txt += "}\n\n"
+		        txt += "variable-declarations : {\n"
+		        for k, v in self.var_decl_map.items():
+		            txt += "\t" + f'"{k}"' + " : " + f'"{v}"' + "\n"
+		        txt += "}\n\n"
 		        txt += "Test-Scenario: S%s\n" % idx
 		        for step in self.step_list:
 		            if not step.is_assert:
