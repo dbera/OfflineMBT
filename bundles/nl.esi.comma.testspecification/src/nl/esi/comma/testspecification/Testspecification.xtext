@@ -14,9 +14,6 @@ TSMain:
 ModelType:
 	APIDefinition | TestDefinition /* concrete */| AbstractTestDefinition | ContextMap
 ;
-// code generator does not exist -> I have to create it (easier than changing an existing one)
-// I get two instances for the mapping between the two
-
 
 APIDefinition:
 	('data-instances' vars+=Variable+)
@@ -31,7 +28,7 @@ ContextMap:
 AbstractTestDefinition:
 	{AbstractTestDefinition} 'abstract-test-definition'
 	'imports' ':' '{' imp_list += STRING* '}'
-	'variable-declarations' ':' '{' kvp += KVPair* '}'
+	'variable-declarations' ':' '{' kvp += NestedKeyValuesPair* '}'
 	testSeq += AbstractTestSequence*
 	'generate-file' filePath = STRING
 ;
