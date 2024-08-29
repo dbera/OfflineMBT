@@ -12,8 +12,11 @@ TSMain:
 ;
 
 ModelType:
-	APIDefinition | TestDefinition | AbstractTestDefinition | ContextMap
+	APIDefinition | TestDefinition /* concrete */| AbstractTestDefinition | ContextMap
 ;
+// code generator does not exist -> I have to create it (easier than changing an existing one)
+// I get two instances for the mapping between the two
+
 
 APIDefinition:
 	('data-instances' vars+=Variable+)
@@ -82,42 +85,47 @@ ConstraintElm:
 AbstractStep:
 	'step-name' ':' name = ID
 	stepRef += StepReference*
-	'input-binding' ':' input += (Binding | BINDINGSTR)+
-	'output-data' ':' output += (Binding | BINDINGSTR)+
+	'input-binding' ':' input += Binding+
+	'output-data' ':' output += Binding+
 ;
 
 StepReference:
 	'consumes-from-step' ':' refStep = [AbstractStep|ID] '{' refData += [Binding|ID]+ '}'
 ;
 
-BINDINGSTR:
-	name = ID ':' strvalue = STRING
-;
-
 Binding:
-	name = ID ':' '{'
-		kvPairs += (KVPair|NestedKeyValuesPair)+
-	'}'
+	name = ID ':' 
+		(	strvalue = STRING
+		|	'{'
+				kvPairs += NestedKeyValuesPair (',' kvPairs += NestedKeyValuesPair)*
+			'}'
+		)
 ;
 
 NestedKeyValuesPair:
-	refVar = STRING ':' ( ('{' | '[')
-		(kvpl = KVPList)?
-		kvsp += (NestedKeyValuesPair)*
-		// (kvplpost = KVPList)?
-	('}' | ']') (',')? )
+	refVar = STRING ':' 
+		(	nestedKeyValue = NestedKeyValue
+		|	nestedKeyValuesSet = NestedKeyValuesSet
+		|	nestedKeyValuesList = NestedKeyValuesList
+		)
 ;
 
-KVPList:
-	kvp += (KVPair|ListElm)+
+NestedKeyValue:
+	intValue = Int | strValue = STRING | bValue = BOOL_LITERAL
 ;
 
-KVPair:
-	key = STRING ':' (intValue = Int | strValue = STRING | bValue = BOOL_LITERAL ) (',')?
+NestedKeyValuesSet:
+	'{'
+		kvsp += NestedKeyValuesPair (',' kvsp += NestedKeyValuesPair)*
+	'}'
 ;
 
-ListElm:
-	lkey += STRING (',')?
+NestedKeyValuesList: {NestedKeyValuesList} 
+	'['
+		(	valueOnly = STRING	
+		|	kvsp += NestedKeyValuesPair (',' kvsp += NestedKeyValuesPair)*
+		)?
+	']'
 ;
 
 /*********************************************************/
