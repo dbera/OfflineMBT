@@ -5,18 +5,22 @@ generate testspecification "http://www.esi.nl/comma/testspecification/Testspecif
 import "http://www.esi.nl/comma/signature/InterfaceSignature" as sig 
 import "http://www.esi.nl/comma/types/Types" as types
 import "http://www.esi.nl/comma/expressions/Expression" as expr
+import "http://www.asml.nl/matala/product/Product" as prod
 
 TSMain:
 	imports += Import*
+	namespace += NameSpace*
 	model = ModelType
+;
+
+@Override
+NamedElement returns types::NamedElement:
+	name=QualifiedName | Variable
 ;
 
 ModelType:
 	APIDefinition | TestDefinition /* concrete */| AbstractTestDefinition | ContextMap
 ;
-// code generator does not exist -> I have to create it (easier than changing an existing one)
-// I get two instances for the mapping between the two
-
 
 APIDefinition:
 	('data-instances' vars+=Variable+)
@@ -30,7 +34,6 @@ ContextMap:
 
 AbstractTestDefinition:
 	{AbstractTestDefinition} 'abstract-test-definition'
-	'imports' ':' '{' imp_list += STRING* '}'
 	testSeq += AbstractTestSequence*
 	'generate-file' filePath = STRING
 ;
@@ -71,7 +74,8 @@ AbstractTestSequence:
 
 ConstraintStep:
 	'symbolic-constraint' ':' name = ID
-	 ce += ConstraintElm+
+//	ce += ConstraintElm+
+	ce += [prod::RefConstraint|QualifiedName]+	
 ;
 
 AssertStep:
@@ -84,18 +88,30 @@ ConstraintElm:
 ;
 
 AbstractStep:
-	'step-name' ':' name = ID
+	ComposeStep | RunStep
+;
+
+ComposeStep:
+	'compose-step-name' ':' name = ID
+	stepRef += StepReference*
+	'input-binding' ':' input += Binding+
+	'output-data' ':' output += Binding+
+;
+
+RunStep:
+	'run-step-name' ':' name = ID
+	('step-type' ':' stepType += STRING)?
 	stepRef += StepReference*
 	'input-binding' ':' input += Binding+
 	'output-data' ':' output += Binding+
 ;
 
 StepReference:
-	'consumes-from-step' ':' refStep = [AbstractStep|ID] '{' refData += [Binding|ID]+ '}'
+	'consumes-from-step' ':' refStep = [AbstractStep|ID] '{' refData += [expr::Variable|QualifiedName]+ '}'
 ;
 
 Binding:
-	name = ID ':' 
+	name = [expr::Variable|QualifiedName] ':' 
 		(	strvalue = STRING
 		|	'{'
 				kvPairs += NestedKeyValuesPair (',' kvPairs += NestedKeyValuesPair)*
@@ -104,29 +120,7 @@ Binding:
 ;
 
 NestedKeyValuesPair:
-	refVar = STRING ':' 
-		(	nestedKeyValue = NestedKeyValue
-		|	nestedKeyValuesSet = NestedKeyValuesSet
-		|	nestedKeyValuesList = NestedKeyValuesList
-		)
-;
-
-NestedKeyValue:
-	intValue = Int | strValue = STRING | bValue = BOOL_LITERAL
-;
-
-NestedKeyValuesSet:
-	'{'
-		kvsp += NestedKeyValuesPair (',' kvsp += NestedKeyValuesPair)*
-	'}'
-;
-
-NestedKeyValuesList: {NestedKeyValuesList} 
-	'['
-		(	valueOnly = STRING	
-		|	kvsp += NestedKeyValuesPair (',' kvsp += NestedKeyValuesPair)*
-		)?
-	']'
+	actions += Action+
 ;
 
 /*********************************************************/
