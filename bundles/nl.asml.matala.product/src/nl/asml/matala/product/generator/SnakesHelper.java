@@ -401,4 +401,48 @@ class SnakesHelper {
 		
 		throw new RuntimeException("Not supported");
 	}
+
+	static String commaAction(Action action, Function<String, String> variablePrefix, String indent) {
+		if (action instanceof AssignmentAction) {
+			AssignmentAction a = (AssignmentAction) action;
+			String QUOTE = "\"";
+			String variable = String.format("%s", variablePrefix.apply(a.getAssignment().getName()));
+			return String.format("%s = %s%s%s", variable, QUOTE, (new ExpressionsCommaGenerator()).exprToComMASyntax(a.getExp()).toString(), QUOTE); //.replace("\"", "\\\"")
+		} else if (action instanceof RecordFieldAssignmentAction) {
+			RecordFieldAssignmentAction a = (RecordFieldAssignmentAction) action;
+			ExpressionRecordAccess access = (ExpressionRecordAccess) a.getFieldAccess();
+			String QUOTE = "\"";
+			String record = (new ExpressionsCommaGenerator()).exprToComMASyntax(access.getRecord()).toString();
+			String field = access.getField().getName();
+			String value = (new ExpressionsCommaGenerator()).exprToComMASyntax(a.getExp()).toString();
+			return String.format("%s.%s = %s%s%s", record, field, QUOTE, value, QUOTE); //.replace("\"", "\\\"")
+		} else if(action instanceof IfAction) {
+			var txt = new String();
+			var indent_level = indent + "	";
+			var act = (IfAction) action;
+			txt += String.format("if %s:\n",expression(act.getGuard(), variablePrefix));
+			for(var a : act.getThenList().getActions()) {
+				txt += indent_level + String.format("%s\n", action(a,variablePrefix, indent_level)); 
+			}
+			if(act.getElseList()!= null) {
+				txt += "else:\n";
+				for(var a : act.getElseList().getActions()) {
+					txt += indent_level + String.format("%s\n", action(a,variablePrefix, indent_level)); 
+				}
+			}
+			return txt.trim();
+		} else if(action instanceof ForAction) {
+			var txt = new String();
+			var indent_level = indent + "	";
+			var act = (ForAction) action;
+			txt += String.format("for %s in %s:\n", act.getVar().getName(), expression(act.getExp(), variablePrefix));
+			for(var a : act.getDoList().getActions()) {
+				txt += indent_level + String.format("%s\n", action(a,variablePrefix, indent_level));
+			}
+			return txt.trim();
+		}
+		
+		throw new RuntimeException("Not supported");
+	}
+
 }

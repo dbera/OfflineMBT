@@ -33,7 +33,7 @@ SystemDecl:
 Specification:
 	'specification' name = ID '{'
 		blocks += Blocks+
-		('environment-blocks' envBlock += [Block|QualifiedName]*)?
+		('SUT-blocks' envBlock += [Block|QualifiedName]*)?
 		'depth-limits' limit = Int
 	'}'
 ;
@@ -80,15 +80,26 @@ UpdateOutVar:
 VarRef:
 	opt?='opt'? init?='init'? 
 	ref = [expr::Variable|ID] 
-	(dataConstraints = DataConstraints)? 
+	(dataConstraints = DataConstraints)?
+	(dataReferences = DataReferences)? 
 ;
 
 DataConstraints:
 	'constraints' '{' 
-		constr += Constraint+
+		constr += SymbConstraint+
 	 '}'
 ;
 
-Constraint:
-	name=ID ':' symbExpr=Expression
+DataReferences:
+	'references' '{' 
+		constr += RefConstraint+
+	 '}'
+;
+
+RefConstraint:
+	name=ID ':' act = ActionList
+;
+
+SymbConstraint:
+	name=ID ':' symbExpr = Expression
 ;

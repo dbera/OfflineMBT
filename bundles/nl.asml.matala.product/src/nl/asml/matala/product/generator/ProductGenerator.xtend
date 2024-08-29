@@ -305,8 +305,17 @@ class ProductGenerator extends AbstractGenerator {
 				// val (String) => String fn = [s|"json.loads(v_"+s+", object_pairs_hook=Data().int_keys)"]
 				val (String) => String fn = [s|s]
 				// constraints.add(new Constraint(c.name, SnakesHelper.expression(c.symbExpr, fn)))
+				
 				// constraints to comma expression. 27.08.2024
+				// Check if boolean expression or assignment action
 				constraints.add(new Constraint(c.name, (new ExpressionsCommaGenerator()).exprToComMASyntax(c.symbExpr).toString()))
+			}
+		}
+		if(v.dataReferences !== null) {
+			for(c : v.dataReferences.constr) {
+				val (String) => String fn = [s|s]
+				for(a : c.act.actions)
+					constraints.add(new Constraint(c.name, SnakesHelper.commaAction(a, fn, "")))
 			}
 		}
 		return constraints
