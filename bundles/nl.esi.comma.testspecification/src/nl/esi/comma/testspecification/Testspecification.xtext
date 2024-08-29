@@ -102,7 +102,7 @@ Binding:
 ;
 
 NestedKeyValuesPair:
-	refVar = STRING ':' 
+	refVar = STRING ':'
 		(	nestedKeyValue = NestedKeyValue
 		|	nestedKeyValuesSet = NestedKeyValuesSet
 		|	nestedKeyValuesList = NestedKeyValuesList
@@ -123,9 +123,15 @@ NestedKeyValuesList: {NestedKeyValuesList}
 	'['
 		(	valueOnly = STRING	
 		|	kvsp += NestedKeyValuesPair (',' kvsp += NestedKeyValuesPair)*
+		|	kvss += NestedKeyValuesSet (',' kvss += NestedKeyValuesSet)*
 		)?
 	']'
 ;
+
+NestedKeyValuesRecord:
+	refVar = STRING ':' nestedKeyValue = NestedKeyValue
+;
+
 
 /*********************************************************/
 
