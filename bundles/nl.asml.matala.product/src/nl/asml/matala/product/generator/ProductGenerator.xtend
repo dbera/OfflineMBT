@@ -5,22 +5,28 @@ package nl.asml.matala.product.generator
 
 import java.util.ArrayList
 import java.util.HashMap
+import java.util.HashSet
 import java.util.List
 import java.util.Map
+import java.util.Set
 import nl.asml.matala.product.product.Block
 import nl.asml.matala.product.product.Product
 import nl.asml.matala.product.product.VarRef
+import nl.esi.comma.expressions.expression.Variable
+import nl.esi.comma.expressions.generator.ExpressionsCommaGenerator
+import nl.esi.comma.types.generator.TypesZ3Generator
 import nl.esi.comma.types.types.RecordTypeDecl
 import nl.esi.comma.types.types.SimpleTypeDecl
 import nl.esi.comma.types.types.TypeDecl
+import nl.esi.comma.types.types.TypesModel
 import org.eclipse.emf.ecore.resource.Resource
+import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
-import org.eclipse.xtext.EcoreUtil2
-import nl.esi.comma.types.types.TypesModel
-import nl.esi.comma.types.generator.TypesZ3Generator
-import nl.esi.comma.expressions.generator.ExpressionsCommaGenerator
+import nl.esi.comma.types.types.Type
+import nl.esi.comma.types.types.VectorTypeConstructor
+import nl.esi.comma.types.types.RecordField
 
 /**
  * Generates code from your *.ps model files on save.
@@ -156,7 +162,7 @@ class ProductGenerator extends AbstractGenerator {
 			'''
 			fsa.generateFile(name + '_data.py', data_container_class)
 			
-			fsa.generateFile(name + '_TestSCN.py', generateTestSCNTxt(prod.specification.name + "_types", import_list, var_decl_map))
+			fsa.generateFile(name + '_TestSCN.py', generateTestSCNTxt(prod.specification.name + "_types", prod))
 			
 			// execute python code
 			// val relativeFile = fsa.getURI(prod.name + '.py')
@@ -321,9 +327,7 @@ class ProductGenerator extends AbstractGenerator {
 		return constraints
 	}
 	
-	def generateTestSCNTxt(String name, 
-		ArrayList<String> import_list, HashMap<String,String> var_decl_map
-	) {
+	def generateTestSCNTxt(String name, Product prod) {
 		return
 		'''
 		import json
@@ -348,16 +352,12 @@ class ProductGenerator extends AbstractGenerator {
 		    step_dependencies = []
 		    map_transition_assert = {}
 		    constraint_dict = {}
-		    import_list = []
-		    var_decl_map = {}
 		
 		    def __init__(self, _mapTrAssert, _constraint_dict):
 		        self.step_list = []
 		        self.step_dependencies = []
 		        self.map_transition_assert = _mapTrAssert
 		        self.constraint_dict = _constraint_dict
-		        self.import_list = Types().import_list
-		        self.var_decl_map = Types().var_decl_map
 		
 		    def generate_viz(self, idx):
 		        txt = "@startuml\n"
@@ -378,31 +378,63 @@ class ProductGenerator extends AbstractGenerator {
 		        with open(fname, 'w') as f:
 		            f.write(txt)
 		
+		    def recurseJson(self, items, prefix):
+		        txt = ""
+		        try:
+		            for jk in items.keys():
+		                txt += self.recurseJson(items[jk], f"{prefix}.{jk}")
+		        except:
+		            match items:
+		                case str():
+		                    if ":" in items and not "()" in items:
+		                        items = items.replace(":", "::")
+		                    elif "True" in items:
+		                        items = "true"
+		                    elif "False" in items:
+		                        items = "false"
+		                    else:
+		                        items = f"\"{items}\""
+		                case int():
+		                    items = items
+		                case list():
+		                	«printListConstructors(prod)»
+		                case _:
+		                    raise TypeError('Unsupported type')
+		            txt += f"    {prefix} := {items}\n"
+		        return txt
+		
+		    def printData(self, idata):
+		        txt = ""
+		        for k, v in idata.items():
+		            txt += "%s : {\n" % k
+		            j = json.loads(v)
+		            for jk in j.keys():
+		                txt += self.recurseJson(j[jk], "%s.%s" % (k,jk))
+		            txt += "}\n"
+		        return txt
+				
 		    def generateTSpec(self, idx):
-		        txt = "abstract-test-definition\n\n"
-		        txt += "imports : {\n"
-		        for imp in self.import_list:
-		            txt += "\t" + f'"{imp}"' + "\n"
-		        txt += "}\n\n"
-		        txt += "variable-declarations : {\n"
-		        for k, v in self.var_decl_map.items():
-		            txt += "\t" + f'"{k}"' + " : " + f'"{v}"' + "\n"
-		        txt += "}\n\n"
+		        txt = ""
+		        txt += "import \"BMMO.ps\"\n\n"
+		        «usageList(prod)»
+		        txt += "abstract-test-definition\n\n"
 		        txt += "Test-Scenario: S%s\n" % idx
 		        for step in self.step_list:
 		            if not step.is_assert:
 		                name = step.step_name
 		                idata = step.input_data
 		                odata = step.output_data
-		                txt += "step-name: %s\n" % name
+		                if "_run_" in name:
+		                    txt += "run-step-name: %s\n" % name
+		                else:
+		                    txt += "compose-step-name: %s\n" % name		                
 		                for elm in self.step_dependencies:
 		                    if elm.step_name == name:
 		                        txt += "consumes-from-step: %s { " % elm.depends_on
 		                        txt += elm.var_ref
 		                        txt += " }\n"
 		                txt += "input-binding:\n"
-		                for k, v in idata.items():
-		                    txt += "%s : %s\n" % (k, v)
+		                txt += self.printData(idata)
 		                for k, v in idata.items():
 		                    if name.rsplit("_",1)[0] in self.constraint_dict:
 		                        for constr in self.constraint_dict[name.rsplit("_",1)[0]]:
@@ -411,8 +443,7 @@ class ProductGenerator extends AbstractGenerator {
 		                                for entry in constr.centry:
 		                                    txt += "%s : \"%s\"\n" % (entry.name, entry.constr.replace('"','\\"'))
 		                txt += "output-data:\n"
-		                for k, v in odata.items():
-		                    txt += "%s : %s\n" % (k, v)
+		                txt += self.printData(odata)
 		                for k, v in odata.items():
 		                    if name.rsplit("_",1)[0] in self.constraint_dict:
 		                        for constr in self.constraint_dict[name.rsplit("_",1)[0]]:
@@ -549,6 +580,78 @@ class ProductGenerator extends AbstractGenerator {
 			txt += '''v_«elm»'''
 		
 		return txt
+	}
+	
+	def usageList(Product prod) {
+		var varSet = getUniqueVariables(prod)
+		var usings = ""
+		for (v : varSet) {
+			var blockName = (v.eContainer as Block).name
+			usings += "txt += \"using " + prod.specification.name + "." + blockName + "." + v.name + "\\n\"\n"
+		}
+		return usings
+	}
+	
+	def printListConstructors(Product prod) {
+		var constrTxt = ""
+		var constructors = newLinkedHashMap() 
+		var varSet = getUniqueVariables(prod)
+		for (v : varSet) {
+			constructors.putAll(recurseTypes(v.type))
+		}
+		var applySeparator = false
+		for (c : constructors.keySet) {
+			if (applySeparator) constrTxt += "el"
+			else applySeparator = true
+			constrTxt += "if \"" + constructors.get(c) + "\" in prefix:\n"
+			constrTxt += "    items = \"<" + c + "[]>[]\"\n"
+		}
+		constrTxt += "else:\n"
+		constrTxt += "    items = \"<string[]>[\\\"\\\"]\"\n"
+		return constrTxt
+	}
+
+	def Map<String,String> recurseTypes(Type typ) {
+		var constructors = newLinkedHashMap() 
+		var typ2 = typ.type
+		if (typ instanceof VectorTypeConstructor) {
+			var t = typ
+			if (!typ2.name.equalsIgnoreCase("string")) {
+				if (typ.eContainer instanceof RecordField) {
+					var field = (typ.eContainer as RecordField).name
+					var key = typ2.name
+					constructors.put(key, field)
+				}
+			}
+		}
+		if (typ2 instanceof RecordTypeDecl) {
+			for (f : (typ2 as RecordTypeDecl).fields) {
+				constructors.putAll(recurseTypes(f.type))
+			}
+		}
+		return constructors
+	}
+	
+	def getUniqueVariables(Product prod) {
+		var Set<Variable> varSet = new HashSet<Variable>()
+		var Set<Variable> varSetUniqueNames = new HashSet<Variable>()
+		for (b : prod.eAllContents.filter(Block).toIterable) {
+			varSet.addAll(b.invars)
+			varSet.addAll(b.outvars)
+			varSet.addAll(b.localvars)
+		}
+		for (v : varSet) {
+			var notInUniqueSet = true
+			for (u : varSetUniqueNames) {
+				if (v.name.compareToIgnoreCase(u.name) == 0) {
+					notInUniqueSet = false
+				}				
+			}
+			if (notInUniqueSet) {
+				varSetUniqueNames.add(v)
+			}
+		}
+		return varSetUniqueNames
 	}
 	
 	def parseOutVariablesWithActions(Block block, HashMap<String, List<String>> map_output_input, 

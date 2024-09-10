@@ -8,7 +8,13 @@ import "http://www.esi.nl/comma/expressions/Expression" as expr
 
 TSMain:
 	imports += Import*
+	namespace += NameSpace*
 	model = ModelType
+;
+
+@Override
+NamedElement returns types::NamedElement:
+	name=QualifiedName | Variable
 ;
 
 ModelType:
@@ -27,8 +33,6 @@ ContextMap:
 
 AbstractTestDefinition:
 	{AbstractTestDefinition} 'abstract-test-definition'
-	'imports' ':' '{' imp_list += STRING* '}'
-	'variable-declarations' ':' '{' kvp += NestedKeyValuesPair* '}'
 	testSeq += AbstractTestSequence*
 	'generate-file' filePath = STRING
 ;
@@ -69,7 +73,7 @@ AbstractTestSequence:
 
 ConstraintStep:
 	'symbolic-constraint' ':' name = ID
-	 ce += ConstraintElm+
+	ce += ConstraintElm+
 ;
 
 AssertStep:
@@ -82,18 +86,29 @@ ConstraintElm:
 ;
 
 AbstractStep:
-	'step-name' ':' name = ID
+	ComposeStep | RunStep
+;
+
+ComposeStep:
+	'compose-step-name' ':' name = ID
+	stepRef += StepReference*
+	'input-binding' ':' input += Binding+
+	'output-data' ':' output += Binding+
+;
+
+RunStep:
+	'run-step-name' ':' name = ID
 	stepRef += StepReference*
 	'input-binding' ':' input += Binding+
 	'output-data' ':' output += Binding+
 ;
 
 StepReference:
-	'consumes-from-step' ':' refStep = [AbstractStep|ID] '{' refData += [Binding|ID]+ '}'
+	'consumes-from-step' ':' refStep = [AbstractStep|ID] '{' refData += [expr::Variable|QualifiedName]+ '}'
 ;
 
 Binding:
-	name = ID ':' 
+	name = [expr::Variable|QualifiedName] ':' 
 		(	strvalue = STRING
 		|	'{'
 				kvPairs += NestedKeyValuesPair (',' kvPairs += NestedKeyValuesPair)*
@@ -102,36 +117,8 @@ Binding:
 ;
 
 NestedKeyValuesPair:
-	refVar = STRING ':'
-		(	nestedKeyValue = NestedKeyValue
-		|	nestedKeyValuesSet = NestedKeyValuesSet
-		|	nestedKeyValuesList = NestedKeyValuesList
-		)
+	actions += Action+
 ;
-
-NestedKeyValue:
-	intValue = Int | strValue = STRING | bValue = BOOL_LITERAL
-;
-
-NestedKeyValuesSet:
-	'{'
-		kvsp += NestedKeyValuesPair (',' kvsp += NestedKeyValuesPair)*
-	'}'
-;
-
-NestedKeyValuesList: {NestedKeyValuesList} 
-	'['
-		(	valueOnly = STRING	
-		|	kvsp += NestedKeyValuesPair (',' kvsp += NestedKeyValuesPair)*
-		|	kvss += NestedKeyValuesSet (',' kvss += NestedKeyValuesSet)*
-		)?
-	']'
-;
-
-NestedKeyValuesRecord:
-	refVar = STRING ':' nestedKeyValue = NestedKeyValue
-;
-
 
 /*********************************************************/
 

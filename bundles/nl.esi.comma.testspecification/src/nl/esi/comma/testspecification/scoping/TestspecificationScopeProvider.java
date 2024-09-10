@@ -3,6 +3,9 @@
  */
 package nl.esi.comma.testspecification.scoping;
 
+import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.EReference;
+import org.eclipse.xtext.scoping.IScope;
 
 /**
  * This class contains custom scoping description.
@@ -12,4 +15,8 @@ package nl.esi.comma.testspecification.scoping;
  */
 public class TestspecificationScopeProvider extends AbstractTestspecificationScopeProvider {
 
+	@Override
+	public IScope getScope(EObject ctx, EReference ref) {
+		return super.getScope(ctx, ref);
+	}
 }
