@@ -61,13 +61,14 @@ Block:
 ;
 
 Function:
-	'action' name=ID  
+	'action' name = ID
 	updates += Update*
 ;
 
 Update:
 	'case' name = ID 
-	('with-inputs' fnInp += VarRef (',' fnInp+=VarRef)*  )?
+	('type' type = STRING)?
+	('with-inputs' fnInp += VarRef (',' fnInp+=VarRef)*)?
 	('with-guard' guard=Expression)?
 	updateOutputVar += UpdateOutVar*
 ;

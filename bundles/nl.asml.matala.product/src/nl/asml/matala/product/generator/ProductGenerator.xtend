@@ -215,7 +215,7 @@ class ProductGenerator extends AbstractGenerator {
 			for(update : f.updates) 
 			{
 				System.out.println("  > case: " + update.name)
-				var tname = f.name + "_" + update.name
+				var tname = f.name + "_" + update.name + "@" + update.type + "@"
 				var tr = new Transition(block.name, block.name+"_"+tname)
 				pnet.transitions.add(tr)
 				var input_var_list = new HashMap<String,TypeDecl> // ArrayList<String>
@@ -397,7 +397,7 @@ class ProductGenerator extends AbstractGenerator {
 		                case int():
 		                    items = items
 		                case list():
-		                	«printListConstructors(prod)»
+		                    «printListConstructors(prod)»
 		                case _:
 		                    raise TypeError('Unsupported type')
 		            txt += f"    {prefix} := {items}\n"
@@ -424,13 +424,20 @@ class ProductGenerator extends AbstractGenerator {
 		                name = step.step_name
 		                idata = step.input_data
 		                odata = step.output_data
+		                parts = name.split("@")
+		                new_name = parts[0] + parts[2]
 		                if "_run_" in name:
-		                    txt += "run-step-name: %s\n" % name
+		                    type_name = ""
+		                    if not "null" in parts[1]:
+		                        type_name = " step-type: \"%s\"" % parts[1] 
+		                    txt += "run-step-name: %s%s\n" % (new_name, type_name)
 		                else:
-		                    txt += "compose-step-name: %s\n" % name		                
+		                    txt += "compose-step-name: %s\n" % new_name
 		                for elm in self.step_dependencies:
 		                    if elm.step_name == name:
-		                        txt += "consumes-from-step: %s { " % elm.depends_on
+		                        parts = elm.depends_on.split("@")
+		                        new_name = parts[0] + parts[2]
+		                        txt += "consumes-from-step: %s { " % new_name
 		                        txt += elm.var_ref
 		                        txt += " }\n"
 		                txt += "input-binding:\n"
@@ -845,297 +852,3 @@ class ProductGenerator extends AbstractGenerator {
 		fsa.generateFile('OnlineMBT_Controller.py', txt)
 	}
 }
-
-
-
-/*
-def toSnakesSimulation() {
-		'''
-		import PySimpleGUI as sg
-		import PIL
-		from PIL import Image
-		from plantuml import PlantUML
-		import os
-		import base64
-		from os.path import abspath
-		from io import BytesIO
-		
-		class Simulation:
-		    
-		    def convert_to_bytes(self, source, size=(None, None), subsample=None, zoom=None, fill=False):
-		        if isinstance(source, str):
-		            image = Image.open(source)
-		        elif isinstance(source, bytes):
-		            image = Image.open(io.BytesIO(base64.b64decode(source)))
-		        else:
-		            image = PIL.Image.open(io.BytesIO(source))
-		    
-		        width, height = image.size
-		    
-		        scale = None
-		        if size != (None, None):
-		            new_width, new_height = size
-		            scale = min(new_height/height, new_width/width)
-		        elif subsample is not None:
-		            scale = 1/subsample
-		        elif zoom is not None:
-		            scale = zoom
-		    
-		        resized_image = image.resize((int(width * scale), int(height * scale)), Image.ANTIALIAS) if scale is not None else image
-		        if fill and scale is not None:
-		            resized_image = make_square(resized_image)
-		        # encode a PNG formatted version of image into BASE64
-		        with BytesIO() as bio:
-		            resized_image.save(bio, format="PNG")
-		            contents = bio.getvalue()
-		            encoded = base64.b64encode(contents)
-		        return encoded
-		    
-		    
-		    def simulateUI(self,n):
-		        trList = []
-		        column = [[sg.Image(key="-IMAGE-")]]
-		        buttonLayout = [
-		                    [sg.Button("Start"),
-		                    sg.Button("ZoomIn"),
-		                    sg.Button("ZoomOut"),
-		                    sg.Button("Fire")],
-		                    [sg.Text('Enabled-Transitions')],
-		                    [sg.Combo(['empty'], enable_events=True, key='enabled',size=(60, 0))],
-		                    [sg.Text('Modes')],
-		                    [sg.Listbox(trList, size=(60, len(trList) + 10), horizontal_scroll = True, key='modes')],
-		                    [sg.Text('Marking')],
-		                    [sg.Multiline('', size=(60,10), horizontal_scroll = True, key = 'marking')]
-		        ]
-		        layout = [
-		            [sg.Column(column, size=(700, 500), scrollable=True, key='Column', expand_x=True, expand_y=True),
-		            [sg.Checkbox('block-view', default=True, key='isBlockView')],
-		            sg.VSeperator(),
-		            sg.Column(buttonLayout, key='bColumn', expand_x=True, expand_y=True)],
-		        ]
-		        window = sg.Window("Simulator", layout, resizable=True)
-		        server = PlantUML(url='http://www.plantuml.com/plantuml/img/', basic_auth={}, form_auth={}, http_opts={}, request_opts={})
-		        zoomin = 0
-		        zoomout = 0
-		        isBlockViewEnabled = False
-		        while True:
-		            event, values = window.read()
-		            if event == sg.WINDOW_CLOSED:
-		                break
-		            if event == "Fire":
-		                # print(values['modes'])
-		                # print(values['enabled'])
-		                n.transition(self.dictTrName[values['enabled']]).fire(values['modes'][0])
-		                self.generatePlantUML(n,values['isBlockView'])
-		                # print(self.getEnabledTransitionList(n))
-		                window['enabled'].update(values=self.getEnabledTransitionList(n))
-		                #window['modes'].Widget.configure(height=len(trList)+10)
-		                window['modes'].update(values=[])
-		                marking_txt = ''
-		                for k in n.get_marking():
-		                    marking_txt += ' Queue: {0}\n'.format(k)
-		                    marking_txt += '     Contents: {0}\n'.format(n.get_marking()[k])
-		                window['marking'].update(marking_txt)
-		                # print(values)
-		                filename = 'simulation.plantuml'
-		                if os.path.exists(filename):
-		                    server.processes_file(abspath(filename))                    
-		                    window["-IMAGE-"].update(self.convert_to_bytes('simulation.png'))
-		                    if zoomin > 1: 
-		                        window["-IMAGE-"].update(self.convert_to_bytes('simulation.png', zoom=zoomin))
-		                    if zoomout > 1:
-		                        window["-IMAGE-"].update(self.convert_to_bytes('simulation.png', subsample=zoomout))
-		                    window.refresh()
-		                    window['Column'].contents_changed()
-		            if event == "enabled":
-		                # print(values['enabled'])
-		                trList = []
-		                for key,value in self.dictTrMode.items():
-		                    if key == values['enabled']:
-		                        trList.append(value)
-		                window['modes'].Widget.configure(height=len(trList)+10)
-		                window['modes'].update(values=trList)
-		            if event == "ZoomOut":
-		                zoomout = zoomout + 1
-		                if zoomin > 1: 
-		                    zoomin = zoomin - 1
-		                    window["-IMAGE-"].update(self.convert_to_bytes('simulation.png', zoom=zoomin))
-		                else:
-		                    window["-IMAGE-"].update(self.convert_to_bytes('simulation.png', subsample=zoomout))
-		                window.refresh()
-		                window['Column'].contents_changed()
-		            if event == "ZoomIn":
-		                zoomin = zoomin + 1
-		                if zoomout > 1:
-		                    zoomout = zoomout - 1
-		                    window["-IMAGE-"].update(self.convert_to_bytes('simulation.png', subsample=zoomout))
-		                else:
-		                    window["-IMAGE-"].update(self.convert_to_bytes('simulation.png', zoom=zoomin))
-		                window.refresh()
-		                window['Column'].contents_changed()
-		            if event == "Start":
-		                self.generatePlantUML(n,values['isBlockView'])
-		                # print(self.getEnabledTransitionList(n))
-		                window['enabled'].update(values=self.getEnabledTransitionList(n))
-		                marking_txt = ''
-		                for k in n.get_marking():
-		                    marking_txt += ' Queue: {0}\n'.format(k)
-		                    marking_txt += '     Contents: {0}\n'.format(n.get_marking()[k])
-		                window['marking'].update(marking_txt)
-		                # print(values)
-		                filename = 'simulation.plantuml'
-		                if os.path.exists(filename):
-		                    server.processes_file(abspath(filename))                    
-		                    window["-IMAGE-"].update(self.convert_to_bytes('simulation.png'))
-		                    window.refresh()
-		                    window['Column'].contents_changed()
-		    
-		    
-		    def getEnabledTransitionList(self,n):
-		        trList = []
-		        self.dictTrName = {}
-		        self.dictTrMode = {}
-		        for t in n.transition():
-		            tmodes = t.modes()
-		            idx = 0
-		            for mode in tmodes:
-		                #for key,value in mode.dict().items():
-		                    #kv = ': {0}  -> {1}'.format(key,value)
-		                trList.append(t.name + str(idx))
-		                self.dictTrName.update({t.name + str(idx) : t.name})
-		                self.dictTrMode.update({t.name + str(idx) : mode})
-		                idx = idx + 1
-		        return trList
-		    
-		    def simulate(self,n):
-		        stop = False
-		        while not stop:
-		            dead_marking = False
-		            enabled_transition_modes = {}
-		            for t in n.transition():
-		                tmodes = t.modes()
-		                for mode in tmodes:
-		                    print('\n')
-		                    print(' Enabled-transition-name: ', t)
-		                    print('    # with-input-modes: ')
-		                    for key,value in mode.dict().items():
-		                        print('      - var: ', key, '  ->  value:', value)
-		                    # print('     > with mode: ', mode.dict())
-		                    enabled_transition_modes[t] = mode
-		    
-		            if not enabled_transition_modes:
-		                dead_marking = True
-		    
-		            choices = {}
-		            idx = 0
-		            for key, value in enabled_transition_modes.items():
-		                choices[idx] = key, value
-		                idx = idx + 1
-		    
-		            for k, v in choices.items():
-		                print('\n')
-		                print('Possible-choices: ')
-		                print('    + choice: ', k, ' with-mode: ', v)
-		    
-		            if not dead_marking:
-		                print('\n')
-		                value = input(" Enter Choice: ")
-		                print('\n')
-		                print(' - Selected transition: ', choices.get(int(value)))
-		                t, m = choices.get(int(value))
-		                t.fire(m)
-		                print('\n')
-		                print(' [ Transition Fired! ]')
-		                print('\n')
-		                print(' Resulting Marking: ')
-		                for k in n.get_marking():
-		                    print('    + Place: ', k, ' has Token: ', n.get_marking()[k])
-		                print('****************************************************************')
-		                self.generatePlantUML(n,True)
-		            else:
-		                print('No Enabled Transitions!!')
-		                stop = True
-		    
-		    
-		    def getTransitionName(self,t,isDetailed):
-		        if isDetailed:
-		            return t.name
-		        else:
-		            return t.name.split('_')[0]
-		    
-		    
-		    def generatePlantUML(self, n, isDetailed):
-		        print('generating animation...')
-		        fname = "simulation.plantuml"
-		        txt = ''
-		        txt += '@startuml'
-		        txt += '\n'
-		        placeList = []
-		        transitionList = []
-		        
-		        for k in n.get_marking():
-		            print('    + Place: ', k, ' has Token: ', n.get_marking()[k])
-		            placeList.append(k)
-		            # txt += 'interface {0} #yellow\n'.format(k)
-		        for t in n.transition():
-		            tmodes = t.modes()
-		            for mode in tmodes:
-		                print('\n')
-		                print(' Enabled-transition-name: ', t)
-		                # transitionList.append(t.name)
-		                transitionList.append(self.getTransitionName(t,isDetailed))
-		                # txt += 'component {0} #yellow\n'.format(self.getTransitionName(t,isDetailed))
-		        
-		        net_places = []
-		        net_transitions = []
-		        
-		        for p in n.place():
-		            net_places.append(p.name)
-		        for t in n.transition():
-		            net_transitions.append(self.getTransitionName(t,isDetailed))
-		        
-		        for p in sorted(net_places):
-		            if p in placeList:
-		                if not "local" in p:
-		                    txt += 'interface {0} #yellow\n'.format(p)
-		            else:
-		                if not "local" in p:
-		                    txt += 'interface {0} #white\n'.format(p)
-		        for t in sorted(net_transitions):
-		            if t in transitionList:
-		                if isDetailed:
-		                    txt += 'component {0} #yellow\n'.format(self.getTransitionName(n.transition(t),isDetailed))
-		                else:
-		                    txt += 'component {0} #yellow\n'.format(t)
-		            else:
-		                if isDetailed:
-		                    txt += 'component {0} #white\n'.format(self.getTransitionName(n.transition(t),isDetailed))
-		                else:
-		                    txt += 'component {0} #white\n'.format(t)
-		        
-		        conn = set()
-		        for t in n.transition():
-		            for p in n.pre(t.name):
-		                str = ''
-		                if not "local" in p:
-		                    str = '{0} --> [{1}]\n'.format(p,self.getTransitionName(t,isDetailed))
-		                if not str in conn:
-		                    if not "local" in p:
-		                        txt += '{0} --> [{1}]\n'.format(p,self.getTransitionName(t,isDetailed))
-		                    conn.add(str)
-		            for p in n.post(t.name):
-		                str = ''
-		                if not "local" in p:
-		                    str = '[{1}] --> {0}\n'.format(p,self.getTransitionName(t,isDetailed))
-		                if not str in conn:
-		                    if not "local" in p:
-		                        txt += '[{1}] --> {0}\n'.format(p,self.getTransitionName(t,isDetailed))
-		                    conn.add(str)
-		        
-		        txt += '@enduml'
-		        with open(fname, 'w') as f:
-		            f.write(txt)
-
-		'''
-	} 
-*/
