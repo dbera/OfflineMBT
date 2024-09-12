@@ -98,6 +98,7 @@ ComposeStep:
 
 RunStep:
 	'run-step-name' ':' name = ID
+	('step-type' ':' type = STRING)?
 	stepRef += StepReference*
 	'input-binding' ':' input += Binding+
 	'output-data' ':' output += Binding+
