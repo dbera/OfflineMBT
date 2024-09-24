@@ -3,7 +3,7 @@ Automatic-Module-Name: nl.asml.matala.product.ui
 Bundle-ManifestVersion: 2
 Bundle-Name: nl.asml.matala.product.ui
 Bundle-Vendor: My Company
-Bundle-Version: 1.0.0.qualifier
+Bundle-Version: 4.2.0.qualifier
 Bundle-SymbolicName: nl.asml.matala.product.ui; singleton:=true
 Bundle-ActivationPolicy: lazy
 Require-Bundle: nl.asml.matala.product,

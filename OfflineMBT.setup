@@ -279,7 +279,7 @@
         </detail>
         <detail
             key="extraUnits">
-          <value>org.eclipse.equinox.executable.feature.group, org.slf4j.impl.log4j12, org.eclipse.jdt.annotation</value>
+          <value>org.eclipse.equinox.executable.feature.group, org.slf4j.impl.log4j12, org.eclipse.jdt.annotation, com.google.gson</value>
         </detail>
         <detail
             key="generateImplicitUnits">
