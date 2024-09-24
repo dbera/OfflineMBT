@@ -18,9 +18,9 @@
     label="OfflineMBT">
   <setupTask
       xsi:type="jdt:JRETask"
-      version="JavaSE-11"
-      location="${jre.location-11}"
-      name="JRE for JavaSE-11">
+      version="JavaSE-17"
+      location="${jre.location-17}"
+      name="JRE for JavaSE-17">
     <description>Define the JRE needed to compile and run the Java projects of ${scope.project.label}</description>
   </setupTask>
   <setupTask
@@ -326,7 +326,7 @@
         <repository
             url="http://hallvard.github.io/plantuml"/>
         <repository
-            url="https://download.eclipse.org/justj/jres/11/updates/release/11.0.2"/>
+            url="https://download.eclipse.org/justj/jres/17/updates/release/17.0.12"/>
         <repository
             url="https://s3-eu-west-1.amazonaws.com/obeo-m2doc-releases/3.2.0/repository/"/>
         <repository
@@ -352,11 +352,8 @@
     <workingSet
         name="${scope.project.name}">
       <predicate
-          xsi:type="predicates:AndPredicate">
-        <operand
-            xsi:type="predicates:RepositoryPredicate"
-            project="nl.esi.comma.root"/>
-      </predicate>
+          xsi:type="predicates:RepositoryPredicate"
+          project="nl.esi.comma.root"/>
     </workingSet>
     <description>The dynamic working sets for ${scope.project.label}</description>
   </setupTask>
