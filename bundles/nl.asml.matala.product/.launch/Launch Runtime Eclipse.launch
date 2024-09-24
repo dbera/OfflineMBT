@@ -11,7 +11,7 @@
     <booleanAttribute key="clearws" value="false"/>
     <booleanAttribute key="clearwslog" value="false"/>
     <stringAttribute key="configLocation" value="${workspace_loc}/.metadata/.plugins/org.eclipse.pde.core/Launch Runtime Eclipse"/>
-    <booleanAttribute key="default" value="false"/>
+    <booleanAttribute key="default" value="true"/>
     <setAttribute key="deselected_workspace_bundles">
         <setEntry value="nl.esi.comma.branding"/>
         <setEntry value="nl.esi.comma.product.philips"/>
@@ -25,7 +25,7 @@
     </listAttribute>
     <booleanAttribute key="org.eclipse.jdt.launching.ATTR_ATTR_USE_ARGFILE" value="false"/>
     <booleanAttribute key="org.eclipse.jdt.launching.ATTR_SHOW_CODEDETAILS_IN_EXCEPTION_MESSAGES" value="true"/>
-    <stringAttribute key="org.eclipse.jdt.launching.JRE_CONTAINER" value="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-17"/>
+    <stringAttribute key="org.eclipse.jdt.launching.JRE_CONTAINER" value="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-11"/>
     <stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="-os ${target.os} -ws ${target.ws} -arch ${target.arch} -nl ${target.nl}"/>
     <stringAttribute key="org.eclipse.jdt.launching.SOURCE_PATH_PROVIDER" value="org.eclipse.pde.ui.workbenchClasspathProvider"/>
     <stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-Xms40m -Xmx512m"/>
@@ -260,8 +260,6 @@
         <setEntry value="org.eclipse.jface@default:default"/>
         <setEntry value="org.eclipse.jsch.core@default:default"/>
         <setEntry value="org.eclipse.jsch.ui@default:default"/>
-        <setEntry value="org.eclipse.justj.openjdk.hotspot.jre.full.win32.x86_64@default:false"/>
-        <setEntry value="org.eclipse.justj.openjdk.hotspot.jre.full@default:default"/>
         <setEntry value="org.eclipse.ltk.core.refactoring@default:default"/>
         <setEntry value="org.eclipse.ltk.ui.refactoring@default:default"/>
         <setEntry value="org.eclipse.osgi.compatibility.state@default:false"/>
@@ -425,9 +423,17 @@
         <setEntry value="nl.esi.comma.actions.ide@default:default"/>
         <setEntry value="nl.esi.comma.actions.ui@default:default"/>
         <setEntry value="nl.esi.comma.actions@default:default"/>
+        <setEntry value="nl.esi.comma.automata@default:default"/>
         <setEntry value="nl.esi.comma.behavior.ide@default:default"/>
+        <setEntry value="nl.esi.comma.behavior.scl.ide@default:default"/>
+        <setEntry value="nl.esi.comma.behavior.scl.ui@default:default"/>
+        <setEntry value="nl.esi.comma.behavior.scl@default:default"/>
         <setEntry value="nl.esi.comma.behavior.ui@default:default"/>
         <setEntry value="nl.esi.comma.behavior@default:default"/>
+        <setEntry value="nl.esi.comma.constraints.dashboard@default:default"/>
+        <setEntry value="nl.esi.comma.constraints.ide@default:default"/>
+        <setEntry value="nl.esi.comma.constraints.ui@default:default"/>
+        <setEntry value="nl.esi.comma.constraints@default:default"/>
         <setEntry value="nl.esi.comma.expressions.ide@default:default"/>
         <setEntry value="nl.esi.comma.expressions.ui@default:default"/>
         <setEntry value="nl.esi.comma.expressions@default:default"/>
@@ -437,10 +443,24 @@
         <setEntry value="nl.esi.comma.project.standard.ide@default:default"/>
         <setEntry value="nl.esi.comma.project.standard.ui@default:default"/>
         <setEntry value="nl.esi.comma.project.standard@default:default"/>
+        <setEntry value="nl.esi.comma.scenarios.dashboard@default:default"/>
+        <setEntry value="nl.esi.comma.scenarios.ide@default:default"/>
+        <setEntry value="nl.esi.comma.scenarios.tests@default:default"/>
+        <setEntry value="nl.esi.comma.scenarios.ui@default:default"/>
+        <setEntry value="nl.esi.comma.scenarios@default:default"/>
         <setEntry value="nl.esi.comma.signature.ide@default:default"/>
         <setEntry value="nl.esi.comma.signature.ui@default:default"/>
         <setEntry value="nl.esi.comma.signature@default:default"/>
+        <setEntry value="nl.esi.comma.steps.ide@default:default"/>
+        <setEntry value="nl.esi.comma.steps.ui@default:default"/>
+        <setEntry value="nl.esi.comma.steps@default:default"/>
+        <setEntry value="nl.esi.comma.systemconfig.ide@default:default"/>
+        <setEntry value="nl.esi.comma.systemconfig.tests@default:default"/>
+        <setEntry value="nl.esi.comma.systemconfig.ui@default:default"/>
+        <setEntry value="nl.esi.comma.systemconfig@default:default"/>
         <setEntry value="nl.esi.comma.testspecification.ide@default:default"/>
+        <setEntry value="nl.esi.comma.testspecification.tests@default:default"/>
+        <setEntry value="nl.esi.comma.testspecification.ui.tests@default:default"/>
         <setEntry value="nl.esi.comma.testspecification.ui@default:default"/>
         <setEntry value="nl.esi.comma.testspecification@default:default"/>
         <setEntry value="nl.esi.comma.types.ide@default:default"/>
