@@ -599,19 +599,19 @@ class TestspecificationGenerator extends AbstractGenerator
 		var txt = 
 		'''
 		in.data.global_parameters = {
-			«FOR key : mapLocalDataVarToDataInstance.keySet SEPARATOR ''','''»
+			«FOR key : mapLocalDataVarToDataInstance.keySet SEPARATOR ','»
 				"«key»" : «mapLocalDataVarToDataInstance.get(key).head»
 			«ENDFOR»
 		}
 		
 		in.data.suts = [
-			«FOR elm : mapLocalSUTVarToDataInstance.keySet SEPARATOR ''','''»
+			«FOR elm : mapLocalSUTVarToDataInstance.keySet SEPARATOR ','»
 				«mapLocalSUTVarToDataInstance.get(elm).head»
 			«ENDFOR»
 		]
 		
 		in.data.steps = [
-			«FOR elm : listStepInstances SEPARATOR ''','''»
+			«FOR elm : listStepInstances SEPARATOR ','»
 				{ "id" : "«elm.id»", "type" : "«elm.type.replaceAll("_",".")»", "input_file" : "«elm.inputFile»" }
 			«ENDFOR»
 		]

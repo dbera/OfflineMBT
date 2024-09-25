@@ -409,8 +409,8 @@ class PetriNet {
 		    #    print('SCN: ', entry)
 		    c = datetime.datetime.now()
 		    
-		    listOfEnvBlocks = [«FOR elm : listOfEnvBlocks SEPARATOR ''','''»"«elm»"«ENDFOR»]
-		    listOfAssertTransitions = [«FOR elm : listOfAssertTransitions SEPARATOR ''','''»"«elm»"«ENDFOR»]
+		    listOfEnvBlocks = [«FOR elm : listOfEnvBlocks SEPARATOR ','»"«elm»"«ENDFOR»]
+		    listOfAssertTransitions = [«FOR elm : listOfAssertTransitions SEPARATOR ','»"«elm»"«ENDFOR»]
 		    print("[INFO] Starting Test Generation.")
 		    
 		    map_of_transition_modes = {}
@@ -470,7 +470,7 @@ class PetriNet {
 		    
 		    idx = 0
 		    # txt = ''
-		    map_transition_assert = {«FOR elm : map_transition_assertions.keySet SEPARATOR ''','''»'«elm»': [«FOR v : map_transition_assertions.get(elm) SEPARATOR ''','''»'«v»'«ENDFOR»]«ENDFOR»}
+		    map_transition_assert = {«FOR elm : map_transition_assertions.keySet SEPARATOR ','»'«elm»': [«FOR v : map_transition_assertions.get(elm) SEPARATOR ','»'«v»'«ENDFOR»]«ENDFOR»}
 		    i = 0
 		    j = 0
 		    _tests = Tests()

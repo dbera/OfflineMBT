@@ -244,7 +244,7 @@ class ScenarioGenerator {
 				lots = <map<int, Lot>> { 
 			«{idx++ ""}»
 			«{stepIdx = 1 ""}»
-			«FOR step : stepList SEPARATOR ''','''»
+			«FOR step : stepList SEPARATOR ','»
 						// «step»
 						«IF !step.equals("ANY") && exprMap.containsKey(step)»«exprMap.get(step).replaceAll("lot :=", stepIdx + " ->")»«ENDIF»
 				«{stepIdx++ ""}»
