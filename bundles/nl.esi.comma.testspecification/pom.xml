@@ -31,7 +31,7 @@
 			<configuration>
 				<mainClass>org.eclipse.emf.mwe2.launch.runtime.Mwe2Launcher</mainClass>
 				<arguments>
-					<argument>/${project.basedir}/src/nl/esi/comma/testspecification/GenerateTestSpecification.mwe2</argument>
+					<argument>/${project.basedir}/src/nl/esi/comma/testspecification/GenerateTestspecification.mwe2</argument>
 					<argument>-p</argument>
 					<argument>rootPath=/${project.basedir}/..</argument>
 				</arguments>

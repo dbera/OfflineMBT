@@ -2,12 +2,11 @@
 <project>
 	<modelVersion>4.0.0</modelVersion>
 
-	<parent>
-		<relativePath>../pom.xml</relativePath>
-		<groupId>nl.esi.comma</groupId>
-		<artifactId>nl.esi.comma.tests</artifactId>
-		<version>4.2.0-SNAPSHOT</version>
-	</parent>
+    <parent>
+        <groupId>nl.esi.comma</groupId>
+        <artifactId>nl.esi.comma.bundles</artifactId>
+        <version>4.2.0-SNAPSHOT</version>
+    </parent>
 
 	<artifactId>nl.esi.comma.scenarios.tests</artifactId>
 	<packaging>eclipse-test-plugin</packaging>

@@ -18,9 +18,6 @@
    <feature id="nl.esi.comma.standard.feature" version="0.0.0">
       <category name="ComMA"/>
    </feature>
-   <feature id="nl.esi.comma.examples.standard.feature" version="0.0.0">
-      <category name="ComMA"/>
-   </feature>
    <feature id="org.obeonetwork.m2doc.feature">
       <category name="ComMA"/>
    </feature>
