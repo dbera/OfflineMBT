@@ -20,7 +20,7 @@ Require-Bundle: nl.esi.comma.project.standard,
  org.eclipse.debug.ui,
  nl.esi.comma.types.ui;bundle-version="2.0.1"
 Import-Package: org.apache.log4j
-Bundle-RequiredExecutionEnvironment: JavaSE-11
+Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: nl.esi.comma.project.standard.ui.contentassist,
  nl.esi.comma.project.standard.ui.internal,
  nl.esi.comma.project.standard.ui.quickfix

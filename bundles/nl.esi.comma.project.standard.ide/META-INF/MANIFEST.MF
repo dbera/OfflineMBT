@@ -11,7 +11,7 @@ Require-Bundle: nl.esi.comma.project.standard,
  org.antlr.runtime;bundle-version="[3.2.0,3.2.1)",
  nl.esi.comma.types.ide;bundle-version="2.0.1",
  nl.esi.comma.types;bundle-version="2.0.1"
-Bundle-RequiredExecutionEnvironment: JavaSE-11
+Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: nl.esi.comma.project.standard.ide.contentassist.antlr,
  nl.esi.comma.project.standard.ide.contentassist.antlr.internal
 Automatic-Module-Name: nl.esi.comma.project.standard.ide

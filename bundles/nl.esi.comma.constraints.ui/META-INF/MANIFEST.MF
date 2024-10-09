@@ -27,7 +27,7 @@ Require-Bundle: nl.esi.comma.constraints,
  nl.esi.comma.actions.ui;bundle-version="4.2.0",
  nl.esi.comma.scenarios;bundle-version="4.2.0"
 Import-Package: org.apache.log4j
-Bundle-RequiredExecutionEnvironment: JavaSE-11
+Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: nl.esi.comma.constraints.ui,
  nl.esi.comma.constraints.ui.contentassist,
  nl.esi.comma.constraints.ui.internal,

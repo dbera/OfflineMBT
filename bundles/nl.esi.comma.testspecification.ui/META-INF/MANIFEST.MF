@@ -24,7 +24,7 @@ Require-Bundle: nl.esi.comma.testspecification,
  nl.esi.comma.expressions,
  nl.esi.comma.types;bundle-version="1.0.0"
 Import-Package: org.apache.log4j
-Bundle-RequiredExecutionEnvironment: JavaSE-11
+Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: nl.esi.comma.testspecification.ui.internal,
  nl.esi.comma.testspecification.ui.quickfix,
  nl.esi.comma.testspecification.ui.contentassist

@@ -22,7 +22,7 @@ Require-Bundle: nl.esi.comma.actions,
  nl.esi.comma.expressions.ui,
  nl.esi.comma.types.ui
 Import-Package: org.apache.log4j
-Bundle-RequiredExecutionEnvironment: JavaSE-11
+Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: nl.esi.comma.actions.ui.contentassist,
  nl.esi.comma.actions.ui.quickfix,
  nl.esi.comma.actions.ui.internal

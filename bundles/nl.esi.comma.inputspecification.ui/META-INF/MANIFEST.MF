@@ -22,7 +22,7 @@ Require-Bundle: nl.esi.comma.inputspecification,
  nl.esi.comma.actions.ui;bundle-version="3.0.0",
  nl.esi.comma.expressions.ui;bundle-version="3.0.0"
 Import-Package: org.apache.log4j
-Bundle-RequiredExecutionEnvironment: JavaSE-11
+Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: nl.esi.comma.inputspecification.ui.contentassist,
  nl.esi.comma.inputspecification.ui.internal,
  nl.esi.comma.inputspecification.ui.quickfix

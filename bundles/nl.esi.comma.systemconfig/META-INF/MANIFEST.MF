@@ -18,7 +18,7 @@ Require-Bundle: org.eclipse.xtext,
  nl.esi.comma.expressions;bundle-version="4.2.0",
  nl.esi.comma.types;bundle-version="4.2.0",
  nl.esi.comma.signature;bundle-version="4.2.0"
-Bundle-RequiredExecutionEnvironment: JavaSE-11
+Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: nl.esi.comma.systemconfig.serializer,
  nl.esi.comma.systemconfig.parser.antlr.internal,
  nl.esi.comma.systemconfig.configuration.impl,

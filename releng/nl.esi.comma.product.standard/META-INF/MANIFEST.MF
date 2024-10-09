@@ -5,5 +5,5 @@ Bundle-SymbolicName: nl.esi.comma.product.philips;singleton:=true
 Bundle-Version: 4.2.0.qualifier
 Bundle-Vendor: TNO-ESI, Philips
 Bundle-ActivationPolicy: lazy
-Bundle-RequiredExecutionEnvironment: JavaSE-11
+Bundle-RequiredExecutionEnvironment: JavaSE-21
 Automatic-Module-Name: nl.esi.comma.product

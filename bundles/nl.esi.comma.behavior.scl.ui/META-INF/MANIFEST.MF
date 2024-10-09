@@ -21,7 +21,7 @@ Require-Bundle: nl.esi.comma.behavior.scl,
  nl.esi.comma.actions.ui;bundle-version="4.2.0",
  nl.esi.comma.behavior.ui;bundle-version="4.2.0"
 Import-Package: org.apache.log4j
-Bundle-RequiredExecutionEnvironment: JavaSE-11
+Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: nl.esi.comma.behavior.scl.ui.quickfix,
  nl.esi.comma.behavior.scl.ui.contentassist,
  nl.esi.comma.behavior.scl.ui.internal

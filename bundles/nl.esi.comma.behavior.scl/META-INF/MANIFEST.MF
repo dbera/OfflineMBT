@@ -23,7 +23,7 @@ Require-Bundle: org.eclipse.xtext,
  nl.esi.comma.signature;bundle-version="4.2.0",
  nl.esi.comma.actions;bundle-version="4.2.0",
  nl.esi.comma.behavior;bundle-version="4.2.0"
-Bundle-RequiredExecutionEnvironment: JavaSE-11
+Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: nl.esi.comma.behavior.scl,
  nl.esi.comma.behavior.scl.validation,
  nl.esi.comma.behavior.scl.scoping,

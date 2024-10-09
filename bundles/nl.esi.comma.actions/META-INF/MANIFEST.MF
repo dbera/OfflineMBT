@@ -17,7 +17,7 @@ Require-Bundle: org.eclipse.xtext,
  nl.esi.comma.signature,
  org.eclipse.xtext.xbase.lib;bundle-version="2.15.0",
  org.eclipse.xtend.lib;bundle-version="2.15.0"
-Bundle-RequiredExecutionEnvironment: JavaSE-11
+Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: nl.esi.comma.actions,
  nl.esi.comma.actions.actions,
  nl.esi.comma.actions.actions.impl,

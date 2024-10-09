@@ -18,7 +18,7 @@ Require-Bundle: org.eclipse.xtext,
  net.sourceforge.plantuml.lib;bundle-version="1.2017.15",
  org.eclipse.core.runtime;bundle-version="3.16.0",
  org.eclipse.e4.core.di;bundle-version="1.7.400"
-Bundle-RequiredExecutionEnvironment: JavaSE-11
+Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: nl.esi.comma.types,
  nl.esi.comma.types.comments,
  nl.esi.comma.types.formatting2,

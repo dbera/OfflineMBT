@@ -5,7 +5,7 @@ Bundle-SymbolicName: nl.esi.comma.branding;singleton:=true
 Bundle-Version: 4.2.0.qualifier
 Bundle-Activator: nl.esi.comma.branding.Activator
 Bundle-Vendor: TNO-ESI, Philips
-Bundle-RequiredExecutionEnvironment: JavaSE-11
+Bundle-RequiredExecutionEnvironment: JavaSE-21
 Automatic-Module-Name: nl.esi.comma.branding
 Import-Package: javax.annotation;version="0.0.0"
 Bundle-ActivationPolicy: lazy

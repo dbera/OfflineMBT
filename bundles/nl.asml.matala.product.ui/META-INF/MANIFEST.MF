@@ -22,7 +22,7 @@ Require-Bundle: nl.asml.matala.product,
  nl.esi.comma.signature.ui;bundle-version="4.2.0",
  nl.esi.comma.behavior.ui;bundle-version="4.2.0"
 Import-Package: org.apache.log4j
-Bundle-RequiredExecutionEnvironment: JavaSE-11
+Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: nl.asml.matala.product.ui.contentassist,
  nl.asml.matala.product.ui.quickfix,
  nl.asml.matala.product.ui.internal

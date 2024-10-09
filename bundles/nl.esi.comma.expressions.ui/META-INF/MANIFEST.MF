@@ -20,7 +20,7 @@ Require-Bundle: nl.esi.comma.expressions,
  nl.esi.comma.types;bundle-version="1.0.0",
  nl.esi.comma.types.ui;bundle-version="1.0.0"
 Import-Package: org.apache.log4j
-Bundle-RequiredExecutionEnvironment: JavaSE-11
+Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: nl.esi.comma.expressions.ui.contentassist;
   uses:="org.eclipse.emf.ecore,
    org.eclipse.xtext.ui.editor.contentassist,

@@ -13,7 +13,7 @@ Require-Bundle: nl.esi.comma.inputspecification,
  nl.esi.comma.behavior;bundle-version="3.0.0",
  nl.esi.comma.actions;bundle-version="3.0.0",
  nl.esi.comma.expressions;bundle-version="3.0.0"
-Bundle-RequiredExecutionEnvironment: JavaSE-11
+Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: nl.esi.comma.inputspecification.ide.contentassist.antlr.internal,
  nl.esi.comma.inputspecification.ide.contentassist.antlr
 Automatic-Module-Name: nl.esi.comma.inputspecification.ide
