@@ -78,7 +78,6 @@ the Department of Electrical Engineering of Eindhoven University of Technology.
       <import plugin="net.sourceforge.plantuml.lib" version="1.1.12" match="greaterOrEqual"/>
       <import plugin="nl.esi.comma.actions"/>
       <import plugin="org.eclipse.core.runtime"/>
-      <import plugin="org.eclipse.xtext.generator" version="2.14.0" match="greaterOrEqual"/>
       <import plugin="org.eclipse.core.resources" version="3.11.1" match="greaterOrEqual"/>
       <import plugin="nl.esi.comma.actions.ui"/>
    </requires>
