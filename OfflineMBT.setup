@@ -18,13 +18,6 @@
     name="OfflineMBT"
     label="OfflineMBT">
   <setupTask
-      xsi:type="jdt:JRETask"
-      version="JavaSE-17"
-      location="${jre.location-17}"
-      name="JRE for JavaSE-17">
-    <description>Define the JRE needed to compile and run the Java projects of ${scope.project.label}</description>
-  </setupTask>
-  <setupTask
       xsi:type="setup:EclipseIniTask"
       option="-Xmx"
       value="1024m"
@@ -62,11 +55,6 @@
       showIntro=false
     </content>
   </setupTask>
-  <setupTask
-      xsi:type="setup:VariableTask"
-      name="eclipse.target.platform"
-      defaultValue="2021-12"
-      storageURI="scope://Workspace"/>
   <setupTask
       xsi:type="setup.p2:P2Task">
     <requirement
@@ -383,7 +371,7 @@
             project="nl.esi.comma.root"/>
         <operand
             xsi:type="workingsets:ExclusionPredicate"
-            excludedWorkingSet="//@setupTasks.11/@workingSets[name='${scope.project.name}%20-%20Bundles'] //@setupTasks.11/@workingSets[name='${scope.project.name}%20-%20Features']"/>
+            excludedWorkingSet="//@setupTasks.9/@workingSets[name='${scope.project.name}%20-%20Bundles'] //@setupTasks.9/@workingSets[name='${scope.project.name}%20-%20Features']"/>
       </predicate>
     </workingSet>
     <description>The dynamic working sets for ${scope.project.label}</description>
@@ -394,19 +382,21 @@
   <stream name="main"
       label="Main">
     <setupTask
-        xsi:type="setup:EclipseIniTask"
-        option="-Doomph.redirection.OfflineMBT"
-        value="=https://raw.githubusercontent.com/dbera/OfflineMBT/main/OfflineMBT.setup->${git.clone.OfflineMBT.location|uri}/OfflineMBT.setup"
-        vm="true">
-      <description>Set an Oomph redirection system property to redirect the logical location of this setup to its physical location in the Git clone.</description>
+        xsi:type="jdt:JRETask"
+        version="JavaSE-17"
+        location="${jre.location-17}"
+        name="JRE for JavaSE-17">
+      <description>Define the JRE needed to compile and run the Java projects of ${scope.project.label}</description>
     </setupTask>
-  </stream>
-  <stream name="fix_build"
-      label="Fix Build">
+    <setupTask
+        xsi:type="setup:VariableTask"
+        name="eclipse.target.platform"
+        defaultValue="2021-12"
+        storageURI="scope://Workspace"/>
     <setupTask
         xsi:type="setup:EclipseIniTask"
         option="-Doomph.redirection.OfflineMBT"
-        value="=https://raw.githubusercontent.com/dbera/OfflineMBT/fix_build/OfflineMBT.setup->${git.clone.OfflineMBT.location|uri}/OfflineMBT.setup"
+        value="=https://raw.githubusercontent.com/dbera/OfflineMBT/main/OfflineMBT.setup->${git.clone.OfflineMBT.location|uri}/OfflineMBT.setup"
         vm="true">
       <description>Set an Oomph redirection system property to redirect the logical location of this setup to its physical location in the Git clone.</description>
     </setupTask>
