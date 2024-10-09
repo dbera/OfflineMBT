@@ -56,6 +56,13 @@
     </content>
   </setupTask>
   <setupTask
+      xsi:type="setup:EclipseIniTask"
+      option="-Doomph.redirection.OfflineMBT"
+      value="=https://raw.githubusercontent.com/dbera/OfflineMBT/main/OfflineMBT.setup->${git.clone.OfflineMBT.location|uri}/OfflineMBT.setup"
+      vm="true">
+    <description>Set an Oomph redirection system property to redirect the logical location of this setup to its physical location in the Git clone.</description>
+  </setupTask>
+  <setupTask
       xsi:type="setup.p2:P2Task">
     <requirement
         name="org.eclipse.xtext.sdk.feature.group"/>
@@ -321,6 +328,19 @@
         <repository
             url="https://download.itemis.com/updates/releases/2.1.1/"/>
       </repositoryList>
+      <repositoryList
+          name="2024-09">
+        <repository
+            url="https://download.eclipse.org/releases/2024-09"/>
+        <repository
+            url="http://hallvard.github.io/plantuml"/>
+        <repository
+            url="https://download.eclipse.org/justj/jres/21/updates/release/21.0.4"/>
+        <repository
+            url="https://s3-eu-west-1.amazonaws.com/obeo-m2doc-releases/3.2.0/repository/"/>
+        <repository
+            url="https://download.itemis.com/updates/releases/2.1.1/"/>
+      </repositoryList>
     </targlet>
   </setupTask>
   <setupTask
@@ -371,7 +391,7 @@
             project="nl.esi.comma.root"/>
         <operand
             xsi:type="workingsets:ExclusionPredicate"
-            excludedWorkingSet="//@setupTasks.9/@workingSets[name='${scope.project.name}%20-%20Bundles'] //@setupTasks.9/@workingSets[name='${scope.project.name}%20-%20Features']"/>
+            excludedWorkingSet="//@setupTasks.10/@workingSets[name='${scope.project.name}%20-%20Bundles'] //@setupTasks.10/@workingSets[name='${scope.project.name}%20-%20Features']"/>
       </predicate>
     </workingSet>
     <description>The dynamic working sets for ${scope.project.label}</description>
@@ -393,13 +413,14 @@
         name="eclipse.target.platform"
         defaultValue="2021-12"
         storageURI="scope://Workspace"/>
+  </stream>
+  <stream name="2024-09"
+      label="Eclipse 2024-09">
     <setupTask
-        xsi:type="setup:EclipseIniTask"
-        option="-Doomph.redirection.OfflineMBT"
-        value="=https://raw.githubusercontent.com/dbera/OfflineMBT/main/OfflineMBT.setup->${git.clone.OfflineMBT.location|uri}/OfflineMBT.setup"
-        vm="true">
-      <description>Set an Oomph redirection system property to redirect the logical location of this setup to its physical location in the Git clone.</description>
-    </setupTask>
+        xsi:type="setup:VariableTask"
+        name="eclipse.target.platform"
+        defaultValue="2024-09"
+        storageURI="scope://Workspace"/>
   </stream>
   <logicalProjectContainer
       xsi:type="setup:ProjectCatalog"
