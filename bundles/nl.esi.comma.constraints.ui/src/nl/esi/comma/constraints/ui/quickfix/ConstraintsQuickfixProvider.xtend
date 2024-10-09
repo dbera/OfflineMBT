@@ -4,10 +4,10 @@
 package nl.esi.comma.constraints.ui.quickfix
 
 import com.google.inject.Inject
+import jakarta.inject.Provider
 import java.util.ArrayList
 import java.util.List
 import java.util.regex.Pattern
-import javax.inject.Provider
 import nl.esi.comma.constraints.constraints.Actions
 import nl.esi.comma.constraints.constraints.Constraints
 import nl.esi.comma.types.ui.quickfix.TypesQuickfixProvider
