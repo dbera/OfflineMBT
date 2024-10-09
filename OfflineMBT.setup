@@ -216,19 +216,15 @@
         name="org.eclipse.xtend.core.Xtend">
       <setupTask
           xsi:type="setup:PreferenceTask"
-          key="/instance/org.eclipse.xtend.core.Xtend/targetJavaVersion"
-          value="JAVA11"/>
-      <setupTask
-          xsi:type="setup:PreferenceTask"
           key="/instance/org.eclipse.xtend.core.Xtend/useJavaCompilerCompliance"
           value="true"/>
       <setupTask
           xsi:type="setup:PreferenceTask"
-          key="/instance/org.eclipse.xtend.core.Xtend/outlet.DEFAULT_OUTPUT.derived"
+          key="/instance/org.eclipse.xtend.core.Xtend/outlet.DEFAULT_OUTPUT.cleanDirectory"
           value="false"/>
       <setupTask
           xsi:type="setup:PreferenceTask"
-          key="/instance/org.eclipse.xtend.core.Xtend/outlet.DEFAULT_OUTPUT.cleanDirectory"
+          key="/instance/org.eclipse.xtend.core.Xtend/outlet.DEFAULT_OUTPUT.derived"
           value="true"/>
     </setupTask>
   </setupTask>
@@ -413,6 +409,14 @@
         name="eclipse.target.platform"
         defaultValue="2021-12"
         storageURI="scope://Workspace"/>
+    <setupTask
+        xsi:type="setup:CompoundTask"
+        name="org.eclipse.xtend.core.Xtend">
+      <setupTask
+          xsi:type="setup:PreferenceTask"
+          key="/instance/org.eclipse.xtend.core.Xtend/targetJavaVersion"
+          value="JAVA11"/>
+    </setupTask>
   </stream>
   <stream name="2024-09"
       label="Eclipse 2024-09">
@@ -421,6 +425,14 @@
         name="eclipse.target.platform"
         defaultValue="2024-09"
         storageURI="scope://Workspace"/>
+    <setupTask
+        xsi:type="setup:CompoundTask"
+        name="org.eclipse.xtend.core.Xtend">
+      <setupTask
+          xsi:type="setup:PreferenceTask"
+          key="/instance/org.eclipse.xtend.core.Xtend/targetJavaVersion"
+          value="JAVA21"/>
+    </setupTask>
   </stream>
   <logicalProjectContainer
       xsi:type="setup:ProjectCatalog"
