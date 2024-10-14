@@ -40,10 +40,6 @@
 
         <module>nl.esi.comma.testspecification</module>
         <module>nl.esi.comma.testspecification.ide</module>
-        <!-- Disabled tests for now
-        <module>nl.esi.comma.testspecification.tests</module>
-        <module>nl.esi.comma.testspecification.ui.tests</module>
-        -->
         <module>nl.esi.comma.testspecification.ui</module>
 
         <module>nl.asml.matala.product</module>
