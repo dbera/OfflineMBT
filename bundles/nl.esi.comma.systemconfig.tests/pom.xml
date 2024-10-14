@@ -1,44 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-	<modelVersion>4.0.0</modelVersion>
+    <modelVersion>4.0.0</modelVersion>
 
     <parent>
         <groupId>nl.esi.comma</groupId>
-        <artifactId>nl.esi.comma.bundles</artifactId>
+        <artifactId>nl.esi.comma.bundles.xtend</artifactId>
         <version>4.2.0-SNAPSHOT</version>
+        <relativePath>../xtend-bundles-config/pom.xml</relativePath>
     </parent>
 
-	<artifactId>nl.esi.comma.systemconfig.tests</artifactId>
-	<packaging>eclipse-test-plugin</packaging>
+    <artifactId>nl.esi.comma.systemconfig.tests</artifactId>
+    <packaging>eclipse-test-plugin</packaging>
 
-	<name>nl.esi.comma.systemconfig.tests - System configuration Tests</name>
+    <name>nl.esi.comma.systemconfig.tests - System configuration Tests</name>
 
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-clean-plugin</artifactId>
-				<executions>
-					<execution>
-						<id>gen-clean</id>
-						<phase>clean</phase>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.eclipse.xtend</groupId>
-				<artifactId>xtend-maven-plugin</artifactId>
-				
-			</plugin>
-			<plugin>
-				<groupId>org.eclipse.tycho</groupId>
-				<artifactId>tycho-surefire-plugin</artifactId>
-				<version>${tycho.version}</version>
-				<configuration>
-					<useUIHarness>false</useUIHarness>
-					<useUIThread>false</useUIThread>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.eclipse.tycho</groupId>
+                <artifactId>tycho-surefire-plugin</artifactId>
+                <version>${tycho.version}</version>
+                <configuration>
+                    <useUIHarness>false</useUIHarness>
+                    <useUIThread>false</useUIThread>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>

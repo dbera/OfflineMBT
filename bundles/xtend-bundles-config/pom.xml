@@ -1,51 +1,103 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<groupId>nl.esi.comma</groupId>
-	<artifactId>nl.esi.comma.bundles.xtend</artifactId>
-	<version>4.2.0-SNAPSHOT</version>
-	<packaging>pom</packaging>
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>nl.esi.comma.bundles.xtend</artifactId>
+    <packaging>pom</packaging>
 
-	<parent>
-		<groupId>nl.esi.comma</groupId>
-		<artifactId>nl.esi.comma.bundles</artifactId>
-		<version>4.2.0-SNAPSHOT</version>		
-	</parent>
+    <parent>
+        <groupId>nl.esi.comma</groupId>
+        <artifactId>nl.esi.comma.bundles</artifactId>
+        <version>4.2.0-SNAPSHOT</version>
+    </parent>
 
-	<profiles>
-		<profile>
-			<id>xtend</id>
-			<activation>
-				<activeByDefault>false</activeByDefault>
-			</activation>
+    <profiles>
+        <profile>
+            <id>xtend-compile</id>
+            <activation>
+                <file>
+                    <exists>${basedir}/xtend-gen</exists>
+                </file>
+            </activation>
 
-			<build>
-				<plugins>
-					<plugin>
-						<artifactId>maven-antrun-plugin</artifactId>
-						<version>1.7</version>
-						<executions>
-							<execution>
-								<id>process-xtend-gen</id>
-								<phase>process-sources</phase>
-								<configuration>
-									<skip>!${process-xtend-gen}</skip>
-									<target>
-										<property name="project.basedir" value="${project.basedir}" />
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.eclipse.xtend</groupId>
+                        <artifactId>xtend-maven-plugin</artifactId>
+                        <version>${xtend.version}</version>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>compile</goal>
+                                    <goal>xtend-install-debug-info</goal>
+                                    <goal>testCompile</goal>
+                                    <goal>xtend-test-install-debug-info</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <outputDirectory>${basedir}/xtend-gen</outputDirectory>
+                            <testOutputDirectory>${basedir}/xtend-gen</testOutputDirectory>
+                        </configuration>
+                    </plugin>
+                </plugins>
+                <pluginManagement>
+                    <plugins>
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-clean-plugin</artifactId>
+                            <version>2.5</version>
+                            <configuration>
+                                <filesets>
+                                    <fileset>
+                                        <directory>${basedir}/xtend-gen</directory>
+                                        <includes>
+                                            <include>**/*</include>
+                                        </includes>
+                                        <excludes>
+                                            <exclude>.gitignore</exclude>
+                                        </excludes>
+                                    </fileset>
+                                </filesets>
+                            </configuration>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
+            </build>
+        </profile>
+        <profile>
+            <id>xtend</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
 
-										<ant antfile="${project.basedir}/../xtend-bundles-config/process-xtend-gen.ant">
-											<target name="process-xtend-gen" />
-										</ant>
-									</target>
-								</configuration>
-								<goals>
-									<goal>run</goal>
-								</goals>
-							</execution>
-						</executions>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-	</profiles>			
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <version>1.7</version>
+                        <executions>
+                            <execution>
+                                <id>process-xtend-gen</id>
+                                <phase>process-sources</phase>
+                                <configuration>
+                                    <skip>!${process-xtend-gen}</skip>
+                                    <target>
+                                        <property name="project.basedir" value="${project.basedir}" />
+
+                                        <ant antfile="${project.basedir}/../xtend-bundles-config/process-xtend-gen.ant">
+                                            <target name="process-xtend-gen" />
+                                        </ant>
+                                    </target>
+                                </configuration>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

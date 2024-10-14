@@ -1,36 +1,14 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
- 
-  <parent>
-		 <groupId>nl.esi.comma</groupId>
-		 <artifactId>nl.esi.comma.bundles.xtend</artifactId>
-		 <version>4.2.0-SNAPSHOT</version>
-		 <relativePath>../xtend-bundles-config/pom.xml</relativePath>
-	</parent>
+    <modelVersion>4.0.0</modelVersion>
 
-	<artifactId>nl.esi.comma.testspecification.ui</artifactId>
-	<packaging>eclipse-plugin</packaging>
+    <parent>
+        <groupId>nl.esi.comma</groupId>
+        <artifactId>nl.esi.comma.bundles</artifactId>
+        <version>4.2.0-SNAPSHOT</version>
+    </parent>
 
-	<name>nl.esi.comma.testspecification.ui - Test Specification UI</name>
+    <artifactId>nl.esi.comma.testspecification.ui</artifactId>
+    <packaging>eclipse-plugin</packaging>
 
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-clean-plugin</artifactId>
-				<executions>
-					<execution>
-						<id>gen-clean</id>
-						<phase>clean</phase>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.eclipse.xtend</groupId>
-				<artifactId>xtend-maven-plugin</artifactId>
-				
-			</plugin>
-		</plugins>
-	</build>
-
+    <name>nl.esi.comma.testspecification.ui - Test Specification UI</name>
 </project>
