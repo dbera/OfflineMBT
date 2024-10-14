@@ -34,7 +34,9 @@ class KeyValue {
 	def getRefVal() { return refVal }
 	
 	def display() {
-		System.out.println("  Key: " + key + " Value: " + value )
+		System.out.println("	Key: " + key + "	Value: " + value )
+		for(rk : refKey) System.out.println("	RefKey: " + rk )
+		for(rv : refVal) System.out.println("	RefVal: " + rv )
 	}
 }
 

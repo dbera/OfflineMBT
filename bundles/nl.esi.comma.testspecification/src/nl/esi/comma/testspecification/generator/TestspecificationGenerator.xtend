@@ -387,6 +387,7 @@ class TestspecificationGenerator extends AbstractGenerator
 		val varExp = record as ExpressionVariable
 		mapLHStoRHS.key = field.name
 		mapLHStoRHS.value = ExpressionsParser::generateExpression(exp, ref).toString
+		mapLHStoRHS.refVal.add(mapLHStoRHS.value) // Added DB 14.10.2024
 
 		// modify key value data structure to JSON
 		/*mapLHStoRHS.value = mapLHStoRHS.value.replaceAll("\"key\" : ","")
@@ -400,7 +401,8 @@ class TestspecificationGenerator extends AbstractGenerator
 		// check references to Step outputs and replace with FAST syntax
 		for(elm : mapLocalStepInstance.keySet) {
 			if(mapLHStoRHS.value.contains(elm+".output")) {
-				mapLHStoRHS.value = mapLHStoRHS.value.replaceAll(elm+".output", "steps.out['" + elm + "']")
+				mapLHStoRHS.value = mapLHStoRHS.value.replaceAll(elm+".output", "steps.out['" + "_" + elm + "']")
+				mapLHStoRHS.refKey.add(elm)  // reference to step
 				// Custom String Updates for FAST Syntax Peculiarities! TODO investigate solution?
 				// map-var['key'] + "[0]" -> map-var['key'][0] 
 				mapLHStoRHS.value = mapLHStoRHS.value.replaceAll(Pattern.quote("] + \"["), "][") // ("\\] + \"\\[","\\]\\[")
@@ -520,7 +522,7 @@ class TestspecificationGenerator extends AbstractGenerator
 						for(stepId : mapLHStoRHS_.keySet) {
 							fileName = getStepInstanceFileName(stepId)
 							var fileContents = mapLHStoRHS.value
-							System.out.println("Generating File" + fileName+ " For Step " + stepId)
+							System.out.println("Generating File: " + fileName+ " For Step: " + stepId)
 							for(elm : mapLHStoRHS_.get(stepId)) 
 							{
 								var str = '''"«elm.key»" : «elm.value»'''
@@ -561,7 +563,7 @@ class TestspecificationGenerator extends AbstractGenerator
 					if(!mapLHStoRHS_.isEmpty) {
 						for(stepId : mapLHStoRHS_.keySet) {
 							fileName = getStepInstanceFileName(stepId)
-							System.out.println("Generating File" + fileName+ " For Step " + stepId)
+							System.out.println("Generating File: " + fileName+ " For Step: " + stepId)
 							for(elm : mapLHStoRHS_.get(stepId)) {
 								var str = 
 								'''
@@ -660,12 +662,33 @@ class TestspecificationGenerator extends AbstractGenerator
 		
 		in.data.steps = [
 			«FOR elm : listStepInstances SEPARATOR ','»
-				{ "id" : "«elm.id»", "type" : "«elm.type.replaceAll("_",".")»", "input_file" : "«elm.inputFile»" }
+				«IF generateFASTRefStepTxt(elm).empty»
+					{ "id" : "«elm.id»", "type" : "«elm.type.replaceAll("_",".")»", "input_file" : "«elm.inputFile»" }
+				«ELSE»
+					{ "id" : "«elm.id»", "type" : "«elm.type.replaceAll("_",".")»", "input_file" : "«elm.inputFile»",
+						"parameters" : {
+							«FOR refTxt : generateFASTRefStepTxt(elm) SEPARATOR ','»
+								«refTxt»
+							«ENDFOR»
+						} 
+					}
+				«ENDIF»
 			«ENDFOR»
 		]
 		'''
 		return txt
 	}
+	
+	def generateFASTRefStepTxt(Step step) {
+		var refTxt = new ArrayList<CharSequence>
+		for(kv : step.parameters) {
+			for(rk : kv.refKey) {
+				refTxt.add('''"_«rk»" : "«rk»"''')
+			}
+		}
+		return refTxt
+	}
+	
 	
 	def generateVFDFile(SUTDefinition sDef) {
 		var def = sDef.generic.virtualFabDefinition
@@ -806,8 +829,9 @@ class TestspecificationGenerator extends AbstractGenerator
 			System.out.println("	step-id: " + st.id + " type: " + st.type)
 			System.out.println("	input: " + st.inputFile)
 			System.out.println("	var: " + st.variableName)
-			for(param : st.parameters)
-				System.out.println("	parameters: " + param.key + " -> " + param.value)
+			for(param : st.parameters) 
+				param.display
+				//System.out.println("	parameters: " + param.key + " -> " + param.value)
 		}		
 	}
 }
