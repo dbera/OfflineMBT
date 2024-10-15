@@ -2,7 +2,7 @@
 __pycache__/
 *.pyc
 
-# Ignore plugin.xm_gen and feature.xml_gen files, when build Eclipse Plugine.
+# Ignore plugin.xml_gen and feature.xml_gen files, when build Eclipse Plugin.
 *.xml_gen
 
 # Eclipse #
@@ -12,6 +12,7 @@ tmp/
 *.tmp
 *.bak
 *.swp
+*.orig
 *~.nib
 local.properties
 .antlr-generator-*-patch.jar

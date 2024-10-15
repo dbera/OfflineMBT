@@ -33,6 +33,7 @@ import java.util.regex.Pattern
 import nl.esi.comma.testspecification.testspecification.AbstractTestDefinition
 import nl.esi.comma.testspecification.testspecification.ContextMap
 import nl.esi.comma.testspecification.testspecification.AbstractStep
+import java.util.HashSet
 
 /**
  * Generates code from your model files on save.
@@ -386,6 +387,7 @@ class TestspecificationGenerator extends AbstractGenerator
 		val varExp = record as ExpressionVariable
 		mapLHStoRHS.key = field.name
 		mapLHStoRHS.value = ExpressionsParser::generateExpression(exp, ref).toString
+		mapLHStoRHS.refVal.add(mapLHStoRHS.value) // Added DB 14.10.2024
 
 		// modify key value data structure to JSON
 		/*mapLHStoRHS.value = mapLHStoRHS.value.replaceAll("\"key\" : ","")
@@ -399,7 +401,8 @@ class TestspecificationGenerator extends AbstractGenerator
 		// check references to Step outputs and replace with FAST syntax
 		for(elm : mapLocalStepInstance.keySet) {
 			if(mapLHStoRHS.value.contains(elm+".output")) {
-				mapLHStoRHS.value = mapLHStoRHS.value.replaceAll(elm+".output", "steps.out['" + elm + "']")
+				mapLHStoRHS.value = mapLHStoRHS.value.replaceAll(elm+".output", "steps.out['" + "_" + elm + "']")
+				mapLHStoRHS.refKey.add(elm)  // reference to step
 				// Custom String Updates for FAST Syntax Peculiarities! TODO investigate solution?
 				// map-var['key'] + "[0]" -> map-var['key'][0] 
 				mapLHStoRHS.value = mapLHStoRHS.value.replaceAll(Pattern.quote("] + \"["), "][") // ("\\] + \"\\[","\\]\\[")
@@ -464,8 +467,10 @@ class TestspecificationGenerator extends AbstractGenerator
 
 	def generateJSONDataAndVFDFiles(String testDefFilePath, IFileSystemAccess2 fsa, TSMain modelInst) {
 		var txt = ''''''
+		var listOfStepVars = new HashSet<String>
 		// val modelInst = _resource.allContents.head as TSMain
-		
+		// NOTE. Assumption is that steps are populated.
+		for(step : listStepInstances) { listOfStepVars.add(step.variableName) }
 		// Process TSPEC Imports and parse them
 		for(imp : modelInst.imports) {
 			val inputResource = EcoreUtil2.getResource(_resource, imp.importURI)
@@ -479,6 +484,7 @@ class TestspecificationGenerator extends AbstractGenerator
 						if(	act instanceof AssignmentAction || 
 							act instanceof RecordFieldAssignmentAction) {
 							var mapLHStoRHS = generateInitAssignmentAction(act)
+							listOfStepVars.remove(mapLHStoRHS.key) // variable is initialized in param file
 							dataInst.getKvList.add(mapLHStoRHS)
 						}
 					}
@@ -490,7 +496,7 @@ class TestspecificationGenerator extends AbstractGenerator
 					fsa.generateFile(testDefFilePath + "vfd.xml", generateVFDFile(sutDef))
 				}
 			}
-
+			
 			// Merge Contents and Generate JSON File //
 			
 			// ASSUMPTION: Data Extensions on Record Fields of Steps API should not overlap 
@@ -499,8 +505,12 @@ class TestspecificationGenerator extends AbstractGenerator
 				for(mapLHStoRHS : dataInst.kvList) {
 					// System.out.println("Chekcing " + mapLHStoRHS.key)
 					var mapLHStoRHS_ = getExtensions(mapLHStoRHS.key)
-					// System.out.println(" Got Extension for Key: " + mapLHStoRHS.key)
-					//for(elm: mapLHStoRHS_) elm.display
+//					System.out.println(" Got Extension for Key: " + mapLHStoRHS.key)
+//					for(elm: mapLHStoRHS_.keySet) { 
+//						System.out.println("	K: " + elm)
+//						for(kv : mapLHStoRHS_.get(elm))
+//							System.out.println("	k: " + kv.key + "	v : " + kv.value)
+//					}//elm.display
 					// check that mapLHStoRHS_ is not empty => get file name from step instance list
 					// else call function to get file name
 					// Reason: 
@@ -512,7 +522,7 @@ class TestspecificationGenerator extends AbstractGenerator
 						for(stepId : mapLHStoRHS_.keySet) {
 							fileName = getStepInstanceFileName(stepId)
 							var fileContents = mapLHStoRHS.value
-							System.out.println("Generating File" + fileName+ " For Step " + stepId)
+							System.out.println("Generating File: " + fileName+ " For Step: " + stepId)
 							for(elm : mapLHStoRHS_.get(stepId)) 
 							{
 								var str = '''"«elm.key»" : «elm.value»'''
@@ -527,6 +537,7 @@ class TestspecificationGenerator extends AbstractGenerator
 							fsa.generateFile(fileName, fileContents)
 						}
 					} else { 
+						System.out.println("Warning: Variable " + mapLHStoRHS.key + " defined in param but not used in TSpec!")
 						fileName = getFileName(mapLHStoRHS.key)
 						fsa.generateFile(fileName, mapLHStoRHS.value)
 					}
@@ -534,7 +545,46 @@ class TestspecificationGenerator extends AbstractGenerator
 				dataInst.display
 			}
 		}
-		
+		// if var in params file does not have a constructor init
+		// but occurs in tspec ==> create data files per step input def.
+		for(vname : listOfStepVars) {
+			// System.out.println(" variable not declared in params: " + vname)
+			// for(step : listStepInstances) {
+				// if(step.variableName.equals(vname)) {
+					var mapLHStoRHS_ = getExtensions(vname) //step.variableName
+//					System.out.println(" Got Extension for Key: " + step.variableName)
+//					for(elm: mapLHStoRHS_.keySet) { 
+//						System.out.println("	K: " + elm)
+//						for(kv : mapLHStoRHS_.get(elm))
+//							System.out.println("	k: " + kv.key + "	v : " + kv.value)
+//					}
+					var String fileName = new String
+					var fileContents = ''''''
+					if(!mapLHStoRHS_.isEmpty) {
+						for(stepId : mapLHStoRHS_.keySet) {
+							fileName = getStepInstanceFileName(stepId)
+							System.out.println("Generating File: " + fileName+ " For Step: " + stepId)
+							for(elm : mapLHStoRHS_.get(stepId)) {
+								var str = 
+								'''
+									"«elm.key»" : «elm.value»,
+								'''
+								// System.out.println("DEBUG: " + str)
+								fileContents += str
+							}
+							fileContents =
+							'''
+							{
+								«fileContents.replaceAll(",$", "")»
+							}
+							'''
+							fsa.generateFile(fileName, fileContents)
+							fileContents = ''''''
+						}
+					}
+				//}
+			//}
+		}
 		return txt
 	}
 	
@@ -612,12 +662,33 @@ class TestspecificationGenerator extends AbstractGenerator
 		
 		in.data.steps = [
 			«FOR elm : listStepInstances SEPARATOR ','»
-				{ "id" : "«elm.id»", "type" : "«elm.type.replaceAll("_",".")»", "input_file" : "«elm.inputFile»" }
+				«IF generateFASTRefStepTxt(elm).empty»
+					{ "id" : "«elm.id»", "type" : "«elm.type.replaceAll("_",".")»", "input_file" : "«elm.inputFile»" }
+				«ELSE»
+					{ "id" : "«elm.id»", "type" : "«elm.type.replaceAll("_",".")»", "input_file" : "«elm.inputFile»",
+						"parameters" : {
+							«FOR refTxt : generateFASTRefStepTxt(elm) SEPARATOR ','»
+								«refTxt»
+							«ENDFOR»
+						} 
+					}
+				«ENDIF»
 			«ENDFOR»
 		]
 		'''
 		return txt
 	}
+	
+	def generateFASTRefStepTxt(Step step) {
+		var refTxt = new ArrayList<CharSequence>
+		for(kv : step.parameters) {
+			for(rk : kv.refKey) {
+				refTxt.add('''"_«rk»" : "«rk»"''')
+			}
+		}
+		return refTxt
+	}
+	
 	
 	def generateVFDFile(SUTDefinition sDef) {
 		var def = sDef.generic.virtualFabDefinition
@@ -758,8 +829,9 @@ class TestspecificationGenerator extends AbstractGenerator
 			System.out.println("	step-id: " + st.id + " type: " + st.type)
 			System.out.println("	input: " + st.inputFile)
 			System.out.println("	var: " + st.variableName)
-			for(param : st.parameters)
-				System.out.println("	parameters: " + param.key + " -> " + param.value)
+			for(param : st.parameters) 
+				param.display
+				//System.out.println("	parameters: " + param.key + " -> " + param.value)
 		}		
 	}
 }
