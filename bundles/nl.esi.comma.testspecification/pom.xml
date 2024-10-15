@@ -8,7 +8,6 @@
         <relativePath>../xtext-bundles-config/pom.xml</relativePath>
     </parent>
 
-
     <artifactId>nl.esi.comma.testspecification</artifactId>
     <packaging>eclipse-plugin</packaging>
 
