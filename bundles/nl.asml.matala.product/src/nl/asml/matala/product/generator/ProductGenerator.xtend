@@ -27,6 +27,13 @@ import org.eclipse.xtext.generator.IGeneratorContext
 import nl.esi.comma.types.types.Type
 import nl.esi.comma.types.types.VectorTypeConstructor
 import nl.esi.comma.types.types.RecordField
+import nl.asml.matala.product.product.RefConstraint
+import nl.asml.matala.product.product.DataReferences
+import nl.asml.matala.product.product.Blocks
+import nl.asml.matala.product.product.Specification
+import nl.asml.matala.product.product.Update
+import nl.asml.matala.product.product.Function
+import nl.asml.matala.product.product.UpdateOutVar
 
 /**
  * Generates code from your *.ps model files on save.
@@ -215,7 +222,7 @@ class ProductGenerator extends AbstractGenerator {
 			for(update : f.updates) 
 			{
 				System.out.println("  > case: " + update.name)
-				var tname = f.name + "_" + update.name + "@" + update.type + "@"
+				var tname = f.name + "_" + update.name + "@" + update.stepType + "@" + update.actionType + "@"
 				var tr = new Transition(block.name, block.name+"_"+tname)
 				pnet.transitions.add(tr)
 				var input_var_list = new HashMap<String,TypeDecl> // ArrayList<String>
@@ -314,18 +321,61 @@ class ProductGenerator extends AbstractGenerator {
 				
 				// constraints to comma expression. 27.08.2024
 				// Check if boolean expression or assignment action
-				constraints.add(new Constraint(c.name, (new ExpressionsCommaGenerator()).exprToComMASyntax(c.symbExpr).toString()))
+//				constraints.add(new Constraint(c.name, (new ExpressionsCommaGenerator()).exprToComMASyntax(c.symbExpr).toString()))
+				constraints.add(new Constraint(printConstraint(c as RefConstraint), ""))
 			}
 		}
 		if(v.dataReferences !== null) {
 			for(c : v.dataReferences.constr) {
 				val (String) => String fn = [s|s]
 				for(a : c.act.actions)
-					constraints.add(new Constraint(c.name, SnakesHelper.commaAction(a, fn, "")))
+//					constraints.add(new Constraint(c.name, SnakesHelper.commaAction(a, fn, "")))
+					constraints.add(new Constraint(printConstraint(c as RefConstraint), ""))
 			}
 		}
 		return constraints
 	}
+	
+	dispatch def String printConstraint(RefConstraint ref) {
+		return printConstraint(ref.eContainer as DataReferences) + "." + ref.name
+	}
+	
+	dispatch def String printConstraint(DataReferences ref) {
+		return printConstraint(ref.eContainer as VarRef)
+	}
+	
+	dispatch def String printConstraint(VarRef ref) {
+		return printConstraint(ref.eContainer as UpdateOutVar)
+	}
+	
+	dispatch def String printConstraint(UpdateOutVar ref) {
+		return printConstraint(ref.eContainer as Update)
+	}
+	
+	dispatch def String printConstraint(Update ref) {
+		return printConstraint(ref.eContainer as Function) + "." + ref.name
+	}
+	
+	dispatch def String printConstraint(Function ref) {
+		return printConstraint(ref.eContainer as Block) + "." + ref.name
+	}
+	
+	dispatch def String printConstraint(Variable ref) {
+		return printConstraint(ref.eContainer as Block) + "." + ref.name
+	}
+	
+	dispatch def String printConstraint(Block ref) {
+		return printConstraint(ref.eContainer as Blocks) + "." + ref.name
+	}
+	
+	dispatch def String printConstraint(Blocks ref) {
+		return printConstraint(ref.eContainer as Specification)
+	}
+	
+	dispatch def String printConstraint(Specification ref) {
+		return ref.name
+	}
+
 	
 	def generateTestSCNTxt(String name, Product prod) {
 		return
@@ -425,8 +475,8 @@ class ProductGenerator extends AbstractGenerator {
 		                idata = step.input_data
 		                odata = step.output_data
 		                parts = name.split("@")
-		                new_name = parts[0] + parts[2]
-		                if "_run_" in name:
+		                new_name = parts[0] + parts[3]
+		                if "RUN" in parts[2]:
 		                    type_name = ""
 		                    if not "null" in parts[1]:
 		                        type_name = " step-type: \"%s\"" % parts[1] 
@@ -436,7 +486,7 @@ class ProductGenerator extends AbstractGenerator {
 		                for elm in self.step_dependencies:
 		                    if elm.step_name == name:
 		                        parts = elm.depends_on.split("@")
-		                        new_name = parts[0] + parts[2]
+		                        new_name = parts[0] + parts[3]
 		                        txt += "consumes-from-step: %s { " % new_name
 		                        txt += elm.var_ref
 		                        txt += " }\n"
@@ -448,7 +498,7 @@ class ProductGenerator extends AbstractGenerator {
 		                            if constr.var_ref == k and constr.dir == "IN":
 		                                txt += "output-assertion: %s\n" % k
 		                                for entry in constr.centry:
-		                                    txt += "%s : \"%s\"\n" % (entry.name, entry.constr.replace('"','\\"'))
+		                                    txt += "%s\n" % entry.name
 		                txt += "output-data:\n"
 		                txt += self.printData(odata)
 		                for k, v in odata.items():
@@ -457,7 +507,7 @@ class ProductGenerator extends AbstractGenerator {
 		                            if constr.var_ref == k and constr.dir == "OUT":
 		                                txt += "symbolic-constraint: %s\n" % k
 		                                for entry in constr.centry:
-		                                    txt += "%s : \"%s\"\n" % (entry.name, entry.constr.replace('"','\\"'))
+		                                    txt += "%s\n" % entry.name
 		            else:
 		                name = step.step_name
 		                idata = step.input_data

@@ -5,6 +5,7 @@ generate testspecification "http://www.esi.nl/comma/testspecification/Testspecif
 import "http://www.esi.nl/comma/signature/InterfaceSignature" as sig 
 import "http://www.esi.nl/comma/types/Types" as types
 import "http://www.esi.nl/comma/expressions/Expression" as expr
+import "http://www.asml.nl/matala/product/Product" as prod
 
 TSMain:
 	imports += Import*
@@ -73,7 +74,8 @@ AbstractTestSequence:
 
 ConstraintStep:
 	'symbolic-constraint' ':' name = ID
-	ce += ConstraintElm+
+//	ce += ConstraintElm+
+	ce += [prod::RefConstraint|QualifiedName]+	
 ;
 
 AssertStep:
@@ -98,7 +100,7 @@ ComposeStep:
 
 RunStep:
 	'run-step-name' ':' name = ID
-	('step-type' ':' type = STRING)?
+	('step-type' ':' stepType += STRING)?
 	stepRef += StepReference*
 	'input-binding' ':' input += Binding+
 	'output-data' ':' output += Binding+
