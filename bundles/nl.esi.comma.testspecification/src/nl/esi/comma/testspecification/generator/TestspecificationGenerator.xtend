@@ -70,9 +70,14 @@ class TestspecificationGenerator extends AbstractGenerator
 			if(modelInst.model instanceof TestDefinition)
 				generateContents(fsa) // Parsing and File Generation
 			
-			if(modelInst.model instanceof AbstractTestDefinition)
-				fsa.generateFile("concrete.tspec", (new FromAbstractToConcrete).generateAbstractTest(modelInst.model as AbstractTestDefinition))
-			
+			if(modelInst.model instanceof AbstractTestDefinition) {
+				var atd = new FromAbstractToConcrete(modelInst.model as AbstractTestDefinition)
+				for (sys : atd.getSystems()) {
+					fsa.generateFile("types/" + sys + ".types", atd.generateTypesFile(sys))
+					fsa.generateFile("parameters/" + sys + ".params", atd.generateParamsFile(sys))
+				}
+				fsa.generateFile("concrete.tspec", atd.generateAbstractTest())
+			}
 			System.out.println("\n")
 			System.out.println(" ******* TEST DOCUMENTATION GENERATOR *********")
 			System.out.println("\n")
