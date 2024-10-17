@@ -9,23 +9,19 @@
     <properties>
         <release.type>latest</release.type>
 
-        <xtext.version>2.25.0</xtext.version>
-        <xtend.version>2.25.0</xtend.version>
-        <mwe2.version>2.12.1</mwe2.version>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
+        <java.version>21</java.version>
+        <maven.compiler.source>${java.version}</maven.compiler.source>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
+        <tycho.version>4.0.9</tycho.version>
+
+        <xtext.version>2.36.0</xtext.version>
+        <xtend.version>${xtext.version}</xtend.version>
+        <mwe2.version>2.19.0</mwe2.version>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven-dependency-plugin.version>3.7.0</maven-dependency-plugin.version>
         <maven-antrun-plugin.version>3.1.0</maven-antrun-plugin.version>
         <maven-clean-plugin.version>3.2.0</maven-clean-plugin.version>
-        <!-- Tycho settings -->
-        <tycho.version>2.7.5</tycho.version>
-        <!-- Define overridable properties for tycho-surefire-plugin -->
-        <platformSystemProperties></platformSystemProperties>
-        <moduleProperties></moduleProperties>
-        <systemProperties></systemProperties>
-        <tycho.testArgLine></tycho.testArgLine>
 
         <m2doc.version>2.0.3</m2doc.version>
         <jacoco.version>0.8.6</jacoco.version>
@@ -186,6 +182,7 @@
                 <artifactId>target-platform-configuration</artifactId>
                 <version>${tycho.version}</version>
                 <configuration>
+                    <executionEnvironment>org.eclipse.justj.openjdk.hotspot.jre.full-${java.version}</executionEnvironment>
                     <target>
                         <artifact>
                             <groupId>nl.esi.comma</groupId>
@@ -193,8 +190,6 @@
                             <version>${project.version}</version>
                         </artifact>
                     </target>
-                    <!-- Required because of: https://www.eclipse.org/justj/?page=documentation -->
-                    <resolveWithExecutionEnvironmentConstraints>false</resolveWithExecutionEnvironmentConstraints>
                     <environments>
                         <environment>
                             <os>win32</os>
