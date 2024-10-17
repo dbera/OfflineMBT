@@ -1,5 +1,5 @@
 //outlet.DEFAULT_OUTPUT.sourceFolder.src/main/java.directory=xtend-gen
-//outlet.DEFAULT_OUTPUT.sourceFolder.src/test/java.directory=src/test/generated-sources/xtend
+//outlet.DEFAULT_OUTPUT.sourceFolder.src/test/java.directory=xtend-gen
 //outlet.DEFAULT_OUTPUT.sourceFolder.target/classes/generated/xtext.directory=xtend-gen
 BuilderConfiguration.is_project_specific=true
 eclipse.preferences.version=1

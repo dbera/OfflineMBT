@@ -12,13 +12,7 @@ Workflow {
 			project = StandardProjectConfig {
 				baseName = "nl.esi.comma.testspecification"
 				rootPath = rootPath
-				runtimeTest = {
-					enabled = true
-				}
 				eclipsePlugin = {
-					enabled = true
-				}
-				eclipsePluginTest = {
 					enabled = true
 				}
 				createEclipseMetaData = true

@@ -56,8 +56,8 @@ class ProductGenerator extends AbstractGenerator {
 		'''
 		class Types:
 		    def __init__(self):
-		        self.import_list = ["«FOR elm : import_list SEPARATOR ''','''»«elm»«ENDFOR»"]
-		        self.var_decl_map = {«FOR k : var_decl_map.keySet SEPARATOR ''','''»"«k»" : "«var_decl_map.get(k)»"«ENDFOR»}
+		        self.import_list = ["«FOR elm : import_list SEPARATOR ','»«elm»«ENDFOR»"]
+		        self.var_decl_map = {«FOR k : var_decl_map.keySet SEPARATOR ','»"«k»" : "«var_decl_map.get(k)»"«ENDFOR»}
 		'''
 	}
 	
@@ -293,7 +293,7 @@ class ProductGenerator extends AbstractGenerator {
 							var methodDef = 
 							'''
 								@staticmethod
-								def execute_«f.name»_«update.name»_«place»(«FOR elm : input_var_list.keySet SEPARATOR ''','''»«elm»«ENDFOR»):
+								def execute_«f.name»_«update.name»_«place»(«FOR elm : input_var_list.keySet SEPARATOR ','»«elm»«ENDFOR»):
 									«actTxt»
 									«IF v.ref.type.type instanceof RecordTypeDecl»
 										return json.dumps(«v.ref.name»)
@@ -624,7 +624,7 @@ class ProductGenerator extends AbstractGenerator {
 	}
 	
 	def generateVarListTxt(Map<String,TypeDecl> input_var_map) {
-		return '''(«FOR elm : input_var_map.keySet SEPARATOR ''','''»«generateVarTxt(input_var_map,elm)»«ENDFOR»)'''
+		return '''(«FOR elm : input_var_map.keySet SEPARATOR ','»«generateVarTxt(input_var_map,elm)»«ENDFOR»)'''
 	}
 	
 	def generateVarTxt(Map<String,TypeDecl> input_var_map, String elm) {

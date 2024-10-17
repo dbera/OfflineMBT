@@ -177,7 +177,7 @@ class TypesZ3Generator {
 	
 	def generateRecordFields(RecordTypeDecl type) {
 		'''
-		«FOR elm : type.fields SEPARATOR ''','''»
+		«FOR elm : type.fields SEPARATOR ','»
 			«IF elm.type instanceof TypeReference»
 				«IF elm.type.type instanceof SimpleTypeDecl»
 					('«elm.name»', «generateSimpleTypeDefinition(elm.type.type as SimpleTypeDecl, elm, type.name)»)
@@ -278,7 +278,7 @@ class TypesZ3Generator {
 «««						«ENDIF»
 «««					«ELSEIF elm.type instanceof VectorTypeConstructor»
 «««						«{vecIter = (elm.type as VectorTypeConstructor).dimensions.size ""}»
-«««						self.«type.name»_«elm.name» =  «FOR iter_ : 0..<vecIter»[«ENDFOR»«elm.type.type.name»([«FOR _iter : 0..<vecIter SEPARATOR ''', '''»i«_iter»«ENDFOR»])«FOR iter : 0..<vecIter» for i«iter» in range(«(elm.type as VectorTypeConstructor).dimensions.get(iter).size»)]«ENDFOR»
+«««						self.«type.name»_«elm.name» =  «FOR iter_ : 0..<vecIter»[«ENDFOR»«elm.type.type.name»([«FOR _iter : 0..<vecIter SEPARATOR ', '»i«_iter»«ENDFOR»])«FOR iter : 0..<vecIter» for i«iter» in range(«(elm.type as VectorTypeConstructor).dimensions.get(iter).size»)]«ENDFOR»
 «««					«ELSEIF elm.type instanceof MapTypeConstructor»
 «««						«{addMapRecTxt(elm) ""}»
 «««						self.«type.name»_«elm.name» = Const('«type.name»_«elm.name»_' + str(idx), «elm.name»)
@@ -294,7 +294,7 @@ class TypesZ3Generator {
 //		«ELSE»
 //			«{vecIter = (elm.type as VectorTypeConstructor).dimensions.size ""}»
 //			(«elm.name», Array('«elm.name»', IntSort(), «elm.type.type.name»))
-//			«FOR iter_ : 0..<vecIter»[«ENDFOR»«elm.type.type.name»([«FOR _iter : 0..<vecIter SEPARATOR ''', '''»i«_iter»«ENDFOR»])«FOR iter : 0..<vecIter» for i«iter» in range(«(elm.type as VectorTypeConstructor).dimensions.get(iter).size»)]«ENDFOR»)
+//			«FOR iter_ : 0..<vecIter»[«ENDFOR»«elm.type.type.name»([«FOR _iter : 0..<vecIter SEPARATOR ', '»i«_iter»«ENDFOR»])«FOR iter : 0..<vecIter» for i«iter» in range(«(elm.type as VectorTypeConstructor).dimensions.get(iter).size»)]«ENDFOR»)
 //		«ENDIF»
 //		'''
 
