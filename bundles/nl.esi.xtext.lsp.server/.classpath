@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry exported="true" kind="lib" path="lib/Java-WebSocket-1.5.7.jar" sourcepath="lib/Java-WebSocket-1.5.7-sources.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:platform:/resource/nl.esi.xtext.lsp.server/lib/Java-WebSocket-1.5.7-javadoc.jar!/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-17"/>
+	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="output" path="target/classes"/>
+</classpath>

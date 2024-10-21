@@ -51,6 +51,10 @@ Workflow {
 			junitSupport = {
 				junitVersion = "5"
 			}
+			fragment = textmate.TextMateHighlightingFragment {
+			    absolutePath = "../nl.asml.matala.product.lsp.editor/language/grammars"
+			    override = true
+			}
 		}
 	}
 }

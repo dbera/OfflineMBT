@@ -13,6 +13,7 @@
     <modules>
         <module>nl.esi.comma.automata</module>
         <module>xtend-bundles-config</module>
+        <module>nl.esi.xtext.lsp.server</module>
 
         <module>nl.esi.comma.types</module>
         <module>nl.esi.comma.types.ide</module>
@@ -45,6 +46,8 @@
         <module>nl.asml.matala.product</module>
         <module>nl.asml.matala.product.ide</module>
         <module>nl.asml.matala.product.ui</module>
+        <module>nl.asml.matala.product.lsp.server</module>
+        <module>nl.asml.matala.product.lsp.editor</module>
 
         <module>nl.esi.comma.behavior.scl</module>
         <module>nl.esi.comma.behavior.scl.ide</module>

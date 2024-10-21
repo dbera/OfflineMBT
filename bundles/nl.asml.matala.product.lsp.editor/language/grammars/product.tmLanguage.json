@@ -1,0 +1,30 @@
+{
+  "patterns": [
+    {
+      "match": "\\b(AND|Bulkdata|NOT|OR|action|and|any|assert|based|case|command|constraints|declarations|delete|desc|do|else|enum|event|exists|extends|fi|for|forAll|fragment|if|import|in|init|inputs|local|map|max|min|mod|not|notification|on|opt|or|order|outputs|record|reference|references|reply|signal|specification|system|then|to|type|updates|using|variables|vector)\\b",
+      "name": "keyword.control.product"
+    },
+    {
+      "match": "\\^?([a-z]|[A-Z]|_)([a-z]|[A-Z]|_|[0-9])*",
+      "name": "variable.product"
+    },
+    {
+      "match": "(\\\"(\\\\.|[^\\\\\\\"])*\\\"|\u0027(\\\\.|[^\\\\\u0027])*\u0027)",
+      "name": "string.quoted.product"
+    },
+    {
+      "begin": "/\\*",
+      "end": "\\*/",
+      "name": "comment.block.product"
+    },
+    {
+      "match": "//[^\\\n\\\r]*(\\\r?\\\n)?",
+      "name": "comment.line.product"
+    },
+    {
+      "match": ".",
+      "name": "invalid.product"
+    }
+  ],
+  "scopeName": "source.product"
+}
