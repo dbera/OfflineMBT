@@ -15,54 +15,62 @@
         <mwe2-workflow>/${project.basedir}/src/nl/esi/comma/project/standard/GenerateStandardProject.mwe2</mwe2-workflow>
     </properties>
 
-    <dependencies>
-        <!--
-            This dependency is needed to make maven-dependency-plugin copy both antlr runtime v3 and v4 to the
-            target/libs folder (which is included in the fat jar). Comma has a depedency to both v3 (via xtext) and v4 (via m2doc)
-            and for some reason maven-dependency-plugin does not detect both as a dependency without the dependency below (name clash?).
-        -->
-        <dependency>
-            <groupId>org.antlr</groupId>
-            <artifactId>antlr-runtime</artifactId>
-            <version>3.2</version>
-        </dependency>
-    </dependencies>
-
-    <build>
-        <plugins>
-            <!-- Build fat jar for CLI usage -->
-            <plugin>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>unpack-dependencies</id>
-                        <phase>prepare-package</phase>
-                        <goals>
-                            <goal>unpack-dependencies</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>${project.build.directory}/libs</outputDirectory>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <artifactId>maven-antrun-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>package-jar</id>
-                        <phase>package</phase>
-                        <configuration>
-                            <target>
-                                <ant antfile="${project.basedir}/fat-jar.xml" />
-                            </target>
-                        </configuration>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
+    <profiles>
+        <profile>
+            <id>cli</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <dependencies>
+                <!--
+                    This dependency is needed to make maven-dependency-plugin copy both antlr runtime v3 and v4 to the
+                    target/libs folder (which is included in the fat jar). Comma has a depedency to both v3 (via xtext) and v4 (via m2doc)
+                    and for some reason maven-dependency-plugin does not detect both as a dependency without the dependency below (name clash?).
+                -->
+                <dependency>
+                    <groupId>org.antlr</groupId>
+                    <artifactId>antlr-runtime</artifactId>
+                    <version>3.2</version>
+                </dependency>
+            </dependencies>
+        
+            <build>
+                <plugins>
+                    <!-- Build fat jar for CLI usage -->
+                    <plugin>
+                        <artifactId>maven-dependency-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>unpack-dependencies</id>
+                                <phase>prepare-package</phase>
+                                <goals>
+                                    <goal>unpack-dependencies</goal>
+                                </goals>
+                                <configuration>
+                                    <outputDirectory>${project.build.directory}/libs</outputDirectory>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>package-jar</id>
+                                <phase>package</phase>
+                                <configuration>
+                                    <target>
+                                        <ant antfile="${project.basedir}/fat-jar.xml" />
+                                    </target>
+                                </configuration>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

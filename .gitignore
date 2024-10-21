@@ -23,5 +23,5 @@ local.properties
 
 # maven #
 target/
-.polyglot.build.properties
+.polyglot.*
 .m2/
