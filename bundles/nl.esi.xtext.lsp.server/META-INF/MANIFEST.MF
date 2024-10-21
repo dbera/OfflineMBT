@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Xtext LSP Server
 Bundle-SymbolicName: nl.esi.xtext.lsp.server
-Bundle-Version: 1.0.0.qualifier
+Bundle-Version: 4.2.0.qualifier
 Export-Package: nl.esi.xtext.lsp.client,
  nl.esi.xtext.lsp.server,
  org.java_websocket,
