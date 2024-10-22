@@ -144,6 +144,7 @@ TypeObject:
 Int returns ecore::EInt: NUMBER;
 
 terminal ID: '^'?('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'_'|'0'..'9')*;
+@LezerNumber
 terminal NUMBER: ('0'..'9')+;
 terminal STRING:
 			'"' ( '\\' . /* 'b'|'t'|'n'|'f'|'r'|'u'|'"'|"'"|'\\' */ | !('\\'|'"') )* '"' |

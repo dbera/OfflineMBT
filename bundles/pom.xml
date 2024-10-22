@@ -14,6 +14,7 @@
         <module>nl.esi.comma.automata</module>
         <module>xtend-bundles-config</module>
         <module>nl.esi.xtext.lsp.server</module>
+        <module>nl.esi.xtext.lsp.generator</module>
 
         <module>nl.esi.comma.types</module>
         <module>nl.esi.comma.types.ide</module>
