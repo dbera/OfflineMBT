@@ -19,12 +19,7 @@ class TypesProposalProvider extends AbstractTypesProposalProvider {
 	
 	@Inject
 	protected IScopeProvider scopeProvider;
-	protected Image templateIcon
 	final int TEMPLATE_DEFAULT_PRIORITY = 600
-	new() {
-        templateIcon = ImageDescriptor.createFromURL(
-            TypesProposalProvider.getResource("/icons/icon_template.png")).createImage();
-    }
     
 	protected def createTemplate(String name, String content, String additionalInfo, Integer nrIndents,
         ContentAssistContext context, int priority, int selection, int length) {
@@ -45,6 +40,8 @@ class TypesProposalProvider extends AbstractTypesProposalProvider {
         int priority, int selection, int length) {
 
         var finalAdditionalInfo = content.replaceAll("<", "&lt;").replaceAll(">", "&gt;")
+        val templateIcon = ImageDescriptor.createFromURL(
+            TypesProposalProvider.getResource("/icons/icon_template.png")).createImage();
         val proposal = createHtmlCompletionProposal(content, new StyledString(name), templateIcon,
             TEMPLATE_DEFAULT_PRIORITY, context);
 
