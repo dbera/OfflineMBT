@@ -15,6 +15,8 @@ import nl.esi.comma.testspecification.testspecification.RunStep
 import org.eclipse.emf.common.util.BasicEList
 import org.eclipse.emf.common.util.EList
 import nl.esi.comma.testspecification.testspecification.StepReference
+import nl.esi.comma.testspecification.testspecification.TSMain
+import java.util.List
 
 class FromAbstractToConcrete 
 {
@@ -155,7 +157,7 @@ class FromAbstractToConcrete
 		return SymbolicContraints
 	}
 
-	def generateTypesFile(String sys) {
+	def generateTypesFile(String sys, List<String> typesImports) {
 		var typ = ""
 		var ios = new BasicEList<Binding>()
 		for (s : atd.eAllContents.filter(RunStep).filter[s | s.name.split("_").get(0).equalsIgnoreCase(sys)].toIterable) {
@@ -175,12 +177,14 @@ class FromAbstractToConcrete
 				uniqueIos.add(io)
 			}
 		}
-		return printTypes(uniqueIos, typ)
+		return printTypes(uniqueIos, typ, typesImports)
 	}
 
-	def printTypes(EList<Binding> ios, String type) '''
-		import "../../data.types"
-««« TODO: get data.types path from imported ps 
+	def printTypes(EList<Binding> ios, String type, List<String> typesImports) '''
+		«FOR ti : typesImports»
+		import "«ti»"
+		«ENDFOR»
+		
 		record «type» {
 			«type»Input input
 			«type»Output output
