@@ -10,15 +10,13 @@
     <booleanAttribute key="clearConfig" value="true"/>
     <booleanAttribute key="clearws" value="false"/>
     <booleanAttribute key="clearwslog" value="false"/>
-    <stringAttribute key="configLocation" value="${workspace_loc}/.metadata/.plugins/org.eclipse.pde.core/Launch Runtime Eclipse"/>
+    <stringAttribute key="configLocation" value="${workspace_loc}/.metadata/.plugins/org.eclipse.pde.core/Launch Runtime Eclipse (LSP)"/>
     <booleanAttribute key="default" value="false"/>
     <setAttribute key="deselected_workspace_bundles">
-        <setEntry value="nl.asml.matala.product.lsp.editor"/>
-        <setEntry value="nl.asml.matala.product.lsp.server"/>
+        <setEntry value="nl.asml.matala.product.ui"/>
         <setEntry value="nl.esi.comma.branding"/>
         <setEntry value="nl.esi.comma.product.philips"/>
         <setEntry value="nl.esi.xtext.lsp.generator"/>
-        <setEntry value="nl.esi.xtext.lsp.server"/>
     </setAttribute>
     <booleanAttribute key="includeOptional" value="true"/>
     <stringAttribute key="location" value="${workspace_loc}/../runtime-EclipseXtext"/>
@@ -498,7 +496,8 @@
     </setAttribute>
     <setAttribute key="selected_workspace_bundles">
         <setEntry value="nl.asml.matala.product.ide@default:default"/>
-        <setEntry value="nl.asml.matala.product.ui@default:default"/>
+        <setEntry value="nl.asml.matala.product.lsp.editor@default:default"/>
+        <setEntry value="nl.asml.matala.product.lsp.server@default:default"/>
         <setEntry value="nl.asml.matala.product@default:default"/>
         <setEntry value="nl.esi.comma.actions.ide@default:default"/>
         <setEntry value="nl.esi.comma.actions.ui@default:default"/>
@@ -544,6 +543,7 @@
         <setEntry value="nl.esi.comma.types.ide@default:default"/>
         <setEntry value="nl.esi.comma.types.ui@default:default"/>
         <setEntry value="nl.esi.comma.types@default:default"/>
+        <setEntry value="nl.esi.xtext.lsp.server@default:default"/>
     </setAttribute>
     <booleanAttribute key="show_selected_only" value="false"/>
     <stringAttribute key="templateConfig" value="${target_home}/configuration/config.ini"/>
