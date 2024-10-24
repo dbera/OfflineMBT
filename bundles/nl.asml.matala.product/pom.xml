@@ -19,20 +19,4 @@
     <properties>
         <mwe2-workflow>/${project.basedir}/src/nl/asml/matala/product/GenerateProduct.mwe2</mwe2-workflow>
     </properties>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <dependencies>
-                    <dependency>
-                        <groupId>${project.groupId}</groupId>
-                        <artifactId>nl.esi.xtext.lsp.generator</artifactId>
-                        <version>${project.version}</version>
-                    </dependency>
-                </dependencies>
-            </plugin>
-        </plugins>
-    </build>
 </project>
