@@ -5,22 +5,36 @@ package nl.asml.matala.product.generator
 
 import java.util.ArrayList
 import java.util.HashMap
+import java.util.HashSet
 import java.util.List
 import java.util.Map
+import java.util.Set
 import nl.asml.matala.product.product.Block
 import nl.asml.matala.product.product.Product
 import nl.asml.matala.product.product.VarRef
+import nl.esi.comma.expressions.expression.Variable
+import nl.esi.comma.expressions.generator.ExpressionsCommaGenerator
+import nl.esi.comma.types.generator.TypesZ3Generator
 import nl.esi.comma.types.types.RecordTypeDecl
 import nl.esi.comma.types.types.SimpleTypeDecl
 import nl.esi.comma.types.types.TypeDecl
+import nl.esi.comma.types.types.TypesModel
 import org.eclipse.emf.ecore.resource.Resource
+import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
-import org.eclipse.xtext.EcoreUtil2
-import nl.esi.comma.types.types.TypesModel
-import nl.esi.comma.types.generator.TypesZ3Generator
-import nl.esi.comma.expressions.generator.ExpressionsCommaGenerator
+import nl.esi.comma.types.types.Type
+import nl.esi.comma.types.types.VectorTypeConstructor
+import nl.esi.comma.types.types.RecordField
+import nl.asml.matala.product.product.RefConstraint
+import nl.asml.matala.product.product.DataReferences
+import nl.asml.matala.product.product.Blocks
+import nl.asml.matala.product.product.Specification
+import nl.asml.matala.product.product.Update
+import nl.asml.matala.product.product.Function
+import nl.asml.matala.product.product.UpdateOutVar
+import nl.asml.matala.product.product.SymbConstraint
 
 /**
  * Generates code from your *.ps model files on save.
@@ -156,7 +170,7 @@ class ProductGenerator extends AbstractGenerator {
 			'''
 			fsa.generateFile(name + '_data.py', data_container_class)
 			
-			fsa.generateFile(name + '_TestSCN.py', generateTestSCNTxt(prod.specification.name + "_types", import_list, var_decl_map))
+			fsa.generateFile(name + '_TestSCN.py', generateTestSCNTxt(prod.specification.name + "_types", prod))
 			
 			// execute python code
 			// val relativeFile = fsa.getURI(prod.name + '.py')
@@ -209,7 +223,7 @@ class ProductGenerator extends AbstractGenerator {
 			for(update : f.updates) 
 			{
 				System.out.println("  > case: " + update.name)
-				var tname = f.name + "_" + update.name
+				var tname = f.name + "_" + update.name + "@" + update.stepType + "@" + update.actionType + "@"
 				var tr = new Transition(block.name, block.name+"_"+tname)
 				pnet.transitions.add(tr)
 				var input_var_list = new HashMap<String,TypeDecl> // ArrayList<String>
@@ -308,22 +322,67 @@ class ProductGenerator extends AbstractGenerator {
 				
 				// constraints to comma expression. 27.08.2024
 				// Check if boolean expression or assignment action
-				constraints.add(new Constraint(c.name, (new ExpressionsCommaGenerator()).exprToComMASyntax(c.symbExpr).toString()))
+//				constraints.add(new Constraint(c.name, (new ExpressionsCommaGenerator()).exprToComMASyntax(c.symbExpr).toString()))
+				constraints.add(new Constraint(printConstraint(c as SymbConstraint), ""))
 			}
 		}
 		if(v.dataReferences !== null) {
 			for(c : v.dataReferences.constr) {
 				val (String) => String fn = [s|s]
 				for(a : c.act.actions)
-					constraints.add(new Constraint(c.name, SnakesHelper.commaAction(a, fn, "")))
+//					constraints.add(new Constraint(c.name, SnakesHelper.commaAction(a, fn, "")))
+					constraints.add(new Constraint(printConstraint(c as RefConstraint), ""))
 			}
 		}
 		return constraints
 	}
 	
-	def generateTestSCNTxt(String name, 
-		ArrayList<String> import_list, HashMap<String,String> var_decl_map
-	) {
+	dispatch def String printConstraint(SymbConstraint ref) {
+		return new String // TODO handle this case.
+	}
+	
+	dispatch def String printConstraint(RefConstraint ref) {
+		return printConstraint(ref.eContainer as DataReferences) + "." + ref.name
+	}
+	
+	dispatch def String printConstraint(DataReferences ref) {
+		return printConstraint(ref.eContainer as VarRef)
+	}
+	
+	dispatch def String printConstraint(VarRef ref) {
+		return printConstraint(ref.eContainer as UpdateOutVar)
+	}
+	
+	dispatch def String printConstraint(UpdateOutVar ref) {
+		return printConstraint(ref.eContainer as Update)
+	}
+	
+	dispatch def String printConstraint(Update ref) {
+		return printConstraint(ref.eContainer as Function) + "." + ref.name
+	}
+	
+	dispatch def String printConstraint(Function ref) {
+		return printConstraint(ref.eContainer as Block) + "." + ref.name
+	}
+	
+	dispatch def String printConstraint(Variable ref) {
+		return printConstraint(ref.eContainer as Block) + "." + ref.name
+	}
+	
+	dispatch def String printConstraint(Block ref) {
+		return printConstraint(ref.eContainer as Blocks) + "." + ref.name
+	}
+	
+	dispatch def String printConstraint(Blocks ref) {
+		return printConstraint(ref.eContainer as Specification)
+	}
+	
+	dispatch def String printConstraint(Specification ref) {
+		return ref.name
+	}
+
+	
+	def generateTestSCNTxt(String name, Product prod) {
 		return
 		'''
 		import json
@@ -348,16 +407,12 @@ class ProductGenerator extends AbstractGenerator {
 		    step_dependencies = []
 		    map_transition_assert = {}
 		    constraint_dict = {}
-		    import_list = []
-		    var_decl_map = {}
 		
 		    def __init__(self, _mapTrAssert, _constraint_dict):
 		        self.step_list = []
 		        self.step_dependencies = []
 		        self.map_transition_assert = _mapTrAssert
 		        self.constraint_dict = _constraint_dict
-		        self.import_list = Types().import_list
-		        self.var_decl_map = Types().var_decl_map
 		
 		    def generate_viz(self, idx):
 		        txt = "@startuml\n"
@@ -378,48 +433,86 @@ class ProductGenerator extends AbstractGenerator {
 		        with open(fname, 'w') as f:
 		            f.write(txt)
 		
+		    def recurseJson(self, items, prefix):
+		        txt = ""
+		        try:
+		            for jk in items.keys():
+		                txt += self.recurseJson(items[jk], f"{prefix}.{jk}")
+		        except:
+		            match items:
+		                case str():
+		                    if ":" in items and not "()" in items:
+		                        items = items.replace(":", "::")
+		                    elif "True" in items:
+		                        items = "true"
+		                    elif "False" in items:
+		                        items = "false"
+		                    else:
+		                        items = f"\"{items}\""
+		                case int():
+		                    items = items
+		                case list():
+		                    «printListConstructors(prod)»
+		                case _:
+		                    raise TypeError('Unsupported type')
+		            txt += f"    {prefix} := {items}\n"
+		        return txt
+		
+		    def printData(self, idata):
+		        txt = ""
+		        for k, v in idata.items():
+		            txt += "%s : {\n" % k
+		            j = json.loads(v)
+		            for jk in j.keys():
+		                txt += self.recurseJson(j[jk], "%s.%s" % (k,jk))
+		            txt += "}\n"
+		        return txt
+				
 		    def generateTSpec(self, idx):
-		        txt = "abstract-test-definition\n\n"
-		        txt += "imports : {\n"
-		        for imp in self.import_list:
-		            txt += "\t" + f'"{imp}"' + "\n"
-		        txt += "}\n\n"
-		        txt += "variable-declarations : {\n"
-		        for k, v in self.var_decl_map.items():
-		            txt += "\t" + f'"{k}"' + " : " + f'"{v}"' + "\n"
-		        txt += "}\n\n"
+		        txt = ""
+		        txt += "import \"BMMO.ps\"\n\n"
+		        «usageList(prod)»
+		        txt += "abstract-test-definition\n\n"
 		        txt += "Test-Scenario: S%s\n" % idx
 		        for step in self.step_list:
 		            if not step.is_assert:
 		                name = step.step_name
 		                idata = step.input_data
 		                odata = step.output_data
-		                txt += "step-name: %s\n" % name
+		                parts = name.split("@")
+		                new_name = parts[0] + parts[3]
+		                if "RUN" in parts[2]:
+		                    type_name = ""
+		                    if not "null" in parts[1]:
+		                        type_name = " step-type: \"%s\"" % parts[1] 
+		                    txt += "run-step-name: %s%s\n" % (new_name, type_name)
+		                else:
+		                    txt += "compose-step-name: %s\n" % new_name
 		                for elm in self.step_dependencies:
 		                    if elm.step_name == name:
-		                        txt += "consumes-from-step: %s { " % elm.depends_on
+		                        parts = elm.depends_on.split("@")
+		                        new_name = parts[0] + parts[3]
+		                        txt += "consumes-from-step: %s { " % new_name
 		                        txt += elm.var_ref
 		                        txt += " }\n"
 		                txt += "input-binding:\n"
-		                for k, v in idata.items():
-		                    txt += "%s : %s\n" % (k, v)
+		                txt += self.printData(idata)
 		                for k, v in idata.items():
 		                    if name.rsplit("_",1)[0] in self.constraint_dict:
 		                        for constr in self.constraint_dict[name.rsplit("_",1)[0]]:
 		                            if constr.var_ref == k and constr.dir == "IN":
 		                                txt += "output-assertion: %s\n" % k
 		                                for entry in constr.centry:
-		                                    txt += "%s : \"%s\"\n" % (entry.name, entry.constr.replace('"','\\"'))
+		                                    txt += "%s\n" % entry.name
 		                txt += "output-data:\n"
-		                for k, v in odata.items():
-		                    txt += "%s : %s\n" % (k, v)
+		                txt += self.printData(odata)
 		                for k, v in odata.items():
 		                    if name.rsplit("_",1)[0] in self.constraint_dict:
 		                        for constr in self.constraint_dict[name.rsplit("_",1)[0]]:
 		                            if constr.var_ref == k and constr.dir == "OUT":
 		                                txt += "symbolic-constraint: %s\n" % k
 		                                for entry in constr.centry:
-		                                    txt += "%s : \"%s\"\n" % (entry.name, entry.constr.replace('"','\\"'))
+		                                    txt += "%s\n" % entry.name
 		            else:
 		                name = step.step_name
 		                idata = step.input_data
@@ -549,6 +642,78 @@ class ProductGenerator extends AbstractGenerator {
 			txt += '''v_«elm»'''
 		
 		return txt
+	}
+	
+	def usageList(Product prod) {
+		var varSet = getUniqueVariables(prod)
+		var usings = ""
+		for (v : varSet) {
+			var blockName = (v.eContainer as Block).name
+			usings += "txt += \"using " + prod.specification.name + "." + blockName + "." + v.name + "\\n\"\n"
+		}
+		return usings
+	}
+	
+	def printListConstructors(Product prod) {
+		var constrTxt = ""
+		var constructors = newLinkedHashMap() 
+		var varSet = getUniqueVariables(prod)
+		for (v : varSet) {
+			constructors.putAll(recurseTypes(v.type))
+		}
+		var applySeparator = false
+		for (c : constructors.keySet) {
+			if (applySeparator) constrTxt += "el"
+			else applySeparator = true
+			constrTxt += "if \"" + constructors.get(c) + "\" in prefix:\n"
+			constrTxt += "    items = \"<" + c + "[]>[]\"\n"
+		}
+		constrTxt += "else:\n"
+		constrTxt += "    items = \"<string[]>[\\\"\\\"]\"\n"
+		return constrTxt
+	}
+
+	def Map<String,String> recurseTypes(Type typ) {
+		var constructors = newLinkedHashMap() 
+		var typ2 = typ.type
+		if (typ instanceof VectorTypeConstructor) {
+			var t = typ
+			if (!typ2.name.equalsIgnoreCase("string")) {
+				if (typ.eContainer instanceof RecordField) {
+					var field = (typ.eContainer as RecordField).name
+					var key = typ2.name
+					constructors.put(key, field)
+				}
+			}
+		}
+		if (typ2 instanceof RecordTypeDecl) {
+			for (f : (typ2 as RecordTypeDecl).fields) {
+				constructors.putAll(recurseTypes(f.type))
+			}
+		}
+		return constructors
+	}
+	
+	def getUniqueVariables(Product prod) {
+		var Set<Variable> varSet = new HashSet<Variable>()
+		var Set<Variable> varSetUniqueNames = new HashSet<Variable>()
+		for (b : prod.eAllContents.filter(Block).toIterable) {
+			varSet.addAll(b.invars)
+			varSet.addAll(b.outvars)
+			varSet.addAll(b.localvars)
+		}
+		for (v : varSet) {
+			var notInUniqueSet = true
+			for (u : varSetUniqueNames) {
+				if (v.name.compareToIgnoreCase(u.name) == 0) {
+					notInUniqueSet = false
+				}				
+			}
+			if (notInUniqueSet) {
+				varSetUniqueNames.add(v)
+			}
+		}
+		return varSetUniqueNames
 	}
 	
 	def parseOutVariablesWithActions(Block block, HashMap<String, List<String>> map_output_input, 
@@ -742,297 +907,3 @@ class ProductGenerator extends AbstractGenerator {
 		fsa.generateFile('OnlineMBT_Controller.py', txt)
 	}
 }
-
-
-
-/*
-def toSnakesSimulation() {
-		'''
-		import PySimpleGUI as sg
-		import PIL
-		from PIL import Image
-		from plantuml import PlantUML
-		import os
-		import base64
-		from os.path import abspath
-		from io import BytesIO
-		
-		class Simulation:
-		    
-		    def convert_to_bytes(self, source, size=(None, None), subsample=None, zoom=None, fill=False):
-		        if isinstance(source, str):
-		            image = Image.open(source)
-		        elif isinstance(source, bytes):
-		            image = Image.open(io.BytesIO(base64.b64decode(source)))
-		        else:
-		            image = PIL.Image.open(io.BytesIO(source))
-		    
-		        width, height = image.size
-		    
-		        scale = None
-		        if size != (None, None):
-		            new_width, new_height = size
-		            scale = min(new_height/height, new_width/width)
-		        elif subsample is not None:
-		            scale = 1/subsample
-		        elif zoom is not None:
-		            scale = zoom
-		    
-		        resized_image = image.resize((int(width * scale), int(height * scale)), Image.ANTIALIAS) if scale is not None else image
-		        if fill and scale is not None:
-		            resized_image = make_square(resized_image)
-		        # encode a PNG formatted version of image into BASE64
-		        with BytesIO() as bio:
-		            resized_image.save(bio, format="PNG")
-		            contents = bio.getvalue()
-		            encoded = base64.b64encode(contents)
-		        return encoded
-		    
-		    
-		    def simulateUI(self,n):
-		        trList = []
-		        column = [[sg.Image(key="-IMAGE-")]]
-		        buttonLayout = [
-		                    [sg.Button("Start"),
-		                    sg.Button("ZoomIn"),
-		                    sg.Button("ZoomOut"),
-		                    sg.Button("Fire")],
-		                    [sg.Text('Enabled-Transitions')],
-		                    [sg.Combo(['empty'], enable_events=True, key='enabled',size=(60, 0))],
-		                    [sg.Text('Modes')],
-		                    [sg.Listbox(trList, size=(60, len(trList) + 10), horizontal_scroll = True, key='modes')],
-		                    [sg.Text('Marking')],
-		                    [sg.Multiline('', size=(60,10), horizontal_scroll = True, key = 'marking')]
-		        ]
-		        layout = [
-		            [sg.Column(column, size=(700, 500), scrollable=True, key='Column', expand_x=True, expand_y=True),
-		            [sg.Checkbox('block-view', default=True, key='isBlockView')],
-		            sg.VSeperator(),
-		            sg.Column(buttonLayout, key='bColumn', expand_x=True, expand_y=True)],
-		        ]
-		        window = sg.Window("Simulator", layout, resizable=True)
-		        server = PlantUML(url='http://www.plantuml.com/plantuml/img/', basic_auth={}, form_auth={}, http_opts={}, request_opts={})
-		        zoomin = 0
-		        zoomout = 0
-		        isBlockViewEnabled = False
-		        while True:
-		            event, values = window.read()
-		            if event == sg.WINDOW_CLOSED:
-		                break
-		            if event == "Fire":
-		                # print(values['modes'])
-		                # print(values['enabled'])
-		                n.transition(self.dictTrName[values['enabled']]).fire(values['modes'][0])
-		                self.generatePlantUML(n,values['isBlockView'])
-		                # print(self.getEnabledTransitionList(n))
-		                window['enabled'].update(values=self.getEnabledTransitionList(n))
-		                #window['modes'].Widget.configure(height=len(trList)+10)
-		                window['modes'].update(values=[])
-		                marking_txt = ''
-		                for k in n.get_marking():
-		                    marking_txt += ' Queue: {0}\n'.format(k)
-		                    marking_txt += '     Contents: {0}\n'.format(n.get_marking()[k])
-		                window['marking'].update(marking_txt)
-		                # print(values)
-		                filename = 'simulation.plantuml'
-		                if os.path.exists(filename):
-		                    server.processes_file(abspath(filename))                    
-		                    window["-IMAGE-"].update(self.convert_to_bytes('simulation.png'))
-		                    if zoomin > 1: 
-		                        window["-IMAGE-"].update(self.convert_to_bytes('simulation.png', zoom=zoomin))
-		                    if zoomout > 1:
-		                        window["-IMAGE-"].update(self.convert_to_bytes('simulation.png', subsample=zoomout))
-		                    window.refresh()
-		                    window['Column'].contents_changed()
-		            if event == "enabled":
-		                # print(values['enabled'])
-		                trList = []
-		                for key,value in self.dictTrMode.items():
-		                    if key == values['enabled']:
-		                        trList.append(value)
-		                window['modes'].Widget.configure(height=len(trList)+10)
-		                window['modes'].update(values=trList)
-		            if event == "ZoomOut":
-		                zoomout = zoomout + 1
-		                if zoomin > 1: 
-		                    zoomin = zoomin - 1
-		                    window["-IMAGE-"].update(self.convert_to_bytes('simulation.png', zoom=zoomin))
-		                else:
-		                    window["-IMAGE-"].update(self.convert_to_bytes('simulation.png', subsample=zoomout))
-		                window.refresh()
-		                window['Column'].contents_changed()
-		            if event == "ZoomIn":
-		                zoomin = zoomin + 1
-		                if zoomout > 1:
-		                    zoomout = zoomout - 1
-		                    window["-IMAGE-"].update(self.convert_to_bytes('simulation.png', subsample=zoomout))
-		                else:
-		                    window["-IMAGE-"].update(self.convert_to_bytes('simulation.png', zoom=zoomin))
-		                window.refresh()
-		                window['Column'].contents_changed()
-		            if event == "Start":
-		                self.generatePlantUML(n,values['isBlockView'])
-		                # print(self.getEnabledTransitionList(n))
-		                window['enabled'].update(values=self.getEnabledTransitionList(n))
-		                marking_txt = ''
-		                for k in n.get_marking():
-		                    marking_txt += ' Queue: {0}\n'.format(k)
-		                    marking_txt += '     Contents: {0}\n'.format(n.get_marking()[k])
-		                window['marking'].update(marking_txt)
-		                # print(values)
-		                filename = 'simulation.plantuml'
-		                if os.path.exists(filename):
-		                    server.processes_file(abspath(filename))                    
-		                    window["-IMAGE-"].update(self.convert_to_bytes('simulation.png'))
-		                    window.refresh()
-		                    window['Column'].contents_changed()
-		    
-		    
-		    def getEnabledTransitionList(self,n):
-		        trList = []
-		        self.dictTrName = {}
-		        self.dictTrMode = {}
-		        for t in n.transition():
-		            tmodes = t.modes()
-		            idx = 0
-		            for mode in tmodes:
-		                #for key,value in mode.dict().items():
-		                    #kv = ': {0}  -> {1}'.format(key,value)
-		                trList.append(t.name + str(idx))
-		                self.dictTrName.update({t.name + str(idx) : t.name})
-		                self.dictTrMode.update({t.name + str(idx) : mode})
-		                idx = idx + 1
-		        return trList
-		    
-		    def simulate(self,n):
-		        stop = False
-		        while not stop:
-		            dead_marking = False
-		            enabled_transition_modes = {}
-		            for t in n.transition():
-		                tmodes = t.modes()
-		                for mode in tmodes:
-		                    print('\n')
-		                    print(' Enabled-transition-name: ', t)
-		                    print('    # with-input-modes: ')
-		                    for key,value in mode.dict().items():
-		                        print('      - var: ', key, '  ->  value:', value)
-		                    # print('     > with mode: ', mode.dict())
-		                    enabled_transition_modes[t] = mode
-		    
-		            if not enabled_transition_modes:
-		                dead_marking = True
-		    
-		            choices = {}
-		            idx = 0
-		            for key, value in enabled_transition_modes.items():
-		                choices[idx] = key, value
-		                idx = idx + 1
-		    
-		            for k, v in choices.items():
-		                print('\n')
-		                print('Possible-choices: ')
-		                print('    + choice: ', k, ' with-mode: ', v)
-		    
-		            if not dead_marking:
-		                print('\n')
-		                value = input(" Enter Choice: ")
-		                print('\n')
-		                print(' - Selected transition: ', choices.get(int(value)))
-		                t, m = choices.get(int(value))
-		                t.fire(m)
-		                print('\n')
-		                print(' [ Transition Fired! ]')
-		                print('\n')
-		                print(' Resulting Marking: ')
-		                for k in n.get_marking():
-		                    print('    + Place: ', k, ' has Token: ', n.get_marking()[k])
-		                print('****************************************************************')
-		                self.generatePlantUML(n,True)
-		            else:
-		                print('No Enabled Transitions!!')
-		                stop = True
-		    
-		    
-		    def getTransitionName(self,t,isDetailed):
-		        if isDetailed:
-		            return t.name
-		        else:
-		            return t.name.split('_')[0]
-		    
-		    
-		    def generatePlantUML(self, n, isDetailed):
-		        print('generating animation...')
-		        fname = "simulation.plantuml"
-		        txt = ''
-		        txt += '@startuml'
-		        txt += '\n'
-		        placeList = []
-		        transitionList = []
-		        
-		        for k in n.get_marking():
-		            print('    + Place: ', k, ' has Token: ', n.get_marking()[k])
-		            placeList.append(k)
-		            # txt += 'interface {0} #yellow\n'.format(k)
-		        for t in n.transition():
-		            tmodes = t.modes()
-		            for mode in tmodes:
-		                print('\n')
-		                print(' Enabled-transition-name: ', t)
-		                # transitionList.append(t.name)
-		                transitionList.append(self.getTransitionName(t,isDetailed))
-		                # txt += 'component {0} #yellow\n'.format(self.getTransitionName(t,isDetailed))
-		        
-		        net_places = []
-		        net_transitions = []
-		        
-		        for p in n.place():
-		            net_places.append(p.name)
-		        for t in n.transition():
-		            net_transitions.append(self.getTransitionName(t,isDetailed))
-		        
-		        for p in sorted(net_places):
-		            if p in placeList:
-		                if not "local" in p:
-		                    txt += 'interface {0} #yellow\n'.format(p)
-		            else:
-		                if not "local" in p:
-		                    txt += 'interface {0} #white\n'.format(p)
-		        for t in sorted(net_transitions):
-		            if t in transitionList:
-		                if isDetailed:
-		                    txt += 'component {0} #yellow\n'.format(self.getTransitionName(n.transition(t),isDetailed))
-		                else:
-		                    txt += 'component {0} #yellow\n'.format(t)
-		            else:
-		                if isDetailed:
-		                    txt += 'component {0} #white\n'.format(self.getTransitionName(n.transition(t),isDetailed))
-		                else:
-		                    txt += 'component {0} #white\n'.format(t)
-		        
-		        conn = set()
-		        for t in n.transition():
-		            for p in n.pre(t.name):
-		                str = ''
-		                if not "local" in p:
-		                    str = '{0} --> [{1}]\n'.format(p,self.getTransitionName(t,isDetailed))
-		                if not str in conn:
-		                    if not "local" in p:
-		                        txt += '{0} --> [{1}]\n'.format(p,self.getTransitionName(t,isDetailed))
-		                    conn.add(str)
-		            for p in n.post(t.name):
-		                str = ''
-		                if not "local" in p:
-		                    str = '[{1}] --> {0}\n'.format(p,self.getTransitionName(t,isDetailed))
-		                if not str in conn:
-		                    if not "local" in p:
-		                        txt += '[{1}] --> {0}\n'.format(p,self.getTransitionName(t,isDetailed))
-		                    conn.add(str)
-		        
-		        txt += '@enduml'
-		        with open(fname, 'w') as f:
-		            f.write(txt)
-
-		'''
-	} 
-*/

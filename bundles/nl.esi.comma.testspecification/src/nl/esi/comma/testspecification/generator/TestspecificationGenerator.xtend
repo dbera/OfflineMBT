@@ -3,37 +3,34 @@
  */
 package nl.esi.comma.testspecification.generator
 
+import java.util.ArrayList
+import java.util.HashMap
+import java.util.HashSet
+import java.util.List
+import java.util.Map
+import java.util.regex.Pattern
+import nl.asml.matala.product.product.Product
+import nl.esi.comma.actions.actions.AssignmentAction
+import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
+import nl.esi.comma.expressions.expression.Expression
+import nl.esi.comma.expressions.expression.ExpressionRecordAccess
+import nl.esi.comma.expressions.expression.ExpressionVariable
+import nl.esi.comma.inputspecification.inputSpecification.APIDefinition
+import nl.esi.comma.inputspecification.inputSpecification.LISVCP
+import nl.esi.comma.inputspecification.inputSpecification.Main
+import nl.esi.comma.inputspecification.inputSpecification.SUTDefinition
+import nl.esi.comma.inputspecification.inputSpecification.TWINSCANKT
+import nl.esi.comma.testspecification.testspecification.AbstractStep
+import nl.esi.comma.testspecification.testspecification.AbstractTestDefinition
+import nl.esi.comma.testspecification.testspecification.ContextMap
+import nl.esi.comma.testspecification.testspecification.StepSequence
+import nl.esi.comma.testspecification.testspecification.TSMain
+import nl.esi.comma.testspecification.testspecification.TestDefinition
 import org.eclipse.emf.ecore.resource.Resource
+import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
-import org.eclipse.xtext.EcoreUtil2
-import nl.esi.comma.inputspecification.inputSpecification.APIDefinition
-import nl.esi.comma.testspecification.testspecification.TestDefinition
-import nl.esi.comma.actions.actions.AssignmentAction
-import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
-import nl.esi.comma.expressions.expression.ExpressionRecordAccess
-import nl.esi.comma.expressions.expression.ExpressionVariable
-import nl.esi.comma.types.types.VectorTypeDecl
-import nl.esi.comma.expressions.expression.Expression
-import nl.esi.comma.inputspecification.inputSpecification.SUTDefinition
-import java.util.HashMap
-import java.util.List
-import java.util.ArrayList
-import java.util.Map
-import com.google.common.base.Splitter
-import com.google.gson.Gson
-import nl.esi.comma.testspecification.testspecification.TSMain
-import com.google.gson.JsonParser
-import com.google.gson.GsonBuilder
-import com.google.gson.JsonElement
-import nl.esi.comma.inputspecification.inputSpecification.TWINSCANKT
-import nl.esi.comma.inputspecification.inputSpecification.LISVCP
-import java.util.regex.Pattern
-import nl.esi.comma.testspecification.testspecification.AbstractTestDefinition
-import nl.esi.comma.testspecification.testspecification.ContextMap
-import nl.esi.comma.testspecification.testspecification.AbstractStep
-import java.util.HashSet
 
 /**
  * Generates code from your model files on save.
@@ -71,6 +68,15 @@ class TestspecificationGenerator extends AbstractGenerator
 			if(modelInst.model instanceof TestDefinition)
 				generateContents(fsa) // Parsing and File Generation
 			
+			if(modelInst.model instanceof AbstractTestDefinition) {
+				val typesImports = getTypesImports(resource)
+				val atd = new FromAbstractToConcrete(modelInst.model as AbstractTestDefinition)
+				for (sys : atd.getSystems()) {
+					fsa.generateFile("types/" + sys + ".types", atd.generateTypesFile(sys, typesImports))
+					fsa.generateFile("parameters/" + sys + ".params", atd.generateParamsFile(sys))
+				}
+				fsa.generateFile("concrete.tspec", atd.generateAbstractTest())
+			}
 			System.out.println("\n")
 			System.out.println(" ******* TEST DOCUMENTATION GENERATOR *********")
 			System.out.println("\n")
@@ -84,7 +90,7 @@ class TestspecificationGenerator extends AbstractGenerator
 	{
 		val modelInst = _resource.allContents.head as TSMain // This is our abstract test spec
 		var testDefFilePath = new String
-		var mapActToStepSequence = new HashMap<String,nl.esi.comma.testspecification.testspecification.StepSequence>
+		var mapActToStepSequence = new HashMap<String,StepSequence>
 		
 		for(imp : modelInst.imports) {
 			// expect: import of only context map type.
@@ -106,7 +112,7 @@ class TestspecificationGenerator extends AbstractGenerator
 							for(_imp : inputTSpec.imports) {
 								val inputResource = EcoreUtil2.getResource(_resource, _imp.importURI)
 								var input = inputResource.allContents.head
-								if( input instanceof nl.esi.comma.inputspecification.inputSpecification.Main) {
+								if( input instanceof Main) {
 									if(input.model instanceof APIDefinition) {
 										val apidef = input.model as APIDefinition
 										for(api : apidef.apiImpl) {
@@ -200,7 +206,7 @@ class TestspecificationGenerator extends AbstractGenerator
 		for(imp : modelInst.imports) {
 			val inputResource = EcoreUtil2.getResource(_resource, imp.importURI)
 			var input = inputResource.allContents.head
-			if( input instanceof nl.esi.comma.inputspecification.inputSpecification.Main) {
+			if( input instanceof Main) {
 				if(input.model instanceof APIDefinition) {
 					val apidef = input.model as APIDefinition
 					for(api : apidef.apiImpl) {
@@ -280,7 +286,7 @@ class TestspecificationGenerator extends AbstractGenerator
 	}
 	
 	def getCMStepRef(ContextMap cm) {
-		var mapActToStepSequence = new HashMap<String,nl.esi.comma.testspecification.testspecification.StepSequence>
+		var mapActToStepSequence = new HashMap<String,StepSequence>
 		for(elm : cm.TMap) {
 			mapActToStepSequence.put(elm.name,elm.stepSeqId)
 		}
@@ -288,7 +294,7 @@ class TestspecificationGenerator extends AbstractGenerator
 	}
 	
 	def getAbstractStepSequence(AbstractTestDefinition atd, 
-		Map<String,nl.esi.comma.testspecification.testspecification.StepSequence> mapActToStepSequence
+		Map<String,StepSequence> mapActToStepSequence
 	) {
 		var listStepSequence = new ArrayList<nl.esi.comma.testspecification.testspecification.Step>
 		for(elm: atd.testSeq) {
@@ -476,7 +482,7 @@ class TestspecificationGenerator extends AbstractGenerator
 			val inputResource = EcoreUtil2.getResource(_resource, imp.importURI)
 			var input = inputResource.allContents.head
 			var JSONDataFileContents = new ArrayList<JSONData>
-			if( input instanceof nl.esi.comma.inputspecification.inputSpecification.Main) {
+			if( input instanceof Main) {
 				if(input.model instanceof APIDefinition) {
 					val apiDef = input.model as APIDefinition
 					var dataInst = new JSONData
@@ -681,9 +687,13 @@ class TestspecificationGenerator extends AbstractGenerator
 	
 	def generateFASTRefStepTxt(Step step) {
 		var refTxt = new ArrayList<CharSequence>
+		var refKeyList = new HashSet<String>
 		for(kv : step.parameters) {
 			for(rk : kv.refKey) {
-				refTxt.add('''"_«rk»" : "«rk»"''')
+				if(!refKeyList.contains(rk)) {
+					refTxt.add('''"_«rk»" : "«rk»"''')
+					refKeyList.add(rk)
+				}
 			}
 		}
 		return refTxt
@@ -834,4 +844,22 @@ class TestspecificationGenerator extends AbstractGenerator
 				//System.out.println("	parameters: " + param.key + " -> " + param.value)
 		}		
 	}
+	
+	def List<String> getTypesImports(Resource resource) {
+		val typesImports = new ArrayList<String>()
+		val tsMain = resource.allContents.head as TSMain
+		for(i : tsMain.imports.filter[f | f.importURI.contains(".ps")]) {
+			val psResource = EcoreUtil2.getResource(resource, i.importURI)
+			val psInst = psResource.allContents.head as Product
+			for(j : psInst.imports.filter[t | t.importURI.contains(".types")]) {
+				val typesResource = EcoreUtil2.getResource(psResource, j.importURI)
+				if (typesResource !== null) {
+					typesImports.add(typesResource.URI.toString)
+				}
+			}
+		}
+		return typesImports
+	}
+
+
 }

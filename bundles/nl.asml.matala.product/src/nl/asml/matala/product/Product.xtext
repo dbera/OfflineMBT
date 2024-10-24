@@ -61,15 +61,20 @@ Block:
 ;
 
 Function:
-	'action' name=ID  
+	'action' name = ID
 	updates += Update*
 ;
 
 Update:
 	'case' name = ID 
-	('with-inputs' fnInp += VarRef (',' fnInp+=VarRef)*  )?
+	('step-type' stepType = STRING 'action-type' actionType = ActionType)?
+	('with-inputs' fnInp += VarRef (',' fnInp+=VarRef)*)?
 	('with-guard' guard=Expression)?
 	updateOutputVar += UpdateOutVar*
+;
+
+enum ActionType:
+	INTERNAL | COMPOSE | RUN
 ;
 
 UpdateOutVar:

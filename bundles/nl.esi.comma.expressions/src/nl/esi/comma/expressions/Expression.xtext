@@ -232,11 +232,11 @@ fragment InterfaceAwareType:
 ;
 
 // === Terminals =======
-terminal BOOL_LITERAL returns ecore::EBoolean:
+BOOL_LITERAL returns ecore::EBoolean:
 	'true' | 'false' | 'TRUE' | 'FALSE' | 'True' | 'False'
 ;	
 
-terminal FLOAT returns ecore::EDouble:
+FLOAT returns ecore::EDouble:
 	NUMBER '.' NUMBER (('E' | 'e') ('-')? NUMBER)?
 ;
 
