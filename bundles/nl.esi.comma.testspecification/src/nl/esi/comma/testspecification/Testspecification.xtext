@@ -5,14 +5,21 @@ generate testspecification "http://www.esi.nl/comma/testspecification/Testspecif
 import "http://www.esi.nl/comma/signature/InterfaceSignature" as sig 
 import "http://www.esi.nl/comma/types/Types" as types
 import "http://www.esi.nl/comma/expressions/Expression" as expr
+import "http://www.asml.nl/matala/product/Product" as prod
 
 TSMain:
 	imports += Import*
+	namespace += NameSpace*
 	model = ModelType
 ;
 
+@Override
+NamedElement returns types::NamedElement:
+	name=QualifiedName | Variable
+;
+
 ModelType:
-	APIDefinition | TestDefinition | AbstractTestDefinition | ContextMap
+	APIDefinition | TestDefinition /* concrete */| AbstractTestDefinition | ContextMap
 ;
 
 APIDefinition:
@@ -27,8 +34,6 @@ ContextMap:
 
 AbstractTestDefinition:
 	{AbstractTestDefinition} 'abstract-test-definition'
-	'imports' ':' '{' imp_list += STRING* '}'
-	'variable-declarations' ':' '{' kvp += KVPair* '}'
 	testSeq += AbstractTestSequence*
 	'generate-file' filePath = STRING
 ;
@@ -69,7 +74,8 @@ AbstractTestSequence:
 
 ConstraintStep:
 	'symbolic-constraint' ':' name = ID
-	 ce += ConstraintElm+
+//	ce += ConstraintElm+
+	ce += [prod::RefConstraint|QualifiedName]+	
 ;
 
 AssertStep:
@@ -82,44 +88,39 @@ ConstraintElm:
 ;
 
 AbstractStep:
-	'step-name' ':' name = ID
+	ComposeStep | RunStep
+;
+
+ComposeStep:
+	'compose-step-name' ':' name = ID
 	stepRef += StepReference*
-	'input-binding' ':' input += (Binding | BINDINGSTR)+
-	'output-data' ':' output += (Binding | BINDINGSTR)+
+	'input-binding' ':' input += Binding+
+	'output-data' ':' output += Binding+
+;
+
+RunStep:
+	'run-step-name' ':' name = ID
+	('step-type' ':' stepType += STRING)?
+	stepRef += StepReference*
+	'input-binding' ':' input += Binding+
+	'output-data' ':' output += Binding+
 ;
 
 StepReference:
-	'consumes-from-step' ':' refStep = [AbstractStep|ID] '{' refData += [Binding|ID]+ '}'
-;
-
-BINDINGSTR:
-	name = ID ':' strvalue = STRING
+	'consumes-from-step' ':' refStep = [AbstractStep|ID] '{' refData += [expr::Variable|QualifiedName]+ '}'
 ;
 
 Binding:
-	name = ID ':' '{'
-		kvPairs += (KVPair|NestedKeyValuesPair)+
-	'}'
+	name = [expr::Variable|QualifiedName] ':' 
+		(	strvalue = STRING
+		|	'{'
+				kvPairs += NestedKeyValuesPair (',' kvPairs += NestedKeyValuesPair)*
+			'}'
+		)
 ;
 
 NestedKeyValuesPair:
-	refVar = STRING ':' ( ('{' | '[')
-		(kvpl = KVPList)?
-		kvsp += (NestedKeyValuesPair)*
-		// (kvplpost = KVPList)?
-	('}' | ']') (',')? )
-;
-
-KVPList:
-	kvp += (KVPair|ListElm)+
-;
-
-KVPair:
-	key = STRING ':' (intValue = Int | strValue = STRING | bValue = BOOL_LITERAL ) (',')?
-;
-
-ListElm:
-	lkey += STRING (',')?
+	actions += Action+
 ;
 
 /*********************************************************/

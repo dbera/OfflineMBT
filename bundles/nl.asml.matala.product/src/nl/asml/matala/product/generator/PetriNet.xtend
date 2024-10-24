@@ -427,8 +427,8 @@ class PetriNet {
 		    for k,v in map_of_transition_modes.items():
 		        # print(k)
 		        cnt = 0
-		        modes = set(v)
-		        for elm in modes:
+		        # modes = set(v)
+		        for elm in v: # modes
 		            # print(elm)
 		            map_transition_modes_to_name[k + "_" +elm.__repr__()] = k + "_" + str(cnt)
 		            # map_transition_modes_to_name[k + "_" + pprint.pformat(elm.items(), width=60, compact=True,depth=5)] = k + "_" + str(cnt)
