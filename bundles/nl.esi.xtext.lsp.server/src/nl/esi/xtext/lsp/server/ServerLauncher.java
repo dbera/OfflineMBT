@@ -4,6 +4,7 @@ import org.eclipse.xtext.ide.server.ILanguageServerShutdownAndExitHandler;
 import org.eclipse.xtext.ide.server.LaunchArgs;
 import org.eclipse.xtext.ide.server.ServerModule;
 import org.eclipse.xtext.ide.server.SocketServerLauncher;
+import org.eclipse.xtext.util.IFileSystemScanner;
 import org.eclipse.xtext.xbase.lib.ArrayExtensions;
 
 import com.google.inject.AbstractModule;
@@ -11,6 +12,8 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
+
+import nl.esi.xtext.lsp.impl.SaveJavaIoFileSystemScanner;
 
 public class ServerLauncher {
 	public static final String STDIO = "-stdio";
@@ -41,7 +44,7 @@ public class ServerLauncher {
 		return new WebSocketServerLauncher() {
 			@Override
 			protected Module getServerModule() {
-				return Modules.combine(new ServerShutdownModule(), ServerLauncher.this.getServerModule());
+				return Modules.combine(new RemoteServerModule(), ServerLauncher.this.getServerModule());
 			}
 		};
 	}
@@ -50,7 +53,7 @@ public class ServerLauncher {
 		return new SocketServerLauncher() {
 			@Override
 			protected Module getServerModule() {
-				return Modules.combine(new ServerShutdownModule(), ServerLauncher.this.getServerModule());
+				return Modules.combine(new RemoteServerModule(), ServerLauncher.this.getServerModule());
 			}
 		};
 	}
@@ -59,9 +62,10 @@ public class ServerLauncher {
 		return new ServerModule();
 	}
 
-	protected static class ServerShutdownModule extends AbstractModule {
+	protected static class RemoteServerModule extends AbstractModule {
 		@Override
 		protected void configure() {
+			bind(IFileSystemScanner.class).to(SaveJavaIoFileSystemScanner.class);
 			bind(ILanguageServerShutdownAndExitHandler.class).to(ILanguageServerShutdownAndExitHandler.NullImpl.class);
 		}
 	}
