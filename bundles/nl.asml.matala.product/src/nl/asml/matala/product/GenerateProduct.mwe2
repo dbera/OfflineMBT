@@ -50,12 +50,12 @@ Workflow {
 				junitVersion = "5"
 			}
 			fragment = textmate.TextMateHighlightingFragment {
-			    absolutePath = "../nl.asml.matala.product.lsp.editor/language/grammars"
+			    absolutePath = "${rootPath}/nl.asml.matala.product.lsp.editor/language/grammars"
 			    override = true
 			}
 /*
 			fragment = nl.esi.xtext.lsp.generator.lezer.LezerGrammarFragment {
-                absolutePath = "../nl.asml.matala.product.lsp.editor/language/grammars"
+                absolutePath = "${rootPath}/nl.asml.matala.product.lsp.editor/language/grammars"
                 override = true
 			}
 */
