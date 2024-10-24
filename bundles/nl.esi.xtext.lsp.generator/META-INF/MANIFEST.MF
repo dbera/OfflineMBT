@@ -3,6 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-Name: Xtext LSP Generator
 Bundle-SymbolicName: nl.esi.xtext.lsp.generator
 Bundle-Version: 4.2.0.qualifier
+Export-Package: nl.esi.xtext.lsp.generator.lezer
 Require-Bundle: org.eclipse.xtend.lib,
  org.eclipse.xtext,
  org.eclipse.xtext.xtext.generator
