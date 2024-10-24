@@ -34,6 +34,7 @@ import nl.asml.matala.product.product.Specification
 import nl.asml.matala.product.product.Update
 import nl.asml.matala.product.product.Function
 import nl.asml.matala.product.product.UpdateOutVar
+import nl.asml.matala.product.product.SymbConstraint
 
 /**
  * Generates code from your *.ps model files on save.
@@ -322,7 +323,7 @@ class ProductGenerator extends AbstractGenerator {
 				// constraints to comma expression. 27.08.2024
 				// Check if boolean expression or assignment action
 //				constraints.add(new Constraint(c.name, (new ExpressionsCommaGenerator()).exprToComMASyntax(c.symbExpr).toString()))
-				constraints.add(new Constraint(printConstraint(c as RefConstraint), ""))
+				constraints.add(new Constraint(printConstraint(c as SymbConstraint), ""))
 			}
 		}
 		if(v.dataReferences !== null) {
@@ -334,6 +335,10 @@ class ProductGenerator extends AbstractGenerator {
 			}
 		}
 		return constraints
+	}
+	
+	dispatch def String printConstraint(SymbConstraint ref) {
+		return new String // TODO handle this case.
 	}
 	
 	dispatch def String printConstraint(RefConstraint ref) {
