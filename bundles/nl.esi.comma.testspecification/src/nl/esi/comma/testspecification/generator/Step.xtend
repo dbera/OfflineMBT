@@ -19,6 +19,25 @@ class Step {
 	def getParameters() { return parameters }
 	def getVariableName() { return variableName }
 	def getRecordExp() { return recordExp }
+	
+//	def isParamPresent(KeyValue kv, List<KeyValue> kvList) {
+//		for(_kv : kvList) {
+//			if(_kv.key.equals(kv.key) && _kv.value.equals(kv.value)) {
+//				return true
+//			}
+//		}
+//		return false
+//	}
+//	
+//	def getUniqueParameters() {
+//		var uniqueParamsList = new ArrayList<KeyValue>
+//		for(kv : parameters) {
+//			if(!isParamPresent(kv, uniqueParamsList)) {
+//				uniqueParamsList.add(kv)
+//			}
+//		}
+//		return uniqueParamsList
+//	}
 }
 
 

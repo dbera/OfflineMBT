@@ -171,6 +171,8 @@ class ExpressionsParser {
     		return '''(double)(«generateExpression(expr.args.get(0), ref)»)'''
     	else if(expr.functionName.equals('abs')) 
     		return '''Math.abs(«generateExpression(expr.args.get(0), ref)»)'''
+    	else if(expr.functionName.equals('get'))
+    		return '''«generateExpression(expr.args.get(0), ref)»[«generateExpression(expr.args.get(1), ref)»]'''
     	else 
     		return '''UNSUPPORTED FUNCTION NAME: «expr.functionName»'''
     }

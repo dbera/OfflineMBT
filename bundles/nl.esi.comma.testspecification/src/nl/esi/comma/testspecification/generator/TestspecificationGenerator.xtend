@@ -687,9 +687,13 @@ class TestspecificationGenerator extends AbstractGenerator
 	
 	def generateFASTRefStepTxt(Step step) {
 		var refTxt = new ArrayList<CharSequence>
+		var refKeyList = new HashSet<String>
 		for(kv : step.parameters) {
 			for(rk : kv.refKey) {
-				refTxt.add('''"_«rk»" : "«rk»"''')
+				if(!refKeyList.contains(rk)) {
+					refTxt.add('''"_«rk»" : "«rk»"''')
+					refKeyList.add(rk)
+				}
 			}
 		}
 		return refTxt
