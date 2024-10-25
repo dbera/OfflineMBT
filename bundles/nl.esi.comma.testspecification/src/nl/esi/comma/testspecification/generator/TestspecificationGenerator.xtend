@@ -75,7 +75,7 @@ class TestspecificationGenerator extends AbstractGenerator
 					fsa.generateFile("types/" + sys + ".types", atd.generateTypesFile(sys, typesImports))
 					fsa.generateFile("parameters/" + sys + ".params", atd.generateParamsFile(sys))
 				}
-				fsa.generateFile("concrete.tspec", atd.generateAbstractTest())
+				fsa.generateFile("concrete.tspec", atd.generateConcreteTest())
 			}
 			System.out.println("\n")
 			System.out.println(" ******* TEST DOCUMENTATION GENERATOR *********")
@@ -849,7 +849,7 @@ class TestspecificationGenerator extends AbstractGenerator
 			val psInst = psResource.allContents.head as Product
 			for(j : psInst.imports.filter[t | t.importURI.contains(".types")]) {
 				val typesResource = EcoreUtil2.getResource(psResource, j.importURI)
-				if (typesResource !== null) {
+				if(typesResource !== null) {
 					typesImports.add(typesResource.URI.toString)
 				}
 			}
