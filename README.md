@@ -32,10 +32,10 @@ To create a development environment:
       If the button is disabled (grey), you are already using the latest version.
 - In the first wizard window:
     - Select **Eclipse Modeling Tools** from the big list at the top.
-    - Select **2021-12** for **Product Version**.
-    - For **Java 11+ VM** select either a JRE 11 that is installed on your local machine or the JustJ JRE 11 release.
+    - Select **2024-09** for **Product Version**.
+    - For **Java 21+ VM** select either the JustJ JRE 21 release or a JRE 21 that is installed on your local machine.
       Use the button to the right of the dropdown to manage the installed virtual machines on your system.
-      A JDK can also be downloaded from e.g. [Adoptium](https://adoptium.net/temurin/archive/?variant=openjdk11&jvmVariant=hotspot&version=11).
+      A JDK can also be downloaded from e.g. [Adoptium](https://adoptium.net/temurin/archive/?variant=openjdk21&jvmVariant=hotspot&version=21).
     - Choose whether you want a P2 bundle pool (recommended).
     - Click the **Next** button.
 - In the second wizard window:
@@ -45,7 +45,7 @@ To create a development environment:
         - Click the **OK** button.
     - Check the checkbox for **OfflineMBT**, from the big list.
       It is under **Github Projects** / **<User>**.
-    - At the bottom right, select the **Main** stream.
+    - At the bottom right, select the **Eclipse 2024-09** stream.
     - Click the **Next** button.
 - In the third wizard window:
     - Enable the **Show all variables** option to show all options.
@@ -56,11 +56,9 @@ To create a development environment:
         - Contributors can use the `HTTPS (read-only, anonymous)` URL, as they don't have write access.
           They will not be able to push to the remote repository, they can instead make a fork of the official Git repository.
           Then they can fill in the URL of their clone instead, i.e. `https://${github.user.id|username}@github.com/<username>/<cloned_repo_name>.git`, with `<username>` replaced by their Github account username, and `<cloned_repo_name>` replaced by the name of the cloned repistory, which defaults to `OfflineMBT`.
-    - Fill in the **JRE 17 Location** select a JRE 17 that is installed on your local machine.
-      Use the button to the right of the dropdown to manage the installed virtual machines on your system.
-      A JDK can also be downloaded from e.g. [Adoptium](https://adoptium.net/temurin/archive/?variant=openjdk11&jvmVariant=hotspot&version=17).
     - Fill in your **Github author name** and **Github author email**.
       These will be used for Git commits.
+    - Check that the **Target platform** is set to **2024-09**.
     - Click the **Next** button.
 - In the fourth wizard window:
     - Select the **Finish** button.
@@ -98,8 +96,8 @@ In your new development environment, consider changing the following settings:
 ### Building with Maven
 
 > [!CAUTION]
-> OfflineMBT should be built using a _Java 11 VM_.
-> The JDK can be downloaded from e.g. [Adoptium](https://adoptium.net/temurin/archive/?variant=openjdk11&jvmVariant=hotspot&version=11).
+> OfflineMBT should be built using [Maven 3.9](https://maven.apache.org/download.cgi) and a _Java 21 VM_.
+> The JDK can be downloaded from e.g. [Adoptium](https://adoptium.net/temurin/archive/?variant=openjdk21&jvmVariant=hotspot&version=21).
 >
 > To test which Java version is used by Maven, type `mvn -version` in a command shell.
 
