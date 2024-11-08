@@ -78,7 +78,7 @@ enum ActionType:
 ;
 
 UpdateOutVar:
-	'produces-outputs'  fnOut += VarRef (',' fnOut+=VarRef)* (assert?='assert'?)
+	'produces-outputs'  fnOut += VarRef (',' fnOut+=VarRef)* (assert?='assert'?) (suppress?='suppress'?)
 	('updates' hiddenVars += Variable* ':' act = ActionList)?
 ;
 

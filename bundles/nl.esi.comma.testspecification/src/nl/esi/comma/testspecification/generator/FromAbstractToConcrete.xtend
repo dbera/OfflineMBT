@@ -45,13 +45,10 @@ class FromAbstractToConcrete
 			step-id    step_«step.name»
 			step-type  «step.stepType.get(0)»
 			step-input «step.name.split("_").get(0)»Input
+			«IF !printOutputs(step).toString.nullOrEmpty»
 			ref-to-step-output
-				«FOR composeStep : previousComposeStep(step)»
-				«printKVOutputPairs(step.name.split("_").get(0) + "Input", composeStep)»
-				«ENDFOR»
-				«FOR symbolicStep : previousSymbolicContraint(step)»
-				«printSymbolicContraint(step.name.split("_").get(0) + "Input", symbolicStep, previousRunStep(step), previousComposeStep(step))»
-				«ENDFOR»
+				«printOutputs(step)»
+			«ENDIF»
 			«ENDFOR»
 		«ENDFOR»
 		}
@@ -92,10 +89,22 @@ class FromAbstractToConcrete
 		return ""
 	}
 
+	def printOutputs(RunStep step) '''
+«FOR composeStep : previousComposeStep(step)»
+«printKVOutputPairs(step.name.split("_").get(0) + "Input", composeStep)»
+«ENDFOR»
+«FOR symbolicStep : previousSymbolicContraint(step)»
+«printSymbolicContraint(step.name.split("_").get(0) + "Input", symbolicStep, previousRunStep(step), previousComposeStep(step))»
+«ENDFOR»
+	'''
+	
+
 	def printKVOutputPairs(String prefix, ComposeStep step) {
 		var kv = ""
-		for (o : step.output) {
-			kv += printKVInputPairs(prefix, o.name.name, o.kvPairs)
+		if (!step.suppress) {
+			for (o : step.output) {
+				kv += printKVInputPairs(prefix, o.name.name, o.kvPairs)
+			}
 		}
 		return kv
 	}
@@ -104,7 +113,7 @@ class FromAbstractToConcrete
 		var sc = ""
 		for (s : step.ce) {
 			for (a : s.act.actions) {
-				for (rs : runSteps) {
+				for (rs : runSteps.filter[r | !r.suppress]) {
 					for (cs : composeSteps) {
 						var pi = prefix + "." + step.name
 						var po = "step_" + rs.name + ".output."

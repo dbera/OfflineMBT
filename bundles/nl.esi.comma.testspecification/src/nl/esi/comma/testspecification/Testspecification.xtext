@@ -95,7 +95,7 @@ ComposeStep:
 	'compose-step-name' ':' name = ID
 	stepRef += StepReference*
 	'input-binding' ':' input += Binding+
-	'output-data' ':' output += Binding+
+	'output-data' ':' output += Binding+ (suppress?='suppress'?)
 ;
 
 RunStep:
@@ -103,7 +103,7 @@ RunStep:
 	('step-type' ':' stepType += STRING)?
 	stepRef += StepReference*
 	'input-binding' ':' input += Binding+
-	'output-data' ':' output += Binding+
+	'output-data' ':' output += Binding+ (suppress?='suppress'?) // do not generate these in concrete TSpec
 ;
 
 StepReference:

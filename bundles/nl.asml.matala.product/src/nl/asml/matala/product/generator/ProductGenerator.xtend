@@ -161,8 +161,24 @@ class ProductGenerator extends AbstractGenerator {
 					}
 				}
 			}
+			var listOfSuppressTransitions = new ArrayList<String>
+			for(b : prod.specification.blocks) {
+				if (b.block !== null) {
+					val block = b.block
+					for(f : block.functions) {
+						for(u : f.updates) {
+							for(ovar : u.updateOutputVar) {
+								if(ovar.suppress) {
+									listOfSuppressTransitions.add(block.name+"_" + f.name + "_" + u.name)
+								}
+							}
+						}
+					}
+				}
+			}
+			
 			var name = prod.specification.name
-			fsa.generateFile(name + '.py', pnet.toSnakes(name, name, listOfEnvBlocks, listOfAssertTransitions, inout_places, init_places, depth_limit))
+			fsa.generateFile(name + '.py', pnet.toSnakes(name, name, listOfEnvBlocks, listOfAssertTransitions, listOfSuppressTransitions, inout_places, init_places, depth_limit))
 			
 			fsa.generateFile(name + '_Simulation.py', pnet.toSnakesSimulation)
 				
@@ -524,6 +540,8 @@ class ProductGenerator extends AbstractGenerator {
 		                                    txt += "%s\n" % entry.name
 		                txt += "output-data:\n"
 		                txt += self.printData(odata)
+		                if step.is_suppress:
+		                    txt += "suppress\n"
 		                for k, v in odata.items():
 		                    if name.rsplit("_",1)[0] in self.constraint_dict:
 		                        for constr in self.constraint_dict[name.rsplit("_",1)[0]]:
@@ -581,12 +599,14 @@ class ProductGenerator extends AbstractGenerator {
 		    input_data = {}
 		    output_data = {}
 		    is_assert = False
+		    is_suppress = False
 		
-		    def __init__(self, _is_assert):
+		    def __init__(self, _is_assert, _is_suppress):
 		        self.step_name = ""
 		        self.input_data = {}
 		        self.output_data = {}
 		        self.is_assert = _is_assert
+		        self.is_suppress = _is_suppress
 		
 		    def compare(self, _step, mapTrAssert):
 		        for ipdata in self.output_data:
@@ -730,7 +750,7 @@ class ProductGenerator extends AbstractGenerator {
 		var list = new ArrayList<String>()
 		for (f : exp.fields) {
 			var fqname = getFQName(f)
-			list += "updateDict[\"" + fqname + "\"] = \"\"\"" + (new ExpressionsCommaGenerator).exprToComMASyntax(f.exp) + " \"\"\"\n"
+			list += "updateDict[\"" + fqname + "\"] = \"\"\"" + (new ExpressionGenerator).exprToComMASyntax(f.exp) + " \"\"\"\n"
 			list += findVariableAssignments(f.exp)
 		}
 		return list
