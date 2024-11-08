@@ -20,13 +20,13 @@ import java.util.List
 
 class FromAbstractToConcrete 
 {
-	AbstractTestDefinition atd
+	protected AbstractTestDefinition atd
 
 	new (AbstractTestDefinition atd) {
 		this.atd = atd
 	}
 
-	def generateAbstractTest() '''
+	def generateConcreteTest() '''
 		«FOR sys : getSystems()»
 		import "parameters/«sys».params"
 		«ENDFOR»
@@ -40,7 +40,7 @@ class FromAbstractToConcrete
 		
 		step-sequence test_single_sequence {
 		«FOR test : atd.testSeq»
-		«FOR step : test.step.filter(RunStep)»
+			«FOR step : test.step.filter(RunStep)»
 			
 			step-id    step_«step.name»
 			step-type  «step.stepType.get(0)»
@@ -108,7 +108,6 @@ class FromAbstractToConcrete
 					for (cs : composeSteps) {
 						var pi = prefix + "." + step.name
 						var po = "step_" + rs.name + ".output."
-//						var po = "step_" + cs.name + ".output."
 						sc += pi + printRecord(po, cs.stepRef, a as RecordFieldAssignmentAction) + "\n"
 					}
 				}

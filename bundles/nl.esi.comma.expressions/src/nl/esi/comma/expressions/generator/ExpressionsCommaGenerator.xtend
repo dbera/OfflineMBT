@@ -29,6 +29,7 @@ import nl.esi.comma.expressions.expression.ExpressionEqual
 import nl.esi.comma.expressions.expression.ExpressionNEqual
 import nl.esi.comma.expressions.expression.ExpressionAnd
 import nl.esi.comma.expressions.expression.ExpressionOr
+import nl.esi.comma.expressions.expression.ExpressionMapRW
 
 class ExpressionsCommaGenerator extends TypesCommaGenerator {
 	
@@ -143,5 +144,7 @@ class ExpressionsCommaGenerator extends TypesCommaGenerator {
 	
 	def dispatch CharSequence exprToComMASyntax(ExpressionMap e)
 	'''<«typeToComMASyntax(e.typeAnnotation.type)»>{«FOR el : e.pairs SEPARATOR ', '»«exprToComMASyntax(el.key)» -> «exprToComMASyntax(el.value)»«ENDFOR»}'''
-	
+
+	def dispatch CharSequence exprToComMASyntax(ExpressionMapRW e)
+	'''«exprToComMASyntax(e.map)»[«exprToComMASyntax(e.key)»«IF e.value !== null»->«exprToComMASyntax(e.value)»«ENDIF»]'''
 }
