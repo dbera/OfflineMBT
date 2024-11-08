@@ -42,6 +42,10 @@ class TestspecificationGenerator extends AbstractGenerator
 
 	var Resource _resource
 	
+	/* TODO this should come from project task? Investigate and Implement it. */
+	var record_path_for_lot_def = "TSTSSUTInput.concrete_expose_job.exposure_params.lot_def" 
+	var lot_def_dataInst = new JSONData
+	
 	// In-Memory Data Structures corresponding *.tspec (captured in resource object)
 	var mapLocalDataVarToDataInstance = new HashMap<String, List<String>>
 	var mapLocalStepInstance = new HashMap<String, List<String>>
@@ -390,6 +394,7 @@ class TestspecificationGenerator extends AbstractGenerator
             else recExp = '''«(record as ExpressionRecordAccess).field.name».''' + recExp
             record = (record as ExpressionRecordAccess).record
         }
+        System.out.println(" DEBUG: " + recExp)
 		val varExp = record as ExpressionVariable
 		mapLHStoRHS.key = field.name
 		mapLHStoRHS.value = ExpressionsParser::generateExpression(exp, ref).toString
