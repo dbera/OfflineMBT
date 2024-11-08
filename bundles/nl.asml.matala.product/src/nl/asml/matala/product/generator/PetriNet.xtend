@@ -308,7 +308,8 @@ class PetriNet {
 	def toSnakes(String prod_name, 
 				 String topology_name, 
 				 List<String> listOfEnvBlocks,
-				 ArrayList<String> listOfAssertTransitions, 
+				 ArrayList<String> listOfAssertTransitions,
+				 ArrayList<String> listOfSuppressTransitions,
 				 List<String> inout_places, 
 				 List<String> init_places, 
 				 int depth_limit
@@ -411,6 +412,7 @@ class PetriNet {
 		    
 		    listOfEnvBlocks = [«FOR elm : listOfEnvBlocks SEPARATOR ','»"«elm»"«ENDFOR»]
 		    listOfAssertTransitions = [«FOR elm : listOfAssertTransitions SEPARATOR ','»"«elm»"«ENDFOR»]
+		    listOfSuppressTransitions = [«FOR elm : listOfSuppressTransitions SEPARATOR ','»"«elm»"«ENDFOR»]
 		    print("[INFO] Starting Test Generation.")
 		    
 		    map_of_transition_modes = {}
@@ -488,10 +490,13 @@ class PetriNet {
 		                # step_txt = map_transition_modes_to_name[step[1].name + "_" + step[2].__repr__()]
 		                step_txt = map_transition_modes_to_name[stp]
 		                if step_txt.split("_")[0] in listOfEnvBlocks or step_txt.rsplit("_",1)[0] in listOfAssertTransitions:
+		                    suppress = False
+		                    if step_txt.split("@")[0] in listOfSuppressTransitions:
+		                        suppress = True
 		                    if not step_txt.split("_")[0] in listOfEnvBlocks:
-		                        _step = Step(step_txt.rsplit("_",1)[0] in listOfAssertTransitions)
+		                        _step = Step(step_txt.rsplit("_",1)[0] in listOfAssertTransitions, suppress)
 		                    else:
-		                        _step = Step(False)
+		                        _step = Step(False, suppress)
 		                    # txt += "    %s\n" % (map_transition_modes_to_name[step[1].name + "_" + step[2].__repr__()])
 		                    # txt += "step-name: %s\n" % (map_transition_modes_to_name[stp])
 		                    _step.step_name = map_transition_modes_to_name[stp]
