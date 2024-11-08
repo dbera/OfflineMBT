@@ -750,7 +750,7 @@ class ProductGenerator extends AbstractGenerator {
 		var list = new ArrayList<String>()
 		for (f : exp.fields) {
 			var fqname = getFQName(f)
-			list += "updateDict[\"" + fqname + "\"] = \"\"\"" + (new ExpressionsCommaGenerator).exprToComMASyntax(f.exp) + " \"\"\"\n"
+			list += "updateDict[\"" + fqname + "\"] = \"\"\"" + (new ExpressionGenerator).exprToComMASyntax(f.exp) + " \"\"\"\n"
 			list += findVariableAssignments(f.exp)
 		}
 		return list
