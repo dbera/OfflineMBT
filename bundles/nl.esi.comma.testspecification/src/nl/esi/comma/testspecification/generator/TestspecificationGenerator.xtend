@@ -591,6 +591,11 @@ class TestspecificationGenerator extends AbstractGenerator
 			// for(step : listStepInstances) {
 				// if(step.variableName.equals(vname)) {
 			var mapLHStoRHS_ = getExtensions(vname) //step.variableName
+			/*for(elm: mapLHStoRHS_.keySet) { 
+						System.out.println("	VAR: " + elm)
+						for(kv : mapLHStoRHS_.get(elm))
+							System.out.println("	k: " + kv.key + "	v : " + kv.value)
+			}*/
 			var String fileName = new String
 			var fileContents = ''''''
 			if(!mapLHStoRHS_.isEmpty) {
@@ -690,11 +695,42 @@ class TestspecificationGenerator extends AbstractGenerator
 		return mapListOfKeyValue
 	}
 	
+	// function to combine keys (parameters of step may have duplicate keys) //
+	// Note DB: Incomplete implementation. Decision to avoid duplicate keys in front end. 
+	// Decision: If an attribute of record needs references and concrete data, then do
+	// everything in the reference part. 
+	def combineKeys(List<KeyValue> parameters) {
+		var _parameters = new ArrayList<KeyValue>
+		var listOfExclusionKeys = new ArrayList<String>
+		for(kv : parameters) {
+			if(!listOfExclusionKeys.contains(kv.key)) {
+				var commonKV = new ArrayList<KeyValue>
+				for(_kv : parameters) {
+					if(kv.key.equals(_kv.key)) {
+						commonKV.add(_kv)
+					}
+				}
+				if(commonKV.size > 1) {
+					System.out.println("***** COMMON KEYS ******")
+					for(elmKV : commonKV) { elmKV.display }
+					System.out.println("***** *********** ******")
+				} else {
+					_parameters.addAll(commonKV)
+				}
+			}
+			listOfExclusionKeys.add(kv.key)
+		}
+	}
+	
 	def getExtensions(String varName) {
 		var mapListOfKeyValue = new HashMap<String,List<KeyValue>>
 		//System.out.println(" Getting Extension for Variable: " + varName)
 		for(step : listStepInstances) {
 			if(step.variableName.equals(varName)) {
+				// System.out.println("STEP ID: " + step.id)
+				// Note DB: Incomplete implementation. Decision to avoid duplicate keys in front end. 
+				// Decision: If an attribute of record needs references and concrete data, then do everything in the reference part. 
+				// combineKeys(step.parameters)
 				mapListOfKeyValue.put(step.id,step.parameters)
 				if(!step.stepRefs.empty) {
 					// System.out.println("Adding Step Reference for "+ step.id)
