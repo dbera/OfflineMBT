@@ -11,6 +11,7 @@ class Step {
 	public var List<KeyValue> parameters = new ArrayList<KeyValue>
 	public var String variableName = new String
 	public var String recordExp = new String
+	public var List<Step> stepRefs = new ArrayList<Step>()
 	
 	
 	def getId() { return id }
@@ -19,6 +20,35 @@ class Step {
 	def getParameters() { return parameters }
 	def getVariableName() { return variableName }
 	def getRecordExp() { return recordExp }
+	def getStepRefs() { return stepRefs }
+	
+	def getStepRefs(String _id) {
+		for(sref : stepRefs) {
+			if(sref.getId.equals(_id)) return sref
+		}
+		return null
+	}
+	
+	def isStepRefPresent(String _id) {
+		if(stepRefs.empty) return false
+		for(sref : stepRefs) {
+			if(sref.getId.equals(_id)) return true
+			else return false
+		}
+	}
+	
+	def void display() {
+		System.out.println("********** STEP: " + id + " **********")
+		System.out.println("	> type: " + type)
+		System.out.println("	> input-file: " + inputFile)
+		System.out.println("	> var-name: " + variableName)
+		System.out.println("	> var-value: " + recordExp)
+		for(p : parameters) { p.display }
+		for(s : stepRefs) { 
+			System.out.println("******** REF-STEP *******")
+			s.display
+		}
+	}
 	
 //	def isParamPresent(KeyValue kv, List<KeyValue> kvList) {
 //		for(_kv : kvList) {
