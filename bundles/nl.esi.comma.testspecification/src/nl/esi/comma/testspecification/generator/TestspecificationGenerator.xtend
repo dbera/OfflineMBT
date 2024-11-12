@@ -39,11 +39,10 @@ import org.eclipse.xtext.generator.IGeneratorContext
  */
 class TestspecificationGenerator extends AbstractGenerator 
 {
-
 	var Resource _resource
 	
 	/* TODO this should come from project task? Investigate and Implement it. */
-	var record_path_for_lot_def = "TwinscanControllerInput.concrete_expose_job.exposure_params.lot_def" 
+	var record_path_for_lot_def = "TwinscanControllerInput.concrete_expose_job.lot_def" 
 	var record_lot_def_file_name = "lot_definition"
 	var record_lot_def_file_path_prefix = "./generated_FAST/dataset/"
 	
