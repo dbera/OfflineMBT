@@ -10,31 +10,51 @@ import java.util.List
 import java.util.Map
 import java.util.Set
 import nl.asml.matala.product.product.Block
+import nl.asml.matala.product.product.Blocks
+import nl.asml.matala.product.product.DataReferences
+import nl.asml.matala.product.product.Function
 import nl.asml.matala.product.product.Product
+import nl.asml.matala.product.product.RefConstraint
+import nl.asml.matala.product.product.Specification
+import nl.asml.matala.product.product.Update
+import nl.asml.matala.product.product.UpdateOutVar
 import nl.asml.matala.product.product.VarRef
 import nl.esi.comma.expressions.expression.Variable
-import nl.esi.comma.expressions.generator.ExpressionsCommaGenerator
 import nl.esi.comma.types.generator.TypesZ3Generator
+import nl.esi.comma.types.types.RecordField
 import nl.esi.comma.types.types.RecordTypeDecl
 import nl.esi.comma.types.types.SimpleTypeDecl
+import nl.esi.comma.types.types.Type
 import nl.esi.comma.types.types.TypeDecl
 import nl.esi.comma.types.types.TypesModel
+import nl.esi.comma.types.types.VectorTypeConstructor
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
-import nl.esi.comma.types.types.Type
-import nl.esi.comma.types.types.VectorTypeConstructor
-import nl.esi.comma.types.types.RecordField
-import nl.asml.matala.product.product.RefConstraint
-import nl.asml.matala.product.product.DataReferences
-import nl.asml.matala.product.product.Blocks
-import nl.asml.matala.product.product.Specification
-import nl.asml.matala.product.product.Update
-import nl.asml.matala.product.product.Function
-import nl.asml.matala.product.product.UpdateOutVar
-import nl.asml.matala.product.product.SymbConstraint
+import nl.esi.comma.actions.actions.ActionList
+import nl.esi.comma.actions.actions.Action
+import nl.esi.comma.actions.actions.AssignmentAction
+import nl.esi.comma.expressions.generator.ExpressionsCommaGenerator
+import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
+import org.eclipse.emf.ecore.EObject
+import nl.esi.comma.expressions.expression.ExpressionRecordAccess
+import nl.esi.comma.expressions.expression.ExpressionVariable
+import nl.esi.comma.expressions.expression.ExpressionRecord
+import nl.esi.comma.expressions.expression.Field
+import nl.esi.comma.expressions.expression.ExpressionMapRW
+import nl.esi.comma.expressions.expression.ExpressionEnumLiteral
+import nl.esi.comma.expressions.expression.ExpressionConstantInt
+import nl.esi.comma.expressions.expression.ExpressionConstantString
+import nl.esi.comma.expressions.expression.ExpressionVector
+import nl.esi.comma.expressions.expression.ExpressionConstantBool
+import nl.esi.comma.expressions.expression.ExpressionConstantReal
+import nl.esi.comma.expressions.expression.ExpressionAny
+import nl.esi.comma.expressions.expression.ExpressionBulkData
+import nl.esi.comma.expressions.expression.ExpressionFunctionCall
+import nl.esi.comma.expressions.expression.ExpressionQuantifier
+import nl.esi.comma.expressions.expression.ExpressionBracket
 
 /**
  * Generates code from your *.ps model files on save.
@@ -141,8 +161,40 @@ class ProductGenerator extends AbstractGenerator {
 					}
 				}
 			}
+			// transition names -> list of output variables that were suppressed
+			var mapOfSuppressTransitionVars = new HashMap<String,List<String>>
+			for(b : prod.specification.blocks) {
+				if (b.block !== null) {
+					val block = b.block
+					for(f : block.functions) {
+						for(u : f.updates) {
+							for(ovar : u.updateOutputVar) {
+								if(ovar.suppress) {
+									// ADDED 08.11.2024 DB. Record out variables that were suppressed for a transition
+									// Is transition name present?
+									if(mapOfSuppressTransitionVars.containsKey(block.name+"_" + f.name + "_" + u.name)) {
+										for(elm : ovar.fnOut) {
+											// 08.11.2024 Assumption is that produces output does not have multiple vars (|ovar.fnOut| = 1)
+											mapOfSuppressTransitionVars.get(block.name+"_" + f.name + "_" + u.name).add(elm.ref.name)
+										}
+									} else {
+										for(elm : ovar.fnOut) {
+											// 08.11.2024 Assumption is that produces output does not have multiple vars (|ovar.fnOut| = 1)
+											var strList = new ArrayList<String>() 
+											strList.add(elm.ref.name)
+											mapOfSuppressTransitionVars.put(block.name+"_" + f.name + "_" + u.name, strList)
+										}
+									}
+									// listOfSuppressTransitions.add(block.name+"_" + f.name + "_" + u.name)
+								}
+							}
+						}
+					}
+				}
+			}
+			
 			var name = prod.specification.name
-			fsa.generateFile(name + '.py', pnet.toSnakes(name, name, listOfEnvBlocks, listOfAssertTransitions, inout_places, init_places, depth_limit))
+			fsa.generateFile(name + '.py', pnet.toSnakes(name, name, listOfEnvBlocks, listOfAssertTransitions, mapOfSuppressTransitionVars, inout_places, init_places, depth_limit))
 			
 			fsa.generateFile(name + '_Simulation.py', pnet.toSnakesSimulation)
 				
@@ -323,7 +375,7 @@ class ProductGenerator extends AbstractGenerator {
 				// constraints to comma expression. 27.08.2024
 				// Check if boolean expression or assignment action
 //				constraints.add(new Constraint(c.name, (new ExpressionsCommaGenerator()).exprToComMASyntax(c.symbExpr).toString()))
-				constraints.add(new Constraint(printConstraint(c as SymbConstraint), ""))
+				constraints.add(new Constraint(printConstraint(c as RefConstraint), ""))
 			}
 		}
 		if(v.dataReferences !== null) {
@@ -335,10 +387,6 @@ class ProductGenerator extends AbstractGenerator {
 			}
 		}
 		return constraints
-	}
-	
-	dispatch def String printConstraint(SymbConstraint ref) {
-		return new String // TODO handle this case.
 	}
 	
 	dispatch def String printConstraint(RefConstraint ref) {
@@ -452,11 +500,13 @@ class ProductGenerator extends AbstractGenerator {
 		                case int():
 		                    items = items
 		                case list():
-		                    «printListConstructors(prod)»
+		                    items = self.updateDict[prefix].strip()
 		                case _:
 		                    raise TypeError('Unsupported type')
 		            txt += f"    {prefix} := {items}\n"
 		        return txt
+		
+		    «printLists(prod)»
 		
 		    def printData(self, idata):
 		        txt = ""
@@ -506,6 +556,8 @@ class ProductGenerator extends AbstractGenerator {
 		                                    txt += "%s\n" % entry.name
 		                txt += "output-data:\n"
 		                txt += self.printData(odata)
+		                # if step.is_suppress:
+		                # txt += "suppress\n"
 		                for k, v in odata.items():
 		                    if name.rsplit("_",1)[0] in self.constraint_dict:
 		                        for constr in self.constraint_dict[name.rsplit("_",1)[0]]:
@@ -563,12 +615,14 @@ class ProductGenerator extends AbstractGenerator {
 		    input_data = {}
 		    output_data = {}
 		    is_assert = False
+		    # mapOfSuppressTransitionVars = {}
 		
 		    def __init__(self, _is_assert):
 		        self.step_name = ""
 		        self.input_data = {}
 		        self.output_data = {}
 		        self.is_assert = _is_assert
+		        # self.mapOfSuppressTransitionVars = mapOfSuppressTransitionVars
 		
 		    def compare(self, _step, mapTrAssert):
 		        for ipdata in self.output_data:
@@ -643,7 +697,104 @@ class ProductGenerator extends AbstractGenerator {
 		
 		return txt
 	}
-	
+
+	def dispatch ArrayList<String> findVariableAssignments(RecordFieldAssignmentAction act) {
+		return new ArrayList<String>()
+	}
+
+	def dispatch ArrayList<String> findVariableAssignments(ExpressionVariable v) {
+		return new ArrayList<String>()
+	}
+
+	def dispatch ArrayList<String> findVariableAssignments(ExpressionConstantBool b) {
+		return new ArrayList<String>()
+	}
+
+	def dispatch ArrayList<String> findVariableAssignments(ExpressionConstantInt i) {
+		return new ArrayList<String>()
+	}
+
+	def dispatch ArrayList<String> findVariableAssignments(ExpressionConstantReal r) {
+		return new ArrayList<String>()
+	}
+
+	def dispatch ArrayList<String> findVariableAssignments(ExpressionConstantString s) {
+		return new ArrayList<String>()
+	}
+
+	def dispatch ArrayList<String> findVariableAssignments(ExpressionVector v) {
+		return new ArrayList<String>()
+	}
+
+	def dispatch ArrayList<String> findVariableAssignments(ExpressionEnumLiteral e) {
+		return new ArrayList<String>()
+	}
+
+	def dispatch ArrayList<String> findVariableAssignments(ExpressionAny e) {
+		return new ArrayList<String>()
+	}
+
+	def dispatch ArrayList<String> findVariableAssignments(ExpressionBulkData b) {
+		return new ArrayList<String>()
+	}
+
+	def dispatch ArrayList<String> findVariableAssignments(ExpressionFunctionCall b) {
+		return new ArrayList<String>()
+	}
+
+	def dispatch ArrayList<String> findVariableAssignments(ExpressionQuantifier q) {
+		return new ArrayList<String>()
+	}
+
+	def dispatch ArrayList<String> findVariableAssignments(ExpressionBracket b) {
+		return findVariableAssignments(b.sub)
+	}
+
+	def dispatch ArrayList<String> findVariableAssignments(AssignmentAction act) {
+		return findVariableAssignments(act.exp)
+	}
+
+	def dispatch ArrayList<String> findVariableAssignments(ExpressionMapRW m) {
+		return findVariableAssignments(m.key)
+	}
+
+	def dispatch ArrayList<String> findVariableAssignments(ExpressionRecordAccess r) {
+		return findVariableAssignments(r.record)
+	}
+
+	def dispatch ArrayList<String> findVariableAssignments(ExpressionRecord exp) {
+		var list = new ArrayList<String>()
+		for (f : exp.fields) {
+			var fqname = getFQName(f)
+			list += "updateDict[\"" + fqname + "\"] = \"\"\"" + (new ExpressionGenerator).exprToComMASyntax(f.exp) + " \"\"\"\n"
+			list += findVariableAssignments(f.exp)
+		}
+		return list
+	}
+
+	def dispatch String getFQName(Field f) {
+		return getFQName(f.eContainer) + "." + f.recordField.name
+	}
+
+	def dispatch String getFQName(ExpressionRecord e) {
+		return getFQName(e.eContainer)
+	}
+
+	def dispatch String getFQName(AssignmentAction e) {
+		return e.assignment.name
+	}	
+
+	def printLists(Product prod) {
+		var list = new ArrayList<String>()
+		list += "updateDict = {}\n"
+		for (updateOutVar :  prod.eAllContents.filter(UpdateOutVar).toIterable) {
+			for (act : updateOutVar.act.actions) {
+				list += findVariableAssignments(act)
+			}
+		}
+		return list.join("")
+	}
+
 	def usageList(Product prod) {
 		var varSet = getUniqueVariables(prod)
 		var usings = ""
@@ -653,47 +804,7 @@ class ProductGenerator extends AbstractGenerator {
 		}
 		return usings
 	}
-	
-	def printListConstructors(Product prod) {
-		var constrTxt = ""
-		var constructors = newLinkedHashMap() 
-		var varSet = getUniqueVariables(prod)
-		for (v : varSet) {
-			constructors.putAll(recurseTypes(v.type))
-		}
-		var applySeparator = false
-		for (c : constructors.keySet) {
-			if (applySeparator) constrTxt += "el"
-			else applySeparator = true
-			constrTxt += "if \"" + constructors.get(c) + "\" in prefix:\n"
-			constrTxt += "    items = \"<" + c + "[]>[]\"\n"
-		}
-		constrTxt += "else:\n"
-		constrTxt += "    items = \"<string[]>[\\\"\\\"]\"\n"
-		return constrTxt
-	}
 
-	def Map<String,String> recurseTypes(Type typ) {
-		var constructors = newLinkedHashMap() 
-		var typ2 = typ.type
-		if (typ instanceof VectorTypeConstructor) {
-			var t = typ
-			if (!typ2.name.equalsIgnoreCase("string")) {
-				if (typ.eContainer instanceof RecordField) {
-					var field = (typ.eContainer as RecordField).name
-					var key = typ2.name
-					constructors.put(key, field)
-				}
-			}
-		}
-		if (typ2 instanceof RecordTypeDecl) {
-			for (f : (typ2 as RecordTypeDecl).fields) {
-				constructors.putAll(recurseTypes(f.type))
-			}
-		}
-		return constructors
-	}
-	
 	def getUniqueVariables(Product prod) {
 		var Set<Variable> varSet = new HashSet<Variable>()
 		var Set<Variable> varSetUniqueNames = new HashSet<Variable>()
@@ -715,7 +826,27 @@ class ProductGenerator extends AbstractGenerator {
 		}
 		return varSetUniqueNames
 	}
-	
+
+	def Map<String,String> recurseTypes(Type typ) {
+		var constructors = newLinkedHashMap() 
+		var typ2 = typ.type
+		if (typ instanceof VectorTypeConstructor) {
+			if (!typ2.name.equalsIgnoreCase("string")) {
+				if (typ.eContainer instanceof RecordField) {
+					var field = (typ.eContainer as RecordField).name
+					var key = typ2.name
+					constructors.put(key, field)
+				}
+			}
+		}
+		if (typ2 instanceof RecordTypeDecl) {
+			for (f : (typ2 as RecordTypeDecl).fields) {
+				constructors.putAll(recurseTypes(f.type))
+			}
+		}
+		return constructors
+	}
+
 	def parseOutVariablesWithActions(Block block, HashMap<String, List<String>> map_output_input, 
 									VarRef v, Transition tr, PetriNet pnet, String executeFnName, 
 									Map<String,TypeDecl> input_var_list) 
