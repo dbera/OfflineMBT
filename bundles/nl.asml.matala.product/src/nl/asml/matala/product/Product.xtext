@@ -51,11 +51,13 @@ RefBlock:
 
 Block:
 	'system' name = ID '{'
-		('inputs' invars+=Variable+ )?
-		('outputs' outvars+=Variable+)?
-		('local' localvars+=Variable+ )?
-		('init' initActions+=(AssignmentAction | RecordFieldAssignmentAction)+)?
-		'desc' type = STRING
+		( // Unordered group for following items
+			('inputs' invars+=Variable+ )? &
+			('outputs' outvars+=Variable+)? &
+			('local' localvars+=Variable+ )? &
+			('init' initActions+=(AssignmentAction | RecordFieldAssignmentAction)+)? &
+			'desc' type = STRING
+		)
 		functions += Function*
 	'}'
 ;
