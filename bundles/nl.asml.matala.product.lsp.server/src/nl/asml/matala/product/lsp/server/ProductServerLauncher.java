@@ -1,43 +1,28 @@
 package nl.asml.matala.product.lsp.server;
 
-import org.eclipse.lsp4j.SetTraceParams;
-import org.eclipse.lsp4j.WorkDoneProgressCancelParams;
-import org.eclipse.xtext.ide.server.LanguageServerImpl;
+import static nl.esi.xtext.lsp.server.WebSocketServerLauncher.PORT;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Module;
-import com.google.inject.util.Modules;
+import java.util.List;
+
+import com.google.common.collect.Lists;
 
 import nl.esi.xtext.lsp.server.ServerLauncher;
 
 public class ProductServerLauncher extends ServerLauncher {
+	public static final String SOCKET = "-socket";
+
 	public static void main(String[] args) {
-		new ProductServerLauncher().launch(args);
-	}
-
-	@Override
-	protected Module getServerModule() {
-		return Modules.combine(new MonacoServerModule(), super.getServerModule());
-	}
-
-	private static class MonacoServerModule extends AbstractModule {
-		@Override
-		protected void configure() {
-			bind(LanguageServerImpl.class).to(MonacoLanguageServerImpl.class);
+		// Web-sockets on port 9090 are the default for this server
+		List<String> largs = Lists.newArrayList(args);
+		if (!largs.contains(SOCKET) && !largs.contains(STDIO)) {
+			if (!largs.contains(WEB_SOCKET)) {
+				largs.add(WEB_SOCKET);
+			}
+			if (!largs.contains(PORT)) {
+				largs.add(PORT);
+				largs.add("9090");
+			}
 		}
-	}
-
-	private static class MonacoLanguageServerImpl extends LanguageServerImpl {
-		@Override
-		public void cancelProgress(WorkDoneProgressCancelParams params) {
-			// Ignore, but trace
-			System.err.println(String.format("cancelProgress(%s)", params));
-		}
-
-		@Override
-		public void setTrace(SetTraceParams params) {
-			// Ignore, but trace
-			System.err.println(String.format("setTrace(%s)", params));
-		}
+		new ProductServerLauncher().launch(largs.toArray(new String[largs.size()]));
 	}
 }

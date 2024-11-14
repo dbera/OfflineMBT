@@ -28,6 +28,12 @@ jobs:
         java-distribution: temurin
     - name: Build with Maven
       run: mvn -B -U package --file pom.xml
+    - name: Attach LSP Server
+      uses: actions/upload-artifact@v3
+      with:
+        name: bpmn4s-lsp-server
+        path: bundles/nl.asml.matala.product.lsp.server/target/bpmn4s-lsp-server.jar
+        retention-days: 10
 
     # Optional: Uploads the full dependency graph to GitHub to improve the quality of Dependabot alerts this repository can receive
     # - name: Update dependency graph

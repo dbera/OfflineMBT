@@ -13,6 +13,6 @@
     <booleanAttribute key="org.eclipse.jdt.launching.ATTR_USE_CLASSPATH_ONLY_JAR" value="false"/>
     <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="nl.asml.matala.product.lsp.server.ProductServerLauncher"/>
     <stringAttribute key="org.eclipse.jdt.launching.MODULE_NAME" value="nl.asml.matala.product.lsp.server"/>
-    <stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="-ws -port 5008 -trace"/>
+    <stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="-trace"/>
     <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="nl.asml.matala.product.lsp.server"/>
 </launchConfiguration>
