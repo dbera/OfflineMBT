@@ -16,7 +16,7 @@ public class ProductStreamConnectionProvider implements StreamConnectionProvider
 	@Override
 	public void start() throws IOException {
 		try {
-			lspClient = new WebSocketLspClient(URI.create("ws://localhost:5008"));
+			lspClient = new WebSocketLspClient(URI.create("ws://localhost:9090"));
 			if (!lspClient.connectBlocking(60, TimeUnit.SECONDS)) {
 				lspClient = null;
 				throw new IOException("Failed to connect within a reasonable time.");

@@ -5,7 +5,8 @@ Bundle-Vendor: TNO-ESI, Philips
 Bundle-Version: 4.2.0.qualifier
 Bundle-SymbolicName: nl.esi.comma.project.standard; singleton:=true
 Bundle-ActivationPolicy: lazy
-Require-Bundle: org.eclipse.xtext,
+Require-Bundle: nl.esi.comma.types;visibility:=reexport,
+ org.eclipse.xtext,
  org.eclipse.xtext.xbase,
  org.eclipse.equinox.common;bundle-version="3.5.0",
  org.eclipse.emf.ecore,
@@ -14,19 +15,14 @@ Require-Bundle: org.eclipse.xtext,
  org.eclipse.xtext.util,
  org.eclipse.xtend.lib;bundle-version="2.15.0",
  org.eclipse.emf.common,
- nl.esi.comma.types;bundle-version="1.0.0",
  org.eclipse.acceleo.query;bundle-version="6.0.0",
- nl.esi.comma.signature;bundle-version="4.2.0",
- nl.esi.comma.behavior;bundle-version="4.2.0",
- nl.esi.comma.actions;bundle-version="4.2.0",
- nl.esi.comma.expressions;bundle-version="4.2.0",
+ org.eclipse.core.resources;bundle-version="3.16.0",
+ nl.esi.comma.automata,
+ nl.asml.matala.product,
+ nl.esi.comma.constraints,
+ nl.esi.comma.scenarios,
  nl.esi.comma.inputspecification;bundle-version="4.2.0",
- nl.esi.comma.testspecification;bundle-version="4.2.0",
- nl.asml.matala.product;bundle-version="1.0.0",
- nl.esi.comma.constraints;bundle-version="4.2.0",
- nl.esi.comma.automata;bundle-version="4.2.0",
- nl.esi.comma.scenarios;bundle-version="4.2.0",
- org.eclipse.core.resources;bundle-version="3.16.0"
+ nl.esi.comma.testspecification;bundle-version="4.2.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: nl.esi.comma.project.standard.standardProject,
  nl.esi.comma.project.standard.parser.antlr.internal,

@@ -5,16 +5,13 @@ Bundle-Vendor: TNO-ESI, Philips
 Bundle-Version: 4.2.0.qualifier
 Bundle-SymbolicName: nl.esi.comma.scenarios.ide; singleton:=true
 Bundle-ActivationPolicy: lazy
-Require-Bundle: nl.esi.comma.scenarios,
+Require-Bundle: nl.esi.comma.scenarios;visibility:=reexport,
+ nl.esi.comma.actions.ide;visibility:=reexport,
  org.eclipse.xtext.ide,
  org.eclipse.xtext.xbase.ide,
- org.antlr.runtime;bundle-version="[3.2.0,3.2.1)",
- nl.esi.comma.behavior;bundle-version="2.0.1",
- nl.esi.comma.actions;bundle-version="2.0.1",
- nl.esi.comma.expressions;bundle-version="2.0.1",
- nl.esi.comma.types;bundle-version="2.0.1"
+ org.antlr.runtime;bundle-version="[3.2.0,3.2.1)"
 Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: nl.esi.comma.scenarios.ide.contentassist.antlr.internal,
- nl.esi.comma.scenarios.ide.contentassist.antlr
+ nl.esi.comma.scenarios.ide.contentassist.antlr,
+ nl.esi.comma.scenarios.ide.contentassist
 Automatic-Module-Name: nl.esi.comma.scenarios.ide
-

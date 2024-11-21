@@ -20,8 +20,6 @@ import nl.esi.comma.actions.actions.EventCall;
 import nl.esi.comma.actions.actions.ForAction;
 import nl.esi.comma.actions.actions.IfAction;
 import nl.esi.comma.actions.actions.RecordFieldAssignmentAction;
-import nl.esi.comma.actions.generator.plantuml.ActionsUmlGenerator;
-import nl.esi.comma.behavior.behavior.TriggeredTransition;
 import nl.esi.comma.expressions.expression.Expression;
 import nl.esi.comma.expressions.expression.ExpressionAddition;
 import nl.esi.comma.expressions.expression.ExpressionAnd;
@@ -59,9 +57,7 @@ import nl.esi.comma.expressions.expression.ExpressionSubtraction;
 import nl.esi.comma.expressions.expression.ExpressionVariable;
 import nl.esi.comma.expressions.expression.ExpressionVector;
 import nl.esi.comma.expressions.expression.QUANTIFIER;
-import nl.esi.comma.expressions.expression.Variable;
 import nl.esi.comma.expressions.generator.ExpressionsCommaGenerator;
-import nl.esi.comma.signature.interfaceSignature.DIRECTION;
 import nl.esi.comma.types.types.EnumTypeDecl;
 import nl.esi.comma.types.types.MapTypeDecl;
 import nl.esi.comma.types.types.RecordTypeDecl;
@@ -258,35 +254,11 @@ class SnakesHelper {
 		} else if (event instanceof EventCall) {
 			EventCall e = (EventCall) event;
 			return e.getParameters().stream().map(p -> expression(p, variablePrefix)).collect(Collectors.toList());
-		} else if (event instanceof TriggeredTransition) {
-			TriggeredTransition t = (TriggeredTransition) event;
-			return t.getTrigger().getParameters().stream()
-					.filter(p -> p.getDirection() != DIRECTION.OUT)
-					.map(p -> {
-						int index = t.getTrigger().getParameters().indexOf(p);
-						Variable v = t.getParameters().get(index);
-						return String.format("%s%s", variablePrefix.apply(v.getName()), v.getName());
-					})
-					.collect(Collectors.toList());
 		}
 		 
 		throw new RuntimeException("Not supported");
 	}
 
-	static String name(Object event, TriggeredTransition triggerTransition) {
-		if (event instanceof CommandReply) {
-			return triggerTransition.getTrigger().getName() + "_reply";
-		} else if (event instanceof EventCall) {
-			EventCall e = (EventCall) event;
-			return e.getEvent().getName();
-		} else if (event instanceof TriggeredTransition) {
-			TriggeredTransition t = (TriggeredTransition) event;
-			return t.getTrigger().getName();
-		}
-		 
-		throw new RuntimeException("Not supported");
-	}
-	
 	/*static String action(Action action, Function<String, String> variablePrefix) {
 		if (action instanceof AssignmentAction) {
 			AssignmentAction a = (AssignmentAction) action;

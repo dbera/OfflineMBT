@@ -49,12 +49,12 @@
     <booleanAttribute key="org.eclipse.debug.core.launchGroup.5.adoptIfRunning" value="false"/>
     <booleanAttribute key="org.eclipse.debug.core.launchGroup.5.enabled" value="true"/>
     <stringAttribute key="org.eclipse.debug.core.launchGroup.5.mode" value="inherit"/>
-    <stringAttribute key="org.eclipse.debug.core.launchGroup.5.name" value="Generate InputSpecification (input) Language Infrastructure"/>
+    <stringAttribute key="org.eclipse.debug.core.launchGroup.5.name" value="Generate Product (ps) Language Infrastructure"/>
     <stringAttribute key="org.eclipse.debug.core.launchGroup.6.action" value="WAIT_FOR_TERMINATION"/>
     <booleanAttribute key="org.eclipse.debug.core.launchGroup.6.adoptIfRunning" value="false"/>
     <booleanAttribute key="org.eclipse.debug.core.launchGroup.6.enabled" value="true"/>
     <stringAttribute key="org.eclipse.debug.core.launchGroup.6.mode" value="inherit"/>
-    <stringAttribute key="org.eclipse.debug.core.launchGroup.6.name" value="Generate Product (ps) Language Infrastructure"/>
+    <stringAttribute key="org.eclipse.debug.core.launchGroup.6.name" value="Generate InputSpecification (input) Language Infrastructure"/>
     <stringAttribute key="org.eclipse.debug.core.launchGroup.7.action" value="WAIT_FOR_TERMINATION"/>
     <booleanAttribute key="org.eclipse.debug.core.launchGroup.7.adoptIfRunning" value="false"/>
     <booleanAttribute key="org.eclipse.debug.core.launchGroup.7.enabled" value="true"/>

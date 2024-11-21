@@ -49,6 +49,9 @@ Workflow {
 			junitSupport = {
 				junitVersion = "5"
 			}
+            contentAssist = nl.esi.xtext.lsp.generator.ide.contentassist.IdeContentAssistFragment2 {
+                generateXtendStub = true
+            }
 			fragment = textmate.TextMateHighlightingFragment {
 			    absolutePath = "${rootPath}/nl.asml.matala.product.lsp.editor/language/grammars"
 			    override = true

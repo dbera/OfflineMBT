@@ -5,13 +5,13 @@ Bundle-Vendor: TNO-ESI, Philips
 Bundle-Version: 4.2.0.qualifier
 Bundle-SymbolicName: nl.esi.comma.signature.ide;singleton:=true
 Bundle-ActivationPolicy: lazy
-Require-Bundle: nl.esi.comma.signature,
+Require-Bundle: nl.esi.comma.signature;visibility:=reexport,
+ nl.esi.comma.types.ide;visibility:=reexport,
  org.eclipse.xtext.ide,
  org.eclipse.xtext.xbase.ide,
- nl.esi.comma.types;bundle-version="1.0.0",
  org.antlr.runtime;bundle-version="[3.2.0,3.2.1)"
 Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: nl.esi.comma.signature.ide.contentassist.antlr,
- nl.esi.comma.signature.ide.contentassist.antlr.internal
+ nl.esi.comma.signature.ide.contentassist.antlr.internal,
+ nl.esi.comma.signature.ide.contentassist
 Automatic-Module-Name: nl.esi.comma.signature.ide
-

@@ -6,14 +6,12 @@ Bundle-Vendor: My Company
 Bundle-Version: 4.2.0.qualifier
 Bundle-SymbolicName: nl.esi.comma.behavior.scl.ide; singleton:=true
 Bundle-ActivationPolicy: lazy
-Require-Bundle: nl.esi.comma.behavior.scl,
+Require-Bundle: nl.esi.comma.behavior.scl;visibility:=reexport,
+ nl.esi.comma.actions.ide;visibility:=reexport,
  org.eclipse.xtext.ide,
  org.eclipse.xtext.xbase.ide,
- org.antlr.runtime;bundle-version="[3.2.0,3.2.1)",
- nl.esi.comma.expressions;bundle-version="4.2.0",
- nl.esi.comma.types;bundle-version="4.2.0",
- nl.esi.comma.actions;bundle-version="4.2.0",
- nl.esi.comma.behavior;bundle-version="4.2.0"
+ org.antlr.runtime;bundle-version="[3.2.0,3.2.1)"
 Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: nl.esi.comma.behavior.scl.ide.contentassist.antlr,
- nl.esi.comma.behavior.scl.ide.contentassist.antlr.internal
+ nl.esi.comma.behavior.scl.ide.contentassist.antlr.internal,
+ nl.esi.comma.behavior.scl.ide.contentassist

@@ -45,6 +45,9 @@ Workflow {
 //				generateXtendMain = true
 				generateJavaMain = true
 			}
+            contentAssist = nl.esi.xtext.lsp.generator.ide.contentassist.IdeContentAssistFragment2 {
+                generateXtendStub = true
+            }
 			junitSupport = {
 				junitVersion = "5"
 			}

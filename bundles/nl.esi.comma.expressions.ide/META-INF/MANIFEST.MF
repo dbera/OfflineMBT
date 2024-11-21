@@ -5,14 +5,13 @@ Bundle-Vendor: TNO-ESI, Philips
 Bundle-Version: 4.2.0.qualifier
 Bundle-SymbolicName: nl.esi.comma.expressions.ide; singleton:=true
 Bundle-ActivationPolicy: lazy
-Require-Bundle: nl.esi.comma.expressions,
+Require-Bundle: nl.esi.comma.expressions;visibility:=reexport,
+ nl.esi.comma.types.ide;visibility:=reexport,
  org.eclipse.xtext.ide,
  org.eclipse.xtext.xbase.ide,
- nl.esi.comma.types.ide;bundle-version="1.0.0",
- nl.esi.comma.types;bundle-version="1.0.0",
  org.antlr.runtime;bundle-version="[3.2.0,3.2.1)"
 Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: nl.esi.comma.expressions.ide.contentassist.antlr.internal,
- nl.esi.comma.expressions.ide.contentassist.antlr
+ nl.esi.comma.expressions.ide.contentassist.antlr,
+ nl.esi.comma.expressions.ide.contentassist
 Automatic-Module-Name: nl.esi.comma.expressions.ide
-

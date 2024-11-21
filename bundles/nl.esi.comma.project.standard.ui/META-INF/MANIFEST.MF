@@ -5,8 +5,9 @@ Bundle-Vendor: TNO-ESI, Philips
 Bundle-Version: 4.2.0.qualifier
 Bundle-SymbolicName: nl.esi.comma.project.standard.ui; singleton:=true
 Bundle-ActivationPolicy: lazy
-Require-Bundle: nl.esi.comma.project.standard,
+Require-Bundle: nl.esi.comma.project.standard;visibility:=reexport,
  nl.esi.comma.project.standard.ide,
+ nl.esi.comma.types.ui;visibility:=reexport,
  org.eclipse.xtext.ui,
  org.eclipse.xtext.ui.shared,
  org.eclipse.xtext.ui.codetemplates.ui,
@@ -17,12 +18,10 @@ Require-Bundle: nl.esi.comma.project.standard,
  org.eclipse.xtext.builder,
  org.eclipse.xtend.lib;bundle-version="2.14.0";resolution:=optional,
  org.eclipse.xtext.xbase.lib;bundle-version="2.15.0",
- org.eclipse.debug.ui,
- nl.esi.comma.types.ui;bundle-version="2.0.1"
+ org.eclipse.debug.ui
 Import-Package: org.apache.log4j
 Bundle-RequiredExecutionEnvironment: JavaSE-21
-Export-Package: nl.esi.comma.project.standard.ui.contentassist,
- nl.esi.comma.project.standard.ui.internal,
+Export-Package: nl.esi.comma.project.standard.ui.internal,
  nl.esi.comma.project.standard.ui.quickfix
 Bundle-Activator: nl.esi.comma.project.standard.ui.internal.StandardActivator
 Automatic-Module-Name: nl.esi.comma.project.standard.ui

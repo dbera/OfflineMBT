@@ -32,10 +32,6 @@
         <module>nl.esi.comma.actions.ide</module>
         <module>nl.esi.comma.actions.ui</module>
 
-        <module>nl.esi.comma.behavior</module>
-        <module>nl.esi.comma.behavior.ide</module>
-        <module>nl.esi.comma.behavior.ui</module>
-
         <module>nl.esi.comma.inputspecification</module>
         <module>nl.esi.comma.inputspecification.ide</module>
         <module>nl.esi.comma.inputspecification.ui</module>
