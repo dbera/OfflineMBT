@@ -502,12 +502,9 @@
         <setEntry value="nl.esi.comma.actions.ui@default:default"/>
         <setEntry value="nl.esi.comma.actions@default:default"/>
         <setEntry value="nl.esi.comma.automata@default:default"/>
-        <setEntry value="nl.esi.comma.behavior.ide@default:default"/>
         <setEntry value="nl.esi.comma.behavior.scl.ide@default:default"/>
         <setEntry value="nl.esi.comma.behavior.scl.ui@default:default"/>
         <setEntry value="nl.esi.comma.behavior.scl@default:default"/>
-        <setEntry value="nl.esi.comma.behavior.ui@default:default"/>
-        <setEntry value="nl.esi.comma.behavior@default:default"/>
         <setEntry value="nl.esi.comma.constraints.dashboard@default:default"/>
         <setEntry value="nl.esi.comma.constraints.ide@default:default"/>
         <setEntry value="nl.esi.comma.constraints.ui@default:default"/>
