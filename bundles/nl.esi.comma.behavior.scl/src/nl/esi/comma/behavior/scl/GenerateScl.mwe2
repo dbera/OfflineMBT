@@ -34,8 +34,6 @@ Workflow {
 			name = "nl.esi.comma.behavior.scl.Scl"
 			fileExtensions = "scl"
 			
-			// referencedResource = "platform:/resource/nl.esi.comma.expressions/model/generated/Expression.genmodel"
-			// referencedResource = "platform:/resource/nl.esi.comma.behavior/model/generated/Behavior.genmodel"
 			referencedResource = "platform:/resource/nl.esi.comma.actions/model/generated/Actions.genmodel"
 
 			serializer = {
