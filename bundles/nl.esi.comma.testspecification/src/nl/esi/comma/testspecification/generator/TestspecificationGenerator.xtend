@@ -44,7 +44,7 @@ class TestspecificationGenerator extends AbstractGenerator
 	/* TODO this should come from project task? Investigate and Implement it. */
 	var record_path_for_lot_def = "TwinscanControllerInput.concrete_expose_job.lot_def" 
 	var record_lot_def_file_name = "lot_definition"
-	var record_lot_def_file_path_prefix = "./generated_FAST/dataset/"
+	var record_lot_def_file_path_prefix = "./vfab2_scenario/FAST/generated_FAST/dataset/"
 	
 	// In-Memory Data Structures corresponding *.tspec (captured in resource object)
 	var mapLocalDataVarToDataInstance = new HashMap<String, List<String>>
@@ -783,9 +783,9 @@ class TestspecificationGenerator extends AbstractGenerator
 		in.data.steps = [
 			«FOR elm : listStepInstances SEPARATOR ','»
 				«IF generateFASTRefStepTxt(elm).empty»
-					{ "id" : "«elm.id»", "type" : "«elm.type.replaceAll("_",".")»", "input_file" : "«elm.inputFile»" }
+					{ "id" : "«elm.id»", "type" : "«elm.type.replaceAll("_dot_",".")»", "input_file" : "«elm.inputFile»" }
 				«ELSE»
-					{ "id" : "«elm.id»", "type" : "«elm.type.replaceAll("_",".")»", "input_file" : "«elm.inputFile»",
+					{ "id" : "«elm.id»", "type" : "«elm.type.replaceAll("_dot_",".")»", "input_file" : "«elm.inputFile»",
 						"parameters" : {
 							«FOR refTxt : generateFASTRefStepTxt(elm) SEPARATOR ','»
 								«refTxt»

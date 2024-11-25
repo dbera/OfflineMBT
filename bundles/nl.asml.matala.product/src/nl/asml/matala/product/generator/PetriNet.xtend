@@ -337,6 +337,7 @@ class PetriNet {
 		    visitedTList = [[]]
 		    visitedTProdList = [[]]
 		    rg_txt = ""
+		    SavedMarking = Marking()
 		
 		    def __init__(self):
 		        self.rg_txt = '@startuml\n'
@@ -620,6 +621,37 @@ class PetriNet {
 	def print_SCNGen() {
 		return
 		'''
+	    def getCurrentMarking(self):
+	        print('[INFO] Current Marking: ', self.n.get_marking())
+	        return self.n.get_marking()
+
+	    def saveMarking(self):
+	        self.SavedMarking = self.n.get_marking()
+	    
+	    def gotoSavedMarking(self):
+	        print('[INFO] Setting Petri net to Saved Marking: ', self.SavedMarking)
+	        self.n.set_marking(self.SavedMarking)
+
+	    @staticmethod
+	    def fireEnabledTransition(choices, cid):
+	        _t, _m = choices.get(int(cid))
+	        _t.fire(_m)
+	        print('[INFO] Transition Fired with ID: ', cid)
+
+	    def getEnabledTransitions(self):
+	        enabled_transition_modes = {}
+	        choices = {}
+	        for _t in self.n.transition():
+	            enabled_transition_modes[_t] = _t.modes()
+	            # print(enabled_transition_modes)
+	            chidx = 0
+	            for _key, _value in enabled_transition_modes.items():
+	                for _elm in _value:
+	                    choices[chidx] = _key, _elm
+	                    chidx = chidx + 1
+	        print('[INFO] Enabled Transition Choices: ', choices)
+	        return choices
+	    
 	    def generateScenarios(self, state_space, currentVertex, visited, visitedT, visitedTP, depth, limit):
 	        # print(currentVertex)
 	        # print(self.visitedList)

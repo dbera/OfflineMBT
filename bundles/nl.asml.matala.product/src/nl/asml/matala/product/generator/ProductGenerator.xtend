@@ -195,7 +195,8 @@ class ProductGenerator extends AbstractGenerator {
 			
 			var name = prod.specification.name
 			fsa.generateFile(name + '.py', pnet.toSnakes(name, name, listOfEnvBlocks, listOfAssertTransitions, mapOfSuppressTransitionVars, inout_places, init_places, depth_limit))
-			
+			fsa.generateFile('server.py', (new FlaskSimulationGenerator).generateServer(name))
+			fsa.generateFile('client.py', (new FlaskSimulationGenerator).generateClient)
 			fsa.generateFile(name + '_Simulation.py', pnet.toSnakesSimulation)
 				
 			var data_container_class = 
@@ -467,10 +468,10 @@ class ProductGenerator extends AbstractGenerator {
 		        if len(self.step_list) > 0:
 		            # txt += "[*] --> %s : x\n" % self.step_list[0].step_name
 		            for first, second in zip(self.step_list, self.step_list[1:]):
-		                txt += "%s --> %s : follows\n" % (first.step_name, second.step_name)
+		                txt += "%s --> %s : follows\n" % (first.step_name.replace("@","_"), second.step_name.replace("@","_"))
 		        if len(self.step_dependencies):
 		            for elm in self.step_dependencies:
-		                txt += "%s ..> %s : uses\n" % (elm.step_name, elm.depends_on)
+		                txt += "%s ..> %s : uses\n" % (elm.step_name.replace("@","_"), elm.depends_on.replace("@","_"))
 		                txt += "note on link\n"
 		                txt += "%s" % elm.payload
 		                txt += "\nend note\n"
