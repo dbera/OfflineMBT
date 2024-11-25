@@ -1,8 +1,8 @@
 Manifest-Version: 1.0
 Automatic-Module-Name: nl.asml.matala.product.ide
 Bundle-ManifestVersion: 2
-Bundle-Name: nl.asml.matala.product.ide
-Bundle-Vendor: My Company
+Bundle-Name: Product Language IDE
+Bundle-Vendor: TNO-ESI
 Bundle-Version: 4.2.0.qualifier
 Bundle-SymbolicName: nl.asml.matala.product.ide; singleton:=true
 Bundle-ActivationPolicy: lazy

@@ -25,3 +25,4 @@ local.properties
 target/
 .polyglot.*
 .m2/
+pom.tycho

@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Automatic-Module-Name: nl.esi.comma.behavior.scl.ide
 Bundle-ManifestVersion: 2
 Bundle-Name: nl.esi.comma.behavior.scl.ide
-Bundle-Vendor: My Company
+Bundle-Vendor: TNO-ESI
 Bundle-Version: 4.2.0.qualifier
 Bundle-SymbolicName: nl.esi.comma.behavior.scl.ide; singleton:=true
 Bundle-ActivationPolicy: lazy

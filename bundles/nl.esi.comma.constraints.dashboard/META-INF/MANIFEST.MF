@@ -1,9 +1,9 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: nl.esi.comma.constraints.dashboard
+Bundle-Name: Constraints Language Dashboard
 Bundle-SymbolicName: nl.esi.comma.constraints.dashboard;singleton:=true
 Bundle-Version: 4.2.0.qualifier
 Automatic-Module-Name: nl.esi.comma.constraints.dashboard
-Bundle-Vendor: Eclipse CommaSuite
+Bundle-Vendor: TNO-ESI
 Bundle-ActivationPolicy: lazy
 Export-Package: nl.esi.comma.constraints.dashboard

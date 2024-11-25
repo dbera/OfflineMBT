@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Automatic-Module-Name: nl.esi.comma.constraints.ide
 Bundle-ManifestVersion: 2
-Bundle-Name: nl.esi.comma.constraints.ide
+Bundle-Name: Constraints Language IDE
 Bundle-Vendor: TNO-ESI
 Bundle-Version: 4.2.0.qualifier
 Bundle-SymbolicName: nl.esi.comma.constraints.ide; singleton:=true

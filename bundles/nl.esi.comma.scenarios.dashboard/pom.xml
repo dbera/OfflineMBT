@@ -3,14 +3,13 @@
 
     <parent>
         <groupId>nl.esi.comma</groupId>
-        <artifactId>nl.esi.comma.bundles</artifactId>
+        <artifactId>nl.esi.comma.root</artifactId>
         <version>4.2.0-SNAPSHOT</version>
+        <relativePath>../../</relativePath>
     </parent>
 
     <artifactId>nl.esi.comma.scenarios.dashboard</artifactId>
     <packaging>eclipse-plugin</packaging>
-
-    <name>nl.esi.comma.scenarios.dashboard</name>
 
     <profiles>
         <profile>

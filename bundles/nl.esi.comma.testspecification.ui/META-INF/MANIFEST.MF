@@ -1,8 +1,8 @@
 Manifest-Version: 1.0
 Automatic-Module-Name: nl.esi.comma.testspecification.ui
 Bundle-ManifestVersion: 2
-Bundle-Name: nl.esi.comma.testspecification.ui
-Bundle-Vendor: My Company
+Bundle-Name: Test Specification UI
+Bundle-Vendor: TNO-ESI
 Bundle-Version: 4.2.0.qualifier
 Bundle-SymbolicName: nl.esi.comma.testspecification.ui; singleton:=true
 Bundle-ActivationPolicy: lazy

@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: nl.esi.comma.expressions.ide
-Bundle-Vendor: TNO-ESI, Philips
+Bundle-Name: Expression Lang IDE
+Bundle-Vendor: TNO-ESI
 Bundle-Version: 4.2.0.qualifier
 Bundle-SymbolicName: nl.esi.comma.expressions.ide; singleton:=true
 Bundle-ActivationPolicy: lazy

@@ -1,8 +1,8 @@
 Manifest-Version: 1.0
 Automatic-Module-Name: nl.esi.comma.systemconfig.ide
 Bundle-ManifestVersion: 2
-Bundle-Name: nl.esi.comma.systemconfig.ide
-Bundle-Vendor: TNO-ESI, Philips
+Bundle-Name: System configuration Language IDE
+Bundle-Vendor: TNO-ESI
 Bundle-Version: 4.2.0.qualifier
 Bundle-SymbolicName: nl.esi.comma.systemconfig.ide; singleton:=true
 Bundle-ActivationPolicy: lazy

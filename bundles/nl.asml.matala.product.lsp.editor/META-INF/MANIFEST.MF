@@ -1,7 +1,8 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: Product LSP Editor
+Bundle-Name: Product Language LSP Editor
 Bundle-SymbolicName: nl.asml.matala.product.lsp.editor;singleton:=true
+Bundle-Vendor: TNO-ESI
 Bundle-Version: 4.2.0.qualifier
 Require-Bundle: org.eclipse.lsp4e,
  org.eclipse.tm4e.registry,
