@@ -60,7 +60,7 @@
                     <configuration>
                         <filesets combine.children="append">
                             <fileset>
-                                <directory>${basedir}/xtend-gen</directory>
+                                <directory>${project.basedir}/xtend-gen</directory>
                                 <includes>
                                     <include>**/*</include>
                                 </includes>
@@ -91,8 +91,8 @@
                         </execution>
                     </executions>
                     <configuration>
-                        <outputDirectory>${basedir}/xtend-gen</outputDirectory>
-                        <testOutputDirectory>${basedir}/xtend-gen</testOutputDirectory>
+                        <outputDirectory>${project.basedir}/xtend-gen</outputDirectory>
+                        <testOutputDirectory>${project.basedir}/xtend-gen</testOutputDirectory>
                     </configuration>
                 </plugin>
                 <plugin>
@@ -205,7 +205,7 @@
             <id>xtext</id>
             <activation>
                 <file>
-                    <exists>model/generated/</exists>
+                    <exists>${project.basedir}/model/.gitignore</exists>
                 </file>
             </activation>
             <build>
@@ -277,10 +277,10 @@
                             <configuration>
                                 <filesets combine.children="append">
                                     <fileset>
-                                        <directory>${basedir}/model/generated/</directory>
+                                        <directory>${project.basedir}/model/generated/</directory>
                                     </fileset>
                                     <fileset>
-                                        <directory>${basedir}/../${project.artifactId}/src-gen/</directory>
+                                        <directory>${project.basedir}/../${project.artifactId}/src-gen/</directory>
                                         <includes>
                                             <include>**/*</include>
                                         </includes>
@@ -289,7 +289,7 @@
                                         </excludes>
                                     </fileset>
                                     <fileset>
-                                <directory>${basedir}/../${project.artifactId}.ide/src-gen/</directory>
+                                        <directory>${project.basedir}/../${project.artifactId}.ide/src-gen/</directory>
                                         <includes>
                                             <include>**/*</include>
                                         </includes>
@@ -298,7 +298,7 @@
                                         </excludes>
                                     </fileset>
                                     <fileset>
-                                        <directory>${basedir}/../${project.artifactId}.tests/src-gen/</directory>
+                                        <directory>${project.basedir}/../${project.artifactId}.tests/src-gen/</directory>
                                         <includes>
                                             <include>**/*</include>
                                         </includes>
@@ -307,7 +307,7 @@
                                         </excludes>
                                     </fileset>
                                     <fileset>
-                                        <directory>${basedir}/../${project.artifactId}.ui/src-gen/</directory>
+                                        <directory>${project.basedir}/../${project.artifactId}.ui/src-gen/</directory>
                                         <includes>
                                             <include>**/*</include>
                                         </includes>
@@ -316,7 +316,7 @@
                                         </excludes>
                                     </fileset>
                                     <fileset>
-                                        <directory>${basedir}/../${project.artifactId}.ui.tests/src-gen/</directory>
+                                        <directory>${project.basedir}/../${project.artifactId}.ui.tests/src-gen/</directory>
                                         <includes>
                                             <include>**/*</include>
                                         </includes>
