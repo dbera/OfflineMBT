@@ -437,7 +437,9 @@ class TestspecificationGenerator extends AbstractGenerator
 		// check references to Step outputs and replace with FAST syntax
 		for(elm : mapLocalStepInstance.keySet) {
 			if(mapLHStoRHS.value.contains(elm+".output")) {
-				mapLHStoRHS.value = mapLHStoRHS.value.replaceAll(elm+".output", "steps.out['" + "_" + elm + "']")
+				// mapLHStoRHS.value = mapLHStoRHS.value.replaceAll(elm+".output", "steps.out['" + "_" + elm + "']") // commented 26.11.2024
+				mapLHStoRHS.value = mapLHStoRHS.value.replaceAll(elm+".output", "steps.out[step.params['" + "_" + elm + "']]")
+				// TODO 26.11.2024: remove the first elm (x) after steps.out[step.params[....]].x.y.... (assumption, always a y is present)
 				mapLHStoRHS.refKey.add(elm)  // reference to step
 				// Custom String Updates for FAST Syntax Peculiarities! TODO investigate solution?
 				// map-var['key'] + "[0]" -> map-var['key'][0] 
