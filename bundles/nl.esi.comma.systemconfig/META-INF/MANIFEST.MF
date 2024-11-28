@@ -1,12 +1,13 @@
 Manifest-Version: 1.0
 Automatic-Module-Name: nl.esi.comma.systemconfig
 Bundle-ManifestVersion: 2
-Bundle-Name: nl.esi.comma.systemconfig
+Bundle-Name: System configuration Language Core
 Bundle-Vendor: TNO-ESI
 Bundle-Version: 4.2.0.qualifier
 Bundle-SymbolicName: nl.esi.comma.systemconfig; singleton:=true
 Bundle-ActivationPolicy: lazy
-Require-Bundle: org.eclipse.xtext,
+Require-Bundle: nl.esi.comma.expressions;visibility:=reexport,
+ org.eclipse.xtext,
  org.eclipse.xtext.xbase,
  org.eclipse.equinox.common;bundle-version="3.5.0",
  org.eclipse.emf.ecore,
@@ -14,10 +15,7 @@ Require-Bundle: org.eclipse.xtext,
  org.eclipse.xtext.util,
  org.eclipse.emf.common,
  org.eclipse.xtend.lib;bundle-version="2.14.0",
- org.antlr.runtime;bundle-version="[3.2.0,3.2.1)",
- nl.esi.comma.expressions;bundle-version="4.2.0",
- nl.esi.comma.types;bundle-version="4.2.0",
- nl.esi.comma.signature;bundle-version="4.2.0"
+ org.antlr.runtime;bundle-version="[3.2.0,3.2.1)"
 Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: nl.esi.comma.systemconfig.serializer,
  nl.esi.comma.systemconfig.parser.antlr.internal,

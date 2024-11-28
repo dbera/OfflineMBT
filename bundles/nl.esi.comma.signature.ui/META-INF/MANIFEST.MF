@@ -1,12 +1,13 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: nl.esi.comma.interfaces.ui
-Bundle-Vendor: TNO-ESI, Philips
+Bundle-Name: Signature Language UI
+Bundle-Vendor: TNO-ESI
 Bundle-Version: 4.2.0.qualifier
 Bundle-SymbolicName: nl.esi.comma.signature.ui;singleton:=true
 Bundle-ActivationPolicy: lazy
-Require-Bundle: nl.esi.comma.signature,
+Require-Bundle: nl.esi.comma.signature;visibility:=reexport,
  nl.esi.comma.signature.ide,
+ nl.esi.comma.types.ui;visibility:=reexport,
  org.eclipse.xtext.ui,
  org.eclipse.xtext.ui.shared,
  org.eclipse.xtext.ui.codetemplates.ui,
@@ -16,12 +17,10 @@ Require-Bundle: nl.esi.comma.signature,
  org.eclipse.compare,
  org.eclipse.xtext.builder,
  org.eclipse.xtend.lib;bundle-version="2.14.0";resolution:=optional,
- org.eclipse.xtext.xbase.lib;bundle-version="2.15.0",
- nl.esi.comma.types.ui;bundle-version="1.0.0"
+ org.eclipse.xtext.xbase.lib;bundle-version="2.15.0"
 Import-Package: org.apache.log4j
 Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: nl.esi.comma.signature.ui.internal,
- nl.esi.comma.signature.ui.contentassist,
  nl.esi.comma.signature.ui.quickfix
 Bundle-Activator: nl.esi.comma.signature.ui.internal.SignatureActivator
 Automatic-Module-Name: nl.esi.comma.signature.ui

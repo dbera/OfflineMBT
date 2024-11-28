@@ -1,12 +1,13 @@
 Manifest-Version: 1.0
 Automatic-Module-Name: nl.esi.comma.constraints
 Bundle-ManifestVersion: 2
-Bundle-Name: nl.esi.comma.constraints
+Bundle-Name: Constraints Language Core
 Bundle-Vendor: TNO-ESI
 Bundle-Version: 4.2.0.qualifier
 Bundle-SymbolicName: nl.esi.comma.constraints; singleton:=true
 Bundle-ActivationPolicy: lazy
-Require-Bundle: org.eclipse.xtext,
+Require-Bundle: nl.esi.comma.actions;visibility:=reexport,
+ org.eclipse.xtext,
  org.eclipse.xtext.xbase,
  org.eclipse.equinox.common;bundle-version="3.5.0",
  org.eclipse.emf.ecore,
@@ -15,22 +16,13 @@ Require-Bundle: org.eclipse.xtext,
  org.eclipse.emf.common,
  org.eclipse.xtend.lib;bundle-version="2.14.0",
  org.antlr.runtime;bundle-version="[3.2.0,3.2.1)",
- nl.esi.comma.expressions;bundle-version="4.2.0",
- nl.esi.comma.signature;bundle-version="4.2.0",
  org.eclipse.core.resources;bundle-version="3.13.500",
- nl.esi.comma.scenarios;bundle-version="4.2.0",
- nl.esi.comma.steps;bundle-version="4.2.0",
  com.google.gson;bundle-version="2.8.2",
+ org.eclipse.core.expressions;bundle-version="3.8.100",
+ nl.esi.comma.constraints.dashboard,
+ nl.esi.comma.automata,
  nl.esi.comma.scenarios,
- nl.esi.comma.expressions;bundle-version="4.2.0",
- nl.esi.comma.expressions.ide;bundle-version="4.2.0",
- nl.esi.comma.expressions.ui;bundle-version="4.2.0",
- nl.esi.comma.automata;bundle-version="4.2.0",
- nl.esi.comma.constraints.dashboard;bundle-version="4.2.0",
- nl.esi.comma.types;bundle-version="4.2.0",
- nl.esi.comma.actions;bundle-version="4.2.0",
- nl.esi.comma.behavior;bundle-version="4.2.0",
- org.eclipse.core.expressions;bundle-version="3.8.100"
+ nl.esi.comma.steps
 Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: nl.esi.comma.constraints,
  nl.esi.comma.constraints.constraints,

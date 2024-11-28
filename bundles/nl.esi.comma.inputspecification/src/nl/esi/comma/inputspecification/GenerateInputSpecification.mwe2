@@ -27,8 +27,7 @@ Workflow {
 			name = "nl.esi.comma.inputspecification.InputSpecification"
 			fileExtensions = "params"
 			
-			referencedResource = "platform:/resource/nl.esi.comma.behavior/model/generated/Behavior.genmodel"
-			//referencedResource = "platform:/resource/nl.esi.comma.actions/model/generated/Actions.genmodel"
+            referencedResource = "platform:/resource/nl.esi.comma.actions/model/generated/Actions.genmodel"
 
 			serializer = {
 				generateStub = false
@@ -36,6 +35,9 @@ Workflow {
 			validator = {
 				// composedCheck = "org.eclipse.xtext.validation.NamesAreUniqueValidator"
 			}
+            contentAssist = nl.esi.xtext.lsp.generator.ide.contentassist.IdeContentAssistFragment2 {
+                generateXtendStub = true
+            }
 		}
 	}
 }

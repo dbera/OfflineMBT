@@ -1,12 +1,13 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: nl.esi.comma.expressions.ui
-Bundle-Vendor: TNO-ESI, Philips
+Bundle-Name: Expression Lang UI
+Bundle-Vendor: TNO-ESI
 Bundle-Version: 4.2.0.qualifier
 Bundle-SymbolicName: nl.esi.comma.expressions.ui; singleton:=true
 Bundle-ActivationPolicy: lazy
-Require-Bundle: nl.esi.comma.expressions,
+Require-Bundle: nl.esi.comma.expressions;visibility:=reexport,
  nl.esi.comma.expressions.ide,
+ nl.esi.comma.types.ui;visibility:=reexport,
  org.eclipse.xtext.ui,
  org.eclipse.xtext.ui.shared,
  org.eclipse.xtext.ui.codetemplates.ui,
@@ -16,17 +17,10 @@ Require-Bundle: nl.esi.comma.expressions,
  org.eclipse.compare,
  org.eclipse.xtext.builder,
  org.eclipse.xtend.lib;bundle-version="2.14.0";resolution:=optional,
- org.eclipse.xtext.xbase.lib;bundle-version="2.15.0",
- nl.esi.comma.types;bundle-version="1.0.0",
- nl.esi.comma.types.ui;bundle-version="1.0.0"
+ org.eclipse.xtext.xbase.lib;bundle-version="2.15.0"
 Import-Package: org.apache.log4j
 Bundle-RequiredExecutionEnvironment: JavaSE-21
-Export-Package: nl.esi.comma.expressions.ui.contentassist;
-  uses:="org.eclipse.emf.ecore,
-   org.eclipse.xtext.ui.editor.contentassist,
-   org.eclipse.xtext.scoping,
-   org.eclipse.xtext",
- nl.esi.comma.expressions.ui.internal;uses:="org.osgi.framework,com.google.inject,org.eclipse.ui.plugin",
+Export-Package: nl.esi.comma.expressions.ui.internal;uses:="org.osgi.framework,com.google.inject,org.eclipse.ui.plugin",
  nl.esi.comma.expressions.ui.quickfix;uses:="nl.esi.comma.types.ui.quickfix"
 Bundle-Activator: nl.esi.comma.expressions.ui.internal.ExpressionsActivator
 Automatic-Module-Name: nl.esi.comma.expressions.ui

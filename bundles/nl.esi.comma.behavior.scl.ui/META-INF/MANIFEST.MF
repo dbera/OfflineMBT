@@ -2,12 +2,13 @@ Manifest-Version: 1.0
 Automatic-Module-Name: nl.esi.comma.behavior.scl.ui
 Bundle-ManifestVersion: 2
 Bundle-Name: nl.esi.comma.behavior.scl.ui
-Bundle-Vendor: My Company
+Bundle-Vendor: TNO-ESI
 Bundle-Version: 4.2.0.qualifier
 Bundle-SymbolicName: nl.esi.comma.behavior.scl.ui; singleton:=true
 Bundle-ActivationPolicy: lazy
-Require-Bundle: nl.esi.comma.behavior.scl,
+Require-Bundle: nl.esi.comma.behavior.scl;visibility:=reexport,
  nl.esi.comma.behavior.scl.ide,
+ nl.esi.comma.actions.ui;visibility:=reexport,
  org.eclipse.xtext.ui,
  org.eclipse.xtext.ui.shared,
  org.eclipse.xtext.ui.codetemplates.ui,
@@ -16,13 +17,10 @@ Require-Bundle: nl.esi.comma.behavior.scl,
  org.eclipse.ui,
  org.eclipse.compare,
  org.eclipse.xtext.builder,
- nl.esi.comma.expressions.ui;bundle-version="4.2.0",
- nl.esi.comma.types.ui;bundle-version="4.2.0",
- nl.esi.comma.actions.ui;bundle-version="4.2.0",
- nl.esi.comma.behavior.ui;bundle-version="4.2.0"
+ org.eclipse.xtext.xbase.lib;bundle-version="2.36.0",
+ org.eclipse.xtend.lib;resolution:=optional
 Import-Package: org.apache.log4j
 Bundle-RequiredExecutionEnvironment: JavaSE-21
-Export-Package: nl.esi.comma.behavior.scl.ui.quickfix,
- nl.esi.comma.behavior.scl.ui.contentassist,
- nl.esi.comma.behavior.scl.ui.internal
+Export-Package: nl.esi.comma.behavior.scl.ui.internal,
+ nl.esi.comma.behavior.scl.ui.quickfix
 Bundle-Activator: nl.esi.comma.behavior.scl.ui.internal.SclActivator

@@ -1,27 +1,23 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: nl.esi.comma.scenarios
-Bundle-Vendor: TNO-ESI, Philips
+Bundle-Name: Scenarios Language Core
+Bundle-Vendor: TNO-ESI
 Bundle-Version: 4.2.0.qualifier
 Bundle-SymbolicName: nl.esi.comma.scenarios; singleton:=true
 Bundle-ActivationPolicy: lazy
-Require-Bundle: org.eclipse.xtext,
+Require-Bundle: nl.esi.comma.actions;visibility:=reexport,
+ org.eclipse.xtext,
  org.eclipse.xtext.xbase,
  org.eclipse.equinox.common;bundle-version="3.5.0",
- nl.esi.comma.behavior;bundle-version="2.0.1",
  org.eclipse.emf.ecore,
  org.eclipse.xtext.xbase.lib;bundle-version="2.15.0",
  org.antlr.runtime;bundle-version="[3.2.0,3.2.1)",
  org.eclipse.xtext.util,
  org.eclipse.xtend.lib;bundle-version="2.15.0",
  org.eclipse.emf.common,
- nl.esi.comma.actions;bundle-version="2.0.1",
- nl.esi.comma.expressions;bundle-version="2.0.1",
- nl.esi.comma.types;bundle-version="2.0.1",
- nl.esi.comma.signature;bundle-version="2.0.1",
  com.google.gson;bundle-version="2.8.2",
- nl.esi.comma.scenarios.dashboard,
- org.eclipse.core.resources;bundle-version="3.14.0"
+ org.eclipse.core.resources;bundle-version="3.14.0",
+ nl.esi.comma.scenarios.dashboard
 Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: nl.esi.comma.scenarios,
  nl.esi.comma.scenarios.generator,

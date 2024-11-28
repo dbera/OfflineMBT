@@ -223,7 +223,6 @@
         <setEntry value="org.eclipse.equinox.frameworkadmin@default:default"/>
         <setEntry value="org.eclipse.equinox.http.jetty@default:default"/>
         <setEntry value="org.eclipse.equinox.http.registry@default:default"/>
-        <setEntry value="org.eclipse.equinox.http.service.api@default:default"/>
         <setEntry value="org.eclipse.equinox.http.servlet@default:default"/>
         <setEntry value="org.eclipse.equinox.jsp.jasper.registry@default:default"/>
         <setEntry value="org.eclipse.equinox.jsp.jasper@default:default"/>
@@ -475,7 +474,6 @@
         <setEntry value="org.osgi.service.coordinator@default:default"/>
         <setEntry value="org.osgi.service.device@default:default"/>
         <setEntry value="org.osgi.service.event@default:default"/>
-        <setEntry value="org.osgi.service.http.whiteboard@default:default"/>
         <setEntry value="org.osgi.service.metatype.annotations@default:default"/>
         <setEntry value="org.osgi.service.metatype@default:default"/>
         <setEntry value="org.osgi.service.prefs@default:default"/>
@@ -504,12 +502,9 @@
         <setEntry value="nl.esi.comma.actions.ui@default:default"/>
         <setEntry value="nl.esi.comma.actions@default:default"/>
         <setEntry value="nl.esi.comma.automata@default:default"/>
-        <setEntry value="nl.esi.comma.behavior.ide@default:default"/>
         <setEntry value="nl.esi.comma.behavior.scl.ide@default:default"/>
         <setEntry value="nl.esi.comma.behavior.scl.ui@default:default"/>
         <setEntry value="nl.esi.comma.behavior.scl@default:default"/>
-        <setEntry value="nl.esi.comma.behavior.ui@default:default"/>
-        <setEntry value="nl.esi.comma.behavior@default:default"/>
         <setEntry value="nl.esi.comma.constraints.dashboard@default:default"/>
         <setEntry value="nl.esi.comma.constraints.ide@default:default"/>
         <setEntry value="nl.esi.comma.constraints.ui@default:default"/>
@@ -547,6 +542,7 @@
     </setAttribute>
     <booleanAttribute key="show_selected_only" value="false"/>
     <stringAttribute key="templateConfig" value="${target_home}/configuration/config.ini"/>
+    <stringAttribute key="timestamp" value="1732112123288"/>
     <booleanAttribute key="tracing" value="false"/>
     <booleanAttribute key="useCustomFeatures" value="false"/>
     <booleanAttribute key="useDefaultConfig" value="true"/>

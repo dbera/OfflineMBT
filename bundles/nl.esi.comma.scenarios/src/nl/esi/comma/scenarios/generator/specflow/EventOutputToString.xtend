@@ -24,10 +24,8 @@ import java.util.ArrayList
 
 class EventOutputToString {
     
-    static var expressionValidator = new ExpressionValidator();
-    
     static def String OuputDataToString(Expression e){
-        var type = expressionValidator.typeOf(e)
+        var type = ExpressionValidator.typeOf(e)
         switch(type){
             SimpleTypeDecl : generateTypeString(type, e)
             EnumTypeDecl : generateTypeString(type, (e as ExpressionEnumLiteral).literal)
@@ -37,7 +35,7 @@ class EventOutputToString {
     
     static def ArrayList<String> OuputDataToStringList(ExpressionRecord e){
         var strList = new ArrayList<String>()
-        var type = expressionValidator.typeOf(e)
+        var type = ExpressionValidator.typeOf(e)
         if (type instanceof RecordTypeDecl){
             strList.addAll(generateTypeStringList(type, (e as ExpressionRecord).fields))
         }

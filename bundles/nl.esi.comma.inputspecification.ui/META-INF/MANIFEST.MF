@@ -1,12 +1,13 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: nl.esi.comma.inputspecification.ui
-Bundle-Vendor: TNO-ESI, Philips
+Bundle-Name: InputSpecification Lang UI
+Bundle-Vendor: TNO-ESI
 Bundle-Version: 4.2.0.qualifier
 Bundle-SymbolicName: nl.esi.comma.inputspecification.ui; singleton:=true
 Bundle-ActivationPolicy: lazy
-Require-Bundle: nl.esi.comma.inputspecification,
+Require-Bundle: nl.esi.comma.inputspecification;visibility:=reexport,
  nl.esi.comma.inputspecification.ide,
+ nl.esi.comma.actions.ui;visibility:=reexport,
  org.eclipse.xtext.ui,
  org.eclipse.xtext.ui.shared,
  org.eclipse.xtext.ui.codetemplates.ui,
@@ -16,15 +17,10 @@ Require-Bundle: nl.esi.comma.inputspecification,
  org.eclipse.compare,
  org.eclipse.xtext.builder,
  org.eclipse.xtend.lib;bundle-version="2.14.0";resolution:=optional,
- org.eclipse.xtext.xbase.lib;bundle-version="2.15.0",
- nl.esi.comma.behavior.ui;bundle-version="3.0.0",
- nl.esi.comma.types.ui;bundle-version="3.0.0",
- nl.esi.comma.actions.ui;bundle-version="3.0.0",
- nl.esi.comma.expressions.ui;bundle-version="3.0.0"
+ org.eclipse.xtext.xbase.lib;bundle-version="2.15.0"
 Import-Package: org.apache.log4j
 Bundle-RequiredExecutionEnvironment: JavaSE-21
-Export-Package: nl.esi.comma.inputspecification.ui.contentassist,
- nl.esi.comma.inputspecification.ui.internal,
+Export-Package: nl.esi.comma.inputspecification.ui.internal,
  nl.esi.comma.inputspecification.ui.quickfix
 Bundle-Activator: nl.esi.comma.inputspecification.ui.internal.InputspecificationActivator
 Automatic-Module-Name: nl.esi.comma.inputspecification.ui

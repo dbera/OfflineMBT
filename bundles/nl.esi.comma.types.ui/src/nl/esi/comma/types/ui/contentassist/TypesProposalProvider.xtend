@@ -15,73 +15,73 @@ import org.eclipse.xtext.ui.editor.contentassist.ContentAssistContext
  * See https://www.eclipse.org/Xtext/documentation/304_ide_concepts.html#content-assist
  * on how to customize the content assistant.
  */
-class TypesProposalProvider extends AbstractTypesProposalProvider {
-	
-	@Inject
-	protected IScopeProvider scopeProvider;
-	final int TEMPLATE_DEFAULT_PRIORITY = 600
-    
-	protected def createTemplate(String name, String content, String additionalInfo, Integer nrIndents,
-        ContentAssistContext context, int priority, int selection, int length) {
-        if (nrIndents == 0) {
-            createProposal(name, content, additionalInfo, context, priority, selection, length)
-        } else {
-            var indent = "";
-            for (var i = 0; i < nrIndents; i++) {
-                indent += "\t";
-            }
-            var indentedContent = content.replace("\n", "\n" + indent)
-            indentedContent = "\n" + indent + indentedContent
-            createProposal(name, indentedContent, additionalInfo, context, priority, selection, length)
-        }
-    }
-    
-    private def createProposal(String name, String content, String additionalInfo, ContentAssistContext context,
-        int priority, int selection, int length) {
-
-        var finalAdditionalInfo = content.replaceAll("<", "&lt;").replaceAll(">", "&gt;")
-        val templateIcon = ImageDescriptor.createFromURL(
-            TypesProposalProvider.getResource("/icons/icon_template.png")).createImage();
-        val proposal = createHtmlCompletionProposal(content, new StyledString(name), templateIcon,
-            TEMPLATE_DEFAULT_PRIORITY, context);
-
-        if (proposal instanceof ConfigurableCompletionProposal) {
-            while (finalAdditionalInfo.startsWith("\n") || finalAdditionalInfo.startsWith("\r")) {
-                finalAdditionalInfo = finalAdditionalInfo.substring(1);
-            }
-            finalAdditionalInfo = "<html><body bgcolor=\"#FFFFE1\"><style> body { font-size:9pt; font-family:'Segoe UI' }</style><pre>" +
-                finalAdditionalInfo + "</pre>";
-            if (additionalInfo !== null) {
-                finalAdditionalInfo = finalAdditionalInfo + "<p>" + additionalInfo + "</p>";
-            }
-            finalAdditionalInfo = finalAdditionalInfo + "</body></html>"
-            proposal.additionalProposalInfo = finalAdditionalInfo
-            proposal.proposalContextResource = context.resource         
-            proposal.priority = priority
-            proposal.selectionStart = context.offset + selection
-            proposal.selectionLength = length           
-        }
-        proposal
-    }
-    
-    private def createHtmlCompletionProposal(String proposal, StyledString displayString, Image image, int priority,
-        ContentAssistContext context) {
-        if (isValidProposal(proposal, context.getPrefix(), context)) {
-            return doCreateHtmlCompletionProposal(proposal, displayString, image, priority, context);
-        }
-        return null;
-    }
-    
-    private def doCreateHtmlCompletionProposal(String proposal, StyledString displayString, Image image, int priority,
-        ContentAssistContext context) {
-        val replacementOffset = context.getReplaceRegion().getOffset();
-        val replacementLength = context.getReplaceRegion().getLength();
-        val result = new HtmlConfigurableCompletionProposal(proposal, replacementOffset, replacementLength,
-            proposal.length(), image, displayString, null, null);
-
-        result.priority = priority
-        result.matcher = context.matcher
-        result.replaceContextLength = context.replaceContextLength
-        result;
-    }
+class TypesProposalProvider {//} extends AbstractTypesProposalProvider {
+//	
+//	@Inject
+//	protected IScopeProvider scopeProvider;
+//	final int TEMPLATE_DEFAULT_PRIORITY = 600
+//    
+//	protected def createTemplate(String name, String content, String additionalInfo, Integer nrIndents,
+//        ContentAssistContext context, int priority, int selection, int length) {
+//        if (nrIndents == 0) {
+//            createProposal(name, content, additionalInfo, context, priority, selection, length)
+//        } else {
+//            var indent = "";
+//            for (var i = 0; i < nrIndents; i++) {
+//                indent += "\t";
+//            }
+//            var indentedContent = content.replace("\n", "\n" + indent)
+//            indentedContent = "\n" + indent + indentedContent
+//            createProposal(name, indentedContent, additionalInfo, context, priority, selection, length)
+//        }
+//    }
+//    
+//    private def createProposal(String name, String content, String additionalInfo, ContentAssistContext context,
+//        int priority, int selection, int length) {
+//
+//        var finalAdditionalInfo = content.replaceAll("<", "&lt;").replaceAll(">", "&gt;")
+//        val templateIcon = ImageDescriptor.createFromURL(
+//            TypesProposalProvider.getResource("/icons/icon_template.png")).createImage();
+//        val proposal = createHtmlCompletionProposal(content, new StyledString(name), templateIcon,
+//            TEMPLATE_DEFAULT_PRIORITY, context);
+//
+//        if (proposal instanceof ConfigurableCompletionProposal) {
+//            while (finalAdditionalInfo.startsWith("\n") || finalAdditionalInfo.startsWith("\r")) {
+//                finalAdditionalInfo = finalAdditionalInfo.substring(1);
+//            }
+//            finalAdditionalInfo = "<html><body bgcolor=\"#FFFFE1\"><style> body { font-size:9pt; font-family:'Segoe UI' }</style><pre>" +
+//                finalAdditionalInfo + "</pre>";
+//            if (additionalInfo !== null) {
+//                finalAdditionalInfo = finalAdditionalInfo + "<p>" + additionalInfo + "</p>";
+//            }
+//            finalAdditionalInfo = finalAdditionalInfo + "</body></html>"
+//            proposal.additionalProposalInfo = finalAdditionalInfo
+//            proposal.proposalContextResource = context.resource         
+//            proposal.priority = priority
+//            proposal.selectionStart = context.offset + selection
+//            proposal.selectionLength = length           
+//        }
+//        proposal
+//    }
+//    
+//    private def createHtmlCompletionProposal(String proposal, StyledString displayString, Image image, int priority,
+//        ContentAssistContext context) {
+//        if (isValidProposal(proposal, context.getPrefix(), context)) {
+//            return doCreateHtmlCompletionProposal(proposal, displayString, image, priority, context);
+//        }
+//        return null;
+//    }
+//    
+//    private def doCreateHtmlCompletionProposal(String proposal, StyledString displayString, Image image, int priority,
+//        ContentAssistContext context) {
+//        val replacementOffset = context.getReplaceRegion().getOffset();
+//        val replacementLength = context.getReplaceRegion().getLength();
+//        val result = new HtmlConfigurableCompletionProposal(proposal, replacementOffset, replacementLength,
+//            proposal.length(), image, displayString, null, null);
+//
+//        result.priority = priority
+//        result.matcher = context.matcher
+//        result.replaceContextLength = context.replaceContextLength
+//        result;
+//    }
 }

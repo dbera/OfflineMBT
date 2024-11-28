@@ -94,7 +94,7 @@ ExpressionLevel9 returns Expression:
 	ExpressionVariable |
 	ExpressionRecord |
 	ExpressionAny |
-	ExpressionBulkData |
+//	ExpressionBulkData |
 	ExpressionFunctionCall |
 	ExpressionQuantifier |
 	ExpressionTypeAnnotated

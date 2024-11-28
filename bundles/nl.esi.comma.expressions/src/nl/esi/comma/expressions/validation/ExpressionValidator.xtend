@@ -66,34 +66,38 @@ import static extension nl.esi.comma.types.utilities.TypeUtilities.*
  * in text here. Consult the document with the formal definition of the ComMA type system.
  */
 class ExpressionValidator extends AbstractExpressionValidator {
-	
 	@Inject protected IScopeProvider scopeProvider
 	
-	protected var SimpleTypeDecl boolType = null;
-	protected var SimpleTypeDecl intType = null;
-	protected var SimpleTypeDecl realType = null;
-	protected var SimpleTypeDecl stringType = null;
-	protected var SimpleTypeDecl voidType = null;
-	protected var SimpleTypeDecl anyType = null
-	protected var SimpleTypeDecl idType = null
-	protected var SimpleTypeDecl bulkdataType = null;
+	protected static val SimpleTypeDecl boolType = TypesFactory.eINSTANCE.createSimpleTypeDecl() => [
+	    name = 'bool'
+	]
+	protected static val SimpleTypeDecl intType = TypesFactory.eINSTANCE.createSimpleTypeDecl() => [
+        name = 'int'
+    ]
+	protected static val SimpleTypeDecl realType = TypesFactory.eINSTANCE.createSimpleTypeDecl() => [
+        name = 'real'
+    ]
+	protected static val SimpleTypeDecl stringType = TypesFactory.eINSTANCE.createSimpleTypeDecl() => [
+        name = 'string'
+    ]
+	protected static val SimpleTypeDecl voidType = TypesFactory.eINSTANCE.createSimpleTypeDecl() => [
+        name = 'void'
+    ]
+	protected static val SimpleTypeDecl anyType = TypesFactory.eINSTANCE.createSimpleTypeDecl() => [
+        name = 'any'
+    ]
+	protected static val SimpleTypeDecl idType = TypesFactory.eINSTANCE.createSimpleTypeDecl() => [
+        name = 'id'
+    ]
+	protected static val SimpleTypeDecl bulkdataType = TypesFactory.eINSTANCE.createSimpleTypeDecl() => [
+        name = 'bulkdata'
+    ]
+
+    static def boolean numeric(TypeObject t) {
+        return t.subTypeOf(intType) || t.subTypeOf(realType)
+    }
 	
-	new(){
-		initPredefinedTypes();
-	}
-	
-	def initPredefinedTypes(){
-			
-		boolType = TypesFactory.eINSTANCE.createSimpleTypeDecl(); boolType.name = 'bool'
-		voidType = TypesFactory.eINSTANCE.createSimpleTypeDecl(); voidType.name = 'void'
-		intType = TypesFactory.eINSTANCE.createSimpleTypeDecl(); intType.name = 'int'
-		stringType = TypesFactory.eINSTANCE.createSimpleTypeDecl(); stringType.name = 'string'
-		realType = TypesFactory.eINSTANCE.createSimpleTypeDecl(); realType.name = 'real'
-		anyType = TypesFactory.eINSTANCE.createSimpleTypeDecl(); anyType.name = 'any'
-		idType = TypesFactory.eINSTANCE.createSimpleTypeDecl(); idType.name = 'id'
-		bulkdataType = TypesFactory.eINSTANCE.createSimpleTypeDecl(); bulkdataType.name = 'bulkdata'
-	}
-	def boolean identical(TypeObject t1, TypeObject t2) {
+	static def boolean identical(TypeObject t1, TypeObject t2) {
 		if(t1 === null || t2 === null) return false
 		
 		if(t1 instanceof SimpleTypeDecl)
@@ -118,7 +122,7 @@ class ExpressionValidator extends AbstractExpressionValidator {
 		t1 === t2	
 	}
 	
-	def boolean subTypeOf(TypeObject t1, TypeObject t2){
+	static def boolean subTypeOf(TypeObject t1, TypeObject t2){
 		if(t1 === null || t2 === null) return false
 		if(t1.synonym(t2)) return true //reflexive case
 		if(t1.identical(anyType)) return true //any is subtype of all types
@@ -138,7 +142,7 @@ class ExpressionValidator extends AbstractExpressionValidator {
 		false
 	}
 	
-	def boolean synonym(TypeObject t1, TypeObject t2){
+	static def boolean synonym(TypeObject t1, TypeObject t2){
 		if(t1 === null || t2 === null) return false
 		if(t1.identical(t2)) return true //reflexive case
 		
@@ -152,7 +156,7 @@ class ExpressionValidator extends AbstractExpressionValidator {
 	}
 	
 	//Type computation. No checking is performed. If the type cannot be determined, null is returned
-	def TypeObject typeOf(Expression e){
+	static def TypeObject typeOf(Expression e) {
 		if(e === null) return null
 		switch(e){
 			ExpressionConstantBool |
@@ -191,7 +195,7 @@ class ExpressionValidator extends AbstractExpressionValidator {
 			ExpressionRecordAccess : e.field?.type?.typeObject
 			ExpressionBulkData : bulkdataType
 			ExpressionAny : anyType
-			ExpressionFunctionCall : inferTypeFunCall(e)
+			ExpressionFunctionCall : ExpressionFunction.valueOf(e)?.inferType(e.args)
 			ExpressionVector : e.typeAnnotation?.type?.typeObject
 			ExpressionQuantifier : {
 				if(e.quantifier == QUANTIFIER::DELETE)
@@ -215,7 +219,7 @@ class ExpressionValidator extends AbstractExpressionValidator {
 		}
 	}
 		
-	def TypeObject inferTypeBinaryArithmetic(ExpressionBinary e){
+	static def TypeObject inferTypeBinaryArithmetic(ExpressionBinary e){
 		val leftType = e.left.typeOf
 		val rightType = e.right.typeOf
 		switch(e){
@@ -236,37 +240,6 @@ class ExpressionValidator extends AbstractExpressionValidator {
 				return null
 			}
 			default : null
-		}
-	}
-	
-	def TypeObject inferTypeFunCall(ExpressionFunctionCall e){
-		switch(e.functionName){
-			case "isEmpty" : boolType
-			case "contains" : boolType
-			case "hasKey" : boolType
-			case "asReal" : realType
-			case "length",
-			case "size" : intType
-			case "abs",
-			case "add",
-			case "deleteKey" : {
-				if(! e.args.empty){
-					val t = e.args.get(0).typeOf
-					if(e.functionName.equals("abs")) {
-						if(t.subTypeOf(intType) || t.subTypeOf(realType)) t
-						else null
-					}
-					else e.args.get(0).typeOf
-				}	
-				else null
-			}
-			case "get" : {
-				if(! e.args.empty) {
-					return e.args.get(0).typeOf.baseType
-				}
-				else null
-			}
-			default: null
 		}
 	}
 	
@@ -430,19 +403,16 @@ class ExpressionValidator extends AbstractExpressionValidator {
 				}
 			}
 			ExpressionFunctionCall : {
-				switch(e.functionName) {
-					case "isEmpty" : checkFunIsEmpty(e)
-					case "size"	: checkFunSize(e)
-					case "contains" : checkFunContains(e)
-					case "add" : checkFunAdd(e)
-					case "asReal" : checkFunAsReal(e)
-					case "abs" : checkFunAbs(e)
-					case "length" : checkFunLength(e)
-					case "hasKey" : checkFunHasOrDeleteKey(e)
-					case "deleteKey" : checkFunHasOrDeleteKey(e)
-					case "get" : checkFunHasIntIndex(e)
-					default : error("Unknown function", ExpressionPackage.Literals.EXPRESSION_FUNCTION_CALL__FUNCTION_NAME)
-				}
+			    val func = ExpressionFunction.valueOf(e)
+			    if (func === null) {
+			        error("Unknown function", ExpressionPackage.Literals.EXPRESSION_FUNCTION_CALL__FUNCTION_NAME)
+			    } else {
+			        switch (result: func.validate(e.args)) {
+			        	case null: { /* No Error */ }
+			        	case result.key < 0: error(result.value, ExpressionPackage.Literals.EXPRESSION_FUNCTION_CALL__FUNCTION_NAME)
+			        	default: error(result.value, ExpressionPackage.Literals.EXPRESSION_FUNCTION_CALL__ARGS, result.key)
+			        }
+			    }
 			}
 			//TODO consider adding a new check if the type of the iterator is compatible with the type of
 			//the vector elements
@@ -458,119 +428,7 @@ class ExpressionValidator extends AbstractExpressionValidator {
 		}
 	}
 	
-	def checkFunHasIntIndex(ExpressionFunctionCall e) {
-		if(e.args.size != 2){
-			error("Function get expects two arguments", ExpressionPackage.Literals.EXPRESSION_FUNCTION_CALL__FUNCTION_NAME)
-			return
-		}
-		val _t = e.args.get(0).typeOf
-		val t = e.args.get(1).typeOf
-		if(_t !== null && !isVectorType(_t)){
-			error("Function get expects first argument of type vector", ExpressionPackage.Literals.EXPRESSION_FUNCTION_CALL__ARGS, 0)
-		}
-		if(t !== null && t != intType){
-			error("Function get expects second argument of type integer", ExpressionPackage.Literals.EXPRESSION_FUNCTION_CALL__ARGS, 1)
-		}
-	}
-	
-	def checkFunIsEmpty(ExpressionFunctionCall e){
-		if(e.args.size != 1){
-			error("Function isEmpty expects one argument", ExpressionPackage.Literals.EXPRESSION_FUNCTION_CALL__FUNCTION_NAME)
-			return
-		}
-		val t = e.args.get(0).typeOf
-		if(t !== null && !isVectorType(t)){
-			error("Function isEmpty expects argument of type vector", ExpressionPackage.Literals.EXPRESSION_FUNCTION_CALL__ARGS, 0)
-		}
-	}
-	
-	def checkFunSize(ExpressionFunctionCall e){
-		if(e.args.size != 1){
-			error("Function size expects one argument", ExpressionPackage.Literals.EXPRESSION_FUNCTION_CALL__FUNCTION_NAME)
-			return
-		}
-		val t = e.args.get(0).typeOf
-		if(t !== null && ! (isVectorType(t) || isMapType(t)) ){
-			error("Function size expects argument of type vector or map", ExpressionPackage.Literals.EXPRESSION_FUNCTION_CALL__ARGS, 0)
-		}
-	}
-	
-	def checkFunContains(ExpressionFunctionCall e){
-		if(e.args.size != 2){
-			error("Function contains expects two arguments", ExpressionPackage.Literals.EXPRESSION_FUNCTION_CALL__FUNCTION_NAME)
-			return
-		}
-		val t = e.args.get(0).typeOf
-		if(t !== null && !isVectorType(t)){
-			error("Function contains expects first argument of type vector", ExpressionPackage.Literals.EXPRESSION_FUNCTION_CALL__ARGS, 0)
-		}	
-	}
-	
-	def checkFunAdd(ExpressionFunctionCall e){
-		if(e.args.size != 2){
-			error("Function add expects two arguments", ExpressionPackage.Literals.EXPRESSION_FUNCTION_CALL__FUNCTION_NAME)
-			return
-		}
-		val t = e.args.get(0).typeOf
- 		if(t === null || !isVectorType(t)){
- 			error("Function add expects first argument of type vector", e, ExpressionPackage.Literals.EXPRESSION_FUNCTION_CALL__ARGS, 0)
- 			return
- 		}
-		//Check if the second argument conforms to the base type of the vector
-		val expectedType = getBaseTypeToCheck(t)
-		val elType = e.args.get(1).typeOf
-		if(elType !== null && !subTypeOf(elType, expectedType))
-			error("Second argument does not conform to the base type of the vector", ExpressionPackage.Literals.EXPRESSION_FUNCTION_CALL__ARGS, 1)	
-	}
-	
-	def checkFunAsReal(ExpressionFunctionCall e){
-		if(e.args.size != 1)
-			error("Function asReal expects one argument", ExpressionPackage.Literals.EXPRESSION_FUNCTION_CALL__FUNCTION_NAME)
-		else{
-			val t = e.args.get(0).typeOf
-			if(t !== null && !t.subTypeOf(intType))
-				error("Function asReal expects an argument of type int", ExpressionPackage.Literals.EXPRESSION_FUNCTION_CALL__ARGS, 0)
-		}
-	}
-	
-	def checkFunAbs(ExpressionFunctionCall e){
-		if(e.args.size != 1)
-			error("Function abs expects one argument", ExpressionPackage.Literals.EXPRESSION_FUNCTION_CALL__FUNCTION_NAME)
-		else{
-			val t = e.args.get(0).typeOf
-			if(t !== null && !(t.subTypeOf(realType) || t.subTypeOf(intType)))
-				error("Function abs expects an argument of numeric type", ExpressionPackage.Literals.EXPRESSION_FUNCTION_CALL__ARGS)
-		}
-	}
-	
-	def checkFunLength(ExpressionFunctionCall e){
-		if(e.args.size != 1)
-			error("Function length expects one argument", ExpressionPackage.Literals.EXPRESSION_FUNCTION_CALL__FUNCTION_NAME)
-		else{
-			val t = e.args.get(0).typeOf
-			if(t !== null && !t.subTypeOf(bulkdataType))
-				error("Function length expects an argument of type bulkdata", ExpressionPackage.Literals.EXPRESSION_FUNCTION_CALL__ARGS, 0)
-		}
-	}
-	
-	def checkFunHasOrDeleteKey(ExpressionFunctionCall e){
-		if(e.args.size != 2){
-			error("This function expects two arguments", ExpressionPackage.Literals.EXPRESSION_FUNCTION_CALL__FUNCTION_NAME)
-			return
-		}
-		val t = e.args.get(0).typeOf
- 		if(t === null || !t.isMapType) {
- 			error("This function expects first argument of type map", e, ExpressionPackage.Literals.EXPRESSION_FUNCTION_CALL__ARGS, 0)
- 			return
- 		}
-		//Check if the second argument conforms to the key type of the map
-		val expectedType = t.keyType
-		val keyExprType = e.args.get(1).typeOf
-		if(keyExprType !== null && !identical(keyExprType, expectedType))
-			error("Second argument does not conform to the key type of the map", ExpressionPackage.Literals.EXPRESSION_FUNCTION_CALL__ARGS, 1)	
-	}
-	
-	private def getBaseTypeToCheck(TypeObject vt){
+	static def getBaseTypeToCheck(TypeObject vt){
 		var TypeDecl base
 		var List<Dimension> dimensions
 		if(vt instanceof VectorTypeDecl){
@@ -599,7 +457,7 @@ class ExpressionValidator extends AbstractExpressionValidator {
 	
 	//Check some expressions for possible ambiguous types
 	
-	protected def boolean isAmbigousType(EObject context, String typeName, EReference ref){
+	private def boolean isAmbigousType(EObject context, String typeName, EReference ref){
 		var scopeElements = scopeProvider.getScope(context, ref).allElements.filter(od | (od.name.lastSegment == typeName) && (od.name.segmentCount == 1))	
 		scopeElements.size > 1
 	}

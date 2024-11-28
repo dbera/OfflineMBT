@@ -4,5 +4,5 @@ type int
 type string
 type real
 type any
-type bulkdata
-type id
+// type bulkdata
+// type id

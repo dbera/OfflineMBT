@@ -1,13 +1,14 @@
 Manifest-Version: 1.0
 Automatic-Module-Name: nl.esi.comma.constraints.ui
 Bundle-ManifestVersion: 2
-Bundle-Name: nl.esi.comma.constraints.ui
+Bundle-Name: Constraints Language UI
 Bundle-Vendor: TNO-ESI
 Bundle-Version: 4.2.0.qualifier
 Bundle-SymbolicName: nl.esi.comma.constraints.ui; singleton:=true
 Bundle-ActivationPolicy: lazy
-Require-Bundle: nl.esi.comma.constraints,
+Require-Bundle: nl.esi.comma.constraints;visibility:=reexport,
  nl.esi.comma.constraints.ide,
+ nl.esi.comma.actions.ui;visibility:=reexport,
  org.eclipse.xtext.ui,
  org.eclipse.xtext.ui.shared,
  org.eclipse.xtext.ui.codetemplates.ui,
@@ -18,14 +19,7 @@ Require-Bundle: nl.esi.comma.constraints,
  org.eclipse.xtext.builder,
  org.eclipse.xtext.xbase.lib;bundle-version="2.14.0",
  org.eclipse.xtend.lib;bundle-version="2.14.0";resolution:=optional,
- nl.esi.comma.types;bundle-version="4.2.0",
- nl.esi.comma.steps;bundle-version="4.2.0",
- nl.esi.comma.expressions;bundle-version="4.2.0",
- nl.esi.comma.expressions.ui;bundle-version="4.2.0",
- nl.esi.comma.types.ui;bundle-version="4.2.0",
- nl.esi.comma.actions;bundle-version="4.2.0",
- nl.esi.comma.actions.ui;bundle-version="4.2.0",
- nl.esi.comma.scenarios;bundle-version="4.2.0"
+ nl.esi.comma.steps
 Import-Package: org.apache.log4j
 Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: nl.esi.comma.constraints.ui,

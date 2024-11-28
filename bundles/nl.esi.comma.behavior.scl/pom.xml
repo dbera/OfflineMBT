@@ -4,15 +4,13 @@
 
     <parent>
         <groupId>nl.esi.comma</groupId>
-        <artifactId>nl.esi.comma.bundles.xtext</artifactId>
+        <artifactId>nl.esi.comma.root</artifactId>
         <version>4.2.0-SNAPSHOT</version>
-        <relativePath>../xtext-bundles-config/pom.xml</relativePath>
+        <relativePath>../../</relativePath>
     </parent>
 
     <artifactId>nl.esi.comma.behavior.scl</artifactId>
     <packaging>eclipse-plugin</packaging>
-
-    <name>nl.esi.comma.behavior.scl</name>
 
     <properties>
         <mwe2-workflow>/${project.basedir}/src/nl/esi/comma/behavior/scl/GenerateScl.mwe2</mwe2-workflow>
