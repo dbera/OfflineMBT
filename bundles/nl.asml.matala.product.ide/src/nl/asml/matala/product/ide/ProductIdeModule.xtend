@@ -3,9 +3,14 @@
  */
 package nl.asml.matala.product.ide
 
+import nl.asml.matala.product.ide.contentassist.ProductIdeCrossrefProposalProvider
+import org.eclipse.xtext.ide.editor.contentassist.IdeCrossrefProposalProvider
 
 /**
  * Use this class to register ide components.
  */
 class ProductIdeModule extends AbstractProductIdeModule {
+    def Class<? extends IdeCrossrefProposalProvider> bindIdeCrossrefProposalProvider() {
+        return ProductIdeCrossrefProposalProvider;
+    }
 }
