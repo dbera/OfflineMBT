@@ -3,7 +3,7 @@
  * It defines the language for type definitions and some generic constructs reused in other 
  * languages (e.g. NamedElement, ModelContainer).
  */
-grammar nl.esi.comma.types.Types hidden(WS, ML_COMMENT, SL_COMMENT)
+grammar nl.esi.comma.types.Types with org.eclipse.xtext.common.Terminals
 
 generate types "http://www.esi.nl/comma/types/Types"
 
@@ -87,7 +87,7 @@ EnumElement:
 ;
 
 IntExp:
-	value = Int
+	value = INT
 ;
 
 RecordTypeDecl:
@@ -131,7 +131,7 @@ TypeReference :
 ;
 
 Dimension:
-	{Dimension}'['(size = Int)?']'
+	{Dimension}'['(size = INT)?']'
 ;
 
 /*
@@ -140,19 +140,3 @@ Dimension:
 TypeObject:
 	{TypeDecl} | {VectorTypeConstructor} | {MapTypeConstructor}
 ;
-
-Int returns ecore::EInt: NUMBER;
-
-terminal ID: '^'?('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'_'|'0'..'9')*;
-@LezerNumber
-terminal NUMBER: ('0'..'9')+;
-terminal STRING:
-			'"' ( '\\' . /* 'b'|'t'|'n'|'f'|'r'|'u'|'"'|"'"|'\\' */ | !('\\'|'"') )* '"' |
-			"'" ( '\\' . /* 'b'|'t'|'n'|'f'|'r'|'u'|'"'|"'"|'\\' */ | !('\\'|"'") )* "'"
-		;
-terminal ML_COMMENT : '/*' -> '*/';
-terminal SL_COMMENT : '//' !('\n'|'\r')* ('\r'? '\n')?;
-
-terminal WS         : (' '|'\t'|'\r'|'\n')+;
-
-terminal ANY_OTHER: .;

@@ -137,7 +137,7 @@ Field:
 ;
 
 ExpressionBulkData : {ExpressionBulkData}
-	'Bulkdata' '<' (size = Int)? '>'
+	'Bulkdata' '<' (size = INT)? '>'
 ;
 
 ExpressionAny :
@@ -237,7 +237,7 @@ BOOL_LITERAL returns ecore::EBoolean:
 ;	
 
 FLOAT returns ecore::EDouble:
-	NUMBER '.' NUMBER (('E' | 'e') ('-')? NUMBER)?
+	INT '.' INT (('E' | 'e') ('-')? INT)?
 ;
 
-Long returns ecore::ELong: NUMBER;
+Long returns ecore::ELong: INT;

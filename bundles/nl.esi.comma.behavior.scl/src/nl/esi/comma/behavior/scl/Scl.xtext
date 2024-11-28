@@ -32,7 +32,7 @@ SequenceDef:
 ;
 
 ParamAct:
-	act = [_Action|ID] ('['idx = Int']')?
+	act = [_Action|ID] ('['idx = INT']')?
 ;
 
 Ref returns Ref:
@@ -40,7 +40,7 @@ Ref returns Ref:
 ;
 
 RefStep:
-	'act' step = [_Action|ID] ('['idx = Int']')?
+	'act' step = [_Action|ID] ('['idx = INT']')?
 ;
 
 RefSequence:
@@ -147,7 +147,7 @@ NotSuccession:
 // A (or | and C..) occurs if and only if followed immediately by B (or | and D..)
 ChainSuccession:
 	'<>' eitherA?= 'either'? refA += Ref+ 'occurs-if-and-only-if-immediately-followed-by' 
-	 	 eitherB?= 'either'? refB += Ref+ ('within' minVal = Int ('-' maxVal = Int)? 'ms')?
+	 	 eitherB?= 'either'? refB += Ref+ ('within' minVal = INT ('-' maxVal = INT)? 'ms')?
 ;
 
 // A occurs if and only if followed by B with no A and B (C, D…) in between
@@ -160,7 +160,7 @@ AlternateSuccession:
 // A (or | and C..) occurs if and only if followed by B (or | and D..) 
 Succession:
 	'<-->' eitherA?= 'either'? refA += Ref+ ('occurs')? 'if-and-only-if-followed-by' 
-		   eitherB?= 'either'? refB += Ref+ ('within' minVal = Int ('-' maxVal = Int)? 'ms')?
+		   eitherB?= 'either'? refB += Ref+ ('within' minVal = INT ('-' maxVal = INT)? 'ms')?
 ;
 
 // A and B (and C..) occur together
@@ -178,41 +178,41 @@ RespondedExistence:
 ChainPrecedence:
 	'<' 'whenever' eitherB?= 'either'? refB += Ref+ ('occurs')? 
 	'then' eitherA?= 'either'? refA += Ref+ 'must' not?= 'not'? 
-	'have-occurred-immediately-before' ('within' minVal = Int ('-' maxVal = Int)? 'ms')?
+	'have-occurred-immediately-before' ('within' minVal = INT ('-' maxVal = INT)? 'ms')?
 ;
 
 // If A (OR|AND C..) occurs then B (OR|AND D...) (does not) immediately follow
 ChainResponse:
 	'>' 'if' eitherA?= 'either'? refA += Ref+ ('occurs')? 
 	'then' eitherB?= 'either'? refB += Ref+ 'must' not?= 'not'? 
-	'immediately-follow' ('within' minVal = Int ('-' maxVal = Int)? 'ms')?
+	'immediately-follow' ('within' minVal = INT ('-' maxVal = INT)? 'ms')?
 ;
 
 // If A (OR|AND X...) occurs then B (OR|AND Y...) must follow with no (only) A (OR|AND X...) and C (OR|AND Z...) in between
 AlternateResponse:
 	'!>' 'if' eitherA?= 'either'? refA += Ref+ ('occurs')? 
-	'then' eitherB?= 'either'? refB += Ref+ 'must-follow' ('within' minVal = Int ('-' maxVal = Int)? 'ms')? 
+	'then' eitherB?= 'either'? refB += Ref+ 'must-follow' ('within' minVal = INT ('-' maxVal = INT)? 'ms')? 
 	'with' not?= 'no'? eitherC?= 'either'? refC += Ref+ 'in-between'
 ;
 
 // Whenever B (OR|AND Y...) occurs then A (OR|AND X...) must have occurred before with no B (OR|AND Y...) and C (OR|AND Z...) in between
 AlternatePrecedence:
 	'<!' 'whenever' eitherB?= 'either'? refB += Ref ('occurs')? 
-	'then' eitherA?= 'either'? refA += Ref 'must-have-occurred' ('within' minVal = Int ('-' maxVal = Int)? 'ms')? 
+	'then' eitherA?= 'either'? refA += Ref 'must-have-occurred' ('within' minVal = INT ('-' maxVal = INT)? 'ms')? 
 	'with' not?= 'no'? eitherC?= 'either'? refC += Ref 'in-between'
 ;
 
 Response:
 	'->' 'if' eitherA?= 'either'? refA += Ref+ ('occurs')? 
 	'then' eitherB?= 'either'? refB += Ref+ 'must' not?= 'not'?
-	'eventually-follow' ('within' minVal = Int ('-' maxVal = Int)? 'ms')?
+	'eventually-follow' ('within' minVal = INT ('-' maxVal = INT)? 'ms')?
 ;
 
 // Whenever B (OR|AND D...) occurs then A (OR|AND C...) should (not) have occurred before
 Precedence:
 	'<-' 'whenever' eitherB?= 'either'? refB += Ref+ ('occurs')? 
 	'then' eitherA?= 'either'? refA += Ref+ 'must' not?= 'not'?
-	'have-occurred-before' ('within' minVal = Int ('-' maxVal = Int)? 'ms')?
+	'have-occurred-before' ('within' minVal = INT ('-' maxVal = INT)? 'ms')?
 ;
 
 // Existential //
@@ -225,14 +225,14 @@ Init:
 ;
 
 AtMost:
-	 ref += Ref+ 'occurs-at-most' num = Int 'times'
+	 ref += Ref+ 'occurs-at-most' num = INT 'times'
 ;
 
 Exact:
-	 ref += Ref+ 'occurs-exactly' num = Int 'times' consecutively?= 'consecutively'? ('with-periodicity-of' minVal = Int ('-' maxVal = Int)? 'ms')?
+	 ref += Ref+ 'occurs-exactly' num = INT 'times' consecutively?= 'consecutively'? ('with-periodicity-of' minVal = INT ('-' maxVal = INT)? 'ms')?
 ;
 
 
 AtLeast:
-	ref += Ref+ 'occurs-at-least' num = Int 'times' ('with-periodicity-of' minVal = Int ('-' maxVal = Int)? 'ms')?
+	ref += Ref+ 'occurs-at-least' num = INT 'times' ('with-periodicity-of' minVal = INT ('-' maxVal = INT)? 'ms')?
 ;
