@@ -187,8 +187,7 @@ abstract class ExpressionsPooslGenerator extends TypesPooslGenerator {
 	'''«generateExpression(expr.map)» clone putAt(«generateExpression(expr.key)», «generateExpression(expr.value)»)'''
 	
 	def CharSequence generateMapAccess(ExpressionMapRW expr){
-		var validator = new ExpressionValidator()
-		var mapType = validator.typeOf(expr.map)
+		var mapType = ExpressionValidator.typeOf(expr.map)
 		'''if «generateExpression(expr.map)» includesKey(«generateExpression(expr.key)») then «generateExpression(expr.map)» at(«generateExpression(expr.key)») else «generateDefaultValue(TypeUtilities::getValueType(mapType))» fi'''
 	}
 	

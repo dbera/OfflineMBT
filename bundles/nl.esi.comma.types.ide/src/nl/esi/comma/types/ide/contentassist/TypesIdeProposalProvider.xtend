@@ -4,6 +4,7 @@
 package nl.esi.comma.types.ide.contentassist
 
 import org.eclipse.xtext.Assignment
+import org.eclipse.xtext.RuleCall
 import org.eclipse.xtext.ide.editor.contentassist.ContentAssistContext
 import org.eclipse.xtext.ide.editor.contentassist.IIdeContentProposalAcceptor
 
@@ -15,7 +16,11 @@ class TypesIdeProposalProvider extends AbstractTypesIdeProposalProvider {
     protected val TEMPLATE_DEFAULT_PRIORITY = 600
 
     override protected _createProposals(Assignment assignment, ContentAssistContext context, IIdeContentProposalAcceptor acceptor) {
-        //println('''complete«context.currentModel.eClass.name»_«assignment.feature.toFirstUpper»''')
-        super._createProposals(assignment, context, acceptor)
+        val terminal = assignment.getTerminal();
+        if (terminal instanceof RuleCall) {
+            _createProposals(terminal, context, acceptor)
+        } else {
+            super._createProposals(assignment, context, acceptor)
+        }
     }
 }

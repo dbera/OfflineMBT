@@ -9,6 +9,7 @@ import nl.esi.comma.expressions.expression.Field
 import nl.esi.comma.expressions.expression.MapTypeConstructor
 import nl.esi.comma.expressions.expression.Pair
 import nl.esi.comma.expressions.expression.TypeAnnotation
+import nl.esi.comma.expressions.validation.ExpressionFunction
 import nl.esi.comma.types.types.Type
 import org.eclipse.xtext.Assignment
 import org.eclipse.xtext.ide.editor.contentassist.ContentAssistContext
@@ -41,13 +42,24 @@ class ExpressionIdeProposalProvider extends AbstractExpressionIdeProposalProvide
                     createDefaultValue(mapType.valueType, context, acceptor)
                 }
             }
+            case feature == 'functionName' : {
+                for (func : ExpressionFunction.values) {
+                    val proposal = proposalCreator.createProposal(func.name + '()', context, [ entry |
+                        entry.kind = ContentAssistEntry.KIND_FUNCTION
+                        entry.label = func.name
+                        entry.description = 'Function'
+                        entry.documentation = func.documentation
+                    ])
+                    acceptor.accept(proposal, proposalPriorities.getDefaultPriority(proposal))
+                }
+            }
         }
     }
 
     protected def createDefaultValueEntry(TypeAnnotation typeAnn, ContentAssistContext context, IIdeContentProposalAcceptor acceptor) {
         val defaultValue = ProposalHelper.defaultValue(typeAnn)
         val proposal = proposalCreator.createProposal(defaultValue, context, [ entry |
-            entry.kind = ContentAssistEntry.KIND_VALUE
+            entry.kind = ContentAssistEntry.KIND_SNIPPET
             entry.label = ProposalHelper.getTypeName(typeAnn)
             entry.description = 'Default Value'
             entry.documentation = defaultValue
@@ -58,7 +70,7 @@ class ExpressionIdeProposalProvider extends AbstractExpressionIdeProposalProvide
     protected def createDefaultValue(Type type, ContentAssistContext context, IIdeContentProposalAcceptor acceptor) {
         val defaultValue = ProposalHelper.defaultValue(type)
         val proposal = proposalCreator.createProposal(defaultValue, context, [ entry |
-            entry.kind = ContentAssistEntry.KIND_VALUE
+            entry.kind = ContentAssistEntry.KIND_SNIPPET
             entry.label = ProposalHelper.getTypeName(type)
             entry.description = 'Default Value'
             entry.documentation = defaultValue
