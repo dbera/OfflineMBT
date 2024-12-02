@@ -44,7 +44,7 @@ class TestspecificationGenerator extends AbstractGenerator
 	/* TODO this should come from project task? Investigate and Implement it. */
 	var record_path_for_lot_def = "TwinscanControllerInput.concrete_expose_job.lot_def" 
 	var record_lot_def_file_name = "lot_definition"
-	var record_lot_def_file_path_prefix = "./generated_FAST/dataset/"
+	var record_lot_def_file_path_prefix = "./vfab2_scenario/FAST/generated_FAST/dataset/"
 	
 	// In-Memory Data Structures corresponding *.tspec (captured in resource object)
 	var mapLocalDataVarToDataInstance = new HashMap<String, List<String>>
@@ -437,7 +437,11 @@ class TestspecificationGenerator extends AbstractGenerator
 		// check references to Step outputs and replace with FAST syntax
 		for(elm : mapLocalStepInstance.keySet) {
 			if(mapLHStoRHS.value.contains(elm+".output")) {
-				mapLHStoRHS.value = mapLHStoRHS.value.replaceAll(elm+".output", "steps.out['" + "_" + elm + "']")
+				// mapLHStoRHS.value = mapLHStoRHS.value.replaceAll(elm+".output", "steps.out['" + "_" + elm + "']") // commented 26.11.2024
+				// Added REGEX 26.11.2024: remove (x) after steps.out[step.params[....]].x.y.... (assumption, always a y is present)
+				// In BPMN4S model, x represents the container of output data. So we need to filter it out for FAST. 
+				mapLHStoRHS.value = mapLHStoRHS.value.replaceAll(elm+".output" + "\\.(.*?)\\.", "steps.out[step.params['" + "_" + elm + "']].")
+				// System.out.println("DEBUG XY: " + mapLHStoRHS.value)
 				mapLHStoRHS.refKey.add(elm)  // reference to step
 				// Custom String Updates for FAST Syntax Peculiarities! TODO investigate solution?
 				// map-var['key'] + "[0]" -> map-var['key'][0] 
@@ -783,9 +787,9 @@ class TestspecificationGenerator extends AbstractGenerator
 		in.data.steps = [
 			«FOR elm : listStepInstances SEPARATOR ','»
 				«IF generateFASTRefStepTxt(elm).empty»
-					{ "id" : "«elm.id»", "type" : "«elm.type.replaceAll("_",".")»", "input_file" : "«elm.inputFile»" }
+					{ "id" : "«elm.id»", "type" : "«elm.type.replaceAll("_dot_",".")»", "input_file" : "«elm.inputFile»" }
 				«ELSE»
-					{ "id" : "«elm.id»", "type" : "«elm.type.replaceAll("_",".")»", "input_file" : "«elm.inputFile»",
+					{ "id" : "«elm.id»", "type" : "«elm.type.replaceAll("_dot_",".")»", "input_file" : "«elm.inputFile»",
 						"parameters" : {
 							«FOR refTxt : generateFASTRefStepTxt(elm) SEPARATOR ','»
 								«refTxt»
