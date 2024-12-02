@@ -438,8 +438,10 @@ class TestspecificationGenerator extends AbstractGenerator
 		for(elm : mapLocalStepInstance.keySet) {
 			if(mapLHStoRHS.value.contains(elm+".output")) {
 				// mapLHStoRHS.value = mapLHStoRHS.value.replaceAll(elm+".output", "steps.out['" + "_" + elm + "']") // commented 26.11.2024
-				mapLHStoRHS.value = mapLHStoRHS.value.replaceAll(elm+".output", "steps.out[step.params['" + "_" + elm + "']]")
-				// TODO 26.11.2024: remove the first elm (x) after steps.out[step.params[....]].x.y.... (assumption, always a y is present)
+				// Added REGEX 26.11.2024: remove (x) after steps.out[step.params[....]].x.y.... (assumption, always a y is present)
+				// In BPMN4S model, x represents the container of output data. So we need to filter it out for FAST. 
+				mapLHStoRHS.value = mapLHStoRHS.value.replaceAll(elm+".output" + "\\.(.*?)\\.", "steps.out[step.params['" + "_" + elm + "']].")
+				// System.out.println("DEBUG XY: " + mapLHStoRHS.value)
 				mapLHStoRHS.refKey.add(elm)  // reference to step
 				// Custom String Updates for FAST Syntax Peculiarities! TODO investigate solution?
 				// map-var['key'] + "[0]" -> map-var['key'][0] 
