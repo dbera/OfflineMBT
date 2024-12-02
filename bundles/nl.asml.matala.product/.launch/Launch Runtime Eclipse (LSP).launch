@@ -49,6 +49,9 @@
         <setEntry value="com.google.inject@default:default"/>
         <setEntry value="com.ibm.icu@default:default"/>
         <setEntry value="com.jcraft.jsch@default:default"/>
+        <setEntry value="com.python.pydev.analysis"/>
+        <setEntry value="com.python.pydev.debug"/>
+        <setEntry value="com.python.pydev.refactoring"/>
         <setEntry value="com.sun.el.javax.el@default:default"/>
         <setEntry value="com.sun.jna*4.5.1.v20190425-1842@default:default"/>
         <setEntry value="com.sun.jna*5.14.0.v20231211-1200@default:default"/>
@@ -221,6 +224,7 @@
         <setEntry value="org.eclipse.equinox.frameworkadmin@default:default"/>
         <setEntry value="org.eclipse.equinox.http.jetty@default:default"/>
         <setEntry value="org.eclipse.equinox.http.registry@default:default"/>
+        <setEntry value="org.eclipse.equinox.http.service.api"/>
         <setEntry value="org.eclipse.equinox.http.servlet@default:default"/>
         <setEntry value="org.eclipse.equinox.jsp.jasper.registry@default:default"/>
         <setEntry value="org.eclipse.equinox.jsp.jasper@default:default"/>
@@ -472,6 +476,7 @@
         <setEntry value="org.osgi.service.coordinator@default:default"/>
         <setEntry value="org.osgi.service.device@default:default"/>
         <setEntry value="org.osgi.service.event@default:default"/>
+        <setEntry value="org.osgi.service.http.whiteboard"/>
         <setEntry value="org.osgi.service.metatype.annotations@default:default"/>
         <setEntry value="org.osgi.service.metatype@default:default"/>
         <setEntry value="org.osgi.service.prefs@default:default"/>
@@ -485,6 +490,19 @@
         <setEntry value="org.osgi.util.position@default:default"/>
         <setEntry value="org.osgi.util.promise@default:default"/>
         <setEntry value="org.osgi.util.xml@default:default"/>
+        <setEntry value="org.python.pydev"/>
+        <setEntry value="org.python.pydev.ast"/>
+        <setEntry value="org.python.pydev.core"/>
+        <setEntry value="org.python.pydev.customizations"/>
+        <setEntry value="org.python.pydev.debug"/>
+        <setEntry value="org.python.pydev.django"/>
+        <setEntry value="org.python.pydev.help"/>
+        <setEntry value="org.python.pydev.jython"/>
+        <setEntry value="org.python.pydev.parser"/>
+        <setEntry value="org.python.pydev.refactoring"/>
+        <setEntry value="org.python.pydev.shared_core"/>
+        <setEntry value="org.python.pydev.shared_interactive_console"/>
+        <setEntry value="org.python.pydev.shared_ui"/>
         <setEntry value="org.sat4j.core@default:default"/>
         <setEntry value="org.sat4j.pb@default:default"/>
         <setEntry value="org.snakeyaml.engine@default:default"/>
