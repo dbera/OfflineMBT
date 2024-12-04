@@ -3,25 +3,36 @@
  */
 package nl.esi.comma.expressions.ide.contentassist
 
+import com.google.inject.Inject
 import nl.esi.comma.expressions.expression.ExpressionMap
 import nl.esi.comma.expressions.expression.ExpressionVector
 import nl.esi.comma.expressions.expression.Field
 import nl.esi.comma.expressions.expression.MapTypeConstructor
 import nl.esi.comma.expressions.expression.Pair
 import nl.esi.comma.expressions.expression.TypeAnnotation
+import nl.esi.comma.expressions.services.ExpressionGrammarAccess
 import nl.esi.comma.expressions.validation.ExpressionFunction
 import nl.esi.comma.types.types.Type
 import org.eclipse.xtext.Assignment
+import org.eclipse.xtext.ParserRule
+import org.eclipse.xtext.RuleCall
 import org.eclipse.xtext.ide.editor.contentassist.ContentAssistContext
 import org.eclipse.xtext.ide.editor.contentassist.ContentAssistEntry
 import org.eclipse.xtext.ide.editor.contentassist.IIdeContentProposalAcceptor
+import org.eclipse.xtext.util.TextRegion
+
+import static extension org.eclipse.xtext.EcoreUtil2.getContainerOfType
 
 /**
  * See https://www.eclipse.org/Xtext/documentation/310_eclipse_support.html#content-assist
  * on how to customize the content assistant.
  */
 class ExpressionIdeProposalProvider extends AbstractExpressionIdeProposalProvider {
-    override protected _createProposals(Assignment assignment, ContentAssistContext context, IIdeContentProposalAcceptor acceptor) {
+    @Inject
+    ExpressionGrammarAccess grammarAccess
+
+    override protected _createProposals(Assignment assignment, ContentAssistContext context,
+        IIdeContentProposalAcceptor acceptor) {
         super._createProposals(assignment, context, acceptor)
 
         val feature = assignment.feature
@@ -35,25 +46,42 @@ class ExpressionIdeProposalProvider extends AbstractExpressionIdeProposalProvide
             ExpressionMap case feature == 'key': {
                 createDefaultValueEntry(object.typeAnnotation, context, acceptor)
             }
-            Pair case feature == 'value' : {
+            Pair case feature == 'value': {
                 val container = object.eContainer
                 if (container instanceof ExpressionMap) {
                     val mapType = container.typeAnnotation.type as MapTypeConstructor
                     createDefaultValue(mapType.valueType, context, acceptor)
                 }
             }
-            case feature == 'functionName' : {
+            case feature == 'functionName': {
                 for (func : ExpressionFunction.values) {
                     val proposal = proposalCreator.createProposal(func.name + '()', context, [ entry |
                         entry.kind = ContentAssistEntry.KIND_FUNCTION
                         entry.label = func.name
                         entry.description = 'Function'
                         entry.documentation = func.documentation
+                        entry.editPositions +=
+                            new TextRegion(context.offset + func.name.length + 1, entry.proposal.length - 2)
                     ])
-                    acceptor.accept(proposal, proposalPriorities.getDefaultPriority(proposal))
+                    if (proposal !== null) {
+                        acceptor.accept(proposal, proposalPriorities.getDefaultPriority(proposal))
+                    }
                 }
             }
         }
+    }
+
+    override protected _createProposals(RuleCall ruleCall, ContentAssistContext context, IIdeContentProposalAcceptor acceptor) {
+        switch (ruleCall.getContainerOfType(ParserRule)) {
+            case grammarAccess.expressionConstantBoolRule,
+            case grammarAccess.expressionConstantIntRule,
+            case grammarAccess.expressionConstantRealRule,
+            case grammarAccess.expressionConstantStringRule,
+            case grammarAccess.expressionFunctionCallRule: {
+                return
+            }
+        }
+        super._createProposals(ruleCall, context, acceptor)
     }
 
     protected def createDefaultValueEntry(TypeAnnotation typeAnn, ContentAssistContext context, IIdeContentProposalAcceptor acceptor) {
@@ -64,7 +92,9 @@ class ExpressionIdeProposalProvider extends AbstractExpressionIdeProposalProvide
             entry.description = 'Default Value'
             entry.documentation = defaultValue
         ])
-        acceptor.accept(proposal, TEMPLATE_DEFAULT_PRIORITY);
+        if (proposal !== null) {
+            acceptor.accept(proposal, TEMPLATE_DEFAULT_PRIORITY);
+        }
     }
 
     protected def createDefaultValue(Type type, ContentAssistContext context, IIdeContentProposalAcceptor acceptor) {
@@ -75,7 +105,9 @@ class ExpressionIdeProposalProvider extends AbstractExpressionIdeProposalProvide
             entry.description = 'Default Value'
             entry.documentation = defaultValue
         ])
-        acceptor.accept(proposal, TEMPLATE_DEFAULT_PRIORITY);
+        if (proposal !== null) {
+            acceptor.accept(proposal, TEMPLATE_DEFAULT_PRIORITY);
+        }
     }
 
 //    override completeExpressionTypeAnnotated_Elements(EObject model, Assignment assignment, ContentAssistContext context, ICompletionProposalAcceptor acceptor){

@@ -5,8 +5,12 @@ package nl.esi.comma.types.ide.contentassist
 
 import org.eclipse.xtext.Assignment
 import org.eclipse.xtext.RuleCall
+import org.eclipse.xtext.TerminalRule
 import org.eclipse.xtext.ide.editor.contentassist.ContentAssistContext
 import org.eclipse.xtext.ide.editor.contentassist.IIdeContentProposalAcceptor
+import org.eclipse.xtext.ide.editor.contentassist.ContentAssistEntry
+import org.eclipse.xtext.util.TextRegion
+import org.eclipse.xtext.EcoreUtil2
 
 /**
  * See https://www.eclipse.org/Xtext/documentation/310_eclipse_support.html#content-assist
@@ -21,6 +25,40 @@ class TypesIdeProposalProvider extends AbstractTypesIdeProposalProvider {
             _createProposals(terminal, context, acceptor)
         } else {
             super._createProposals(assignment, context, acceptor)
+        }
+    }
+
+    override protected _createProposals(RuleCall ruleCall, ContentAssistContext context, IIdeContentProposalAcceptor acceptor) {
+        super._createProposals(ruleCall, context, acceptor)
+
+        if (ruleCall.rule instanceof TerminalRule && context.prefix.isEmpty) {
+            val feature = EcoreUtil2.getContainerOfType(ruleCall, Assignment)?.feature
+            val entry = switch (ruleCall.rule.name) {
+                case 'ID': {
+                    proposalCreator.createProposal(feature ?: 'id', context) [ entry |
+                        entry.kind = ContentAssistEntry.KIND_VALUE
+                        entry.description = 'ID'
+                        entry.editPositions += new TextRegion(context.offset, entry.proposal.length)
+                    ]
+                }
+                case 'INT': {
+                    proposalCreator.createProposal('0', context) [ entry |
+                        entry.kind = ContentAssistEntry.KIND_VALUE
+                        entry.description = feature.toFirstUpper
+                        entry.editPositions += new TextRegion(context.offset, entry.proposal.length)
+                    ];
+                }
+                case 'STRING': {
+                    proposalCreator.createProposal('""', context) [ entry |
+                        entry.kind = ContentAssistEntry.KIND_TEXT
+                        entry.description = feature.toFirstUpper
+                        entry.editPositions += new TextRegion(context.offset + 1, entry.proposal.length - 2)
+                    ];
+                }
+            }
+            if (entry !== null) {
+                acceptor.accept(entry, proposalPriorities.getDefaultPriority(entry))
+            }
         }
     }
 }
