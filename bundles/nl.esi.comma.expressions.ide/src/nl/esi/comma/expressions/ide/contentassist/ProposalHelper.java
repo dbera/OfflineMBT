@@ -64,7 +64,7 @@ import nl.esi.comma.types.types.VectorTypeConstructor;
 import nl.esi.comma.types.types.VectorTypeDecl;
 
 public class ProposalHelper {
-	public static String getTypeName(Type type) {
+	public static String getTypeName(Type type) throws UnsupportedTypeException {
 		if (type instanceof TypeReference) {
 			return type.getType().getName();
 		} else if (type instanceof VectorTypeConstructor vecType) {
@@ -74,10 +74,10 @@ public class ProposalHelper {
 		} else if (type instanceof MapTypeConstructor mapType) {
 			return "map<" + type.getType().getName() + ", " + getTypeName(mapType.getValueType()) + ">";
 		}
-		throw new RuntimeException("Not supported");
+		throw new UnsupportedTypeException(type);
 	}
 	
-	public static String getTypeName(TypeAnnotation typeAnn) {
+	public static String getTypeName(TypeAnnotation typeAnn) throws UnsupportedTypeException {
 		final Type type = typeAnn.getType();
 		if (type instanceof TypeReference) {
 			return type.getType().getName();
@@ -86,18 +86,18 @@ public class ProposalHelper {
 		} else if (type instanceof MapTypeConstructor mapType) {
 			return "map.entry<" + type.getType().getName() + ", " + getTypeName(mapType.getValueType()) + ">";
 		}
-		throw new RuntimeException("Not supported");
+		throw new UnsupportedTypeException(type);
 	}
 
-	public static String defaultValue(TypeAnnotation typeAnn) {
+	public static String defaultValue(TypeAnnotation typeAnn) throws UnsupportedTypeException {
 		return defaultValueEntry(typeAnn.getType(), "");
 	}
 
-	public static String defaultValue(Type type) {
+	public static String defaultValue(Type type) throws UnsupportedTypeException {
 		return defaultValue(type, "");
 	}
 
-	private static String defaultValue(Type type, String indent) {
+	private static String defaultValue(Type type, String indent) throws UnsupportedTypeException {
 		if (type instanceof TypeReference) {
 			return defaultValueEntry(type, indent);
 		} else if (type instanceof VectorTypeConstructor) {
@@ -105,10 +105,10 @@ public class ProposalHelper {
 		} else if (type instanceof MapTypeConstructor) {
 			return "<" + getTypeName(type) + ">{ " + defaultValueEntry(type, indent) + " }";
 		}
-		throw new RuntimeException("Not supported");
+		throw new UnsupportedTypeException(type);
 	}
 
-	private static String defaultValueEntry(Type type, String indent) {
+	private static String defaultValueEntry(Type type, String indent) throws UnsupportedTypeException {
 		if (type instanceof TypeReference) {
 			return defaultValue(type.getType(), indent);
 		} else if (type instanceof VectorTypeConstructor vecType) {
@@ -121,7 +121,7 @@ public class ProposalHelper {
 			String value = defaultValue(mapType.getValueType(), indent);
 			return key + " -> " + value;
 		}
-		throw new RuntimeException("Not supported");
+		throw new UnsupportedTypeException(type);
 	}
 	
 	private static Type getOuterDimension(VectorTypeConstructor vectorType) {
@@ -130,7 +130,7 @@ public class ProposalHelper {
 		return outerDimension;
 	}
 
-	private static String defaultValue(TypeDecl type, String indent) {
+	private static String defaultValue(TypeDecl type, String indent) throws UnsupportedTypeException {
 		if (type instanceof SimpleTypeDecl simpleType) {
 			if (simpleType.getBase() != null) return defaultValue(simpleType.getBase(), indent);
 			else if (simpleType.getName().equals("int")) return "0";
@@ -159,7 +159,7 @@ public class ProposalHelper {
 			}
 		} 
 		
-		throw new RuntimeException("Not supported");
+		throw new UnsupportedTypeException(type);
 	}
 
 	static String expression(Expression expression, Function<String, String> variablePrefix) {

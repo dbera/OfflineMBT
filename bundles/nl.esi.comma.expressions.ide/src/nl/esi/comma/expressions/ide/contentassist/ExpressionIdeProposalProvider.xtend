@@ -85,28 +85,36 @@ class ExpressionIdeProposalProvider extends AbstractExpressionIdeProposalProvide
     }
 
     protected def createDefaultValueEntry(TypeAnnotation typeAnn, ContentAssistContext context, IIdeContentProposalAcceptor acceptor) {
-        val defaultValue = ProposalHelper.defaultValue(typeAnn)
-        val proposal = proposalCreator.createProposal(defaultValue, context, [ entry |
-            entry.kind = ContentAssistEntry.KIND_SNIPPET
-            entry.label = ProposalHelper.getTypeName(typeAnn)
-            entry.description = 'Default Value'
-            entry.documentation = defaultValue
-        ])
-        if (proposal !== null) {
-            acceptor.accept(proposal, TEMPLATE_DEFAULT_PRIORITY);
+        try {
+            val defaultValue = ProposalHelper.defaultValue(typeAnn)
+            val proposal = proposalCreator.createProposal(defaultValue, context, [ entry |
+                entry.kind = ContentAssistEntry.KIND_SNIPPET
+                entry.label = ProposalHelper.getTypeName(typeAnn)
+                entry.description = 'Default Value'
+                entry.documentation = defaultValue
+            ])
+            if (proposal !== null) {
+                acceptor.accept(proposal, TEMPLATE_DEFAULT_PRIORITY);
+            }
+        } catch (UnsupportedTypeException e) {
+            // Ignore
         }
     }
 
     protected def createDefaultValue(Type type, ContentAssistContext context, IIdeContentProposalAcceptor acceptor) {
-        val defaultValue = ProposalHelper.defaultValue(type)
-        val proposal = proposalCreator.createProposal(defaultValue, context, [ entry |
-            entry.kind = ContentAssistEntry.KIND_SNIPPET
-            entry.label = ProposalHelper.getTypeName(type)
-            entry.description = 'Default Value'
-            entry.documentation = defaultValue
-        ])
-        if (proposal !== null) {
-            acceptor.accept(proposal, TEMPLATE_DEFAULT_PRIORITY);
+        try {
+            val defaultValue = ProposalHelper.defaultValue(type)
+            val proposal = proposalCreator.createProposal(defaultValue, context, [ entry |
+                entry.kind = ContentAssistEntry.KIND_SNIPPET
+                entry.label = ProposalHelper.getTypeName(type)
+                entry.description = 'Default Value'
+                entry.documentation = defaultValue
+            ])
+            if (proposal !== null) {
+                acceptor.accept(proposal, TEMPLATE_DEFAULT_PRIORITY);
+            }
+        } catch (UnsupportedTypeException e) {
+            // Ignore
         }
     }
 

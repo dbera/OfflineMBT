@@ -107,6 +107,17 @@ class TypesValidator extends AbstractTypesValidator {
   		}
   	}					
   	
+    /*
+     * Constraints:
+     * - At least one record field
+     */             
+    @Check
+    def checkMinimumRecordFields(RecordTypeDecl type) {
+        if (type.fields.isEmpty) {
+            error('''Expected at least 1 field for record «type.name»''', TypesPackage.Literals.RECORD_TYPE_DECL__FIELDS)
+        }
+    }
+
   	/*
   	 * Constraints:
   	 * - record fields have unique names

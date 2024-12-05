@@ -92,7 +92,7 @@ IntExp:
 
 RecordTypeDecl:
 	'record' name = ID ('extends' parent = [RecordTypeDecl])? 
-	'{' fields+=RecordField ((',')? fields+=RecordField)* '}'
+	'{' (fields+=RecordField ((',')? fields+=RecordField)*)? '}'
 ;	
 
 RecordField: 
