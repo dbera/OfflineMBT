@@ -39,16 +39,24 @@ class TypesValidator extends AbstractTypesValidator {
 	ResourceDescriptionsProvider rdp
 	
 	//Generic method to detect name duplications in a collection of a named elements
-	protected def checkForNameDuplications(Iterable<? extends NamedElement> elements, String desc, String code, String... issueData) {
+    protected def checkForNameDuplications(Iterable<? extends NamedElement> elements, String desc, String code, String... issueData) {
+        checkForNameDuplicationsVerbose(elements, desc, null, code, issueData)
+    }
+
+	protected def checkForNameDuplicationsVerbose(Iterable<? extends NamedElement> elements, String desc, String namePrefix, String code, String... issueData) {
 		val multiMap = HashMultimap.create()
-		
 		for (e : elements)
 			multiMap.put(e.name, e)
   		for (entry : multiMap.asMap.entrySet) {
-  			val duplicates = entry.value    
+  			val duplicates = entry.value
   			if (duplicates.size > 1) {
-  				for (d : duplicates)
-  					error("Duplicate " + desc + " name", d, TypesPackage.Literals.NAMED_ELEMENT__NAME, code, issueData)
+  				for (d : duplicates) {
+  				    var error = "Duplicate " + desc + " name"
+  				    if (namePrefix !== null) {
+  				        error += ": " + namePrefix + d.name
+  				    }
+  					error(error, d, TypesPackage.Literals.NAMED_ELEMENT__NAME, code, issueData)
+				}
   			}
   		}
   	}				
@@ -109,6 +117,17 @@ class TypesValidator extends AbstractTypesValidator {
   	
     /*
      * Constraints:
+     * - At least one enum literal
+     */             
+    @Check
+    def checkMinimumEnumLiterals(EnumTypeDecl type) {
+        if (type.literals.isEmpty) {
+            error('''Expected at least 1 literal for enum «type.name»''', TypesPackage.Literals.ENUM_TYPE_DECL__LITERALS)
+        }
+    }
+
+    /*
+     * Constraints:
      * - At least one record field
      */             
     @Check
@@ -124,7 +143,7 @@ class TypesValidator extends AbstractTypesValidator {
   	 */				
   	@Check
 	def checkDuplicatedRecordFields(RecordTypeDecl type) {
-		checkForNameDuplications(type.fields, "record field", null)
+		checkForNameDuplicationsVerbose(type.fields, "record field", type.name + ".", null)
 	}
 	
 	/*
@@ -160,7 +179,7 @@ class TypesValidator extends AbstractTypesValidator {
 	 */
 	@Check
 	def checkDuplicatedEnumElements(EnumTypeDecl type) {
-		checkForNameDuplications(type.literals, "enumeration literal", null)
+		checkForNameDuplicationsVerbose(type.literals, "enumeration literal", type.name + ".", null)
 	}
 	
 	/*
@@ -192,7 +211,7 @@ class TypesValidator extends AbstractTypesValidator {
 	 */
 	@Check
 	def checkDuplicatedTypeDeclarations(TypesModel typedecl) {
-		checkForNameDuplications(typedecl.types, "type declaration", null)
+		checkForNameDuplicationsVerbose(typedecl.types, "type declaration", "", null)
 	}
 	
 	/*

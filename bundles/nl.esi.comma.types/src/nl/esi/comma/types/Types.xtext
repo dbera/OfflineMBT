@@ -79,7 +79,7 @@ SimpleTypeDecl :
 ;
 
 EnumTypeDecl:
-	'enum' name = ID '{' literals+=EnumElement+ '}'
+	'enum' name = ID '{' literals+=EnumElement* '}'
 ;
 
 EnumElement:
