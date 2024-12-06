@@ -17,6 +17,7 @@ import org.eclipse.emf.common.util.EList
 import nl.esi.comma.testspecification.testspecification.StepReference
 import nl.esi.comma.testspecification.testspecification.TSMain
 import java.util.List
+import nl.esi.comma.expressions.expression.ExpressionFunctionCall
 
 class FromAbstractToConcrete 
 {
@@ -68,16 +69,16 @@ class FromAbstractToConcrete
 		var kv = ""
 		for (p : pairs) {
 			for (a : p.actions) {
-				kv += prefix + "." + field + printRecord("", null, a as RecordFieldAssignmentAction) + "\n"
+				kv += prefix + "." + field + printRecord("", "", null, a as RecordFieldAssignmentAction) + "\n"
 			}
 		}
 		return kv
 	}
 
-	def printRecord(String prefix, EList<StepReference> stepRef, RecordFieldAssignmentAction rec) {
+	def printRecord(String stepName, String prefix, EList<StepReference> stepRef, RecordFieldAssignmentAction rec) {
 		var field = printField(rec.fieldAccess)
-		var value = (new ExpressionGenerator(stepRef)).exprToComMASyntax(rec.exp)
-		var p = (rec.exp instanceof ExpressionVector) ? "" : prefix
+		var value = (new ExpressionGenerator(stepRef,stepName)).exprToComMASyntax(rec.exp)
+		var p = (rec.exp instanceof ExpressionVector || rec.exp instanceof ExpressionFunctionCall) ? "" : prefix
 		return field + " := " + p + value
 	}
 
@@ -113,11 +114,11 @@ class FromAbstractToConcrete
 		var sc = ""
 		for (s : step.ce) {
 			for (a : s.act.actions) {
-				for (rs : runSteps.filter[r | !r.suppress]) {
+				for (rs : runSteps.filter[r | r !== null &&  !r.suppress]) {
 					for (cs : composeSteps) {
 						var pi = prefix + "." + step.name
 						var po = "step_" + rs.name + ".output."
-						sc += pi + printRecord(po, cs.stepRef, a as RecordFieldAssignmentAction) + "\n"
+						sc += pi + printRecord(prefix, po, cs.stepRef, a as RecordFieldAssignmentAction) + "\n"
 					}
 				}
 			}
