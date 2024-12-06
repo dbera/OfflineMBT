@@ -395,7 +395,7 @@ class PetriNet {
 		    
 		    parser.add_argument("-pudir","--plantuml_dir",
 		                        type=Path,
-		                        default="os.getcwd()",
+		                        default=os.getcwd(),
 		                        help="The directory in which plantuml files produced will be saved")
 		
 		    p = parser.parse_args()
