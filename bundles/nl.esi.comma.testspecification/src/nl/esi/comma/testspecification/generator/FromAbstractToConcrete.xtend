@@ -113,7 +113,7 @@ class FromAbstractToConcrete
 		var sc = ""
 		for (s : step.ce) {
 			for (a : s.act.actions) {
-				for (rs : runSteps.filter[r | !r.suppress]) {
+				for (rs : runSteps.filter[r | r !== null && !r.suppress]) {
 					for (cs : composeSteps) {
 						var pi = prefix + "." + step.name
 						var po = "step_" + rs.name + ".output."
