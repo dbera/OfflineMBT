@@ -39,8 +39,12 @@ import org.eclipse.xtext.generator.IGeneratorContext
  */
 class TestspecificationGenerator extends AbstractGenerator 
 {
-
 	var Resource _resource
+	
+	/* TODO this should come from project task? Investigate and Implement it. */
+	var record_path_for_lot_def = "TwinscanControllerInput.concrete_expose_job.lot_def" 
+	var record_lot_def_file_name = "lot_definition"
+	var record_lot_def_file_path_prefix = "./vfab2_scenario/FAST/generated_FAST/dataset/"
 	
 	// In-Memory Data Structures corresponding *.tspec (captured in resource object)
 	var mapLocalDataVarToDataInstance = new HashMap<String, List<String>>
@@ -257,13 +261,37 @@ class TestspecificationGenerator extends AbstractGenerator
 						if(	act instanceof AssignmentAction || act instanceof RecordFieldAssignmentAction) 
 						{
 							var mapLHStoRHS = generateInitAssignmentAction(act)
-							stepInst.parameters.add(mapLHStoRHS)
 							var lhs = getLHS(act) // note key = record variable, and value = recExp
-							stepInst.variableName = lhs.key
-							stepInst.recordExp = lhs.value
+							stepInst.variableName = lhs.key // Note DB: This is the same for all actions
+							stepInst.recordExp = lhs.value // Note DB: This keeps overwriting (record prefix)
+							// System.out.println("DEBUG: " + lhs.value)
+							// System.out.println("DEBUG: " + record_path_for_lot_def)
+							if(record_path_for_lot_def.equals(lhs.value) || 
+								record_path_for_lot_def.endsWith(lhs.value)
+							) {
+								if(stepInst.isStepRefPresent(lhs.value)) {
+									var refStep = stepInst.getStepRefs(lhs.value)
+									refStep.parameters.add(mapLHStoRHS)
+								} else {																
+									// Create new step instance and fill all details there
+									// Add to list of step reference of step
+									var rstepInst = new Step
+									rstepInst.id = lhs.value
+									rstepInst.type = s.type.name
+									rstepInst.inputFile = record_lot_def_file_path_prefix /*+ 
+														  record_lot_def_file_name + "_" + 
+														  s.inputVar.name + ".json"*/
+									rstepInst.variableName = record_lot_def_file_name
+									rstepInst.recordExp = stepInst.id
+									stepInst.stepRefs.add(rstepInst)					
+								}
+							} else {
+								stepInst.parameters.add(mapLHStoRHS)
+							}
 						}
 					}
 				}
+				// stepInst.display
 				listStepInstances.add(stepInst)
 			}
 		}
@@ -347,6 +375,7 @@ class TestspecificationGenerator extends AbstractGenerator
             else recExp = '''«(record as ExpressionRecordAccess).field.name».''' + recExp
             record = (record as ExpressionRecordAccess).record
         }
+        // System.out.println("DEBUG: " + recExp)
 		val varExp = record as ExpressionVariable
 		var kv = new KeyValue
 		kv.key = varExp.variable.name
@@ -390,7 +419,8 @@ class TestspecificationGenerator extends AbstractGenerator
             else recExp = '''«(record as ExpressionRecordAccess).field.name».''' + recExp
             record = (record as ExpressionRecordAccess).record
         }
-		val varExp = record as ExpressionVariable
+        // System.out.println(" DEBUG: " + recExp)
+		// val varExp = record as ExpressionVariable
 		mapLHStoRHS.key = field.name
 		mapLHStoRHS.value = ExpressionsParser::generateExpression(exp, ref).toString
 		mapLHStoRHS.refVal.add(mapLHStoRHS.value) // Added DB 14.10.2024
@@ -407,7 +437,11 @@ class TestspecificationGenerator extends AbstractGenerator
 		// check references to Step outputs and replace with FAST syntax
 		for(elm : mapLocalStepInstance.keySet) {
 			if(mapLHStoRHS.value.contains(elm+".output")) {
-				mapLHStoRHS.value = mapLHStoRHS.value.replaceAll(elm+".output", "steps.out['" + "_" + elm + "']")
+				// mapLHStoRHS.value = mapLHStoRHS.value.replaceAll(elm+".output", "steps.out['" + "_" + elm + "']") // commented 26.11.2024
+				// Added REGEX 26.11.2024: remove (x) after steps.out[step.params[....]].x.y.... (assumption, always a y is present)
+				// In BPMN4S model, x represents the container of output data. So we need to filter it out for FAST. 
+				mapLHStoRHS.value = mapLHStoRHS.value.replaceAll(elm+".output" + "\\.(.*?)\\.", "steps.out[step.params['" + "_" + elm + "']].")
+				// System.out.println("DEBUG XY: " + mapLHStoRHS.value)
 				mapLHStoRHS.refKey.add(elm)  // reference to step
 				// Custom String Updates for FAST Syntax Peculiarities! TODO investigate solution?
 				// map-var['key'] + "[0]" -> map-var['key'][0] 
@@ -509,14 +543,14 @@ class TestspecificationGenerator extends AbstractGenerator
 			// with their initialization in *.params, i.e. should not init same record field. 
 			for(dataInst : JSONDataFileContents) {
 				for(mapLHStoRHS : dataInst.kvList) {
-					// System.out.println("Chekcing " + mapLHStoRHS.key)
+					// System.out.println("Checking " + mapLHStoRHS.key)
 					var mapLHStoRHS_ = getExtensions(mapLHStoRHS.key)
-//					System.out.println(" Got Extension for Key: " + mapLHStoRHS.key)
-//					for(elm: mapLHStoRHS_.keySet) { 
-//						System.out.println("	K: " + elm)
-//						for(kv : mapLHStoRHS_.get(elm))
-//							System.out.println("	k: " + kv.key + "	v : " + kv.value)
-//					}//elm.display
+					// System.out.println(" Got Extension for Key: " + mapLHStoRHS.key)
+					/*for(elm: mapLHStoRHS_.keySet) { 
+						System.out.println("	K: " + elm)
+						for(kv : mapLHStoRHS_.get(elm))
+							System.out.println("	k: " + kv.key + "	v : " + kv.value)
+					}*/ //elm.display
 					// check that mapLHStoRHS_ is not empty => get file name from step instance list
 					// else call function to get file name
 					// Reason: 
@@ -553,45 +587,69 @@ class TestspecificationGenerator extends AbstractGenerator
 		}
 		// if var in params file does not have a constructor init
 		// but occurs in tspec ==> create data files per step input def.
+		// TODO. Make this the only way to generate JSON, i.e. remove previous file generation 
+		// Prevent variable init in params file. 
 		for(vname : listOfStepVars) {
 			// System.out.println(" variable not declared in params: " + vname)
 			// for(step : listStepInstances) {
 				// if(step.variableName.equals(vname)) {
-					var mapLHStoRHS_ = getExtensions(vname) //step.variableName
-//					System.out.println(" Got Extension for Key: " + step.variableName)
-//					for(elm: mapLHStoRHS_.keySet) { 
-//						System.out.println("	K: " + elm)
-//						for(kv : mapLHStoRHS_.get(elm))
-//							System.out.println("	k: " + kv.key + "	v : " + kv.value)
-//					}
-					var String fileName = new String
-					var fileContents = ''''''
-					if(!mapLHStoRHS_.isEmpty) {
-						for(stepId : mapLHStoRHS_.keySet) {
-							fileName = getStepInstanceFileName(stepId)
-							System.out.println("Generating File: " + fileName+ " For Step: " + stepId)
-							for(elm : mapLHStoRHS_.get(stepId)) {
-								var str = 
-								'''
-									"«elm.key»" : «elm.value»,
-								'''
-								// System.out.println("DEBUG: " + str)
-								fileContents += str
-							}
-							fileContents =
-							'''
-							{
-								«fileContents.replaceAll(",$", "")»
-							}
-							'''
-							fsa.generateFile(fileName, fileContents)
-							fileContents = ''''''
-						}
+			var mapLHStoRHS_ = getExtensions(vname) //step.variableName
+			/*for(elm: mapLHStoRHS_.keySet) { 
+						System.out.println("	VAR: " + elm)
+						for(kv : mapLHStoRHS_.get(elm))
+							System.out.println("	k: " + kv.key + "	v : " + kv.value)
+			}*/
+			var String fileName = new String
+			var fileContents = ''''''
+			if(!mapLHStoRHS_.isEmpty) {
+				for(stepId : mapLHStoRHS_.keySet) {
+					fileName = getStepInstanceFileName(stepId)
+					System.out.println("Generating File: " + fileName+ " For Step: " + stepId)
+					for(elm : mapLHStoRHS_.get(stepId)) {
+						var str = 
+						'''
+							"«elm.key»" : «elm.value»,
+						'''
+						fileContents += str
 					}
-				//}
-			//}
+					fileContents =
+					'''
+					{
+						«fileContents.replaceAll(",$", "")»
+					}
+					'''
+					fsa.generateFile(fileName, fileContents)
+					fileContents = ''''''
+				}
+			}
+			
+			// Added 09.11.2024 DB: generate explicit JSON files referenced before 
+			var mapLHStoRHSExt = getRefExtensions(vname)
+			var String fileNameExt = new String
+			var fileContentsExt = ''''''
+			if(!mapLHStoRHSExt.isEmpty) {
+				for(stepId : mapLHStoRHSExt.keySet) {
+					fileNameExt = stepId
+					System.out.println("Generating File: " + fileNameExt + " For Var: " + vname)
+					for(elm : mapLHStoRHSExt.get(stepId)) {
+						var str = 
+						'''
+							"«elm.key»" : «elm.value»,
+						'''
+						fileContentsExt += str
+					}
+					fileContentsExt =
+					'''
+					{
+						«fileContentsExt.replaceAll(",$", "")»
+					}
+					'''
+					fsa.generateFile(fileNameExt, fileContentsExt)
+					fileContentsExt = ''''''
+				}
+			}
 		}
-		return txt
+		return txt // TODO Remove unused variable
 	}
 	
 	def String getStepInstanceFileName(String step_id) {
@@ -624,12 +682,72 @@ class TestspecificationGenerator extends AbstractGenerator
 		return "undefined.json"
 	}
 	
+	// Added DB: get contents for explicit JSON file generation
+	def getRefExtensions(String varName) {
+		var mapListOfKeyValue = new HashMap<String,List<KeyValue>>
+		for(step : listStepInstances) {
+			if(step.variableName.equals(varName)) {
+				if(!step.stepRefs.empty) {
+					for(sr: step.stepRefs) {
+						mapListOfKeyValue.put(sr.inputFile + sr.variableName + 
+											"_" + sr.recordExp + ".json", sr.parameters)
+					}
+				}
+			}
+		}
+		return mapListOfKeyValue
+	}
+	
+	// function to combine keys (parameters of step may have duplicate keys) //
+	// Note DB: Incomplete implementation. Decision to avoid duplicate keys in front end. 
+	// Decision: If an attribute of record needs references and concrete data, then do
+	// everything in the reference part. 
+	def combineKeys(List<KeyValue> parameters) {
+		var _parameters = new ArrayList<KeyValue>
+		var listOfExclusionKeys = new ArrayList<String>
+		for(kv : parameters) {
+			if(!listOfExclusionKeys.contains(kv.key)) {
+				var commonKV = new ArrayList<KeyValue>
+				for(_kv : parameters) {
+					if(kv.key.equals(_kv.key)) {
+						commonKV.add(_kv)
+					}
+				}
+				if(commonKV.size > 1) {
+					System.out.println("***** COMMON KEYS ******")
+					for(elmKV : commonKV) { elmKV.display }
+					System.out.println("***** *********** ******")
+				} else {
+					_parameters.addAll(commonKV)
+				}
+			}
+			listOfExclusionKeys.add(kv.key)
+		}
+	}
+	
 	def getExtensions(String varName) {
 		var mapListOfKeyValue = new HashMap<String,List<KeyValue>>
 		//System.out.println(" Getting Extension for Variable: " + varName)
 		for(step : listStepInstances) {
 			if(step.variableName.equals(varName)) {
+				// System.out.println("STEP ID: " + step.id)
+				// Note DB: Incomplete implementation. Decision to avoid duplicate keys in front end. 
+				// Decision: If an attribute of record needs references and concrete data, then do everything in the reference part. 
+				// combineKeys(step.parameters)
 				mapListOfKeyValue.put(step.id,step.parameters)
+				if(!step.stepRefs.empty) {
+					// System.out.println("Adding Step Reference for "+ step.id)
+					// Added DB: add reference to explicit JSON file
+					for(sr: step.stepRefs) {
+						var kv = new KeyValue
+						kv.key = sr.variableName
+						kv.value = '"' + sr.inputFile + sr.variableName + 
+											"_" + sr.recordExp + ".json" + '"'
+						kv.refVal = new HashSet<String>
+						kv.refVal.add('"' + sr.inputFile + '"')
+						mapListOfKeyValue.get(step.id).add(kv)
+					}
+				}					
 				// return step.parameters
 			}
 		}
@@ -669,9 +787,9 @@ class TestspecificationGenerator extends AbstractGenerator
 		in.data.steps = [
 			«FOR elm : listStepInstances SEPARATOR ','»
 				«IF generateFASTRefStepTxt(elm).empty»
-					{ "id" : "«elm.id»", "type" : "«elm.type.replaceAll("_",".")»", "input_file" : "«elm.inputFile»" }
+					{ "id" : "«elm.id»", "type" : "«elm.type.replaceAll("_dot_",".")»", "input_file" : "«elm.inputFile»" }
 				«ELSE»
-					{ "id" : "«elm.id»", "type" : "«elm.type.replaceAll("_",".")»", "input_file" : "«elm.inputFile»",
+					{ "id" : "«elm.id»", "type" : "«elm.type.replaceAll("_dot_",".")»", "input_file" : "«elm.inputFile»",
 						"parameters" : {
 							«FOR refTxt : generateFASTRefStepTxt(elm) SEPARATOR ','»
 								«refTxt»
@@ -836,11 +954,12 @@ class TestspecificationGenerator extends AbstractGenerator
 		
 		System.out.println(" ------------------ STEPS ------------------")
 		for(st : listStepInstances) {
-			System.out.println("	step-id: " + st.id + " type: " + st.type)
-			System.out.println("	input: " + st.inputFile)
-			System.out.println("	var: " + st.variableName)
-			for(param : st.parameters) 
-				param.display
+			st.display
+//			System.out.println("	step-id: " + st.id + " type: " + st.type)
+//			System.out.println("	input: " + st.inputFile)
+//			System.out.println("	var: " + st.variableName)
+//			for(param : st.parameters) 
+//				param.display
 				//System.out.println("	parameters: " + param.key + " -> " + param.value)
 		}		
 	}

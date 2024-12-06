@@ -53,7 +53,7 @@ class FromAbstractToConcrete
 		«ENDFOR»
 		}
 		
-		generate-file "./generated_FAST/"
+		generate-file "./vfab2_scenario/FAST/generated_FAST/"
 		
 		step-parameters
 		«FOR test : atd.testSeq»
@@ -236,7 +236,7 @@ class FromAbstractToConcrete
 		data-implementation
 		// Empty
 		
-		path-prefix "./generated_FAST/dataset/"
+		path-prefix "./vfab2_scenario/FAST/generated_FAST/dataset/"
 		var-ref «sys»Input -> file-name "«sys»Input.json"
 		var-ref «sys»Output -> file-name "«sys»Output.json"
 		'''

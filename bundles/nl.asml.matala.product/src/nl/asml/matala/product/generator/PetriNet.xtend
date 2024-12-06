@@ -309,7 +309,7 @@ class PetriNet {
 				 String topology_name, 
 				 List<String> listOfEnvBlocks,
 				 ArrayList<String> listOfAssertTransitions,
-				 ArrayList<String> listOfSuppressTransitions,
+				 HashMap<String,List<String>> mapOfSuppressTransitionVars,
 				 List<String> inout_places, 
 				 List<String> init_places, 
 				 int depth_limit
@@ -337,6 +337,7 @@ class PetriNet {
 		    visitedTList = [[]]
 		    visitedTProdList = [[]]
 		    rg_txt = ""
+		    SavedMarking = Marking()
 		
 		    def __init__(self):
 		        self.rg_txt = '@startuml\n'
@@ -412,7 +413,7 @@ class PetriNet {
 		    
 		    listOfEnvBlocks = [«FOR elm : listOfEnvBlocks SEPARATOR ','»"«elm»"«ENDFOR»]
 		    listOfAssertTransitions = [«FOR elm : listOfAssertTransitions SEPARATOR ','»"«elm»"«ENDFOR»]
-		    listOfSuppressTransitions = [«FOR elm : listOfSuppressTransitions SEPARATOR ','»"«elm»"«ENDFOR»]
+		    mapOfSuppressTransitionVars = {«FOR k : mapOfSuppressTransitionVars.keySet SEPARATOR ','»'«k»': [«FOR v : mapOfSuppressTransitionVars.get(k) SEPARATOR ','»'«v»'«ENDFOR»]«ENDFOR»}
 		    print("[INFO] Starting Test Generation.")
 		    
 		    map_of_transition_modes = {}
@@ -490,13 +491,13 @@ class PetriNet {
 		                # step_txt = map_transition_modes_to_name[step[1].name + "_" + step[2].__repr__()]
 		                step_txt = map_transition_modes_to_name[stp]
 		                if step_txt.split("_")[0] in listOfEnvBlocks or step_txt.rsplit("_",1)[0] in listOfAssertTransitions:
-		                    suppress = False
-		                    if step_txt.split("@")[0] in listOfSuppressTransitions:
-		                        suppress = True
+		                    # suppress = False
+		                    # if step_txt.split("@")[0] in listOfSuppressTransitions:
+		                    # suppress = True
 		                    if not step_txt.split("_")[0] in listOfEnvBlocks:
-		                        _step = Step(step_txt.rsplit("_",1)[0] in listOfAssertTransitions, suppress)
+		                        _step = Step(step_txt.rsplit("_",1)[0] in listOfAssertTransitions)
 		                    else:
-		                        _step = Step(False, suppress)
+		                        _step = Step(False)
 		                    # txt += "    %s\n" % (map_transition_modes_to_name[step[1].name + "_" + step[2].__repr__()])
 		                    # txt += "step-name: %s\n" % (map_transition_modes_to_name[stp])
 		                    _step.step_name = map_transition_modes_to_name[stp]
@@ -513,7 +514,11 @@ class PetriNet {
 		                        # txt += "%s:" % x
 		                        for z in y.items():
 		                            # txt += "%s\n" % (json.dumps(json.loads(z), indent=4, sort_keys=True))
-		                            _step.output_data[x] = json.dumps(json.loads(z), indent=4, sort_keys=True)
+		                            if step_txt.split("@")[0] in mapOfSuppressTransitionVars:
+		                                if x not in mapOfSuppressTransitionVars[step_txt.split("@")[0]]:
+		                                    _step.output_data[x] = json.dumps(json.loads(z), indent=4, sort_keys=True)
+		                            else:
+		                                _step.output_data[x] = json.dumps(json.loads(z), indent=4, sort_keys=True)
 		                    # txt += "\n"
 		                    _test_scn.step_list.append(_step)
 		                    # if map_transition_assert[map_transition_modes_to_name[stp].rsplit('_', 1)[0]]:
@@ -616,6 +621,37 @@ class PetriNet {
 	def print_SCNGen() {
 		return
 		'''
+	    def getCurrentMarking(self):
+	        print('[INFO] Current Marking: ', self.n.get_marking())
+	        return self.n.get_marking()
+
+	    def saveMarking(self):
+	        self.SavedMarking = self.n.get_marking()
+	    
+	    def gotoSavedMarking(self):
+	        print('[INFO] Setting Petri net to Saved Marking: ', self.SavedMarking)
+	        self.n.set_marking(self.SavedMarking)
+
+	    @staticmethod
+	    def fireEnabledTransition(choices, cid):
+	        _t, _m = choices.get(int(cid))
+	        _t.fire(_m)
+	        print('[INFO] Transition Fired with ID: ', cid)
+
+	    def getEnabledTransitions(self):
+	        enabled_transition_modes = {}
+	        choices = {}
+	        for _t in self.n.transition():
+	            enabled_transition_modes[_t] = _t.modes()
+	            # print(enabled_transition_modes)
+	            chidx = 0
+	            for _key, _value in enabled_transition_modes.items():
+	                for _elm in _value:
+	                    choices[chidx] = _key, _elm
+	                    chidx = chidx + 1
+	        print('[INFO] Enabled Transition Choices: ', choices)
+	        return choices
+	    
 	    def generateScenarios(self, state_space, currentVertex, visited, visitedT, visitedTP, depth, limit):
 	        # print(currentVertex)
 	        # print(self.visitedList)
