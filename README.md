@@ -45,7 +45,7 @@ To create a development environment:
         - Click the **OK** button.
     - Check the checkbox for **OfflineMBT**, from the big list.
       It is under **Github Projects** / **<User>**.
-    - At the bottom right, select the **Eclipse 2024-09** stream.
+    - At the bottom right, select the **Main** stream.
     - Click the **Next** button.
 - In the third wizard window:
     - Enable the **Show all variables** option to show all options.
