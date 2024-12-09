@@ -35,15 +35,15 @@ StateMachineGenerationBlock:
 ;
 
 TestGeneration:
-    'generate-test-scenarios' (numSCN = Int)? 'with-strategy' 
+    'generate-test-scenarios' (numSCN = INT)? 'with-strategy' 
             (algorithmPrefixSuffix ?= 'prefix-suffix' 
             | algorithmPrefixSuffixMinimized ?= 'prefix-suffix-minimized'
             | algorithmPrefix ?= 'prefix' 
             | algorithmPrefixMinimized ?= 'prefix-minimized' 
             | algorithmDfs ?= 'dfs' | algorithmBfs ?= 'bfs') ('{' (
-                    ('k:' k = Int)? &
-                    ('timeout:' timeout = Int)? &
-                    ('similarity-threshold(0-100):' similarity = Int)? &
+                    ('k:' k = INT)? &
+                    ('timeout:' timeout = INT)? &
+                    ('similarity-threshold(0-100):' similarity = INT)? &
                     (skipDuplicateSelfLoop?='skip-duplicate-self-loop')? &
                     (skipSelfLoop?='skip-self-loop')? &
                     (skipAny?='skip-any')?

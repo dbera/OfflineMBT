@@ -168,7 +168,7 @@ enum EVENT_KIND:
 ;
 
 ActionList: {ActionList}
-	actions+=Action+
+	actions+=Action*
 ;
 
 /*

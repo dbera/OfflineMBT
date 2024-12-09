@@ -7,14 +7,26 @@ import org.eclipse.emf.common.util.EList
 
 class ExpressionGenerator extends ExpressionsCommaGenerator {
 	EList<StepReference> stepRef
+	String stepName
 
-	new(EList<StepReference> stepRef) {
+	new(EList<StepReference> stepRef, String stepName) {
 		this.stepRef = stepRef
+		this.stepName = stepName
 	}
 
 	override CharSequence getFunctionText(ExpressionFunctionCall e) {
 		if (e.getFunctionName().equals("add")) {
-			return String.format("add(%s,%s)", exprToComMASyntax(e.getArgs().get(0)), exprToComMASyntax(e.getArgs().get(1)))
+		    var lst = this.stepName + "." + exprToComMASyntax(e.getArgs().get(0))
+            var idx = exprToComMASyntax(e.getArgs().get(1));
+            var prefix = ""
+            for (sf : this.stepRef) {
+                for (rd : sf.refData) {
+                    if (idx.toString.contains(rd.name)) {
+                        prefix = "step_" + sf.refStep.name + ".output."
+                    }
+                }
+            }
+			return String.format("add(%s,%s)", lst, prefix+idx)
 		} else if (e.getFunctionName().equals("size")) {
 			return String.format("size(%s)", exprToComMASyntax(e.getArgs().get(0)))
 		} else if (e.getFunctionName().equals("isEmpty")) {

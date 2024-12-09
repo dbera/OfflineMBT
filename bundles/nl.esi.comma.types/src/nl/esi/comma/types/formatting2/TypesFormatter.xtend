@@ -126,7 +126,7 @@ class TypesFormatter extends AbstractFormatter2 {
 		kwRecord.append(oneSpace)
 		
 		val allBrackets = rFinder.keywordPairs(recordTypeDeclAccess.leftCurlyBracketKeyword_3,
-			recordTypeDeclAccess.rightCurlyBracketKeyword_6)		
+			recordTypeDeclAccess.rightCurlyBracketKeyword_5)		
 		if (!allBrackets.empty) {
 			val brackets = allBrackets.get(0)
 			brackets.interior(indent)
@@ -135,7 +135,7 @@ class TypesFormatter extends AbstractFormatter2 {
 			brackets.value.prepend(newLine)
 		}		
 		
-		for(ISemanticRegion region : rFinder.keywords(recordTypeDeclAccess.commaKeyword_5_0)) {
+		for(ISemanticRegion region : rFinder.keywords(recordTypeDeclAccess.commaKeyword_4_1_0)) {
 			region.prepend(noSpace)
 		}
 		

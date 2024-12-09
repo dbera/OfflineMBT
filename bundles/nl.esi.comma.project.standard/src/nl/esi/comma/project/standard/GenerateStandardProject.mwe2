@@ -47,6 +47,9 @@ Workflow {
 			formatter = formatting.Formatter2Fragment2 {				
 				generateStub =true		
 			}
+            contentAssist = nl.esi.xtext.lsp.generator.ide.contentassist.IdeContentAssistFragment2 {
+                generateXtendStub = true
+            }
 			generator = {
 				generateXtendMain = true
 			}

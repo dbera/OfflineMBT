@@ -318,18 +318,26 @@ class PetriNet {
 		import datetime
 		import json
 		import pprint
+		import argparse
+		from pathlib import Path
 		
 		from snakes.nets import *
 
-		from «prod_name»_TestSCN import TestSCN, Step, Tests, Constraint, CEntry
-		from «prod_name»_data import Data
-		from «prod_name»_Simulation import Simulation, simulate
+		if __package__ is None or __package__ == '':
+		    from «prod_name»_TestSCN import TestSCN, Step, Tests, Constraint, CEntry
+		    from «prod_name»_data import Data
+		    from «prod_name»_Simulation import Simulation, simulate
+		else:
+		    from .«prod_name»_TestSCN import TestSCN, Step, Tests, Constraint, CEntry
+		    from .«prod_name»_data import Data
+		    from .«prod_name»_Simulation import Simulation, simulate
 		import subprocess
 		import copy
 		import os
 		
 		snakes.plugins.load('gv', 'snakes.nets', 'nets')
 		from nets import *
+		# from CPNServer.utils import AbstractCPNControl
 		
 		
 		class «prod_name»Model:
@@ -375,6 +383,25 @@ class PetriNet {
 		
 		
 		if __name__ == '__main__':
+		    # check if there is custom output directory
+		    parser = argparse.ArgumentParser(
+		                    prog='ProgramName',
+		                    description='What the program does',
+		                    epilog='Text at the bottom of help')
+		    parser.add_argument("-tsdir","--tspec_dir",
+		                        type=Path,
+		                        default="generated_scenarios",
+		                        help="The directory in which tspec files produced will be saved")
+		    
+		    parser.add_argument("-pudir","--plantuml_dir",
+		                        type=Path,
+		                        default=os.getcwd(),
+		                        help="The directory in which plantuml files produced will be saved")
+		
+		    p = parser.parse_args()
+		    p.tspec_dir.mkdir(exist_ok=True)
+		    p.plantuml_dir.mkdir(exist_ok=True)
+		    
 		    a = datetime.datetime.now()
 		    pn = «prod_name»Model()
 		    print("[INFO] Loaded CPN model.")
@@ -395,7 +422,7 @@ class PetriNet {
 		        # for succ in s.successors():
 		            # rg_txt += '%s --> %s : %s\n' % (state,succ[0],succ[1])
 		    pn.rg_txt += "@enduml\n"
-		    fname = "rg.plantuml"
+		    fname = p.plantuml_dir / "rg.plantuml"
 		    with open(fname, 'w') as f:
 		        f.write(pn.rg_txt)
 		    print("[INFO] Created rg.platuml")
@@ -447,7 +474,7 @@ class PetriNet {
 		            txt += '    with /* %s */\n' %(k)
 		            txt += '    // -> <refer to a step sequence>\n'
 		    
-		    fname = "./generated_scenarios/_cm.tspec"
+		    fname = p.tspec_dir / "_cm.tspec"
 		    os.makedirs(os.path.dirname(fname), exist_ok=True)
 		    with open(fname, 'w') as f:
 		        f.write(txt)
@@ -534,17 +561,17 @@ class PetriNet {
 		                        # txt += "\t*/\n"
 		                j = j + 1
 		            _test_scn.compute_dependencies()
-		            _test_scn.generate_viz(i)
-		            _test_scn.generateTSpec(i)
+		            _test_scn.generate_viz(i, output_dir=p.plantuml_dir)
+		            _test_scn.generateTSpec(i, output_dir=p.tspec_dir)
 		            _tests.list_of_test_scn.append(_test_scn)
 		            # txt += '\ngenerate-file "./vfab2_scenario/"\n\n'
-		            # fname = "./generated_scenarios/scenario" + str(idx) +".tspec"
+		            # fname = p.tspec_dir / "scenario" / (str(idx) +".tspec")
 		            # os.makedirs(os.path.dirname(fname), exist_ok=True)
 		            # with open(fname, 'w') as f:
 		            #    f.write(txt)
 		        i = i + 1
 		    
-		    fname = "./generated_scenarios/tcs" + ".json"
+		    fname = p.tspec_dir / ("tcs"+".json")
 		    os.makedirs(os.path.dirname(fname), exist_ok=True)
 		    with open(fname, 'w') as f:
 		        f.write(_tests.toJSON())
@@ -593,7 +620,7 @@ class PetriNet {
 		        txt = map_block_uml_txt.get(key)
 		        txt += '@enduml\n'
 		        map_block_uml_txt[key] = txt
-		        fname = key + ".plantuml"
+		        fname = p.plantuml_dir / (key + ".plantuml")
 		        with open(fname, 'w') as f:
 		            f.write(txt)
 		    

@@ -46,150 +46,183 @@ the Department of Electrical Engineering of Eindhoven University of Technology.
    </license>
 
    <plugin
-         id="nl.esi.comma.behavior"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
          id="nl.esi.comma.expressions.ui"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
 
    <plugin
          id="nl.esi.comma.actions.ui"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
 
    <plugin
          id="nl.esi.comma.types.ide"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
 
    <plugin
          id="nl.esi.comma.signature.ui"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
 
    <plugin
          id="nl.esi.comma.types"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
 
    <plugin
          id="nl.esi.comma.actions"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
 
    <plugin
          id="nl.esi.comma.signature"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
 
    <plugin
          id="nl.esi.comma.signature.ide"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
 
    <plugin
          id="nl.esi.comma.expressions"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="nl.esi.comma.behavior.ui"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
 
    <plugin
          id="nl.esi.comma.expressions.ide"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
 
    <plugin
          id="nl.esi.comma.actions.ide"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="nl.esi.comma.behavior.ide"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
 
    <plugin
          id="nl.esi.comma.types.ui"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
 
    <plugin
          id="nl.esi.comma.testspecification"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
 
    <plugin
          id="nl.esi.comma.testspecification.ide"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
 
    <plugin
          id="nl.esi.comma.testspecification.ui"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
 
    <plugin
          id="nl.esi.comma.inputspecification"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
 
    <plugin
          id="nl.esi.comma.inputspecification.ide"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
 
    <plugin
          id="nl.esi.comma.inputspecification.ui"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
+
+   <plugin
+         id="nl.esi.comma.automata"
+         version="0.0.0"/>
+
+   <plugin
+         id="nl.esi.comma.behavior.scl"
+         version="0.0.0"/>
+
+   <plugin
+         id="nl.esi.comma.behavior.scl.ide"
+         version="0.0.0"/>
+
+   <plugin
+         id="nl.esi.comma.behavior.scl.ui"
+         version="0.0.0"/>
+
+   <plugin
+         id="nl.esi.comma.constraints"
+         version="0.0.0"/>
+
+   <plugin
+         id="nl.esi.comma.constraints.dashboard"
+         version="0.0.0"/>
+
+   <plugin
+         id="nl.esi.comma.constraints.ide"
+         version="0.0.0"/>
+
+   <plugin
+         id="nl.esi.comma.constraints.ui"
+         version="0.0.0"/>
+
+   <plugin
+         id="nl.esi.comma.project.standard"
+         version="0.0.0"/>
+
+   <plugin
+         id="nl.esi.comma.project.standard.ide"
+         version="0.0.0"/>
+
+   <plugin
+         id="nl.esi.comma.project.standard.ui"
+         version="0.0.0"/>
+
+   <plugin
+         id="nl.esi.comma.scenarios"
+         version="0.0.0"/>
+
+   <plugin
+         id="nl.esi.comma.scenarios.dashboard"
+         version="0.0.0"/>
+
+   <plugin
+         id="nl.esi.comma.scenarios.ide"
+         version="0.0.0"/>
+
+   <plugin
+         id="nl.esi.comma.scenarios.tests"
+         version="0.0.0"/>
+
+   <plugin
+         id="nl.esi.comma.scenarios.ui"
+         version="0.0.0"/>
+
+   <plugin
+         id="nl.esi.comma.steps"
+         version="0.0.0"/>
+
+   <plugin
+         id="nl.esi.comma.steps.ide"
+         version="0.0.0"/>
+
+   <plugin
+         id="nl.esi.comma.steps.ui"
+         version="0.0.0"/>
+
+   <plugin
+         id="nl.esi.comma.systemconfig"
+         version="0.0.0"/>
+
+   <plugin
+         id="nl.esi.comma.systemconfig.ide"
+         version="0.0.0"/>
+
+   <plugin
+         id="nl.esi.comma.systemconfig.tests"
+         version="0.0.0"/>
+
+   <plugin
+         id="nl.esi.comma.systemconfig.ui"
+         version="0.0.0"/>
+
+   <plugin
+         id="nl.asml.matala.product"
+         version="0.0.0"/>
+
+   <plugin
+         id="nl.asml.matala.product.ide"
+         version="0.0.0"/>
+
+   <plugin
+         id="nl.asml.matala.product.lsp.server"
+         version="0.0.0"/>
+
+   <plugin
+         id="nl.asml.matala.product.ui"
+         version="0.0.0"/>
 
 </feature>

@@ -94,7 +94,7 @@ ExpressionLevel9 returns Expression:
 	ExpressionVariable |
 	ExpressionRecord |
 	ExpressionAny |
-	ExpressionBulkData |
+//	ExpressionBulkData |
 	ExpressionFunctionCall |
 	ExpressionQuantifier |
 	ExpressionTypeAnnotated
@@ -137,7 +137,7 @@ Field:
 ;
 
 ExpressionBulkData : {ExpressionBulkData}
-	'Bulkdata' '<' (size = Int)? '>'
+	'Bulkdata' '<' (size = INT)? '>'
 ;
 
 ExpressionAny :
@@ -232,12 +232,12 @@ fragment InterfaceAwareType:
 ;
 
 // === Terminals =======
-terminal BOOL_LITERAL returns ecore::EBoolean:
+BOOL_LITERAL returns ecore::EBoolean:
 	'true' | 'false' | 'TRUE' | 'FALSE' | 'True' | 'False'
 ;	
 
-terminal FLOAT returns ecore::EDouble:
-	NUMBER '.' NUMBER (('E' | 'e') ('-')? NUMBER)?
+FLOAT returns ecore::EDouble:
+	INT '.' INT (('E' | 'e') ('-')? INT)?
 ;
 
-Long returns ecore::ELong: NUMBER;
+Long returns ecore::ELong: INT;

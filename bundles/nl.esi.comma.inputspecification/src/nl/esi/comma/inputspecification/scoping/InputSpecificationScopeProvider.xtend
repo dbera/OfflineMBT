@@ -3,27 +3,16 @@
  */
 package nl.esi.comma.inputspecification.scoping
 
-import java.util.ArrayList
-import java.util.HashMap
-import nl.esi.comma.behavior.behavior.BehaviorPackage
-import nl.esi.comma.behavior.behavior.State
-import nl.esi.comma.behavior.behavior.StateMachine
-import nl.esi.comma.behavior.behavior.Transition
-import nl.esi.comma.behavior.behavior.TriggeredTransition
-import nl.esi.comma.behavior.utilities.StateMachineUtilities
 import nl.esi.comma.expressions.expression.ExpressionPackage
-//import nl.esi.comma.inputspecification.inputSpecification.Body
-//import nl.esi.comma.inputspecification.inputSpecification.EventData
 import nl.esi.comma.inputspecification.inputSpecification.InputSpecificationPackage
-import nl.esi.comma.signature.interfaceSignature.Command
+import nl.esi.comma.inputspecification.inputSpecification.Tail
 import nl.esi.comma.signature.utilities.InterfaceUtilities
 import nl.esi.comma.types.utilities.CommaUtilities
 import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.EReference
+import org.eclipse.xtext.scoping.IScope
 
 import static org.eclipse.xtext.scoping.Scopes.*
-import org.eclipse.xtext.scoping.IScope
-import nl.esi.comma.inputspecification.inputSpecification.Tail
 
 /**
  * This class contains custom scoping description.
@@ -88,35 +77,6 @@ class InputSpecificationScopeProvider extends AbstractInputSpecificationScopePro
 		}		
 	}
 
-
-	// In progress: DB
-	def static HashMap<String, ArrayList<Transition>> getCommandsMapForState(StateMachine sm, State s) 
-	{
-		var commands_map = new HashMap<String, ArrayList<Transition>>
-		var ArrayList<Transition> list_of_command_transitions
-		
-		for(transition : StateMachineUtilities::transitionsForState(sm, s)) 
-		{
-			// if(transition.trigger !== null)
-			if(transition instanceof TriggeredTransition) 
-			{
-				if(transition.trigger instanceof Command) 
-				{
-					val transitionName = transition.trigger.name
-					if(commands_map.containsKey(transitionName)) {
-						list_of_command_transitions = commands_map.get(transitionName) }
-					else {
-						list_of_command_transitions = new ArrayList<Transition> }
-
-					list_of_command_transitions.add(transition)
-					commands_map.put(transitionName, list_of_command_transitions)
-				}
-			}
-		}
-		
-		commands_map
-	}
-	
 	// In Progress: DB	
 	//var SimpleAnyType wrapper = XMLTypeFactory.eINSTANCE.createSimpleAnyType();
 	//wrapper.setInstanceType(EcorePackage.eINSTANCE.getEInt());

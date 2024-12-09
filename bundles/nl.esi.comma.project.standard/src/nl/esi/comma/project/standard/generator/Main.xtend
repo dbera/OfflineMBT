@@ -3,18 +3,16 @@
  */
 package nl.esi.comma.project.standard.generator
 
-import nl.esi.comma.behavior.BehaviorStandaloneSetup
+import nl.esi.comma.inputspecification.InputSpecificationStandaloneSetup
 import nl.esi.comma.project.standard.StandardProjectStandaloneSetup
 import nl.esi.comma.signature.InterfaceSignatureStandaloneSetup
-import nl.esi.comma.types.generator.CommaMain
-import nl.esi.comma.inputspecification.InputSpecificationStandaloneSetup
 import nl.esi.comma.testspecification.TestspecificationStandaloneSetup
+import nl.esi.comma.types.generator.CommaMain
 
 class Main {
 
 	def static main(String[] args) {
 		InterfaceSignatureStandaloneSetup.doSetup
-		BehaviorStandaloneSetup.doSetup
 		InputSpecificationStandaloneSetup.doSetup
 		TestspecificationStandaloneSetup.doSetup
 

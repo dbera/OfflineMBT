@@ -103,7 +103,7 @@ class ProductGenerator extends AbstractGenerator {
 			var typeInst = typeResource.allContents.head
 			if(typeInst instanceof TypesModel) {
 				var txt = (new TypesZ3Generator).generateAllUserDefinedTypes(typeInst) 
-				fsa.generateFile('Z3//' + prod.specification.name + '_z3types.py', txt)
+				fsa.generateFile('CPNServer//' + prod.specification.name + '//Z3//' + prod.specification.name + '_z3types.py', txt)
 			}
 			import_list.add(imp.importURI)
 		}
@@ -131,10 +131,9 @@ class ProductGenerator extends AbstractGenerator {
 			methodTxt += tuple.value		
 		}
 		
-		fsa.generateFile(prod.specification.name + '_types.py', toTypes(prod.specification.name + "_types", import_list, var_decl_map))
-		
-		fsa.generateFile(prod.specification.name + '_model.plantuml', pnet.toPlantUML(pnet, false))
-		fsa.generateFile(prod.specification.name + '_system.plantuml', pnet.toPlantUML(pnet, true))
+		fsa.generateFile('CPNServer//' + prod.specification.name + '//' + prod.specification.name + '_types.py', toTypes(prod.specification.name + "_types", import_list, var_decl_map))
+		fsa.generateFile('CPNServer//' + prod.specification.name + '//plantuml//' + prod.specification.name + '_model.plantuml', pnet.toPlantUML(pnet, false))
+		fsa.generateFile('CPNServer//' + prod.specification.name + '//plantuml//' + prod.specification.name + '_system.plantuml', pnet.toPlantUML(pnet, true))
 		
 		pnet.display
 		
@@ -194,11 +193,22 @@ class ProductGenerator extends AbstractGenerator {
 			}
 			
 			var name = prod.specification.name
-			fsa.generateFile(name + '.py', pnet.toSnakes(name, name, listOfEnvBlocks, listOfAssertTransitions, mapOfSuppressTransitionVars, inout_places, init_places, depth_limit))
-			fsa.generateFile('server.py', (new FlaskSimulationGenerator).generateServer(name))
-			fsa.generateFile('client.py', (new FlaskSimulationGenerator).generateClient)
-			fsa.generateFile(name + '_Simulation.py', pnet.toSnakesSimulation)
-				
+			fsa.generateFile('CPNServer//' + prod.specification.name + '//' + name + '.py', pnet.toSnakes(name, name, listOfEnvBlocks, listOfAssertTransitions, mapOfSuppressTransitionVars, inout_places, init_places, depth_limit))
+			fsa.generateFile('CPNServer//' + prod.specification.name + '//' + 'server.py', (new FlaskSimulationGenerator).generateServer(name))
+			fsa.generateFile('CPNserver.py', (new FlaskSimulationGenerator).generateCPNServer)
+			fsa.generateFile('CPNclient.py', (new FlaskSimulationGenerator).generateCPNClient(prod.specification.name))
+			fsa.generateFile('CPNServer//' + prod.specification.name + '//' + 'client.py', (new FlaskSimulationGenerator).generateClient)
+			fsa.generateFile('CPNServer//' + prod.specification.name + '//' + name + '_Simulation.py', pnet.toSnakesSimulation)
+			
+            // generate utils for HTTP server
+            fsa.generateFile('CPNServer//' + prod.specification.name + '//' + '__init__.py', 
+                (new FlaskSimulationGenerator).generateInitForCPNSpecPkg(prod)
+            )
+            
+            fsa.generateFile('CPNServer//' + '__init__.py', 
+                (new FlaskSimulationGenerator).generateInitForCPNServerSpecPkg(prod)
+            )
+			
 			var data_container_class = 
 			'''
 			import copy
@@ -221,9 +231,8 @@ class ProductGenerator extends AbstractGenerator {
 				«dataGetterTxt»
 				«methodTxt»
 			'''
-			fsa.generateFile(name + '_data.py', data_container_class)
-			
-			fsa.generateFile(name + '_TestSCN.py', generateTestSCNTxt(prod.specification.name + "_types", prod))
+			fsa.generateFile('CPNServer//' + prod.specification.name + '//' + name + '_data.py', data_container_class)
+			fsa.generateFile('CPNServer//' + prod.specification.name + '//' + name + '_TestSCN.py', generateTestSCNTxt(prod.specification.name + "_types", prod))
 			
 			// execute python code
 			// val relativeFile = fsa.getURI(prod.name + '.py')
@@ -437,7 +446,7 @@ class ProductGenerator extends AbstractGenerator {
 		import json
 		import os
 		
-		from «name» import Types
+		# from .«prod.specification.name».«name» import Types
 		
 		
 		class Tests:
@@ -463,7 +472,7 @@ class ProductGenerator extends AbstractGenerator {
 		        self.map_transition_assert = _mapTrAssert
 		        self.constraint_dict = _constraint_dict
 		
-		    def generate_viz(self, idx):
+		    def generate_viz(self, idx, output_dir):
 		        txt = "@startuml\n"
 		        if len(self.step_list) > 0:
 		            # txt += "[*] --> %s : x\n" % self.step_list[0].step_name
@@ -477,7 +486,7 @@ class ProductGenerator extends AbstractGenerator {
 		                txt += "\nend note\n"
 		        txt += "@enduml"
 		
-		        fname = "./generated_scenarios/scenario" + str(idx) + ".plantuml"
+		        fname = output_dir / f"scenario{str(idx)}.plantuml"
 		        os.makedirs(os.path.dirname(fname), exist_ok=True)
 		        with open(fname, 'w') as f:
 		            f.write(txt)
@@ -519,7 +528,7 @@ class ProductGenerator extends AbstractGenerator {
 		            txt += "}\n"
 		        return txt
 				
-		    def generateTSpec(self, idx):
+		    def generateTSpec(self, idx, output_dir):
 		        txt = ""
 		        txt += "import \"BMMO.ps\"\n\n"
 		        «usageList(prod)»
@@ -590,7 +599,7 @@ class ProductGenerator extends AbstractGenerator {
 		                                    txt += "%s : \"%s\"\n" % (entry.name, entry.constr.replace('"','\\"'))
 		                txt += "\n"
 		        txt += '\ngenerate-file "./vfab2_scenario/"\n\n'
-		        fname = "./generated_scenarios/_scenario" + str(idx) + ".tspec"
+		        fname = output_dir / f"_scenario{str(idx)}.tspec"
 		        os.makedirs(os.path.dirname(fname), exist_ok=True)
 		        with open(fname, 'w') as f:
 		            f.write(txt)

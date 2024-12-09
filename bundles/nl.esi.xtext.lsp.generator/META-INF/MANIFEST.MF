@@ -1,0 +1,12 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Xtext LSP Generator
+Bundle-SymbolicName: nl.esi.xtext.lsp.generator
+Bundle-Version: 4.2.0.qualifier
+Export-Package: nl.esi.xtext.lsp.generator.ide.contentassist,
+ nl.esi.xtext.lsp.generator.lezer
+Require-Bundle: org.eclipse.xtend.lib,
+ org.eclipse.xtext,
+ org.eclipse.xtext.xtext.generator
+Automatic-Module-Name: nl.esi.xtext.lsp.generator
+Bundle-RequiredExecutionEnvironment: JavaSE-21

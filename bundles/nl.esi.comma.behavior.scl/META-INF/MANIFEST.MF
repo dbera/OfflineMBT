@@ -2,11 +2,12 @@ Manifest-Version: 1.0
 Automatic-Module-Name: nl.esi.comma.behavior.scl
 Bundle-ManifestVersion: 2
 Bundle-Name: nl.esi.comma.behavior.scl
-Bundle-Vendor: My Company
+Bundle-Vendor: TNO-ESI
 Bundle-Version: 4.2.0.qualifier
 Bundle-SymbolicName: nl.esi.comma.behavior.scl; singleton:=true
 Bundle-ActivationPolicy: lazy
-Require-Bundle: org.eclipse.xtext,
+Require-Bundle: nl.esi.comma.actions;visibility:=reexport,
+ org.eclipse.xtext,
  org.eclipse.xtext.xbase,
  org.eclipse.equinox.common;bundle-version="3.5.0",
  org.eclipse.xtext.xbase.lib;bundle-version="2.14.0",
@@ -15,15 +16,8 @@ Require-Bundle: org.eclipse.xtext,
  org.eclipse.emf.ecore,
  org.eclipse.emf.common,
  org.eclipse.core.resources;bundle-version="3.14.0",
- nl.esi.comma.automata;bundle-version="4.2.0",
- nl.esi.comma.expressions;bundle-version="4.2.0",
- nl.esi.comma.expressions.ide;bundle-version="4.2.0",
- nl.esi.comma.expressions.ui;bundle-version="4.2.0",
- nl.esi.comma.types;bundle-version="4.2.0",
- nl.esi.comma.signature;bundle-version="4.2.0",
- nl.esi.comma.actions;bundle-version="4.2.0",
- nl.esi.comma.behavior;bundle-version="4.2.0"
-Bundle-RequiredExecutionEnvironment: JavaSE-11
+ nl.esi.comma.automata
+Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: nl.esi.comma.behavior.scl,
  nl.esi.comma.behavior.scl.validation,
  nl.esi.comma.behavior.scl.scoping,

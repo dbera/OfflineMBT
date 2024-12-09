@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
     <groupId>nl.esi.comma</groupId>
     <artifactId>nl.esi.comma.configuration</artifactId>
     <version>4.2.0-SNAPSHOT</version>
@@ -9,23 +12,18 @@
     <properties>
         <release.type>latest</release.type>
 
-        <xtext.version>2.25.0</xtext.version>
-        <xtend.version>2.25.0</xtend.version>
-        <mwe2.version>2.12.1</mwe2.version>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
+        <java.version>21</java.version>
+        <tycho.version>4.0.9</tycho.version>
+
+        <xtext.version>2.36.0</xtext.version>
+        <xtend.version>${xtext.version}</xtend.version>
+        <mwe2.version>2.19.0</mwe2.version>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven-dependency-plugin.version>3.7.0</maven-dependency-plugin.version>
         <maven-antrun-plugin.version>3.1.0</maven-antrun-plugin.version>
         <maven-clean-plugin.version>3.2.0</maven-clean-plugin.version>
-        <!-- Tycho settings -->
-        <tycho.version>2.7.5</tycho.version>
-        <!-- Define overridable properties for tycho-surefire-plugin -->
-        <platformSystemProperties></platformSystemProperties>
-        <moduleProperties></moduleProperties>
-        <systemProperties></systemProperties>
-        <tycho.testArgLine></tycho.testArgLine>
+        <build-helper--plugin.version>3.6.0</build-helper--plugin.version>
 
         <m2doc.version>2.0.3</m2doc.version>
         <jacoco.version>0.8.6</jacoco.version>
@@ -33,10 +31,11 @@
         <!-- sonar properties -->
         <sonar.test.inclusions>**/*Test*/**</sonar.test.inclusions>
         <sonar.exclusions>/src-gen/**,/*Test*/**,**/*Formatter.java</sonar.exclusions>
+
+        <mwe2-workflow>PLEASE SPECIFY THE 'mwe2-workflow' PROPERTY IN YOUR MAVEN POM</mwe2-workflow>
     </properties>
 
     <build>
-
         <extensions>
             <extension>
                 <groupId>org.apache.maven.wagon</groupId>
@@ -58,6 +57,43 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-clean-plugin</artifactId>
                     <version>${maven-clean-plugin.version}</version>
+                    <configuration>
+                        <filesets combine.children="append">
+                            <fileset>
+                                <directory>${project.basedir}/xtend-gen</directory>
+                                <includes>
+                                    <include>**/*</include>
+                                </includes>
+                                <excludes>
+                                    <exclude>.gitignore</exclude>
+                                </excludes>
+                            </fileset>
+                        </filesets>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>build-helper-maven-plugin</artifactId>
+                    <version>${build-helper--plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.eclipse.xtend</groupId>
+                    <artifactId>xtend-maven-plugin</artifactId>
+                    <version>${xtend.version}</version>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>compile</goal>
+                                <goal>xtend-install-debug-info</goal>
+                                <goal>testCompile</goal>
+                                <goal>xtend-test-install-debug-info</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                    <configuration>
+                        <outputDirectory>${project.basedir}/xtend-gen</outputDirectory>
+                        <testOutputDirectory>${project.basedir}/xtend-gen</testOutputDirectory>
+                    </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.eclipse.tycho</groupId>
@@ -74,76 +110,6 @@
                                 <type>eclipse-plugin</type>
                             </dependency>
                         </dependencies>
-                    </configuration>
-                </plugin>
-                <plugin>
-                    <groupId>org.eclipse.m2e</groupId>
-                    <artifactId>lifecycle-mapping</artifactId>
-                    <version>1.0.0</version>
-                    <configuration>
-                        <lifecycleMappingMetadata>
-                            <pluginExecutions>
-                                <pluginExecution>
-                                    <pluginExecutionFilter>
-                                        <groupId>org.apache.maven.plugins</groupId>
-                                        <artifactId>maven-resources-plugin</artifactId>
-                                        <versionRange>[2.4.3,)</versionRange>
-                                        <goals>
-                                            <goal>resources</goal>
-                                            <goal>testResources</goal>
-                                        </goals>
-                                    </pluginExecutionFilter>
-                                    <action>
-                                        <ignore />
-                                    </action>
-                                </pluginExecution>
-                                <pluginExecution>
-                                    <pluginExecutionFilter>
-                                        <groupId>org.codehaus.mojo</groupId>
-                                        <artifactId>build-helper-maven-plugin</artifactId>
-                                        <versionRange>[1.9.1,)</versionRange>
-                                        <goals>
-                                            <goal>add-resource</goal>
-                                            <goal>add-source</goal>
-                                            <goal>add-test-resource</goal>
-                                            <goal>add-test-source</goal>
-                                        </goals>
-                                    </pluginExecutionFilter>
-                                    <action>
-                                        <ignore />
-                                    </action>
-                                </pluginExecution>
-                                <pluginExecution>
-                                    <pluginExecutionFilter>
-                                        <groupId>org.eclipse.tycho</groupId>
-                                        <artifactId>tycho-compiler-plugin</artifactId>
-                                        <versionRange>[0.23.1,)</versionRange>
-                                        <goals>
-                                            <goal>compile</goal>
-                                        </goals>
-                                    </pluginExecutionFilter>
-                                    <action>
-                                        <ignore />
-                                    </action>
-                                </pluginExecution>
-                                <pluginExecution>
-                                    <pluginExecutionFilter>
-                                        <groupId>org.eclipse.tycho</groupId>
-                                        <artifactId>tycho-packaging-plugin</artifactId>
-                                        <versionRange>[0.23.1,)</versionRange>
-                                        <goals>
-                                            <goal>build-qualifier</goal>
-                                            <goal>build-qualifier-aggregator</goal>
-                                            <goal>validate-id</goal>
-                                            <goal>validate-version</goal>
-                                        </goals>
-                                    </pluginExecutionFilter>
-                                    <action>
-                                        <ignore />
-                                    </action>
-                                </pluginExecution>
-                            </pluginExecutions>
-                        </lifecycleMappingMetadata>
                     </configuration>
                 </plugin>
                 <plugin>
@@ -186,6 +152,7 @@
                 <artifactId>target-platform-configuration</artifactId>
                 <version>${tycho.version}</version>
                 <configuration>
+                    <executionEnvironment>org.eclipse.justj.openjdk.hotspot.jre.full-${java.version}</executionEnvironment>
                     <target>
                         <artifact>
                             <groupId>nl.esi.comma</groupId>
@@ -193,8 +160,6 @@
                             <version>${project.version}</version>
                         </artifact>
                     </target>
-                    <!-- Required because of: https://www.eclipse.org/justj/?page=documentation -->
-                    <resolveWithExecutionEnvironmentConstraints>false</resolveWithExecutionEnvironmentConstraints>
                     <environments>
                         <environment>
                             <os>win32</os>
@@ -216,23 +181,157 @@
                 <version>3.13.0</version>
                 <configuration>
                     <compilerId>eclipse</compilerId>
-                    <source>${maven.compiler.source}</source>
-                    <target>${maven.compiler.target}</target>
                     <optimize>true</optimize>
                 </configuration>
                 <dependencies>
                     <dependency>
                         <groupId>org.codehaus.plexus</groupId>
                         <artifactId>plexus-compiler-eclipse</artifactId>
-                        <version>2.6</version>
+                        <version>2.15.0</version>
                         <scope>runtime</scope>
                     </dependency>
                 </dependencies>
+            </plugin>
+
+            <plugin>
+                <groupId>org.eclipse.xtend</groupId>
+                <artifactId>xtend-maven-plugin</artifactId>
             </plugin>
         </plugins>
     </build>
 
     <profiles>
+        <profile>
+            <id>xtext</id>
+            <activation>
+                <file>
+                    <exists>${project.basedir}/model/.gitignore</exists>
+                </file>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <version>3.4.1</version>
+                        <executions>
+                            <execution>
+                                <id>mwe2Launcher</id>
+                                <phase>generate-sources</phase>
+                                <goals>
+                                    <goal>java</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <mainClass>org.eclipse.emf.mwe2.launch.runtime.Mwe2Launcher</mainClass>
+                            <arguments>
+                                <argument>${mwe2-workflow}</argument>
+                                <argument>-p</argument>
+                                <argument>rootPath=/${project.basedir}/..</argument>
+                            </arguments>
+                            <classpathScope>compile</classpathScope>
+                            <includePluginDependencies>true</includePluginDependencies>
+                            <!-- see https://bugs.eclipse.org/bugs/show_bug.cgi?id=475098#c3 -->
+                            <cleanupDaemonThreads>false</cleanupDaemonThreads>
+                        </configuration>
+                        <dependencies>
+                            <dependency>
+                                <groupId>org.eclipse.emf</groupId>
+                                <artifactId>org.eclipse.emf.mwe2.launch</artifactId>
+                                <version>${mwe2.version}</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>org.eclipse.xtext</groupId>
+                                <artifactId>org.eclipse.xtext.common.types</artifactId>
+                                <version>${xtext.version}</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>org.eclipse.xtext</groupId>
+                                <artifactId>org.eclipse.xtext.xtext.generator</artifactId>
+                                <version>${xtext.version}</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>org.eclipse.xtext</groupId>
+                                <artifactId>org.eclipse.xtext.xbase</artifactId>
+                                <version>${xtext.version}</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>org.eclipse.xtext</groupId>
+                                <artifactId>xtext-antlr-generator</artifactId>
+                                <version>[2.1.1, 3)</version>
+                            </dependency>
+                        </dependencies>
+                    </plugin>
+                    <!-- Be very explicit to run this plugin after code generation -->
+                    <plugin>
+                        <groupId>org.eclipse.xtend</groupId>
+                        <artifactId>xtend-maven-plugin</artifactId>
+                    </plugin>
+                </plugins>
+                <pluginManagement>
+                    <plugins>
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-clean-plugin</artifactId>
+                            <configuration>
+                                <filesets combine.children="append">
+                                    <fileset>
+                                        <directory>${project.basedir}/model/generated/</directory>
+                                    </fileset>
+                                    <fileset>
+                                        <directory>${project.basedir}/../${project.artifactId}/src-gen/</directory>
+                                        <includes>
+                                            <include>**/*</include>
+                                        </includes>
+                                        <excludes>
+                                            <exclude>.gitignore</exclude>
+                                        </excludes>
+                                    </fileset>
+                                    <fileset>
+                                        <directory>${project.basedir}/../${project.artifactId}.ide/src-gen/</directory>
+                                        <includes>
+                                            <include>**/*</include>
+                                        </includes>
+                                        <excludes>
+                                            <exclude>.gitignore</exclude>
+                                        </excludes>
+                                    </fileset>
+                                    <fileset>
+                                        <directory>${project.basedir}/../${project.artifactId}.tests/src-gen/</directory>
+                                        <includes>
+                                            <include>**/*</include>
+                                        </includes>
+                                        <excludes>
+                                            <exclude>.gitignore</exclude>
+                                        </excludes>
+                                    </fileset>
+                                    <fileset>
+                                        <directory>${project.basedir}/../${project.artifactId}.ui/src-gen/</directory>
+                                        <includes>
+                                            <include>**/*</include>
+                                        </includes>
+                                        <excludes>
+                                            <exclude>.gitignore</exclude>
+                                        </excludes>
+                                    </fileset>
+                                    <fileset>
+                                        <directory>${project.basedir}/../${project.artifactId}.ui.tests/src-gen/</directory>
+                                        <includes>
+                                            <include>**/*</include>
+                                        </includes>
+                                        <excludes>
+                                            <exclude>.gitignore</exclude>
+                                        </excludes>
+                                    </fileset>
+                                </filesets>
+                            </configuration>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
+            </build>
+        </profile>
+
         <profile>
             <id>coverage</id>
             <activation>

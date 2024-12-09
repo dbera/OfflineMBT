@@ -3,9 +3,14 @@
  */
 package nl.esi.comma.constraints.ide
 
+import nl.esi.comma.types.ide.contentassist.TypesIdeContentProposalCreator
+import org.eclipse.xtext.ide.editor.contentassist.IdeContentProposalCreator
 
 /**
  * Use this class to register ide components.
  */
 class ConstraintsIdeModule extends AbstractConstraintsIdeModule {
+    def Class<? extends IdeContentProposalCreator> bindIdeContentProposalCreator() {
+        return TypesIdeContentProposalCreator
+    }
 }

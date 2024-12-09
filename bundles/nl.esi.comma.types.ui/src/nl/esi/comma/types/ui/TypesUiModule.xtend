@@ -3,9 +3,11 @@
  */
 package nl.esi.comma.types.ui
 
+import nl.esi.comma.types.ide.contentassist.TypesIdeContentProposalCreator
+import nl.esi.comma.types.ui.contentassist.CommaHyperLinkDetector
 import org.eclipse.jface.text.hyperlink.IHyperlinkDetector
 import org.eclipse.xtend.lib.annotations.FinalFieldsConstructor
-import nl.esi.comma.types.ui.contentassist.CommaHyperLinkDetector
+import org.eclipse.xtext.ide.editor.contentassist.IdeContentProposalCreator
 
 /**
  * Use this class to register components to be used within the Eclipse IDE.
@@ -16,4 +18,8 @@ class TypesUiModule extends AbstractTypesUiModule {
 	override Class<? extends IHyperlinkDetector> bindIHyperlinkDetector() {
 		return CommaHyperLinkDetector
 	}
+
+    def  Class<? extends IdeContentProposalCreator> bindIdeContentProposalCreator() {
+        return TypesIdeContentProposalCreator
+    }
 }

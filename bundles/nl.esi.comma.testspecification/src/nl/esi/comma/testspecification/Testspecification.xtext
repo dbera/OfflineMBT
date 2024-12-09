@@ -190,11 +190,11 @@ Tail:
 ;
 
 EventInstance:
-	'(' instanceID = Int ':' '(' evtCl += EventClause+ ')' params += EventParams* ')'
+	'(' instanceID = INT ':' '(' evtCl += EventClause+ ')' params += EventParams* ')'
 ;
 
 EventClause:
-	clauseID = Int | ',' clauseID = Int
+	clauseID = INT | ',' clauseID = INT
 ;
 
 EventParams: {EventParams}

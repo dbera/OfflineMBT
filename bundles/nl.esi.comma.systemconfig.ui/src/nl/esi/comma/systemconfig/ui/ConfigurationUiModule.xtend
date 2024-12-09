@@ -3,11 +3,16 @@
  */
 package nl.esi.comma.systemconfig.ui
 
+import nl.esi.comma.types.ide.contentassist.TypesIdeContentProposalCreator
 import org.eclipse.xtend.lib.annotations.FinalFieldsConstructor
+import org.eclipse.xtext.ide.editor.contentassist.IdeContentProposalCreator
 
 /**
  * Use this class to register components to be used within the Eclipse IDE.
  */
 @FinalFieldsConstructor
 class ConfigurationUiModule extends AbstractConfigurationUiModule {
+    def Class<? extends IdeContentProposalCreator> bindIdeContentProposalCreator() {
+        return TypesIdeContentProposalCreator
+    }
 }

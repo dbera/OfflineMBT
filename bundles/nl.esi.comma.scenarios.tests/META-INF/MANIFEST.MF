@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: nl.esi.comma.scenarios.tests
-Bundle-Vendor: TNO-ESI, Philips
+Bundle-Name: Scenarios Language Tests
+Bundle-Vendor: TNO-ESI
 Bundle-Version: 4.2.0.qualifier
 Bundle-SymbolicName: nl.esi.comma.scenarios.tests; singleton:=true
 Bundle-ActivationPolicy: lazy
@@ -10,7 +10,7 @@ Require-Bundle: nl.esi.comma.scenarios,
  org.eclipse.xtext.testing,
  org.eclipse.xtext.xbase.testing,
  org.eclipse.xtext.xbase.lib;bundle-version="2.15.0"
-Bundle-RequiredExecutionEnvironment: JavaSE-11
+Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: nl.esi.comma.scenarios.tests;x-internal=true
 Import-Package: org.hamcrest.core,
  org.junit;version="4.5.0",

@@ -111,8 +111,8 @@ TWINSCANKT:
 		'type' type = STRING
 		'scenario-param-name' ScenarioParameterName = STRING
 		'machine-id' machineID = STRING
-		'cpu-cores' CPU = Int
-		'memory-size' Memory = Int
+		'cpu-cores' CPU = INT
+		'memory-size' Memory = INT
 		'machine-type' MachineType = STRING
 		(useExisting?='use-existing')?
 		'sw-baseline' baseline = STRING
@@ -179,11 +179,11 @@ Tail:
 ;
 
 EventInstance:
-	'(' instanceID = Int ':' '(' evtCl += EventClause+ ')' params += EventParams* ')'
+	'(' instanceID = INT ':' '(' evtCl += EventClause+ ')' params += EventParams* ')'
 ;
 
 EventClause:
-	clauseID = Int | ',' clauseID = Int
+	clauseID = INT | ',' clauseID = INT
 ;
 
 EventParams: {EventParams}

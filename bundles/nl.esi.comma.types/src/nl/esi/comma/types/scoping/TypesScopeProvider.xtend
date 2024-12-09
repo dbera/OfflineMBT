@@ -15,13 +15,24 @@ import org.eclipse.xtext.scoping.impl.FilteringScope
  * on how and when to use it.
  */
 class TypesScopeProvider extends AbstractTypesScopeProvider {
-	
-	override getScope(EObject context, EReference reference){
-		if(reference == TypesPackage.Literals.SIMPLE_TYPE_DECL__BASE){
-			return new FilteringScope(super.getScope(context, reference), [val n = name.toString n.equals("int") || n.equals("string") || n.equals("real")])
-		}
-		
-		return super.getScope(context, reference);
-	}
-	
+    static val SIMPLE_TYPES_BASE = #{'int', 'real', 'string'}
+
+    override getScope(EObject context, EReference reference) {
+        //println(context.eClass.name + ' -> ' + reference.toPackageDeclaration)
+
+        val scope = super.getScope(context, reference)
+
+        return switch (reference) {
+            case TypesPackage.Literals.SIMPLE_TYPE_DECL__BASE: {
+                new FilteringScope(scope)[SIMPLE_TYPES_BASE.contains(name.toString)]
+            }
+            default: scope
+        }
+    }
+
+    protected def toPackageDeclaration(EReference reference) {
+        val eclassName = reference.EContainingClass.name.replaceAll('([^A-Z])([A-Z])', '$1_$2')
+        val referenceName = reference.name.replaceAll('([^A-Z])([A-Z])', '$1_$2')
+        return '''«reference.EContainingClass.EPackage.name.toFirstUpper»Package.Literals.«eclassName.toUpperCase»__«referenceName.toUpperCase»'''
+    }
 }

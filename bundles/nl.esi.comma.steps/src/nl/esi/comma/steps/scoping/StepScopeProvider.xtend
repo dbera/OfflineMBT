@@ -4,18 +4,12 @@
 package nl.esi.comma.steps.scoping
 
 import nl.esi.comma.steps.step.FeatureList
-import nl.esi.comma.steps.step.StepPackage
 import nl.esi.comma.systemconfig.configuration.ConfigurationPackage
 import nl.esi.comma.systemconfig.configuration.FeatureDefinition
 import nl.esi.comma.types.utilities.CommaUtilities
-import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.EReference
 import org.eclipse.xtext.scoping.IScope
 import org.eclipse.xtext.scoping.Scopes
-import nl.esi.comma.behavior.utilities.StateMachineUtilities
-import org.eclipse.emf.ecore.resource.Resource
-import org.eclipse.xtext.EcoreUtil2
-import nl.esi.comma.steps.step.Steps
 
 /**
  * This class contains custom scoping description.
@@ -25,26 +19,6 @@ import nl.esi.comma.steps.step.Steps
  */
 class StepScopeProvider extends AbstractStepScopeProvider {
 	
-	override getScope(EObject context, EReference reference) {
-		if (context instanceof FeatureList && reference == StepPackage.Literals.FEATURE_LIST__FEATURE_LIST) {
-			return scope_GlobalTypesForConfig(context as FeatureList, reference)
-		}
-		
-		return super.getScope(context, reference)
-	}
-	
-	def scope_GlobalTypesForConfig(FeatureList list, EReference reference) {
-		var types = newArrayList
-		for (imp : (list.eContainer as Steps).imports) {
-			val Resource r = EcoreUtil2.getResource(imp.eResource, imp.importURI)
-			val root = r.allContents.head
-				if (root instanceof FeatureDefinition) {
-					types.addAll(StateMachineUtilities::getGlobalTypesForConfig(root, this))
-				}
-		}
-		return Scopes.scopeFor(types)
-	}
-		
 	def IScope scope_FeatureDefinition(FeatureList context, EReference reference) {
 		var featureDefintions = CommaUtilities::resolveProxy(context, this.
 			getScope(context, ConfigurationPackage.Literals.FEATURE_DEFINITION__FEATURES).allElements)

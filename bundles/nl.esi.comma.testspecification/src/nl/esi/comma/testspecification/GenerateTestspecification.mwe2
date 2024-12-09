@@ -28,7 +28,6 @@ Workflow {
 			name = "nl.esi.comma.testspecification.Testspecification"
 			fileExtensions = "tspec"
 			
-			referencedResource = "platform:/resource/nl.esi.comma.behavior/model/generated/Behavior.genmodel"
 			referencedResource = "platform:/resource/nl.esi.comma.actions/model/generated/Actions.genmodel"
 			referencedResource = "platform:/resource/nl.asml.matala.product/model/generated/Product.genmodel"
 			
@@ -45,6 +44,9 @@ Workflow {
 //				generateXtendMain = true
 				generateJavaMain = true
 			}
+            contentAssist = nl.esi.xtext.lsp.generator.ide.contentassist.IdeContentAssistFragment2 {
+                generateXtendStub = true
+            }
 			junitSupport = {
 				junitVersion = "5"
 			}

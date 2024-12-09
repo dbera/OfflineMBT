@@ -1,13 +1,14 @@
 Manifest-Version: 1.0
 Automatic-Module-Name: nl.asml.matala.product.ui
 Bundle-ManifestVersion: 2
-Bundle-Name: nl.asml.matala.product.ui
-Bundle-Vendor: My Company
+Bundle-Name: Product Language UI
+Bundle-Vendor: TNO-ESI
 Bundle-Version: 4.2.0.qualifier
 Bundle-SymbolicName: nl.asml.matala.product.ui; singleton:=true
 Bundle-ActivationPolicy: lazy
-Require-Bundle: nl.asml.matala.product,
+Require-Bundle: nl.asml.matala.product;visibility:=reexport,
  nl.asml.matala.product.ide,
+ nl.esi.comma.actions.ui;visibility:=reexport,
  org.eclipse.xtext.ui,
  org.eclipse.xtext.ui.shared,
  org.eclipse.xtext.ui.codetemplates.ui,
@@ -16,14 +17,10 @@ Require-Bundle: nl.asml.matala.product,
  org.eclipse.ui,
  org.eclipse.compare,
  org.eclipse.xtext.builder,
- nl.esi.comma.types.ui;bundle-version="4.2.0",
- nl.esi.comma.expressions.ui;bundle-version="4.2.0",
- nl.esi.comma.actions.ui;bundle-version="4.2.0",
- nl.esi.comma.signature.ui;bundle-version="4.2.0",
- nl.esi.comma.behavior.ui;bundle-version="4.2.0"
+ org.eclipse.xtext.xbase.lib;bundle-version="2.36.0",
+ org.eclipse.xtend.lib;bundle-version="2.36.0";resolution:=optional
 Import-Package: org.apache.log4j
-Bundle-RequiredExecutionEnvironment: JavaSE-11
-Export-Package: nl.asml.matala.product.ui.contentassist,
- nl.asml.matala.product.ui.quickfix,
- nl.asml.matala.product.ui.internal
+Bundle-RequiredExecutionEnvironment: JavaSE-21
+Export-Package: nl.asml.matala.product.ui.internal,
+ nl.asml.matala.product.ui.quickfix
 Bundle-Activator: nl.asml.matala.product.ui.internal.ProductActivator

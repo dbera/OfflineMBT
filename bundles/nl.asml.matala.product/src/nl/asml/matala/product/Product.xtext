@@ -14,6 +14,7 @@ ModelContainer returns types::ModelContainer:
 Product:
 	imports += Import*
 	(namespace += NameSpace)*
+    types += TypeDecl*
 	( systemDecl = SystemDecl	
 	| specification = Specification)
 ;
@@ -34,7 +35,7 @@ Specification:
 	'specification' name = ID '{'
 		blocks += Blocks+
 		('SUT-blocks' envBlock += [Block|QualifiedName]*)?
-		'depth-limits' limit = Int
+		'depth-limits' limit = INT
 	'}'
 ;
 
@@ -52,10 +53,10 @@ RefBlock:
 Block:
 	'system' name = ID '{'
 		( // Unordered group for following items
-			('inputs' invars+=Variable+ )? &
-			('outputs' outvars+=Variable+)? &
-			('local' localvars+=Variable+ )? &
-			('init' initActions+=(AssignmentAction | RecordFieldAssignmentAction)+)? &
+			('inputs' invars+=Variable* )? &
+			('outputs' outvars+=Variable* )? &
+			('local' localvars+=Variable* )? &
+			('init' initActions+=(AssignmentAction | RecordFieldAssignmentAction)*)? &
 			'desc' type = STRING
 		)
 		functions += Function*
@@ -71,7 +72,7 @@ Update:
 	'case' name = ID 
 	('step-type' stepType = STRING 'action-type' actionType = ActionType)?
 	('with-inputs' fnInp += VarRef (',' fnInp+=VarRef)*)?
-	('with-guard' guard=Expression)?
+	('with-guard' guard=Expression?)?
 	updateOutputVar += UpdateOutVar*
 ;
 
@@ -91,15 +92,15 @@ VarRef:
 	(dataReferences = DataReferences)? 
 ;
 
-DataConstraints:
+DataConstraints: {DataConstraints}
 	'constraints' '{' 
-		constr += SymbConstraint+
+		constr += SymbConstraint*
 	 '}'
 ;
 
-DataReferences:
+DataReferences: {DataReferences}
 	'references' '{' 
-		constr += RefConstraint+
+		constr += RefConstraint*
 	 '}'
 ;
 

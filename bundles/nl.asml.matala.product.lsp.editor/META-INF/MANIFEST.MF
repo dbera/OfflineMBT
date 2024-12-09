@@ -1,0 +1,17 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Product Language LSP Editor
+Bundle-SymbolicName: nl.asml.matala.product.lsp.editor;singleton:=true
+Bundle-Vendor: TNO-ESI
+Bundle-Version: 4.2.0.qualifier
+Require-Bundle: org.eclipse.lsp4e,
+ org.eclipse.tm4e.registry,
+ org.eclipse.tm4e.languageconfiguration,
+ org.eclipse.ui,
+ org.eclipse.core.contenttype,
+ org.eclipse.core.runtime,
+ org.eclipse.ui.genericeditor,
+ org.eclipse.tm4e.ui,
+ nl.esi.xtext.lsp.server
+Automatic-Module-Name: nl.asml.matala.product.lsp.editor
+Bundle-RequiredExecutionEnvironment: JavaSE-21
