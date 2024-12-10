@@ -232,7 +232,7 @@ class ProductGenerator extends AbstractGenerator {
 				«methodTxt»
 			'''
 			fsa.generateFile('CPNServer//' + prod.specification.name + '//' + name + '_data.py', data_container_class)
-			fsa.generateFile('CPNServer//' + prod.specification.name + '//' + name + '_TestSCN.py', generateTestSCNTxt(prod.specification.name + "_types", prod))
+			fsa.generateFile('CPNServer//' + prod.specification.name + '//' + name + '_TestSCN.py', generateTestSCNTxt(prod.specification.name + "_types", prod, resource.URI.lastSegment))
 			
 			// execute python code
 			// val relativeFile = fsa.getURI(prod.name + '.py')
@@ -440,7 +440,7 @@ class ProductGenerator extends AbstractGenerator {
 	}
 
 	
-	def generateTestSCNTxt(String name, Product prod) {
+	def generateTestSCNTxt(String name, Product prod, String pSpecFile) {
 		return
 		'''
 		import json
@@ -530,7 +530,7 @@ class ProductGenerator extends AbstractGenerator {
 				
 		    def generateTSpec(self, idx, output_dir):
 		        txt = ""
-		        txt += "import \"BMMO.ps\"\n\n"
+		        txt += "import \"«pSpecFile»\"\n\n"
 		        «usageList(prod)»
 		        txt += "abstract-test-definition\n\n"
 		        txt += "Test-Scenario: S%s\n" % idx
