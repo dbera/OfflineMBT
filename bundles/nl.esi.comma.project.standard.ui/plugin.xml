@@ -8,7 +8,7 @@
 			contributorClass="org.eclipse.ui.editors.text.TextEditorActionContributor"
 			default="true"
 			extensions="prj"
-			icon="platform:/plugin/nl.esi.comma.project.ui/icons/icon_file_project.png"
+			icon="platform:/plugin/nl.esi.comma.project.standard.ui/icons/icon_template_project.png"
 			id="nl.esi.comma.project.standard.StandardProject"
 			name="StandardProject Editor">
 		</editor>
@@ -535,7 +535,7 @@
 	     point="org.eclipse.debug.ui.launchShortcuts">
 		  <shortcut
 		        class="nl.esi.comma.project.standard.ui.StandardProjectExecutableExtensionFactory:nl.esi.comma.project.standard.ui.handler.LaunchShortcut"
-		        icon="platform:/plugin/nl.esi.comma.project.ui/icons/comma_poosl_simulation.png"
+		        icon="platform:/plugin/nl.esi.comma.project.standard.ui/icons/icon_template_project.png"
 		        id="nl.esi.comma.launchShortcut.monitor"
 		        label="MBT Project Generation"
 		        modes="run,debug">
@@ -660,7 +660,7 @@
             category="nl.esi.comma"
             class="nl.esi.comma.project.standard.ui.wizard.StandardProjectWizard"
             hasPages="true"
-            icon="platform:/plugin/nl.esi.comma.project.ui/icons/icon_file_project.png"
+            icon="platform:/plugin/nl.esi.comma.project.standard.ui/icons/icon_template_project.png"
             id="nl.esi.comma.standard.project.ui.wizard.commaproject"
             name="ComMA Project"
             project="true">
