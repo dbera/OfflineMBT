@@ -16,10 +16,41 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <version>3.3.0</version>
+                <artifactId>maven-resources-plugin</artifactId>
                 <executions>
+                    <execution>
+                        <id>copy-docs</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/dist</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${basedir}/doc</directory>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>unpack-jre</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>unpack-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/dist</outputDirectory>
+                            <includeArtifactIds>org.eclipse.justj.openjdk.hotspot.jre.minimal.stripped.win32.x86_64</includeArtifactIds>
+                            <includes>jre/**/*</includes>
+                        </configuration>
+                    </execution>
                     <execution>
                         <id>copy-dependencies</id>
                         <phase>package</phase>
@@ -58,6 +89,9 @@
                                 org.eclipse.jdt.debug,
                                 org.eclipse.jdt.launching,
                                 org.eclipse.text,
+                                org.eclipse.justj.openjdk.hotspot.jre.minimal.stripped,
+                                org.eclipse.justj.openjdk.hotspot.jre.minimal.stripped.linux.x86_64,
+                                org.eclipse.justj.openjdk.hotspot.jre.minimal.stripped.win32.x86_64
                             </excludeArtifactIds>
                         </configuration>
                     </execution>
@@ -152,6 +186,7 @@
                     <shadedClassifierName>uber</shadedClassifierName>
                     <minimizeJar>false</minimizeJar>
                     <finalName>bpmn4s-lsp-server</finalName>
+                    <outputDirectory>${project.build.directory}/dist</outputDirectory>
                 </configuration>
                 <executions>
                     <execution>

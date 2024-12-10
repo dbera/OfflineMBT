@@ -10,9 +10,9 @@ name: Java CI with Maven
 
 on:
   push:
-    branches: [ "main", "2024-09" ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ "main", "2024-09" ]
+    branches: [ "main" ]
 
 jobs:
   build:
@@ -32,7 +32,7 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: bpmn4s-lsp-server
-        path: bundles/nl.asml.matala.product.lsp.server/target/bpmn4s-lsp-server.jar
+        path: bundles/nl.asml.matala.product.lsp.server/target/dist
         retention-days: 10
 
     # Optional: Uploads the full dependency graph to GitHub to improve the quality of Dependabot alerts this repository can receive

@@ -62,7 +62,7 @@
       <feature id="net.sourceforge.plantuml.ecore.feature" installMode="root"/>
       <feature id="net.sourceforge.plantuml.feature" installMode="root"/>
       <feature id="net.sourceforge.plantuml.lib.feature" installMode="root"/>
-      <feature id="org.eclipse.justj.openjdk.hotspot.jre.full" installMode="root"/>
+      <feature id="org.eclipse.justj.openjdk.hotspot.jre.minimal.stripped" installMode="root"/>
    </features>
 
    <configurations>
