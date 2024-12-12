@@ -4,14 +4,18 @@ import nl.esi.comma.expressions.expression.ExpressionFunctionCall
 import nl.esi.comma.expressions.generator.ExpressionsCommaGenerator
 import nl.esi.comma.testspecification.testspecification.StepReference
 import org.eclipse.emf.common.util.EList
+import nl.esi.comma.expressions.expression.ExpressionVector
+import java.util.ArrayList
 
 class ExpressionGenerator extends ExpressionsCommaGenerator {
 	EList<StepReference> stepRef
 	String stepName
+    String prefix
 
-	new(EList<StepReference> stepRef, String stepName) {
+	new(EList<StepReference> stepRef, String stepName, String prefix) {
 		this.stepRef = stepRef
 		this.stepName = stepName
+		this.prefix = prefix
 	}
 
 	override CharSequence getFunctionText(ExpressionFunctionCall e) {
@@ -59,4 +63,13 @@ class ExpressionGenerator extends ExpressionsCommaGenerator {
 			return String.format("deleteKey(%s,%s)", map, key);
 		}
 	}
+
+	 override dispatch CharSequence exprToComMASyntax(ExpressionVector e) {
+        var typ = typeToComMASyntax(e.typeAnnotation.type)
+        var lst = new ArrayList<String>()
+        for (el : e.elements) {
+            lst.add(this.prefix + exprToComMASyntax(el).toString)
+        }
+        return "<" + typ + ">[" + lst.join(", ") + "]"
+    }
 }

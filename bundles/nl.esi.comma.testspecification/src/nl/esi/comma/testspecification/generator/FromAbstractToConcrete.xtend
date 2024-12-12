@@ -77,7 +77,7 @@ class FromAbstractToConcrete
 
 	def printRecord(String stepName, String prefix, EList<StepReference> stepRef, RecordFieldAssignmentAction rec) {
 		var field = printField(rec.fieldAccess)
-		var value = (new ExpressionGenerator(stepRef,stepName)).exprToComMASyntax(rec.exp)
+		var value = (new ExpressionGenerator(stepRef,stepName,prefix)).exprToComMASyntax(rec.exp)
 		var p = (rec.exp instanceof ExpressionVector || rec.exp instanceof ExpressionFunctionCall) ? "" : prefix
 		return field + " := " + p + value
 	}
