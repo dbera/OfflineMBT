@@ -1,4 +1,4 @@
-package nl.esi.comma.testspecification.generator
+package nl.esi.comma.testspecification.generator.utils
 
 import java.util.ArrayList
 import java.util.List

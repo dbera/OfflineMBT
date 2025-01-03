@@ -1,4 +1,4 @@
-package nl.esi.comma.testspecification.generator
+package nl.esi.comma.testspecification.generator.fast
 
 import nl.esi.comma.inputspecification.inputSpecification.SUTDefinition
 import nl.esi.comma.inputspecification.inputSpecification.TWINSCANKT

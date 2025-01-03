@@ -1,4 +1,4 @@
-package nl.esi.comma.testspecification.generator
+package nl.esi.comma.testspecification.generator.markdown
 
 import java.util.ArrayList
 import nl.esi.comma.actions.actions.AssignmentAction
@@ -14,6 +14,11 @@ import org.eclipse.xtext.generator.IFileSystemAccess2
 import java.util.HashMap
 import java.util.List
 import nl.esi.comma.expressions.expression.Variable
+import nl.esi.comma.testspecification.generator.TestSpecificationInstance
+import nl.esi.comma.testspecification.generator.fast.ConcreteSUTHandler
+import nl.esi.comma.testspecification.generator.fast.ExpressionHandler
+import nl.esi.comma.testspecification.generator.utils.Step
+import nl.esi.comma.testspecification.generator.utils.InputDataInstance
 
 class TestDocumentationGenerator 
 {
@@ -187,7 +192,7 @@ class TestDocumentationGenerator
 											)
 											stepInst.parameters.add(mapLHStoRHS)
 											// note key = record variable, and value = recExp
-											var lhs = (new ExpressionHandler).getLHS(act) 
+											var lhs = ExpressionHandler::getLHS(act) 
 											stepInst.variableName = lhs.key
 											// this is empty. see get LHS.
 											stepInst.recordExp = lhs.value 	
@@ -211,15 +216,14 @@ class TestDocumentationGenerator
 					}
 				}
 				
-				var inputDataInst = new InputDataInstance()
-				var mapStepToInputData = inputDataInst.computeInputDataInstances(resource, modelInst, tsInst)
+				var mapStepToInputData = InputDataInstance::computeInputDataInstances(resource, modelInst, tsInst)
 				
 				// Generate PlantUML txt
-				var plantUMLTxt = (new DocGen).generatePlantUMLFile(tsInst.listStepInstances, mapStepSeqToSteps)
+				var plantUMLTxt = DocGen::generatePlantUMLFile(tsInst.listStepInstances, mapStepSeqToSteps)
 				fsa.generateFile(configName + ".plantuml", plantUMLTxt)
 				
 				// Generate MD File
-				var mdTxt = (new DocGen).generateMDFile(tsInst, mapStepToInputData, _sutHandler, featureList, configName)
+				var mdTxt = DocGen::generateMDFile(tsInst, mapStepToInputData, _sutHandler, featureList, configName)
 				fsa.generateFile(configName + "_doc.md", mdTxt)
 				
 				// Turn off during production!

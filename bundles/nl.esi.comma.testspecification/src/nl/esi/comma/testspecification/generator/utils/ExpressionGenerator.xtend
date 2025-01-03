@@ -1,4 +1,4 @@
-package nl.esi.comma.testspecification.generator
+package nl.esi.comma.testspecification.generator.utils
 
 import nl.esi.comma.expressions.expression.ExpressionFunctionCall
 import nl.esi.comma.expressions.generator.ExpressionsCommaGenerator

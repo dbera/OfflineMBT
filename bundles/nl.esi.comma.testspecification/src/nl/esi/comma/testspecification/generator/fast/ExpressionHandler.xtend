@@ -1,4 +1,4 @@
-package nl.esi.comma.testspecification.generator
+package nl.esi.comma.testspecification.generator.fast
 
 import nl.esi.comma.actions.actions.AssignmentAction
 import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
@@ -8,6 +8,8 @@ import nl.esi.comma.expressions.expression.ExpressionVariable
 import java.util.regex.Pattern
 import java.util.HashMap
 import java.util.List
+import nl.esi.comma.testspecification.generator.utils.KeyValue
+import nl.esi.comma.testspecification.generator.utils.ExpressionsParser
 
 class ExpressionHandler 
 {
@@ -89,18 +91,18 @@ class ExpressionHandler
 	}
 	// End Expression Handler //
 
-	def dispatch KeyValue getLHS(AssignmentAction action) {
+	def static dispatch KeyValue getLHS(AssignmentAction action) {
 		var kv = new KeyValue
 		kv.key = action.assignment.name
 		kv.value = new String
 		return kv
 	}
 	
-	def dispatch KeyValue getLHS(RecordFieldAssignmentAction action) {
+	def static dispatch KeyValue getLHS(RecordFieldAssignmentAction action) {
 		return getLHSRecAssignment(action.fieldAccess as ExpressionRecordAccess, action.exp)
 	}
 	
-	def KeyValue getLHSRecAssignment(ExpressionRecordAccess eRecAccess, Expression exp) {
+	def static KeyValue getLHSRecAssignment(ExpressionRecordAccess eRecAccess, Expression exp) {
 		var record = eRecAccess.record
         var field = eRecAccess.field
         var recExp = ''''''

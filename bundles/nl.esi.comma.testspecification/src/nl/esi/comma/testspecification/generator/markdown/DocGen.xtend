@@ -1,18 +1,21 @@
-package nl.esi.comma.testspecification.generator
+package nl.esi.comma.testspecification.generator.markdown
 
 import java.util.ArrayList
 import java.util.HashMap
 import java.util.List
+import nl.esi.comma.testspecification.generator.TestSpecificationInstance
+import nl.esi.comma.testspecification.generator.fast.ConcreteSUTHandler
+import nl.esi.comma.testspecification.generator.utils.Step
 
 class DocGen 
 {
-	def getStep(ArrayList<Step> listStepInstances, String name) {
+	def static getStep(ArrayList<Step> listStepInstances, String name) {
 		for(elm : listStepInstances) {
 			if(elm.id.equals(name)) return elm
 		}
 	}
 	
-	def generateMDFile(TestSpecificationInstance tsInst, 
+	def static generateMDFile(TestSpecificationInstance tsInst, 
 		HashMap<String, String> mapStepToInputData,
 		ConcreteSUTHandler _sutHandler, 
 		List<String> featureList,
@@ -60,7 +63,7 @@ class DocGen
 		return txt
 	}
 	
-	def generatePlantUMLFile(
+	def static generatePlantUMLFile(
 		ArrayList<Step> listStepInstances, 
 		HashMap<String, List<String>> mapStepSeqToSteps
 	) {

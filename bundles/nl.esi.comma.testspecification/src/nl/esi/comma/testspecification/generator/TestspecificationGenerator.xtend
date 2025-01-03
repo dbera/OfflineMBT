@@ -4,26 +4,15 @@
 package nl.esi.comma.testspecification.generator
 
 import java.util.ArrayList
-import java.util.HashMap
 import java.util.HashSet
 import java.util.List
-import java.util.Map
-import java.util.regex.Pattern
 import nl.asml.matala.product.product.Product
 import nl.esi.comma.actions.actions.AssignmentAction
 import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
-import nl.esi.comma.expressions.expression.Expression
-import nl.esi.comma.expressions.expression.ExpressionRecordAccess
-import nl.esi.comma.expressions.expression.ExpressionVariable
 import nl.esi.comma.inputspecification.inputSpecification.APIDefinition
-import nl.esi.comma.inputspecification.inputSpecification.LISVCP
 import nl.esi.comma.inputspecification.inputSpecification.Main
 import nl.esi.comma.inputspecification.inputSpecification.SUTDefinition
-import nl.esi.comma.inputspecification.inputSpecification.TWINSCANKT
-import nl.esi.comma.testspecification.testspecification.AbstractStep
 import nl.esi.comma.testspecification.testspecification.AbstractTestDefinition
-import nl.esi.comma.testspecification.testspecification.ContextMap
-import nl.esi.comma.testspecification.testspecification.StepSequence
 import nl.esi.comma.testspecification.testspecification.TSMain
 import nl.esi.comma.testspecification.testspecification.TestDefinition
 import org.eclipse.emf.ecore.resource.Resource
@@ -31,6 +20,12 @@ import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
+import nl.esi.comma.testspecification.generator.fast.FastUtils
+import nl.esi.comma.testspecification.generator.markdown.TestDocumentationGenerator
+import nl.esi.comma.testspecification.generator.utils.Step
+import nl.esi.comma.testspecification.generator.utils.JSONData
+import nl.esi.comma.testspecification.generator.fast.ExpressionHandler
+import nl.esi.comma.testspecification.generator.abstractToConcrete.FromAbstractToConcrete
 
 /**
  * Generates code from your model files on save.
@@ -40,30 +35,18 @@ import org.eclipse.xtext.generator.IGeneratorContext
 class TestspecificationGenerator extends AbstractGenerator 
 {
 	var Resource _resource
+	var TestSpecificationInstance tspecInst
 	
 	/* TODO this should come from project task? Investigate and Implement it. */
 	var record_path_for_lot_def = "TwinscanControllerInput.concrete_expose_job.lot_def" 
 	var record_lot_def_file_name = "lot_definition"
 	var record_lot_def_file_path_prefix = "./vfab2_scenario/FAST/generated_FAST/dataset/"
-	
-	// In-Memory Data Structures corresponding *.tspec (captured in resource object)
-	var mapLocalDataVarToDataInstance = new HashMap<String, List<String>>
-	var mapLocalStepInstance = new HashMap<String, List<String>>
-	var mapLocalSUTVarToDataInstance = new HashMap<String, List<String>>
-	var mapDataInstanceToFile = new HashMap<String, List<String>>
-	var mapSUTInstanceToFile = new HashMap<String, List<String>>
-	var listStepInstances = new ArrayList<Step>
 		
 	// On save of TSPEC file, this function is called by Eclipse Framework
 	override void doGenerate(Resource resource, IFileSystemAccess2 fsa, IGeneratorContext context) 
 	{
-		mapLocalDataVarToDataInstance = new HashMap<String, List<String>>
-		mapLocalStepInstance = new HashMap<String, List<String>>
-		mapLocalSUTVarToDataInstance = new HashMap<String, List<String>>
-		mapDataInstanceToFile = new HashMap<String, List<String>>
-		mapSUTInstanceToFile = new HashMap<String, List<String>>
-		listStepInstances = new ArrayList<Step>
-
+		tspecInst = new TestSpecificationInstance
+		
 		if(resource.allContents.head instanceof TSMain) {
 			_resource = resource
 			val modelInst = resource.allContents.head as TSMain
@@ -88,118 +71,6 @@ class TestspecificationGenerator extends AbstractGenerator
 		}		
 	}
 	
-	// This function was specifically written for transformation of abstract test cases
-	// to concrete test specification. Consider moving it somewhere dedicated!
-	def generateAbstractTest(IFileSystemAccess2 fsa) 
-	{
-		val modelInst = _resource.allContents.head as TSMain // This is our abstract test spec
-		var testDefFilePath = new String
-		var mapActToStepSequence = new HashMap<String,StepSequence>
-		
-		for(imp : modelInst.imports) {
-			// expect: import of only context map type.
-			// Assumption: At most one
-			val inputCMResource = EcoreUtil2.getResource(_resource, imp.importURI)
-			var inputCM = inputCMResource.allContents.head
-			if(inputCM instanceof TSMain) {
-				if(inputCM.model instanceof ContextMap) {
-					mapActToStepSequence = getCMStepRef(inputCM.model as ContextMap)
-					// now we will recursively parse this files imports
-					var TSMain _inputTSpec
-					for(cm_imp : inputCM.imports) {
-						// Assumption: At most one import
-						val inputTSRes = EcoreUtil2.getResource(_resource, cm_imp.importURI)
-						var inputTSpec = inputTSRes.allContents.head
-						if(inputTSpec instanceof TSMain) {
-							_inputTSpec = inputTSpec
-							// Process TSPEC Imports.
-							for(_imp : inputTSpec.imports) {
-								val inputResource = EcoreUtil2.getResource(_resource, _imp.importURI)
-								var input = inputResource.allContents.head
-								if( input instanceof Main) {
-									if(input.model instanceof APIDefinition) {
-										val apidef = input.model as APIDefinition
-										for(api : apidef.apiImpl) {
-											for(elm : api.di)
-												addMapDataInstanceToFile(elm.^var.name, api.path + elm.fname)
-										}
-									} 
-									else if(input.model instanceof SUTDefinition) { } 
-									else { System.out.println("Error: Unhandled Model Type! ")}
-								}
-							}
-						}
-					}
-					
-					if(_inputTSpec !== null)
-					{
-						// Parse TSPEC Test Definition
-						val model = _inputTSpec.model
-						val abstract_model = modelInst.model
-						if(model instanceof TestDefinition) 
-						{
-							if(abstract_model instanceof AbstractTestDefinition) 
-								testDefFilePath = abstract_model.filePath
-							//for(gpars : model.gparams) { addMapLocalDataVarToDataInstance(gpars.name, new String) }
-							for(steppars : model.stepparams) { 
-								addMapLocalStepInstance(steppars.name, steppars.type.type.name)
-							}
-							//for(sutpars : model.sutparams) { addMapLocalSUTVarToDataInstance(sutpars.name, new String) }
-							for(act : model.gparamsInitActions) {
-								var mapLHStoRHS = generateInitAssignmentAction(act)
-								addMapLocalDataVarToDataInstance(mapLHStoRHS.key, mapLHStoRHS.value)
-							}
-							for(act : model.sutInitActions) {
-								var mapLHStoRHS = generateInitAssignmentAction(act)
-								addMapLocalSUTVarToDataInstance(mapLHStoRHS.key, mapLHStoRHS.value)
-							}
-							
-							// Parse Step Sequence 
-							val stepSequence = getAbstractStepSequence((abstract_model as AbstractTestDefinition), mapActToStepSequence)
-							for(s : stepSequence) {
-								var stepInst = new Step
-								stepInst.id = s.inputVar.name //stepVar.name // was identifier
-								stepInst.type = s.type.name
-								stepInst.inputFile = mapDataInstanceToFile.get(s.stepVar.name).head
-								// check if additional data was specified in a step
-								for(ref : s.refStep) {
-								//if(s.input!==null) {
-									for(act : ref.input.actions) {
-										if(	act instanceof AssignmentAction || act instanceof RecordFieldAssignmentAction) 
-										{
-											var mapLHStoRHS = generateInitAssignmentAction(act)
-											stepInst.parameters.add(mapLHStoRHS)
-											var lhs = getLHS(act) // note key = record variable, and value = recExp
-											stepInst.variableName = lhs.key
-											stepInst.recordExp = lhs.value
-										}
-									}
-								}
-								listStepInstances.add(stepInst)
-							}
-						}
-						
-						// update step file names based on checking if additional data was specified. 
-						for(step : listStepInstances) {
-							if(!step.parameters.isEmpty) {
-								step.inputFile = step.inputFile.replaceAll(".json", "_" + step.id + ".json")
-							}
-						}
-						
-						// Turn off during production!
-						displayParseResults
-						
-						// generate data.kvp file
-						fsa.generateFile(testDefFilePath + "data.kvp", generateFASTScenarioFile)
-						
-						// Generate JSON data files and vfd.xml
-						generateJSONDataAndVFDFiles(testDefFilePath, fsa, _inputTSpec)
-					}
-				}
-			}	
-		}
-	}
-	
 	// Generate data.kvp and referenced JSON files
 	def generateContents(IFileSystemAccess2 fsa) 
 	{
@@ -215,7 +86,7 @@ class TestspecificationGenerator extends AbstractGenerator
 					val apidef = input.model as APIDefinition
 					for(api : apidef.apiImpl) {
 						for(elm : api.di)
-							addMapDataInstanceToFile(elm.^var.name, api.path + elm.fname)
+							tspecInst.addMapDataInstanceToFile(elm.^var.name, api.path + elm.fname)
 					}
 				} else if(input.model instanceof SUTDefinition) {
 					/*val sutdef = input.model as SUTDefinition
@@ -235,16 +106,16 @@ class TestspecificationGenerator extends AbstractGenerator
 			testDefFilePath = model.filePath
 			//for(gpars : model.gparams) { addMapLocalDataVarToDataInstance(gpars.name, new String) }
 			for(steppars : model.stepparams) { 
-				addMapLocalStepInstance(steppars.name, steppars.type.type.name)
+				tspecInst.addMapLocalStepInstance(steppars.name, steppars.type.type.name)
 			}
 			//for(sutpars : model.sutparams) { addMapLocalSUTVarToDataInstance(sutpars.name, new String) }
 			for(act : model.gparamsInitActions) {
-				var mapLHStoRHS = generateInitAssignmentAction(act)
-				addMapLocalDataVarToDataInstance(mapLHStoRHS.key, mapLHStoRHS.value)
+				var mapLHStoRHS = tspecInst.generateInitAssignmentAction(act)
+				tspecInst.addMapLocalDataVarToDataInstance(mapLHStoRHS.key, mapLHStoRHS.value)
 			}
 			for(act : model.sutInitActions) {
-				var mapLHStoRHS = generateInitAssignmentAction(act)
-				addMapLocalSUTVarToDataInstance(mapLHStoRHS.key, mapLHStoRHS.value)
+				var mapLHStoRHS = tspecInst.generateInitAssignmentAction(act)
+				tspecInst.addMapLocalSUTVarToDataInstance(mapLHStoRHS.key, mapLHStoRHS.value)
 			}
 			
 			// Parse Step Sequence
@@ -253,15 +124,15 @@ class TestspecificationGenerator extends AbstractGenerator
 				var stepInst = new Step
 				stepInst.id = s.inputVar.name //stepVar.name // was identifier
 				stepInst.type = s.type.name
-				stepInst.inputFile = mapDataInstanceToFile.get(s.stepVar.name).head
+				stepInst.inputFile = tspecInst.mapDataInstanceToFile.get(s.stepVar.name).head
 				// check if additional data was specified in a step
 				for(ref : s.refStep) {
 				//if(s.input!==null) {
 					for(act : ref.input.actions) {
 						if(	act instanceof AssignmentAction || act instanceof RecordFieldAssignmentAction) 
 						{
-							var mapLHStoRHS = generateInitAssignmentAction(act)
-							var lhs = getLHS(act) // note key = record variable, and value = recExp
+							var mapLHStoRHS = tspecInst.generateInitAssignmentAction(act)
+							var lhs = ExpressionHandler::getLHS(act) // note key = record variable, and value = recExp
 							stepInst.variableName = lhs.key // Note DB: This is the same for all actions
 							stepInst.recordExp = lhs.value // Note DB: This keeps overwriting (record prefix)
 							// System.out.println("DEBUG: " + lhs.value)
@@ -278,9 +149,7 @@ class TestspecificationGenerator extends AbstractGenerator
 									var rstepInst = new Step
 									rstepInst.id = lhs.value
 									rstepInst.type = s.type.name
-									rstepInst.inputFile = record_lot_def_file_path_prefix /*+ 
-														  record_lot_def_file_name + "_" + 
-														  s.inputVar.name + ".json"*/
+									rstepInst.inputFile = record_lot_def_file_path_prefix 
 									rstepInst.variableName = record_lot_def_file_name
 									rstepInst.recordExp = stepInst.id
 									stepInst.stepRefs.add(rstepInst)					
@@ -292,49 +161,25 @@ class TestspecificationGenerator extends AbstractGenerator
 					}
 				}
 				// stepInst.display
-				listStepInstances.add(stepInst)
+				tspecInst.listStepInstances.add(stepInst)
 			}
 		}
 		
 		// update step file names based on checking if additional data was specified. 
-		for(step : listStepInstances) {
+		for(step : tspecInst.listStepInstances) {
 			if(!step.parameters.isEmpty) {
 				step.inputFile = step.inputFile.replaceAll(".json", "_" + step.id + ".json")
 			}
 		}
 		
 		// Turn off during production!
-		displayParseResults
+		tspecInst.displayParseResults
 		
 		// generate data.kvp file
-		fsa.generateFile(testDefFilePath + "data.kvp", generateFASTScenarioFile)
+		fsa.generateFile(testDefFilePath + "data.kvp", tspecInst.generateFASTScenarioFile)
 		
 		// Generate JSON data files and vfd.xml
-		generateJSONDataAndVFDFiles(testDefFilePath, fsa, modelInst)
-	}
-	
-	def getCMStepRef(ContextMap cm) {
-		var mapActToStepSequence = new HashMap<String,StepSequence>
-		for(elm : cm.TMap) {
-			mapActToStepSequence.put(elm.name,elm.stepSeqId)
-		}
-		return mapActToStepSequence
-	}
-	
-	def getAbstractStepSequence(AbstractTestDefinition atd, 
-		Map<String,StepSequence> mapActToStepSequence
-	) {
-		var listStepSequence = new ArrayList<nl.esi.comma.testspecification.testspecification.Step>
-		for(elm: atd.testSeq) {
-			for(s : elm.step) {
-				if(s instanceof AbstractStep) {
-					if(mapActToStepSequence.get(s.name)!== null)
-						for(st: mapActToStepSequence.get(s.name).step)
-							listStepSequence.add(st)
-				}
-			}
-		}
-		return listStepSequence
+		generateJSONDataAndVFDFiles(testDefFilePath, fsa, modelInst, tspecInst)
 	}
 	
 	def getStepSequence(TestDefinition td) {
@@ -353,164 +198,15 @@ class TestspecificationGenerator extends AbstractGenerator
 		}
 		return listStepSequence
 	}
-	
-	def dispatch KeyValue getLHS(AssignmentAction action) {
-		var kv = new KeyValue
-		kv.key = action.assignment.name
-		kv.value = new String
-		return kv
-	}
-	
-	def dispatch KeyValue getLHS(RecordFieldAssignmentAction action) {
-		return getLHSRecAssignment(action.fieldAccess as ExpressionRecordAccess, action.exp)
-	}
-	
-	def KeyValue getLHSRecAssignment(ExpressionRecordAccess eRecAccess, Expression exp) {
-		var record = eRecAccess.record
-        var field = eRecAccess.field
-        var recExp = ''''''
-             
-        while(! (record instanceof ExpressionVariable)) {
-        	if(recExp.empty) recExp = '''«(record as ExpressionRecordAccess).field.name»'''
-            else recExp = '''«(record as ExpressionRecordAccess).field.name».''' + recExp
-            record = (record as ExpressionRecordAccess).record
-        }
-        // System.out.println("DEBUG: " + recExp)
-		val varExp = record as ExpressionVariable
-		var kv = new KeyValue
-		kv.key = varExp.variable.name
-		kv.value = recExp
-		return kv
-	}
-	
-	// Expression Handler //
-	def dispatch KeyValue generateInitAssignmentAction(AssignmentAction action) {
-		var mapLHStoRHS = new KeyValue //HashMap<String,String>
-		mapLHStoRHS.key =  action.assignment.name
-		mapLHStoRHS.value = ExpressionsParser::generateExpression(action.exp, '''''').toString
-		/*if(mapLHStoRHS.value.contains('''platform:''') || mapLHStoRHS.value.contains('''setup.suts''')) 
-			{
-				System.out.println(" DETECTED PLATFORM: " + mapLHStoRHS.value)
-				mapLHStoRHS.value = mapLHStoRHS.value.replaceAll("^\"|\"$", "")
-				
-				}*/
-		// replace references to global variables with FAST syntax
-		for(elm : mapLocalDataVarToDataInstance.keySet) {
-			if(mapLHStoRHS.value.contains(elm)) {
-				mapLHStoRHS.value = mapLHStoRHS.value.replaceAll(elm, "global.params['" + elm + "']")
-			}	
-		}
-		return mapLHStoRHS
-	}
-	
-	def dispatch KeyValue generateInitAssignmentAction(RecordFieldAssignmentAction action) {
-		return generateInitRecordAssignment(action.fieldAccess as ExpressionRecordAccess, action.exp, '''''')
-	}
-
-	def generateInitRecordAssignment(ExpressionRecordAccess eRecAccess, Expression exp, CharSequence ref) {
-		var mapLHStoRHS = new KeyValue
-		
-        var record = eRecAccess.record
-        var field = eRecAccess.field
-        var recExp = ''''''
-             
-        while(! (record instanceof ExpressionVariable)) {
-        	if(recExp.empty) recExp = '''«(record as ExpressionRecordAccess).field.name»'''
-            else recExp = '''«(record as ExpressionRecordAccess).field.name».''' + recExp
-            record = (record as ExpressionRecordAccess).record
-        }
-        // System.out.println(" DEBUG: " + recExp)
-		// val varExp = record as ExpressionVariable
-		mapLHStoRHS.key = field.name
-		mapLHStoRHS.value = ExpressionsParser::generateExpression(exp, ref).toString
-		mapLHStoRHS.refVal.add(mapLHStoRHS.value) // Added DB 14.10.2024
-
-		// modify key value data structure to JSON
-		/*mapLHStoRHS.value = mapLHStoRHS.value.replaceAll("\"key\" : ","")
-		mapLHStoRHS.value = mapLHStoRHS.value.replaceAll(", \"value\"","")		
-		// check references to SUT and replace with FAST syntax
-		for(elm : mapLocalSUTVarToDataInstance.keySet) {
-			if(mapLHStoRHS.value.contains(elm+"."))
-				mapLHStoRHS.value = mapLHStoRHS.value.replaceFirst(elm, "setup.suts['" + elm + "']")
-		}*/
-		
-		// check references to Step outputs and replace with FAST syntax
-		for(elm : mapLocalStepInstance.keySet) {
-			if(mapLHStoRHS.value.contains(elm+".output")) {
-				// mapLHStoRHS.value = mapLHStoRHS.value.replaceAll(elm+".output", "steps.out['" + "_" + elm + "']") // commented 26.11.2024
-				// Added REGEX 26.11.2024: remove (x) after steps.out[step.params[....]].x.y.... (assumption, always a y is present)
-				// In BPMN4S model, x represents the container of output data. So we need to filter it out for FAST. 
-				mapLHStoRHS.value = mapLHStoRHS.value.replaceAll(elm+".output" + "\\.(.*?)\\.", "steps.out[step.params['" + "_" + elm + "']].")
-				// System.out.println("DEBUG XY: " + mapLHStoRHS.value)
-				mapLHStoRHS.refKey.add(elm)  // reference to step
-				// Custom String Updates for FAST Syntax Peculiarities! TODO investigate solution?
-				// map-var['key'] + "[0]" -> map-var['key'][0] 
-				mapLHStoRHS.value = mapLHStoRHS.value.replaceAll(Pattern.quote("] + \"["), "][") // ("\\] + \"\\[","\\]\\[")
-				mapLHStoRHS.value = mapLHStoRHS.value.replaceAll("\\]\"","]")
-			}
-		}
-		// replace references to global variables with FAST syntax
-		for(elm : mapLocalDataVarToDataInstance.keySet) {
-			if(mapLHStoRHS.value.contains(elm)) {
-				mapLHStoRHS.value = mapLHStoRHS.value.replaceAll(elm, "global.params['" + elm + "']")
-			}
-		}
-		// name of variable instance: varExp.variable.name
-		return mapLHStoRHS
-	}
-	// End Expression Handler //
-	
-	def addMapSUTInstanceToFile(String key, String value) {
-		if(mapSUTInstanceToFile.containsKey(key)) 
-			mapSUTInstanceToFile.get(key).add(value)
-		else { 
-			mapSUTInstanceToFile.put(key, new ArrayList)
-			mapSUTInstanceToFile.get(key).add(value)	
-		}
-	}
-		
-	def addMapDataInstanceToFile(String key, String value) {
-		if(mapDataInstanceToFile.containsKey(key)) 
-			mapDataInstanceToFile.get(key).add(value)
-		else { 
-			mapDataInstanceToFile.put(key, new ArrayList)
-			mapDataInstanceToFile.get(key).add(value)	
-		}
-	}
-	
-	def addMapLocalSUTVarToDataInstance(String key, String value) {
-		if(mapLocalSUTVarToDataInstance.containsKey(key)) 
-			mapLocalSUTVarToDataInstance.get(key).add(value)
-		else { 
-			mapLocalSUTVarToDataInstance.put(key, new ArrayList)
-			mapLocalSUTVarToDataInstance.get(key).add(value)
-		}
-	}
-	
-	def addMapLocalStepInstance(String key, String value) {
-		if(mapLocalStepInstance.containsKey(key)) 
-			mapLocalStepInstance.get(key).add(value)
-		else {
-			mapLocalStepInstance.put(key, new ArrayList)
-			mapLocalStepInstance.get(key).add(value)
-		}
-	}
-	
-	def addMapLocalDataVarToDataInstance(String key, String value) {
-		if(mapLocalDataVarToDataInstance.containsKey(key)) 
-			mapLocalDataVarToDataInstance.get(key).add(value)
-		else { 
-			mapLocalDataVarToDataInstance.put(key, new ArrayList)
-			mapLocalDataVarToDataInstance.get(key).add(value)
-		}
-	}
-
-	def generateJSONDataAndVFDFiles(String testDefFilePath, IFileSystemAccess2 fsa, TSMain modelInst) {
+//	
+	def generateJSONDataAndVFDFiles(String testDefFilePath, IFileSystemAccess2 fsa, TSMain modelInst,
+	    TestSpecificationInstance tspecInst
+	) {
 		var txt = ''''''
 		var listOfStepVars = new HashSet<String>
 		// val modelInst = _resource.allContents.head as TSMain
 		// NOTE. Assumption is that steps are populated.
-		for(step : listStepInstances) { listOfStepVars.add(step.variableName) }
+		for(step : tspecInst.listStepInstances) { listOfStepVars.add(step.variableName) }
 		// Process TSPEC Imports and parse them
 		for(imp : modelInst.imports) {
 			val inputResource = EcoreUtil2.getResource(_resource, imp.importURI)
@@ -523,7 +219,7 @@ class TestspecificationGenerator extends AbstractGenerator
 					for(act : apiDef.initActions) {
 						if(	act instanceof AssignmentAction || 
 							act instanceof RecordFieldAssignmentAction) {
-							var mapLHStoRHS = generateInitAssignmentAction(act)
+							var mapLHStoRHS = tspecInst.generateInitAssignmentAction(act)
 							listOfStepVars.remove(mapLHStoRHS.key) // variable is initialized in param file
 							dataInst.getKvList.add(mapLHStoRHS)
 						}
@@ -533,7 +229,7 @@ class TestspecificationGenerator extends AbstractGenerator
 				} else if(input.model instanceof SUTDefinition) {
 					val sutDef = input.model as SUTDefinition
 					// generate XML-File! => vfd.xml
-					fsa.generateFile(testDefFilePath + "vfd.xml", generateVFDFile(sutDef))
+					fsa.generateFile(testDefFilePath + "vfd.xml", FastUtils::generateVFDFile(sutDef))
 				}
 			}
 			
@@ -544,7 +240,7 @@ class TestspecificationGenerator extends AbstractGenerator
 			for(dataInst : JSONDataFileContents) {
 				for(mapLHStoRHS : dataInst.kvList) {
 					// System.out.println("Checking " + mapLHStoRHS.key)
-					var mapLHStoRHS_ = getExtensions(mapLHStoRHS.key)
+					var mapLHStoRHS_ = tspecInst.getExtensions(mapLHStoRHS.key,true)
 					// System.out.println(" Got Extension for Key: " + mapLHStoRHS.key)
 					/*for(elm: mapLHStoRHS_.keySet) { 
 						System.out.println("	K: " + elm)
@@ -560,7 +256,7 @@ class TestspecificationGenerator extends AbstractGenerator
 					
 					if(!mapLHStoRHS_.isEmpty) {
 						for(stepId : mapLHStoRHS_.keySet) {
-							fileName = getStepInstanceFileName(stepId)
+							fileName = tspecInst.getStepInstanceFileName(stepId)
 							var fileContents = mapLHStoRHS.value
 							System.out.println("Generating File: " + fileName+ " For Step: " + stepId)
 							for(elm : mapLHStoRHS_.get(stepId)) 
@@ -578,7 +274,7 @@ class TestspecificationGenerator extends AbstractGenerator
 						}
 					} else { 
 						System.out.println("Warning: Variable " + mapLHStoRHS.key + " defined in param but not used in TSpec!")
-						fileName = getFileName(mapLHStoRHS.key)
+						fileName = tspecInst.getFileName(mapLHStoRHS.key)
 						fsa.generateFile(fileName, mapLHStoRHS.value)
 					}
 				}
@@ -593,7 +289,7 @@ class TestspecificationGenerator extends AbstractGenerator
 			// System.out.println(" variable not declared in params: " + vname)
 			// for(step : listStepInstances) {
 				// if(step.variableName.equals(vname)) {
-			var mapLHStoRHS_ = getExtensions(vname) //step.variableName
+			var mapLHStoRHS_ = tspecInst.getExtensions(vname, true) //step.variableName
 			/*for(elm: mapLHStoRHS_.keySet) { 
 						System.out.println("	VAR: " + elm)
 						for(kv : mapLHStoRHS_.get(elm))
@@ -603,7 +299,7 @@ class TestspecificationGenerator extends AbstractGenerator
 			var fileContents = ''''''
 			if(!mapLHStoRHS_.isEmpty) {
 				for(stepId : mapLHStoRHS_.keySet) {
-					fileName = getStepInstanceFileName(stepId)
+					fileName = tspecInst.getStepInstanceFileName(stepId)
 					System.out.println("Generating File: " + fileName+ " For Step: " + stepId)
 					for(elm : mapLHStoRHS_.get(stepId)) {
 						var str = 
@@ -624,7 +320,7 @@ class TestspecificationGenerator extends AbstractGenerator
 			}
 			
 			// Added 09.11.2024 DB: generate explicit JSON files referenced before 
-			var mapLHStoRHSExt = getRefExtensions(vname)
+			var mapLHStoRHSExt = tspecInst.getRefExtensions(vname)
 			var String fileNameExt = new String
 			var fileContentsExt = ''''''
 			if(!mapLHStoRHSExt.isEmpty) {
@@ -652,318 +348,6 @@ class TestspecificationGenerator extends AbstractGenerator
 		return txt // TODO Remove unused variable
 	}
 	
-	def String getStepInstanceFileName(String step_id) {
-		for(elm : listStepInstances) {
-			if(elm.id.equals(step_id)) {
-				return elm.inputFile
-			}
-		}
-		return new String
-	}
-	
-	def String getFileName(String varName) {
-		for(step : listStepInstances) {
-			if(step.variableName.equals(varName)) {
-				return step.inputFile.replaceAll(".json", "_" + step.id + ".json")
-			}
-		}
-		for(key : mapDataInstanceToFile.keySet) {
-			if(key.equals(varName)) {
-				return mapDataInstanceToFile.get(key).head
-			}
-		}
-		for(key : mapSUTInstanceToFile.keySet) {
-			var fname = mapSUTInstanceToFile.get(key).head
-			//System.out.println("Checking: " + fname + " map key entry: " + key)
-			if(key.equals(varName)) {
-				return fname
-			}
-		}
-		return "undefined.json"
-	}
-	
-	// Added DB: get contents for explicit JSON file generation
-	def getRefExtensions(String varName) {
-		var mapListOfKeyValue = new HashMap<String,List<KeyValue>>
-		for(step : listStepInstances) {
-			if(step.variableName.equals(varName)) {
-				if(!step.stepRefs.empty) {
-					for(sr: step.stepRefs) {
-						mapListOfKeyValue.put(sr.inputFile + sr.variableName + 
-											"_" + sr.recordExp + ".json", sr.parameters)
-					}
-				}
-			}
-		}
-		return mapListOfKeyValue
-	}
-	
-	// function to combine keys (parameters of step may have duplicate keys) //
-	// Note DB: Incomplete implementation. Decision to avoid duplicate keys in front end. 
-	// Decision: If an attribute of record needs references and concrete data, then do
-	// everything in the reference part. 
-	def combineKeys(List<KeyValue> parameters) {
-		var _parameters = new ArrayList<KeyValue>
-		var listOfExclusionKeys = new ArrayList<String>
-		for(kv : parameters) {
-			if(!listOfExclusionKeys.contains(kv.key)) {
-				var commonKV = new ArrayList<KeyValue>
-				for(_kv : parameters) {
-					if(kv.key.equals(_kv.key)) {
-						commonKV.add(_kv)
-					}
-				}
-				if(commonKV.size > 1) {
-					System.out.println("***** COMMON KEYS ******")
-					for(elmKV : commonKV) { elmKV.display }
-					System.out.println("***** *********** ******")
-				} else {
-					_parameters.addAll(commonKV)
-				}
-			}
-			listOfExclusionKeys.add(kv.key)
-		}
-	}
-	
-	def getExtensions(String varName) {
-		var mapListOfKeyValue = new HashMap<String,List<KeyValue>>
-		//System.out.println(" Getting Extension for Variable: " + varName)
-		for(step : listStepInstances) {
-			if(step.variableName.equals(varName)) {
-				// System.out.println("STEP ID: " + step.id)
-				// Note DB: Incomplete implementation. Decision to avoid duplicate keys in front end. 
-				// Decision: If an attribute of record needs references and concrete data, then do everything in the reference part. 
-				// combineKeys(step.parameters)
-				mapListOfKeyValue.put(step.id,step.parameters)
-				if(!step.stepRefs.empty) {
-					// System.out.println("Adding Step Reference for "+ step.id)
-					// Added DB: add reference to explicit JSON file
-					for(sr: step.stepRefs) {
-						var kv = new KeyValue
-						kv.key = sr.variableName
-						kv.value = '"' + sr.inputFile + sr.variableName + 
-											"_" + sr.recordExp + ".json" + '"'
-						kv.refVal = new HashSet<String>
-						kv.refVal.add('"' + sr.inputFile + '"')
-						mapListOfKeyValue.get(step.id).add(kv)
-					}
-				}					
-				// return step.parameters
-			}
-		}
-		/*for(k : mapListOfKeyValue.keySet) {
-			System.out.println(" ++ KEY : " + k)
-			for(elm : mapListOfKeyValue.get(k)) {
-				System.out.println(" ++ Value : " + elm.key + " -> " + elm.value)
-			}
-		}*/
-		//System.out.println(" Extension: " + mapListOfKeyValue)
-		return mapListOfKeyValue //new ArrayList<KeyValue>
-	}
-	
-	def String getFileExtension(String varName) {
-		for(step : listStepInstances) {
-			if(step.variableName.equals(varName))
-				return step.inputFile			
-		}
-		return new String
-	}
-	
-	def generateFASTScenarioFile() {
-		var txt = 
-		'''
-		in.data.global_parameters = {
-			«FOR key : mapLocalDataVarToDataInstance.keySet SEPARATOR ','»
-				"«key»" : «mapLocalDataVarToDataInstance.get(key).head»
-			«ENDFOR»
-		}
-		
-		in.data.suts = [
-			«FOR elm : mapLocalSUTVarToDataInstance.keySet SEPARATOR ','»
-				«mapLocalSUTVarToDataInstance.get(elm).head»
-			«ENDFOR»
-		]
-		
-		in.data.steps = [
-			«FOR elm : listStepInstances SEPARATOR ','»
-				«IF generateFASTRefStepTxt(elm).empty»
-					{ "id" : "«elm.id»", "type" : "«elm.type.replaceAll("_dot_",".")»", "input_file" : "«elm.inputFile»" }
-				«ELSE»
-					{ "id" : "«elm.id»", "type" : "«elm.type.replaceAll("_dot_",".")»", "input_file" : "«elm.inputFile»",
-						"parameters" : {
-							«FOR refTxt : generateFASTRefStepTxt(elm) SEPARATOR ','»
-								«refTxt»
-							«ENDFOR»
-						} 
-					}
-				«ENDIF»
-			«ENDFOR»
-		]
-		'''
-		return txt
-	}
-	
-	def generateFASTRefStepTxt(Step step) {
-		var refTxt = new ArrayList<CharSequence>
-		var refKeyList = new HashSet<String>
-		for(kv : step.parameters) {
-			for(rk : kv.refKey) {
-				if(!refKeyList.contains(rk)) {
-					refTxt.add('''"_«rk»" : "«rk»"''')
-					refKeyList.add(rk)
-				}
-			}
-		}
-		return refTxt
-	}
-	
-	
-	def generateVFDFile(SUTDefinition sDef) {
-		var def = sDef.generic.virtualFabDefinition
-		var xsi = sDef.generic.XSI
-		var loc = sDef.generic.schemaLocation
-		var title = sDef.generic.title
-		var sutsname = sDef.sut.name
-		var sutsdesc = sDef.sut.desc
-		'''
-		<?xml version="1.0" encoding="UTF-8"?>
-		<VirtualFabDefinition:VirtualFabDefinition xmlns:VirtualFabDefinition="«def»" xmlns:xsi="«xsi»" xsi:schemaLocation="«loc»">
-		  <Header>
-		    <Title>«title»</Title>
-		    <CreateTime>2022-03-03T09:12:12</CreateTime>
-		  </Header>
-		  <Definition>
-		    <Name>«sutsname»</Name>
-		    <Description>«sutsdesc»</Description>
-		    <SUTList>
-		    «FOR sut : sDef.sut.sutDefRef»
-		    	«IF sut instanceof TWINSCANKT»
-		    		«generateTwinScanTxt(sut)»
-		    	«ELSEIF sut instanceof LISVCP»
-		    		«generateLisTxt(sut)»
-		    	«ENDIF»
-		    «ENDFOR»
-		    </SUTList>
-		  </Definition>
-		</VirtualFabDefinition:VirtualFabDefinition>
-		'''
-	}
-	
-	def generateTwinScanTxt(TWINSCANKT ts) {
-		var name = ts.name
-		var type = ts.type
-		var scn_param_name = ts.scenarioParameterName
-		var machine_id = ts.machineID
-		var cpu = ts.CPU
-		var memory = ts.memory
-		var machine_type = ts.machineType
-		var useExisting = ts.useExisting
-		var swbaseline = ts.baseline
-		
-		'''
-		<SUT>
-			<SutType>«type»</SutType>
-			<Name>«name»</Name>
-		    <ScenarioParameterName>«scn_param_name»</ScenarioParameterName>
-		    <TWINSCAN-KT>
-		    	<MachineID>«machine_id»</MachineID>
-		        <CPU>«cpu»</CPU>
-		        <Memory>«memory»</Memory>
-		        <MachineType>«machine_type»</MachineType>
-		        <UseExisting>«useExisting»</UseExisting>
-		        <Baseline>«swbaseline»</Baseline>
-		        «IF !ts.options.empty»
-		        <OptionList>
-		        «FOR elm : ts.options»
-		        	<Option>
-		        		<OptionName>«elm.optionname»</OptionName>
-		        		<OptionValue>«elm.value»</OptionValue>
-		        		<IsSVP>«elm.isIsSVP»</IsSVP>
-		        	</Option>
-		        «ENDFOR»
-		        </OptionList>
-		        «ENDIF»
-		        «IF !ts.commands.empty»
-		        <RunCommands>
-		        	<PostConfiguration>
-		            	<CommandList>
-		                	«FOR elm : ts.commands»
-		                	<Command>«elm»</Command>
-		                	«ENDFOR»
-		              	</CommandList>
-		            </PostConfiguration>
-		         </RunCommands>
-		         «ENDIF»
-			</TWINSCAN-KT>
-		</SUT>
-		'''
-	}
-	
-	def generateLisTxt(LISVCP lis) {
-		var name = lis.name
-		var type = lis.type
-		var scn_param_name = lis.scenarioParameterName
-		var address = lis.address
-		
-		'''
-		      <SUT>
-		        <SutType>«type»</SutType>
-		        <Name>«name»</Name>
-		        <ScenarioParameterName>«scn_param_name»</ScenarioParameterName>
-		        <LIS-VCP>
-		          <Address>«address»</Address>
-		          <JobConfigList>
-		          «FOR elm : lis.jobConfigList»
-		            <JobConfig>
-		              <ApplicationId>«elm.appID»</ApplicationId>
-		              <FunctionId>«elm.fnId»</FunctionId>
-		              <ActiveDocumentCollection>«elm.isActDocColl»</ActiveDocumentCollection>
-		            </JobConfig>
-		          «ENDFOR»
-		          </JobConfigList>
-		        </LIS-VCP>
-		      </SUT>
-		'''
-	}
-	
-	def displayParseResults() {
-		System.out.println(" ---- Map Data Instance To File ---- ")
-		for(key : mapDataInstanceToFile.keySet) {
-			System.out.println(" 	Key: " + key + " Value: " + mapDataInstanceToFile.get(key))
-		}
-		
-		System.out.println(" ---- Map SUT Instance To File ---- ")
-		for(key : mapSUTInstanceToFile.keySet) {
-			System.out.println(" 	Key: " + key + " Value: " + mapSUTInstanceToFile.get(key))
-		}
-		
-		System.out.println(" ---- Map Local Data Var To Data Instance ---- ")
-		for(key : mapLocalDataVarToDataInstance.keySet) {
-			System.out.println(" 	Key: " + key + " Value: " + mapLocalDataVarToDataInstance.get(key))
-		}
-		
-		System.out.println(" ---- Map SUT Var To Data Instance ---- ")
-		for(key : mapLocalSUTVarToDataInstance.keySet) {
-			System.out.println(" 	Key: " + key + " Value: " + mapLocalSUTVarToDataInstance.get(key))
-		}
-		
-		System.out.println(" ---- Map Step Instance ---- ")
-		for(key : mapLocalStepInstance.keySet) {
-			System.out.println(" 	Key: " + key + " Value: " + mapLocalStepInstance.get(key))
-		}
-		
-		System.out.println(" ------------------ STEPS ------------------")
-		for(st : listStepInstances) {
-			st.display
-//			System.out.println("	step-id: " + st.id + " type: " + st.type)
-//			System.out.println("	input: " + st.inputFile)
-//			System.out.println("	var: " + st.variableName)
-//			for(param : st.parameters) 
-//				param.display
-				//System.out.println("	parameters: " + param.key + " -> " + param.value)
-		}		
-	}
-	
 	def List<String> getTypesImports(Resource resource) {
 		val typesImports = new ArrayList<String>()
 		val tsMain = resource.allContents.head as TSMain
@@ -979,6 +363,5 @@ class TestspecificationGenerator extends AbstractGenerator
 		}
 		return typesImports
 	}
-
 
 }

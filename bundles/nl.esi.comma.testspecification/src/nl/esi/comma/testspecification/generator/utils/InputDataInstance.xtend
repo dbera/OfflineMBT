@@ -1,7 +1,6 @@
-package nl.esi.comma.testspecification.generator
+package nl.esi.comma.testspecification.generator.utils
 
 import nl.esi.comma.testspecification.testspecification.TSMain
-import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.EcoreUtil2
 import java.util.ArrayList
 import org.eclipse.emf.ecore.resource.Resource
@@ -10,15 +9,15 @@ import nl.esi.comma.actions.actions.AssignmentAction
 import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
 import nl.esi.comma.inputspecification.inputSpecification.SUTDefinition
 import java.util.HashMap
+import nl.esi.comma.testspecification.generator.utils.JSONData
+import nl.esi.comma.testspecification.generator.fast.ExpressionHandler
+import nl.esi.comma.testspecification.generator.TestSpecificationInstance
 
 class InputDataInstance 
 {
-	var mapStepToInputData = new HashMap<String,String>
-	
-	// def getMapStepToInputData() { return mapStepToInputData }
-	
-	def computeInputDataInstances(Resource resource, TSMain modelInst, TestSpecificationInstance tsInst) 
+	def static HashMap<String,String> computeInputDataInstances(Resource resource, TSMain modelInst, TestSpecificationInstance tsInst) 
 	{	
+		var mapStepToInputData = new HashMap<String,String>
 		// Process TSPEC Imports and parse them
 		for(imp : modelInst.imports) {
 			val inputResource = EcoreUtil2.getResource(resource, imp.importURI)
@@ -46,7 +45,7 @@ class InputDataInstance
 			
 			for(dataInst : JSONDataFileContents) {
 				for(mapLHStoRHS : dataInst.kvList) {
-					var mapLHStoRHS_ = tsInst.getExtensions(mapLHStoRHS.key)
+					var mapLHStoRHS_ = tsInst.getExtensions(mapLHStoRHS.key, false)
 					var String fileName = new String
 					
 					if(!mapLHStoRHS_.isEmpty) {
