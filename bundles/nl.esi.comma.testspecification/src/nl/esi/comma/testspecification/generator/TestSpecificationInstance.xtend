@@ -242,39 +242,40 @@ class TestSpecificationInstance {
         return mapLHStoRHS
     }
 
-    // End Expression Handler //
-    def generateFASTScenarioFile() {
-        var txt = '''
-            in.data.global_parameters = {
-                «FOR key : mapLocalDataVarToDataInstance.keySet SEPARATOR ','»
-                    "«key»" : «mapLocalDataVarToDataInstance.get(key).head»
-                «ENDFOR»
-            }
-            
-            in.data.suts = [
-                «FOR elm : mapLocalSUTVarToDataInstance.keySet SEPARATOR ','»
-                    «mapLocalSUTVarToDataInstance.get(elm).head»
-                «ENDFOR»
-            ]
-            
-            in.data.steps = [
-                «FOR elm : listStepInstances SEPARATOR ','»
-                    «IF generateFASTRefStepTxt(elm).empty»
-                        { "id" : "«elm.id»", "type" : "«elm.type.replaceAll("_dot_",".")»", "input_file" : "«elm.inputFile»" }
-                    «ELSE»
-                        { "id" : "«elm.id»", "type" : "«elm.type.replaceAll("_dot_",".")»", "input_file" : "«elm.inputFile»",
-                            "parameters" : {
-                                «FOR refTxt : generateFASTRefStepTxt(elm) SEPARATOR ','»
-                                    «refTxt»
-                                «ENDFOR»
-                            } 
-                        }
-                    «ENDIF»
-                «ENDFOR»
-            ]
-        '''
-        return txt
-    }
+	// End Expression Handler //
+	def generateFASTScenarioFile() {
+		var txt = 
+		'''
+		in.data.global_parameters = {
+			«FOR key : mapLocalDataVarToDataInstance.keySet SEPARATOR ','»
+				"«key»" : «mapLocalDataVarToDataInstance.get(key).head»
+			«ENDFOR»
+		}
+		
+		in.data.suts = [
+			«FOR elm : mapLocalSUTVarToDataInstance.keySet SEPARATOR ','»
+				«mapLocalSUTVarToDataInstance.get(elm).head»
+			«ENDFOR»
+		]
+		
+		in.data.steps = [
+			«FOR elm : listStepInstances SEPARATOR ','»
+				«IF generateFASTRefStepTxt(elm).empty»
+					{ "id" : "«elm.id»", "type" : "«elm.type.replaceAll("_dot_",".")»", "input_file" : "«elm.inputFile»" }
+				«ELSE»
+					{ "id" : "«elm.id»", "type" : "«elm.type.replaceAll("_dot_",".")»", "input_file" : "«elm.inputFile»",
+						"parameters" : {
+							«FOR refTxt : generateFASTRefStepTxt(elm) SEPARATOR ','»
+								«refTxt»
+							«ENDFOR»
+						} 
+					}
+				«ENDIF»
+			«ENDFOR»
+		]
+		'''
+		return txt
+	}
 
     def generateFASTRefStepTxt(Step step) {
         var refTxt = new ArrayList<CharSequence>
