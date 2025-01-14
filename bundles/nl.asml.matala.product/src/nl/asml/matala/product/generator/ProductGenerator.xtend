@@ -600,6 +600,7 @@ class ProductGenerator extends AbstractGenerator {
 		                txt += "\n"
 		        txt += '\ngenerate-file "./vfab2_scenario/"\n\n'
 		        fname = output_dir / f"_scenario{str(idx)}.tspec"
+		        print(str(fname))
 		        os.makedirs(os.path.dirname(fname), exist_ok=True)
 		        with open(fname, 'w') as f:
 		            f.write(txt)

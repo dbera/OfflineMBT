@@ -5,10 +5,9 @@ generate standardProject "http://www.esi.nl/comma/project/standard/StandardProje
 Project:
 	'Project' name = ID 
 	'{'
-		(
-			products += Product
-		|	statemachines += StateMachineGenerationBlock
-		)*
+		(products += Product)?
+		(tspecs += TSpec)?
+		(statemachines += StateMachineGenerationBlock)?
 	'}'
 ;
 
@@ -16,9 +15,18 @@ Product:
 	'Generate' 'Tests' '{'
 		taskname = ID '{'
 			'product-file' product = STRING
+			('path-to-python-exe' pythonExe = STRING)?
 			('sut-product-files' stubProducts += STRING*)?
 		'}'
 	'}'
+;
+
+TSpec:
+    'Generate' 'FAST' '{'
+        taskname = ID '{'
+            'abstract-tspec-file' tspec = STRING
+        '}'
+    '}'
 ;
 
 StateMachineGenerationBlock:
