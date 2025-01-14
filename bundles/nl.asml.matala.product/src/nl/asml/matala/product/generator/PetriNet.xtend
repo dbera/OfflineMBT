@@ -397,7 +397,12 @@ class PetriNet {
 		                        type=Path,
 		                        default=os.getcwd(),
 		                        help="The directory in which plantuml files produced will be saved")
-		
+		    
+		    parser.add_argument("-no_sim",
+		                        type=bool,
+		                        default=False,
+		                        help="Disable simulation")
+		    
 		    p = parser.parse_args()
 		    p.tspec_dir.mkdir(exist_ok=True)
 		    p.plantuml_dir.mkdir(exist_ok=True)
@@ -635,11 +640,12 @@ class PetriNet {
 		    print("[INFO] Starting Command-Line Simulation.")
 		    # Simulation().simulateUI(pn.n)
 		    
-		    print('[SIM] Start Simulation? (Y/N) :')
-		    value = input(" Enter Choice: ")
-		    if value == "Y" or value == "y":
-		        os.system('cls')
-		        simulate(pn.n)
+		    if not p.no_sim:
+			    print('[SIM] Start Simulation? (Y/N) :')
+			    value = input(" Enter Choice: ")
+			    if value == "Y" or value == "y":
+			        os.system('cls')
+			        simulate(pn.n)
 		    
 		    print("[INFO] Exiting..")
 		'''

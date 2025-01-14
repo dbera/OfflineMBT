@@ -964,7 +964,7 @@ class TestspecificationGenerator extends AbstractGenerator
 		}		
 	}
 	
-	def List<String> getTypesImports(Resource resource) {
+    static def List<String> getTypesImports(Resource resource) {
 		val typesImports = new ArrayList<String>()
 		val tsMain = resource.allContents.head as TSMain
 		for(i : tsMain.imports.filter[f | f.importURI.contains(".ps")]) {

@@ -29,6 +29,26 @@ import nl.esi.comma.project.standard.standardProject.StateMachineGenerationBlock
 import java.io.FilenameFilter
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.resources.ResourcesPlugin
+import nl.esi.comma.testspecification.testspecification.TSMain
+import nl.esi.comma.testspecification.testspecification.TestDefinition
+import org.eclipse.core.runtime.Assert
+import nl.esi.comma.testspecification.testspecification.AbstractTestDefinition
+import nl.esi.comma.testspecification.generator.FromAbstractToConcrete
+import nl.esi.comma.testspecification.generator.TestspecificationGenerator
+import java.io.InputStream
+import java.util.function.Consumer
+import java.io.InputStreamReader
+import java.io.BufferedReader
+import java.util.concurrent.Future
+import java.util.concurrent.TimeUnit
+import java.util.Arrays
+import java.io.IOException
+import java.io.OutputStreamWriter
+import java.io.BufferedWriter
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
+import java.nio.file.Paths
+import java.nio.file.Path
 
 /**
  * Generates code from your model files on save.
@@ -57,7 +77,79 @@ class StandardProjectGenerator extends AbstractGenerator {
 				if (input instanceof Product) {
 					envProduct = input as Product
 					(new ProductGenerator).doGenerate(inputResource, fsa, context)
+					var name = envProduct.specification.name
+					var pythonPathURI = res.URI.trimSegments(1).appendSegment("src-gen\\CPNServer").appendSegment(name)
+					var pythonFileURI = pythonPathURI.appendSegment(name + ".py")
+					var pythonAbsPath = CommonPlugin.resolve(pythonPathURI.appendSegment("generated_scenarios")).toFileString
+					var pythonAbsFile = CommonPlugin.resolve(pythonFileURI).toFileString
+					var pythonExe = "python.exe"
+					if (!product.pythonExe.nullOrEmpty) {
+						pythonExe = product.pythonExe
+					}
+		            var Process pr = Runtime.getRuntime().exec(pythonExe + " " + pythonAbsFile + " -no_sim=TRUE -tsdir=" + pythonAbsPath)
+		            var BufferedReader i = new BufferedReader(new InputStreamReader(pr.getInputStream()))
+		            var String line = null
+	                while ((line = i.readLine()) !== null) {
+	                    System.err.println(line)
+		            }
+		            pr.destroyForcibly
+		            for (r : ResourcesPlugin.workspace.root.getProjects()) {
+		                r.refreshLocal(IResource.DEPTH_INFINITE, null)
+		            }
+					var abstractTSpecFileURI = res.URI.trimSegments(1).appendSegment("src-gen\\CPNServer\\" + name + "\\generated_scenarios")
+					var abstractTSpecAbsFilePath = CommonPlugin.resolve(abstractTSpecFileURI).toFileString
+					var lst = (new File(abstractTSpecAbsFilePath)).listFiles()
+					for (f : lst.filter[n | !n.name.equalsIgnoreCase("_cm.tspec") && !n.name.equalsIgnoreCase("tcs.json") && n.name.contains(".tspec")]) {
+						var src = Paths.get(f.toURI)
+						var fileName = src.fileName.toString
+						var path = res.URI.trimSegments(1).appendSegment(fileName)
+						var dstAbsFilePath = CommonPlugin.resolve(path).toFileString
+						var dst = Paths.get(dstAbsFilePath)
+
+						Files.copy(src, dst, StandardCopyOption.REPLACE_EXISTING)
+                        val tfis = new FileInputStream(dst.toFile)
+
+//						val tfis = new FileInputStream(f)
+
+                        resourceSet.createResource(URI.createURI(fileName)).load(tfis, emptyMap)
+                        val testResource = EcoreUtil2.getResource(res, fileName)
+                        val test = testResource.allContents.head
+                        if (test instanceof TSMain) {
+                            if (test.model instanceof TestDefinition) {
+                                Assert.isTrue(true, "this is a concrete tspec, not an abstract tspec")
+                            } else if (test.model instanceof AbstractTestDefinition) {
+                                val typesImports = TestspecificationGenerator.getTypesImports(testResource)
+                                val atd = new FromAbstractToConcrete(test.model as AbstractTestDefinition)
+                                for (sys : atd.getSystems()) {
+                                    fsa.generateFile("types/" + sys + ".types", atd.generateTypesFile(sys, typesImports))
+                                    fsa.generateFile("parameters/" + sys + ".params", atd.generateParamsFile(sys))
+                                }
+                                fsa.generateFile("concrete.tspec", atd.generateConcreteTest())
+                                val abstractTSpecURI = res.URI.trimSegments(1).appendSegment("src-gen").appendSegment("concrete.tspec")
+                                val abstractTSpecPath = CommonPlugin.resolve(abstractTSpecURI).toFileString
+                                val abstractTSpecFile = new FileInputStream(abstractTSpecPath)
+                                try {
+                                    resourceSet.createResource(URI.createURI(abstractTSpecURI.toString)).load(abstractTSpecFile, emptyMap)
+                                } catch (Exception ex) {} // re-registration is not a problem
+                                val abstractTSpecResource = EcoreUtil2.getResource(res, abstractTSpecURI.toString)
+                                val inputTSpec = abstractTSpecResource.allContents.head
+                                if (inputTSpec instanceof TSMain) {
+                                    if (inputTSpec.model instanceof TestDefinition) {
+                                        (new TestspecificationGenerator).doGenerate(abstractTSpecResource, fsa, context) 
+                                        // TODO: test this
+                                    }
+                                }
+                            } else {
+                                Assert.isTrue(true, "this is not an abstract tspec")
+                            }
+                        }
+						
+					}
 				}
+	            for (r : ResourcesPlugin.workspace.root.getProjects()) {
+	                r.refreshLocal(IResource.DEPTH_INFINITE, null)
+	            }
+				
 				// check if there are SUT products
 				if(!product.stubProducts.nullOrEmpty) {
 					// resolve each SUT product and generate petri net
@@ -79,6 +171,43 @@ class StandardProjectGenerator extends AbstractGenerator {
 							stubProductList.get(0), fsa, context)
 				}
 			}
+            for (tspec : project.tspecs) {
+                val inputFileURI = res.URI.trimSegments(1).appendSegment(tspec.tspec)
+                val absFilePath = CommonPlugin.resolve(inputFileURI).toFileString
+                val fis = new FileInputStream(absFilePath)
+                resourceSet.createResource(URI.createURI(tspec.tspec)).load(fis, emptyMap)
+                val inputResource = EcoreUtil2.getResource(res, tspec.tspec)
+                val input = inputResource.allContents.head
+                if (input instanceof TSMain) {
+                    if (input.model instanceof TestDefinition) {
+                        Assert.isTrue(true, "this is a concrete tspec, not an abstract tspec")
+                    } else if (input.model instanceof AbstractTestDefinition) {
+                        val typesImports = TestspecificationGenerator.getTypesImports(inputResource)
+                        val atd = new FromAbstractToConcrete(input.model as AbstractTestDefinition)
+                        for (sys : atd.getSystems()) {
+                            fsa.generateFile("types/" + sys + ".types", atd.generateTypesFile(sys, typesImports))
+                            fsa.generateFile("parameters/" + sys + ".params", atd.generateParamsFile(sys))
+                        }
+                        fsa.generateFile("concrete.tspec", atd.generateConcreteTest())
+                        val abstractTSpecURI = res.URI.trimSegments(1).appendSegment("src-gen").appendSegment("concrete.tspec")
+                        val abstractTSpecPath = CommonPlugin.resolve(abstractTSpecURI).toFileString
+                        val abstractTSpecFile = new FileInputStream(abstractTSpecPath)
+                        resourceSet.createResource(URI.createURI(abstractTSpecURI.toString)).load(abstractTSpecFile, emptyMap)
+                        val abstractTSpecResource = EcoreUtil2.getResource(res, abstractTSpecURI.toString)
+                        val inputTSpec = abstractTSpecResource.allContents.head
+                        if (inputTSpec instanceof TSMain) {
+                            if (inputTSpec.model instanceof TestDefinition) {
+                                (new TestspecificationGenerator).doGenerate(abstractTSpecResource, fsa, context) 
+                                // TODO: test this
+                            }
+                        }
+                    } else {
+                        Assert.isTrue(true, "this is not an abstract tspec")
+                    }
+                }
+            }
+			
+			
             for (task : project.statemachines) {
             	this.task = task
             	this.resource = task.eResource
@@ -229,3 +358,18 @@ class StandardProjectGenerator extends AbstractGenerator {
 		return uri;
 	}
 }
+
+class StreamGobbler implements Runnable {
+    InputStream inputStream;
+    Consumer<String> consumer;
+
+    new(InputStream inputStream, Consumer<String> consumer) {
+        this.inputStream = inputStream;
+        this.consumer = consumer;
+    }
+
+    override run() {
+        new BufferedReader(new InputStreamReader(inputStream)).lines().forEach(consumer);
+    }
+}
+
