@@ -10,12 +10,10 @@ import java.util.ArrayList
 class ExpressionGenerator extends ExpressionsCommaGenerator {
 	EList<StepReference> stepRef
 	String stepName
-    String prefix
 
-	new(EList<StepReference> stepRef, String stepName, String prefix) {
+	new(EList<StepReference> stepRef, String stepName) {
 		this.stepRef = stepRef
 		this.stepName = stepName
-		this.prefix = prefix
 	}
 
 	override CharSequence getFunctionText(ExpressionFunctionCall e) {
@@ -64,12 +62,24 @@ class ExpressionGenerator extends ExpressionsCommaGenerator {
 		}
 	}
 
-	 override dispatch CharSequence exprToComMASyntax(ExpressionVector e) {
+    override dispatch CharSequence exprToComMASyntax(ExpressionVector e) {
         var typ = typeToComMASyntax(e.typeAnnotation.type)
         var lst = new ArrayList<String>()
         for (el : e.elements) {
-            lst.add(this.prefix + exprToComMASyntax(el).toString)
+            var ename = exprToComMASyntax(el).toString
+            var prefix = ""
+            if (this.stepRef !== null) {
+                for (sf : this.stepRef) {
+                    for (rd : sf.refData) {
+                        if (ename.contains(rd.name)) {
+                            prefix = "step_" + sf.refStep.name + ".output."
+                        }
+                    }
+                }
+            }
+            lst.add(prefix + exprToComMASyntax(el).toString)
         }
         return "<" + typ + ">[" + lst.join(", ") + "]"
     }
+
 }
