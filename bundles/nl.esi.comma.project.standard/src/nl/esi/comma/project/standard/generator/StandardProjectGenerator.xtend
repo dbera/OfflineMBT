@@ -109,9 +109,9 @@ class StandardProjectGenerator extends AbstractGenerator {
 						Files.copy(src, dst, StandardCopyOption.REPLACE_EXISTING)
                         val tfis = new FileInputStream(dst.toFile)
 
-//						val tfis = new FileInputStream(f)
-
-                        resourceSet.createResource(URI.createURI(fileName)).load(tfis, emptyMap)
+                        try {
+                            resourceSet.createResource(URI.createURI(fileName)).load(tfis, emptyMap)
+                        } catch (Exception ex) {} // re-registration is not a problem
                         val testResource = EcoreUtil2.getResource(res, fileName)
                         val test = testResource.allContents.head
                         if (test instanceof TSMain) {
@@ -136,7 +136,6 @@ class StandardProjectGenerator extends AbstractGenerator {
                                 if (inputTSpec instanceof TSMain) {
                                     if (inputTSpec.model instanceof TestDefinition) {
                                         (new TestspecificationGenerator).doGenerate(abstractTSpecResource, fsa, context) 
-                                        // TODO: test this
                                     }
                                 }
                             } else {
