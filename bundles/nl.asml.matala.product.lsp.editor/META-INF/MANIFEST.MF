@@ -12,6 +12,7 @@ Require-Bundle: org.eclipse.lsp4e,
  org.eclipse.core.runtime,
  org.eclipse.ui.genericeditor,
  org.eclipse.tm4e.ui,
- nl.esi.xtext.lsp.server
+ nl.esi.xtext.lsp.server,
+ Java-WebSocket;bundle-version="1.6.0"
 Automatic-Module-Name: nl.asml.matala.product.lsp.editor
 Bundle-RequiredExecutionEnvironment: JavaSE-21

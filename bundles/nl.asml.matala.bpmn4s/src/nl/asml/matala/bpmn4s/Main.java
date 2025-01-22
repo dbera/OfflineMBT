@@ -49,7 +49,6 @@ import nl.asml.matala.bpmn4s.bpmn4s.Element;
 import nl.asml.matala.bpmn4s.bpmn4s.Bpmn4sDataType;
 
 
-
 public class Main {
 	
 	static Bpmn4s model;
@@ -71,6 +70,7 @@ public class Main {
 		
 		if(args.length < 1) {
 			Logging.logError("Missing model file name!");
+			System.exit(1);
 		} else {
 			inputModel = args[0];
 		}
@@ -179,7 +179,7 @@ public class Main {
 	 * Parse and add DataStores and MessageQueues.
 	 */
 	static void makeDataNode(BpmnModelInstance modelInst, ItemAwareElement elem, ElementType type) {
-		String name = elem.getName();
+		String name = NameResolver.getName(elem);
 		String id = elem.getId();
 		Element node = new Element(type, name, id);
 		String origin = getOriginDataReference(elem);
@@ -471,7 +471,7 @@ public class Main {
 	}
 	
 	static String getName(ItemAwareElement elem) {
-		String name = elem.getName();
+		String name = NameResolver.getName(elem);
 		if (name == null) {
 			name = elem.getId();
 		}

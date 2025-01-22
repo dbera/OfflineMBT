@@ -1,0 +1,13 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: BPMN4S to PSPEC transformer
+Bundle-SymbolicName: nl.asml.matala.bpmn4s
+Bundle-Vendor: TNO-ESI
+Bundle-Version: 4.2.0.qualifier
+Export-Package: nl.asml.matala.bpmn4s,
+ nl.asml.matala.bpmn4s.bpmn4s;x-internal:=true,
+ nl.asml.matala.bpmn4s.extensions;x-internal:=true
+Require-Bundle: org.camunda.bpm.model.bpmn;bundle-version="7.22.0",
+ org.camunda.bpm.model.xml;bundle-version="7.22.0"
+Automatic-Module-Name: nl.asml.matala.bpmn4s
+Bundle-RequiredExecutionEnvironment: JavaSE-21

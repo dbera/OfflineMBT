@@ -6,14 +6,14 @@
     xmlns:git="http://www.eclipse.org/oomph/setup/git/1.0"
     xmlns:launching="http://www.eclipse.org/oomph/setup/launching/1.0"
     xmlns:maven="http://www.eclipse.org/oomph/setup/maven/1.0"
+    xmlns:pde="http://www.eclipse.org/oomph/setup/pde/1.0"
     xmlns:predicates="http://www.eclipse.org/oomph/predicates/1.0"
     xmlns:projects="http://www.eclipse.org/oomph/setup/projects/1.0"
     xmlns:setup="http://www.eclipse.org/oomph/setup/1.0"
     xmlns:setup.p2="http://www.eclipse.org/oomph/setup/p2/1.0"
-    xmlns:setup.targlets="http://www.eclipse.org/oomph/setup/targlets/1.0"
     xmlns:setup.workingsets="http://www.eclipse.org/oomph/setup/workingsets/1.0"
     xmlns:workingsets="http://www.eclipse.org/oomph/workingsets/1.0"
-    xsi:schemaLocation="http://www.eclipse.org/oomph/setup/git/1.0 https://raw.githubusercontent.com/eclipse-oomph/oomph/master/setups/models/Git.ecore http://www.eclipse.org/oomph/setup/launching/1.0 https://raw.githubusercontent.com/eclipse-oomph/oomph/master/setups/models/Launching.ecore http://www.eclipse.org/oomph/setup/maven/1.0 https://raw.githubusercontent.com/eclipse-oomph/oomph/master/setups/models/Maven.ecore http://www.eclipse.org/oomph/predicates/1.0 https://raw.githubusercontent.com/eclipse-oomph/oomph/master/setups/models/Predicates.ecore http://www.eclipse.org/oomph/setup/projects/1.0 https://raw.githubusercontent.com/eclipse-oomph/oomph/master/setups/models/Projects.ecore http://www.eclipse.org/oomph/setup/targlets/1.0 https://raw.githubusercontent.com/eclipse-oomph/oomph/master/setups/models/SetupTarglets.ecore http://www.eclipse.org/oomph/setup/workingsets/1.0 https://raw.githubusercontent.com/eclipse-oomph/oomph/master/setups/models/SetupWorkingSets.ecore http://www.eclipse.org/oomph/workingsets/1.0 https://raw.githubusercontent.com/eclipse-oomph/oomph/master/setups/models/WorkingSets.ecore"
+    xsi:schemaLocation="http://www.eclipse.org/oomph/setup/git/1.0 https://raw.githubusercontent.com/eclipse-oomph/oomph/master/setups/models/Git.ecore http://www.eclipse.org/oomph/setup/launching/1.0 https://raw.githubusercontent.com/eclipse-oomph/oomph/master/setups/models/Launching.ecore http://www.eclipse.org/oomph/setup/maven/1.0 https://raw.githubusercontent.com/eclipse-oomph/oomph/master/setups/models/Maven.ecore http://www.eclipse.org/oomph/setup/pde/1.0 https://raw.githubusercontent.com/eclipse-oomph/oomph/master/setups/models/PDE.ecore http://www.eclipse.org/oomph/predicates/1.0 https://raw.githubusercontent.com/eclipse-oomph/oomph/master/setups/models/Predicates.ecore http://www.eclipse.org/oomph/setup/projects/1.0 https://raw.githubusercontent.com/eclipse-oomph/oomph/master/setups/models/Projects.ecore http://www.eclipse.org/oomph/setup/workingsets/1.0 https://raw.githubusercontent.com/eclipse-oomph/oomph/master/setups/models/SetupWorkingSets.ecore http://www.eclipse.org/oomph/workingsets/1.0 https://raw.githubusercontent.com/eclipse-oomph/oomph/master/setups/models/WorkingSets.ecore"
     name="OfflineMBT"
     label="OfflineMBT">
   <setupTask
@@ -70,6 +70,8 @@
       xsi:type="setup.p2:P2Task">
     <requirement
         name="org.eclipse.xtext.sdk.feature.group"/>
+    <requirement
+        name="org.eclipse.m2e.pde.feature.feature.group"/>
     <description>Install the tools needed in the IDE to work with the source code for ${scope.project.label}</description>
   </setupTask>
   <setupTask
@@ -267,95 +269,6 @@
     <description>${scope.project.label}</description>
   </setupTask>
   <setupTask
-      xsi:type="setup.targlets:TargletTask">
-    <targlet
-        name="${scope.project.label}"
-        activeRepositoryList="${eclipse.target.platform}">
-      <annotation
-          source="http:/www.eclipse.org/oomph/targlets/TargetDefinitionGenerator">
-        <detail
-            key="location">
-          <value>${git.clone.OfflineMBT.location}/releng/nl.esi.comma.target/nl.esi.comma.platform.target</value>
-        </detail>
-        <detail
-            key="extraUnits">
-          <value>org.eclipse.equinox.executable.feature.group, org.slf4j.impl.log4j12, org.eclipse.jdt.annotation, com.google.gson, slf4j.reload4j</value>
-        </detail>
-        <detail
-            key="generateImplicitUnits">
-          <value>false</value>
-        </detail>
-        <detail
-            key="minimizeImplicitUnits">
-          <value>false</value>
-        </detail>
-        <detail
-            key="includeMode">
-          <value>planner</value>
-        </detail>
-        <detail
-            key="generateVersions">
-          <value>false</value>
-        </detail>
-        <detail
-            key="includeAllPlatforms">
-          <value>false</value>
-        </detail>
-        <detail
-            key="includeSource">
-          <value>true</value>
-        </detail>
-      </annotation>
-      <requirement
-          name="org.eclipse.sdk.feature.group"/>
-      <requirement
-          name="org.eclipse.pde.source.feature.group"/>
-      <requirement
-          name="org.eclipse.xtext.sdk.feature.group"/>
-      <requirement
-          name="de.itemis.xtext.antlr.feature.feature.group"/>
-      <requirement
-          name="org.python.pydev.feature.feature.group"/>
-      <requirement
-          name="*"/>
-      <sourceLocator
-          rootFolder="${git.clone.OfflineMBT.location}"
-          locateNestedProjects="true"/>
-      <repositoryList
-          name="2021-12">
-        <repository
-            url="https://download.eclipse.org/releases/2021-12"/>
-        <repository
-            url="http://hallvard.github.io/plantuml"/>
-        <repository
-            url="https://download.eclipse.org/justj/jres/17/updates/release/17.0.12"/>
-        <repository
-            url="https://s3-eu-west-1.amazonaws.com/obeo-m2doc-releases/3.2.0/repository/"/>
-        <repository
-            url="https://download.itemis.com/updates/releases/2.1.1/"/>
-        <repository
-            url="https://www.pydev.org/updates/"/>
-      </repositoryList>
-      <repositoryList
-          name="2024-09">
-        <repository
-            url="https://download.eclipse.org/releases/2024-09"/>
-        <repository
-            url="https://download.eclipse.org/tools/orbit/simrel/orbit-aggregation/2024-09"/>
-        <repository
-            url="http://hallvard.github.io/plantuml"/>
-        <repository
-            url="https://download.eclipse.org/justj/jres/21/updates/release/21.0.4"/>
-        <repository
-            url="https://s3-eu-west-1.amazonaws.com/obeo-m2doc-releases/3.2.0/repository/"/>
-        <repository
-            url="https://download.itemis.com/updates/releases/2.1.1/"/>
-        <repository
-            url="https://www.pydev.org/updates/"/>
-      </repositoryList>
-    </targlet>
-  </setupTask>
-  <setupTask
       xsi:type="projects:ProjectsImportTask">
     <sourceLocator
         rootFolder="${git.clone.OfflineMBT.location}"
@@ -367,6 +280,9 @@
         rootFolder="${git.clone.OfflineMBT.location}"
         locateNestedProjects="true"/>
   </setupTask>
+  <setupTask
+      xsi:type="pde:TargetPlatformTask"
+      name="OfflineMBT"/>
   <setupTask
       xsi:type="setup.workingsets:WorkingSetTask"
       prefix="com.github.OfflineMBT-">

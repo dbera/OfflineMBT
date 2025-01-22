@@ -1,7 +1,6 @@
 package nl.asml.matala.bpmn4s;
 
 import java.util.Collection;
-
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -97,11 +96,11 @@ public class BPMN4SModelValidator {
 			Collection<SequenceFlow> sfoList = comp.getOutgoing();
 			for (DataInputAssociation dia: diaList) {
 				for (ItemAwareElement src: dia.getSources()) {
-					inputs.add(src.getName());
+					inputs.add(NameResolver.getName(src));
 				}
 			}
 			for (DataOutputAssociation doa: doaList) {
-				outputs.add(doa.getTarget().getName());
+				outputs.add(NameResolver.getName(doa.getTarget()));
 			}
 			for (SequenceFlow sfi: sfiList) {
 				if ( sfi.getSource() instanceof IntermediateCatchEvent ) {
