@@ -27,7 +27,7 @@ jobs:
         java-version: 21
         java-distribution: temurin
     - name: Build with Maven
-      run: mvn -B -U package --file pom.xml
+      run: mvn -B -U -fae package --file pom.xml
     - name: Attach LSP Server
       uses: actions/upload-artifact@v3
       with:

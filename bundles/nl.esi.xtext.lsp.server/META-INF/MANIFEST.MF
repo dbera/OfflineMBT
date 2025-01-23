@@ -5,29 +5,15 @@ Bundle-SymbolicName: nl.esi.xtext.lsp.server
 Bundle-Version: 4.2.0.qualifier
 Export-Package: nl.esi.xtext.lsp.client,
  nl.esi.xtext.lsp.impl;x-internal:=true,
- nl.esi.xtext.lsp.server,
- org.java_websocket;x-internal:=true,
- org.java_websocket.client,
- org.java_websocket.drafts;x-internal:=true,
- org.java_websocket.enums;x-internal:=true,
- org.java_websocket.exceptions;x-internal:=true,
- org.java_websocket.extensions;x-internal:=true,
- org.java_websocket.extensions.permessage_deflate;x-internal:=true,
- org.java_websocket.framing;x-internal:=true,
- org.java_websocket.handshake;x-internal:=true,
- org.java_websocket.interfaces;x-internal:=true,
- org.java_websocket.protocols;x-internal:=true,
- org.java_websocket.server;x-internal:=true,
- org.java_websocket.util;x-internal:=true
+ nl.esi.xtext.lsp.server
 Require-Bundle: com.google.gson,
  org.aopalliance,
  org.eclipse.lsp4j;visibility:=reexport,
  org.eclipse.lsp4j.jsonrpc;visibility:=reexport,
  org.eclipse.xtend.lib,
  org.eclipse.xtext.ide;visibility:=reexport,
- io.github.classgraph.classgraph
+ io.github.classgraph.classgraph,
+ Java-WebSocket;bundle-version="1.6.0";visibility:=reexport
 Import-Package: org.slf4j;version="1.7.36"
 Automatic-Module-Name: nl.esi.xtext.lsp.server
-Bundle-ClassPath: .,
- lib/Java-WebSocket-1.5.7.jar
 Bundle-RequiredExecutionEnvironment: JavaSE-21
