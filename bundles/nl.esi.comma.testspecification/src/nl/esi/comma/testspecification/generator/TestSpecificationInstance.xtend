@@ -101,12 +101,6 @@ class TestSpecificationInstance {
             // return step.parameters
             }
         }
-        /*for(k : mapListOfKeyValue.keySet) {
-         *     System.out.println(" ++ KEY : " + k)
-         *     for(elm : mapListOfKeyValue.get(k)) {
-         *         System.out.println(" ++ Value : " + elm.key + " -> " + elm.value)
-         *     }
-         }*/
         // System.out.println(" Extension: " + mapListOfKeyValue)
         return mapListOfKeyValue // new ArrayList<KeyValue>
     }
@@ -170,12 +164,6 @@ class TestSpecificationInstance {
         var mapLHStoRHS = new KeyValue // HashMap<String,String>
         mapLHStoRHS.key = action.assignment.name
         mapLHStoRHS.value = ExpressionsParser::generateExpression(action.exp, '''''').toString
-        /*if(mapLHStoRHS.value.contains('''platform:''') || mapLHStoRHS.value.contains('''setup.suts''')) 
-         *     {
-         *         System.out.println(" DETECTED PLATFORM: " + mapLHStoRHS.value)
-         *         mapLHStoRHS.value = mapLHStoRHS.value.replaceAll("^\"|\"$", "")
-         *         
-         }*/
         // replace references to global variables with FAST syntax
         for (elm : mapLocalDataVarToDataInstance.keySet) {
             if (mapLHStoRHS.value.contains(elm)) {
@@ -208,14 +196,6 @@ class TestSpecificationInstance {
         mapLHStoRHS.key = field.name
         mapLHStoRHS.value = ExpressionsParser::generateExpression(exp, ref).toString
         mapLHStoRHS.refVal.add(mapLHStoRHS.value) // Added DB 14.10.2024
-        // modify key value data structure to JSON
-        /*mapLHStoRHS.value = mapLHStoRHS.value.replaceAll("\"key\" : ","")
-         * mapLHStoRHS.value = mapLHStoRHS.value.replaceAll(", \"value\"","")      
-         * // check references to SUT and replace with FAST syntax
-         * for(elm : mapLocalSUTVarToDataInstance.keySet) {
-         *     if(mapLHStoRHS.value.contains(elm+"."))
-         *         mapLHStoRHS.value = mapLHStoRHS.value.replaceFirst(elm, "setup.suts['" + elm + "']")
-         }*/
         // check references to Step outputs and replace with FAST syntax
         for (elm : mapLocalStepInstance.keySet) {
             if (mapLHStoRHS.value.contains(elm + ".output")) {
@@ -349,12 +329,6 @@ class TestSpecificationInstance {
         System.out.println(" ------------------ STEPS ------------------")
         for (st : listStepInstances) {
             st.display
-//          System.out.println("    step-id: " + st.id + " type: " + st.type)
-//          System.out.println("    input: " + st.inputFile)
-//          System.out.println("    var: " + st.variableName)
-//          for(param : st.parameters) 
-//              param.display
-        // System.out.println("  parameters: " + param.key + " -> " + param.value)
         }
     }
 

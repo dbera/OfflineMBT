@@ -88,13 +88,6 @@ class TestspecificationGenerator extends AbstractGenerator
 						for(elm : api.di)
 							tspecInst.addMapDataInstanceToFile(elm.^var.name, api.path + elm.fname)
 					}
-				} else if(input.model instanceof SUTDefinition) {
-					/*val sutdef = input.model as SUTDefinition
-					for(sut : sutdef.sutImpl) {
-						for(elm : sut.di) {
-							addMapSUTInstanceToFile(elm.^var.name, sut.path + elm.fname)	
-						}
-					}*/ // assumption is its a standard vfd.xml file. See dedicated generator later.
 				} else { System.out.println("Error: Unhandled Model Type! ")}
 			}
 		}
@@ -127,7 +120,6 @@ class TestspecificationGenerator extends AbstractGenerator
 				stepInst.inputFile = tspecInst.mapDataInstanceToFile.get(s.stepVar.name).head
 				// check if additional data was specified in a step
 				for(ref : s.refStep) {
-				//if(s.input!==null) {
 					for(act : ref.input.actions) {
 						if(	act instanceof AssignmentAction || act instanceof RecordFieldAssignmentAction) 
 						{
@@ -135,8 +127,6 @@ class TestspecificationGenerator extends AbstractGenerator
 							var lhs = ExpressionHandler::getLHS(act) // note key = record variable, and value = recExp
 							stepInst.variableName = lhs.key // Note DB: This is the same for all actions
 							stepInst.recordExp = lhs.value // Note DB: This keeps overwriting (record prefix)
-							// System.out.println("DEBUG: " + lhs.value)
-							// System.out.println("DEBUG: " + record_path_for_lot_def)
 							if(record_path_for_lot_def.equals(lhs.value) || 
 								record_path_for_lot_def.endsWith(lhs.value)
 							) {
@@ -241,12 +231,6 @@ class TestspecificationGenerator extends AbstractGenerator
 				for(mapLHStoRHS : dataInst.kvList) {
 					// System.out.println("Checking " + mapLHStoRHS.key)
 					var mapLHStoRHS_ = tspecInst.getExtensions(mapLHStoRHS.key,true)
-					// System.out.println(" Got Extension for Key: " + mapLHStoRHS.key)
-					/*for(elm: mapLHStoRHS_.keySet) { 
-						System.out.println("	K: " + elm)
-						for(kv : mapLHStoRHS_.get(elm))
-							System.out.println("	k: " + kv.key + "	v : " + kv.value)
-					}*/ //elm.display
 					// check that mapLHStoRHS_ is not empty => get file name from step instance list
 					// else call function to get file name
 					// Reason: 
@@ -286,15 +270,7 @@ class TestspecificationGenerator extends AbstractGenerator
 		// TODO. Make this the only way to generate JSON, i.e. remove previous file generation 
 		// Prevent variable init in params file. 
 		for(vname : listOfStepVars) {
-			// System.out.println(" variable not declared in params: " + vname)
-			// for(step : listStepInstances) {
-				// if(step.variableName.equals(vname)) {
 			var mapLHStoRHS_ = tspecInst.getExtensions(vname, true) //step.variableName
-			/*for(elm: mapLHStoRHS_.keySet) { 
-						System.out.println("	VAR: " + elm)
-						for(kv : mapLHStoRHS_.get(elm))
-							System.out.println("	k: " + kv.key + "	v : " + kv.value)
-			}*/
 			var String fileName = new String
 			var fileContents = ''''''
 			if(!mapLHStoRHS_.isEmpty) {
