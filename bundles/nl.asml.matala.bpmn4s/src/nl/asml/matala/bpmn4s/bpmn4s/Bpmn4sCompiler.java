@@ -227,7 +227,7 @@ public class Bpmn4sCompiler{
 		return init == "" ? "// init\n" : "init\n" + init;
 	}
 	
-	private AbstractList<String> getInitialPlaces (Bpmn4s model, Element component) {
+	protected AbstractList<String> getInitialPlaces (Bpmn4s model, Element component) {
 		/*
 		 * Return the places (Element repr) in the target PN that need to be initialized.
 		 */

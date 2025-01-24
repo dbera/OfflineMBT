@@ -3,6 +3,7 @@ import java.io.File;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -111,6 +112,12 @@ public class Main {
         			@Override
         			protected String getCompiledGateName(Bpmn4s model, Element xor) {
         				return repr(xor);
+        			}
+        			@Override
+        			protected AbstractList<String> getInitialPlaces (Bpmn4s model, Element component) {
+        				ArrayList<String> result = new ArrayList<String>();
+        				result.add(repr(model.getStartEvent(component)));
+        				return result;
         			}
         		};
         	}else {
