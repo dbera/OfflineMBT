@@ -124,9 +124,9 @@ public class Bpmn4s {
 		}
 	}
 	
-	public void addEdge(String src, String expr, String dst, String ref_update, String sym_update) {
-		edges.add(new Edge(src, expr, ref_update, sym_update, dst));
-	}
+//	public void addEdge(String id, String src, String expr, String dst, String ref_update, String sym_update) {
+//		edges.add(new Edge(id, src, expr, ref_update, sym_update, dst));
+//	}
 	
 	@Override
 	public String toString() {

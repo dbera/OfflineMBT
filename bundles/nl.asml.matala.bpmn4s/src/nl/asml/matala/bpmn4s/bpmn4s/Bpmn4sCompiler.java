@@ -179,7 +179,7 @@ public class Bpmn4sCompiler{
 					&& !model.isEvent(srcId) && !model.isEvent(tarId)){
 				assert isParent( c, tar);
 				String datatype = mapType(c.context.dataType != "" ? c.context.dataType : UNIT_TYPE);
-				locals += tabulate(datatype, sanitize(namePlaceBetweenTransitions(repr(src), repr(tar)))) + "\n";
+				locals += tabulate(datatype, sanitize(namePlaceBetweenTransitions(e, repr(src), repr(tar)))) + "\n";
 			}
 		}
 		if (!locals.isBlank()) {
@@ -257,7 +257,7 @@ public class Bpmn4sCompiler{
 					} else if (model.isTask(edge.getTar())) {
 						String tarId = edge.getTar();
 						Element tar = model.getElementById(tarId);
-						result.add(namePlaceBetweenTransitions(repr(next), repr(tar)));
+						result.add(namePlaceBetweenTransitions(edge, repr(next), repr(tar)));
 					}
 				}
 			} else {
@@ -279,7 +279,7 @@ public class Bpmn4sCompiler{
 	 * Return a name in the PN for the place that results from 
 	 * two subsequent tasks in the original BPMN4S model.
 	 */
-	private String namePlaceBetweenTransitions(String src, String dst) {
+	protected String namePlaceBetweenTransitions(Edge  e, String src, String dst) {
 		return String.format("between_%s_and_%s", src, dst);
 	}
 	
@@ -406,7 +406,7 @@ public class Bpmn4sCompiler{
 			if (!model.isTask(e.getSrc()) && !model.isAnd(e.getSrc())) {
 				Logging.logError(String.format("%s should be a task or par gate!", e.getSrc()));
 			}
-			return namePlaceBetweenTransitions(repr(model, e.getSrc()), repr(model, e.getTar()));
+			return namePlaceBetweenTransitions(e, repr(model, e.getSrc()), repr(model, e.getTar()));
 		}
 	}
 	
@@ -419,7 +419,7 @@ public class Bpmn4sCompiler{
 			if (!model.isTask(e.getTar()) && !model.isAnd(e.getTar())) {
 				Logging.logError(String.format("%s should be a task or par gate!", e.getTar()));
 			}
-			return namePlaceBetweenTransitions(repr(model, e.getSrc()), repr(model, e.getTar()));
+			return namePlaceBetweenTransitions(e, repr(model, e.getSrc()), repr(model, e.getTar()));
 		}
 	}
 	
