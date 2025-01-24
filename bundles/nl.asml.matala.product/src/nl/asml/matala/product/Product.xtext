@@ -63,6 +63,65 @@ Block:
 	'}'
 ;
 
+enum MARGIN_TYPE:
+    ABSOLUTE = 'absolute' |
+    RELATIVE = 'relative'
+;
+
+//MargingBlock_OLD:
+//    type=MARGIN_TYPE '{' value = FLOAT '}'
+//;
+//
+//
+//AssertBlock_OLD:
+//    'assertThat' '{'
+//        ( 
+//            'output' '{' outvar = Expression '}' & 
+//            (
+//                'reference' '{' itemVal = Expression '}' |
+//                'reference-values' '[' listVal += Expression (',' listVal+=Expression)* ']'
+//            )&
+//            ('as-regex')?&
+//            ('hasSize'  '{' itemLength = INT '}' )? &
+//            (
+//                'within'  '{' margingVal=MargingBlock_OLD '}' |
+//                'within-margings' '['  margingList+=MargingBlock_OLD (',' margingList+=MargingBlock_OLD)* ']'
+//            )?
+//        )
+//    '}'
+//;
+
+MargingBlock:
+    type=MARGIN_TYPE '(' ( valueInt = INT | valueFloat = FLOAT ) ')'
+;
+
+AssertBlock:
+    'assertThat' '(' 'output' outvar = Expression  ')'
+    (
+        ('.isEqualTo' 
+            '(' 
+                  ( 'value'      item   = Expression )
+                | ( 'values' '[' items += Expression (',' items += Expression)* ']' )
+            ')' 
+            ( '.asRegex()' )?
+        ) | 
+        ( '.isCloseTo'
+            '(' 
+                  ( 'value'      item   = Expression )
+                | ( 'values' '[' items += Expression (',' items += Expression)* ']')
+                        ( ',' 'within' 
+                            '(' 
+                                   ( 'margin'      marging   = MargingBlock ) 
+                                 | ( 'margins' '[' margings += MargingBlock (',' margings += MargingBlock)* ']' ) 
+                            ')' 
+                        )
+            ')' 
+        )| 
+        ( '.hasSize'  '(' itemLength = INT ')' ) 
+    )
+    ';'
+;
+
 Function:
 	'action' name = ID
 	updates += Update*
@@ -89,7 +148,8 @@ VarRef:
 	opt?='opt'? init?='init'? 
 	ref = [expr::Variable|ID] 
 	(dataConstraints = DataConstraints)?
-	(dataReferences = DataReferences)? 
+	(dataReferences = DataReferences)?
+	(dataAssertions = DataAssertions)?  
 ;
 
 DataConstraints: {DataConstraints}
@@ -102,6 +162,12 @@ DataReferences: {DataReferences}
 	'references' '{' 
 		constr += RefConstraint*
 	 '}'
+;
+
+DataAssertions: {DataAssertions}
+    'assertions' '{' 
+        constr += AssertBlock*
+     '}'
 ;
 
 RefConstraint:
