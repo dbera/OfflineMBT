@@ -288,8 +288,8 @@ public class Bpmn4sCompiler{
 		for (Element node: model.elements.values()) {
 			if (isParent(component, node)) { 
 				ElementType nodeType = node.getType();
+				// Tasks and Parallel gates are transitions in the CPN
 				if( nodeType == ElementType.TASK  || nodeType == ElementType.AND_GATE ) {			
-					// Tasks and Parallel gates are transitions in the CPN
 					String task = "";
 					// Name of context as defined by user at front end:
 					String compCtxName = model.getElementById(component).getContextName();  
@@ -305,9 +305,9 @@ public class Bpmn4sCompiler{
 					}
 					task += "case\t\t\t" + "default" + stepConf + "\n";
 
-					/* Updates from the bpmn4s model come as a string. In these strings, names are used as defined
-					 * by the user in the model. Since for simulation we change this names for ids, we also need
-					 * to do this in the updates strings. Unfortunately, interpreting the update to make a proper
+					/* Updates and guards from the bpmn4s model come as a string. In these strings, names are used 
+					 * as defined by the user in the model. Since for simulation we change this names for ids, we also 
+					 * need to do this in the updates strings. Unfortunately, interpreting the update to make a proper
 					 * renaming is too much work, so for now we hack it around by doing string replace and hopping
 					 * there is no unfortunate name collision.
 					 */
@@ -320,8 +320,8 @@ public class Bpmn4sCompiler{
 					Edge inFlow = node.inputs.get(0);	
 					// Name of place that holds source context value for this transition:
 					String preCtxName  = sanitize(getPNSourceName(model, inFlow));
+					replaceFrom.add(0,compCtxName);
 					replaceTo.add(preCtxName);
-					replaceFrom.add(0,"");
 					for(String id: replaceIds) {
 						replaceFrom.add(model.getElementById(id).getName());
 						replaceTo.add(repr(model, id));
@@ -336,13 +336,11 @@ public class Bpmn4sCompiler{
 					// GUARD
 					String guard = node.getGuard();
 					if (guard != null) {
-						task += "with-guard\t\t" + replace(guard, compCtxName, preCtxName) + "\n";
+						task += "with-guard\t\t" + replaceAll(guard, replaceFrom, replaceTo) + "\n";
 					}
 					for(Edge e: node.getOutputs()) {
 						// Name of place that holds target context value for this transition:
 						String postCtxName = sanitize(getPNTargetName(model, e));
-						replaceFrom.remove(0);
-						replaceFrom.add(0, postCtxName);
 						if (model.isData(e.getTar())) {
 							task += "produces-outputs\t" + sanitize(repr(model, e.getTar()));
 							if (isLinked(model, node.getId(), e.getTar())) {
