@@ -304,14 +304,31 @@ public class Bpmn4sCompiler{
 						stepConf = String.format(" step-type \"%s\" action-type RUN", stepType);
 					}
 					task += "case\t\t\t" + "default" + stepConf + "\n";
-					// INPUTS
-					List<String> inputs = new ArrayList<String>();
+
+					/* Updates from the bpmn4s model come as a string. In these strings, names are used as defined
+					 * by the user in the model. Since for simulation we change this names for ids, we also need
+					 * to do this in the updates strings. Unfortunately, interpreting the update to make a proper
+					 * renaming is too much work, so for now we hack it around by doing string replace and hopping
+					 * there is no unfortunate name collision.
+					 */
+					ArrayList<String> replaceIds = getInputOutputIds(model, node);
+					ArrayList<String> replaceFrom = new ArrayList<String>();
+					ArrayList<String> replaceTo = new ArrayList<String>();
 					// FIXME: We are not considering AND join gates properly. 
 					// They have several inputs. How do we check for compatible 
 					// context from different inputs to the gate?
 					Edge inFlow = node.inputs.get(0);	
 					// Name of place that holds source context value for this transition:
 					String preCtxName  = sanitize(getPNSourceName(model, inFlow));
+					replaceTo.add(preCtxName);
+					replaceFrom.add(0,"");
+					for(String id: replaceIds) {
+						replaceFrom.add(model.getElementById(id).getName());
+						replaceTo.add(repr(model, id));
+					}
+					
+					// INPUTS
+					ArrayList<String> inputs = new ArrayList<String>();
 					for(Edge e: node.getInputs()) {
 						inputs.add(sanitize(getPNSourceName(model, e)));
 					}
@@ -323,7 +340,9 @@ public class Bpmn4sCompiler{
 					}
 					for(Edge e: node.getOutputs()) {
 						// Name of place that holds target context value for this transition:
-						String postCtxName = sanitize(getPNTargetName(model, e)) ;
+						String postCtxName = sanitize(getPNTargetName(model, e));
+						replaceFrom.remove(0);
+						replaceFrom.add(0, postCtxName);
 						if (model.isData(e.getTar())) {
 							task += "produces-outputs\t" + sanitize(repr(model, e.getTar()));
 							if (isLinked(model, node.getId(), e.getTar())) {
@@ -334,24 +353,24 @@ public class Bpmn4sCompiler{
 								task += "\n";
 							}
 							if (e.getRefUpdate() != null && e.getRefUpdate() != "") {
-								task += "references {\n" + indent(replace(e.getRefUpdate(), compCtxName, preCtxName)) + "\n}\n" ;
+								task += "references {\n" + indent(replaceAll(e.getRefUpdate(), replaceFrom, replaceTo)) + "\n}\n" ;
 							}
 							if (e.getSymUpdate() != null && e.getSymUpdate() != "") {
-								task += "constraints {\n" + indent(replace(e.getSymUpdate(), compCtxName, preCtxName)) + "\n}\n";
+								task += "constraints {\n" + indent(replaceAll(e.getSymUpdate(), replaceFrom, replaceTo)) + "\n}\n";
 							}
 							if (e.isPersistent()) {
 								task += String.format("updates: %s := %s\n",  repr(model, e.getTar()), repr(model, e.getTar())) ;
 							}
 							if (e.getUpdate() != null && e.getUpdate() != "" ) {
-								task += "updates:" + indent(replace(e.getUpdate(), compCtxName, preCtxName)) + "\n";
+								task += "updates:" + indent(replaceAll(e.getUpdate(), replaceFrom, replaceTo)) + "\n";
 							}
 						} else { // then its context
 							task += "produces-outputs\t" + postCtxName + (e.isSuppressed() ? " suppress\n" : "\n");
 							if (e.getRefUpdate() != null && e.getRefUpdate() != "") {
-								task += "references {\n" + indent(replace(e.getRefUpdate(), compCtxName, preCtxName)) + "\n}\n" ;
+								task += "references {\n" + indent(replaceAll(e.getRefUpdate(), replaceFrom, replaceTo)) + "\n}\n" ;
 							}
 							if (e.getSymUpdate() != null && e.getSymUpdate() != "") {
-								task += "constraints {\n" + indent(replace(e.getSymUpdate(), compCtxName, preCtxName)) + "\n}\n";
+								task += "constraints {\n" + indent(replaceAll(e.getSymUpdate(), replaceFrom, replaceTo)) + "\n}\n";
 							}
 							// move the context between places in the PN
 							task += "updates:" + indent(postCtxName + " := " + preCtxName) + "\n";
@@ -360,7 +379,7 @@ public class Bpmn4sCompiler{
 								// Add users updates
 								String[] assignment = update.split(":=");
 								update = replace(assignment[0] + ":=" + assignment[1], compCtxName, postCtxName);
-								task += indent(update) + "\n";
+								task += indent(replaceAll(update, replaceFrom, replaceTo)) + "\n";
 							}
 						}
 					}
@@ -370,6 +389,28 @@ public class Bpmn4sCompiler{
 			}
 		}
 		return "desc \"" + repr(model, component) + "_Model\"\n\n" + String.join("\n", desc);
+	}
+	
+	private ArrayList<String> getInputOutputIds(Bpmn4s model, Element elem) {
+		ArrayList<String> result = new ArrayList<String>();
+		for (Edge e: elem.getInputs()) {
+			if(isAPlace(model, e.getSrc())) {
+				result.add(e.getSrc());
+			}
+		}
+		for (Edge e: elem.getOutputs()) {
+			if(isAPlace(model, e.getTar())) {
+				result.add(e.getTar());
+			}
+		}
+		return result;
+	}
+	
+	private String replaceAll(String text, ArrayList<String> from, ArrayList<String> to) {
+		for (int idx = 0; idx < from.size(); idx++) {
+			text = text.replace(from.get(idx), to.get(idx));
+		}
+		return text;
 	}
 	
 	private boolean isLinked(Bpmn4s model, String source, String data) {
@@ -597,6 +638,13 @@ public class Bpmn4sCompiler{
 	}
 
 	private String repr(Bpmn4s model, String elId) {
+		
+//		Element elem = model.getElementById(elId);
+//		if (elem != null) {
+//			return repr(elem);
+//		}else {
+//			return elId;
+//		}
 		return repr(model.getElementById(elId));
 	}
 	
