@@ -297,11 +297,9 @@ public class Bpmn4sCompiler{
 					// STEP TYPE
 					String stepConf = "";
 					if (model.isComposeTask(node.getId())) {
-						String stepType = node.getStepType();
-						stepConf = String.format(" step-type \"%s\" action-type COMPOSE", stepType);
+						stepConf = String.format(" step-type \"%s\" action-type COMPOSE", node.getStepType());
 					} else if(model.isRunTask(node.getId())) {
-						String stepType = node.getStepType();
-						stepConf = String.format(" step-type \"%s\" action-type RUN", stepType);
+						stepConf = String.format(" step-type \"%s\" action-type RUN", node.getStepType());
 					}
 					task += "case\t\t\t" + "default" + stepConf + "\n";
 
@@ -406,8 +404,8 @@ public class Bpmn4sCompiler{
 	
 	private String replaceAll(String text, ArrayList<String> from, ArrayList<String> to) {
 		for (int idx = 0; idx < from.size(); idx++) {
-			text = text.replace(from.get(idx), to.get(idx));
-		}
+			text = text.replaceAll(String.format("(?<!\\S)%s\\b", from.get(idx)), to.get(idx));
+		}		
 		return text;
 	}
 	

@@ -107,8 +107,7 @@ public class Main {
         			@Override
         			protected String repr(Element el) {
         				return el.getId();
-        			}
-        			
+        			}		
         			@Override
         			protected String getCompiledGateName(Bpmn4s model, Element xor) {
         				return repr(xor);
@@ -123,7 +122,6 @@ public class Main {
         			protected String namePlaceBetweenTransitions(Edge e, String src, String dst) {
         				return e.getId();
         			}
-        			
         		};
         	}else {
         		compiler = new Bpmn4sCompiler();
