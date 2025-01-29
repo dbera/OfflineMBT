@@ -404,7 +404,10 @@ public class Bpmn4sCompiler{
 	
 	private String replaceAll(String text, ArrayList<String> from, ArrayList<String> to) {
 		for (int idx = 0; idx < from.size(); idx++) {
+<<<<<<< HEAD
 			// Only replace if match is preceded by a space or new line and its followed by a delimiter.
+=======
+>>>>>>> c53c106922c58191b6011c15aaddee35743a79ee
 			text = text.replaceAll(String.format("(?<!\\S)%s\\b", from.get(idx)), to.get(idx));
 		}		
 		return text;
