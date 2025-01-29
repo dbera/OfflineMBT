@@ -112,7 +112,7 @@ public class Element {
 		return stepType;
 	}
 	
-	ElementType getType() {
+	public ElementType getType() {
 		return type;
 	}
 	

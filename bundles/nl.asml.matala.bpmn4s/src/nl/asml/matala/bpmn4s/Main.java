@@ -6,6 +6,7 @@ import java.nio.file.Paths;
 import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import org.camunda.bpm.model.bpmn.Bpmn;
 import org.camunda.bpm.model.bpmn.BpmnModelInstance;
@@ -121,6 +122,39 @@ public class Main {
         			@Override
         			protected String namePlaceBetweenTransitions(Edge e, String src, String dst) {
         				return e.getId();
+        			}
+        			@Override
+        			protected List<String> localsFromStartEvents (Bpmn4s model, Element c) {
+        				List<String> result = new ArrayList<String>();
+        				for (Element se: model.elements.values()) {
+        					if (se.getType().equals(ElementType.START_EVENT) && isParent( c, se)) { 
+    							String datatype = mapType(c.getContextDataType() != "" ? c.getContextDataType() : UNIT_TYPE);
+    							result.add(tabulate(datatype, sanitize(repr(se))));
+        						}
+        					}
+        				return result;
+        			}
+        			@Override
+        			protected List<String> getInvisibleActions(Bpmn4s model, String component) {
+        				Element c = model.getElementById(component);
+        				ArrayList<String> result = new ArrayList<String>();
+        				for (Element se: model.elements.values()) {
+        					if (isAPlace(model, se.getId()) && isParent( c, se)) { 
+        						for(Edge e: se.getOutputs()) {
+        							String targetId = e.getTar();
+        							if (isAPlace(model, targetId)) {
+        								String action = "";
+        								action += "action            " + repr(e) + "\n";
+        								action += "case              default\n";
+        								action += "with-inputs       " + e.getSrc() + "\n";
+        								action += "produces-outputs  " + e.getTar() + "\n";
+        								action += String.format("updates:          %s := %s\n", e.getTar(), e.getSrc());
+        								result.add(action);
+        							}
+        						}
+        					}
+        				}
+        				return result;
         			}
         		};
         	}else {

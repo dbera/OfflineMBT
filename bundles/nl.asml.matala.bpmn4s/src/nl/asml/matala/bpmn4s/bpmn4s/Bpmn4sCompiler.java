@@ -23,7 +23,7 @@ import nl.asml.matala.bpmn4s.Logging;
  */
 public class Bpmn4sCompiler{
 	
-	private final String UNIT_TYPE = "UNIT";
+	protected  final String UNIT_TYPE = "UNIT";
 	private final String UNITINIT = "UNIT{ unit=0 }";
 
 	String psFileName = "default.ps";
@@ -121,6 +121,22 @@ public class Bpmn4sCompiler{
 	}
 	
 
+	protected List<String> localsFromStartEvents (Bpmn4s model, Element c) {
+		List<String> result = new ArrayList<String>();
+		/* START_EVENTs introduce a place if followed by a task or an AND gate */
+		for (Element se: model.elements.values()) {
+			if (se.getType().equals(ElementType.START_EVENT) && isParent( c, se)) { 
+				Edge edge = se.getOutputs().get(0);
+				Element tar = model.getElementById(edge.getTar());
+				if(tar.getType() == ElementType.TASK || tar.getType() == ElementType.AND_GATE) { 
+					String datatype = mapType(c.context.dataType != "" ? c.context.dataType : UNIT_TYPE);
+					result.add(tabulate(datatype, sanitize(repr(se))));
+				}
+			}
+		}
+		return result;
+	}
+	
 	private String fabSpecLocal(Bpmn4s model, Element c) {
 		String locals = "";
 		// All data nodes are places (except for input/outputs)
@@ -156,6 +172,9 @@ public class Bpmn4sCompiler{
 				}
 			}
 		}
+		locals += String.join("\n", localsFromStartEvents(model, c));
+		locals += "\n";
+
 		/* END_EVENTs introduce a place if preceded by a task or an AND gate */
 		for (Element se: model.elements.values()) {
 			if (se.getType().equals(ElementType.END_EVENT) && isParent( c, se)) { 
@@ -380,11 +399,17 @@ public class Bpmn4sCompiler{
 						}
 					}
 					desc.add(task);
-				
 				} 
 			}
 		}
+		
+		desc.addAll(getInvisibleActions(model, component));
+		
 		return "desc \"" + repr(model, component) + "_Model\"\n\n" + String.join("\n", desc);
+	}
+	
+	protected List<String> getInvisibleActions(Bpmn4s model, String component) {
+		return new ArrayList<String>();
 	}
 	
 	private ArrayList<String> getInputOutputIds(Bpmn4s model, Element elem) {
@@ -512,7 +537,7 @@ public class Bpmn4sCompiler{
 		return field;
 	}
 	
-	private String mapType(String name) {
+	protected String mapType(String name) {
 		/*
 		 * Basic types in BPMN4S editor start with upper case, 
 		 * while in pspec they are lower cased.
@@ -530,8 +555,8 @@ public class Bpmn4sCompiler{
 	//
 	// Helper functions
 	//
-	private Boolean isAPlace (Bpmn4s model, String name) {
-		Element elem = model.getElementById(name);
+	protected Boolean isAPlace (Bpmn4s model, String id) {
+		Element elem = model.getElementById(id);
 		if (elem != null) {
 			ElementType t = elem.getType();
 			return t == ElementType.DATASTORE 
@@ -540,13 +565,13 @@ public class Bpmn4sCompiler{
 					|| t == ElementType.START_EVENT 
 					|| t == ElementType.END_EVENT;
 		} else {
-			Logging.logWarning("No vertex named " + name);
+			Logging.logWarning("No element with id " + id);
 			return false;
 		}
 	}
 	
 
-	Boolean isParent(Element parent, Element child) {
+	protected Boolean isParent(Element parent, Element child) {
 		return isParent(parent.getId(), child);
 	}
 	
@@ -594,7 +619,7 @@ public class Bpmn4sCompiler{
 	    Logging.logInfo(String.format("File %s generated at %s", filename, file.getAbsolutePath()));
 	}
 	
-	private String sanitize(String str) {
+	protected String sanitize(String str) {
 		/*
 		 * The BPMN4S editor allows spaces and colons in names, 
 		 * but PSpec is more restrictive so we replace them.
@@ -609,7 +634,7 @@ public class Bpmn4sCompiler{
 		return str.replaceAll("(?m)^", "    ");
 	}
 
-	private String tabulate (String... strings) {
+	protected String tabulate (String... strings) {
 		return String.join("\t", strings);
 	}
 
