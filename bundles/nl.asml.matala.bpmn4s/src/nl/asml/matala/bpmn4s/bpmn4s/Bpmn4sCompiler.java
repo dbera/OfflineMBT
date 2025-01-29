@@ -161,21 +161,12 @@ public class Bpmn4sCompiler{
 				}
 			}
 		}
-		/* START_EVENTs introduce a place if followed by a task or an AND gate */
-		for (Element se: model.elements.values()) {
-			if (se.getType().equals(ElementType.START_EVENT) && isParent( c, se)) { 
-				Edge edge = se.getOutputs().get(0);
-				Element tar = model.getElementById(edge.getTar());
-				if(tar.getType() == ElementType.TASK || tar.getType() == ElementType.AND_GATE) { 
-					String datatype = mapType(c.context.dataType != "" ? c.context.dataType : UNIT_TYPE);
-					locals += tabulate(datatype, sanitize(repr(se))) + "\n";
-				}
-			}
-		}
+
 		locals += String.join("\n", localsFromStartEvents(model, c));
 		locals += "\n";
 
 		/* END_EVENTs introduce a place if preceded by a task or an AND gate */
+		/* FIXME: for simulation, end events are always there */
 		for (Element se: model.elements.values()) {
 			if (se.getType().equals(ElementType.END_EVENT) && isParent( c, se)) { 
 				Edge edge = se.getInputs().get(0);
@@ -186,19 +177,19 @@ public class Bpmn4sCompiler{
 				}
 			}
 		}
-		/* Edges between transitions introduce places. */
+		
+		/* Edges between transitions (tasks and parallel gates) introduce places. */
 		for (Edge e: model.edges) {
 			String srcId = e.getSrc();
 			String tarId = e.getTar();
 			Element src = model.getElementById(srcId);
 			Element tar = model.getElementById(tarId);
-			if (isParent( c, src) 
-					&& !model.isXor(srcId) && !model.isData(srcId)
-					&& !model.isXor(tarId) && !model.isData(tarId)
-					&& !model.isEvent(srcId) && !model.isEvent(tarId)){
+			if (isParent( c, src)
+					&& (model.isAnd(srcId) || model.isTask(srcId))
+					&& (model.isAnd(tarId) || model.isTask(tarId))){
 				assert isParent( c, tar);
 				String datatype = mapType(c.context.dataType != "" ? c.context.dataType : UNIT_TYPE);
-				locals += tabulate(datatype, sanitize(namePlaceBetweenTransitions(e, repr(src), repr(tar)))) + "\n";
+				locals += tabulate(datatype, sanitize(namePlaceBetweenTransitions(e.getId(), repr(src), repr(tar)))) + "\n";
 			}
 		}
 		if (!locals.isBlank()) {
@@ -207,6 +198,24 @@ public class Bpmn4sCompiler{
 		return locals;
 	}	
 
+	
+	protected String getActivityInitialPlace(Bpmn4s model, Element activity) {
+		Element se = model.getStartEvent(activity);
+		Element fe = getNextFlowElement(model, se);
+		String feId = fe.getId();
+		if (model.isAnd(feId) || model.isTask(feId)) {
+			return repr(se);
+		} else if (model.isActivity(feId)) {
+			return getActivityInitialPlace(model, fe);
+		} else if (model.isXor(feId)) {
+			return repr(fe);
+		} else {
+			Logging.logError(String.format("Unknown type %s for element %s", fe.getType(), feId));
+			return "";
+		}
+	}
+	
+	
 	private String fabSpecInit(Bpmn4s model, String component) {
 		String init = "";
 		Element c = model.getElementById(component);
@@ -276,7 +285,7 @@ public class Bpmn4sCompiler{
 					} else if (model.isTask(edge.getTar())) {
 						String tarId = edge.getTar();
 						Element tar = model.getElementById(tarId);
-						result.add(namePlaceBetweenTransitions(edge, repr(next), repr(tar)));
+						result.add(namePlaceBetweenTransitions(edge.getId(), repr(next), repr(tar)));
 					}
 				}
 			} else {
@@ -298,7 +307,7 @@ public class Bpmn4sCompiler{
 	 * Return a name in the PN for the place that results from 
 	 * two subsequent tasks in the original BPMN4S model.
 	 */
-	protected String namePlaceBetweenTransitions(Edge  e, String src, String dst) {
+	protected String namePlaceBetweenTransitions(String  flowId, String src, String dst) {
 		return String.format("between_%s_and_%s", src, dst);
 	}
 	
@@ -462,27 +471,32 @@ public class Bpmn4sCompiler{
 	}
 	
 	private String getPNSourceName(Bpmn4s model, Edge e) {
-		//		FIXME check preconditions for this method and its correctness 
-		if (this.isAPlace(model, e.getSrc())) {
-			return getCompiledName(model, e.getSrc());
+		// Assumes target is either a task or an and gate
+		String srcId = e.getSrc();
+		if (this.isAPlace(model, srcId)) {
+			return getCompiledName(model, srcId);
+//		} else if (model.isActivity(srcId)){
+//			getActivityFinalPlace(model, srcId);
+		} else if (model.isTask(srcId) || model.isAnd(srcId)) {
+			return namePlaceBetweenTransitions(e.getId(), repr(model, srcId), repr(model, e.getTar()));
 		} else {
-			if (!model.isTask(e.getSrc()) && !model.isAnd(e.getSrc())) {
-				Logging.logError(String.format("%s should be a task or par gate!", e.getSrc()));
-			}
-			return namePlaceBetweenTransitions(e, repr(model, e.getSrc()), repr(model, e.getTar()));
+			Logging.logError(String.format("Unknown element type for src %s of edge %s", srcId, e.getId()));
+			return "";
 		}
 	}
 	
 	private String getPNTargetName(Bpmn4s model, Edge e) {
-		// assumes e.getTar() is a task
-		// FIXME check preconditions for this method and its correctness 
-		if (this.isAPlace(model, e.getTar())) {
-			return getCompiledName(model, e.getTar());
+		// assumes e.getTar() is a task or and gate
+		String tarId = e.getTar();
+		if (this.isAPlace(model, tarId)) {
+			return getCompiledName(model, tarId);
+		} else if (model.isActivity(tarId)) {
+			return getActivityInitialPlace(model, model.getElementById(tarId));
+		} else if (model.isTask(tarId) || model.isAnd(tarId)) {
+			return namePlaceBetweenTransitions(e.getId(), repr(model, e.getSrc()), repr(model, tarId));	
 		} else {
-			if (!model.isTask(e.getTar()) && !model.isAnd(e.getTar())) {
-				Logging.logError(String.format("%s should be a task or par gate!", e.getTar()));
-			}
-			return namePlaceBetweenTransitions(e, repr(model, e.getSrc()), repr(model, e.getTar()));
+			Logging.logError(String.format("Unknown element type for tar %s of edge %s", tarId, e.getId()));
+			return "";
 		}
 	}
 	
@@ -624,7 +638,6 @@ public class Bpmn4sCompiler{
 		 * The BPMN4S editor allows spaces and colons in names, 
 		 * but PSpec is more restrictive so we replace them.
 		 */
-//		String result = str.replaceAll("\\p{Zs}+", "00SP00").replace(".", "00CLN00");
 		String result = str.replaceAll("\\p{Zs}+", "").replace(".", "");
 		return result;
 	}
@@ -660,22 +673,10 @@ public class Bpmn4sCompiler{
 	}
 
 	private String repr(Bpmn4s model, String elId) {
-		
-//		Element elem = model.getElementById(elId);
-//		if (elem != null) {
-//			return repr(elem);
-//		}else {
-//			return elId;
-//		}
 		return repr(model.getElementById(elId));
 	}
 	
 	protected String repr(Element el) {
-//		if(this.simulation) {
-//			return el.getId();
-//		}else {
-//			return el.getName();
-//		}
 		return el.getName();
 	}
 	

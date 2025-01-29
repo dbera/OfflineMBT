@@ -92,13 +92,8 @@ public class Main {
         	Path path = Paths.get(inputModel);
         	String fileName = path.getFileName().toString();
         	fileName = fileName.substring(0, fileName.lastIndexOf('.')); // remove file extension (.pbmn)
-//        	URL resource = Bpmn4s.class.getClassLoader().getResource("testing/" + modelName + ".bpmn");
-//        	File file = new File(resource.toURI());
         	File file = path.toFile();
         	modelInst = Bpmn.readModelFromFile(file);
-//        	boolean valid = BPMN4SModelValidator.validate(modelInst);
-//        	if (!valid)
-//        		logWarning("Compiling an INVALID BPMN4S input model.");
         	model = new Bpmn4s();
         	model.setName(fileName);
         	parseBPMN(modelInst);
@@ -120,14 +115,14 @@ public class Main {
         				return result;
         			}
         			@Override
-        			protected String namePlaceBetweenTransitions(Edge e, String src, String dst) {
-        				return e.getId();
+        			protected String namePlaceBetweenTransitions(String flowId, String src, String dst) {
+        				return flowId;
         			}
         			@Override
         			protected List<String> localsFromStartEvents (Bpmn4s model, Element c) {
         				List<String> result = new ArrayList<String>();
         				for (Element se: model.elements.values()) {
-        					if (se.getType().equals(ElementType.START_EVENT) && isParent( c, se)) { 
+        					if (se.getType().equals(ElementType.START_EVENT) && isParent(c, se)) { 
     							String datatype = mapType(c.getContextDataType() != "" ? c.getContextDataType() : UNIT_TYPE);
     							result.add(tabulate(datatype, sanitize(repr(se))));
         						}
@@ -155,6 +150,11 @@ public class Main {
         					}
         				}
         				return result;
+        			}
+        			@Override
+        			protected String getActivityInitialPlace(Bpmn4s model, Element activity) {
+        				Element se = model.getStartEvent(activity);
+        				return se.getId();
         			}
         		};
         	}else {
@@ -538,20 +538,13 @@ public class Main {
 		}
 		return result;
 	}
-		
 	
 	
 	static String getParentId(ModelElementInstance elem) {
-		/* 
-		 * Get first parent that is not an Activity (since we ignore Activities)
-		 */
 		ModelElementInstance parent = elem.getParentElement();
 		if(parent == null) {
 			return null;
 		}
-		while(parent.getElementType().getTypeName() == "subProcess" && !isComponent(parent)) {
-			parent = parent.getParentElement();
-		} // assert: either is subprocess and component or is a process
 		return parent.getAttributeValue("id");
 	}
 	
