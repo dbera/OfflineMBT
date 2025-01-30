@@ -8,59 +8,59 @@ import "http://www.esi.nl/comma/expressions/Expression" as expr
 
 @Override
 ModelContainer returns types::ModelContainer:
-	super::ModelContainer | Product
+    super::ModelContainer | Product
 ;
 
 Product:
-	imports += Import*
-	(namespace += NameSpace)*
+    imports += Import*
+    (namespace += NameSpace)*
     types += TypeDecl*
-	( systemDecl = SystemDecl	
-	| specification = Specification)
+    ( systemDecl = SystemDecl   
+    | specification = Specification)
 ;
 
 @Override
 NamedElement returns types::NamedElement:
-	name=QualifiedName | SystemDecl
+    name=QualifiedName | SystemDecl
 ;
 
 SystemDecl:
-	'system' 'declarations' name = ID '{'
-		block += Block*
-		// if it works, make it recursive
-	'}'
+    'system' 'declarations' name = ID '{'
+        block += Block*
+        // if it works, make it recursive
+    '}'
 ;
 
 Specification:
-	'specification' name = ID '{'
-		blocks += Blocks+
-		('SUT-blocks' envBlock += [Block|QualifiedName]*)?
-		'depth-limits' limit = INT
-	'}'
+    'specification' name = ID '{'
+        blocks += Blocks+
+        ('SUT-blocks' envBlock += [Block|QualifiedName]*)?
+        'depth-limits' limit = INT
+    '}'
 ;
 
 Blocks:
-	( block = Block
-	| refBlock = RefBlock
-	)
+    ( block = Block
+    | refBlock = RefBlock
+    )
 ;
 
 
 RefBlock:
-	'reference' 'system' system = [Block|QualifiedName]
+    'reference' 'system' system = [Block|QualifiedName]
 ;
 
 Block:
-	'system' name = ID '{'
-		( // Unordered group for following items
-			('inputs' invars+=Variable* )? &
-			('outputs' outvars+=Variable* )? &
-			('local' localvars+=Variable* )? &
-			('init' initActions+=(AssignmentAction | RecordFieldAssignmentAction)*)? &
-			'desc' type = STRING
-		)
-		functions += Function*
-	'}'
+    'system' name = ID '{'
+        ( // Unordered group for following items
+            ('inputs' invars+=Variable* )? &
+            ('outputs' outvars+=Variable* )? &
+            ('local' localvars+=Variable* )? &
+            ('init' initActions+=(AssignmentAction | RecordFieldAssignmentAction)*)? &
+            'desc' type = STRING
+        )
+        functions += Function*
+    '}'
 ;
 
 enum MARGIN_TYPE:
@@ -92,76 +92,98 @@ enum MARGIN_TYPE:
 //;
 
 MargingBlock:
-    type=MARGIN_TYPE '(' ( valueInt = INT | valueFloat = FLOAT ) ')'
+    type=MARGIN_TYPE '(' valueFloat = FLOAT ')'
+;
+
+ItemOrList:
+    itemVal = Expression | '[' listVal += Expression (',' listVal+=Expression)* ']'
+;
+
+MargingOrList:
+    ( margin = MargingBlock ) 
+    | ('[' margins += MargingBlock (',' margins += MargingBlock)* ']' )
+;
+
+XPathBlock:
+    'xpath' '(' 'expression' xpathExpr = STRING  (',' 'id' xpathId = STRING )? ')'
+;
+
+XPathItemOrList:
+    ( margin = XPathBlock ) 
+    | ('[' margins += XPathBlock (',' margins += XPathBlock)* ']' )
 ;
 
 AssertBlock:
-    'assertThat' '(' 'output' outvar = Expression  ')'
+    AssertValue | AssertXMLValue 
+;
+
+
+AssertValue:
+    'assertThat' '(' 'val' outvar = Expression  ')'
     (
-        ('.isEqualTo' 
-            '(' 
-                  ( 'value'      item   = Expression )
-                | ( 'values' '[' items += Expression (',' items += Expression)* ']' )
-            ')' 
-            ( '.asRegex()' )?
-        ) | 
-        ( '.isCloseTo'
-            '(' 
-                  ( 'value'      item   = Expression )
-                | ( 'values' '[' items += Expression (',' items += Expression)* ']')
-                        ( ',' 'within' 
-                            '(' 
-                                   ( 'margin'      marging   = MargingBlock ) 
-                                 | ( 'margins' '[' margings += MargingBlock (',' margings += MargingBlock)* ']' ) 
-                            ')' 
-                        )
-            ')' 
-        )| 
-        ( '.hasSize'  '(' itemLength = INT ')' ) 
+        ( '.isEqualTo' '(' 'out' itemEq = ItemOrList  ')' ( '.asRegex()' )? ) |
+        ( '.isCloseTo' '(' 'out' itemCt = ItemOrList ',' 'withMargin' '(' itemMrg = MargingOrList ')' ')' ) |
+        ( '.hasSize'   '(' itemLength = INT ')' )
+    )
+    ';'
+;
+
+AssertXMLValue:
+    'assertThat' '(' 'xml' outvar = Expression  ')'
+    ( '.and'     '(' 'xml' itemRef = Expression ')' )? // optional to make it for both XMLFile and XPath assertions
+    ( '.valueByXPath' '(' 'path' xpathItem = XPathItemOrList ')' )
+    (
+        // comparison of values between XML files
+        ( '.areIdentical' '('                                      ')' ) |
+        ( '.areSimilar'   '(' 'withMargin' marginItems = MargingOrList ')' ) |
+        // assertion of value(s) in one (or more) XPath(s)
+        ( '.isEqualTo' '(' 'output' itemEq = ItemOrList ')' ( '.asRegex()' )? ) |
+        ( '.isCloseTo' '(' 'output' itemCt = ItemOrList ',' 'withMargin' '(' itemMrg = MargingOrList ')' ')' ) |
+        ( '.hasSize'   '(' itemLength = INT ')' )
     )
     ';'
 ;
 
 Function:
-	'action' name = ID
-	updates += Update*
+    'action' name = ID
+    updates += Update*
 ;
 
 Update:
-	'case' name = ID 
-	('step-type' stepType = STRING 'action-type' actionType = ActionType)?
-	('with-inputs' fnInp += VarRef (',' fnInp+=VarRef)*)?
-	('with-guard' guard=Expression?)?
-	updateOutputVar += UpdateOutVar*
+    'case' name = ID 
+    ('step-type' stepType = STRING 'action-type' actionType = ActionType)?
+    ('with-inputs' fnInp += VarRef (',' fnInp+=VarRef)*)?
+    ('with-guard' guard=Expression?)?
+    updateOutputVar += UpdateOutVar*
 ;
 
 enum ActionType:
-	INTERNAL | COMPOSE | RUN
+    INTERNAL | COMPOSE | RUN
 ;
 
 UpdateOutVar:
-	'produces-outputs'  fnOut += VarRef (',' fnOut+=VarRef)* (assert?='assert'?) (suppress?='suppress'?)
-	('updates' hiddenVars += Variable* ':' act = ActionList)?
+    'produces-outputs'  fnOut += VarRef (',' fnOut+=VarRef)* (assert?='assert'?) (suppress?='suppress'?)
+    ('updates' hiddenVars += Variable* ':' act = ActionList)?
 ;
 
 VarRef:
-	opt?='opt'? init?='init'? 
-	ref = [expr::Variable|ID] 
-	(dataConstraints = DataConstraints)?
-	(dataReferences = DataReferences)?
-	(dataAssertions = DataAssertions)?  
+    opt?='opt'? init?='init'? 
+    ref = [expr::Variable|ID] 
+    (dataConstraints = DataConstraints)?
+    (dataReferences = DataReferences)? 
+    (dataAssertions = DataAssertions)?  
 ;
 
 DataConstraints: {DataConstraints}
-	'constraints' '{' 
-		constr += SymbConstraint*
-	 '}'
+    'constraints' '{' 
+        constr += SymbConstraint*
+     '}'
 ;
 
 DataReferences: {DataReferences}
-	'references' '{' 
-		constr += RefConstraint*
-	 '}'
+    'references' '{' 
+        constr += RefConstraint*
+     '}'
 ;
 
 DataAssertions: {DataAssertions}
@@ -171,9 +193,9 @@ DataAssertions: {DataAssertions}
 ;
 
 RefConstraint:
-	name=ID ':' act = ActionList
+    name=ID ':' act = ActionList
 ;
 
 SymbConstraint:
-	name=ID ':' symbExpr = Expression
+    name=ID ':' symbExpr = Expression
 ;
