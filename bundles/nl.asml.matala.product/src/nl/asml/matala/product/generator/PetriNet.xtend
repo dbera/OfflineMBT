@@ -523,12 +523,12 @@ class PetriNet {
 		                # step_txt = map_transition_modes_to_name[step[1].name + "_" + step[2].__repr__()]
 		                step_txt = map_transition_modes_to_name[stp]
 		                # step_txt.split("_")[0] in listOfEnvBlocks or 
-		                if step_txt.rsplit("_",1)[0].rsplit("_",1)[0] + "_" in listOfAssertTransitions:
+		                if step_txt.rsplit("_",1)[0].split("@",1)[0] in listOfAssertTransitions:
 		                    # suppress = False
 		                    # if step_txt.split("@")[0] in listOfSuppressTransitions:
 		                    # suppress = True
 		                    if not step_txt.split("_")[0] in listOfEnvBlocks:
-		                        _step = Step(step_txt.rsplit("_",1)[0].rsplit("_",1)[0] + "_" in listOfAssertTransitions)
+		                        _step = Step(step_txt.rsplit("_",1)[0].split("@",1)[0] in listOfAssertTransitions)
 		                    else:
 		                        _step = Step(False)
 		                    # txt += "    %s\n" % (map_transition_modes_to_name[step[1].name + "_" + step[2].__repr__()])

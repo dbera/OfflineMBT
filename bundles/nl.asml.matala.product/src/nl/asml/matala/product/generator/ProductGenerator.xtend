@@ -151,20 +151,20 @@ class ProductGenerator extends AbstractGenerator {
 					val block = b.block
 					for(f : block.functions) {
 						for(u : f.updates) {
-						    if(!u.actionType.equals(ActionType.INTERNAL)) {
+						    if(u.actionType.equals(ActionType.COMPOSE) || u.actionType.equals(ActionType.RUN)) {
 						        listOfAssertTransitions.add(block.name+"_" + f.name + "_" + u.name)
 						    }
 							// 30.01.2025 commented out
 							/*for(fi : u.fnInp) {
 								if(fi.dataConstraints !== null) listOfAssertTransitions.add(block.name+"_" + f.name + "_" + u.name)
 							}*/
-							for(ovar : u.updateOutputVar) {
+							//for(ovar : u.updateOutputVar) {
 							    // if(ovar.assert) listOfAssertTransitions.add(block.name+"_" + f.name + "_" + u.name)
 								// 30.01.2025 commented out and replaced with line above. 
 								/*for(fo : ovar.fnOut) {
 									if(fo.dataConstraints !== null) listOfAssertTransitions.add(block.name+"_" + f.name + "_" + u.name)
 								}*/
-							}
+							//}
 						}
 					}
 				}
