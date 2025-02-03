@@ -29,7 +29,7 @@ jobs:
     - name: Build with Maven
       run: mvn -B -U -fae package --file pom.xml
     - name: Attach LSP Server
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: bpmn4s-lsp-server
         path: bundles/nl.asml.matala.product.lsp.server/target/dist
