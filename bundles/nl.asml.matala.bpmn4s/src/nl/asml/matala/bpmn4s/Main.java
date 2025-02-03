@@ -105,11 +105,11 @@ public class Main {
         				return el.getId();
         			}		
         			@Override
-        			protected String getCompiledGateName(Bpmn4s model, Element xor) {
-        				return repr(xor);
+        			protected String getCompiledGateName(String xorId) {
+        				return repr(model.getElementById(xorId));
         			}
         			@Override
-        			protected AbstractList<String> getInitialPlaces (Bpmn4s model, Element component) {
+        			protected AbstractList<String> getInitialPlaces (Element component) {
         				ArrayList<String> result = new ArrayList<String>();
         				result.add(repr(model.getStartEvent(component)));
         				return result;
@@ -119,7 +119,7 @@ public class Main {
         				return flowId;
         			}
         			@Override
-        			protected List<String> localsFromStartEvents (Bpmn4s model, Element c) {
+        			protected List<String> localsFromStartEvents (Element c) {
         				List<String> result = new ArrayList<String>();
         				for (Element se: model.elements.values()) {
         					if (se.getType().equals(ElementType.START_EVENT) && isParent(c, se)) { 
@@ -130,20 +130,33 @@ public class Main {
         				return result;
         			}
         			@Override
-        			protected List<String> getInvisibleActions(Bpmn4s model, String component) {
+        			protected List<String> localsFromEndEvents (Element c) {
+        				List<String> result = new ArrayList<String>();
+        				for (Element se: model.elements.values()) {
+        					if (se.getType().equals(ElementType.END_EVENT) && isParent(c, se)) { 
+    							String datatype = mapType(c.getContextDataType() != "" ? c.getContextDataType() : UNIT_TYPE);
+    							result.add(tabulate(datatype, sanitize(repr(se))));
+        						}
+        					}
+        				return result;
+        			}
+        			@Override
+        			protected List<String> getFlowActions(String component) {
         				Element c = model.getElementById(component);
         				ArrayList<String> result = new ArrayList<String>();
-        				for (Element se: model.elements.values()) {
-        					if (isAPlace(model, se.getId()) && isParent( c, se)) { 
-        						for(Edge e: se.getOutputs()) {
-        							String targetId = e.getTar();
-        							if (isAPlace(model, targetId)) {
+        				for (Element source: model.elements.values()) {
+        					if ((isAPlace(source.getId()) || model.isActivity(source.getId())) 
+        							&& isParent( c, source)) { 
+        						for(Edge e: source.getOutputs()) {
+        							String sourceId = getEdgeSourceId(e);
+        							String targetId = getEdgeTargetId(e);
+        							if (isAPlace(targetId)) {
         								String action = "";
         								action += "action            " + repr(e) + "\n";
         								action += "case              default\n";
-        								action += "with-inputs       " + e.getSrc() + "\n";
-        								action += "produces-outputs  " + e.getTar() + "\n";
-        								action += String.format("updates:          %s := %s\n", e.getTar(), e.getSrc());
+        								action += "with-inputs       " + sourceId + "\n";
+        								action += "produces-outputs  " + targetId + "\n";
+        								action += String.format("updates:          %s := %s\n", targetId, sourceId);
         								result.add(action);
         							}
         						}
@@ -152,9 +165,14 @@ public class Main {
         				return result;
         			}
         			@Override
-        			protected String getActivityInitialPlace(Bpmn4s model, Element activity) {
-        				Element se = model.getStartEvent(activity);
+        			protected String getActivityInitialPlace(String actId) {
+        				Element se = model.getStartEvent(model.getElementById(actId));
         				return se.getId();
+        			}
+        			@Override
+        			protected String getActivityFinalPlace(String actId) {
+        				Element ee = model.getEndEvent(model.getElementById(actId));
+        				return ee.getId();
         			}
         		};
         	}else {
@@ -398,7 +416,7 @@ public class Main {
 		
 	}
 
-	// FIXME duplicated code:
+	// TODO re-factor duplicated code:
 	public static void makeActionNode(BpmnModelInstance modelInst, Process p, ElementType type) {
 		String name = getName(p);
 		Element node = new Element(type, ElementType.NONE, name);
@@ -416,9 +434,6 @@ public class Main {
 				contextTypeName = contextTypeId;
 			}
 		}
-//		if(contextInit != null && contextInit.strip().startsWith("=")) {
-//			contextInit = contextInit.substring(1); // FIXME due to issues with bpmn4s editor lsp integration
-//		}
 		node.setContext(contextName != null ? contextName : "", 
 				contextTypeName != null ? contextTypeName : "", 
 						contextInit != null ? contextInit : "");

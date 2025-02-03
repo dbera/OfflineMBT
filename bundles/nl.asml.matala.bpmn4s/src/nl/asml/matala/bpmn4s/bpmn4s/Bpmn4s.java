@@ -72,6 +72,14 @@ public class Bpmn4s {
 				elements.get(id).getType().equals(ElementType.END_EVENT)); 
 	}
 	
+	public boolean isStartEvent(String id) {
+		return elements.containsKey(id) && (elements.get(id).getType().equals(ElementType.START_EVENT)); 
+	}
+	
+	public boolean isEndEvent(String id) {
+		return elements.containsKey(id) && (elements.get(id).getType().equals(ElementType.END_EVENT)); 
+	}
+		
 	public Boolean isGate(String name) {
 		return elements.containsKey(name) && (elements.get(name).getType().equals(ElementType.AND_GATE) ||
 				elements.get(name).getType().equals(ElementType.XOR_GATE)); 
@@ -85,10 +93,14 @@ public class Bpmn4s {
 		return isNode(name) && elements.get(name).getType().equals(ElementType.AND_GATE); 
 	}
 	
-	public Boolean isData (String name) {
-		return elements.get(name) != null && 
-				(elements.get(name).getType() == ElementType.DATASTORE || 
-				 elements.get(name).getType() == ElementType.MSGQUEUE);
+	public Boolean isData (String id) {
+		return elements.get(id) != null && 
+				(elements.get(id).getType() == ElementType.DATASTORE || 
+				 elements.get(id).getType() == ElementType.MSGQUEUE);
+	}
+	
+	public Boolean isReferenceData (String id) {
+		return isData(id) && getElementById(id).isReferenceData();
 	}
 	
 	public Element getElementById(String id) {
@@ -124,10 +136,6 @@ public class Bpmn4s {
 		}
 	}
 	
-//	public void addEdge(String id, String src, String expr, String dst, String ref_update, String sym_update) {
-//		edges.add(new Edge(id, src, expr, ref_update, sym_update, dst));
-//	}
-	
 	@Override
 	public String toString() {
 		String result = String.format("A bpmn4s model named '%s'.\n", name);
@@ -138,12 +146,21 @@ public class Bpmn4s {
 		return result;
 	}
 	
+	
 	public Element getStartEvent(Element c) {
+		return getEvent(c, ElementType.START_EVENT);
+	}
+	
+	public Element getEndEvent(Element c) {
+		return getEvent(c, ElementType.END_EVENT);
+	}
+	
+	private Element getEvent(Element c, ElementType et) {
 		for (Element e: this.elements.values()) {
-			if(e.getType() == ElementType.START_EVENT && e.getParent() == c.getId()){
+			if(e.getType() == et && e.getParent() == c.getId()){
 				return e;
 			}
 		}
-		return null;
+		return null; 
 	}
 }

@@ -25,7 +25,8 @@ public class Edge extends Element {
 	
 	@Override
 	public String toString() {
-		return String.format("An Edge with source %s, expression %s and target %s.", src, update, tar);
+		return this.id;
+//		return String.format("An Edge with source %s, expression %s and target %s.", src, update, tar);
 	}
 	
 	public String getSrc() {
