@@ -112,6 +112,9 @@ class StandardProjectGenerator extends AbstractGenerator {
                         try {
                             resourceSet.createResource(URI.createURI(fileName)).load(tfis, emptyMap)
                         } catch (Exception ex) {} // re-registration is not a problem
+                        // Commented DB to prevent concrete test generation
+                        // TODO Fix step id resolution to step params variables. Cause: Type not being scoped. 
+                        /*
                         val testResource = EcoreUtil2.getResource(res, fileName)
                         val test = testResource.allContents.head
                         if (test instanceof TSMain) {
@@ -141,7 +144,7 @@ class StandardProjectGenerator extends AbstractGenerator {
                             } else {
                                 Assert.isTrue(true, "this is not an abstract tspec")
                             }
-                        }
+                        }*/
 						
 					}
 				}

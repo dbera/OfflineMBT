@@ -55,6 +55,9 @@ import nl.esi.comma.expressions.expression.ExpressionBulkData
 import nl.esi.comma.expressions.expression.ExpressionFunctionCall
 import nl.esi.comma.expressions.expression.ExpressionQuantifier
 import nl.esi.comma.expressions.expression.ExpressionBracket
+import nl.asml.matala.product.product.SymbConstraint
+import nl.asml.matala.product.product.DataConstraints
+import nl.asml.matala.product.product.ActionType
 
 /**
  * Generates code from your *.ps model files on save.
@@ -148,14 +151,20 @@ class ProductGenerator extends AbstractGenerator {
 					val block = b.block
 					for(f : block.functions) {
 						for(u : f.updates) {
-							for(fi : u.fnInp) {
+						    if(u.actionType.equals(ActionType.COMPOSE) || u.actionType.equals(ActionType.RUN)) {
+						        listOfAssertTransitions.add(block.name+"_" + f.name + "_" + u.name)
+						    }
+							// 30.01.2025 commented out
+							/*for(fi : u.fnInp) {
 								if(fi.dataConstraints !== null) listOfAssertTransitions.add(block.name+"_" + f.name + "_" + u.name)
-							}
-							for(ovar : u.updateOutputVar) {
-								for(fo : ovar.fnOut) {
+							}*/
+							//for(ovar : u.updateOutputVar) {
+							    // if(ovar.assert) listOfAssertTransitions.add(block.name+"_" + f.name + "_" + u.name)
+								// 30.01.2025 commented out and replaced with line above. 
+								/*for(fo : ovar.fnOut) {
 									if(fo.dataConstraints !== null) listOfAssertTransitions.add(block.name+"_" + f.name + "_" + u.name)
-								}
-							}
+								}*/
+							//}
 						}
 					}
 				}
@@ -385,7 +394,7 @@ class ProductGenerator extends AbstractGenerator {
 				// constraints to comma expression. 27.08.2024
 				// Check if boolean expression or assignment action
 //				constraints.add(new Constraint(c.name, (new ExpressionsCommaGenerator()).exprToComMASyntax(c.symbExpr).toString()))
-				constraints.add(new Constraint(printConstraint(c as RefConstraint), ""))
+				constraints.add(new Constraint(printConstraint(c as SymbConstraint), ""))
 			}
 		}
 		if(v.dataReferences !== null) {
@@ -399,10 +408,17 @@ class ProductGenerator extends AbstractGenerator {
 		return constraints
 	}
 	
+	dispatch def String printConstraint(SymbConstraint sref) {
+        return printConstraint(sref.eContainer as DataConstraints) + "." + sref.name
+    }	
 	dispatch def String printConstraint(RefConstraint ref) {
 		return printConstraint(ref.eContainer as DataReferences) + "." + ref.name
 	}
 	
+	dispatch def String printConstraint(DataConstraints ref) {
+        return printConstraint(ref.eContainer as VarRef)
+    }
+    
 	dispatch def String printConstraint(DataReferences ref) {
 		return printConstraint(ref.eContainer as VarRef)
 	}
