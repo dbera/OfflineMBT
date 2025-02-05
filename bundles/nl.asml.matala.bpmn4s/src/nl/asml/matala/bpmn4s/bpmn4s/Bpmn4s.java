@@ -34,6 +34,7 @@ public class Bpmn4s {
 	public AbstractMap<String, Element> 		elements	= new HashMap<String, Element>();
 	public List<Edge> 							edges 		= new ArrayList<Edge>();
 	public AbstractMap<String, Bpmn4sDataType> 	dataSchema  = new HashMap<String, Bpmn4sDataType>();
+	public int depthLimit = 100;
 	
 	public Boolean isNode (String id) {
 		return elements.containsKey(id);
@@ -162,5 +163,13 @@ public class Bpmn4s {
 			}
 		}
 		return null; 
+	}
+
+	public void setDepthLimit (int limit) {
+		this.depthLimit = limit;
+	}
+	
+	public int getDepthLimit() {
+		return depthLimit;
 	}
 }

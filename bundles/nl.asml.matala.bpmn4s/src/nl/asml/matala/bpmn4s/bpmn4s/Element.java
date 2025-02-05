@@ -26,7 +26,7 @@ public class Element {
 	List<Edge> inputs = new ArrayList<Edge>();
 	List<Edge> outputs = new ArrayList<Edge>();	
 	String parent = "";
-	ArrayList<String> component = new ArrayList<String>();
+	ArrayList<String> components = new ArrayList<String>();
 	String init = "";
 	String stepType;
 	
@@ -130,11 +130,11 @@ public class Element {
 	}
 	
 	public void setComponent (ArrayList<String> cname) {
-		component = cname;
+		components = cname;
 	}
 	
-	public ArrayList<String> getComponent () {
-		return component;
+	public ArrayList<String> getParentComponents () {
+		return components;
 	}
 	
 	public void setContext(String name, String dataType, String init) {

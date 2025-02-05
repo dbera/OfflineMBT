@@ -1,12 +1,13 @@
 package nl.asml.matala.bpmn4s;
 import java.io.File;
-import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.camunda.bpm.model.bpmn.Bpmn;
 import org.camunda.bpm.model.bpmn.BpmnModelInstance;
@@ -65,10 +66,12 @@ public class Main {
 		 * arg0 is path to input model. 
 		 * arg1 is true for simulation tailored compilation, else for test generation. 
 		 * arg2 is output folder for generated ps and types files.
+		 * arg3 is depthLimit for test generation.
 		 */
 		String inputModel = "";
 		boolean simulation = false;
 		String output = "";
+		int depthLimit = 300;
 		
 		if(args.length < 1) {
 			Logging.logError("Missing model file name!");
@@ -82,10 +85,13 @@ public class Main {
 		if(args.length > 2) {
 			output = args[2];
 		}
-		compile(inputModel, simulation, output);
+		if(args.length > 3) {
+			depthLimit = Integer.parseInt(args[3]);
+		}
+		compile(inputModel, simulation, output, depthLimit);
 	}
 	
-	public static void compile(String inputModel, boolean simulation, String outputFolder) {
+	public static void compile(String inputModel, boolean simulation, String outputFolder, int depthLimit) {
         BpmnModelInstance modelInst;
         try {
         	registerModelExtensionTypes();
@@ -96,6 +102,7 @@ public class Main {
         	modelInst = Bpmn.readModelFromFile(file);
         	model = new Bpmn4s();
         	model.setName(fileName);
+        	model.setDepthLimit(depthLimit);
         	parseBPMN(modelInst);
         	Bpmn4sCompiler compiler;
         	if (simulation) {
@@ -105,13 +112,14 @@ public class Main {
         				return el.getId();
         			}		
         			@Override
-        			protected String getCompiledGateName(String xorId) {
+        			protected String getCompiledXorName(String xorId) {
         				return repr(model.getElementById(xorId));
         			}
         			@Override
-        			protected AbstractList<String> getInitialPlaces (Element component) {
+        			protected AbstractList<String> getInitialPlaces (String cId) {
+        				Element c = model.getElementById(cId);
         				ArrayList<String> result = new ArrayList<String>();
-        				result.add(repr(model.getStartEvent(component)));
+        				result.add(repr(model.getStartEvent(c)));
         				return result;
         			}
         			@Override
@@ -122,7 +130,7 @@ public class Main {
         			protected List<String> localsFromStartEvents (Element c) {
         				List<String> result = new ArrayList<String>();
         				for (Element se: model.elements.values()) {
-        					if (se.getType().equals(ElementType.START_EVENT) && isParent(c, se)) { 
+        					if (se.getType().equals(ElementType.START_EVENT) && isParentComponent(c, se)) { 
     							String datatype = mapType(c.getContextDataType() != "" ? c.getContextDataType() : UNIT_TYPE);
     							result.add(tabulate(datatype, sanitize(repr(se))));
         						}
@@ -133,7 +141,7 @@ public class Main {
         			protected List<String> localsFromEndEvents (Element c) {
         				List<String> result = new ArrayList<String>();
         				for (Element se: model.elements.values()) {
-        					if (se.getType().equals(ElementType.END_EVENT) && isParent(c, se)) { 
+        					if (se.getType().equals(ElementType.END_EVENT) && isParentComponent(c, se)) { 
     							String datatype = mapType(c.getContextDataType() != "" ? c.getContextDataType() : UNIT_TYPE);
     							result.add(tabulate(datatype, sanitize(repr(se))));
         						}
@@ -146,11 +154,11 @@ public class Main {
         				ArrayList<String> result = new ArrayList<String>();
         				for (Element source: model.elements.values()) {
         					if ((isAPlace(source.getId()) || model.isActivity(source.getId())) 
-        							&& isParent( c, source)) { 
+        							&& isParentComponent( c, source)) { 
         						for(Edge e: source.getOutputs()) {
-        							String sourceId = getEdgeSourceId(e);
-        							String targetId = getEdgeTargetId(e);
-        							if (isAPlace(targetId)) {
+        							String sourceId = e.getSrc(); //getEdgeSourceId(e);
+        							String targetId = e.getTar(); // getEdgeTargetId(e);
+        				 			if (isAPlace(targetId)) {
         								String action = "";
         								action += "action            " + repr(e) + "\n";
         								action += "case              default\n";
@@ -165,21 +173,20 @@ public class Main {
         				return result;
         			}
         			@Override
-        			protected String getActivityInitialPlace(String actId) {
-        				Element se = model.getStartEvent(model.getElementById(actId));
-        				return se.getId();
-        			}
-        			@Override
-        			protected String getActivityFinalPlace(String actId) {
-        				Element ee = model.getEndEvent(model.getElementById(actId));
-        				return ee.getId();
+        			protected Map<String, String> buildReplaceMap (Element transition) {
+        				Map<String, String> replaceMap = new HashMap<String, String>();
+        				ArrayList<String> replaceIds = getInputOutputIds(transition);
+        				for(String id: replaceIds) {
+        					replaceMap.put(model.getElementById(id).getName(), compile(id));
+        				}
+        				return replaceMap;
         			}
         		};
         	}else {
         		compiler = new Bpmn4sCompiler();
         	}
         	compiler.compile(model);
-        	compiler.writeToFile(outputFolder);
+        	compiler.writeModelToFiles(outputFolder);
         } catch (Exception e) { e.printStackTrace(); }
 	}
 
