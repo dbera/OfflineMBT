@@ -341,7 +341,7 @@ public class Bpmn4sCompiler{
 					String mssg = String.format("Missing context initialization for component %s", compile(cId));
 					throw new InvalidModel(mssg);
 				} else {
-					init += replace(ctxInit, ctxName, sanitize(place)) + "\n";
+					init += replaceWord(ctxInit, ctxName, sanitize(place)) + "\n";
 				}
 			}
 		}
@@ -366,38 +366,42 @@ public class Bpmn4sCompiler{
 	}
 	
 	/**
-	 * Collect the places in the target PN that need to be initialized 
-	 * for the system corresponding to component cId. FIXME
+	 * Collect the places which will hold context data in the target PN that need to be initialized 
+	 * for the system corresponding to component cId. To avoid spurious non-determinism,
+	 * we may avoid initializing the context in the start event place, and move the 
+	 * initialization further into the flow instead.
 	 * @param cId is the id of the component
 	 * @return
+	 * @throws InvalidModel 
 	 */
-	protected AbstractList<String> getInitialPlaces (String cId) {
+	protected AbstractList<String> getInitialPlaces (String cId) throws InvalidModel {
 		Element c = model.getElementById(cId);
 		ArrayList<String> result = new ArrayList<String>();
 		Element startEvent = model.getStartEvent(c);
 		LinkedList<Element> queue = new LinkedList<Element>();
-		if (startEvent != null) 
-			queue.add(startEvent);
-		
+		if(startEvent == null) {
+			throw new InvalidModel("Missing start event for compoent " + c.getName());
+		}
+		queue.add(startEvent);
 		while(!queue.isEmpty()) {
 			Element next = queue.pop();
 			if (next.getType() == ElementType.START_EVENT) {
 				Element e = getNextFlowElement(next);
 				if (e.getType() == ElementType.AND_GATE) {
-					queue.add(e);
+					queue.add(e); // ignore the start event and init outputs of the AND gate
 				} else if (e.getType() == ElementType.TASK) {
-					result.add(repr(next)); // FIXME need to add start event as a place (what does this mean??? make better comments)
+					result.add(repr(next)); // add the start event
 				} else if (e.getType() == ElementType.XOR_GATE) {
-					result.add(getCompiledXorName(e.getId()));
+					result.add(getCompiledXorName(e.getId())); // ignore the start event, and init the xor gate
 				} 
 			}else if (next.getType() == ElementType.AND_GATE) {
 				for (Edge edge: next.getOutputs()) {
-					if (model.isXor(edge.getTar())) {
-						result.add(getCompiledXorName(edge.getTar()));
-					} else if (model.isAnd(edge.getTar())) {
-						queue.add(model.getElementById(edge.getTar()));
-					} else if (model.isTask(edge.getTar())) {
-						String tarId = edge.getTar();
+					String tarId = edge.getTar();
+					if (model.isXor(tarId)) {
+						result.add(getCompiledXorName(tarId));
+					} else if (model.isAnd(tarId)) {
+						queue.add(model.getElementById(tarId));
+					} else if (model.isTask(tarId)) {
 						Element tar = model.getElementById(tarId);
 						result.add(namePlaceBetweenTransitions(edge.getId(), repr(next), repr(tar)));
 					}
@@ -409,15 +413,18 @@ public class Bpmn4sCompiler{
 		return result;
 	}
 	
-	private String replace(String text, String from, String to) {
-		if (!from.isBlank()) {
-			return text.replace(from, to);
-		}else {
-			return text;
-		}
+	/**
+	 * Replace whole word only (only match <from> if surrounded by delimiters)
+	 * @param text
+	 * @param from
+	 * @param to
+	 * @return
+	 */
+	private String replaceWord (String text, String from, String to) {
+		return text.replaceAll(String.format("\\b%s\\b", from), to);
 	}
 	
-	/*
+	/**
 	 * Return a name in the PN for the place that results from 
 	 * two subsequent tasks in the original BPMN4S model.
 	 */
@@ -445,27 +452,22 @@ public class Bpmn4sCompiler{
 						stepConf = String.format(" step-type \"%s\" action-type RUN", node.getStepType());
 					}
 					task += "case\t\t\t" + "default" + stepConf + "\n";
-
 					/*
-					 * Updates, guards and initializations from the bpmn4s model reach us as Strings. 
-					 * In these strings, names are used as defined by the user in the model. 
-					 * Since for simulation we change this names for ids, we also 
-					 * need to do this in the updates strings. Also, both for simulation and test generation, updates 
-					 * and guards related to context variables need to be renamed since we hold the context in 
-					 * different places through the PN. Unfortunately, interpreting the update to make a proper
-					 * renaming is too much work, so for now we hack it around by doing string replace and hopping
-					 * there is no unfortunate name collision.
+					 * Updates, guards, and initializations from the bpmn4s model reach us as Strings. 
+					 * In these strings, data stores, queues, and context are referred to by their user-defined names.
+					 * Since for simulation we change this names for ids, we also need to do this in the updates 
+					 * strings. Also, both for simulation and test generation, updates and guards related to context 
+					 * variables need to be renamed since we hold the context in different places through the PN. 
+					 * Unfortunately, interpreting the update to make a proper renaming is too much work, so for now 
+					 * we hack it around by doing string replace and hopping there is no unfortunate name collision.
 					 */
 					Map<String, String> replaceMap = buildReplaceMap(node);
-					/* FIXME: We are not considering AND join gates properly. 
-					 * They have several inputs. How do we check for compatible 
-					 * context from different inputs to the gate?
+					/* Note: we assume all inputs of merging AND gates contain exactly the same context data.
 					 */
 					Edge inFlow = node.inputs.get(0);
 					// Name of place that holds source context value for this transition:
 					String preCtxName = sanitize(getPNSourcePlaceName(inFlow));
 					replaceMap.put(compCtxName, preCtxName);
-					
 					// INPUTS
 					ArrayList<String> inputs = new ArrayList<String>();
 					for(Edge e: node.getInputs()) {
@@ -514,7 +516,7 @@ public class Bpmn4sCompiler{
 							String update = e.getUpdate();
 							if(update != null && update != "") {
 								// Add users updates. Notice that postCtxName holds the value of preCtxName here.
-								update = update.replaceAll(String.format("\\b%s\\b", compCtxName), postCtxName);
+								update = replaceWord(update, compCtxName, postCtxName);
 								task += indent(replaceAll(update, replaceMap)) + "\n";
 							}
 						}
@@ -588,8 +590,8 @@ public class Bpmn4sCompiler{
 	 */
 	private String replaceAll(String text, Map<String,String> replace) {
 		for (String k: replace.keySet()) {
-			// Only replace if match is surrounded by delimiters.
-			text = text.replaceAll(String.format("\\b%s\\b", k), replace.get(k));
+			// replace whole word only
+			text = replaceWord(text, k, replace.get(k));
 		}		
 		return text;
 	}
@@ -622,36 +624,26 @@ public class Bpmn4sCompiler{
 	}
 	
 	/**
-	 * Assuming the target of e is a Task or an AND gate (which are compiled to transition in the PN)
-	 * return the name of the source place in the PN.
+	 * Assuming the target of e is a Task or an AND gate (which are compiled 
+	 * to a transition in the PN) return the name of the source place in the PN.
 	 */
 	private String getPNSourcePlaceName(Edge e) {
 		String srcId = e.getSrc();
-		if (model.isXor(srcId)) {
-			return getCompiledXorName(srcId);
-		} else if (model.isTask(srcId) || model.isAnd(srcId)) {
+		if (model.isTask(srcId) || model.isAnd(srcId)) {
 			return namePlaceBetweenTransitions(e.getId(), compile(srcId), compile(e.getTar()));
-		} else if (model.isReferenceData(srcId)) {
-			Element src = model.getElementById(srcId);
-			return compile(src.getOriginDataNodeId());
 		} else {
 			return compile(srcId);
 		}
 	}
 	
 	/**
-	 * Assuming the source of e is a Task or an AND gate (which are compiled to transition in the PN)
-	 * return the name of the target place in the PN.
+	 * Assuming the source of e is a Task or an AND gate (which are compiled
+	 * to transition in the PN) return the name of the target place in the PN.
 	 */
 	private String getPNTargetPlaceName(Edge e) {
 		String tarId = e.getTar();
-		if (model.isXor(tarId)) {
-			return getCompiledXorName(tarId);
-		} else if (model.isTask(tarId) || model.isAnd(tarId)) {
+		if (model.isTask(tarId) || model.isAnd(tarId)) {
 			return namePlaceBetweenTransitions(e.getId(), compile(e.getSrc()), compile(tarId));
-		} else if (model.isReferenceData(tarId)) {
-			Element tar = model.getElementById(tarId);
-			return compile(tar.getOriginDataNodeId());
 		} else {
 			return compile(tarId);
 		}
@@ -729,17 +721,12 @@ public class Bpmn4sCompiler{
 	
 	protected Boolean isAPlace (String id) {
 		Element elem = model.getElementById(id);
-		if (elem != null) {
-			ElementType t = elem.getType();
-			return t == ElementType.DATASTORE 
-					|| t == ElementType.MSGQUEUE 
-					|| t == ElementType.XOR_GATE 
-					|| t == ElementType.START_EVENT 
-					|| t == ElementType.END_EVENT;
-		} else {
-			Logging.logWarning("No element with id " + id);
-			return false;
-		}
+		ElementType t = elem.getType();
+		return t == ElementType.DATASTORE 
+				|| t == ElementType.MSGQUEUE 
+				|| t == ElementType.XOR_GATE 
+				|| t == ElementType.START_EVENT 
+				|| t == ElementType.END_EVENT;
 	}
 	
 	protected Boolean isParentComponent(Element parent, Element child) {
@@ -865,15 +852,11 @@ public class Bpmn4sCompiler{
 		return id;
 	}
 	
-	//
-	// XOR gate optimization for Test generation.
-	//
-	
-	/*
+	/**
 	 * For test generation, networks of connected XOR gates are merged 
 	 * into single places in the target PN. This method returns the name
 	 * of the target place.
-	 */	
+	 */
 	protected String getCompiledXorName(String xorId) {
 		Element xor = model.getElementById(xorId);
 		String result = compiledGateName.get(xor.getId());
@@ -895,7 +878,7 @@ public class Bpmn4sCompiler{
 		return result;
 	}
 	
-	/*
+	/**
 	 * Build the Maximal Connected Component of xor gates that contains <xor> and 
 	 * add its elements to <net>. Notice that <net> is used as an accumulator for
 	 * the recursive algorithm.
@@ -920,7 +903,4 @@ public class Bpmn4sCompiler{
 		}
 	}
 	
-	//
-	// END XOR gate optimization for Test generation.
-	//
 }
