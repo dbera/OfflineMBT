@@ -452,13 +452,13 @@ public class Bpmn4sCompiler{
 						stepConf = String.format(" step-type \"%s\" action-type RUN", node.getStepType());
 					}
 					task += "case\t\t\t" + "default" + stepConf + "\n";
-					/*
+					/* 
 					 * Updates, guards, and initializations from the bpmn4s model reach us as Strings. 
 					 * In these strings, data stores, queues, and context are referred to by their user-defined names.
 					 * Since for simulation we change this names for ids, we also need to do this in the updates 
 					 * strings. Also, both for simulation and test generation, updates and guards related to context 
 					 * variables need to be renamed since we hold the context in different places through the PN. 
-					 * Unfortunately, interpreting the update to make a proper renaming is too much work, so for now 
+					 * FIXME: Unfortunately, interpreting the update to make a proper renaming is too much work, so for now 
 					 * we hack it around by doing string replace and hopping there is no unfortunate name collision.
 					 */
 					Map<String, String> replaceMap = buildReplaceMap(node);

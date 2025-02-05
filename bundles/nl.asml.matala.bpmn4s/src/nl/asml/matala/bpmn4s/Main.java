@@ -12,7 +12,7 @@ import java.util.Map;
 import org.camunda.bpm.model.bpmn.Bpmn;
 import org.camunda.bpm.model.bpmn.BpmnModelInstance;
 import org.camunda.bpm.model.bpmn.instance.Activity;
-
+import org.camunda.bpm.model.bpmn.instance.BaseElement;
 import org.camunda.bpm.model.bpmn.instance.DataInputAssociation;
 import org.camunda.bpm.model.bpmn.instance.DataObjectReference;
 import org.camunda.bpm.model.bpmn.instance.DataOutputAssociation;
@@ -66,7 +66,7 @@ public class Main {
 		 * arg0 is path to input model. 
 		 * arg1 is true for simulation tailored compilation, else for test generation. 
 		 * arg2 is output folder for generated ps and types files.
-		 * arg3 is depthLimit for test generation.
+		 * arg3 is depth limit for test generation.
 		 */
 		String inputModel = "";
 		boolean simulation = false;
@@ -156,8 +156,8 @@ public class Main {
         					if ((isAPlace(source.getId()) || model.isActivity(source.getId())) 
         							&& isParentComponent( c, source)) { 
         						for(Edge e: source.getOutputs()) {
-        							String sourceId = e.getSrc(); //getEdgeSourceId(e);
-        							String targetId = e.getTar(); // getEdgeTargetId(e);
+        							String sourceId = e.getSrc();
+        							String targetId = e.getTar();
         				 			if (isAPlace(targetId)) {
         								String action = "";
         								action += "action            " + repr(e) + "\n";
@@ -422,49 +422,27 @@ public class Main {
 		}
 		
 	}
-
-	// TODO re-factor duplicated code:
-	public static void makeActionNode(BpmnModelInstance modelInst, Process p, ElementType type) {
-		String name = getName(p);
-		Element node = new Element(type, ElementType.NONE, name);
-		String id = p.getId();
-		node.setId(id);
-		String contextName = p.getAttributeValueNs("http://bpmn4s", "ctxName");
-		String contextInit = p.getAttributeValueNs("http://bpmn4s", "ctxInit");
-		String contextTypeId = p.getAttributeValueNs("http://bpmn4s", "ctxTypeRef");
-		String contextTypeName = "";
-		if (contextTypeId != null) {
-			DataType contextType = getExtensionElementById(modelInst, DataType.class, contextTypeId);
-			if (contextType != null) { 
-				contextTypeName = contextType.getAttributeValue("name"); 
-			} else {
-				contextTypeName = contextTypeId;
-			}
-		}
-		node.setContext(contextName != null ? contextName : "", 
-				contextTypeName != null ? contextTypeName : "", 
-						contextInit != null ? contextInit : "");
-		model.addElement(id, node);
-	}	
 	
-	public static void makeActionNode(BpmnModelInstance modelInst, FlowNode elem, ElementType type) {
+	public static void makeActionNode(BpmnModelInstance modelInst, BaseElement elem, ElementType type) {
 		makeActionNode(modelInst, elem, type, ElementType.NONE);
 	}
 	
-	/*
+	/**
 	 * Tasks, events, gates and components are compiled into bpmn4s elements.
 	 * Task elements may have a taskType such as COMPOSE or RUN, to indicate 
 	 * they are part of generated tests.
 	 */
-	public static void makeActionNode(BpmnModelInstance modelInst, FlowNode elem, ElementType type, ElementType taskType) {
+	public static void makeActionNode(BpmnModelInstance modelInst, BaseElement elem, ElementType type, ElementType taskType) {
 		String name = getName(elem);
 		String id = elem.getId();
 		Element node = new Element(type, taskType, name);
 		node.setId(id);
-		node.setParent(getParentId(elem));
-		node.setComponent(getParentComponents(elem));
-		node.setGuard(elem.getAttributeValueNs("http://bpmn4s", "guard"));
-		node.setStepType(elem.getAttributeValueNs("http://bpmn4s", "stepType"));
+		if (elem instanceof FlowNode) {
+			node.setParent(getParentId(elem));
+			node.setComponent(getParentComponents(elem));
+			node.setGuard(elem.getAttributeValueNs("http://bpmn4s", "guard"));
+			node.setStepType(elem.getAttributeValueNs("http://bpmn4s", "stepType"));
+		}
 		String contextName = elem.getAttributeValueNs("http://bpmn4s", "ctxName");
 		String contextInit = elem.getAttributeValueNs("http://bpmn4s", "ctxInit");
 		String contextTypeId = elem.getAttributeValueNs("http://bpmn4s", "ctxTypeRef");
@@ -484,6 +462,12 @@ public class Main {
 				contextTypeName != null ? contextTypeName : "", 
 						contextInit != null ? contextInit : "");
 		model.addElement(id, node);
+		if (elem instanceof FlowNode) {
+			resolveNodeEdges((FlowNode) elem, node);
+		}
+	}
+	
+	static void resolveNodeEdges(FlowNode elem, Element node) {
 		for(SequenceFlow out: elem.getOutgoing()) {
 			Edge e = makeSequenceEdge(out);
 			// Flow nodes may update the context
@@ -499,7 +483,6 @@ public class Main {
 			// nodes, thus we avoid duplication here.
 			// model.addEdge(e);
 		}
-
 	}
 	
 	static Edge makeSequenceEdge (SequenceFlow elem) {
@@ -519,27 +502,10 @@ public class Main {
 		return "subProcess".equals(isSubprocess) && SUBTYPE_COMPONENT.equals(isComponent);
 	}
 	
-	
 	static String getName(ModelElementInstance elem) {
 		String name = elem.getAttributeValue("name");
 		if (name == null) {
 			name = elem.getAttributeValue("id");
-		}
-		return name;
-	}
-	
-	static String getName(FlowElement elem) {
-		String name = elem.getName();
-		if (name == null) {
-			name = elem.getId();
-		}
-		return name;
-	}
-	
-	static String getName(ItemAwareElement elem) {
-		String name = NameResolver.getName(elem);
-		if (name == null) {
-			name = elem.getId();
 		}
 		return name;
 	}

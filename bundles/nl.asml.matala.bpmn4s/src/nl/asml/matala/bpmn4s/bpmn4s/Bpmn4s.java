@@ -117,10 +117,8 @@ public class Bpmn4s {
 	}
 	
 	public void addElement (String id, Element elem) {
-//		// FIXME check it is not already there
 		this.elements.put(id, elem);
 	}
-	
 	
 	public void addEdge(Edge e) {
 		edges.add(e);
