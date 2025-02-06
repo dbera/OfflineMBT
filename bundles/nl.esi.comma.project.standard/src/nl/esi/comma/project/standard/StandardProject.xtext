@@ -17,6 +17,7 @@ Product:
 			'product-file' product = STRING
 			('path-to-python-exe' pythonExe = STRING)?
 			('sut-product-files' stubProducts += STRING*)?
+			(simulatorOnly ?= 'simulator-only')?
 		'}'
 	'}'
 ;
