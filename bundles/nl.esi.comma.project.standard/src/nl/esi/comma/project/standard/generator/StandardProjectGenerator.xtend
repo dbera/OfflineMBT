@@ -17,7 +17,6 @@ import java.util.List
 import java.util.function.Consumer
 import nl.asml.matala.product.generator.ProductGenerator
 import nl.asml.matala.product.product.Product
-import nl.asml.matala.bpmn4s.bpmn4s.Bpmn4s
 import nl.esi.comma.automata.AlgorithmType
 import nl.esi.comma.constraints.constraints.Constraints
 import nl.esi.comma.constraints.generator.ConstraintsAnalysisAndGeneration
