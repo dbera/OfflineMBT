@@ -3,52 +3,45 @@
  */
 package nl.esi.comma.project.standard.generator
 
+import java.io.BufferedReader
+import java.io.File
 import java.io.FileInputStream
+import java.io.FilenameFilter
+import java.io.InputStream
+import java.io.InputStreamReader
+import java.nio.file.Files
+import java.nio.file.Paths
+import java.nio.file.StandardCopyOption
+import java.util.ArrayList
+import java.util.List
+import java.util.function.Consumer
 import nl.asml.matala.product.generator.ProductGenerator
 import nl.asml.matala.product.product.Product
+import nl.asml.matala.bpmn4s.bpmn4s.Bpmn4s
+import nl.esi.comma.automata.AlgorithmType
+import nl.esi.comma.constraints.constraints.Constraints
+import nl.esi.comma.constraints.generator.ConstraintsAnalysisAndGeneration
+import nl.esi.comma.project.standard.standardProject.FilePath
 import nl.esi.comma.project.standard.standardProject.Project
+import nl.esi.comma.project.standard.standardProject.StateMachineGenerationBlock
+import nl.esi.comma.scenarios.scenarios.Scenarios
+import nl.esi.comma.testspecification.generator.FromAbstractToConcrete
+import nl.esi.comma.testspecification.generator.TestspecificationGenerator
+import nl.esi.comma.testspecification.testspecification.AbstractTestDefinition
+import nl.esi.comma.testspecification.testspecification.TSMain
+import nl.esi.comma.testspecification.testspecification.TestDefinition
+import org.eclipse.core.resources.IResource
+import org.eclipse.core.resources.ResourcesPlugin
+import org.eclipse.core.runtime.Assert
 import org.eclipse.emf.common.CommonPlugin
+import org.eclipse.emf.common.util.EList
 import org.eclipse.emf.common.util.URI
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
-import org.eclipse.emf.common.util.EList
-import java.util.ArrayList
-import nl.esi.comma.constraints.constraints.Constraints
-import nl.esi.comma.project.standard.standardProject.FilePath
-import nl.esi.comma.automata.AlgorithmType
-import java.io.File
-import nl.esi.comma.scenarios.scenarios.Scenarios
-import nl.esi.comma.constraints.generator.ConstraintsAnalysisAndGeneration
 import org.eclipse.xtext.nodemodel.util.NodeModelUtils
-import java.util.List
-import org.eclipse.xtext.scoping.IScopeProvider
-import nl.esi.comma.project.standard.standardProject.StateMachineGenerationBlock
-import java.io.FilenameFilter
-import org.eclipse.core.resources.IResource
-import org.eclipse.core.resources.ResourcesPlugin
-import nl.esi.comma.testspecification.testspecification.TSMain
-import nl.esi.comma.testspecification.testspecification.TestDefinition
-import org.eclipse.core.runtime.Assert
-import nl.esi.comma.testspecification.testspecification.AbstractTestDefinition
-import nl.esi.comma.testspecification.generator.FromAbstractToConcrete
-import nl.esi.comma.testspecification.generator.TestspecificationGenerator
-import java.io.InputStream
-import java.util.function.Consumer
-import java.io.InputStreamReader
-import java.io.BufferedReader
-import java.util.concurrent.Future
-import java.util.concurrent.TimeUnit
-import java.util.Arrays
-import java.io.IOException
-import java.io.OutputStreamWriter
-import java.io.BufferedWriter
-import java.nio.file.Files
-import java.nio.file.StandardCopyOption
-import java.nio.file.Paths
-import java.nio.file.Path
 
 /**
  * Generates code from your model files on save.
@@ -68,11 +61,24 @@ class StandardProjectGenerator extends AbstractGenerator {
             var stubProductList = new ArrayList<Product>
             for (product : project.products) {
             	// resolve environment product and generate petri net 
-	            val inputFileURI = res.URI.trimSegments(1).appendSegment(product.product)
-	            val absFilePath = CommonPlugin.resolve(inputFileURI).toFileString
+            	var productName = product.product
+	            var inputFileURI = res.URI.trimSegments(1).appendSegment(productName)
+	            var absFilePath = CommonPlugin.resolve(inputFileURI).toFileString
+	            if (inputFileURI.fileExtension.equalsIgnoreCase("bpmn")) {
+	                val outputPathURI = res.URI.trimSegments(1)
+	                val absOutputPath = CommonPlugin.resolve(outputPathURI).toFileString
+                    nl.asml.matala.bpmn4s.Main.compile(absFilePath, true, absOutputPath)
+                    for (r : ResourcesPlugin.workspace.root.getProjects()) {
+                        r.refreshLocal(IResource.DEPTH_INFINITE, null)
+                    }
+                    var outputFileURI = inputFileURI.trimSegments(1)
+                    productName = inputFileURI.lastSegment.replaceAll("bpmn", "ps").replaceAll(" ", "")
+                    inputFileURI = outputFileURI.appendSegment(productName)
+                    absFilePath = CommonPlugin.resolve(inputFileURI).toFileString
+	            }
 	            val fis = new FileInputStream(absFilePath)
-	            resourceSet.createResource(URI.createURI(product.product)).load(fis, emptyMap)
-				val inputResource = EcoreUtil2.getResource(res, product.product)
+	            resourceSet.createResource(URI.createURI(productName)).load(fis, emptyMap)
+				val inputResource = EcoreUtil2.getResource(res, productName)
 				val input = inputResource.allContents.head
 				if (input instanceof Product) {
 					envProduct = input as Product
