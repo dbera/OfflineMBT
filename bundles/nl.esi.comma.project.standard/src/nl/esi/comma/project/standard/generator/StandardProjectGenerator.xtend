@@ -82,7 +82,7 @@ class StandardProjectGenerator extends AbstractGenerator {
 				if (input instanceof Product) {
 					envProduct = input as Product
 					(new ProductGenerator).doGenerate(inputResource, fsa, context)
-                    if (!product.simulatorOnly) {
+                    if (!product.simulator) {
     					var name = envProduct.specification.name
     					var pythonPathURI = res.URI.trimSegments(1).appendSegment("src-gen\\CPNServer").appendSegment(name)
     					var pythonFileURI = pythonPathURI.appendSegment(name + ".py")
