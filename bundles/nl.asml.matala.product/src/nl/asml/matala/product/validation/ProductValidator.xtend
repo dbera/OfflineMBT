@@ -8,6 +8,10 @@ import nl.esi.comma.types.types.TypesPackage
 import org.eclipse.emf.common.util.URI
 import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.validation.Check
+import nl.asml.matala.product.product.AssertXPaths
+import nl.esi.comma.expressions.expression.ExpressionMap
+import nl.asml.matala.product.product.ProductPackage
+import nl.esi.comma.expressions.expression.MapTypeConstructor
 
 /**
  * This class contains custom validation rules. 
@@ -28,6 +32,25 @@ class ProductValidator extends AbstractProductValidator {
         }*/
         }
     }
+    
+    @Check
+    def checkABC(AssertXPaths vari){
+//        var isMap = vari.namespaceMap instanceof ExpressionMap
+//        
+//        if (!isMap) {
+//            error("The type is not a Map.", vari, 
+//                ProductPackage.Literals.ASSERT_XPATHS__NAMESPACE_MAP
+//            )
+//        }
+//        else{
+//            var variMapParsed = vari.namespaceMap as ExpressionMap
+//            var variMapConstr = variMapParsed.typeAnnotation instanceof MapTypeConstructor
+//            println(variMapParsed)
+//            println(variMapConstr)
+//        }
+        
+    }
+
     
     
     /* STRANGE BUG: Output Vars are Empty. Appears in Input Vars. 

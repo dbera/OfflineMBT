@@ -63,85 +63,101 @@ Block:
     '}'
 ;
 
+
+// Json Grammar obtained from https://gist.github.com/nightscape/629651
+
+JsonObject:
+    {JsonObject} '{' ((members+=JsonMember) (',' members+=JsonMember)*)? '}'
+;
+
+JsonMember:
+    key=STRING ':' value=JsonValue
+;
+
+JsonArray:
+    {JsonArray} '[' ((values+=JsonValue) (',' values+=JsonValue)*)? ']'
+
+;
+
+JsonNumeric:
+    {JsonNumeric} INT | {JsonNumeric} FLOAT
+;
+
+JsonValue:
+    {JsonValue} STRING | {JsonValue} BOOL_LITERAL | JsonNumeric | JsonObject | JsonArray 
+;
+
+StringOrStringArray:
+    {StringOrStringArray} STRING | {StringOrStringArray} '[' ((values+=STRING) (',' values+=STRING)*)? ']'
+;
+
 enum MARGIN_TYPE:
     ABSOLUTE = 'absolute' |
-    RELATIVE = 'relative'
+    RELATIVE = 'relative' |
+    NONE = 'none'
 ;
 
-//MargingBlock_OLD:
-//    type=MARGIN_TYPE '{' value = FLOAT '}'
-//;
-//
-//
-//AssertBlock_OLD:
-//    'assertThat' '{'
-//        ( 
-//            'output' '{' outvar = Expression '}' & 
-//            (
-//                'reference' '{' itemVal = Expression '}' |
-//                'reference-values' '[' listVal += Expression (',' listVal+=Expression)* ']'
-//            )&
-//            ('as-regex')?&
-//            ('hasSize'  '{' itemLength = INT '}' )? &
-//            (
-//                'within'  '{' margingVal=MargingBlock_OLD '}' |
-//                'within-margings' '['  margingList+=MargingBlock_OLD (',' margingList+=MargingBlock_OLD)* ']'
-//            )?
-//        )
-//    '}'
-//;
-
-MargingBlock:
-    type=MARGIN_TYPE '(' valueFloat = FLOAT ')'
+MargingItem:
+    type=MARGIN_TYPE '(' ( valueFloat = FLOAT )? ')'
 ;
 
-ItemOrList:
-    itemVal = Expression | '[' listVal += Expression (',' listVal+=Expression)* ']'
+XPathItem:
+    'path' '(' xpathExpr = STRING  ( ',' 'logId' '=' loggingId = STRING )? ')'
 ;
 
-MargingOrList:
-    ( margin = MargingBlock ) 
-    | ('[' margins += MargingBlock (',' margins += MargingBlock)* ']' )
+// "AssertThat" DSL
+AssertThatBlock:
+    AssertValue | AssertXPaths | AssertXMLFile
 ;
-
-XPathBlock:
-    'xpath' '(' 'expression' xpathExpr = STRING  (',' 'id' xpathId = STRING )? ')'
-;
-
-XPathItemOrList:
-    ( margin = XPathBlock ) 
-    | ('[' margins += XPathBlock (',' margins += XPathBlock)* ']' )
-;
-
-AssertBlock:
-    AssertValue | AssertXMLValue 
-;
-
 
 AssertValue:
-    'assertThat' '(' 'val' outvar = Expression  ')'
+    'assertThat' '(' 'value'  outExpr=ActionList ')'
     (
-        ( '.isEqualTo' '(' 'out' itemEq = ItemOrList  ')' ( '.asRegex()' )? ) |
-        ( '.isCloseTo' '(' 'out' itemCt = ItemOrList ',' 'withMargin' '(' itemMrg = MargingOrList ')' ')' ) |
-        ( '.hasSize'   '(' itemLength = INT ')' )
+        ('.isEqualTo'   '(' outRef = JsonValue 
+                            (',' 'margin'  '=' outMrg  = MargingItem  )?
+                            (',' 'asRegex' '=' isRegex = BOOL_LITERAL )? ')' )|
+        ('.isCloseTo'   '(' outClo = JsonNumeric  ',' 'margin'  '=' outMrg = MargingItem ')' )|
+        ('.matches' '(' outRegex = StringOrStringArray ')' )|
+        ('.hasSize'     '(' itLen = INT ')')
     )
     ';'
 ;
 
-AssertXMLValue:
-    'assertThat' '(' 'xml' outvar = Expression  ')'
-    ( '.and'     '(' 'xml' itemRef = Expression ')' )? // optional to make it for both XMLFile and XPath assertions
-    ( '.valueByXPath' '(' 'path' xpathItem = XPathItemOrList ')' )
-    (
-        // comparison of values between XML files
-        ( '.areIdentical' '('                                      ')' ) |
-        ( '.areSimilar'   '(' 'withMargin' marginItems = MargingOrList ')' ) |
-        // assertion of value(s) in one (or more) XPath(s)
-        ( '.isEqualTo' '(' 'output' itemEq = ItemOrList ')' ( '.asRegex()' )? ) |
-        ( '.isCloseTo' '(' 'output' itemCt = ItemOrList ',' 'withMargin' '(' itemMrg = MargingOrList ')' ')' ) |
-        ( '.hasSize'   '(' itemLength = INT ')' )
-    )
+AssertXMLFile:
+    'assertThat' '(' 'xmls'  outXML = Expression ')'
+    ( '.and'     '(' refXML = Expression ')' ) // used for XMLFile assertions, not for XPath
+    ( '.withNamespaceContext'  '(' namespaceMap = Expression     ')' )?
+    ( '.withGlobalMargin'      '(' globalMrg    = MargingItem    ')' )?
+    assertRef += AssertXMLFileRef+
     ';'
+;
+
+AssertXPaths:
+    'assertThat' '(' 'xml' outXML = Expression ')'
+    ( '.withNamespaceContext'  '(' namespaceMap = Expression     ')' )?
+    ( '.withGlobalMargin'      '(' globalMrg    = MargingItem    ')' )?
+    ( '.withAllStringsAsRegex' '(' (allAsRegex  = BOOL_LITERAL)? ')' )?
+    assertRef += AssertXPathsRef+
+    ';'
+;
+
+AssertXMLFileRef:
+    ( '.valueByXPath' '(' xpathItem = XPathItem ')' )
+    (
+        ( '.areIdentical' '(' ')'  ) |
+        ( '.areSimilar'   '(' ( localMargin = MargingItem )? ')'  ) 
+    )
+;
+
+AssertXPathsRef:
+    ( '.valueByXPath' '(' xpathItem = XPathItem ')' )
+    (
+        ('.isEqualTo' '(' outRef = JsonValue 
+                            (',' 'margin'  '=' outMrg  = MargingItem  )?
+                            (',' 'asRegex' '=' isRegex = BOOL_LITERAL )?')')|
+        ('.isCloseTo' '(' outClo = JsonNumeric  ',' 'margin'  '=' outMrg = MargingItem ')')|
+        ('.matches'  '(' outRegex = StringOrStringArray ')' )
+    )
 ;
 
 Function:
@@ -171,7 +187,7 @@ VarRef:
     ref = [expr::Variable|ID] 
     (dataConstraints = DataConstraints)?
     (dataReferences = DataReferences)? 
-    (dataAssertions = DataAssertions)?  
+    (dataAssertions = DataAssertions)? 
 ;
 
 DataConstraints: {DataConstraints}
@@ -188,7 +204,7 @@ DataReferences: {DataReferences}
 
 DataAssertions: {DataAssertions}
     'assertions' '{' 
-        constr += AssertBlock*
+        constr += AssertThatBlock*
      '}'
 ;
 
