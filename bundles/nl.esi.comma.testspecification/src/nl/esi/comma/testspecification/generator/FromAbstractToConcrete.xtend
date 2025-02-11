@@ -145,7 +145,7 @@ class FromAbstractToConcrete
         // at most one (TODO validate this)
         var listOfComposeSteps = getComposeSteps(rstep)
 
-        System.out.println("Run Step: " + rstep.name)
+        // System.out.println("Run Step: " + rstep.name)
 
         // Find preceding Compose Step
         for(cstep : listOfComposeSteps) // at most one 
@@ -209,13 +209,13 @@ class FromAbstractToConcrete
         '''
         
         // print references
-        if(!mapLHStoRHS.isEmpty) System.out.println(" References: ")
+        // if(!mapLHStoRHS.isEmpty) System.out.println(" References: ")
         for(k : mapLHStoRHS.keySet) {
             txt += 
             '''
             «k» := «mapLHStoRHS.get(k)»
             '''
-            System.out.println(" EXP: " + k + " = " + mapLHStoRHS.get(k))
+            // System.out.println(" EXP: " + k + " = " + mapLHStoRHS.get(k))
         }
         return txt
     }
