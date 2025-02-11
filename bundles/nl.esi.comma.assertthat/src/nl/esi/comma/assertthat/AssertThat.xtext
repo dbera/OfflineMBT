@@ -1,0 +1,9 @@
+grammar nl.esi.comma.assertthat.AssertThat with org.eclipse.xtext.common.Terminals
+
+generate assertThat "http://www.esi.nl/comma/assertthat/AssertThat"
+
+Model:
+	greetings+=Greeting*;
+	
+Greeting:
+	'Hello' name=ID '!';
