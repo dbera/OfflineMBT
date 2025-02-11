@@ -13,6 +13,6 @@
     <packaging>eclipse-plugin</packaging>
 
     <properties>
-        <mwe2-workflow>/${project.basedir}/src/nl/esi/comma/actions/GenerateAssertThat.mwe2</mwe2-workflow>
+        <mwe2-workflow>/${project.basedir}/src/nl/esi/comma/assertthat/GenerateAssertThat.mwe2</mwe2-workflow>
     </properties>
 </project>
