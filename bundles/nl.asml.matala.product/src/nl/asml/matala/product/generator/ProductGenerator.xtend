@@ -588,7 +588,7 @@ class ProductGenerator extends AbstractGenerator {
 		                    if name.rsplit("_",1)[0] in self.constraint_dict:
 		                        for constr in self.constraint_dict[name.rsplit("_",1)[0]]:
 		                            if constr.var_ref == k and constr.dir == "OUT":
-		                                txt += "symbolic-constraint: %s\n" % k
+		                                txt += "data-references: %s\n" % k
 		                                for entry in constr.centry:
 		                                    txt += "%s\n" % entry.name
 		            else:
@@ -610,7 +610,7 @@ class ProductGenerator extends AbstractGenerator {
 		                    if name.rsplit("_", 1)[0] in self.constraint_dict:
 		                        for constr in self.constraint_dict[name.rsplit("_", 1)[0]]:
 		                            if constr.var_ref == k and constr.dir == "OUT":
-		                                txt += "\nsymbolic-constraint: %s\n" % k
+		                                txt += "\ndata-references: %s\n" % k
 		                                for entry in constr.centry:
 		                                    txt += "%s : \"%s\"\n" % (entry.name, entry.constr.replace('"','\\"'))
 		                txt += "\n"
@@ -815,8 +815,10 @@ class ProductGenerator extends AbstractGenerator {
 		var list = new ArrayList<String>()
 		list += "updateDict = {}\n"
 		for (updateOutVar :  prod.eAllContents.filter(UpdateOutVar).toIterable) {
-			for (act : updateOutVar.act.actions) {
-				list += findVariableAssignments(act)
+			if (updateOutVar.act !== null) { // Null Pointer BugFix - DB 05.02.2025
+    			for (act : updateOutVar.act.actions) {
+    				list += findVariableAssignments(act)
+    			}
 			}
 		}
 		return list.join("")
@@ -949,7 +951,12 @@ class ProductGenerator extends AbstractGenerator {
 			else
 				pnet.add_expression(tr.name, v.ref.name, "Expression('Data().get_" + vtype + "()')", PType.OUT, getConstraintTxt(v))
 			
-			place = block.name+"_"+v.ref.name
+			/* Commented DB 06.02.2025 */
+			// None of the other places have block name in prefix. 
+			// Causes issues in assert transition list and linking of steps
+			// TODO How to deal with data name collisions in BPMN model
+			/* place = block.name+"_"+v.ref.name */
+			place = v.ref.name
 		}
 		
 		return place
