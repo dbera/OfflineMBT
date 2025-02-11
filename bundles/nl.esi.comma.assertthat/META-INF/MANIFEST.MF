@@ -1,5 +1,4 @@
 Manifest-Version: 1.0
-Automatic-Module-Name: nl.esi.comma.assertthat
 Bundle-ManifestVersion: 2
 Bundle-Name: AssertThat Language Core
 Bundle-Vendor: TNO-ESI
@@ -27,3 +26,4 @@ Export-Package: nl.esi.comma.assertthat.services,
  nl.esi.comma.assertthat.parser.antlr,
  nl.esi.comma.assertthat.generator
 Import-Package: org.apache.log4j
+Automatic-Module-Name: nl.esi.comma.assertthat
