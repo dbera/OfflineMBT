@@ -154,7 +154,7 @@ AssertEq: {AssertEq}
 ;
 
 AssertClose: {AssertClose}
-    '.isCloseTo' '(' outClo = NumericOrNumericArray ',' 'margin'  '=' outMrg  = MargingItem  ')' 
+    '.isCloseTo' '(' outClo = NumericOrNumericArray (',' 'margin'  '=' outMrg  = MargingItem  )? ')' 
 ;
 
 AssertMatch: {AssertMatch}
