@@ -5,6 +5,7 @@ generate product "http://www.asml.nl/matala/product/Product"
 import "http://www.esi.nl/comma/signature/InterfaceSignature" as sig 
 import "http://www.esi.nl/comma/types/Types" as types
 import "http://www.esi.nl/comma/expressions/Expression" as expr
+import "http://www.eclipse.org/emf/2002/Ecore" as ecore
 
 @Override
 ModelContainer returns types::ModelContainer:
@@ -91,73 +92,104 @@ StringOrStringArray:
     {StringOrStringArray} STRING | {StringOrStringArray} '[' ((values+=STRING) (',' values+=STRING)*)? ']'
 ;
 
+NumericOrNumericArray:
+    {NumericOrNumericArray} numeric=JsonNumeric | {NumericOrNumericArray} numericArray = '[' ((values+=JsonNumeric) (',' values+=JsonNumeric)*)? ']'
+;
+
 enum MARGIN_TYPE:
-    ABSOLUTE = 'absolute' |
-    RELATIVE = 'relative' |
-    NONE = 'none'
+      ABSOLUTE = 'absolute'
+    | RELATIVE = 'relative'
+    | NONE = 'none'
 ;
 
 MargingItem:
-    type=MARGIN_TYPE '(' ( valueFloat = FLOAT )? ')'
+    type=MARGIN_TYPE '(' ( marginVal=JsonNumeric)? ')'
 ;
 
-XPathItem:
+XPathItem: {XPathItem}
     'path' '(' xpathExpr = STRING  ( ',' 'logId' '=' loggingId = STRING )? ')'
 ;
 
-// "AssertThat" DSL
 AssertThatBlock:
-    AssertValue | AssertXPaths | AssertXMLFile
-;
-
-AssertValue:
-    'assertThat' '(' 'value'  outExpr=ActionList ')'
-    (
-        ('.isEqualTo'   '(' outRef = JsonValue 
-                            (',' 'margin'  '=' outMrg  = MargingItem  )?
-                            (',' 'asRegex' '=' isRegex = BOOL_LITERAL )? ')' )|
-        ('.isCloseTo'   '(' outClo = JsonNumeric  ',' 'margin'  '=' outMrg = MargingItem ')' )|
-        ('.matches' '(' outRegex = StringOrStringArray ')' )|
-        ('.hasSize'     '(' itLen = INT ')')
+    'assertThat' output = ExpressionBracket
+    ( 
+        val=AssertThatValue | xpath=AssertThatXPath | xmlFiles=AssertThatXMLFile
     )
-    ';'
+    ';' 
 ;
 
-AssertXMLFile:
-    'assertThat' '(' 'xmls'  outXML = Expression ')'
-    ( '.and'     '(' refXML = Expression ')' ) // used for XMLFile assertions, not for XPath
-    ( '.withNamespaceContext'  '(' namespaceMap = Expression     ')' )?
-    ( '.withGlobalMargin'      '(' globalMrg    = MargingItem    ')' )?
-    assertRef += AssertXMLFileRef+
-    ';'
+AssertThatValue:
+    type = AssertionValueValidationTypes 
 ;
 
-AssertXPaths:
-    'assertThat' '(' 'xml' outXML = Expression ')'
-    ( '.withNamespaceContext'  '(' namespaceMap = Expression     ')' )?
-    ( '.withGlobalMargin'      '(' globalMrg    = MargingItem    ')' )?
-    ( '.withAllStringsAsRegex' '(' (allAsRegex  = BOOL_LITERAL)? ')' )?
-    assertRef += AssertXPathsRef+
-    ';'
+AssertThatXPath:
+    ( namespace = AssertNamespace )? 
+    ( globalMargin = AssertGlobalMargin )? 
+    ( globalRegex = AssertGlobalRegex )?
+    assertRef += AssertXPathValidations+ 
 ;
 
-AssertXMLFileRef:
-    ( '.valueByXPath' '(' xpathItem = XPathItem ')' )
-    (
-        ( '.areIdentical' '(' ')'  ) |
-        ( '.areSimilar'   '(' ( localMargin = MargingItem )? ')'  ) 
-    )
+AssertThatXMLFile:
+    '.and' reference = ExpressionBracket
+    ( namespace = AssertNamespace )? 
+    ( globalMargin = AssertGlobalMargin )? 
+    assertRef += AssertXmlValidations+ 
 ;
 
-AssertXPathsRef:
-    ( '.valueByXPath' '(' xpathItem = XPathItem ')' )
-    (
-        ('.isEqualTo' '(' outRef = JsonValue 
-                            (',' 'margin'  '=' outMrg  = MargingItem  )?
-                            (',' 'asRegex' '=' isRegex = BOOL_LITERAL )?')')|
-        ('.isCloseTo' '(' outClo = JsonNumeric  ',' 'margin'  '=' outMrg = MargingItem ')')|
-        ('.matches'  '(' outRegex = StringOrStringArray ')' )
-    )
+
+AssertionValueValidationTypes: 
+    AssertEq | AssertClose | AssertMatch |  AssertSize
+;
+
+AssertionXmlValidationTypes: 
+    AssertIdentical | AssertSimilar
+;
+
+AssertionXPathValidationTypes: 
+    AssertionValueValidationTypes 
+;
+
+AssertEq: {AssertEq}
+    '.isEqualTo' '(' outRef = JsonValue (',' 'margin'  '=' outMrg  = MargingItem  )? (',' 'asRegex' '=' isRegex = BOOL_LITERAL )?')' 
+;
+
+AssertClose: {AssertClose}
+    '.isCloseTo' '(' outClo = NumericOrNumericArray ',' 'margin'  '=' outMrg  = MargingItem  ')' 
+;
+
+AssertMatch: {AssertMatch}
+    '.stringMatches' '(' outRegex = StringOrStringArray ')' 
+;
+
+AssertSize: {AssertSize}
+    '.hasSize' '(' itLen = INT ')' 
+;
+
+AssertXPathValidations: {AssertXPathValidations}
+    ( '.valueByXPath' '(' xpathItem = XPathItem ')' ) validation = AssertionXPathValidationTypes
+;
+
+AssertXmlValidations: {AssertXmlValidations}
+    ( '.valueByXPath' '(' xpathItem = XPathItem ')' ) validation = AssertionXmlValidationTypes
+;
+
+AssertIdentical: {AssertIdentical}
+    '.areIdentical' '()' 
+;
+AssertSimilar: {AssertSimilar}
+    '.areSimilar' ('()' | ('('(localMargin=MargingItem)?')'))
+;
+
+AssertNamespace: {AssertNamespace}
+      '.withNamespaceContext' namespaceMap = ExpressionBracket
+;
+
+AssertGlobalMargin: {AssertGlobalMargin}
+    '.withGlobalMargin' '(' globalMrg = MargingItem ')'
+;
+
+AssertGlobalRegex: {AssertGlobalRegex}
+    '.withAllStringsAsRegex' ('()' | ('('(allAsRegex = BOOL_LITERAL)?')'))
 ;
 
 Function:
