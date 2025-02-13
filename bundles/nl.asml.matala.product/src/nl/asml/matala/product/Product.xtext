@@ -107,7 +107,7 @@ MargingItem:
 ;
 
 XPathItem: {XPathItem}
-    'path' '(' xpathExpr = STRING  ( ',' 'logId' '=' loggingId = STRING )? ')'
+    'path' '(' xpathExpr = STRING  ( ',' 'logId' ':=' loggingId = STRING )? ')'
 ;
 
 AssertThatBlock:
@@ -119,21 +119,21 @@ AssertThatBlock:
 ;
 
 AssertThatValue:
-    type = AssertionValueValidationTypes 
+    'is' type = AssertionValueValidationTypes 
 ;
 
 AssertThatXPath:
     ( namespace = AssertNamespace )? 
     ( globalMargin = AssertGlobalMargin )? 
     ( globalRegex = AssertGlobalRegex )?
-    assertRef += AssertXPathValidations+ 
+    'has' assertRef += AssertXPathValidations+ 
 ;
 
 AssertThatXMLFile:
-    '.and' reference = ExpressionBracket
+    'and' reference = ExpressionBracket
     ( namespace = AssertNamespace )? 
     ( globalMargin = AssertGlobalMargin )? 
-    assertRef += AssertXmlValidations+ 
+    'have' assertRef += AssertXmlValidations+ 
 ;
 
 
@@ -145,51 +145,51 @@ AssertionXmlValidationTypes:
     AssertIdentical | AssertSimilar
 ;
 
-AssertionXPathValidationTypes: 
+AssertionXPathValidationTypes:
     AssertionValueValidationTypes 
 ;
 
 AssertEq: {AssertEq}
-    '.isEqualTo' '(' outRef = JsonValue (',' 'margin'  '=' outMrg  = MargingItem  )? (',' 'asRegex' '=' isRegex = BOOL_LITERAL )?')' 
+    'equalTo' outRef = JsonValue ('withinMargin' outMrg = MargingItem )? ('asRegex')? 
 ;
 
 AssertClose: {AssertClose}
-    '.isCloseTo' '(' outClo = NumericOrNumericArray (',' 'margin'  '=' outMrg  = MargingItem  )? ')' 
+    'closeTo' outClo = NumericOrNumericArray ('withinMargin' outMrg = MargingItem )? 
 ;
 
 AssertMatch: {AssertMatch}
-    '.stringMatches' '(' outRegex = StringOrStringArray ')' 
+    'matching' outRegex = StringOrStringArray 
 ;
 
 AssertSize: {AssertSize}
-    '.hasSize' '(' itLen = INT ')' 
+    'ofSize' itLen = INT 
 ;
 
 AssertXPathValidations: {AssertXPathValidations}
-    ( '.valueByXPath' '(' xpathItem = XPathItem ')' ) validation = AssertionXPathValidationTypes
+    ( 'valueByXPath' xpathItem = XPathItem ) validation = AssertionXPathValidationTypes
 ;
 
 AssertXmlValidations: {AssertXmlValidations}
-    ( '.valueByXPath' '(' xpathItem = XPathItem ')' ) validation = AssertionXmlValidationTypes
+    ( 'valueByXPath' xpathItem = XPathItem ) validation = AssertionXmlValidationTypes
 ;
 
 AssertIdentical: {AssertIdentical}
-    '.areIdentical' '()' 
+    'areIdentical' 
 ;
 AssertSimilar: {AssertSimilar}
-    '.areSimilar' ('()' | ('('(localMargin=MargingItem)?')'))
+    'areSimilar' ('withinMargin' localMargin=MargingItem)?
 ;
 
 AssertNamespace: {AssertNamespace}
-      '.withNamespaceContext' namespaceMap = ExpressionBracket
+      'withNamespaceContext' namespaceMap = ExpressionBracket
 ;
 
 AssertGlobalMargin: {AssertGlobalMargin}
-    '.withGlobalMargin' '(' globalMrg = MargingItem ')'
+    'withGlobalMargin' globalMrg = MargingItem
 ;
 
 AssertGlobalRegex: {AssertGlobalRegex}
-    '.withAllStringsAsRegex' ('()' | ('('(allAsRegex = BOOL_LITERAL)?')'))
+    'withAllStringsAsRegex'
 ;
 
 Function:
