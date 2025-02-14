@@ -1,0 +1,9 @@
+grammar nl.esi.comma.xpath.Xpath with org.eclipse.xtext.common.Terminals
+
+generate xpath "http://www.esi.nl/comma/xpath/Xpath"
+
+Model:
+	greetings+=Greeting*;
+	
+Greeting:
+	'Hello' name=ID '!';

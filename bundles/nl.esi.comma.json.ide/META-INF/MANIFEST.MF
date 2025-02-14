@@ -1,0 +1,15 @@
+Manifest-Version: 1.0
+Automatic-Module-Name: nl.esi.comma.json.ide
+Bundle-ManifestVersion: 2
+Bundle-Name: Json Language IDE
+Bundle-Vendor: TNO-ESI
+Bundle-Version: 4.2.0.qualifier
+Bundle-SymbolicName: nl.esi.comma.json.ide; singleton:=true
+Bundle-ActivationPolicy: lazy
+Require-Bundle: nl.esi.comma.json,
+ org.eclipse.xtext.ide,
+ org.eclipse.xtext.xbase.ide,
+ org.antlr.runtime;bundle-version="[3.2.0,3.2.1)"
+Bundle-RequiredExecutionEnvironment: JavaSE-21
+Export-Package: nl.esi.comma.json.ide.contentassist.antlr,
+ nl.esi.comma.json.ide.contentassist.antlr.internal
