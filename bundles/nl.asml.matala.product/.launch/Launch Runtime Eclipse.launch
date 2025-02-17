@@ -127,6 +127,8 @@
         <setEntry value="org.bndtools.templating@default:default"/>
         <setEntry value="org.bndtools.versioncontrol.ignores.manager@default:default"/>
         <setEntry value="org.bndtools.versioncontrol.ignores.plugin.git@default:default"/>
+        <setEntry value="org.camunda.bpm.model.bpmn@default:default"/>
+        <setEntry value="org.camunda.bpm.model.xml@default:default"/>
         <setEntry value="org.eclipse.acceleo.annotations@default:default"/>
         <setEntry value="org.eclipse.acceleo.query.doc@default:default"/>
         <setEntry value="org.eclipse.acceleo.query.ide@default:default"/>
@@ -310,6 +312,8 @@
         <setEntry value="org.eclipse.jface@default:default"/>
         <setEntry value="org.eclipse.jsch.core@default:default"/>
         <setEntry value="org.eclipse.jsch.ui@default:default"/>
+        <setEntry value="org.eclipse.justj.openjdk.hotspot.jre.minimal.stripped.win32.x86_64@default:false"/>
+        <setEntry value="org.eclipse.justj.openjdk.hotspot.jre.minimal.stripped@default:default"/>
         <setEntry value="org.eclipse.lsp4e@default:default"/>
         <setEntry value="org.eclipse.lsp4j.jsonrpc@default:default"/>
         <setEntry value="org.eclipse.lsp4j@default:default"/>
