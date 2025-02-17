@@ -203,6 +203,15 @@ public class Element {
 		this.flowOutputs.add(e);
 	}
 	
+	public void addDataInput (Edge e) {
+		this.dataInputs.add(e);
+	}
+	
+	public void addDataOutput (Edge e) {
+		this.dataOutputs.add(e);
+	}
+	
+	
 	public void setInit(String init) {
 		this.init = init;
 	}
