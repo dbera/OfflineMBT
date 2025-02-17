@@ -518,6 +518,9 @@
         <setEntry value="nl.esi.comma.actions.ide@default:default"/>
         <setEntry value="nl.esi.comma.actions.ui@default:default"/>
         <setEntry value="nl.esi.comma.actions@default:default"/>
+        <setEntry value="nl.esi.comma.assertthat.ide@default:default"/>
+        <setEntry value="nl.esi.comma.assertthat.ui@default:default"/>
+        <setEntry value="nl.esi.comma.assertthat@default:default"/>
         <setEntry value="nl.esi.comma.automata@default:default"/>
         <setEntry value="nl.esi.comma.behavior.scl.ide@default:default"/>
         <setEntry value="nl.esi.comma.behavior.scl.ui@default:default"/>
@@ -532,6 +535,9 @@
         <setEntry value="nl.esi.comma.inputspecification.ide@default:default"/>
         <setEntry value="nl.esi.comma.inputspecification.ui@default:default"/>
         <setEntry value="nl.esi.comma.inputspecification@default:default"/>
+        <setEntry value="nl.esi.comma.json.ide@default:default"/>
+        <setEntry value="nl.esi.comma.json.ui@default:default"/>
+        <setEntry value="nl.esi.comma.json@default:default"/>
         <setEntry value="nl.esi.comma.project.standard.ide@default:default"/>
         <setEntry value="nl.esi.comma.project.standard.ui@default:default"/>
         <setEntry value="nl.esi.comma.project.standard@default:default"/>
@@ -556,6 +562,9 @@
         <setEntry value="nl.esi.comma.types.ide@default:default"/>
         <setEntry value="nl.esi.comma.types.ui@default:default"/>
         <setEntry value="nl.esi.comma.types@default:default"/>
+        <setEntry value="nl.esi.comma.xpath.ide@default:default"/>
+        <setEntry value="nl.esi.comma.xpath.ui@default:default"/>
+        <setEntry value="nl.esi.comma.xpath@default:default"/>
     </setAttribute>
     <booleanAttribute key="show_selected_only" value="false"/>
     <stringAttribute key="templateConfig" value="${target_home}/configuration/config.ini"/>

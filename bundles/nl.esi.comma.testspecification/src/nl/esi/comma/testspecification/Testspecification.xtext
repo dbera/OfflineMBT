@@ -68,12 +68,12 @@ TMap:
 AbstractTestSequence:
 	'Test-Scenario' ':' name = ID
 		// step += [TMap|ID]+
-		step += (AbstractStep | ConstraintStep | AssertStep)+
+		step += (AbstractStep | AssertStep)+  // | ConstraintStep 
 		
 ;
 
 ConstraintStep:
-	'symbolic-constraint' ':' name = ID
+	'data-references' ':' name = ID
 //	ce += ConstraintElm+
 	ce += [prod::RefConstraint|QualifiedName]+	
 ;
@@ -96,6 +96,7 @@ ComposeStep:
 	stepRef += StepReference*
 	'input-binding' ':' input += Binding+
 	'output-data' ':' output += Binding+ (suppress?='suppress'?)
+	refs += ConstraintStep*
 ;
 
 RunStep:

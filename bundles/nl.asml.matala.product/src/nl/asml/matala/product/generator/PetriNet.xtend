@@ -19,6 +19,7 @@ class PetriNet {
 	
 	
 	def add_to_map_transition_assertions(String tname, String assertion_place) {
+	    System.out.println("   DEBUG: " + assertion_place)
 		if(map_transition_assertions.keySet.contains(tname)) {
 			if(!map_transition_assertions.get(tname).contains(assertion_place)) {
 				map_transition_assertions.get(tname).add(assertion_place)
@@ -444,7 +445,7 @@ class PetriNet {
 		    c = datetime.datetime.now()
 		    
 		    listOfEnvBlocks = [«FOR elm : listOfEnvBlocks SEPARATOR ','»"«elm»"«ENDFOR»]
-		    listOfAssertTransitions = [«FOR elm : listOfAssertTransitions SEPARATOR ','»"«elm»"«ENDFOR»]
+		    listOfSUTActions = [«FOR elm : listOfAssertTransitions SEPARATOR ','»"«elm»"«ENDFOR»]
 		    mapOfSuppressTransitionVars = {«FOR k : mapOfSuppressTransitionVars.keySet SEPARATOR ','»'«k»': [«FOR v : mapOfSuppressTransitionVars.get(k) SEPARATOR ','»'«v»'«ENDFOR»]«ENDFOR»}
 		    print("[INFO] Starting Test Generation.")
 		    
@@ -495,11 +496,13 @@ class PetriNet {
 		    		_txt.append(CEntry("«c.name»","«c.txt.replace("\"", "\\\"")»"))
 		    	«ENDFOR»
 		    	constraint_list.append(Constraint("«e.p»","«e.type»", _txt))
-		    	_txt = []
+		    	# _txt = []
 		    	if "«e.t»" not in constraint_dict:
 		    	    constraint_dict["«e.t»"] = constraint_list
 		    	else:
 		    	    constraint_dict["«e.t»"].extend(constraint_list)
+		    	_txt = []
+		    	constraint_list = []
 		    	«ENDIF»
 		    «ENDFOR»
 		    
@@ -523,12 +526,12 @@ class PetriNet {
 		                # step_txt = map_transition_modes_to_name[step[1].name + "_" + step[2].__repr__()]
 		                step_txt = map_transition_modes_to_name[stp]
 		                # step_txt.split("_")[0] in listOfEnvBlocks or 
-		                if step_txt.rsplit("_",1)[0].split("@",1)[0] in listOfAssertTransitions:
+		                if step_txt.rsplit("_",1)[0].split("@",1)[0] in listOfSUTActions:
 		                    # suppress = False
 		                    # if step_txt.split("@")[0] in listOfSuppressTransitions:
 		                    # suppress = True
 		                    if not step_txt.split("_")[0] in listOfEnvBlocks:
-		                        _step = Step(step_txt.rsplit("_",1)[0].split("@",1)[0] in listOfAssertTransitions)
+		                        _step = Step(step_txt.rsplit("_",1)[0].split("@",1)[0] in listOfSUTActions)
 		                    else:
 		                        _step = Step(False)
 		                    # txt += "    %s\n" % (map_transition_modes_to_name[step[1].name + "_" + step[2].__repr__()])

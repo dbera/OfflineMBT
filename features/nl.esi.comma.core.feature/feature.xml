@@ -237,4 +237,28 @@ the Department of Electrical Engineering of Eindhoven University of Technology.
          id="nl.esi.comma.assertthat.ui"
          version="0.0.0"/>
 
+   <plugin
+         id="nl.esi.comma.json"
+         version="0.0.0"/>
+
+   <plugin
+         id="nl.esi.comma.json.ide"
+         version="0.0.0"/>
+
+   <plugin
+         id="nl.esi.comma.json.ui"
+         version="0.0.0"/>
+
+   <plugin
+         id="nl.esi.comma.xpath"
+         version="0.0.0"/>
+
+   <plugin
+         id="nl.esi.comma.xpath.ide"
+         version="0.0.0"/>
+
+   <plugin
+         id="nl.esi.comma.xpath.ui"
+         version="0.0.0"/>
+
 </feature>

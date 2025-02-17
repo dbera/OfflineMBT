@@ -4,15 +4,15 @@ public class Edge extends Element {
 	
 	String update;
 	String src;
-	String tar;	
+	String tar;
 	String ref_update;
 	String sym_update;
 	boolean suppress;
 	boolean persistent;
 
 	
-	public Edge(String _src, String _expr, String refup, String symup, String _tar) {
-		super(ElementType.EDGE);
+	public Edge(String _id, String _src, String _expr, String refup, String symup, String _tar) {
+		super(ElementType.EDGE, _id, _id);
 		this.src = _src;
 		this.tar = _tar;
 		this.update = _expr;
@@ -25,7 +25,8 @@ public class Edge extends Element {
 	
 	@Override
 	public String toString() {
-		return String.format("An Edge with source %s, expression %s and target %s.", src, update, tar);
+		return String.format("An Edge with id <%s>, source <%s>, expression <%s>, and target <%s>.", 
+				id, src, update, tar);
 	}
 	
 	public String getSrc() {

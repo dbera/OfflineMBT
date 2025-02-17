@@ -7,26 +7,18 @@ import java.util.Map;
 import java.util.Set;
 
 import org.camunda.bpm.model.bpmn.BpmnModelInstance;
-import org.camunda.bpm.model.bpmn.instance.BoundaryEvent;
 import org.camunda.bpm.model.bpmn.instance.DataInputAssociation;
 import org.camunda.bpm.model.bpmn.instance.DataObjectReference;
 import org.camunda.bpm.model.bpmn.instance.DataOutputAssociation;
 import org.camunda.bpm.model.bpmn.instance.DataStoreReference;
-import org.camunda.bpm.model.bpmn.instance.EndEvent;
 import org.camunda.bpm.model.bpmn.instance.ExclusiveGateway;
 import org.camunda.bpm.model.bpmn.instance.IntermediateCatchEvent;
-import org.camunda.bpm.model.bpmn.instance.IntermediateThrowEvent;
 import org.camunda.bpm.model.bpmn.instance.ItemAwareElement;
 import org.camunda.bpm.model.bpmn.instance.ParallelGateway;
 import org.camunda.bpm.model.bpmn.instance.SequenceFlow;
-import org.camunda.bpm.model.bpmn.instance.ServiceTask;
-import org.camunda.bpm.model.bpmn.instance.StartEvent;
 import org.camunda.bpm.model.bpmn.instance.SubProcess;
 import org.camunda.bpm.model.bpmn.instance.Task;
-import org.camunda.bpm.model.bpmn.instance.IntermediateCatchEvent;
-import org.camunda.bpm.model.xml.ModelInstance;
 import org.camunda.bpm.model.xml.instance.ModelElementInstance;
-import org.camunda.bpm.model.xml.type.ModelElementType;
 
 @Deprecated
 /* FIXME:
