@@ -49,9 +49,9 @@
         <setEntry value="com.google.inject@default:default"/>
         <setEntry value="com.ibm.icu@default:default"/>
         <setEntry value="com.jcraft.jsch@default:default"/>
-        <setEntry value="com.python.pydev.analysis"/>
-        <setEntry value="com.python.pydev.debug"/>
-        <setEntry value="com.python.pydev.refactoring"/>
+        <setEntry value="com.python.pydev.analysis@default:default"/>
+        <setEntry value="com.python.pydev.debug@default:default"/>
+        <setEntry value="com.python.pydev.refactoring@default:default"/>
         <setEntry value="com.sun.el.javax.el@default:default"/>
         <setEntry value="com.sun.jna*4.5.1.v20190425-1842@default:default"/>
         <setEntry value="com.sun.jna*5.14.0.v20231211-1200@default:default"/>
@@ -224,7 +224,7 @@
         <setEntry value="org.eclipse.equinox.frameworkadmin@default:default"/>
         <setEntry value="org.eclipse.equinox.http.jetty@default:default"/>
         <setEntry value="org.eclipse.equinox.http.registry@default:default"/>
-        <setEntry value="org.eclipse.equinox.http.service.api"/>
+        <setEntry value="org.eclipse.equinox.http.service.api@default:default"/>
         <setEntry value="org.eclipse.equinox.http.servlet@default:default"/>
         <setEntry value="org.eclipse.equinox.jsp.jasper.registry@default:default"/>
         <setEntry value="org.eclipse.equinox.jsp.jasper@default:default"/>
@@ -308,8 +308,6 @@
         <setEntry value="org.eclipse.jface@default:default"/>
         <setEntry value="org.eclipse.jsch.core@default:default"/>
         <setEntry value="org.eclipse.jsch.ui@default:default"/>
-        <setEntry value="org.eclipse.justj.openjdk.hotspot.jre.full.win32.x86_64@default:false"/>
-        <setEntry value="org.eclipse.justj.openjdk.hotspot.jre.full@default:default"/>
         <setEntry value="org.eclipse.lsp4e@default:default"/>
         <setEntry value="org.eclipse.lsp4j.jsonrpc@default:default"/>
         <setEntry value="org.eclipse.lsp4j@default:default"/>
@@ -476,7 +474,7 @@
         <setEntry value="org.osgi.service.coordinator@default:default"/>
         <setEntry value="org.osgi.service.device@default:default"/>
         <setEntry value="org.osgi.service.event@default:default"/>
-        <setEntry value="org.osgi.service.http.whiteboard"/>
+        <setEntry value="org.osgi.service.http.whiteboard@default:default"/>
         <setEntry value="org.osgi.service.metatype.annotations@default:default"/>
         <setEntry value="org.osgi.service.metatype@default:default"/>
         <setEntry value="org.osgi.service.prefs@default:default"/>
@@ -490,19 +488,19 @@
         <setEntry value="org.osgi.util.position@default:default"/>
         <setEntry value="org.osgi.util.promise@default:default"/>
         <setEntry value="org.osgi.util.xml@default:default"/>
-        <setEntry value="org.python.pydev"/>
-        <setEntry value="org.python.pydev.ast"/>
-        <setEntry value="org.python.pydev.core"/>
-        <setEntry value="org.python.pydev.customizations"/>
-        <setEntry value="org.python.pydev.debug"/>
-        <setEntry value="org.python.pydev.django"/>
-        <setEntry value="org.python.pydev.help"/>
-        <setEntry value="org.python.pydev.jython"/>
-        <setEntry value="org.python.pydev.parser"/>
-        <setEntry value="org.python.pydev.refactoring"/>
-        <setEntry value="org.python.pydev.shared_core"/>
-        <setEntry value="org.python.pydev.shared_interactive_console"/>
-        <setEntry value="org.python.pydev.shared_ui"/>
+        <setEntry value="org.python.pydev.ast@default:default"/>
+        <setEntry value="org.python.pydev.core@default:default"/>
+        <setEntry value="org.python.pydev.customizations@default:default"/>
+        <setEntry value="org.python.pydev.debug@default:default"/>
+        <setEntry value="org.python.pydev.django@default:default"/>
+        <setEntry value="org.python.pydev.help@default:default"/>
+        <setEntry value="org.python.pydev.jython@default:default"/>
+        <setEntry value="org.python.pydev.parser@default:default"/>
+        <setEntry value="org.python.pydev.refactoring@default:default"/>
+        <setEntry value="org.python.pydev.shared_core@default:default"/>
+        <setEntry value="org.python.pydev.shared_interactive_console@default:default"/>
+        <setEntry value="org.python.pydev.shared_ui@default:default"/>
+        <setEntry value="org.python.pydev@default:default"/>
         <setEntry value="org.sat4j.core@default:default"/>
         <setEntry value="org.sat4j.pb@default:default"/>
         <setEntry value="org.snakeyaml.engine@default:default"/>
@@ -511,6 +509,7 @@
         <setEntry value="slf4j.reload4j@default:default"/>
     </setAttribute>
     <setAttribute key="selected_workspace_bundles">
+        <setEntry value="nl.asml.matala.bpmn4s@default:default"/>
         <setEntry value="nl.asml.matala.product.ide@default:default"/>
         <setEntry value="nl.asml.matala.product.lsp.editor@default:default"/>
         <setEntry value="nl.asml.matala.product.lsp.server@default:default"/>
@@ -518,6 +517,9 @@
         <setEntry value="nl.esi.comma.actions.ide@default:default"/>
         <setEntry value="nl.esi.comma.actions.ui@default:default"/>
         <setEntry value="nl.esi.comma.actions@default:default"/>
+        <setEntry value="nl.esi.comma.assertthat.ide@default:default"/>
+        <setEntry value="nl.esi.comma.assertthat.ui@default:default"/>
+        <setEntry value="nl.esi.comma.assertthat@default:default"/>
         <setEntry value="nl.esi.comma.automata@default:default"/>
         <setEntry value="nl.esi.comma.behavior.scl.ide@default:default"/>
         <setEntry value="nl.esi.comma.behavior.scl.ui@default:default"/>
@@ -532,6 +534,9 @@
         <setEntry value="nl.esi.comma.inputspecification.ide@default:default"/>
         <setEntry value="nl.esi.comma.inputspecification.ui@default:default"/>
         <setEntry value="nl.esi.comma.inputspecification@default:default"/>
+        <setEntry value="nl.esi.comma.json.ide@default:default"/>
+        <setEntry value="nl.esi.comma.json.ui@default:default"/>
+        <setEntry value="nl.esi.comma.json@default:default"/>
         <setEntry value="nl.esi.comma.project.standard.ide@default:default"/>
         <setEntry value="nl.esi.comma.project.standard.ui@default:default"/>
         <setEntry value="nl.esi.comma.project.standard@default:default"/>
@@ -556,6 +561,9 @@
         <setEntry value="nl.esi.comma.types.ide@default:default"/>
         <setEntry value="nl.esi.comma.types.ui@default:default"/>
         <setEntry value="nl.esi.comma.types@default:default"/>
+        <setEntry value="nl.esi.comma.xpath.ide@default:default"/>
+        <setEntry value="nl.esi.comma.xpath.ui@default:default"/>
+        <setEntry value="nl.esi.comma.xpath@default:default"/>
         <setEntry value="nl.esi.xtext.lsp.server@default:default"/>
     </setAttribute>
     <booleanAttribute key="show_selected_only" value="false"/>
