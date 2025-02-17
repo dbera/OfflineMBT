@@ -1,15 +1,20 @@
 package nl.asml.matala.bpmn4s;
 import java.io.File;
-import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.camunda.bpm.model.bpmn.Bpmn;
 import org.camunda.bpm.model.bpmn.BpmnModelInstance;
 import org.camunda.bpm.model.bpmn.instance.Activity;
-
+import org.camunda.bpm.model.bpmn.instance.BaseElement;
 import org.camunda.bpm.model.bpmn.instance.DataInputAssociation;
 import org.camunda.bpm.model.bpmn.instance.DataObjectReference;
 import org.camunda.bpm.model.bpmn.instance.DataOutputAssociation;
@@ -17,7 +22,6 @@ import org.camunda.bpm.model.bpmn.instance.DataStoreReference;
 import org.camunda.bpm.model.bpmn.instance.EndEvent;
 import org.camunda.bpm.model.bpmn.instance.Event;
 import org.camunda.bpm.model.bpmn.instance.ExclusiveGateway;
-import org.camunda.bpm.model.bpmn.instance.FlowElement;
 import org.camunda.bpm.model.bpmn.instance.FlowNode;
 import org.camunda.bpm.model.bpmn.instance.ItemAwareElement;
 import org.camunda.bpm.model.bpmn.instance.ParallelGateway;
@@ -35,7 +39,7 @@ import nl.asml.matala.bpmn4s.extensions.FieldImpl;
 import nl.asml.matala.bpmn4s.extensions.Literal;
 import nl.asml.matala.bpmn4s.extensions.LiteralImpl;
 import nl.asml.matala.bpmn4s.extensions.TargetDataRefImpl;
-
+import nl.asml.matala.bpmn4s.bpmn4s.BaseType;
 import nl.asml.matala.bpmn4s.bpmn4s.Bpmn4s;
 import nl.asml.matala.bpmn4s.bpmn4s.ElementType;
 import nl.asml.matala.bpmn4s.bpmn4s.EnumerationType;
@@ -63,10 +67,12 @@ public class Main {
 		 * arg0 is path to input model. 
 		 * arg1 is true for simulation tailored compilation, else for test generation. 
 		 * arg2 is output folder for generated ps and types files.
+		 * arg3 is depth limit for test generation.
 		 */
 		String inputModel = "";
 		boolean simulation = false;
 		String output = "";
+		int depthLimit = 300;
 		
 		if(args.length < 1) {
 			Logging.logError("Missing model file name!");
@@ -80,25 +86,30 @@ public class Main {
 		if(args.length > 2) {
 			output = args[2];
 		}
-		compile(inputModel, simulation, output);
+		if(args.length > 3) {
+			depthLimit = Integer.parseInt(args[3]);
+		}
+		compile(inputModel, simulation, output, depthLimit);
 	}
 	
+	static final int DEFAULT_DEPTH_LIMIT = 300;
+	
 	public static void compile(String inputModel, boolean simulation, String outputFolder) {
+		compile(inputModel, simulation, outputFolder, DEFAULT_DEPTH_LIMIT);
+	}
+	
+	public static void compile(String inputModel, boolean simulation, String outputFolder, int depthLimit) {
         BpmnModelInstance modelInst;
         try {
         	registerModelExtensionTypes();
         	Path path = Paths.get(inputModel);
         	String fileName = path.getFileName().toString();
         	fileName = fileName.substring(0, fileName.lastIndexOf('.')); // remove file extension (.pbmn)
-//        	URL resource = Bpmn4s.class.getClassLoader().getResource("testing/" + modelName + ".bpmn");
-//        	File file = new File(resource.toURI());
         	File file = path.toFile();
         	modelInst = Bpmn.readModelFromFile(file);
-//        	boolean valid = BPMN4SModelValidator.validate(modelInst);
-//        	if (!valid)
-//        		logWarning("Compiling an INVALID BPMN4S input model.");
         	model = new Bpmn4s();
         	model.setName(fileName);
+        	model.setDepthLimit(depthLimit);
         	parseBPMN(modelInst);
         	Bpmn4sCompiler compiler;
         	if (simulation) {
@@ -106,20 +117,90 @@ public class Main {
         			@Override
         			protected String repr(Element el) {
         				return el.getId();
-        			}
-        			
+        			}		
         			@Override
-        			protected String getCompiledGateName(Bpmn4s model, Element xor) {
-        				return repr(xor);
+        			protected String getCompiledXorName(String xorId) {
+        				return repr(model.getElementById(xorId));
+        			}
+        			@Override
+        			protected AbstractList<String> getInitialPlaces (String cId) {
+        				Element c = model.getElementById(cId);
+        				ArrayList<String> result = new ArrayList<String>();
+        				Element startEv = model.getStartEvent(c);
+        				if (startEv != null) {
+        					result.add(repr(startEv));
+        				}
+        				return result;
+        			}
+        			@Override
+        			protected String namePlaceBetweenTransitions(String flowId, String src, String dst) {
+        				return flowId;
+        			}
+        			@Override
+        			protected List<String> localsFromStartEvents (Element c) {
+        				List<String> result = new ArrayList<String>();
+        				for (Element se: model.elements.values()) {
+        					if (se.getType().equals(ElementType.START_EVENT) && isParentComponent(c, se)) { 
+    							String datatype = mapType(c.getContextDataType() != "" ? c.getContextDataType() : UNIT_TYPE);
+    							result.add(tabulate(datatype, sanitize(repr(se))));
+        						}
+        					}
+        				return result;
+        			}
+        			@Override
+        			protected List<String> localsFromEndEvents (Element c) {
+        				List<String> result = new ArrayList<String>();
+        				for (Element se: model.elements.values()) {
+        					if (se.getType().equals(ElementType.END_EVENT) && isParentComponent(c, se)) { 
+    							String datatype = mapType(c.getContextDataType() != "" ? c.getContextDataType() : UNIT_TYPE);
+    							result.add(tabulate(datatype, sanitize(repr(se))));
+        						}
+        					}
+        				return result;
+        			}
+        			@Override
+        			protected List<String> getFlowActions(String component) {
+        				Element c = model.getElementById(component);
+        				ArrayList<String> result = new ArrayList<String>();
+        				for (Element source: model.elements.values()) {
+        					if ((isAPlace(source.getId()) || model.isActivity(source.getId())) 
+        							&& isParentComponent( c, source)) { 
+        						for(Edge e: source.getAllOutputs()) {
+        							String sourceId = e.getSrc();
+        							String targetId = e.getTar();
+        				 			if (isAPlace(targetId)) {
+        								String action = "";
+        								action += "action            " + repr(e) + "\n";
+        								action += "case              default\n";
+        								action += "with-inputs       " + sourceId + "\n";
+        								action += "produces-outputs  " + targetId + "\n";
+        								action += String.format("updates:          %s := %s\n", targetId, sourceId);
+        								result.add(action);
+        							}
+        						}
+        					}
+        				}
+        				return result;
+        			}
+        			@Override
+        			protected Map<String, String> buildReplaceMap (Element transition) {
+        				Map<String, String> replaceMap = new HashMap<String, String>();
+        				ArrayList<String> replaceIds = getInputOutputIds(transition);
+        				for(String id: replaceIds) {
+        					replaceMap.put(model.getElementById(id).getName(), compile(id));
+        				}
+        				return replaceMap;
         			}
         		};
         	}else {
         		compiler = new Bpmn4sCompiler();
         	}
         	compiler.compile(model);
-        	compiler.writeToFile(outputFolder);
+        	compiler.writeModelToFiles(outputFolder);
         } catch (Exception e) { e.printStackTrace(); }
 	}
+	
+
 
 	private static void registerModelExtensionTypes() {
 		DataTypeImpl.registerType(Bpmn.INSTANCE.getBpmnModelBuilder());
@@ -265,9 +346,25 @@ public class Main {
 				}
 			}
 			ftype = ftype.equals("") ? tref : ftype;
-			rec.addField(fname, ftype);
+			rec.addField(fname, typeFromString(ftype));
 		}
 		return rec;
+	}
+	
+	static final String BPMN4S_BOOL = "Boolean";
+	static final String BPMN4S_INT = "Int";
+	static final String BPMN4S_STRING = "String";
+	static final String BPMN4S_FLOAT = "Float";
+	
+	private static Bpmn4sDataType typeFromString (String typeName) {
+		if(typeName.equals(BPMN4S_BOOL) 
+				|| typeName.equals(BPMN4S_FLOAT) 
+				|| typeName.equals(BPMN4S_INT) 
+				|| typeName.equals(BPMN4S_STRING)) {
+			return new BaseType(typeName);
+		} else {
+			return new RecordType(typeName);
+		}
 	}
 	
 	public static String getInnerType(BpmnModelInstance modelInst, DataType dt) {
@@ -331,74 +428,49 @@ public class Main {
 			if(sym_update == null) sym_update = "";
 			if(suppress == null) suppress = "";
 			if(update.strip().startsWith("=")) update = update.substring(1); // FIXME due to issues with bpmn4s editor lsp integration
-			Edge e = new Edge(src, update, ref_update, sym_update, dst);
+			Edge e = new Edge(da.getId(), src, update, ref_update, sym_update, dst);
 			if (suppress.equals("true")) e.makeSupressed();
 			model.addEdge(e);
-			model.associateEdge(e);
+			model.associateDataEdge(e);
 		}
 		for (DataInputAssociation da: inputs) {
 			String dst = act.getId();
 			String src = da.getSources().iterator().next().getId();
-			Edge e = new Edge(src, "", "", "", dst);
+			Edge e = new Edge(da.getId(), src, "", "", "", dst);
 			model.addEdge(e);
-			model.associateEdge(e);
+			model.associateDataEdge(e);
 			boolean persistent = "true".equals(da.getAttributeValueNs("http://bpmn4s", "persistentRead"));	
 			if (persistent) {
-				Edge pe = new Edge(dst, "", "", "", src).makePersistent();
+				Edge pe = new Edge(da.getId(), dst, "", "", "", src).makePersistent();
 				// the update generated by persistent reads on compose tasks is suppressed 
 				if(SUBTYPE_COMPOSETASK.equals(act.getAttributeValueNs("http://bpmn4s", "subType"))) pe.makeSupressed();
 				model.addEdge(pe);
-				model.associateEdge(pe);
+				model.associateDataEdge(pe);
 			}
 		}
 		
 	}
-
-	// FIXME duplicated code:
-	public static void makeActionNode(BpmnModelInstance modelInst, Process p, ElementType type) {
-		String name = getName(p);
-		Element node = new Element(type, ElementType.NONE, name);
-		String id = p.getId();
-		node.setId(id);
-		String contextName = p.getAttributeValueNs("http://bpmn4s", "ctxName");
-		String contextInit = p.getAttributeValueNs("http://bpmn4s", "ctxInit");
-		String contextTypeId = p.getAttributeValueNs("http://bpmn4s", "ctxTypeRef");
-		String contextTypeName = "";
-		if (contextTypeId != null) {
-			DataType contextType = getExtensionElementById(modelInst, DataType.class, contextTypeId);
-			if (contextType != null) { 
-				contextTypeName = contextType.getAttributeValue("name"); 
-			} else {
-				contextTypeName = contextTypeId;
-			}
-		}
-//		if(contextInit != null && contextInit.strip().startsWith("=")) {
-//			contextInit = contextInit.substring(1); // FIXME due to issues with bpmn4s editor lsp integration
-//		}
-		node.setContext(contextName != null ? contextName : "", 
-				contextTypeName != null ? contextTypeName : "", 
-						contextInit != null ? contextInit : "");
-		model.addElement(id, node);
-	}	
 	
-	public static void makeActionNode(BpmnModelInstance modelInst, FlowNode elem, ElementType type) {
+	public static void makeActionNode(BpmnModelInstance modelInst, BaseElement elem, ElementType type) {
 		makeActionNode(modelInst, elem, type, ElementType.NONE);
 	}
 	
-	/*
+	/**
 	 * Tasks, events, gates and components are compiled into bpmn4s elements.
 	 * Task elements may have a taskType such as COMPOSE or RUN, to indicate 
 	 * they are part of generated tests.
 	 */
-	public static void makeActionNode(BpmnModelInstance modelInst, FlowNode elem, ElementType type, ElementType taskType) {
+	public static void makeActionNode(BpmnModelInstance modelInst, BaseElement elem, ElementType type, ElementType taskType) {
 		String name = getName(elem);
 		String id = elem.getId();
 		Element node = new Element(type, taskType, name);
 		node.setId(id);
-		node.setParent(getParentId(elem));
-		node.setComponent(getParentComponents(elem));
-		node.setGuard(elem.getAttributeValueNs("http://bpmn4s", "guard"));
-		node.setStepType(elem.getAttributeValueNs("http://bpmn4s", "stepType"));
+		if (elem instanceof FlowNode) {
+			node.setParent(getParentId(elem));
+			node.setComponent(getParentComponents(elem));
+			node.setGuard(elem.getAttributeValueNs("http://bpmn4s", "guard"));
+			node.setStepType(elem.getAttributeValueNs("http://bpmn4s", "stepType"));
+		}
 		String contextName = elem.getAttributeValueNs("http://bpmn4s", "ctxName");
 		String contextInit = elem.getAttributeValueNs("http://bpmn4s", "ctxInit");
 		String contextTypeId = elem.getAttributeValueNs("http://bpmn4s", "ctxTypeRef");
@@ -418,22 +490,27 @@ public class Main {
 				contextTypeName != null ? contextTypeName : "", 
 						contextInit != null ? contextInit : "");
 		model.addElement(id, node);
+		if (elem instanceof FlowNode) {
+			resolveNodeEdges((FlowNode) elem, node);
+		}
+	}
+	
+	static void resolveNodeEdges(FlowNode elem, Element node) {
 		for(SequenceFlow out: elem.getOutgoing()) {
 			Edge e = makeSequenceEdge(out);
 			// Flow nodes may update the context
 			String ctxUpdate = elem.getAttributeValueNs("http://bpmn4s", "ctxUpdate");
 			e.setUpdate(ctxUpdate != null ? ctxUpdate : "");
-			node.addOutput(e);
+			node.addFlowOutput(e);
 			model.addEdge(e);
 		}
 		for(SequenceFlow in: elem.getIncoming()) {
 			Edge e = makeSequenceEdge(in);
-			node.addInput(e);
+			node.addFlowInput(e);
 			// We assume input flows are output flows of other 
 			// nodes, thus we avoid duplication here.
 			// model.addEdge(e);
 		}
-
 	}
 	
 	static Edge makeSequenceEdge (SequenceFlow elem) {
@@ -441,7 +518,7 @@ public class Main {
 		FlowNode target = elem.getTarget();
 		String srcId = source.getId();
 		String tarId= target.getId();
-		Edge e = new Edge(srcId, "", "", "", tarId);
+		Edge e = new Edge(elem.getId(), srcId, "", "", "", tarId);
 		boolean suppress = "true".equals(source.getAttributeValueNs("http://bpmn4s", "suppressUpdate"));
 		if (suppress) e.makeSupressed();
 		return e;
@@ -453,27 +530,10 @@ public class Main {
 		return "subProcess".equals(isSubprocess) && SUBTYPE_COMPONENT.equals(isComponent);
 	}
 	
-	
 	static String getName(ModelElementInstance elem) {
 		String name = elem.getAttributeValue("name");
 		if (name == null) {
 			name = elem.getAttributeValue("id");
-		}
-		return name;
-	}
-	
-	static String getName(FlowElement elem) {
-		String name = elem.getName();
-		if (name == null) {
-			name = elem.getId();
-		}
-		return name;
-	}
-	
-	static String getName(ItemAwareElement elem) {
-		String name = NameResolver.getName(elem);
-		if (name == null) {
-			name = elem.getId();
 		}
 		return name;
 	}
@@ -494,20 +554,13 @@ public class Main {
 		}
 		return result;
 	}
-		
 	
 	
 	static String getParentId(ModelElementInstance elem) {
-		/* 
-		 * Get first parent that is not an Activity (since we ignore Activities)
-		 */
 		ModelElementInstance parent = elem.getParentElement();
 		if(parent == null) {
 			return null;
 		}
-		while(parent.getElementType().getTypeName() == "subProcess" && !isComponent(parent)) {
-			parent = parent.getParentElement();
-		} // assert: either is subprocess and component or is a process
 		return parent.getAttributeValue("id");
 	}
 	

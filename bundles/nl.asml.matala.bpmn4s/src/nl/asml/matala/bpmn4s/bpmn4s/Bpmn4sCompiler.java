@@ -13,54 +13,186 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 import nl.asml.matala.bpmn4s.Logging;
 
-/*
- * Class to compile a bpmn4s into a pspec (CPN) model.
+
+/**
+ * Compiles a bpmn4s model into a pspec (CPN).
+ * @author
+ * @version
+ * @since
  */
 public class Bpmn4sCompiler{
 	
-	private final String UNIT_TYPE = "UNIT";
+	protected final String UNIT_TYPE = "UNIT";
 	private final String UNITINIT = "UNIT{ unit=0 }";
 
+	// The model being compiled to pspec
+	protected Bpmn4s model = null;
+	
+	// The output files names and content
 	String psFileName = "default.ps";
 	String typesFileName = "default.types";
-	
 	StringBuilder ps = new StringBuilder();
 	StringBuilder types = new StringBuilder();
-	
+
+	// To avoid double initialization of top level defined data stores.
 	HashSet<String> initialized = new HashSet<String>();
-	// Connected XOR gates are collapsed to avoid non-det due to immediately enabled 
-	// transitions between them. Here we keep a map from the individual names to the
-	// collapsed name in the target CPN.
-	AbstractMap<String, String> compiledGateName = new HashMap<String, String>();
 	
-	public void compile (Bpmn4s model) {
-		
+	/* Connected XOR gates are collapsed to avoid spurious non-det due to immediately enabled 
+	 * transitions between them. Here we keep a map from the individual names to the
+	 * collapsed name in the target CPN.
+	 */
+	AbstractMap<String, String> compiledGateName = new HashMap<String, String>();
+
+	/**
+	 * Throw when a non valid bpmn4s model is detected.
+	 */
+	public class InvalidModel extends Exception {
+
+		private static final long serialVersionUID = 1L;
+
+		public InvalidModel (String mssg) {
+			super(mssg);
+		}
+	}
+	
+	
+	/**
+	 * Takes a Bpmn4s <model>, flattens its activities, and compiles it into a 
+	 * CPN in the language of pspec and accompanying types. The 
+	 * resulting CPN and types can be later fetched from variables 
+	 * <this.ps> and <this.types>. The resulting PN is meant for test generation.
+	 * @throws InvalidModel 
+	 */
+	public void compile (Bpmn4s model) throws InvalidModel {
+		this.model = model;
 		String modelname = sanitize(model.getName());
-		
 		this.psFileName = modelname + ".ps";
 		this.typesFileName = modelname + ".types";
+
+		flattenActivities();
+		ps.append(generatePspec());
+		types.append(generateTypes());
+	}
+
+	/**
+	 * Activities and their related Start/End events are removed.
+	 * Related edges are updated to point to proper elements 
+	 * remaining in the model.
+	 */
+	private void flattenActivities () throws InvalidModel {
 		
-		// pspec model
-		ps.append("import \"" + this.typesFileName + "\"\r\n"
-				+ "specification " + modelname + "\r\n"
-				+ "{\r\n");
-		
+		// Update edges
+		List<Edge> removeEdges = new ArrayList<Edge>();
+		for (Edge e: model.edges) {
+			updateEdge(e);
+			String srcId = e.getSrc();
+			String tarId = e.getTar();
+			Element src = model.getElementById(srcId);
+			String parentId = src.getParent();
+			Element parent = model.getElementById(parentId);
+			if(model.isActivity(parentId) && 
+					(model.isStartEvent(srcId) || (model.isEndEvent(tarId) && parent.getFlowOutputs().isEmpty()))) {
+				removeEdges.add(e);
+			}
+		}
+		for(Edge e: removeEdges) {
+			model.edges.remove(e);
+		}
+		/* Remove start and end events of activities. 
+		 * Remove also their related edges and update the ends.
+		 */
+		List<String> removeElements = new ArrayList<String>();
+		for (Element el: model.elements.values()) {
+			String elId = el.getId();
+			String parentId = el.getParent();
+			Element parent = model.getElementById(parentId);
+			if (model.isActivity(parentId) && model.isStartEvent(elId)) {
+				removeElements.add(elId);
+				Edge outFlow = el.getFlowOutputs().get(0);
+				model.edges.remove(outFlow);
+				Element tar = model.getElementById(outFlow.getTar());
+				tar.getFlowInputs().remove(0); // FIXME should remove outFlow here but not working, workaround with index 0.
+			}
+			/*
+			 * Only remove end events if the activity has outgoing flow.
+			 */
+			if(model.isActivity(parentId) &&
+					(model.isEndEvent(elId) && !parent.getFlowOutputs().isEmpty())) {
+				removeElements.add(elId);
+				Edge inFlow = el.getFlowInputs().get(0);
+				model.edges.remove(inFlow);
+				Element src = model.getElementById(inFlow.getSrc());
+				src.getFlowOutputs().remove(0); // FIXME should remove inFlow here but not working, workaround with index 0.
+			}
+		}
+		for(String el: removeElements) {
+			model.elements.remove(el);
+		}
+		// remove activities TODO: update Elements parents.
+		model.elements.entrySet().removeIf(e -> model.isActivity(e.getKey()));
+	}
+	
+	/**
+	 * Edges flowing out or into activities need to be 
+	 * redirected to proper elements (since activities are flattened)
+	 * @note Activities may have nested activities, thus the while loop.
+	 * @param e is the edge to be possibly updated.
+	 * @return nothing
+	 * @throws InvalidModel 
+	 * @assumes activities have a start and an end event.
+	 */
+	private void updateEdge (Edge e) throws InvalidModel {
+		boolean updated = true;
+		while(updated) {
+			updated = false;
+			String tarId = e.getTar();
+			if(model.isActivity(tarId)) {
+				Element target = model.getElementById(tarId);
+				Element startEv = model.getStartEvent(target);
+				if(startEv == null) {
+					throw new InvalidModel("Missing start event for activity " + model.getElementById(tarId).getName());
+				}
+				e.tar = getNextFlowElement(startEv).getId();
+				Element newTar = model.getElementById(e.tar);
+				newTar.addFlowInput(e);
+				updated = true;
+			}
+			String srcId = e.getSrc();
+			if(model.isActivity(srcId)) {
+				Element source = model.getElementById(srcId);
+				Element endEv = model.getEndEvent(source);
+				if(endEv == null) {
+					throw new InvalidModel("Missing end event for activity " + model.getElementById(srcId).getName());
+				}
+				e.src = getPrevFlowElement(endEv).getId();
+				Element newSrc = model.getElementById(e.src);
+				newSrc.addFlowOutput(e);
+				updated = true;
+			}
+		}
+	}
+	
+	private String generatePspec() throws InvalidModel {
+		StringBuilder result = new StringBuilder();
+		result.append("import \"" + this.typesFileName + "\"\n"
+				+ "specification " + sanitize(model.getName()) + "\n"
+				+ "{\n");
 		for (Element c: model.elements.values()) {
 			if (model.isComponent(c)) {
-				if (hasChildComponents(model, c)){ continue; } // skip top level components
+				if (hasChildComponents(c)){ continue; } // skip top level components
 				String component = "";
-				String cname = compileComponentName(model, c) + repr(c);
-//				if (!cname.equals("")) cname += "_" + c.getName(); else cname = c.getName();
+				String cname = compile(c.getId());
 				component += "system " + sanitize(cname) + "\r\n{\r\n";
-				String inOut = fabSpecInputOutput(model, c);
-				String local = fabSpecLocal(model, c);
-				String init = fabSpecInit(model, c.getId());
-				String desc = fabSpecDescription(model, c.getId()); 
+				String inOut = fabSpecInputOutput(c);
+				String local = fabSpecLocal(c);
+				String init = fabSpecInit(c.getId());
+				String desc = fabSpecDescription(c.getId()); 
 				component += indent(inOut);
 				component += "\n";
 				component += indent(local);
@@ -69,63 +201,46 @@ public class Bpmn4sCompiler{
 				component += "\n";
 				component += indent(desc);
 				component += "}\n\n";
-				ps.append(indent(component));	
+				result.append(indent(component));	
 			}
 		}
-		
-		ps.append(String.format("\tSUT-blocks %s\n", String.join(" ", listSUTcomponents(model)))); 
-		ps.append("\tdepth-limits 300\n}\r\n");
-		
-		// types
-		types.append(generateFabSpecTypes(model));
+		result.append(String.format("\tSUT-blocks %s\n", String.join(" ", listSUTcomponents()))); 
+		result.append(String.format("\tdepth-limits %s\n}\r\n", model.getDepthLimit()));
+		return result.toString();
 	}
 
-	
-	/* 
-	 * Nested components are compiled with their fully qualified name.
+	/**
+	 * For a system in the pspec, build its input/output section.
+	 * @param c is the component that corresponds one to one with a pspec system.
+	 * @return a String with the input/output section.
 	 */
-	private String compileComponentName (Bpmn4s model, Element c) {
-		return String.join("", c.getComponent().stream()
-				.map(e -> repr(model, e))
-				.collect(Collectors.toList()));
-	}
-	
-	/*
-	 * Get a list with the names of components that have a RUN task in them.
-	 */
-	private ArrayList<String> listSUTcomponents (Bpmn4s model) {
-		ArrayList<String> result = new ArrayList<String>();
-		for (Element elem: model.elements.values()) {
-			if (model.isRunTask(elem.getId())) {
-				result.add(compileComponentName(model, elem));
-			}
-		}
-		return result;
-	}
-	
-	private String fabSpecInputOutput(Bpmn4s model, Element c) {
+	private String fabSpecInputOutput(Element c) {
 		String inStr = "inputs\n";
 		String outStr = "outputs\n";
 		
-		for (Edge e: c.getInputs()) {
+		for (Edge e: c.getDataInputs()) {
 			Element node = model.elements.get(e.getSrc());
-			inStr += node.getDataType() + "\t" + repr(node) + "\n";
+			inStr += node.getDataType() + "\t" + compile(node.getId()) + "\n";
 		}
-		for (Edge e: c.getOutputs()) {
+		for (Edge e: c.getDataOutputs()) {
 			Element node = model.elements.get(e.getTar());
-			outStr += node.getDataType() + "\t\t" + repr(node) + "\n";
+			outStr += node.getDataType() + "\t\t" + compile(node.getId()) + "\n";
 		}
-		if (c.getInputs().isEmpty()) { inStr = "//" + inStr; }
-		if (c.getOutputs().isEmpty()) { outStr = "//" + outStr; }
+		if (c.getDataInputs().isEmpty()) { inStr = "//" + inStr; }
+		if (c.getDataOutputs().isEmpty()) { outStr = "//" + outStr; }
 		return inStr + "\n" + outStr;
 	}
-	
 
-	private String fabSpecLocal(Bpmn4s model, Element c) {
+	/**
+	 * Build the locals declaration section for a pspec system. FIXME!
+	 * @param c is the component that corresponds one to one with a pspec system.
+	 * @return the locals section for the system corresponding to c.
+	 */
+	private String fabSpecLocal(Element c) {
 		String locals = "";
 		// All data nodes are places (except for input/outputs)
 		for (Element data: model.elements.values()) {
-			if (isParent( c, data) 
+			if (isParentComponent(c, data) 
 					&& model.isData(data.getId()) 
 					&& !data.isReferenceData())
 			{
@@ -136,8 +251,8 @@ public class Bpmn4sCompiler{
 		// XOR gates introduce a place (Maximal Connected Components of XOR gates for optimization)
 		AbstractSet<String> visited = new HashSet<String>();
 		for (Element xor: model.elements.values()) {
-			if (model.isXor(xor.getId()) && isParent( c, xor)) {
-				String cGateName = getCompiledGateName(model, xor); 
+			if (model.isXor(xor.getId()) && isParentComponent( c, xor)) {
+				String cGateName = getCompiledXorName(xor.getId()); 
 				String datatype = mapType(c.context.dataType != "" ? c.context.dataType : UNIT_TYPE);
 				if (!visited.contains(cGateName)) {
 					visited.add(cGateName);
@@ -145,81 +260,115 @@ public class Bpmn4sCompiler{
 				}
 			}
 		}
-		/* START_EVENTs introduce a place if followed by a task or an AND gate */
-		for (Element se: model.elements.values()) {
-			if (se.getType().equals(ElementType.START_EVENT) && isParent( c, se)) { 
-				Edge edge = se.getOutputs().get(0);
-				Element tar = model.getElementById(edge.getTar());
-				if(tar.getType() == ElementType.TASK || tar.getType() == ElementType.AND_GATE) { 
-					String datatype = mapType(c.context.dataType != "" ? c.context.dataType : UNIT_TYPE);
-					locals += tabulate(datatype, sanitize(repr(se))) + "\n";
-				}
-			}
-		}
-		/* END_EVENTs introduce a place if preceded by a task or an AND gate */
-		for (Element se: model.elements.values()) {
-			if (se.getType().equals(ElementType.END_EVENT) && isParent( c, se)) { 
-				Edge edge = se.getInputs().get(0);
-				Element src = model.getElementById(edge.getSrc());
-				if(src.getType() == ElementType.TASK || src.getType() == ElementType.AND_GATE) { 
-					String datatype = mapType(c.context.dataType != "" ? c.context.dataType : UNIT_TYPE);
-					locals += tabulate(datatype, sanitize(repr(se))) + "\n";
-				}
-			}
-		}
-		/* Edges between transitions introduce places. */
+		// Start Events
+		locals += String.join("\n", localsFromStartEvents(c)) + "\n";
+		// End Events
+		locals += String.join("\n", localsFromEndEvents(c)) + "\n";
+		// Edges between transitions (tasks and parallel gates) introduce places. 
 		for (Edge e: model.edges) {
 			String srcId = e.getSrc();
 			String tarId = e.getTar();
 			Element src = model.getElementById(srcId);
 			Element tar = model.getElementById(tarId);
-			if (isParent( c, src) 
-					&& !model.isXor(srcId) && !model.isData(srcId)
-					&& !model.isXor(tarId) && !model.isData(tarId)
-					&& !model.isEvent(srcId) && !model.isEvent(tarId)){
-				assert isParent( c, tar);
+			if (isParentComponent( c, src)
+					&& (model.isAnd(srcId) || model.isTask(srcId))
+					&& (model.isAnd(tarId) || model.isTask(tarId))){
+				assert isParentComponent( c, tar);
 				String datatype = mapType(c.context.dataType != "" ? c.context.dataType : UNIT_TYPE);
-				locals += tabulate(datatype, sanitize(namePlaceBetweenTransitions(repr(src), repr(tar)))) + "\n";
+				locals += tabulate(datatype, sanitize(namePlaceBetweenTransitions(e.getId(), repr(src), repr(tar)))) + "\n";
 			}
 		}
 		if (!locals.isBlank()) {
 			locals = "local\n" + locals;
 		}
 		return locals;
-	}	
+	}
+	
+	
+	/**
+	 * START_EVENTs introduce a place if followed by a transition in the target PN. 
+	 * Otherwise we ignore them for optimization for test generation.
+	 * @param c
+	 * @return
+	 */
+	protected List<String> localsFromStartEvents (Element c) {
+		List<String> result = new ArrayList<String>();
+		for (Element se: model.elements.values()) {
+			if (se.getType().equals(ElementType.START_EVENT) && isParentComponent( c, se)) { 
+				Edge edge = se.getFlowOutputs().get(0);
+				String tarId = edge.getTar();
+				Element tar = model.getElementById(tarId);
+				if(tar.getType() == ElementType.TASK || tar.getType() == ElementType.AND_GATE) { 
+					String datatype = mapType(c.context.dataType != "" ? c.context.dataType : UNIT_TYPE);
+					result.add(tabulate(datatype, sanitize(repr(se))));
+				}
+			}
+		}
+		return result;
+	}
+	
+	/**
+	 * END_EVENTs introduce a place if preceded by a transition in the PN. 
+	 * Otherwise we ignore them for optimization of test generation.
+	 * @param c
+	 * @return
+	 */	
+	protected List<String> localsFromEndEvents (Element c) {
+		List<String> result = new ArrayList<String>();
+		for (Element ee: model.elements.values()) {
+			String datatype = mapType(c.context.dataType != "" ? c.context.dataType : UNIT_TYPE);
+			if (ee.getType().equals(ElementType.END_EVENT) && isParentComponent( c, ee)) {
+				Edge edge = getOrDefault(ee.getFlowInputs(), 0, null);
+				if (edge != null) {
+					Element src = model.getElementById(edge.getSrc());
+					if(src.getType() == ElementType.TASK || src.getType() == ElementType.AND_GATE) { 
+						result.add(tabulate(datatype, sanitize(repr(ee))));
+					}
+				}
+			}
+		}
+		return result;
+	}
 
-	private String fabSpecInit(Bpmn4s model, String component) {
+
+	/**
+	 * Build the initialization section for the system corresponding to component cId.
+	 * @param cId
+	 * @return a String with the section
+	 * @throws InvalidModel 
+	 */
+	private String fabSpecInit(String cId) throws InvalidModel {
 		String init = "";
-		Element c = model.getElementById(component);
+		Element c = model.getElementById(cId);
 		String ctxName = c.getContextName();
 		String ctxDataType = c.getContextDataType();
 		String ctxInit = c.getContextInit();
-		AbstractList<String> initPlaces = getInitialPlaces(model, c);
+		AbstractList<String> initPlaces = getInitialPlaces(cId);
 		for (String place: initPlaces) {
 			if (ctxDataType == "") {
 				init += String.format("%s := %s \n", sanitize(place), UNITINIT);
 			}else {
 				if (ctxInit == "") {
-					Logging.logError(String.format("Missing context initialization for component %s", component));
-					// FIXME fail!
+					String mssg = String.format("Missing context initialization for component %s", compile(cId));
+					throw new InvalidModel(mssg);
 				} else {
-					init += replace(ctxInit, ctxName, sanitize(place)) + "\n";
-				}				
+					init += replaceWord(ctxInit, ctxName, sanitize(place)) + "\n";
+				}
 			}
 		}
-		
 		for (Element ds: model.elements.values()) {
 			/* Data stores of bottom level components are initialized in such components. 
-			 * Other datastores are initialized in components for which they are an input/output.
-			 */
+			 * Other data stores are initialized in components for which they are an input/output.
+			 * In the later case, the instance attribute this.initialized is used to avoid 
+			 * double initialization. */
 			if(ds.getType() == ElementType.DATASTORE  
 					&& !initialized.contains(ds.getId())
 					&& !ds.isReferenceData()
-					&& ((isImmediateParentComponent(component, ds)) || 				
-							(c.hasSource(ds.getId()) || c.hasTarget(ds.getId())))) {   
+					&& ((isImmediateParentComponent(cId, ds)) ||
+							(c.hasDataSource(ds.getId()) || c.hasDataTarget(ds.getId())))) {   
 				
 				if (ds.getInit() != null && ds.getInit() != "") {
-					init += replace(ds.getInit(), repr(ds), repr(ds)) + "\n"; // FIXME what am I replacing here??
+					init += ds.getInit().replace(ds.getName(), compile(ds.getId())) + "\n";
 					initialized.add(ds.getId());
 				}
 			}
@@ -227,106 +376,135 @@ public class Bpmn4sCompiler{
 		return init == "" ? "// init\n" : "init\n" + init;
 	}
 	
-	private AbstractList<String> getInitialPlaces (Bpmn4s model, Element component) {
-		/*
-		 * Return the places (Element repr) in the target PN that need to be initialized.
-		 */
+	/**
+	 * Collect the places which will hold context data in the target PN that need to be initialized 
+	 * for the system corresponding to component cId. To avoid spurious non-determinism,
+	 * we may avoid initializing the context in the start event place, and move the 
+	 * initialization further into the flow instead.
+	 * @param cId is the id of the component
+	 * @return
+	 */
+	protected AbstractList<String> getInitialPlaces (String cId) {
+		Element c = model.getElementById(cId);
 		ArrayList<String> result = new ArrayList<String>();
-		Element startEvent = model.getStartEvent(component);
+		Element startEvent = model.getStartEvent(c);
 		LinkedList<Element> queue = new LinkedList<Element>();
-		if (startEvent != null) 
+		if (startEvent != null) {
 			queue.add(startEvent);
-		
+		}
 		while(!queue.isEmpty()) {
 			Element next = queue.pop();
 			if (next.getType() == ElementType.START_EVENT) {
-				Element e = getNextFlowElement(model, next);
+				Element e = getNextFlowElement(next);
 				if (e.getType() == ElementType.AND_GATE) {
-					queue.add(e);
+					queue.add(e); // ignore the start event and init outputs of the AND gate
 				} else if (e.getType() == ElementType.TASK) {
-					result.add(repr(next)); // FIXME need to add start event as a place (what does this mean??? make better comments)
+					result.add(repr(next)); // add the start event
 				} else if (e.getType() == ElementType.XOR_GATE) {
-					result.add(getCompiledName(model, e));
+					result.add(getCompiledXorName(e.getId())); // ignore the start event, and init the xor gate
 				} 
 			}else if (next.getType() == ElementType.AND_GATE) {
-				for (Edge edge: next.getOutputs()) {
-					if (model.isXor(edge.getTar())) {
-						result.add(getCompiledName(model, edge.getTar()));
-					} else if (model.isAnd(edge.getTar())) {
-						queue.add(model.getElementById(edge.getTar()));
-					} else if (model.isTask(edge.getTar())) {
-						String tarId = edge.getTar();
+				for (Edge edge: next.getFlowOutputs()) {
+					String tarId = edge.getTar();
+					if (model.isXor(tarId)) {
+						result.add(getCompiledXorName(tarId));
+					} else if (model.isAnd(tarId)) {
+						queue.add(model.getElementById(tarId));
+					} else if (model.isTask(tarId)) {
 						Element tar = model.getElementById(tarId);
-						result.add(namePlaceBetweenTransitions(repr(next), repr(tar)));
+						result.add(namePlaceBetweenTransitions(edge.getId(), repr(next), repr(tar)));
 					}
 				}
 			} else {
-				Logging.logError("Only AND_GATE and START_EVENT types are meant to be possible here.");
+				throw new InternalError(String.format("Got unexpected element type: %s.", next.getType()));
 			}
 		}
 		return result;
 	}
 	
-	private String replace(String text, String from, String to) {
-		if (!from.isBlank()) {
-			return text.replace(from, to);
-		}else {
-			return text;
-		}
+	/**
+	 * Replace whole word only (only match <from> if surrounded by delimiters)
+	 * @param text
+	 * @param from
+	 * @param to
+	 * @return
+	 */
+	private String replaceWord (String text, String from, String to) {
+		return text.replaceAll(String.format("\\b%s\\b", from), to);
 	}
 	
-	/*
+	/**
 	 * Return a name in the PN for the place that results from 
 	 * two subsequent tasks in the original BPMN4S model.
 	 */
-	private String namePlaceBetweenTransitions(String src, String dst) {
+	protected String namePlaceBetweenTransitions(String  flowId, String src, String dst) {
 		return String.format("between_%s_and_%s", src, dst);
 	}
 	
-	private String fabSpecDescription(Bpmn4s model, String component) {
+	public static <E> E getOrDefault(List<E> list, int index,E defaultValue) {
+	      if (index < 0) {
+	          throw new IllegalArgumentException("index is less than 0: " + index);
+	      }
+	      return index <= list.size() - 1 ? list.get(index) : defaultValue;
+     }
+	
+	
+	private String fabSpecDescription(String cId) {
 		ArrayList<String> desc = new ArrayList<String>();
 		for (Element node: model.elements.values()) {
-			if (isParent(component, node)) { 
+			if (isParentComponent(cId, node)) { 
 				ElementType nodeType = node.getType();
+				// Tasks and Parallel gates are transitions in the CPN
 				if( nodeType == ElementType.TASK  || nodeType == ElementType.AND_GATE ) {			
-					// Tasks and Parallel gates are transitions in the CPN
 					String task = "";
 					// Name of context as defined by user at front end:
-					String compCtxName = model.getElementById(component).getContextName();  
+					String compCtxName = model.getElementById(cId).getContextName();  
 					task += "action\t\t\t" + sanitize(repr(node)) + "\n";
 					// STEP TYPE
 					String stepConf = "";
 					if (model.isComposeTask(node.getId())) {
-						String stepType = node.getStepType();
-						stepConf = String.format(" step-type \"%s\" action-type COMPOSE", stepType);
+						stepConf = String.format(" step-type \"%s\" action-type COMPOSE", node.getStepType());
 					} else if(model.isRunTask(node.getId())) {
-						String stepType = node.getStepType();
-						stepConf = String.format(" step-type \"%s\" action-type RUN", stepType);
+						stepConf = String.format(" step-type \"%s\" action-type RUN", node.getStepType());
 					}
 					task += "case\t\t\t" + "default" + stepConf + "\n";
+					/* 
+					 * Updates, guards, and initializations from the bpmn4s are parsed into Strings. 
+					 * In these strings, data stores, queues, and context are identified by their user-defined names.
+					 * Since for simulation we change this names for ids, we also need to do this in the updates 
+					 * strings. Also, both for simulation and test generation, updates and guards related to context 
+					 * variables need to be renamed since we hold the context in different places through the PN. 
+					 * FIXME: Unfortunately, interpreting the update to make a proper renaming is too much work, so for now 
+					 * we hack it around by doing string replace and hopping there is no unfortunate name collision.
+					 */
+					Map<String, String> replaceMap = buildReplaceMap(node);
+					/* Note: we assume all inputs of merging AND gates contain exactly the same context data.
+					 */
+					Edge inFlow = getOrDefault(node.getFlowInputs(), 0, null);
+					// Name of place that holds source context value for this transition. Some 
+					// tasks may not have in-flow, such as in headless components.
+					String preCtxName = null;
+					if(inFlow != null) {
+						preCtxName = sanitize(getPNSourcePlaceName(inFlow));
+						replaceMap.put(compCtxName, preCtxName);
+					}
 					// INPUTS
-					List<String> inputs = new ArrayList<String>();
-					// FIXME: We are not considering AND join gates properly. 
-					// They have several inputs. How do we check for compatible 
-					// context from different inputs to the gate?
-					Edge inFlow = node.inputs.get(0);	
-					// Name of place that holds source context value for this transition:
-					String preCtxName  = sanitize(getPNSourceName(model, inFlow));
-					for(Edge e: node.getInputs()) {
-						inputs.add(sanitize(getPNSourceName(model, e)));
+					ArrayList<String> inputs = new ArrayList<String>();
+					for(Edge e: node.getAllInputs()) {
+						inputs.add(sanitize(getPNSourcePlaceName(e)));
 					}
 					task += "with-inputs\t\t" + String.join(", ", inputs) + "\n";
 					// GUARD
 					String guard = node.getGuard();
 					if (guard != null) {
-						task += "with-guard\t\t" + replace(guard, compCtxName, preCtxName) + "\n";
+						task += "with-guard\t\t" + replaceAll(guard, replaceMap) + "\n";
 					}
-					for(Edge e: node.getOutputs()) {
+					for(Edge e: node.getAllOutputs()) {
 						// Name of place that holds target context value for this transition:
-						String postCtxName = sanitize(getPNTargetName(model, e)) ;
+						String postCtxName = sanitize(getPNTargetPlaceName(e));
 						if (model.isData(e.getTar())) {
-							task += "produces-outputs\t" + sanitize(repr(model, e.getTar()));
-							if (isLinked(model, node.getId(), e.getTar())) {
+							task += "produces-outputs\t" + sanitize(compile(e.getTar()));
+							if (isLinked(node.getId(), e.getTar())) {
 								task += " assert\n";
 							} else if (e.isSuppressed()) {
 								task += " suppress\n";
@@ -334,59 +512,133 @@ public class Bpmn4sCompiler{
 								task += "\n";
 							}
 							if (e.getRefUpdate() != null && e.getRefUpdate() != "") {
-								task += "references {\n" + indent(replace(e.getRefUpdate(), compCtxName, preCtxName)) + "\n}\n" ;
+								task += "references {\n" + indent(replaceAll(e.getRefUpdate(), replaceMap)) + "\n}\n" ;
 							}
 							if (e.getSymUpdate() != null && e.getSymUpdate() != "") {
-								task += "constraints {\n" + indent(replace(e.getSymUpdate(), compCtxName, preCtxName)) + "\n}\n";
+								task += "constraints {\n" + indent(replaceAll(e.getSymUpdate(), replaceMap)) + "\n}\n";
 							}
 							if (e.isPersistent()) {
-								task += String.format("updates: %s := %s\n",  repr(model, e.getTar()), repr(model, e.getTar())) ;
+								task += String.format("updates: %s := %s\n",  compile(e.getTar()), compile(e.getTar()));
 							}
 							if (e.getUpdate() != null && e.getUpdate() != "" ) {
-								task += "updates:" + indent(replace(e.getUpdate(), compCtxName, preCtxName)) + "\n";
+								task += "updates:" + indent(replaceAll(e.getUpdate(), replaceMap)) + "\n";
 							}
 						} else { // then its context
 							task += "produces-outputs\t" + postCtxName + (e.isSuppressed() ? " suppress\n" : "\n");
 							if (e.getRefUpdate() != null && e.getRefUpdate() != "") {
-								task += "references {\n" + indent(replace(e.getRefUpdate(), compCtxName, preCtxName)) + "\n}\n" ;
+								task += "references {\n" + indent(replaceAll(e.getRefUpdate(), replaceMap)) + "\n}\n";
 							}
 							if (e.getSymUpdate() != null && e.getSymUpdate() != "") {
-								task += "constraints {\n" + indent(replace(e.getSymUpdate(), compCtxName, preCtxName)) + "\n}\n";
+								task += "constraints {\n" + indent(replaceAll(e.getSymUpdate(), replaceMap)) + "\n}\n";
 							}
-							// move the context between places in the PN
-							task += "updates:" + indent(postCtxName + " := " + preCtxName) + "\n";
+							
+							if (preCtxName != null) {
+								// move the context between places in the PN.
+								task += "updates:" + indent(postCtxName + " := " + preCtxName) + "\n";
+							} else {
+								// task without in flowing context (generates token with context)
+								String dataTypeName = model.getElementById(cId).getContextDataType();
+								Bpmn4sDataType dataType = model.dataSchema.get(dataTypeName);
+								task += "updates:" + indent(postCtxName + ":=" + (dataType != null ? dataType.getDefaultInit() : UNITINIT) + "\n");
+							}
 							String update = e.getUpdate();
 							if(update != null && update != "") {
-								// Add users updates
-								String[] assignment = update.split(":=");
-								update = replace(assignment[0] + ":=" + assignment[1], compCtxName, postCtxName);
-								task += indent(update) + "\n";
+								update = replaceWord(update, compCtxName, postCtxName);
+								task += indent(replaceAll(update, replaceMap)) + "\n";
 							}
 						}
 					}
 					desc.add(task);
-				
 				} 
 			}
 		}
-		return "desc \"" + repr(model, component) + "_Model\"\n\n" + String.join("\n", desc);
+		
+		desc.addAll(getFlowActions(cId));
+		
+		return "desc \"" + compile(cId) + "_Model\"\n\n" + String.join("\n", desc);
+	}
+
+	/**
+	 * Collect the compiled name for each input/output node corresponding to a 
+	 * transition (TASK or AND gate in the Bpmn4s).
+	 * @param transition
+	 * @return a Map from the nodes name to their compiled name.
+	 */
+	protected Map<String, String> buildReplaceMap (Element transition) {
+		Map<String, String> replaceMap = new HashMap<String, String>();
+		return replaceMap;
 	}
 	
-	private boolean isLinked(Bpmn4s model, String source, String data) {
-		/*
-		 * Linked data are outputs of RUN tasks which are referenced 
-		 * by a COMPOSE task.
-		 * Checking if it is referenced is not easy: it requires 
-		 * interpreting the expressions inside the references update.
-		 * Thus, I will consider them linked if they are, at the same time,
-		 * output of a RUN task and input of COMPOSE tasks.
-		 */
+	/**
+	 * In simulation mode, some flows between bpmn4s elements introduce transitions in the CPN. 
+	 * Imagine a flow between to XOR gates for instance. In general, if two elements are connected with a flow
+	 * and their CPN semantics is a place, then a transition needs to be added. For test generation, we optimize
+	 * the model such that this flows do not exist anymore, so that we reduce spurious non-determinism.
+	 */
+	protected List<String> getFlowActions(String component) {
+		return new ArrayList<String>();
+	}
+	
+	protected ArrayList<String> getInputOutputIds(Element elem) {
+		ArrayList<String> result = new ArrayList<String>();
+		for (Edge e: elem.getAllInputs()) {
+			if(isAPlace(e.getSrc())) {
+				result.add(e.getSrc());
+			}
+		}
+		for (Edge e: elem.getAllOutputs()) {
+			if(isAPlace(e.getTar())) {
+				result.add(e.getTar());
+			}
+		}
+		return result;
+	}
+	
+	
+	/**
+	 * Fetch the names of components that poses a RUN task.
+	 * @return List with components names
+	 */
+	private ArrayList<String> listSUTcomponents () {
+		ArrayList<String> result = new ArrayList<String>();
+		for (Element elem: model.elements.values()) {
+			if (model.isRunTask(elem.getId())) {
+				result.add(compile(elem.getParentComponents().getLast()));
+			}
+		}
+		return result;
+	}
+	
+	/**
+	 * 
+	 * @param text
+	 * @param replace
+	 * @return
+	 */
+	private String replaceAll(String text, Map<String,String> replace) {
+		for (String k: replace.keySet()) {
+			// replace whole word only
+			text = replaceWord(text, k, replace.get(k));
+		}		
+		return text;
+	}
+	
+	/**
+	 * Linked data are outputs of RUN tasks which are referenced 
+	 * by a COMPOSE task.
+	 * Checking if it is referenced is not easy: it requires 
+	 * interpreting the expressions inside the references update.
+	 * Thus, I will consider them linked if they are, at the same time,
+	 * output of a RUN task and input of COMPOSE tasks.
+	 */
+	private boolean isLinked(String source, String data) {
+
 		Element d = model.getElementById(data);
 		String originDataId = d.getOriginDataNodeId(); 
 		if(model.isRunTask(source)) {
 			for(Element elem: model.elements.values()) {
 				if (model.isComposeTask(elem.getId())) {
-					for (Edge e: elem.getInputs()) {
+					for (Edge e: elem.getDataInputs()) {
 						Element src = model.getElementById(e.getSrc());
 						if (originDataId.equals(src.getOriginDataNodeId())) {
 							return true;
@@ -398,41 +650,43 @@ public class Bpmn4sCompiler{
 		return false;
 	}
 	
-	private String getPNSourceName(Bpmn4s model, Edge e) {
-		//		FIXME check preconditions for this method and its correctness 
-		if (this.isAPlace(model, e.getSrc())) {
-			return getCompiledName(model, e.getSrc());
+	/**
+	 * Assuming the target of e is a Task or an AND gate (which are compiled 
+	 * to a transition in the PN) return the name of the source place in the PN.
+	 */
+	private String getPNSourcePlaceName(Edge e) {
+		String srcId = e.getSrc();
+		if (model.isTask(srcId) || model.isAnd(srcId)) {
+			return namePlaceBetweenTransitions(e.getId(), compile(srcId), compile(e.getTar()));
 		} else {
-			if (!model.isTask(e.getSrc()) && !model.isAnd(e.getSrc())) {
-				Logging.logError(String.format("%s should be a task or par gate!", e.getSrc()));
-			}
-			return namePlaceBetweenTransitions(repr(model, e.getSrc()), repr(model, e.getTar()));
+			return compile(srcId);
 		}
 	}
 	
-	private String getPNTargetName(Bpmn4s model, Edge e) {
-		// assumes e.getTar() is a task
-		// FIXME check preconditions for this method and its correctness 
-		if (this.isAPlace(model, e.getTar())) {
-			return getCompiledName(model, e.getTar());
+	/**
+	 * Assuming the source of e is a Task or an AND gate (which are compiled
+	 * to transition in the PN) return the name of the target place in the PN.
+	 */
+	private String getPNTargetPlaceName(Edge e) {
+		String tarId = e.getTar();
+		if (model.isTask(tarId) || model.isAnd(tarId)) {
+			return namePlaceBetweenTransitions(e.getId(), compile(e.getSrc()), compile(tarId));
 		} else {
-			if (!model.isTask(e.getTar()) && !model.isAnd(e.getTar())) {
-				Logging.logError(String.format("%s should be a task or par gate!", e.getTar()));
-			}
-			return namePlaceBetweenTransitions(repr(model, e.getSrc()), repr(model, e.getTar()));
+			return compile(tarId);
 		}
 	}
-	
-	public String generateFabSpecTypes(Bpmn4s model) {
+
+	public String generateTypes() {
 		String types = new String("");
+		// UNIT_TYPE is the type for undefined contexts.
 		types += String.format("record %s {\n\tint\tunit\n}\n\n", UNIT_TYPE);
 		for (Bpmn4sDataType d: model.dataSchema.values()) {
 			if(d instanceof RecordType) {
 				RecordType rec = RecordType.class.cast(d);
 				String type = "record " + rec.getName() + " {\n";
 				String parameters = "";
-				for (Entry<String, String> e: rec.fields.entrySet()) {
-					parameters += generateRecordField(model, e);
+				for (Entry<String, Bpmn4sDataType> e: rec.fields.entrySet()) {
+					parameters += generateRecordField(e);
 				}
 				type += indent(parameters) + "}\n";
 				types += type + "\n";
@@ -446,39 +700,38 @@ public class Bpmn4sCompiler{
 				types += type + "\n";
 			} else {
 //				NOTE:  I am not compiling data types that are not records or enumerations.
-//				       They are nevertheless kept to be used as fields of 
-//					   records in generateRecordField().
+//				       Other types are used for fields of records in generateRecordField().
 			}
 		}
 		return types;
 	}
 	
-	private String generateRecordField(Bpmn4s model, Entry<String, String> e) {
+	private String generateRecordField(Entry<String, Bpmn4sDataType> e) {
 		String field = "";
 		String fieldName = e.getKey();
-		String fieldTypeName = e.getValue();
-		Bpmn4sDataType dataType = model.dataSchema.get(fieldTypeName); 
-		if (dataType instanceof ListType) {
-			ListType lst = ListType.class.cast(dataType);
+		Bpmn4sDataType fieldDataType = e.getValue(); 
+		if (fieldDataType instanceof ListType) {
+			ListType lst = ListType.class.cast(fieldDataType);
 			field = String.format("%s[]\t%s\n" , mapType(lst.valueType), fieldName); 
-		} else if (dataType instanceof MapType) {
-			MapType mp = MapType.class.cast(dataType);
+		} else if (fieldDataType instanceof MapType) {
+			MapType mp = MapType.class.cast(fieldDataType);
 			field = String.format("map<%s,%s>\t%s\n" , mapType(mp.keyType), mapType(mp.valueType), fieldName);
-		} else if (dataType instanceof SetType) {
-			SetType st = SetType.class.cast(dataType);
+		} else if (fieldDataType instanceof SetType) {
+			SetType st = SetType.class.cast(fieldDataType);
 			field = String.format("set<%s>\t%s\n" , mapType(st.valueType), fieldName);
 		} else {
 			// record, enumerations and basic types go here
+			String fieldTypeName = fieldDataType.getType();
 			field = String.format("%s\t%s\n" , mapType(fieldTypeName), fieldName); 
 		}
 		return field;
 	}
-	
-	private String mapType(String name) {
-		/*
-		 * Basic types in BPMN4S editor start with upper case, 
-		 * while in pspec they are lower cased.
-		 */
+
+	/**
+	 * Basic types in BPMN4S editor start with upper case, 
+	 * while in pspec they are lower cased.
+	 */
+	protected String mapType(String name) {
 		String result = name;
 		if (name.equals("Int") || name.equals("String")) {
 			result = name.toLowerCase();
@@ -492,28 +745,23 @@ public class Bpmn4sCompiler{
 	//
 	// Helper functions
 	//
-	private Boolean isAPlace (Bpmn4s model, String name) {
-		Element elem = model.getElementById(name);
-		if (elem != null) {
-			ElementType t = elem.getType();
-			return t == ElementType.DATASTORE 
-					|| t == ElementType.MSGQUEUE 
-					|| t == ElementType.XOR_GATE 
-					|| t == ElementType.START_EVENT 
-					|| t == ElementType.END_EVENT;
-		} else {
-			Logging.logWarning("No vertex named " + name);
-			return false;
-		}
+	
+	protected Boolean isAPlace (String id) {
+		Element elem = model.getElementById(id);
+		ElementType t = elem.getType();
+		return t == ElementType.DATASTORE 
+				|| t == ElementType.MSGQUEUE 
+				|| t == ElementType.XOR_GATE 
+				|| t == ElementType.START_EVENT 
+				|| t == ElementType.END_EVENT;
 	}
 	
-
-	Boolean isParent(Element parent, Element child) {
-		return isParent(parent.getId(), child);
+	protected Boolean isParentComponent(Element parent, Element child) {
+		return isParentComponent(parent.getId(), child);
 	}
 	
-	Boolean isParent(String parentId, Element child) {
-		return child.getComponent().contains(parentId);
+	Boolean isParentComponent(String parentId, Element child) {
+		return child.getParentComponents().contains(parentId);
 	}
 	
 	Boolean isImmediateParentComponent(Element parent, Element child) {
@@ -521,11 +769,11 @@ public class Bpmn4sCompiler{
 	}
 	
 	Boolean isImmediateParentComponent(String parentId, Element child) {
-		ArrayList<String> parents = child.getComponent();
+		ArrayList<String> parents = child.getParentComponents();
 		return !parents.isEmpty() && parents.get(parents.size()-1).equals(parentId);
 	}
 	
-	Boolean hasChildComponents(Bpmn4s model, Element c) {
+	Boolean hasChildComponents(Element c) {
 		for (Element node: model.elements.values()) {
 			if (node.getType() == ElementType.COMPONENT && 
 					node.parent != null &&
@@ -537,7 +785,7 @@ public class Bpmn4sCompiler{
 		return false;
 	}
 	
-	public void writeToFile (String folder) {
+	public void writeModelToFiles (String folder) {
 		this.writeToFile(Paths.get(folder, psFileName), ps.toString());
 		this.writeToFile(Paths.get(folder, typesFileName), types.toString());
 	}
@@ -555,70 +803,93 @@ public class Bpmn4sCompiler{
 	    }
 	    Logging.logInfo(String.format("File %s generated at %s", filename, file.getAbsolutePath()));
 	}
-	
-	private String sanitize(String str) {
-		/*
-		 * The BPMN4S editor allows spaces and colons in names, 
-		 * but PSpec is more restrictive so we replace them.
-		 */
-//		String result = str.replaceAll("\\p{Zs}+", "00SP00").replace(".", "00CLN00");
+
+	/**
+	 * The BPMN4S editor allows spaces and colons in names, 
+	 * but PSpec is more restrictive so we replace them.
+	 */
+	protected String sanitize(String str) {
 		String result = str.replaceAll("\\p{Zs}+", "").replace(".", "");
 		return result;
 	}
-		
 
 	private String indent(String str) {
 		return str.replaceAll("(?m)^", "    ");
 	}
 
-	private String tabulate (String... strings) {
+	protected String tabulate (String... strings) {
 		return String.join("\t", strings);
 	}
 
-	private Element getNextFlowElement(Bpmn4s model, Element elem) {
-		/* 
-		 * For instance to get the first element after a start event
-		 */
-		String name = elem.outputs.get(0).getTar();
+	/**
+	 * 
+	 * @param elem
+	 * @return
+	 */
+	private Element getNextFlowElement(Element elem) {
+		String name = elem.getFlowOutputs().get(0).getTar();
+		Element result = model.getElementById(name);
+		return result;
+	}
+	
+	/**
+	 * 
+	 * @param elem
+	 * @return
+	 */
+	private Element getPrevFlowElement(Element elem) {
+		String name = elem.getFlowInputs().get(0).getSrc();
 		Element result = model.getElementById(name);
 		return result;
 	}
 
-	private String getCompiledName(Bpmn4s model, String elemId) {
-		if (model.isXor(elemId)) {
-			return getCompiledGateName(model, model.getElementById(elemId));
-		} else {
-			return repr(model, elemId); // FIXME check if there are no other cases 
+	/**
+ 	 * Get the compiled name for Element <el>.
+	 */
+	protected String compile(String elId) {
+		Element el = model.getElementById(elId);
+		if (model.isReferenceData(elId)) {
+			return compile(getOriginDataNode(elId));
+		} else if (model.isXor(elId)) {
+			return getCompiledXorName(elId);
+		} else if (model.isComponent(elId)) { 
+			/* Nested components are compiled with their fully qualified name. */
+			return String.join("", el.getParentComponents().stream()
+					.map(e -> repr(model.getElementById(e)))
+					.collect(Collectors.toList())) + repr(el);
 		}
-	}
-	
-	private String getCompiledName(Bpmn4s model, Element elem) {
-		return getCompiledName(model, elem.getId());
-	}
-
-	private String repr(Bpmn4s model, String elId) {
 		return repr(model.getElementById(elId));
 	}
 	
+	/**
+	 * Get the identifier of a bpmn4s Element <el>
+	 * While the compiler for test generation (this) returns the name of the element,
+	 * the compiler for simulation will return the element's id.
+	 */
 	protected String repr(Element el) {
-//		if(this.simulation) {
-//			return el.getId();
-//		}else {
-//			return el.getName();
-//		}
 		return el.getName();
 	}
 	
-	/*
-	 * Networks of connected XOR gates are merged into single
-	 * places in the target PN. This method returns the name
+	private String getOriginDataNode(String id) {
+		Element el = model.getElementById(id);
+		while(model.isReferenceData(id)) {
+			id = el.getOriginDataNodeId();
+			el = model.getElementById(id);
+		}
+		return id;
+	}
+	
+	/**
+	 * For test generation, networks of connected XOR gates are merged 
+	 * into single places in the target PN. This method returns the name
 	 * of the target place.
-	 */	
-	protected String getCompiledGateName(Bpmn4s model, Element xor) {
+	 */
+	protected String getCompiledXorName(String xorId) {
+		Element xor = model.getElementById(xorId);
 		String result = compiledGateName.get(xor.getId());
 		if(result == null) {
 			AbstractSet<String> net = new HashSet<String>();
-			buildXorNet(model, xor, net);
+			buildXorNet(xor, net);
 			if (net.size() > 1) {
 				result = "merged";
 				for(String name: net) {
@@ -634,28 +905,29 @@ public class Bpmn4sCompiler{
 		return result;
 	}
 	
-	/*
+	/**
 	 * Build the Maximal Connected Component of xor gates that contains <xor> and 
 	 * add its elements to <net>. Notice that <net> is used as an accumulator for
 	 * the recursive algorithm.
 	 */
-	private void buildXorNet(Bpmn4s model, Element xor, AbstractSet<String> net) {
+	private void buildXorNet(Element xor, AbstractSet<String> net) {
 		net.add(repr(xor));
-		for(Edge input: xor.getInputs()) {
+		for(Edge input: xor.getFlowInputs()) {
 			String srcId = input.getSrc();
 			if(model.isXor(srcId)) {
 				if(!net.contains(repr(model.getElementById(srcId)))) {
-					buildXorNet(model, model.getElementById(srcId), net);
+					buildXorNet(model.getElementById(srcId), net);
 				}
 			}
 		}
-		for(Edge output: xor.getOutputs()) {
+		for(Edge output: xor.getFlowOutputs()) {
 			String tarId = output.getTar();
 			if(model.isXor(tarId)) {
 				if(!net.contains(repr(model.getElementById(tarId)))) {
-					buildXorNet(model, model.getElementById(tarId), net);
+					buildXorNet(model.getElementById(tarId), net);
 				}
 			}
 		}
 	}
+	
 }
