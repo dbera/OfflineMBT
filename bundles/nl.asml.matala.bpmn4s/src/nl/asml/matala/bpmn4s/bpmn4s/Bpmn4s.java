@@ -124,14 +124,25 @@ public class Bpmn4s {
 		edges.add(e);
 	}
 	
-	public void associateEdge(Edge e) {
+	public void associateFlowEdge(Edge e) {
 		if (elements.containsKey(e.getSrc())) {
 			Element node = elements.get(e.getSrc());
-			node.outputs.add(e);
+			node.flowOutputs.add(e);
 		}
 		if (elements.containsKey(e.getTar())) {
 			Element node = elements.get(e.getTar());
-			node.inputs.add(e);
+			node.flowInputs.add(e);
+		}
+	}
+	
+	public void associateDataEdge(Edge e) {
+		if (elements.containsKey(e.getSrc())) {
+			Element node = elements.get(e.getSrc());
+			node.dataOutputs.add(e);
+		}
+		if (elements.containsKey(e.getTar())) {
+			Element node = elements.get(e.getTar());
+			node.dataInputs.add(e);
 		}
 	}
 	

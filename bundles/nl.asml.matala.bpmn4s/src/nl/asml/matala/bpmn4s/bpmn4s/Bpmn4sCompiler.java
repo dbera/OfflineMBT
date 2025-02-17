@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
+
 import nl.asml.matala.bpmn4s.Logging;
 
 
@@ -80,11 +81,11 @@ public class Bpmn4sCompiler{
 	}
 
 	/**
-	 * Activities and their related Start End events are removed.
+	 * Activities and their related Start/End events are removed.
 	 * Related edges are updated to point to proper elements 
 	 * remaining in the model.
 	 */
-	private void flattenActivities () {
+	private void flattenActivities () throws InvalidModel {
 		
 		// Update edges
 		List<Edge> removeEdges = new ArrayList<Edge>();
@@ -96,7 +97,7 @@ public class Bpmn4sCompiler{
 			String parentId = src.getParent();
 			Element parent = model.getElementById(parentId);
 			if(model.isActivity(parentId) && 
-					(model.isStartEvent(srcId) || (model.isEndEvent(tarId) && parent.getOutputs().isEmpty()))) {
+					(model.isStartEvent(srcId) || (model.isEndEvent(tarId) && parent.getFlowOutputs().isEmpty()))) {
 				removeEdges.add(e);
 			}
 		}
@@ -113,21 +114,21 @@ public class Bpmn4sCompiler{
 			Element parent = model.getElementById(parentId);
 			if (model.isActivity(parentId) && model.isStartEvent(elId)) {
 				removeElements.add(elId);
-				Edge outFlow = el.getOutputs().get(0);
+				Edge outFlow = el.getFlowOutputs().get(0);
 				model.edges.remove(outFlow);
 				Element tar = model.getElementById(outFlow.getTar());
-				tar.getInputs().remove(0); // FIXME should remove outFlow here but not working, changed for index 0.
+				tar.getFlowInputs().remove(0); // FIXME should remove outFlow here but not working, workaround with index 0.
 			}
 			/*
 			 * Only remove end events if the activity has outgoing flow.
 			 */
 			if(model.isActivity(parentId) &&
-					(model.isEndEvent(elId) && !parent.getOutputs().isEmpty())) {
+					(model.isEndEvent(elId) && !parent.getFlowOutputs().isEmpty())) {
 				removeElements.add(elId);
-				Edge inFlow = el.getInputs().get(0);
+				Edge inFlow = el.getFlowInputs().get(0);
 				model.edges.remove(inFlow);
 				Element src = model.getElementById(inFlow.getSrc());
-				src.getOutputs().remove(0); // FIXME should remove inFlow here but not working, changed for index 0.
+				src.getFlowOutputs().remove(0); // FIXME should remove inFlow here but not working, workaround with index 0.
 			}
 		}
 		for(String el: removeElements) {
@@ -143,27 +144,35 @@ public class Bpmn4sCompiler{
 	 * @note Activities may have nested activities, thus the while loop.
 	 * @param e is the edge to be possibly updated.
 	 * @return nothing
+	 * @throws InvalidModel 
+	 * @assumes activities have a start and an end event.
 	 */
-	private void updateEdge (Edge e) {
+	private void updateEdge (Edge e) throws InvalidModel {
 		boolean updated = true;
 		while(updated) {
 			updated = false;
 			String tarId = e.getTar();
 			if(model.isActivity(tarId)) {
 				Element target = model.getElementById(tarId);
-				Element startEv = model.getStartEvent(target); 
+				Element startEv = model.getStartEvent(target);
+				if(startEv == null) {
+					throw new InvalidModel("Missing start event for activity " + model.getElementById(tarId).getName());
+				}
 				e.tar = getNextFlowElement(startEv).getId();
 				Element newTar = model.getElementById(e.tar);
-				newTar.addInput(e);
+				newTar.addFlowInput(e);
 				updated = true;
 			}
 			String srcId = e.getSrc();
 			if(model.isActivity(srcId)) {
 				Element source = model.getElementById(srcId);
 				Element endEv = model.getEndEvent(source);
+				if(endEv == null) {
+					throw new InvalidModel("Missing end event for activity " + model.getElementById(srcId).getName());
+				}
 				e.src = getPrevFlowElement(endEv).getId();
 				Element newSrc = model.getElementById(e.src);
-				newSrc.addOutput(e);
+				newSrc.addFlowOutput(e);
 				updated = true;
 			}
 		}
@@ -209,16 +218,16 @@ public class Bpmn4sCompiler{
 		String inStr = "inputs\n";
 		String outStr = "outputs\n";
 		
-		for (Edge e: c.getInputs()) {
+		for (Edge e: c.getDataInputs()) {
 			Element node = model.elements.get(e.getSrc());
 			inStr += node.getDataType() + "\t" + compile(node.getId()) + "\n";
 		}
-		for (Edge e: c.getOutputs()) {
+		for (Edge e: c.getDataOutputs()) {
 			Element node = model.elements.get(e.getTar());
 			outStr += node.getDataType() + "\t\t" + compile(node.getId()) + "\n";
 		}
-		if (c.getInputs().isEmpty()) { inStr = "//" + inStr; }
-		if (c.getOutputs().isEmpty()) { outStr = "//" + outStr; }
+		if (c.getDataInputs().isEmpty()) { inStr = "//" + inStr; }
+		if (c.getDataOutputs().isEmpty()) { outStr = "//" + outStr; }
 		return inStr + "\n" + outStr;
 	}
 
@@ -286,7 +295,7 @@ public class Bpmn4sCompiler{
 		List<String> result = new ArrayList<String>();
 		for (Element se: model.elements.values()) {
 			if (se.getType().equals(ElementType.START_EVENT) && isParentComponent( c, se)) { 
-				Edge edge = se.getOutputs().get(0);
+				Edge edge = se.getFlowOutputs().get(0);
 				String tarId = edge.getTar();
 				Element tar = model.getElementById(tarId);
 				if(tar.getType() == ElementType.TASK || tar.getType() == ElementType.AND_GATE) { 
@@ -306,13 +315,15 @@ public class Bpmn4sCompiler{
 	 */	
 	protected List<String> localsFromEndEvents (Element c) {
 		List<String> result = new ArrayList<String>();
-		for (Element se: model.elements.values()) {
+		for (Element ee: model.elements.values()) {
 			String datatype = mapType(c.context.dataType != "" ? c.context.dataType : UNIT_TYPE);
-			if (se.getType().equals(ElementType.END_EVENT) && isParentComponent( c, se)) {
-				Edge edge = se.getInputs().get(0);
-				Element src = model.getElementById(edge.getSrc());
-				if(src.getType() == ElementType.TASK || src.getType() == ElementType.AND_GATE) { 
-					result.add(tabulate(datatype, sanitize(repr(se))));
+			if (ee.getType().equals(ElementType.END_EVENT) && isParentComponent( c, ee)) {
+				Edge edge = getOrDefault(ee.getFlowInputs(), 0, null);
+				if (edge != null) {
+					Element src = model.getElementById(edge.getSrc());
+					if(src.getType() == ElementType.TASK || src.getType() == ElementType.AND_GATE) { 
+						result.add(tabulate(datatype, sanitize(repr(ee))));
+					}
 				}
 			}
 		}
@@ -354,7 +365,7 @@ public class Bpmn4sCompiler{
 					&& !initialized.contains(ds.getId())
 					&& !ds.isReferenceData()
 					&& ((isImmediateParentComponent(cId, ds)) ||
-							(c.hasSource(ds.getId()) || c.hasTarget(ds.getId())))) {   
+							(c.hasDataSource(ds.getId()) || c.hasDataTarget(ds.getId())))) {   
 				
 				if (ds.getInit() != null && ds.getInit() != "") {
 					init += ds.getInit().replace(ds.getName(), compile(ds.getId())) + "\n";
@@ -372,17 +383,15 @@ public class Bpmn4sCompiler{
 	 * initialization further into the flow instead.
 	 * @param cId is the id of the component
 	 * @return
-	 * @throws InvalidModel 
 	 */
-	protected AbstractList<String> getInitialPlaces (String cId) throws InvalidModel {
+	protected AbstractList<String> getInitialPlaces (String cId) {
 		Element c = model.getElementById(cId);
 		ArrayList<String> result = new ArrayList<String>();
 		Element startEvent = model.getStartEvent(c);
 		LinkedList<Element> queue = new LinkedList<Element>();
-		if(startEvent == null) {
-			throw new InvalidModel("Missing start event for compoent " + c.getName());
+		if (startEvent != null) {
+			queue.add(startEvent);
 		}
-		queue.add(startEvent);
 		while(!queue.isEmpty()) {
 			Element next = queue.pop();
 			if (next.getType() == ElementType.START_EVENT) {
@@ -395,7 +404,7 @@ public class Bpmn4sCompiler{
 					result.add(getCompiledXorName(e.getId())); // ignore the start event, and init the xor gate
 				} 
 			}else if (next.getType() == ElementType.AND_GATE) {
-				for (Edge edge: next.getOutputs()) {
+				for (Edge edge: next.getFlowOutputs()) {
 					String tarId = edge.getTar();
 					if (model.isXor(tarId)) {
 						result.add(getCompiledXorName(tarId));
@@ -432,6 +441,13 @@ public class Bpmn4sCompiler{
 		return String.format("between_%s_and_%s", src, dst);
 	}
 	
+	public static <E> E getOrDefault(List<E> list, int index,E defaultValue) {
+	      if (index < 0) {
+	          throw new IllegalArgumentException("index is less than 0: " + index);
+	      }
+	      return index <= list.size() - 1 ? list.get(index) : defaultValue;
+     }
+	
 	
 	private String fabSpecDescription(String cId) {
 		ArrayList<String> desc = new ArrayList<String>();
@@ -453,8 +469,8 @@ public class Bpmn4sCompiler{
 					}
 					task += "case\t\t\t" + "default" + stepConf + "\n";
 					/* 
-					 * Updates, guards, and initializations from the bpmn4s model reach us as Strings. 
-					 * In these strings, data stores, queues, and context are referred to by their user-defined names.
+					 * Updates, guards, and initializations from the bpmn4s are parsed into Strings. 
+					 * In these strings, data stores, queues, and context are identified by their user-defined names.
 					 * Since for simulation we change this names for ids, we also need to do this in the updates 
 					 * strings. Also, both for simulation and test generation, updates and guards related to context 
 					 * variables need to be renamed since we hold the context in different places through the PN. 
@@ -464,13 +480,17 @@ public class Bpmn4sCompiler{
 					Map<String, String> replaceMap = buildReplaceMap(node);
 					/* Note: we assume all inputs of merging AND gates contain exactly the same context data.
 					 */
-					Edge inFlow = node.inputs.get(0);
-					// Name of place that holds source context value for this transition:
-					String preCtxName = sanitize(getPNSourcePlaceName(inFlow));
-					replaceMap.put(compCtxName, preCtxName);
+					Edge inFlow = getOrDefault(node.getFlowInputs(), 0, null);
+					// Name of place that holds source context value for this transition. Some 
+					// tasks may not have in-flow, such as in headless components.
+					String preCtxName = null;
+					if(inFlow != null) {
+						preCtxName = sanitize(getPNSourcePlaceName(inFlow));
+						replaceMap.put(compCtxName, preCtxName);
+					}
 					// INPUTS
 					ArrayList<String> inputs = new ArrayList<String>();
-					for(Edge e: node.getInputs()) {
+					for(Edge e: node.getAllInputs()) {
 						inputs.add(sanitize(getPNSourcePlaceName(e)));
 					}
 					task += "with-inputs\t\t" + String.join(", ", inputs) + "\n";
@@ -479,7 +499,7 @@ public class Bpmn4sCompiler{
 					if (guard != null) {
 						task += "with-guard\t\t" + replaceAll(guard, replaceMap) + "\n";
 					}
-					for(Edge e: node.getOutputs()) {
+					for(Edge e: node.getAllOutputs()) {
 						// Name of place that holds target context value for this transition:
 						String postCtxName = sanitize(getPNTargetPlaceName(e));
 						if (model.isData(e.getTar())) {
@@ -498,7 +518,7 @@ public class Bpmn4sCompiler{
 								task += "constraints {\n" + indent(replaceAll(e.getSymUpdate(), replaceMap)) + "\n}\n";
 							}
 							if (e.isPersistent()) {
-								task += String.format("updates: %s := %s\n",  compile(e.getTar()), compile(e.getTar())) ;
+								task += String.format("updates: %s := %s\n",  compile(e.getTar()), compile(e.getTar()));
 							}
 							if (e.getUpdate() != null && e.getUpdate() != "" ) {
 								task += "updates:" + indent(replaceAll(e.getUpdate(), replaceMap)) + "\n";
@@ -506,16 +526,23 @@ public class Bpmn4sCompiler{
 						} else { // then its context
 							task += "produces-outputs\t" + postCtxName + (e.isSuppressed() ? " suppress\n" : "\n");
 							if (e.getRefUpdate() != null && e.getRefUpdate() != "") {
-								task += "references {\n" + indent(replaceAll(e.getRefUpdate(), replaceMap)) + "\n}\n" ;
+								task += "references {\n" + indent(replaceAll(e.getRefUpdate(), replaceMap)) + "\n}\n";
 							}
 							if (e.getSymUpdate() != null && e.getSymUpdate() != "") {
 								task += "constraints {\n" + indent(replaceAll(e.getSymUpdate(), replaceMap)) + "\n}\n";
 							}
-							// move the context between places in the PN.
-							task += "updates:" + indent(postCtxName + " := " + preCtxName) + "\n";
+							
+							if (preCtxName != null) {
+								// move the context between places in the PN.
+								task += "updates:" + indent(postCtxName + " := " + preCtxName) + "\n";
+							} else {
+								// task without in flowing context (generates token with context)
+								String dataTypeName = model.getElementById(cId).getContextDataType();
+								Bpmn4sDataType dataType = model.dataSchema.get(dataTypeName);
+								task += "updates:" + indent(postCtxName + ":=" + (dataType != null ? dataType.getDefaultInit() : UNITINIT) + "\n");
+							}
 							String update = e.getUpdate();
 							if(update != null && update != "") {
-								// Add users updates. Notice that postCtxName holds the value of preCtxName here.
 								update = replaceWord(update, compCtxName, postCtxName);
 								task += indent(replaceAll(update, replaceMap)) + "\n";
 							}
@@ -554,12 +581,12 @@ public class Bpmn4sCompiler{
 	
 	protected ArrayList<String> getInputOutputIds(Element elem) {
 		ArrayList<String> result = new ArrayList<String>();
-		for (Edge e: elem.getInputs()) {
+		for (Edge e: elem.getAllInputs()) {
 			if(isAPlace(e.getSrc())) {
 				result.add(e.getSrc());
 			}
 		}
-		for (Edge e: elem.getOutputs()) {
+		for (Edge e: elem.getAllOutputs()) {
 			if(isAPlace(e.getTar())) {
 				result.add(e.getTar());
 			}
@@ -611,7 +638,7 @@ public class Bpmn4sCompiler{
 		if(model.isRunTask(source)) {
 			for(Element elem: model.elements.values()) {
 				if (model.isComposeTask(elem.getId())) {
-					for (Edge e: elem.getInputs()) {
+					for (Edge e: elem.getDataInputs()) {
 						Element src = model.getElementById(e.getSrc());
 						if (originDataId.equals(src.getOriginDataNodeId())) {
 							return true;
@@ -658,7 +685,7 @@ public class Bpmn4sCompiler{
 				RecordType rec = RecordType.class.cast(d);
 				String type = "record " + rec.getName() + " {\n";
 				String parameters = "";
-				for (Entry<String, String> e: rec.fields.entrySet()) {
+				for (Entry<String, Bpmn4sDataType> e: rec.fields.entrySet()) {
 					parameters += generateRecordField(e);
 				}
 				type += indent(parameters) + "}\n";
@@ -679,22 +706,22 @@ public class Bpmn4sCompiler{
 		return types;
 	}
 	
-	private String generateRecordField(Entry<String, String> e) {
+	private String generateRecordField(Entry<String, Bpmn4sDataType> e) {
 		String field = "";
 		String fieldName = e.getKey();
-		String fieldTypeName = e.getValue();
-		Bpmn4sDataType dataType = model.dataSchema.get(fieldTypeName); 
-		if (dataType instanceof ListType) {
-			ListType lst = ListType.class.cast(dataType);
+		Bpmn4sDataType fieldDataType = e.getValue(); 
+		if (fieldDataType instanceof ListType) {
+			ListType lst = ListType.class.cast(fieldDataType);
 			field = String.format("%s[]\t%s\n" , mapType(lst.valueType), fieldName); 
-		} else if (dataType instanceof MapType) {
-			MapType mp = MapType.class.cast(dataType);
+		} else if (fieldDataType instanceof MapType) {
+			MapType mp = MapType.class.cast(fieldDataType);
 			field = String.format("map<%s,%s>\t%s\n" , mapType(mp.keyType), mapType(mp.valueType), fieldName);
-		} else if (dataType instanceof SetType) {
-			SetType st = SetType.class.cast(dataType);
+		} else if (fieldDataType instanceof SetType) {
+			SetType st = SetType.class.cast(fieldDataType);
 			field = String.format("set<%s>\t%s\n" , mapType(st.valueType), fieldName);
 		} else {
 			// record, enumerations and basic types go here
+			String fieldTypeName = fieldDataType.getType();
 			field = String.format("%s\t%s\n" , mapType(fieldTypeName), fieldName); 
 		}
 		return field;
@@ -800,7 +827,7 @@ public class Bpmn4sCompiler{
 	 * @return
 	 */
 	private Element getNextFlowElement(Element elem) {
-		String name = elem.outputs.get(0).getTar();
+		String name = elem.getFlowOutputs().get(0).getTar();
 		Element result = model.getElementById(name);
 		return result;
 	}
@@ -811,7 +838,7 @@ public class Bpmn4sCompiler{
 	 * @return
 	 */
 	private Element getPrevFlowElement(Element elem) {
-		String name = elem.inputs.get(0).getSrc();
+		String name = elem.getFlowInputs().get(0).getSrc();
 		Element result = model.getElementById(name);
 		return result;
 	}
@@ -885,7 +912,7 @@ public class Bpmn4sCompiler{
 	 */
 	private void buildXorNet(Element xor, AbstractSet<String> net) {
 		net.add(repr(xor));
-		for(Edge input: xor.getInputs()) {
+		for(Edge input: xor.getFlowInputs()) {
 			String srcId = input.getSrc();
 			if(model.isXor(srcId)) {
 				if(!net.contains(repr(model.getElementById(srcId)))) {
@@ -893,7 +920,7 @@ public class Bpmn4sCompiler{
 				}
 			}
 		}
-		for(Edge output: xor.getOutputs()) {
+		for(Edge output: xor.getFlowOutputs()) {
 			String tarId = output.getTar();
 			if(model.isXor(tarId)) {
 				if(!net.contains(repr(model.getElementById(tarId)))) {
