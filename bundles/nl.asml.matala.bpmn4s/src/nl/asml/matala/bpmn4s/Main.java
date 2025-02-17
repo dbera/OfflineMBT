@@ -8,8 +8,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.camunda.bpm.model.bpmn.Bpmn;
 import org.camunda.bpm.model.bpmn.BpmnModelInstance;
@@ -25,13 +23,25 @@ import org.camunda.bpm.model.bpmn.instance.ExclusiveGateway;
 import org.camunda.bpm.model.bpmn.instance.FlowNode;
 import org.camunda.bpm.model.bpmn.instance.ItemAwareElement;
 import org.camunda.bpm.model.bpmn.instance.ParallelGateway;
+import org.camunda.bpm.model.bpmn.instance.Process;
 import org.camunda.bpm.model.bpmn.instance.SequenceFlow;
 import org.camunda.bpm.model.bpmn.instance.StartEvent;
-import org.camunda.bpm.model.bpmn.instance.Process;
 import org.camunda.bpm.model.bpmn.instance.SubProcess;
 import org.camunda.bpm.model.bpmn.instance.Task;
 import org.camunda.bpm.model.xml.instance.ModelElementInstance;
 
+import nl.asml.matala.bpmn4s.bpmn4s.BaseType;
+import nl.asml.matala.bpmn4s.bpmn4s.Bpmn4s;
+import nl.asml.matala.bpmn4s.bpmn4s.Bpmn4sCompiler;
+import nl.asml.matala.bpmn4s.bpmn4s.Bpmn4sDataType;
+import nl.asml.matala.bpmn4s.bpmn4s.Edge;
+import nl.asml.matala.bpmn4s.bpmn4s.Element;
+import nl.asml.matala.bpmn4s.bpmn4s.ElementType;
+import nl.asml.matala.bpmn4s.bpmn4s.EnumerationType;
+import nl.asml.matala.bpmn4s.bpmn4s.ListType;
+import nl.asml.matala.bpmn4s.bpmn4s.MapType;
+import nl.asml.matala.bpmn4s.bpmn4s.RecordType;
+import nl.asml.matala.bpmn4s.bpmn4s.SetType;
 import nl.asml.matala.bpmn4s.extensions.DataType;
 import nl.asml.matala.bpmn4s.extensions.DataTypeImpl;
 import nl.asml.matala.bpmn4s.extensions.Field;
@@ -39,18 +49,6 @@ import nl.asml.matala.bpmn4s.extensions.FieldImpl;
 import nl.asml.matala.bpmn4s.extensions.Literal;
 import nl.asml.matala.bpmn4s.extensions.LiteralImpl;
 import nl.asml.matala.bpmn4s.extensions.TargetDataRefImpl;
-import nl.asml.matala.bpmn4s.bpmn4s.BaseType;
-import nl.asml.matala.bpmn4s.bpmn4s.Bpmn4s;
-import nl.asml.matala.bpmn4s.bpmn4s.ElementType;
-import nl.asml.matala.bpmn4s.bpmn4s.EnumerationType;
-import nl.asml.matala.bpmn4s.bpmn4s.ListType;
-import nl.asml.matala.bpmn4s.bpmn4s.MapType;
-import nl.asml.matala.bpmn4s.bpmn4s.RecordType;
-import nl.asml.matala.bpmn4s.bpmn4s.SetType;
-import nl.asml.matala.bpmn4s.bpmn4s.Bpmn4sCompiler;
-import nl.asml.matala.bpmn4s.bpmn4s.Edge;
-import nl.asml.matala.bpmn4s.bpmn4s.Element;
-import nl.asml.matala.bpmn4s.bpmn4s.Bpmn4sDataType;
 
 
 public class Main {

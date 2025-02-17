@@ -5,8 +5,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import nl.asml.matala.bpmn4s.Logging;
-
 
 class MsgQueue extends Element {
 	MsgQueue() {
