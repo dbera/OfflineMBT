@@ -14,15 +14,14 @@ Require-Bundle: org.eclipse.xtext,
  org.eclipse.emf.common,
  org.antlr.runtime;bundle-version="[3.2.0,3.2.1)"
 Bundle-RequiredExecutionEnvironment: JavaSE-21
-Export-Package: nl.esi.comma.json.scoping,
+Export-Package: nl.esi.comma.json,
  nl.esi.comma.json.json,
- nl.esi.comma.json.validation,
- nl.esi.comma.json.json.util,
  nl.esi.comma.json.json.impl,
- nl.esi.comma.json.serializer,
+ nl.esi.comma.json.json.util,
  nl.esi.comma.json.parser.antlr,
- nl.esi.comma.json.generator,
- nl.esi.comma.json,
+ nl.esi.comma.json.parser.antlr.internal,
+ nl.esi.comma.json.scoping,
+ nl.esi.comma.json.serializer,
  nl.esi.comma.json.services,
- nl.esi.comma.json.parser.antlr.internal
+ nl.esi.comma.json.validation
 Import-Package: org.apache.log4j

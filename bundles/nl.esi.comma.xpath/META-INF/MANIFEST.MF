@@ -16,13 +16,12 @@ Require-Bundle: org.eclipse.xtext,
 Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: nl.esi.comma.xpath,
  nl.esi.comma.xpath.parser.antlr,
+ nl.esi.comma.xpath.parser.antlr.internal,
+ nl.esi.comma.xpath.scoping,
+ nl.esi.comma.xpath.serializer,
+ nl.esi.comma.xpath.services,
+ nl.esi.comma.xpath.validation,
  nl.esi.comma.xpath.xpath,
  nl.esi.comma.xpath.xpath.impl,
- nl.esi.comma.xpath.scoping,
- nl.esi.comma.xpath.parser.antlr.internal,
- nl.esi.comma.xpath.generator,
- nl.esi.comma.xpath.validation,
- nl.esi.comma.xpath.services,
- nl.esi.comma.xpath.serializer,
  nl.esi.comma.xpath.xpath.util
 Import-Package: org.apache.log4j

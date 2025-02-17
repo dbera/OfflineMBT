@@ -12,4 +12,5 @@ Require-Bundle: nl.esi.comma.xpath,
  org.antlr.runtime;bundle-version="[3.2.0,3.2.1)"
 Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: nl.esi.comma.xpath.ide.contentassist.antlr.internal,
- nl.esi.comma.xpath.ide.contentassist.antlr
+ nl.esi.comma.xpath.ide.contentassist.antlr,
+ nl.esi.comma.xpath.ide.contentassist
