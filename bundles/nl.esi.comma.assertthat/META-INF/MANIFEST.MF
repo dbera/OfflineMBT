@@ -12,7 +12,9 @@ Require-Bundle: org.eclipse.xtext,
  org.eclipse.xtext.xbase.lib;bundle-version="2.36.0",
  org.eclipse.xtend.lib;bundle-version="2.36.0",
  org.eclipse.emf.common,
- org.antlr.runtime;bundle-version="[3.2.0,3.2.1)"
+ org.antlr.runtime;bundle-version="[3.2.0,3.2.1)",
+ nl.esi.comma.xpath;bundle-version="4.2.0",
+ nl.esi.comma.json;bundle-version="4.2.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: nl.esi.comma.assertthat,
  nl.esi.comma.assertthat.assertThat,
