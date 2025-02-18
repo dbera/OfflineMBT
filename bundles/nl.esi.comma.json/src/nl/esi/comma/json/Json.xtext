@@ -24,11 +24,3 @@ JsonNumeric:
 JsonValue:
     {JsonValue} STRING | {JsonValue} BOOL_LITERAL | JsonNumeric | JsonObject | JsonArray 
 ;
-
-StringOrStringArray:
-    item = STRING | array = '[' ((values+=STRING) (',' values+=STRING)*)? ']'
-;
-
-NumericOrNumericArray:
-    item=JsonNumeric |  array = '[' ((values+=JsonNumeric) (',' values+=JsonNumeric)*)? ']'
-;
