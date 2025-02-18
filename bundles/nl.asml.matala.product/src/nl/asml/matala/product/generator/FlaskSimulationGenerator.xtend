@@ -55,12 +55,11 @@ class FlaskSimulationGenerator
 	    import shutil
 	    
 	    from flask import Flask, request, jsonify
-	    from flask_cors import CORS
 	    from CPNServer import get_cpn, load_module, unload_module
 	    
 	    # Initiating a Flask application
 	    app = Flask(__name__)
-	    CORS(app)
+	    
 	    
 	    # The endpoint of our flask app
 	    @app.route(rule="/BPMNParser", methods=["POST"])
