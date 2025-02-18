@@ -8,6 +8,15 @@ import nl.esi.comma.types.types.TypesPackage
 import org.eclipse.emf.common.util.URI
 import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.validation.Check
+import nl.asml.matala.product.product.Product
+import java.util.HashSet
+import java.util.Map
+import java.util.Set
+import java.util.HashMap
+import nl.esi.comma.expressions.expression.Variable
+import nl.esi.comma.expressions.expression.ExpressionVariable
+import nl.asml.matala.product.product.ProductPackage
+import nl.asml.matala.product.product.Block
 
 /**
  * This class contains custom validation rules. 
@@ -28,6 +37,48 @@ class ProductValidator extends AbstractProductValidator {
         }*/
         }
     }
+    
+    
+    /**
+     * Check the duplication of variables in Inputs
+     */
+     
+     @Check
+     def checkInputDuplication(Block b){ 
+            var HashSet<String> existingInputs = new HashSet<String>();
+            for (input : b.invars) {
+                if (!existingInputs.add(input.name)) {
+                    error("There exists a variable name in inputs with the same name" ,  ProductPackage.Literals.BLOCK__INVARS)  
+                }
+            }
+        }
+
+    /**
+     * Check the duplication of variables in Outputs
+     */
+     @Check
+     def checkOutputDuplication(Block b){
+           var HashSet<String> existingOutputs = new HashSet<String>();
+            for (output : b.outvars) {
+                if (!existingOutputs.add(output.name)) {
+                    error("There exists a variable name in outputs with the same name" ,  ProductPackage.Literals.BLOCK__OUTVARS)  
+                }
+            }
+        }
+    
+      /**
+     * Check the duplication of variables in Local
+     */
+     @Check
+     def checkLocalDuplication(Block b){
+        var HashSet<String> existingLocalvars = new HashSet<String>();
+            for (localvars : b.localvars) {
+                if (!existingLocalvars.add(localvars.name)) {
+                    error("There exists a variable name in local with the same name" ,  ProductPackage.Literals.BLOCK__LOCALVARS)  
+                }
+            }
+        }
+
     
     
     /* STRANGE BUG: Output Vars are Empty. Appears in Input Vars. 
