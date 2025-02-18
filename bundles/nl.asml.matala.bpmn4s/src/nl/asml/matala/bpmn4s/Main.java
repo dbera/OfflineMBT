@@ -115,7 +115,11 @@ public class Main {
         			@Override
         			protected String repr(Element el) {
         				return el.getId();
-        			}		
+        			}
+        			@Override
+        			protected String getFullyQualifiedName(Element el) {
+        				return repr(el);
+        			}
         			@Override
         			protected String getCompiledXorName(String xorId) {
         				return repr(model.getElementById(xorId));
@@ -277,7 +281,8 @@ public class Main {
 		String origin = getOriginDataReference(elem);
 		node.setOriginDataNodeId(origin != null ? origin : id);
 		node.setParent(getParentId(elem));
-		node.setComponent(getParentComponents(elem));
+		node.setFullyQualifiedName(getFullyQualifiedName(elem));
+		node.setParentComponent(getParentComponents(elem));
 		String datatyperef = elem.getAttributeValueNs("http://bpmn4s", "dataTypeRef");
 		DataType dt = getExtensionElementById(modelInst, DataType.class, datatyperef);
 		String dtname = dt != null? dt.getAttributeValue("name"): datatyperef;
@@ -475,7 +480,8 @@ public class Main {
 		node.setId(id);
 		if (elem instanceof FlowNode) {
 			node.setParent(getParentId(elem));
-			node.setComponent(getParentComponents(elem));
+			node.setFullyQualifiedName(getFullyQualifiedName(elem));
+			node.setParentComponent(getParentComponents(elem));
 			node.setGuard(elem.getAttributeValueNs("http://bpmn4s", "guard"));
 			node.setStepType(elem.getAttributeValueNs("http://bpmn4s", "stepType"));
 		}
@@ -555,6 +561,24 @@ public class Main {
 		return result;
 	}
 	
+	/*
+	 * Note that we use the separator <@> which is not allowed 
+	 * in the editor ids but is a allowed in pspec ids.
+	 */
+	static String getFullyQualifiedName (ModelElementInstance elem) {
+		ArrayList<String> parentsList = new ArrayList<String>();
+		ModelElementInstance parent = elem.getParentElement();
+		while(parent != null) {
+			String parentType = parent.getElementType().getTypeName();
+			if(parentType.equals("process") || isComponent(parent)) {
+				parentsList.add(0, getName(parent));
+			}
+			parent = parent.getParentElement();
+		}
+		String result = "";
+		result = String.join("@", parentsList) + "@" + getName(elem);
+		return result;
+	}
 	
 	static String getParentId(ModelElementInstance elem) {
 		ModelElementInstance parent = elem.getParentElement();

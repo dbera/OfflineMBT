@@ -448,6 +448,9 @@ public class Bpmn4sCompiler{
 	      return index <= list.size() - 1 ? list.get(index) : defaultValue;
      }
 	
+	protected String getFullyQualifiedName(Element el) {
+		return sanitize(el.getFullyQualifiedName());
+	}
 	
 	private String fabSpecDescription(String cId) {
 		ArrayList<String> desc = new ArrayList<String>();
@@ -459,7 +462,7 @@ public class Bpmn4sCompiler{
 					String task = "";
 					// Name of context as defined by user at front end:
 					String compCtxName = model.getElementById(cId).getContextName();  
-					task += "action\t\t\t" + sanitize(repr(node)) + "\n";
+					task += "action\t\t\t" + getFullyQualifiedName(node) + "\n";
 					// STEP TYPE
 					String stepConf = "";
 					if (model.isComposeTask(node.getId())) {
@@ -809,7 +812,7 @@ public class Bpmn4sCompiler{
 	 * but PSpec is more restrictive so we replace them.
 	 */
 	protected String sanitize(String str) {
-		String result = str.replaceAll("\\p{Zs}+", "").replace(".", "");
+		String result = str.replaceAll("\\p{Zs}+", "").replace(".", "").replace("-","");
 		return result;
 	}
 
@@ -863,11 +866,10 @@ public class Bpmn4sCompiler{
 	
 	/**
 	 * Get the identifier of a bpmn4s Element <el>
-	 * While the compiler for test generation (this) returns the name of the element,
-	 * the compiler for simulation will return the element's id.
+	 * Return a sanitized version of the elemnt's name chosen by the modeler.
+	 * The compiler for simulation overrides this method and returns the element's id.
 	 */
 	protected String repr(Element el) {
-//		Logging.logDebug(el.getId());
 		return sanitize(el.getName());
 	}
 	
