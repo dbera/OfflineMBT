@@ -574,7 +574,7 @@ public class Bpmn4sCompiler{
 	
 	/**
 	 * In simulation mode, some flows between bpmn4s elements introduce transitions in the CPN. 
-	 * Imagine a flow between to XOR gates for instance. In general, if two elements are connected with a flow
+	 * Imagine a flow between two XOR gates for instance. In general, if two elements are connected with a flow
 	 * and their CPN semantics is a place, then a transition needs to be added. For test generation, we optimize
 	 * the model such that this flows do not exist anymore, so that we reduce spurious non-determinism.
 	 */

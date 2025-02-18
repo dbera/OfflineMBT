@@ -134,7 +134,7 @@ public class Element {
 		return parent;
 	}
 	
-	public void setParentComponent (ArrayList<String> cname) {
+	public void setParentComponents (ArrayList<String> cname) {
 		parentComponents = cname;
 	}
 	
