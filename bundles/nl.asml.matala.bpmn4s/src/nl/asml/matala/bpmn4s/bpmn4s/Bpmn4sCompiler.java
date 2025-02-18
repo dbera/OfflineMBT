@@ -455,7 +455,7 @@ public class Bpmn4sCompiler{
 			if (isParentComponent(cId, node)) { 
 				ElementType nodeType = node.getType();
 				// Tasks and Parallel gates are transitions in the CPN
-				if( nodeType == ElementType.TASK  || nodeType == ElementType.AND_GATE ) {			
+				if( nodeType == ElementType.TASK  || nodeType == ElementType.AND_GATE ) {
 					String task = "";
 					// Name of context as defined by user at front end:
 					String compCtxName = model.getElementById(cId).getContextName();  
@@ -533,7 +533,7 @@ public class Bpmn4sCompiler{
 							}
 							
 							if (preCtxName != null) {
-								// move the context between places in the PN.
+								// move the context between places in the PN.(**1)
 								task += "updates:" + indent(postCtxName + " := " + preCtxName) + "\n";
 							} else {
 								// task without in flowing context (generates token with context)
@@ -543,7 +543,7 @@ public class Bpmn4sCompiler{
 							}
 							String update = e.getUpdate();
 							if(update != null && update != "") {
-								update = replaceWord(update, compCtxName, postCtxName);
+								update = replaceWord(update, compCtxName, postCtxName); // (**1) postCtxName == preCtxName
 								task += indent(replaceAll(update, replaceMap)) + "\n";
 							}
 						}
@@ -858,7 +858,7 @@ public class Bpmn4sCompiler{
 					.map(e -> repr(model.getElementById(e)))
 					.collect(Collectors.toList())) + repr(el);
 		}
-		return repr(model.getElementById(elId));
+		return repr(el);
 	}
 	
 	/**
@@ -867,6 +867,7 @@ public class Bpmn4sCompiler{
 	 * the compiler for simulation will return the element's id.
 	 */
 	protected String repr(Element el) {
+//		Logging.logDebug(el.getId());
 		return el.getName();
 	}
 	
