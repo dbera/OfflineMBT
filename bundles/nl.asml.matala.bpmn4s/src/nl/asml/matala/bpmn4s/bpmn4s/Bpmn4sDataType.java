@@ -5,11 +5,11 @@ public class Bpmn4sDataType {
 	static final String RECORD_TYPE = "record";
 	static final String MAP_TYPE = "map";
 	static final String LIST_TYPE = "list";
-	static final String ENUM_TYPE = "Enumeration";
-	static final String BOOL_TYPE = "Boolean";
-	static final String INT_TYPE = "Int";
-	static final String STRING_TYPE = "String";
-	static final String FLOAT_TYPE = "Float";
+	static final String ENUM_TYPE = "enum";
+	static final String BOOL_TYPE = "boolean";
+	static final String INT_TYPE = "int";
+	static final String STRING_TYPE = "string";
+	static final String FLOAT_TYPE = "float";
 	static final String NO_TYPE = "notype";
 	
 	String name = new String();
@@ -43,8 +43,5 @@ public class Bpmn4sDataType {
 	public String getType() {
 		return type;
 	}
-	
-	public String getDefaultInit() {
-		return "null";
-	}
+
 }

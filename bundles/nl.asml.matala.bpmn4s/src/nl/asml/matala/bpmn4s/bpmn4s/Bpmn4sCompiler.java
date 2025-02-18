@@ -531,20 +531,18 @@ public class Bpmn4sCompiler{
 							if (e.getSymUpdate() != null && e.getSymUpdate() != "") {
 								task += "constraints {\n" + indent(replaceAll(e.getSymUpdate(), replaceMap)) + "\n}\n";
 							}
-							
+							String updates = "";
 							if (preCtxName != null) {
-								// move the context between places in the PN.(**1)
-								task += "updates:" + indent(postCtxName + " := " + preCtxName) + "\n";
-							} else {
-								// task without in flowing context (generates token with context)
-								String dataTypeName = model.getElementById(cId).getContextDataType();
-								Bpmn4sDataType dataType = model.dataSchema.get(dataTypeName);
-								task += "updates:" + indent(postCtxName + ":=" + (dataType != null ? dataType.getDefaultInit() : UNITINIT) + "\n");
+								// if there is in-flow, move the context between places in the PN.(**1)
+								updates += indent(postCtxName + " := " + preCtxName) + "\n";
 							}
 							String update = e.getUpdate();
 							if(update != null && update != "") {
 								update = replaceWord(update, compCtxName, postCtxName); // (**1) postCtxName == preCtxName
-								task += indent(replaceAll(update, replaceMap)) + "\n";
+								updates += indent(replaceAll(update, replaceMap)) + "\n";
+							}
+							if (updates != "") {
+								task +=  "updates:\n" + updates;
 							}
 						}
 					}
@@ -685,7 +683,7 @@ public class Bpmn4sCompiler{
 				RecordType rec = RecordType.class.cast(d);
 				String type = "record " + rec.getName() + " {\n";
 				String parameters = "";
-				for (Entry<String, Bpmn4sDataType> e: rec.fields.entrySet()) {
+				for (Entry<String, String> e: rec.fields.entrySet()) {
 					parameters += generateRecordField(e);
 				}
 				type += indent(parameters) + "}\n";
@@ -705,28 +703,27 @@ public class Bpmn4sCompiler{
 		}
 		return types;
 	}
-	
-	private String generateRecordField(Entry<String, Bpmn4sDataType> e) {
+
+	private String generateRecordField(Entry<String, String> e) {
 		String field = "";
 		String fieldName = e.getKey();
-		Bpmn4sDataType fieldDataType = e.getValue(); 
-		if (fieldDataType instanceof ListType) {
-			ListType lst = ListType.class.cast(fieldDataType);
+		String fieldTypeName = e.getValue();
+		Bpmn4sDataType dataType = model.dataSchema.get(fieldTypeName); 
+		if (dataType instanceof ListType) {
+			ListType lst = ListType.class.cast(dataType);
 			field = String.format("%s[]\t%s\n" , mapType(lst.valueType), fieldName); 
-		} else if (fieldDataType instanceof MapType) {
-			MapType mp = MapType.class.cast(fieldDataType);
+		} else if (dataType instanceof MapType) {
+			MapType mp = MapType.class.cast(dataType);
 			field = String.format("map<%s,%s>\t%s\n" , mapType(mp.keyType), mapType(mp.valueType), fieldName);
-		} else if (fieldDataType instanceof SetType) {
-			SetType st = SetType.class.cast(fieldDataType);
+		} else if (dataType instanceof SetType) {
+			SetType st = SetType.class.cast(dataType);
 			field = String.format("set<%s>\t%s\n" , mapType(st.valueType), fieldName);
 		} else {
 			// record, enumerations and basic types go here
-			String fieldTypeName = fieldDataType.getType();
 			field = String.format("%s\t%s\n" , mapType(fieldTypeName), fieldName); 
 		}
 		return field;
 	}
-
 	/**
 	 * Basic types in BPMN4S editor start with upper case, 
 	 * while in pspec they are lower cased.
