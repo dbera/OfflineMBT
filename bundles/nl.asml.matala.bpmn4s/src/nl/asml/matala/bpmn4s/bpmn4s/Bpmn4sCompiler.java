@@ -596,7 +596,7 @@ public class Bpmn4sCompiler{
 	
 	
 	/**
-	 * Fetch the names of components that poses a RUN task.
+	 * Fetch the names of components that contain a RUN task.
 	 * @return List with components names
 	 */
 	private ArrayList<String> listSUTcomponents () {
@@ -868,7 +868,7 @@ public class Bpmn4sCompiler{
 	 */
 	protected String repr(Element el) {
 //		Logging.logDebug(el.getId());
-		return el.getName();
+		return sanitize(el.getName());
 	}
 	
 	private String getOriginDataNode(String id) {
