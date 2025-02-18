@@ -5,6 +5,7 @@ generate product "http://www.asml.nl/matala/product/Product"
 import "http://www.esi.nl/comma/signature/InterfaceSignature" as sig 
 import "http://www.esi.nl/comma/types/Types" as types
 import "http://www.esi.nl/comma/expressions/Expression" as expr
+import "http://www.esi.nl/comma/assertthat/AssertThat" as assertthat
 
 @Override
 ModelContainer returns types::ModelContainer:
