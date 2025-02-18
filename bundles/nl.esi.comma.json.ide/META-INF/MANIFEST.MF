@@ -9,8 +9,7 @@ Bundle-ActivationPolicy: lazy
 Require-Bundle: nl.esi.comma.json,
  org.eclipse.xtext.ide,
  org.eclipse.xtext.xbase.ide,
- org.antlr.runtime;bundle-version="[3.2.0,3.2.1)",
- nl.esi.comma.expressions.ide;bundle-version="4.2.0"
+ org.antlr.runtime;bundle-version="[3.2.0,3.2.1)"
 Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: nl.esi.comma.json.ide.contentassist.antlr,
  nl.esi.comma.json.ide.contentassist.antlr.internal,
