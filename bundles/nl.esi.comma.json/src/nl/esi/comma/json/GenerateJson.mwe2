@@ -28,6 +28,8 @@ Workflow {
 			name = "nl.esi.comma.json.Json"
 			fileExtensions = "json"
 
+            referencedResource = "platform:/resource/nl.esi.comma.expressions/model/generated/Expression.genmodel"
+
 			serializer = {
 				generateStub = false
 			}
