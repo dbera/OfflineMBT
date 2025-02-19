@@ -189,7 +189,7 @@ AssertClose:
 ;
 
 AssertMatch:
-    'matching' outRegex=StringOrArray
+    'match-regex' outRegex=StringOrArray
 ;
 
 AssertSize:
