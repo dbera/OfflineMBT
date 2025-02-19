@@ -189,7 +189,7 @@ AssertClose:
 ;
 
 AssertMatch:
-    'match-regex' outRegex=StringOrArray
+    'matching-regex' outRegex=StringOrArray
 ;
 
 AssertSize:
@@ -199,10 +199,10 @@ AssertSize:
 // Assertion of XPath outputs
 AssertThatXPath:
     'has' '{'
+    'value' '{' assertRef += AssertXPathValidations+ '}'
     ( namespace = AssertNamespace )? 
     ( globalMargin = AssertGlobalMargin )? 
     ( globalRegex = AssertGlobalRegex )?
-    'value' '{' assertRef += AssertXPathValidations+ '}'
     '}'
 ;
 
@@ -224,7 +224,7 @@ XPathItem: {XPathItem}
 
 
 AssertXPathValidations: {AssertXPathValidations}
-    ( xpathItem = XPathItem ) validation = AssertionXPathValidationTypes
+    ( 'by' xpathItem = XPathItem ) validation = AssertionXPathValidationTypes
 ;
 
 AssertionXPathValidationTypes:
@@ -235,14 +235,14 @@ AssertionXPathValidationTypes:
 AssertThatXMLFile:
     'and' reference = ExpressionBracket
     'have' '{'
+    'value' '{' assertRef += AssertXmlValidations+ '}'
     ( namespace = AssertNamespace )? 
     ( globalMargin = AssertGlobalMargin )? 
-    'value' '{' assertRef += AssertXmlValidations+ '}'
     '}'
 ;
 
 AssertXmlValidations: {AssertXmlValidations}
-    ( xpathItem = XPathItem ) validation = AssertionXmlValidationTypes
+    ( 'by' xpathItem = XPathItem ) validation = AssertionXmlValidationTypes
 ;
 
 AssertionXmlValidationTypes: 
