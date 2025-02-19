@@ -6,6 +6,7 @@ import static nl.esi.comma.expressions.validation.ExpressionValidator.identical;
 import static nl.esi.comma.expressions.validation.ExpressionValidator.intType;
 import static nl.esi.comma.expressions.validation.ExpressionValidator.numeric;
 import static nl.esi.comma.expressions.validation.ExpressionValidator.realType;
+import static nl.esi.comma.expressions.validation.ExpressionValidator.stringType;
 import static nl.esi.comma.expressions.validation.ExpressionValidator.subTypeOf;
 import static nl.esi.comma.expressions.validation.ExpressionValidator.typeOf;
 import static nl.esi.comma.types.utilities.TypeUtilities.getBaseType;
@@ -251,6 +252,25 @@ public enum ExpressionFunction {
 		@Override
 		public String getDocumentation() {
 			return String.format("<T> %s(vector<T>, int): T", name());
+		}
+	},
+	uuid {
+		@Override
+		public TypeObject inferType(List<Expression> args) {
+			return stringType;
+		}
+
+		@Override
+		public Pair<Integer, String> validate(List<Expression> args) {
+			if (args.size() != 0) {
+				return Pair.of(-1, "Function uuid expects no argument");
+			}
+			return null;
+		}
+
+		@Override
+		public String getDocumentation() {
+			return String.format("%s(): string", name());
 		}
 	};
 
