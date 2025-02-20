@@ -5,6 +5,7 @@ generate product "http://www.asml.nl/matala/product/Product"
 import "http://www.esi.nl/comma/signature/InterfaceSignature" as sig 
 import "http://www.esi.nl/comma/types/Types" as types
 import "http://www.esi.nl/comma/expressions/Expression" as expr
+import "http://www.esi.nl/comma/assertthat/AssertThat" as assertthat
 
 @Override
 ModelContainer returns types::ModelContainer:
@@ -90,6 +91,7 @@ VarRef:
 	ref = [expr::Variable|ID] 
 	(dataConstraints = DataConstraints)?
 	(dataReferences = DataReferences)? 
+	(dataAssertions = DataAssertions)? 
 ;
 
 DataConstraints: {DataConstraints}
@@ -110,4 +112,146 @@ RefConstraint:
 
 SymbConstraint:
 	name=ID ':' symbExpr = Expression
+;
+
+//TODO Refactor as Grammar Mixins
+
+///// Json Grammar obtained from https://gist.github.com/nightscape/629651
+
+JsonObject:
+    '{' (members+=JsonMember) (',' members+=JsonMember)* '}'
+;
+
+JsonMember:
+    key=STRING ':' value=JsonValue
+;
+
+JsonArray:
+    '[' (values+=JsonValue) (',' values+=JsonValue)* ']'
+
+;
+
+JsonNumeric: 
+    {JsonNumeric} (Expression::FLOAT | Expression::Long)
+;
+
+JsonValue:
+    {JsonValue} STRING | {JsonValue} Expression::BOOL_LITERAL | JsonNumeric | JsonObject | JsonArray 
+;
+
+StringOrArray:
+    item = STRING | '[' (values+=STRING) (',' values+=STRING)* ']'
+;
+
+NumericOrArray:
+    item = JsonNumeric | '[' (values+=JsonNumeric) (',' values+=JsonNumeric)* ']'
+;
+
+///// assert-that DSL (et al.)
+
+DataAssertions: {DataAssertions}
+    'assertions' '{' 
+        constr += AssertThatBlock*
+     '}'
+;
+
+AssertThatBlock:
+    'assert-that' output=ExpressionBracket
+        (
+              val=AssertThatValue 
+            | xpath=AssertThatXPath 
+            | xmlFiles=AssertThatXMLFile
+        )
+;
+
+enum MARGIN_TYPE:
+    ABSOLUTE='absolute'
+    | RELATIVE='relative'
+    | NONE='none';
+
+MargingItem:
+    type=MARGIN_TYPE '(' (marginVal=JsonNumeric)? ')';
+
+// Assertion of Value outputs
+AssertThatValue:
+    'is' '{' type=AssertionValueValidationTypes '}'
+;
+
+AssertionValueValidationTypes:
+    AssertEq | AssertClose | AssertMatch | AssertSize;
+
+AssertEq:
+    'equal-to' outRef=JsonValue ('within-margin' outMrg=MargingItem)? (asRegex ?= 'as-regex')?
+;
+
+AssertClose:
+    'close-to' outClo=NumericOrArray ('within-margin' outMrg=MargingItem)?
+;
+
+AssertMatch:
+    'matching-regex' outRegex=StringOrArray
+;
+
+AssertSize:
+    'of-size' itLen=INT
+;
+
+// Assertion of XPath outputs
+AssertThatXPath:
+    'has' '{'
+    'value' '{' assertRef += AssertXPathValidations+ '}'
+    ( namespace = AssertNamespace )? 
+    ( globalMargin = AssertGlobalMargin )? 
+    ( globalRegex = AssertGlobalRegex )?
+    '}'
+;
+
+AssertNamespace: {AssertNamespace}
+      'using-namespace-context' namespaceMap = JsonObject
+;
+
+AssertGlobalMargin: {AssertGlobalMargin}
+    'using-global-margin' globalMrg = MargingItem
+;
+
+AssertGlobalRegex: {AssertGlobalRegex}
+     globalRegex ?= 'using-all-strings-as-regex'
+;
+
+XPathItem: {XPathItem}
+    'xpath' '(' xpathExpr = STRING  ( ',' 'log-id' ':=' loggingId = STRING )? ')'
+;
+
+
+AssertXPathValidations: {AssertXPathValidations}
+    ( 'by' xpathItem = XPathItem ) validation = AssertionXPathValidationTypes
+;
+
+AssertionXPathValidationTypes:
+    AssertionValueValidationTypes
+;
+
+// Assertion of XMLFile outputs
+AssertThatXMLFile:
+    'and' reference = ExpressionBracket
+    'have' '{'
+    'value' '{' assertRef += AssertXmlValidations+ '}'
+    ( namespace = AssertNamespace )? 
+    ( globalMargin = AssertGlobalMargin )? 
+    '}'
+;
+
+AssertXmlValidations: {AssertXmlValidations}
+    ( 'by' xpathItem = XPathItem ) validation = AssertionXmlValidationTypes
+;
+
+AssertionXmlValidationTypes: 
+    AssertIdentical | AssertSimilar
+;
+
+AssertIdentical: {AssertIdentical}
+    areIdentical ?= 'are-identical' 
+;
+AssertSimilar: {AssertSimilar}
+    areSimilar ?= 'are-similar' ('within-margin' localMargin=MargingItem)?
 ;

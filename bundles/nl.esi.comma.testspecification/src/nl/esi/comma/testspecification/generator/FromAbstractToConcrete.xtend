@@ -1,23 +1,22 @@
 package nl.esi.comma.testspecification.generator
 
+import java.util.ArrayList
+import java.util.HashMap
 import java.util.HashSet
+import java.util.List
 import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
+import nl.esi.comma.expressions.expression.ExpressionFunctionCall
 import nl.esi.comma.expressions.expression.ExpressionRecordAccess
 import nl.esi.comma.expressions.expression.ExpressionVariable
 import nl.esi.comma.expressions.expression.ExpressionVector
-import nl.esi.comma.testspecification.testspecification.AbstractStep
 import nl.esi.comma.testspecification.testspecification.AbstractTestDefinition
 import nl.esi.comma.testspecification.testspecification.Binding
 import nl.esi.comma.testspecification.testspecification.ComposeStep
-import nl.esi.comma.testspecification.testspecification.ConstraintStep
 import nl.esi.comma.testspecification.testspecification.NestedKeyValuesPair
 import nl.esi.comma.testspecification.testspecification.RunStep
+import nl.esi.comma.testspecification.testspecification.StepReference
 import org.eclipse.emf.common.util.BasicEList
 import org.eclipse.emf.common.util.EList
-import nl.esi.comma.testspecification.testspecification.StepReference
-import nl.esi.comma.testspecification.testspecification.TSMain
-import java.util.List
-import nl.esi.comma.expressions.expression.ExpressionFunctionCall
 
 class FromAbstractToConcrete 
 {
@@ -46,9 +45,9 @@ class FromAbstractToConcrete
 			step-id    step_«step.name»
 			step-type  «step.stepType.get(0)»
 			step-input «step.name.split("_").get(0)»Input
-			«IF !printOutputs(step).toString.nullOrEmpty»
+			«IF !_printOutputs_(step).toString.nullOrEmpty»
 			ref-to-step-output
-				«printOutputs(step)»
+				«_printOutputs_(step)»
 			«ENDIF»
 			«ENDFOR»
 		«ENDFOR»
@@ -65,106 +64,203 @@ class FromAbstractToConcrete
 
 	'''
 
-	def printKVInputPairs(String prefix, String field, EList<NestedKeyValuesPair> pairs) {
-		var kv = ""
-		for (p : pairs) {
-			for (a : p.actions) {
-				kv += prefix + "." + field + printRecord("", "", null, a as RecordFieldAssignmentAction) + "\n"
-			}
-		}
-		return kv
-	}
+    /*
+     * Support Interleaving of Compose and Run Steps
+     */
 
-	def printRecord(String stepName, String prefix, EList<StepReference> stepRef, RecordFieldAssignmentAction rec) {
-		var field = printField(rec.fieldAccess)
-		var value = (new ExpressionGenerator(stepRef,stepName)).exprToComMASyntax(rec.exp)
-		var p = (rec.exp instanceof ExpressionVector || rec.exp instanceof ExpressionFunctionCall) ? "" : prefix
-		return field + " := " + p + value
-	}
+    def _printRecord_(String composeStepName, String runStepName, 
+        EList<StepReference> stepRef, RecordFieldAssignmentAction rec, boolean isFirstCompose) {
 
-	dispatch def String printField(ExpressionRecordAccess exp) {
-		return printField(exp.record) + "." + exp.field.name
-	}
+        // run block input data structure = concrete tspec step input data structure
+        var blockInputName = new String //runStepName.split("_").get(0) + "Input" 
+        var pi = new String // blockInputName + "." + runStepName
 
-	dispatch def String printField(ExpressionVariable exp) {
-		return ""
-	}
+        // System.out.println(" FIELD: " + printField(rec.fieldAccess, true))
+        var field = new String
+        if(isFirstCompose) {
+            blockInputName = runStepName.split("_").get(0) + "Input" 
+            pi = blockInputName + "." //+ runStepName
+            field = printField(rec.fieldAccess, true)
+        } else field = printField(rec.fieldAccess, true)
 
-	def printOutputs(RunStep step) '''
-«FOR composeStep : previousComposeStep(step)»
-«printKVOutputPairs(step.name.split("_").get(0) + "Input", composeStep)»
-«ENDFOR»
-«FOR symbolicStep : previousSymbolicContraint(step)»
-«printSymbolicContraint(step.name.split("_").get(0) + "Input", symbolicStep, previousRunStep(step), previousComposeStep(step))»
-«ENDFOR»
-	'''
-	
+        var value = (new ExpressionGenerator(stepRef, runStepName)).exprToComMASyntax(rec.exp)
+        // System.out.println(" Value: " + value)
 
-	def printKVOutputPairs(String prefix, ComposeStep step) {
-		var kv = ""
-		if (!step.suppress) {
-			for (o : step.output) {
-				kv += printKVInputPairs(prefix, o.name.name, o.kvPairs)
-			}
-		}
-		return kv
-	}
+        if (!(rec.exp instanceof ExpressionVector || rec.exp instanceof ExpressionFunctionCall)) {
+            // For record expressions. 
+            // The rest is handled as override functions in ExpressionGenerator.
+            for(csref : stepRef) {
+                for(csrefdata : csref.refData) {
+                    // System.out.println(" Replacing: " + sd.name + " with " + sr.refStep.name)
+                    if(csref.refStep instanceof RunStep && 
+                        value.toString.contains(csrefdata.name)) {
+                        value = "step_" + csref.refStep.name + ".output." + value
+                    }
+                }
+            }
+        }
+        return new StepConstraint ( runStepName,
+                                    composeStepName, 
+                                    pi + field, // lhs
+                                    value.toString, // rhs
+                                    pi + field + " := " + value // text
+                                  ) 
+    }
 
-	def printSymbolicContraint(String prefix, ConstraintStep step, EList<RunStep> runSteps, EList<ComposeStep> composeSteps) {
-		var sc = ""
-		for (s : step.ce) {
-			for (a : s.act.actions) {
-				for (rs : runSteps.filter[r | r !== null && !r.suppress]) {
-					for (cs : composeSteps) {
-						var pi = prefix + "." + step.name
-						var po = "step_" + rs.name + ".output."
-						sc += pi + printRecord(prefix, po, cs.stepRef, a as RecordFieldAssignmentAction) + "\n"
-					}
-				}
-			}
-		}
-		return sc
-	}
 
-	def previousRunStep(RunStep step) {
-		var composeSteps = new BasicEList<RunStep>()
-		var AbstractStep prev
-		for (absStep : atd.eAllContents.filter(AbstractStep).toIterable) {
-			if (absStep === step) {
-				composeSteps.add(prev as RunStep)
-			}
-			if (absStep instanceof RunStep) {
-				prev = absStep
-			}
-		}
-		return composeSteps
-	}
+    // Gets the list of referenced compose steps by a compose step, recursively!
+    // RULE. Compose Step may reference at most one preceding Compose Step. 
+    // RULE. Each Compose Step must reference at least one Run Step. 
+    def List<ComposeStep> getNestedComposeSteps(ComposeStep cstep, List<ComposeStep> listOfComposeSteps) 
+    {
+        if(cstep.stepRef.isNullOrEmpty) return listOfComposeSteps
 
-	def previousComposeStep(RunStep step) {
-		var composeSteps = new BasicEList<ComposeStep>()
-		var AbstractStep prev
-		for (absStep : atd.eAllContents.filter(AbstractStep).toIterable) {
-			if (absStep === step) {
-				composeSteps.add(prev as ComposeStep)
-			}
-			prev = absStep
-		}
-		return composeSteps
-	}
+        for(elm : cstep.stepRef) 
+        {
+            if(elm.refStep instanceof ComposeStep) {
+                listOfComposeSteps.add(elm.refStep as ComposeStep)
+                getNestedComposeSteps(elm.refStep as ComposeStep, listOfComposeSteps)
+            }
+        }
+        return listOfComposeSteps
+    }
 
-	def previousSymbolicContraint(RunStep step) {
-		var SymbolicContraints = new BasicEList<ConstraintStep>()
-		var ConstraintStep prev = null
-		for (testSeq : atd.testSeq) {
-			for (s : testSeq.step) {
-				if (s === step && prev !== null) {
-					SymbolicContraints.add(prev)
-				}
-				prev = (s instanceof ConstraintStep) ? s as ConstraintStep : null
-			}
-		}
-		return SymbolicContraints
-	}
+    // Gets the list of referenced compose steps
+    // RULE. Exactly one referenced Compose Step. 
+    def getComposeSteps(RunStep rstep) {
+        var listOfComposeSteps = new ArrayList<ComposeStep>
+        for(elm : rstep.stepRef) {
+            for(cstep: atd.eAllContents.filter(ComposeStep).toIterable) {
+                if(elm.refStep.name.equals(cstep.name)) {
+                    listOfComposeSteps.add(cstep)
+                }
+            }
+        }
+        listOfComposeSteps
+    }
+
+    def _printOutputs_(RunStep rstep) 
+    {
+        var mapLHStoRHS = new HashMap<String,String>
+        // at most one (TODO validate this)
+        var listOfComposeSteps = getComposeSteps(rstep)
+
+        // System.out.println("Run Step: " + rstep.name)
+
+        // Find preceding Compose Step
+        for(cstep : listOfComposeSteps) // at most one 
+        {
+            // System.out.println("    -> compose-name: " + cstep.name)
+            var refTxt = new String
+            for(cons : cstep.refs) {
+                // System.out.println("    -> constraint-var: " + cons.name)
+                for(refcons : cons.ce) {
+                    for (a : refcons.act.actions) {
+                        var constraint = _printRecord_(cstep.name, 
+                                                    rstep.name, cstep.stepRef, 
+                                                    a as RecordFieldAssignmentAction, true)
+                        refTxt += constraint.getText + "\n" 
+                        mapLHStoRHS.put(constraint.lhs, constraint.rhs)
+                    }
+                }
+            }
+            // if(!refTxt.isEmpty) System.out.println("\nLocal Constraints:\n" + refTxt)
+
+            var cstepList = getNestedComposeSteps(cstep, new ArrayList<ComposeStep>)
+            for(cs : cstepList) {
+                // System.out.println("        -> compose-name: " + cs.name)
+                refTxt = new String
+                for(cons : cs.refs) {
+                    // System.out.println("        -> constraint-var: " + cons.name)
+                    for(refcons : cons.ce) {
+                        for (a : refcons.act.actions) {
+                            var constraint = _printRecord_(cs.name, rstep.name, cs.stepRef, 
+                                                a as RecordFieldAssignmentAction, false)
+                            refTxt += constraint.getText + "\n"
+                            mapLHStoRHS.put(constraint.lhs, constraint.rhs) 
+                        }
+                    }
+                }
+            }
+            // if(!refTxt.isEmpty) System.out.println("\nRef Constraints:\n" + refTxt)
+        }
+        // Rewrite expressions in mapLHStoRHS
+        // TODO 
+        // Validate that LHS and RHS are unique. 
+        // No collisions are allowed.
+        var refKeyList = new ArrayList<String>
+        for(k : mapLHStoRHS.keySet) {
+            for(_k : mapLHStoRHS.keySet) { 
+                if(_k.equals(mapLHStoRHS.get(k))) { // if LHS equals RHS
+                    mapLHStoRHS.put(k, mapLHStoRHS.get(_k)) // rewrite
+                    refKeyList.add(_k)
+                }
+            }
+        }
+        // remove intermediate expressions
+        for(k : refKeyList) mapLHStoRHS.remove(k)
+
+        // print concrete data updates
+        var txt = 
+        '''
+        «FOR composeStep : listOfComposeSteps»
+        «printKVOutputPairs(rstep.name.split("_").get(0) + "Input", composeStep)»
+        «ENDFOR»
+        '''
+        
+        // print references
+        // if(!mapLHStoRHS.isEmpty) System.out.println(" References: ")
+        for(k : mapLHStoRHS.keySet) {
+            txt += 
+            '''
+            «k» := «mapLHStoRHS.get(k)»
+            '''
+            // System.out.println(" EXP: " + k + " = " + mapLHStoRHS.get(k))
+        }
+        return txt
+    }
+
+    /*
+     * End of Feature Update: Support Interleaving of Compose and Run Steps
+     * 
+     */
+
+    def printKVOutputPairs(String prefix, ComposeStep step) {
+        var kv = ""
+        if (!step.suppress) {
+            for (o : step.output) {
+                kv += printKVInputPairs(prefix, o.name.name, o.kvPairs)
+            }
+        }
+        return kv
+    }
+
+    def printKVInputPairs(String prefix, String field, EList<NestedKeyValuesPair> pairs) {
+        var kv = ""
+        for (p : pairs) {
+            for (a : p.actions) {
+                kv += prefix + "." + field + printRecord("", "", null, a as RecordFieldAssignmentAction) + "\n"
+            }
+        }
+        return kv
+    }
+
+    def printRecord(String stepName, String prefix, EList<StepReference> stepRef, RecordFieldAssignmentAction rec) {
+        var field = printField(rec.fieldAccess, false)
+        var value = (new ExpressionGenerator(stepRef,stepName)).exprToComMASyntax(rec.exp)
+        var p = (rec.exp instanceof ExpressionVector || rec.exp instanceof ExpressionFunctionCall) ? "" : prefix
+        return field + " := " + p + value
+    }
+
+    dispatch def String printField(ExpressionRecordAccess exp, boolean printVar) {
+        return printField(exp.record, printVar) + "." + exp.field.name
+    }
+
+    dispatch def String printField(ExpressionVariable exp, boolean printVar) {
+        if(printVar) return exp.getVariable().getName()
+        else return ""
+    }
+
 
 	def generateTypesFile(String sys, List<String> typesImports) {
 		var typ = ""
@@ -175,7 +271,8 @@ class FromAbstractToConcrete
 			}
 			ios.addAll(s.input)
 			ios.addAll(s.output)
-			for (p : previousComposeStep(s)) {
+			// for (p : previousComposeStep(s)) {
+			for (p : getComposeSteps(s)) {
 				ios.addAll(p.input)
 				ios.addAll(p.output)
 			}
@@ -251,4 +348,103 @@ class FromAbstractToConcrete
 		return bbs
 	}
 
+}
+
+//  def printOutputs(RunStep step) '''
+//«FOR composeStep : previousComposeStep(step)»
+//«printKVOutputPairs(step.name.split("_").get(0) + "Input", composeStep)»
+//«ENDFOR»
+//«FOR symbolicStep : previousSymbolicContraint(step)»
+//«printSymbolicContraint(step.name.split("_").get(0) + "Input", symbolicStep, previousRunStep(step), previousComposeStep(step))»
+//«ENDFOR»
+//  '''
+
+//  def printSymbolicContraint(String prefix, ConstraintStep step, EList<RunStep> runSteps, EList<ComposeStep> composeSteps) {
+//      var sc = ""
+//      for (s : step.ce) {
+//          for (a : s.act.actions) {
+//              for (rs : runSteps.filter[r | r !== null && !r.suppress]) {
+//                  for (cs : composeSteps) {
+//                      var pi = prefix + "." + step.name
+//                      var po = "step_" + rs.name + ".output."
+//                      sc += pi + printRecord(prefix, po, cs.stepRef, a as RecordFieldAssignmentAction) + "\n"
+//                  }
+//              }
+//          }
+//      }
+//      return sc
+//  }
+//
+//  def previousRunStep(RunStep step) {
+//      var composeSteps = new BasicEList<RunStep>()
+//      var AbstractStep prev
+//      for (absStep : atd.eAllContents.filter(AbstractStep).toIterable) {
+//          if (absStep === step) {
+//              composeSteps.add(prev as RunStep)
+//          }
+//          if (absStep instanceof RunStep) {
+//              prev = absStep
+//          }
+//      }
+//      return composeSteps
+//  }
+//
+//  def previousComposeStep(RunStep step) {
+//      var composeSteps = new BasicEList<ComposeStep>()
+//      var AbstractStep prev
+//      for (absStep : atd.eAllContents.filter(AbstractStep).toIterable) {
+//          if (absStep === step) {
+//              composeSteps.add(prev as ComposeStep)
+//          }
+//          prev = absStep
+//      }
+//      return composeSteps
+//  }
+//
+//  def previousSymbolicContraint(RunStep step) {
+//      var SymbolicContraints = new BasicEList<ConstraintStep>()
+//      var ConstraintStep prev = null
+//      for (testSeq : atd.testSeq) {
+//          for (s : testSeq.step) {
+//              if (s === step && prev !== null) {
+//                  SymbolicContraints.add(prev)
+//              }
+//              prev = (s instanceof ConstraintStep) ? s as ConstraintStep : null
+//          }
+//      }
+//      return SymbolicContraints
+//  }
+
+
+class StepConstraint 
+{
+    public var composeStepName = new String
+    public var runStepName = new String
+    public var lhs = new String
+    public var rhs = new String
+    public var text = new String
+
+    new(String runStepName, String composeStepName, String lhs, String rhs, String text) {
+        this.runStepName = runStepName
+        this.composeStepName = composeStepName
+        this.lhs = lhs
+        this.rhs = rhs
+        this.text = text
+    }
+    
+    def getComposeStepName() { return composeStepName }
+    def getRunStepName() { return runStepName }
+    def getLHS() { return lhs }
+    def getRHS() { return rhs }
+    def getText() { return text }
+
+    def void print(StepConstraint sc) {
+        System.out.println(" RUN-STEP-NAME: " + runStepName)
+        System.out.println(" COMPOSE-STEP-NAME: " + composeStepName)
+        sc.printLHSandRHS()
+    }
+
+    def printLHSandRHS() {
+        System.out.println("    -> LHS: " + lhs + "  RHS: " + rhs)
+    }
 }

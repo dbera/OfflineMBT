@@ -1,0 +1,30 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: AssertThat Language Core
+Bundle-Vendor: TNO-ESI
+Bundle-Version: 4.2.0.qualifier
+Bundle-SymbolicName: nl.esi.comma.assertthat; singleton:=true
+Bundle-ActivationPolicy: lazy
+Require-Bundle: org.eclipse.xtext,
+ org.eclipse.xtext.xbase,
+ org.eclipse.equinox.common;bundle-version="3.16.0",
+ org.eclipse.emf.ecore,
+ org.eclipse.xtext.xbase.lib;bundle-version="2.36.0",
+ org.eclipse.xtend.lib;bundle-version="2.36.0",
+ org.eclipse.emf.common,
+ org.antlr.runtime;bundle-version="[3.2.0,3.2.1)",
+ nl.esi.comma.xpath;bundle-version="4.2.0",
+ nl.esi.comma.json;bundle-version="4.2.0"
+Bundle-RequiredExecutionEnvironment: JavaSE-21
+Export-Package: nl.esi.comma.assertthat,
+ nl.esi.comma.assertthat.assertThat,
+ nl.esi.comma.assertthat.assertThat.impl,
+ nl.esi.comma.assertthat.assertThat.util,
+ nl.esi.comma.assertthat.parser.antlr,
+ nl.esi.comma.assertthat.parser.antlr.internal,
+ nl.esi.comma.assertthat.scoping,
+ nl.esi.comma.assertthat.serializer,
+ nl.esi.comma.assertthat.services,
+ nl.esi.comma.assertthat.validation
+Import-Package: org.apache.log4j
+Automatic-Module-Name: nl.esi.comma.assertthat

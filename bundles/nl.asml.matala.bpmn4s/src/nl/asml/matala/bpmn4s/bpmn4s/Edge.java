@@ -2,17 +2,21 @@ package nl.asml.matala.bpmn4s.bpmn4s;
 
 public class Edge extends Element {
 	
+	public static final String EDGE_TYPE_FLOW = "Flow";
+	public static final String EDGE_TYPE_DATA = "Data";
+	
 	String update;
 	String src;
-	String tar;	
+	String tar;
 	String ref_update;
 	String sym_update;
+	String edgeType;
 	boolean suppress;
 	boolean persistent;
-
 	
-	public Edge(String _src, String _expr, String refup, String symup, String _tar) {
-		super(ElementType.EDGE);
+	public Edge(String _id, String _src, String _expr, String refup, String symup, String _tar) {
+		super(ElementType.EDGE, _id, _id);
+		this.edgeType = EDGE_TYPE_FLOW;
 		this.src = _src;
 		this.tar = _tar;
 		this.update = _expr;
@@ -22,10 +26,30 @@ public class Edge extends Element {
 		this.persistent = false;
 	}
 	
+	public Edge(String _id, String _type, String _src, String _expr, String refup, String symup, String _tar) {
+		super(ElementType.EDGE, _id, _id);
+		this.edgeType = _type;
+		this.src = _src;
+		this.tar = _tar;
+		this.update = _expr;
+		this.ref_update = refup;
+		this.sym_update = symup;
+		this.suppress = false;
+		this.persistent = false;
+	}
+	
+	public boolean isFlowEdge() {
+		return this.edgeType == EDGE_TYPE_FLOW;
+	}
+
+	public boolean isDataEdge() {
+		return this.edgeType == EDGE_TYPE_DATA;
+	}
 	
 	@Override
 	public String toString() {
-		return String.format("An Edge with source %s, expression %s and target %s.", src, update, tar);
+		return String.format("An Edge with id <%s>, source <%s>, expression <%s>, and target <%s>.", 
+				id, src, update, tar);
 	}
 	
 	public String getSrc() {

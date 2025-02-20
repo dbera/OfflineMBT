@@ -2,6 +2,8 @@ package nl.asml.matala.bpmn4s.bpmn4s;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
 public class Element {
@@ -23,10 +25,12 @@ public class Element {
 	
 	String name = "";
 	String id = "";
-	List<Edge> inputs = new ArrayList<Edge>();
-	List<Edge> outputs = new ArrayList<Edge>();	
+	List<Edge> dataInputs = new ArrayList<Edge>();
+	List<Edge> dataOutputs = new ArrayList<Edge>();
+	List<Edge> flowInputs = new ArrayList<Edge>();
+	List<Edge> flowOutputs = new ArrayList<Edge>();	
 	String parent = "";
-	ArrayList<String> component = new ArrayList<String>();
+	ArrayList<String> components = new ArrayList<String>();
 	String init = "";
 	String stepType;
 	
@@ -112,7 +116,7 @@ public class Element {
 		return stepType;
 	}
 	
-	ElementType getType() {
+	public ElementType getType() {
 		return type;
 	}
 	
@@ -130,11 +134,11 @@ public class Element {
 	}
 	
 	public void setComponent (ArrayList<String> cname) {
-		component = cname;
+		components = cname;
 	}
 	
-	public ArrayList<String> getComponent () {
-		return component;
+	public ArrayList<String> getParentComponents () {
+		return components;
 	}
 	
 	public void setContext(String name, String dataType, String init) {
@@ -153,16 +157,30 @@ public class Element {
 		return this.context != null ? this.context.init : "";
 	}
 	
-	public Boolean hasSource(String id) {
-		for (Edge e: inputs) {
+	public Boolean hasFlowSource(String id) {
+		for (Edge e: flowInputs) {
 			if (e.src.equals(id)) {return true;}
 		}
 		return false;
 	}
 	
-	public Boolean hasTarget(String name) {
-		for (Edge e: outputs) {
-			if (e.tar.equals(name)) {return true;}
+	public Boolean hasFlowTarget(String id) {
+		for (Edge e: flowOutputs) {
+			if (e.tar.equals(id)) {return true;}
+		}
+		return false;
+	}
+	
+	public Boolean hasDataSource(String id) {
+		for (Edge e: dataInputs) {
+			if (e.src.equals(id)) {return true;}
+		}
+		return false;
+	}
+	
+	public Boolean hasDataTarget(String id) {
+		for (Edge e: dataOutputs) {
+			if (e.tar.equals(id)) {return true;}
 		}
 		return false;
 	}
@@ -177,13 +195,22 @@ public class Element {
 		return this.dataType;
 	}
 
-	public void addInput (Edge e) {
-		this.inputs.add(e);
+	public void addFlowInput (Edge e) {
+		this.flowInputs.add(e);
 	}
 	
-	public void addOutput (Edge e) {
-		this.outputs.add(e);
+	public void addFlowOutput (Edge e) {
+		this.flowOutputs.add(e);
 	}
+	
+	public void addDataInput (Edge e) {
+		this.dataInputs.add(e);
+	}
+	
+	public void addDataOutput (Edge e) {
+		this.dataOutputs.add(e);
+	}
+	
 	
 	public void setInit(String init) {
 		this.init = init;
@@ -195,16 +222,25 @@ public class Element {
 	
 	// For action nodes
 	
-	public int numberOfOutputs() {
-		return this.outputs.size();
+	public int numberOfFlowOutputs() {
+		return this.flowOutputs.size();
 	}
 
-	public List<Edge> getInputs() {
-		return inputs;
+	public List<Edge> getFlowInputs() {
+		return flowInputs;
 	}
 
-	public List<Edge> getOutputs() {
-		return outputs;
+	public List<Edge> getFlowOutputs() {
+		return flowOutputs;
+	}
+
+	
+	public List<Edge> getDataInputs() {
+		return dataInputs;
+	}
+
+	public List<Edge> getDataOutputs() {
+		return dataOutputs;
 	}
 	
 	public void setGuard(String value) {
@@ -224,5 +260,17 @@ public class Element {
 		return String.format("Element named %s with id %s and type %s", this.name, this.id, this.type);
 	}
 	
+	
+	private static <T> List<T> listConcat(List<T> list1, List<T> list2) {
+		return Stream.concat(list1.stream(), list2.stream()).collect(Collectors.toList());
+	}
+	
+	public List<Edge> getAllInputs() {
+		return listConcat(flowInputs, dataInputs);
+	}
+	
+	public List<Edge> getAllOutputs() {
+		return listConcat(flowOutputs, dataOutputs);
+	}
 	
 }

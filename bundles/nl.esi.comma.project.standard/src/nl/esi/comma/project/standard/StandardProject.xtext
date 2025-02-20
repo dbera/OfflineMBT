@@ -12,7 +12,7 @@ Project:
 ;
 
 Product:
-	'Generate' 'Tests' '{'
+	'Generate' (tests ?= 'Tests' | simulator ?= 'Simulator') '{'
 		taskname = ID '{'
 			'product-file' product = STRING
 			('path-to-python-exe' pythonExe = STRING)?

@@ -1,0 +1,13 @@
+grammar nl.esi.comma.assertthat.AssertThat with org.eclipse.xtext.common.Terminals
+
+generate assertThat "http://www.esi.nl/comma/assertthat/AssertThat"
+
+import "http://www.esi.nl/comma/json/Json" as json
+import "http://www.esi.nl/comma/xpath/Xpath" as xpath
+
+
+Model:
+	greetings+=Greeting*;
+	
+Greeting:
+	'Hello' name=ID '!';
