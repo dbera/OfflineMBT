@@ -174,7 +174,9 @@ MargingItem:
 
 // Assertion of Value outputs
 AssertThatValue:
-    'is' '{' type=AssertionValueValidationTypes '}'
+    '{'
+    type=AssertionValueValidationTypes
+    '}'
 ;
 
 AssertionValueValidationTypes:
@@ -189,17 +191,17 @@ AssertClose:
 ;
 
 AssertMatch:
-    'matching-regex' outRegex=StringOrArray
+    'match-regex' outRegex=StringOrArray
 ;
 
 AssertSize:
-    'of-size' itLen=INT
+    'has-size' itLen=INT
 ;
 
 // Assertion of XPath outputs
 AssertThatXPath:
-    'has' '{'
-    'value' '{' assertRef += AssertXPathValidations+ '}'
+    '{' 
+    assertRef += AssertXPathValidations+ 
     ( namespace = AssertNamespace )? 
     ( globalMargin = AssertGlobalMargin )? 
     ( globalRegex = AssertGlobalRegex )?
@@ -219,12 +221,12 @@ AssertGlobalRegex: {AssertGlobalRegex}
 ;
 
 XPathItem: {XPathItem}
-    'xpath' '(' xpathExpr = STRING  ( ',' 'log-id' ':=' loggingId = STRING )? ')'
+    'value-by-xpath' '(' xpathExpr = STRING  ( ',' 'log-id' ':=' loggingId = STRING )? ')'
 ;
 
 
 AssertXPathValidations: {AssertXPathValidations}
-    ( 'by' xpathItem = XPathItem ) validation = AssertionXPathValidationTypes
+    ( xpathItem = XPathItem ) validation = AssertionXPathValidationTypes
 ;
 
 AssertionXPathValidationTypes:
@@ -234,15 +236,15 @@ AssertionXPathValidationTypes:
 // Assertion of XMLFile outputs
 AssertThatXMLFile:
     'and' reference = ExpressionBracket
-    'have' '{'
-    'value' '{' assertRef += AssertXmlValidations+ '}'
+    '{' 
+    assertRef += AssertXmlValidations+ 
     ( namespace = AssertNamespace )? 
     ( globalMargin = AssertGlobalMargin )? 
     '}'
 ;
 
 AssertXmlValidations: {AssertXmlValidations}
-    ( 'by' xpathItem = XPathItem ) validation = AssertionXmlValidationTypes
+    ( xpathItem = XPathItem ) validation = AssertionXmlValidationTypes
 ;
 
 AssertionXmlValidationTypes: 
