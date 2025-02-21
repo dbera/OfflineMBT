@@ -5,16 +5,15 @@ Bundle-Vendor: TNO-ESI
 Bundle-Version: 4.2.0.qualifier
 Bundle-SymbolicName: nl.esi.comma.assertthat; singleton:=true
 Bundle-ActivationPolicy: lazy
-Require-Bundle: org.eclipse.xtext,
+Require-Bundle: nl.esi.comma.actions;visibility:=reexport,
+ org.eclipse.xtext,
  org.eclipse.xtext.xbase,
  org.eclipse.equinox.common;bundle-version="3.16.0",
  org.eclipse.emf.ecore,
  org.eclipse.xtext.xbase.lib;bundle-version="2.36.0",
  org.eclipse.xtend.lib;bundle-version="2.36.0",
  org.eclipse.emf.common,
- org.antlr.runtime;bundle-version="[3.2.0,3.2.1)",
- nl.esi.comma.xpath;bundle-version="4.2.0",
- nl.esi.comma.json;bundle-version="4.2.0"
+ org.antlr.runtime;bundle-version="[3.2.0,3.2.1)"
 Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: nl.esi.comma.assertthat,
  nl.esi.comma.assertthat.assertThat,

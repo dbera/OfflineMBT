@@ -28,8 +28,6 @@ Workflow {
 			fileExtensions = "ps"
 
 			referencedResource = "platform:/resource/nl.esi.comma.actions/model/generated/Actions.genmodel"
-            referencedResource = "platform:/resource/nl.esi.comma.json/model/generated/Json.genmodel"
-            referencedResource = "platform:/resource/nl.esi.comma.xpath/model/generated/Xpath.genmodel"
             referencedResource = "platform:/resource/nl.esi.comma.assertthat/model/generated/AssertThat.genmodel"
 
 			serializer = {

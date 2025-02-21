@@ -1,4 +1,4 @@
-grammar nl.asml.matala.product.Product with nl.esi.comma.actions.Actions // with org.eclipse.xtext.common.Terminals
+grammar nl.asml.matala.product.Product with nl.esi.comma.assertthat.AssertThat
 
 generate product "http://www.asml.nl/matala/product/Product"
 
