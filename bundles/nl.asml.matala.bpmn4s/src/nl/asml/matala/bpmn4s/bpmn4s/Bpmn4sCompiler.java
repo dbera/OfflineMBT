@@ -87,25 +87,15 @@ public class Bpmn4sCompiler{
 	 */
 	private void flattenActivities () throws InvalidModel {
 		
-		// Update edges
-		List<Edge> removeEdges = new ArrayList<Edge>();
+		/*
+		 * Every edge in the model that points to or comes from 
+		 * an activity should be re-routed to a proper element.
+		 */
 		for (Edge e: model.edges) {
 			updateEdge(e);
-			String srcId = e.getSrc();
-			String tarId = e.getTar();
-			Element src = model.getElementById(srcId);
-			String parentId = src.getParent();
-			Element parent = model.getElementById(parentId);
-			if(model.isActivity(parentId) && 
-					(model.isStartEvent(srcId) || (model.isEndEvent(tarId) && parent.getFlowOutputs().isEmpty()))) {
-				removeEdges.add(e);
-			}
 		}
-		for(Edge e: removeEdges) {
-			model.edges.remove(e);
-		}
-		/* Remove start and end events of activities. 
-		 * Remove also their related edges and update the ends.
+		/* Remove activities. Also remove their start and end events 
+		 * along with their related edges.
 		 */
 		List<String> removeElements = new ArrayList<String>();
 		for (Element el: model.elements.values()) {
@@ -117,7 +107,7 @@ public class Bpmn4sCompiler{
 				Edge outFlow = el.getFlowOutputs().get(0);
 				model.edges.remove(outFlow);
 				Element tar = model.getElementById(outFlow.getTar());
-				tar.getFlowInputs().remove(0); // FIXME should remove outFlow here but not working, workaround with index 0.
+				tar.getFlowInputs().remove(outFlow);
 			}
 			/*
 			 * Only remove end events if the activity has outgoing flow.
@@ -128,7 +118,7 @@ public class Bpmn4sCompiler{
 				Edge inFlow = el.getFlowInputs().get(0);
 				model.edges.remove(inFlow);
 				Element src = model.getElementById(inFlow.getSrc());
-				src.getFlowOutputs().remove(0); // FIXME should remove inFlow here but not working, workaround with index 0.
+				src.getFlowOutputs().remove(inFlow);
 			}
 		}
 		for(String el: removeElements) {
@@ -158,8 +148,10 @@ public class Bpmn4sCompiler{
 				if(startEv == null) {
 					throw new InvalidModel("Missing start event for activity " + model.getElementById(tarId).getName());
 				}
+				// update the target of the edge
 				e.tar = getNextFlowElement(startEv).getId();
 				Element newTar = model.getElementById(e.tar);
+				// add the edge as an input of the new target 
 				newTar.addFlowInput(e);
 				updated = true;
 			}
