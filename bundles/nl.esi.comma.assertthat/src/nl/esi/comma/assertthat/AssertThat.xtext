@@ -1,10 +1,6 @@
-grammar nl.esi.comma.assertthat.AssertThat with org.eclipse.xtext.common.Terminals
+grammar nl.esi.comma.assertthat.AssertThat with nl.esi.comma.actions.Actions
 
 generate assertThat "http://www.esi.nl/comma/assertthat/AssertThat"
-
-import "http://www.esi.nl/comma/json/Json" as json
-import "http://www.esi.nl/comma/xpath/Xpath" as xpath
-
 
 Model:
 	greetings+=Greeting*;

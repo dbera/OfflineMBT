@@ -8,6 +8,8 @@ Bundle-SymbolicName: nl.esi.comma.assertthat.ui; singleton:=true
 Bundle-ActivationPolicy: lazy
 Require-Bundle: nl.esi.comma.assertthat,
  nl.esi.comma.assertthat.ide,
+ nl.esi.comma.actions.ui;visibility:=reexport,
+ nl.esi.comma.actions.ide;visibility:=reexport,
  org.eclipse.xtext.ui,
  org.eclipse.xtext.ui.shared,
  org.eclipse.xtext.ui.codetemplates.ui,
