@@ -2,8 +2,137 @@ grammar nl.esi.comma.assertthat.AssertThat with nl.esi.comma.actions.Actions
 
 generate assertThat "http://www.esi.nl/comma/assertthat/AssertThat"
 
-Model:
-	greetings+=Greeting*;
-	
-Greeting:
-	'Hello' name=ID '!';
+AssertThatBlock:
+    'assert-that' output=ExpressionBracket
+        (
+              val=AssertThatValue 
+            | xpath=AssertThatXPath 
+            | xmlFiles=AssertThatXMLFile
+        )
+;
+
+enum MARGIN_TYPE:
+    ABSOLUTE='absolute'
+    | RELATIVE='relative'
+    | NONE='none';
+
+MargingItem:
+    type=MARGIN_TYPE '(' (marginVal=JsonNumeric)? ')';
+
+// Assertion of Value outputs
+AssertThatValue:
+    '{'
+    type=AssertionValueValidationTypes
+    '}'
+;
+
+AssertionValueValidationTypes:
+    AssertEq | AssertClose | AssertMatch | AssertSize;
+
+AssertEq:
+    'equal-to' outRef=JsonValue ('within-margin' outMrg=MargingItem)? (asRegex ?= 'as-regex')?
+;
+
+AssertClose:
+    'close-to' outClo=NumericOrArray ('within-margin' outMrg=MargingItem)?
+;
+
+AssertMatch:
+    'match-regex' outRegex=StringOrArray
+;
+
+AssertSize:
+    'has-size' itLen=INT
+;
+
+// Assertion of XPath outputs
+AssertThatXPath:
+    '{' 
+    assertRef += AssertXPathValidations+ 
+    ( namespace = AssertNamespace )? 
+    ( globalMargin = AssertGlobalMargin )? 
+    ( globalRegex = AssertGlobalRegex )?
+    '}'
+;
+
+AssertNamespace: {AssertNamespace}
+      'using-namespace-context' namespaceMap = JsonObject
+;
+
+AssertGlobalMargin: {AssertGlobalMargin}
+    'using-global-margin' globalMrg = MargingItem
+;
+
+AssertGlobalRegex: {AssertGlobalRegex}
+     globalRegex ?= 'using-all-strings-as-regex'
+;
+
+XPathItem: {XPathItem}
+    'value-by-xpath' '(' xpathExpr = STRING  ( ',' 'log-id' ':=' loggingId = STRING )? ')'
+;
+
+
+AssertXPathValidations: {AssertXPathValidations}
+    ( xpathItem = XPathItem ) validation = AssertionXPathValidationTypes
+;
+
+AssertionXPathValidationTypes:
+    AssertionValueValidationTypes
+;
+
+// Assertion of XMLFile outputs
+AssertThatXMLFile:
+    'and' reference = ExpressionBracket
+    '{' 
+    assertRef += AssertXmlValidations+ 
+    ( namespace = AssertNamespace )? 
+    ( globalMargin = AssertGlobalMargin )? 
+    '}'
+;
+
+AssertXmlValidations: {AssertXmlValidations}
+    ( xpathItem = XPathItem ) validation = AssertionXmlValidationTypes
+;
+
+AssertionXmlValidationTypes: 
+    AssertIdentical | AssertSimilar
+;
+
+AssertIdentical: {AssertIdentical}
+    areIdentical ?= 'are-identical' 
+;
+AssertSimilar: {AssertSimilar}
+    areSimilar ?= 'are-similar' ('within-margin' localMargin=MargingItem)?
+;
+
+
+///// Json Grammar obtained from https://gist.github.com/nightscape/629651
+
+JsonObject:
+    '{' (members+=JsonMember) (',' members+=JsonMember)* '}'
+;
+
+JsonMember:
+    key=STRING ':' value=JsonValue
+;
+
+JsonArray:
+    '[' (values+=JsonValue) (',' values+=JsonValue)* ']'
+
+;
+
+JsonNumeric: 
+    {JsonNumeric} (Expression::FLOAT | Expression::Long)
+;
+
+JsonValue:
+    {JsonValue} STRING | {JsonValue} Expression::BOOL_LITERAL | JsonNumeric | JsonObject | JsonArray 
+;
+
+StringOrArray:
+    item = STRING | '[' (values+=STRING) (',' values+=STRING)* ']'
+;
+
+NumericOrArray:
+    item = JsonNumeric | '[' (values+=JsonNumeric) (',' values+=JsonNumeric)* ']'
+;
