@@ -30,7 +30,6 @@ import org.camunda.bpm.model.bpmn.instance.SubProcess;
 import org.camunda.bpm.model.bpmn.instance.Task;
 import org.camunda.bpm.model.xml.instance.ModelElementInstance;
 
-import nl.asml.matala.bpmn4s.bpmn4s.BaseType;
 import nl.asml.matala.bpmn4s.bpmn4s.Bpmn4s;
 import nl.asml.matala.bpmn4s.bpmn4s.Bpmn4sCompiler;
 import nl.asml.matala.bpmn4s.bpmn4s.Bpmn4sDataType;
@@ -348,6 +347,9 @@ public class Main {
 		for(Field f: dt.getChildElementsByType(Field.class)) {
 			String fname = f.getAttributeValue("name");
 			String tref = f.getAttributeValue("typeRef");
+			// tref is either a string representing a basic type (such as int or string) or
+			// an id referencing a user defined data type. We assume the later and fall back 
+			// on the former case.
 			Collection<DataType> datatypes = modelInst.getModelElementsByType(DataType.class);
 			String ftype = "";
 			for (DataType t: datatypes) {
@@ -357,25 +359,9 @@ public class Main {
 				}
 			}
 			ftype = ftype.equals("") ? tref : ftype;
-			rec.addField(fname, typeFromString(ftype));
+			rec.addField(fname, ftype);
 		}
 		return rec;
-	}
-	
-	static final String BPMN4S_BOOL = "Boolean";
-	static final String BPMN4S_INT = "Int";
-	static final String BPMN4S_STRING = "String";
-	static final String BPMN4S_FLOAT = "Float";
-	
-	private static Bpmn4sDataType typeFromString (String typeName) {
-		if(typeName.equals(BPMN4S_BOOL) 
-				|| typeName.equals(BPMN4S_FLOAT) 
-				|| typeName.equals(BPMN4S_INT) 
-				|| typeName.equals(BPMN4S_STRING)) {
-			return new BaseType(typeName);
-		} else {
-			return new RecordType(typeName);
-		}
 	}
 	
 	public static String getInnerType(BpmnModelInstance modelInst, DataType dt) {
