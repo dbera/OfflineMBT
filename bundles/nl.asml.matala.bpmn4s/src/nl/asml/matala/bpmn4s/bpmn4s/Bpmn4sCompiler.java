@@ -478,11 +478,10 @@ public class Bpmn4sCompiler{
 					 * we hack it around by doing string replace and hopping there is no unfortunate name collision.
 					 */
 					Map<String, String> replaceMap = buildReplaceMap(node);
-					/* Note: we assume all inputs of merging AND gates contain exactly the same context data.
-					 */
 					Edge inFlow = getOrDefault(node.getFlowInputs(), 0, null);
 					// Name of place that holds source context value for this transition. Some 
-					// tasks may not have in-flow, such as in headless components.
+					// tasks may not have in-flow, such as in headless components. For parallel
+					// join gates, any input context should be the same (condition to join).
 					String preCtxName = null;
 					if(inFlow != null) {
 						preCtxName = sanitize(getPNSourcePlaceName(inFlow));
@@ -496,8 +495,16 @@ public class Bpmn4sCompiler{
 					task += "with-inputs\t\t" + String.join(", ", inputs) + "\n";
 					// GUARD
 					String guard = node.getGuard();
+					String parJoinGuard = makeParJoinGuard(node);
+					String compiledGuard = ""; 
 					if (guard != null) {
-						task += "with-guard\t\t" + replaceAll(guard, replaceMap) + "\n";
+						compiledGuard += replaceAll(guard, replaceMap) + "\n";
+					}
+					if(parJoinGuard != null) {
+						compiledGuard += parJoinGuard + "\n";
+					}
+					if (compiledGuard != "") {
+						task += "with-guard\t\t" + compiledGuard;
 					}
 					for(Edge e: node.getAllOutputs()) {
 						// Name of place that holds target context value for this transition:
@@ -556,6 +563,28 @@ public class Bpmn4sCompiler{
 		return "desc \"" + compile(cId) + "_Model\"\n\n" + String.join("\n", desc);
 	}
 
+	/**
+	 * Construct a guard that checks for compatibility of input tokens to a parallel join gate.
+	 * @param node is possibly an AND join gate element.
+	 * @return a string with the guard if this is a node of AND gate type with at least 2 inputs.
+	 * null otherwise.
+	 */
+	private String makeParJoinGuard (Element node) {
+		if (model.isAnd(node.getId())) { // is AND ?
+			List<Edge> inputs = node.getFlowInputs();
+			if (inputs.size() > 1) { // is join ?
+				ArrayList<String> inputNames = new ArrayList<String>();
+				for(Edge e: inputs) {
+					inputNames.add(sanitize(getPNSourcePlaceName(e)));
+				}
+				// check all inputs equal first input
+				return String.join(" && ",
+						inputNames.stream().skip(1).map(e -> e + " == " + inputNames.get(0) ).toList());
+			}
+		}
+		return null;
+	}
+	
 	/**
 	 * Collect the compiled name for each input/output node corresponding to a 
 	 * transition (TASK or AND gate in the Bpmn4s).
