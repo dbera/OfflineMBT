@@ -28,6 +28,9 @@ Workflow {
 			name = "nl.esi.comma.assertthat.AssertThat"
 			fileExtensions = "assertthat"
 
+            referencedResource = "platform:/resource/nl.esi.comma.actions/model/generated/Actions.genmodel"
+
+
 			serializer = {
 				generateStub = false
 			}

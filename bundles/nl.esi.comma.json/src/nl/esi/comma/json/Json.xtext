@@ -1,9 +1,0 @@
-grammar nl.esi.comma.json.Json with org.eclipse.xtext.common.Terminals
-
-generate json "http://www.esi.nl/comma/json/Json"
-
-Model:
-	greetings+=Greeting*;
-	
-Greeting:
-	'Hello' name=ID '!';

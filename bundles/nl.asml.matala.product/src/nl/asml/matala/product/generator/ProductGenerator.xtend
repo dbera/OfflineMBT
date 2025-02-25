@@ -58,6 +58,26 @@ import nl.esi.comma.expressions.expression.ExpressionBracket
 import nl.asml.matala.product.product.SymbConstraint
 import nl.asml.matala.product.product.DataConstraints
 import nl.asml.matala.product.product.ActionType
+import nl.esi.comma.expressions.expression.ExpressionAnd
+import nl.esi.comma.expressions.expression.ExpressionOr
+import nl.esi.comma.expressions.expression.ExpressionEqual
+import nl.esi.comma.expressions.expression.ExpressionNEqual
+import nl.esi.comma.expressions.expression.ExpressionGeq
+import nl.esi.comma.expressions.expression.ExpressionGreater
+import nl.esi.comma.expressions.expression.ExpressionLeq
+import nl.esi.comma.expressions.expression.ExpressionLess
+import nl.esi.comma.expressions.expression.ExpressionAddition
+import nl.esi.comma.expressions.expression.ExpressionSubtraction
+import nl.esi.comma.expressions.expression.ExpressionMultiply
+import nl.esi.comma.expressions.expression.ExpressionDivision
+import nl.esi.comma.expressions.expression.ExpressionMaximum
+import nl.esi.comma.expressions.expression.ExpressionMinimum
+import nl.esi.comma.expressions.expression.ExpressionModulo
+import nl.esi.comma.expressions.expression.ExpressionPower
+import nl.esi.comma.expressions.expression.ExpressionUnary
+import nl.esi.comma.expressions.expression.ExpressionNot
+import nl.esi.comma.expressions.expression.ExpressionMinus
+import nl.esi.comma.expressions.expression.ExpressionPlus
 
 /**
  * Generates code from your *.ps model files on save.
@@ -773,9 +793,85 @@ class ProductGenerator extends AbstractGenerator {
 		return new ArrayList<String>()
 	}
 
-	def dispatch ArrayList<String> findVariableAssignments(ExpressionBracket b) {
-		return findVariableAssignments(b.sub)
-	}
+    def dispatch ArrayList<String> findVariableAssignments(ExpressionAnd q) {
+        return new ArrayList<String>()
+    }
+
+    def dispatch ArrayList<String> findVariableAssignments(ExpressionOr q) {
+        return new ArrayList<String>()
+    }
+
+    def dispatch ArrayList<String> findVariableAssignments(ExpressionEqual q) {
+        return new ArrayList<String>()
+    }
+
+    def dispatch ArrayList<String> findVariableAssignments(ExpressionNEqual q) {
+        return new ArrayList<String>()
+    }
+
+    def dispatch ArrayList<String> findVariableAssignments(ExpressionGeq q) {
+        return new ArrayList<String>()
+    }
+
+    def dispatch ArrayList<String> findVariableAssignments(ExpressionGreater q) {
+        return new ArrayList<String>()
+    }
+
+    def dispatch ArrayList<String> findVariableAssignments(ExpressionLeq q) {
+        return new ArrayList<String>()
+    }
+
+    def dispatch ArrayList<String> findVariableAssignments(ExpressionLess q) {
+        return new ArrayList<String>()
+    }
+
+    def dispatch ArrayList<String> findVariableAssignments(ExpressionAddition q) {
+        return new ArrayList<String>()
+    }
+
+    def dispatch ArrayList<String> findVariableAssignments(ExpressionSubtraction b) {
+        return new ArrayList<String>()
+    }
+
+    def dispatch ArrayList<String> findVariableAssignments(ExpressionMultiply b) {
+        return new ArrayList<String>()
+    }
+
+    def dispatch ArrayList<String> findVariableAssignments(ExpressionDivision b) {
+        return new ArrayList<String>()
+    }
+
+    def dispatch ArrayList<String> findVariableAssignments(ExpressionMaximum b) {
+        return new ArrayList<String>()
+    }
+
+    def dispatch ArrayList<String> findVariableAssignments(ExpressionMinimum b) {
+        return new ArrayList<String>()
+    }
+
+    def dispatch ArrayList<String> findVariableAssignments(ExpressionModulo b) {
+        return new ArrayList<String>()
+    }
+
+    def dispatch ArrayList<String> findVariableAssignments(ExpressionPower q) {
+        return new ArrayList<String>()
+    }
+
+    def dispatch ArrayList<String> findVariableAssignments(ExpressionUnary q) {
+        return new ArrayList<String>()
+    }
+
+    def dispatch ArrayList<String> findVariableAssignments(ExpressionNot q) {
+        return new ArrayList<String>()
+    }
+
+    def dispatch ArrayList<String> findVariableAssignments(ExpressionMinus q) {
+        return new ArrayList<String>()
+    }
+
+    def dispatch ArrayList<String> findVariableAssignments(ExpressionPlus q) {
+        return new ArrayList<String>()
+    }
 
 	def dispatch ArrayList<String> findVariableAssignments(AssignmentAction act) {
 		return findVariableAssignments(act.exp)

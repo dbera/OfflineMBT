@@ -1,10 +1,11 @@
-grammar nl.asml.matala.product.Product with nl.esi.comma.actions.Actions // with org.eclipse.xtext.common.Terminals
+grammar nl.asml.matala.product.Product with nl.esi.comma.assertthat.AssertThat
 
 generate product "http://www.asml.nl/matala/product/Product"
 
 import "http://www.esi.nl/comma/signature/InterfaceSignature" as sig 
 import "http://www.esi.nl/comma/types/Types" as types
 import "http://www.esi.nl/comma/expressions/Expression" as expr
+import "http://www.esi.nl/comma/assertthat/AssertThat" as assertthat
 
 @Override
 ModelContainer returns types::ModelContainer:
@@ -90,6 +91,7 @@ VarRef:
 	ref = [expr::Variable|ID] 
 	(dataConstraints = DataConstraints)?
 	(dataReferences = DataReferences)? 
+	(dataAssertions = DataAssertions)? 
 ;
 
 DataConstraints: {DataConstraints}
@@ -111,3 +113,14 @@ RefConstraint:
 SymbConstraint:
 	name=ID ':' symbExpr = Expression
 ;
+
+//TODO Refactor as Grammar Mixins
+
+///// assert-that DSL (et al.)
+
+DataAssertions: {DataAssertions}
+    'assertions' '{' 
+        constr += AssertThatBlock*
+     '}'
+;
+

@@ -9,6 +9,7 @@ Bundle-ActivationPolicy: lazy
 Require-Bundle: nl.asml.matala.product;visibility:=reexport,
  nl.asml.matala.product.ide,
  nl.esi.comma.actions.ui;visibility:=reexport,
+ nl.esi.comma.assertthat.ui;visibility:=reexport,
  org.eclipse.xtext.ui,
  org.eclipse.xtext.ui.shared,
  org.eclipse.xtext.ui.codetemplates.ui,

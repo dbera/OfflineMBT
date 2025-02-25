@@ -478,11 +478,10 @@ public class Bpmn4sCompiler{
 					 * we hack it around by doing string replace and hopping there is no unfortunate name collision.
 					 */
 					Map<String, String> replaceMap = buildReplaceMap(node);
-					/* Note: we assume all inputs of merging AND gates contain exactly the same context data.
-					 */
 					Edge inFlow = getOrDefault(node.getFlowInputs(), 0, null);
 					// Name of place that holds source context value for this transition. Some 
-					// tasks may not have in-flow, such as in headless components.
+					// tasks may not have in-flow, such as in headless components. For parallel
+					// join gates, any input context should be the same (condition to join).
 					String preCtxName = null;
 					if(inFlow != null) {
 						preCtxName = sanitize(getPNSourcePlaceName(inFlow));
@@ -496,8 +495,16 @@ public class Bpmn4sCompiler{
 					task += "with-inputs\t\t" + String.join(", ", inputs) + "\n";
 					// GUARD
 					String guard = node.getGuard();
+					String parJoinGuard = makeParJoinGuard(node);
+					String compiledGuard = ""; 
 					if (guard != null) {
-						task += "with-guard\t\t" + replaceAll(guard, replaceMap) + "\n";
+						compiledGuard += replaceAll(guard, replaceMap) + "\n";
+					}
+					if(parJoinGuard != null) {
+						compiledGuard += parJoinGuard + "\n";
+					}
+					if (compiledGuard != "") {
+						task += "with-guard\t\t" + compiledGuard;
 					}
 					for(Edge e: node.getAllOutputs()) {
 						// Name of place that holds target context value for this transition:
@@ -531,20 +538,18 @@ public class Bpmn4sCompiler{
 							if (e.getSymUpdate() != null && e.getSymUpdate() != "") {
 								task += "constraints {\n" + indent(replaceAll(e.getSymUpdate(), replaceMap)) + "\n}\n";
 							}
-							
+							String updates = "";
 							if (preCtxName != null) {
-								// move the context between places in the PN.(**1)
-								task += "updates:" + indent(postCtxName + " := " + preCtxName) + "\n";
-							} else {
-								// task without in flowing context (generates token with context)
-								String dataTypeName = model.getElementById(cId).getContextDataType();
-								Bpmn4sDataType dataType = model.dataSchema.get(dataTypeName);
-								task += "updates:" + indent(postCtxName + ":=" + (dataType != null ? dataType.getDefaultInit() : UNITINIT) + "\n");
+								// if there is in-flow, move the context between places in the PN.(**1)
+								updates += indent(postCtxName + " := " + preCtxName) + "\n";
 							}
 							String update = e.getUpdate();
 							if(update != null && update != "") {
 								update = replaceWord(update, compCtxName, postCtxName); // (**1) postCtxName == preCtxName
-								task += indent(replaceAll(update, replaceMap)) + "\n";
+								updates += indent(replaceAll(update, replaceMap)) + "\n";
+							}
+							if (updates != "") {
+								task +=  "updates:\n" + updates;
 							}
 						}
 					}
@@ -558,6 +563,28 @@ public class Bpmn4sCompiler{
 		return "desc \"" + compile(cId) + "_Model\"\n\n" + String.join("\n", desc);
 	}
 
+	/**
+	 * Construct a guard that checks for compatibility of input tokens to a parallel join gate.
+	 * @param node is possibly an AND join gate element.
+	 * @return a string with the guard if this is a node of AND gate type with at least 2 inputs.
+	 * null otherwise.
+	 */
+	private String makeParJoinGuard (Element node) {
+		if (model.isAnd(node.getId())) { // is AND ?
+			List<Edge> inputs = node.getFlowInputs();
+			if (inputs.size() > 1) { // is join ?
+				ArrayList<String> inputNames = new ArrayList<String>();
+				for(Edge e: inputs) {
+					inputNames.add(sanitize(getPNSourcePlaceName(e)));
+				}
+				// check all inputs equal first input
+				return String.join(" && ",
+						inputNames.stream().skip(1).map(e -> e + " == " + inputNames.get(0) ).toList());
+			}
+		}
+		return null;
+	}
+	
 	/**
 	 * Collect the compiled name for each input/output node corresponding to a 
 	 * transition (TASK or AND gate in the Bpmn4s).
@@ -685,7 +712,7 @@ public class Bpmn4sCompiler{
 				RecordType rec = RecordType.class.cast(d);
 				String type = "record " + rec.getName() + " {\n";
 				String parameters = "";
-				for (Entry<String, Bpmn4sDataType> e: rec.fields.entrySet()) {
+				for (Entry<String, String> e: rec.fields.entrySet()) {
 					parameters += generateRecordField(e);
 				}
 				type += indent(parameters) + "}\n";
@@ -705,28 +732,27 @@ public class Bpmn4sCompiler{
 		}
 		return types;
 	}
-	
-	private String generateRecordField(Entry<String, Bpmn4sDataType> e) {
+
+	private String generateRecordField(Entry<String, String> e) {
 		String field = "";
 		String fieldName = e.getKey();
-		Bpmn4sDataType fieldDataType = e.getValue(); 
-		if (fieldDataType instanceof ListType) {
-			ListType lst = ListType.class.cast(fieldDataType);
+		String fieldTypeName = e.getValue();
+		Bpmn4sDataType dataType = model.dataSchema.get(fieldTypeName); 
+		if (dataType instanceof ListType) {
+			ListType lst = ListType.class.cast(dataType);
 			field = String.format("%s[]\t%s\n" , mapType(lst.valueType), fieldName); 
-		} else if (fieldDataType instanceof MapType) {
-			MapType mp = MapType.class.cast(fieldDataType);
+		} else if (dataType instanceof MapType) {
+			MapType mp = MapType.class.cast(dataType);
 			field = String.format("map<%s,%s>\t%s\n" , mapType(mp.keyType), mapType(mp.valueType), fieldName);
-		} else if (fieldDataType instanceof SetType) {
-			SetType st = SetType.class.cast(fieldDataType);
+		} else if (dataType instanceof SetType) {
+			SetType st = SetType.class.cast(dataType);
 			field = String.format("set<%s>\t%s\n" , mapType(st.valueType), fieldName);
 		} else {
 			// record, enumerations and basic types go here
-			String fieldTypeName = fieldDataType.getType();
 			field = String.format("%s\t%s\n" , mapType(fieldTypeName), fieldName); 
 		}
 		return field;
 	}
-
 	/**
 	 * Basic types in BPMN4S editor start with upper case, 
 	 * while in pspec they are lower cased.

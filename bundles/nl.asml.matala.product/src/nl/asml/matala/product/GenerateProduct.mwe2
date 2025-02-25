@@ -28,6 +28,7 @@ Workflow {
 			fileExtensions = "ps"
 
 			referencedResource = "platform:/resource/nl.esi.comma.actions/model/generated/Actions.genmodel"
+            referencedResource = "platform:/resource/nl.esi.comma.assertthat/model/generated/AssertThat.genmodel"
 
 			serializer = {
 				generateStub = false
