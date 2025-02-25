@@ -114,7 +114,11 @@ public class Main {
         			@Override
         			protected String repr(Element el) {
         				return el.getId();
-        			}		
+        			}
+        			@Override
+        			protected String getFullyQualifiedName(Element el) {
+        				return repr(el);
+        			}
         			@Override
         			protected String getCompiledXorName(String xorId) {
         				return repr(model.getElementById(xorId));
@@ -160,8 +164,7 @@ public class Main {
         				Element c = model.getElementById(component);
         				ArrayList<String> result = new ArrayList<String>();
         				for (Element source: model.elements.values()) {
-        					if ((isAPlace(source.getId()) || model.isActivity(source.getId())) 
-        							&& isParentComponent( c, source)) { 
+        					if (isAPlace(source.getId()) && isParentComponent( c, source)) { 
         						for(Edge e: source.getAllOutputs()) {
         							String sourceId = e.getSrc();
         							String targetId = e.getTar();
@@ -276,7 +279,8 @@ public class Main {
 		String origin = getOriginDataReference(elem);
 		node.setOriginDataNodeId(origin != null ? origin : id);
 		node.setParent(getParentId(elem));
-		node.setComponent(getParentComponents(elem));
+		node.setFullyQualifiedName(getFullyQualifiedName(elem));
+		node.setParentComponents(getParentComponents(elem));
 		String datatyperef = elem.getAttributeValueNs("http://bpmn4s", "dataTypeRef");
 		DataType dt = getExtensionElementById(modelInst, DataType.class, datatyperef);
 		String dtname = dt != null? dt.getAttributeValue("name"): datatyperef;
@@ -461,7 +465,8 @@ public class Main {
 		node.setId(id);
 		if (elem instanceof FlowNode) {
 			node.setParent(getParentId(elem));
-			node.setComponent(getParentComponents(elem));
+			node.setFullyQualifiedName(getFullyQualifiedName(elem));
+			node.setParentComponents(getParentComponents(elem));
 			node.setGuard(elem.getAttributeValueNs("http://bpmn4s", "guard"));
 			node.setStepType(elem.getAttributeValueNs("http://bpmn4s", "stepType"));
 		}
@@ -476,9 +481,6 @@ public class Main {
 			} else {
 				contextTypeName = contextTypeId;
 			}
-		}
-		if(contextInit != null && contextInit.strip().startsWith("=")) {
-			contextInit = contextInit.substring(1); // FIXME due to issues with bpmn4s editor lsp integration
 		}
 		node.setContext(contextName != null ? contextName : "", 
 				contextTypeName != null ? contextTypeName : "", 
@@ -541,6 +543,25 @@ public class Main {
 		return result;
 	}
 	
+	/*
+	 * Note that we use the separator <@> which is not allowed 
+	 * in the editor ids but is a allowed in pspec ids.
+	 */
+	static String getFullyQualifiedName (ModelElementInstance elem) {
+		ArrayList<String> parentsList = new ArrayList<String>();
+		ModelElementInstance parent = elem.getParentElement();
+		// FIXME: there must be a more robust way to check the type of an element than comparing to a string
+		while(parent != null && 
+				("subProcess".equals(parent.getElementType().getTypeName()) ||
+						"process".equals(parent.getElementType().getTypeName()))) 
+		{
+			parentsList.add(0, getName(parent));
+			parent = parent.getParentElement();
+		}
+		String result = "";
+		result = String.join("@", parentsList) + "@" + getName(elem);
+		return result;
+	}
 	
 	static String getParentId(ModelElementInstance elem) {
 		ModelElementInstance parent = elem.getParentElement();

@@ -30,7 +30,8 @@ public class Element {
 	List<Edge> flowInputs = new ArrayList<Edge>();
 	List<Edge> flowOutputs = new ArrayList<Edge>();	
 	String parent = "";
-	ArrayList<String> components = new ArrayList<String>();
+	String fqname = "";
+	ArrayList<String> parentComponents = new ArrayList<String>();
 	String init = "";
 	String stepType;
 	
@@ -133,12 +134,12 @@ public class Element {
 		return parent;
 	}
 	
-	public void setComponent (ArrayList<String> cname) {
-		components = cname;
+	public void setParentComponents (ArrayList<String> cname) {
+		parentComponents = cname;
 	}
 	
 	public ArrayList<String> getParentComponents () {
-		return components;
+		return parentComponents;
 	}
 	
 	public void setContext(String name, String dataType, String init) {
@@ -259,8 +260,7 @@ public class Element {
 	public String toString() {
 		return String.format("Element named %s with id %s and type %s", this.name, this.id, this.type);
 	}
-	
-	
+		
 	private static <T> List<T> listConcat(List<T> list1, List<T> list2) {
 		return Stream.concat(list1.stream(), list2.stream()).collect(Collectors.toList());
 	}
@@ -271,6 +271,14 @@ public class Element {
 	
 	public List<Edge> getAllOutputs() {
 		return listConcat(flowOutputs, dataOutputs);
+	}
+
+	public void setFullyQualifiedName(String name) {
+		this.fqname = name;
+	}
+	
+	public String getFullyQualifiedName () {
+		return fqname;
 	}
 	
 }
