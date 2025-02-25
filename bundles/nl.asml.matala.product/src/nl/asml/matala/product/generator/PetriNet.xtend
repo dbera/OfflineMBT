@@ -318,6 +318,7 @@ class PetriNet {
 		'''
 		import datetime
 		import json
+		import uuid
 		import pprint
 		import argparse
 		from pathlib import Path
