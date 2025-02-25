@@ -2,6 +2,12 @@ grammar nl.esi.comma.assertthat.AssertThat with nl.esi.comma.actions.Actions
 
 generate assertThat "http://www.esi.nl/comma/assertthat/AssertThat"
 
+DataCheckItems:
+    AssertThatBlock 
+    | GenericScriptBlock
+;
+
+
 AssertThatBlock:
     'assert-that' output=ExpressionBracket
         (
@@ -9,6 +15,24 @@ AssertThatBlock:
             | xpath=AssertThatXPath 
             | xmlFiles=AssertThatXMLFile
         )
+;
+
+GenericScriptBlock:
+    name=ID ':' 'script-call' params = ScriptParametersBlock
+;
+
+ScriptParametersBlock:
+    (
+        paramsVariable  = Expression
+        ('with-positional-args' positionalField = STRING ) ?
+    )
+    | (
+        '{'
+            'path' ':'   scriptName=STRING
+            ('positional-args' ':'  paramsPositional = ExpressionArray  ) ?
+            ('named-args' ':'       paramsNamed      = ExpressionMap ) ?
+        '}' 
+    )
 ;
 
 enum MARGIN_TYPE:
@@ -120,6 +144,18 @@ JsonArray:
     '[' (values+=JsonValue) (',' values+=JsonValue)* ']'
 
 ;
+
+ExpressionArray:
+    '[' (values+=Expression) (',' values+=Expression)* ']'
+;
+ExpressionMapMember:
+    key=STRING ':' value=Expression
+;
+
+ExpressionMap:
+    '{' (members+=ExpressionMapMember) (',' members+=ExpressionMapMember)* '}'
+;
+
 
 JsonNumeric: 
     {JsonNumeric} (Expression::FLOAT | Expression::Long)
