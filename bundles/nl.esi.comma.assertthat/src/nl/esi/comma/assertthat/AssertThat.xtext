@@ -23,8 +23,10 @@ GenericScriptBlock:
 
 ScriptParametersBlock:
     (
-        paramsVariable  = Expression
-        ('with-positional-args' positionalField = STRING ) ?
+        '{'
+        'using-variable' ':'   paramsVariable  = Expression
+        ('with-positional-args' ':' positionalField = STRING ) ?
+        '}'
     )
     | (
         '{'
