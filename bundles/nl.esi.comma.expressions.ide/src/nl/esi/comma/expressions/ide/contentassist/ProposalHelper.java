@@ -52,6 +52,7 @@ import nl.esi.comma.expressions.expression.ExpressionVariable;
 import nl.esi.comma.expressions.expression.ExpressionVector;
 import nl.esi.comma.expressions.expression.QUANTIFIER;
 import nl.esi.comma.expressions.expression.TypeAnnotation;
+import nl.esi.comma.expressions.validation.ExpressionFunction;
 import nl.esi.comma.types.types.EnumTypeDecl;
 import nl.esi.comma.types.types.MapTypeConstructor;
 import nl.esi.comma.types.types.MapTypeDecl;
@@ -89,36 +90,36 @@ public class ProposalHelper {
 		throw new UnsupportedTypeException(type);
 	}
 
-	public static String defaultValue(TypeAnnotation typeAnn) throws UnsupportedTypeException {
-		return defaultValueEntry(typeAnn.getType(), "");
+	public static String defaultValue(TypeAnnotation typeAnn, String targetName) throws UnsupportedTypeException {
+		return createDefaultValueEntry(typeAnn.getType(), targetName, "");
 	}
 
-	public static String defaultValue(Type type) throws UnsupportedTypeException {
-		return defaultValue(type, "");
+	public static String defaultValue(Type type, String targetName) throws UnsupportedTypeException {
+		return createDefaultValue(type, targetName, "");
 	}
 
-	private static String defaultValue(Type type, String indent) throws UnsupportedTypeException {
+	private static String createDefaultValue(Type type, String targetName, String indent) throws UnsupportedTypeException {
 		if (type instanceof TypeReference) {
-			return defaultValueEntry(type, indent);
+			return createDefaultValueEntry(type, targetName, indent);
 		} else if (type instanceof VectorTypeConstructor) {
-			return "<" + getTypeName(type) + ">[ " + defaultValueEntry(type, indent) + " ]";
+			return "<" + getTypeName(type) + ">[ " + createDefaultValueEntry(type, null, indent) + " ]";
 		} else if (type instanceof MapTypeConstructor) {
-			return "<" + getTypeName(type) + ">{ " + defaultValueEntry(type, indent) + " }";
+			return "<" + getTypeName(type) + ">{ " + createDefaultValueEntry(type, null, indent) + " }";
 		}
 		throw new UnsupportedTypeException(type);
 	}
 
-	private static String defaultValueEntry(Type type, String indent) throws UnsupportedTypeException {
+	private static String createDefaultValueEntry(Type type, String targetName, String indent) throws UnsupportedTypeException {
 		if (type instanceof TypeReference) {
-			return defaultValue(type.getType(), indent);
+			return createDefaultValue(type.getType(), targetName, indent);
 		} else if (type instanceof VectorTypeConstructor vecType) {
 			if (vecType.getDimensions().size() > 1) {
-				return defaultValue(getOuterDimension(vecType), indent);
+				return createDefaultValue(getOuterDimension(vecType), null, indent);
 			}
-			return defaultValue(type.getType(), indent);
+			return createDefaultValue(type.getType(), targetName, indent);
 		} else if (type instanceof MapTypeConstructor mapType) {
-			String key = defaultValue(type.getType(), indent);
-			String value = defaultValue(mapType.getValueType(), indent);
+			String key = createDefaultValue(type.getType(), null, indent);
+			String value = createDefaultValue(mapType.getValueType(), null, indent);
 			return key + " -> " + value;
 		}
 		throw new UnsupportedTypeException(type);
@@ -130,13 +131,13 @@ public class ProposalHelper {
 		return outerDimension;
 	}
 
-	private static String defaultValue(TypeDecl type, String indent) throws UnsupportedTypeException {
+	private static String createDefaultValue(TypeDecl type, String targetName, String indent) throws UnsupportedTypeException {
 		if (type instanceof SimpleTypeDecl simpleType) {
-			if (simpleType.getBase() != null) return defaultValue(simpleType.getBase(), indent);
+			if (simpleType.getBase() != null) return createDefaultValue(simpleType.getBase(), targetName, indent);
 			else if (simpleType.getName().equals("int")) return "0";
 			else if (simpleType.getName().equals("real")) return "0.0";
 			else if (simpleType.getName().equals("bool")) return "true";
-			else if (simpleType.getName().equals("string")) return "\"\"";
+			else if (simpleType.getName().equals("string")) return "__uuid__".equals(targetName) ? ExpressionFunction.uuid + "()" : "\"\"";
 			else return "\"\""; // Custom types without base (e.g. type DateTime)
 		} else if (type instanceof VectorTypeDecl) {
 			return "[]";
@@ -148,12 +149,12 @@ public class ProposalHelper {
 			if ( recType.getFields().size() > 1) {
 				String fieldIndent = indent + "\t";
 				String value = recType.getFields().stream()
-					.map(f -> String.format("%s%s = %s", fieldIndent, f.getName(), defaultValue(f.getType(), fieldIndent)))
+					.map(f -> String.format("%s%s = %s", fieldIndent, f.getName(), createDefaultValue(f.getType(), f.getName(), fieldIndent)))
 					.collect(Collectors.joining(",\n"));
 				return String.format("%s {\n%s\n%s}", type.getName(), value, indent);
 			} else {
 				String value = recType.getFields().stream()
-					.map(f -> String.format("%s = %s", f.getName(), defaultValue(f.getType(), indent)))
+					.map(f -> String.format("%s = %s", f.getName(), createDefaultValue(f.getType(), f.getName(), indent)))
 					.collect(Collectors.joining(",\n"));
 				return String.format("%s { %s }", type.getName(), value);
 			}
