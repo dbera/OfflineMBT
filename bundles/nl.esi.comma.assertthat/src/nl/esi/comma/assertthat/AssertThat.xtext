@@ -2,6 +2,8 @@ grammar nl.esi.comma.assertthat.AssertThat with nl.esi.comma.actions.Actions
 
 generate assertThat "http://www.esi.nl/comma/assertthat/AssertThat"
 
+import "http://www.esi.nl/comma/expressions/Expression" as expr
+
 DataCheckItems:
     AssertThatBlock 
     | GenericScriptBlock
@@ -18,7 +20,7 @@ AssertThatBlock:
 ;
 
 GenericScriptBlock:
-    name=ID ':' 'script-call' params = ScriptParametersBlock
+    assignment =[expr::Variable | ID] ':=' 'script-call' params = ScriptParametersBlock
 ;
 
 ScriptParametersBlock:
