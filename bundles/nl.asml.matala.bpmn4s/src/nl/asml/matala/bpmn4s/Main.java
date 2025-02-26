@@ -315,7 +315,7 @@ public class Main {
 	public static void parseDataType(BpmnModelInstance modelInst, DataType dt) {
 		Bpmn4sDataType datatype = new Bpmn4sDataType("");
 		String type = dt.getAttributeValue("type");
-		if (type.equals("Record")) {
+		if (type.equals("Record") || type.equals("Context")) {
 			datatype = parseRecord(modelInst, dt);
 		}else if(type.equals("List")) {
 			datatype = parseList(modelInst, dt);
