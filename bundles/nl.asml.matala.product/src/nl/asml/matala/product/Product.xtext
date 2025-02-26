@@ -120,7 +120,7 @@ SymbConstraint:
 
 DataAssertions: {DataAssertions}
     'assertions' '{' 
-        constr += AssertThatBlock*
+        constr += DataCheckItems*
      '}'
 ;
 
