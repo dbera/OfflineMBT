@@ -38,19 +38,19 @@ class ExpressionIdeProposalProvider extends AbstractExpressionIdeProposalProvide
         val feature = assignment.feature
         switch (object: context.currentModel) {
             Field case feature == 'exp': {
-                createDefaultValue(object.recordField.type, context, acceptor)
+                createDefaultValue(object.recordField.type, object.recordField.name, context, acceptor)
             }
             ExpressionVector case feature == 'elements': {
-                createDefaultValueEntry(object.typeAnnotation, context, acceptor)
+                createDefaultValueEntry(object.typeAnnotation, null, context, acceptor)
             }
             ExpressionMap case feature == 'key': {
-                createDefaultValueEntry(object.typeAnnotation, context, acceptor)
+                createDefaultValueEntry(object.typeAnnotation, null, context, acceptor)
             }
             Pair case feature == 'value': {
                 val container = object.eContainer
                 if (container instanceof ExpressionMap) {
                     val mapType = container.typeAnnotation.type as MapTypeConstructor
-                    createDefaultValue(mapType.valueType, context, acceptor)
+                    createDefaultValue(mapType.valueType, null, context, acceptor)
                 }
             }
             case feature == 'functionName': {
@@ -84,9 +84,9 @@ class ExpressionIdeProposalProvider extends AbstractExpressionIdeProposalProvide
         super._createProposals(ruleCall, context, acceptor)
     }
 
-    protected def createDefaultValueEntry(TypeAnnotation typeAnn, ContentAssistContext context, IIdeContentProposalAcceptor acceptor) {
+    protected def createDefaultValueEntry(TypeAnnotation typeAnn, String targetName, ContentAssistContext context, IIdeContentProposalAcceptor acceptor) {
         try {
-            val defaultValue = ProposalHelper.defaultValue(typeAnn)
+            val defaultValue = ProposalHelper.defaultValue(typeAnn, targetName)
             val proposal = proposalCreator.createProposal(defaultValue, context, [ entry |
                 entry.kind = ContentAssistEntry.KIND_SNIPPET
                 entry.label = ProposalHelper.getTypeName(typeAnn)
@@ -101,9 +101,9 @@ class ExpressionIdeProposalProvider extends AbstractExpressionIdeProposalProvide
         }
     }
 
-    protected def createDefaultValue(Type type, ContentAssistContext context, IIdeContentProposalAcceptor acceptor) {
+    protected def createDefaultValue(Type type, String targetName, ContentAssistContext context, IIdeContentProposalAcceptor acceptor) {
         try {
-            val defaultValue = ProposalHelper.defaultValue(type)
+            val defaultValue = ProposalHelper.defaultValue(type, targetName)
             val proposal = proposalCreator.createProposal(defaultValue, context, [ entry |
                 entry.kind = ContentAssistEntry.KIND_SNIPPET
                 entry.label = ProposalHelper.getTypeName(type)

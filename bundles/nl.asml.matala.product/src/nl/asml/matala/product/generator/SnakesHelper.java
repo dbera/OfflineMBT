@@ -199,6 +199,8 @@ class SnakesHelper {
 				String map = expression(e.getArgs().get(0), variablePrefix);
 				String key = expression(e.getArgs().get(1), variablePrefix);
 				return String.format("{_k: _v for _k, _v in %s.items() if _k != %s}", map, key);
+			} else if (e.getFunctionName().equals("uuid")) {
+				return String.format("uuid.uuid4().hex");
 			}
 		} else if (expression instanceof ExpressionQuantifier) {
 			ExpressionQuantifier e = (ExpressionQuantifier) expression;

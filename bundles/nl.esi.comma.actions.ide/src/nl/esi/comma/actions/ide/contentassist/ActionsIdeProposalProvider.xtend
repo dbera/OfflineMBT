@@ -43,11 +43,11 @@ class ActionsIdeProposalProvider extends AbstractActionsIdeProposalProvider {
         val feature = assignment.feature
         switch (object: context.currentModel) {
             AssignmentAction case feature == 'exp': {
-                createDefaultValue(object.assignment.type, context, acceptor)
+                createDefaultValue(object.assignment.type, object.assignment.name, context, acceptor)
             }
             RecordFieldAssignmentAction case feature == 'exp' && object.fieldAccess instanceof ExpressionRecordAccess: {
                 val recordAccess = object.fieldAccess as ExpressionRecordAccess
-                createDefaultValue(recordAccess.field.type, context, acceptor)
+                createDefaultValue(recordAccess.field.type, recordAccess.field.name, context, acceptor)
             }
         }
     }

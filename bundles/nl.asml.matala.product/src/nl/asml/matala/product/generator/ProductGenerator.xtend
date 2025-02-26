@@ -242,6 +242,7 @@ class ProductGenerator extends AbstractGenerator {
 			'''
 			import copy
 			import json
+			import uuid
 			
 			
 			class Data:
