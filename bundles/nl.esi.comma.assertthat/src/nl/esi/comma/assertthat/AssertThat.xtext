@@ -99,7 +99,6 @@ XPathItem: {XPathItem}
     'value-by-xpath' '(' xpathExpr = STRING  ( ',' 'log-id' ':=' loggingId = STRING )? ')'
 ;
 
-
 AssertXPathValidations: {AssertXPathValidations}
     ( xpathItem = XPathItem ) validation = AssertionXPathValidationTypes
 ;
@@ -159,7 +158,6 @@ ExpressionMapMember:
 ExpressionMap:
     '{' (members+=ExpressionMapMember) (',' members+=ExpressionMapMember)* '}'
 ;
-
 
 JsonNumeric: 
     {JsonNumeric} (Expression::FLOAT | Expression::Long)
