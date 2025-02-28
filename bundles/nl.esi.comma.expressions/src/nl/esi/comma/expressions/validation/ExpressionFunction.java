@@ -291,7 +291,7 @@ public enum ExpressionFunction {
 			}
 			return null;
 		}
-					
+
 		@Override
 		public String getDocumentation() {
 			return String.format("<T> %s(<T>, int, T)", name());
