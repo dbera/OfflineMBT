@@ -272,6 +272,30 @@ public enum ExpressionFunction {
 		public String getDocumentation() {
 			return String.format("%s(): string", name());
 		}
+	},
+	at {
+		@Override
+		public Pair<Integer, String> validate(List<Expression> args) {
+			if (args.size() != 3) {
+				return Pair.of(-1, "Function get expects three arguments");
+			}
+			TypeObject type0 = typeOf(args.get(0));
+			if (!isVectorType(type0)) {
+				return Pair.of(0, "Function get expects first argument of type vector");
+			}
+			if (!intType.equals(typeOf(args.get(1)))) {
+				return Pair.of(1, "Function get expects second argument of type integer");
+			}
+			if (!subTypeOf(typeOf(args.get(2)), getBaseTypeToCheck(type0))) {
+				return Pair.of(1, "Second argument does not conform to the base type of the vector");
+			}
+			return null;
+		}
+					
+		@Override
+		public String getDocumentation() {
+			return String.format("<T> %s(<T>, int, T)", name());
+		}
 	};
 
 	public TypeObject inferType(List<Expression> args) {
