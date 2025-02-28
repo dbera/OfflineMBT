@@ -195,6 +195,11 @@ class SnakesHelper {
 				String lst = expression(e.getArgs().get(0), variablePrefix);
 				String idx = expression(e.getArgs().get(1), variablePrefix);
 				return String.format("%s[%s]", lst, idx);
+			} else if (e.getFunctionName().equals("at")) {
+				String lst = expression(e.getArgs().get(0), variablePrefix);
+				String idx = expression(e.getArgs().get(1), variablePrefix);
+				String val = expression(e.getArgs().get(2), variablePrefix);
+				return String.format("%s; %s[%s] = %s", lst, lst, idx, val);
 			} else if (e.getFunctionName().equals("deleteKey")) {
 				String map = expression(e.getArgs().get(0), variablePrefix);
 				String key = expression(e.getArgs().get(1), variablePrefix);
