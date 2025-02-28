@@ -11,7 +11,7 @@ DataCheckItems:
 
 
 AssertThatBlock:
-    'assert-that' output=ExpressionBracket
+    name = ID ':' 'assert-that' output=ExpressionBracket
         (
               val=AssertThatValue 
             | xpath=AssertThatXPath 
@@ -20,7 +20,7 @@ AssertThatBlock:
 ;
 
 GenericScriptBlock:
-    assignment =[expr::Variable | ID] ':=' 'script-call' params = ScriptParametersBlock
+    assignment = Variable ':=' 'script-call' params = ScriptParametersBlock
 ;
 
 ScriptParametersBlock:
@@ -62,11 +62,11 @@ AssertEq:
 ;
 
 AssertClose:
-    'close-to' outClo=NumericOrArray ('within-margin' outMrg=MargingItem)?
+    'close-to' outClo=Expression ('within-margin' outMrg=MargingItem)?
 ;
 
 AssertMatch:
-    'match-regex' outRegex=StringOrArray
+    'match-regex' outRegex=Expression
 ;
 
 AssertSize:
@@ -164,13 +164,12 @@ JsonNumeric:
 ;
 
 JsonValue:
-    {JsonValue} STRING | {JsonValue} Expression::BOOL_LITERAL | JsonNumeric | JsonObject | JsonArray 
+    {JsonValue} ( fieldAccess=FieldAccessExp | STRING | Expression::BOOL_LITERAL ) | JsonNumeric | JsonObject | JsonArray
 ;
 
 StringOrArray:
     item = STRING | '[' (values+=STRING) (',' values+=STRING)* ']'
 ;
-
 NumericOrArray:
     item = JsonNumeric | '[' (values+=JsonNumeric) (',' values+=JsonNumeric)* ']'
 ;
