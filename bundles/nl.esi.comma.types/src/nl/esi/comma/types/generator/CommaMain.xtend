@@ -88,10 +88,14 @@ class CommaMain {
 	static final String OPT_MONITORING_C = 'm'
 	static final String OPT_MONITORING_DESCRIPTION = 'Deprecated. If monitoring tasks are present all of them will be executed regardless the value of the -m argument.'	
 	
-	static final String OPT_TESTSPECIFICATION = 'testspecification'
-	static final String OPT_TESTSPECIFICATION_C = 'ts'
-	static final String OPT_TESTSPECIFICATION_DESCRIPTION = 'Location of Test Specification'
-	
+    static final String OPT_TESTSPECIFICATION = 'testspecification'
+    static final String OPT_TESTSPECIFICATION_C = 'ts'
+    static final String OPT_TESTSPECIFICATION_DESCRIPTION = 'Location of Test Specification'
+    
+    static final String OPT_STANDARDPROJECT = 'standardproject'
+    static final String OPT_STANDARDPROJECT_C = 'prj'
+    static final String OPT_STANDARDPROJECT_DESCRIPTION = 'Location of Project File'
+    
 	static final String OPT_TESTSPECIFICATIONOUTPUT = 'TestspecOutput'
 	static final String OPT_TESTSPECIFICATIONOUTPUT_C = 'tsOutput'
 	static final String OPT_TESTSPECIFICATIONOUTPUT_DESCRIPTION = 'Output location of the Test Specification Product'
@@ -190,8 +194,11 @@ class CommaMain {
 			}
 			
 			if (cmdLine.hasOption(OPT_TESTSPECIFICATION)){
-				testSpecificationOPT(cmdLine, options)
-			}
+                testSpecificationOPT(cmdLine, options)
+            }
+            if (cmdLine.hasOption(OPT_STANDARDPROJECT)){
+                standardProjectOPT(cmdLine, options)
+            }
 			
 			if (cmdLine.hasOption(OPT_ORIGINALFEATURES)
 				&& cmdLine.hasOption(OPT_UPDATEDFEATURES)
@@ -238,6 +245,26 @@ class CommaMain {
 		fileAccess.outputPath = outputdir.toString
 		setCommaGen(fileAccess, outputdir.toString)
 		
+		generator.generate(resource, fileAccess, cliContext)
+	}
+	
+	def standardProjectOPT(CommandLine cmdLine, Options options) {
+		// var ResourceSet set
+		val set = resourceSetProvider.get
+		val prjPath = getLocation(cmdLine, OPT_STANDARDPROJECT) as Path
+		
+		System.out.println(INFO_OUTPUT + prjPath)
+		
+		if (prjPath === null) {
+			System::err.println(ERR_LOCATION_MISSING)
+			showInfo(description, options)
+			System.exit(1)
+			return
+		}
+		
+		val resource = set.getResource(URI.createFileURI(prjPath.fileName.toString), true)
+		var cliContext = new TestSpecContext(prjPath)
+
 		generator.generate(resource, fileAccess, cliContext)
 	}
 	
@@ -368,6 +395,7 @@ class CommaMain {
 		options.addOption(OPT_STEPSFILES_C, OPT_STEPSFILES, true, OPT_STEPSFILES_DESCRIPTION)
 		options.addOption(OPT_CONTEXT_C, OPT_CONTEXT, true, OPT_CONTEXT_DESCRIPTION)
 		options.addOption(OPT_TESTCONFIGOUTPUT_C, OPT_TESTCONFIGOUTPUT, true, OPT_TESTCONFIGOUTPUT_DESCRIPTION)
+		options.addOption(OPT_STANDARDPROJECT_C, OPT_STANDARDPROJECT, true, OPT_STANDARDPROJECT_DESCRIPTION)
 		options.addOption(OPT_ORIGINALFEATURES_C, OPT_ORIGINALFEATURES, true, OPT_ORIGINALFEATURES_DESCRIPTION)
 		options.addOption(OPT_UPDATEDFEATURES_C, OPT_UPDATEDFEATURES, true, OPT_UPDATEDFEATURES_DESCRIPTION)
 		options.addOption(OPT_ORIGINALTESTCONFIG_C, OPT_ORIGINALTESTCONFIG, true, OPT_ORIGINALTESTCONFIG_DESCRIPTION)
