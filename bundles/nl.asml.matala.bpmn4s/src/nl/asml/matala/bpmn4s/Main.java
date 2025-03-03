@@ -162,7 +162,7 @@ public class Main {
         				for (Element source: model.elements.values()) {
         					if ((isAPlace(source.getId()) || model.isActivity(source.getId())) 
         							&& isParentComponent( c, source)) { 
-        						for(Edge e: source.getAllOutputs()) {
+        						for(Edge e: source.getFlowOutputs()) {
         							String sourceId = e.getSrc();
         							String targetId = e.getTar();
         				 			if (isAPlace(targetId)) {
