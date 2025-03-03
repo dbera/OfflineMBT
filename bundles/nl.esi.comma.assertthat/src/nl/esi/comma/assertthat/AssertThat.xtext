@@ -62,11 +62,11 @@ AssertEq:
 ;
 
 AssertClose:
-    'close-to' outClo=Expression ('within-margin' outMrg=MargingItem)?
+    'close-to' outClo=NumericOrArray ('within-margin' outMrg=MargingItem)?
 ;
 
 AssertMatch:
-    'match-regex' outRegex=Expression
+    'match-regex' outRegex=StringOrArray
 ;
 
 AssertSize:
