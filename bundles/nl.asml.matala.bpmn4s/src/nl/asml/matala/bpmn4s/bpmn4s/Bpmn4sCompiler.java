@@ -88,11 +88,29 @@ public class Bpmn4sCompiler{
 	private void flattenActivities () throws InvalidModel {
 		
 		/*
-		 * Every edge in the model that points to or comes from 
-		 * an activity should be re-routed to a proper element.
+		 * Every flow edge in the model that points to or comes from 
+		 * an activity should be re-routed to a proper element. Data edges
+		 * to and from activities should be removed.
 		 */
+		List<Edge> removeDataEdges = new ArrayList<Edge>(); 
 		for (Edge e: model.edges) {
-			updateEdge(e);
+			if(e.isFlowEdge()) {
+				updateEdge(e);
+			}
+			if(e.isDataEdge()) {
+				String srcId = e.getSrc();
+				String tarId = e.getTar();
+				Element src = model.getElementById(srcId);
+				Element tar = model.getElementById(tarId);
+				if(model.isActivity(srcId) || model.isActivity(tarId)) {
+				src.dataOutputs.remove(e);
+				tar.dataInputs.remove(e);
+				removeDataEdges.add(e);
+				}
+			}
+		}
+		for(Edge e : removeDataEdges) {
+			model.edges.remove(e);
 		}
 		/* Remove activities. Also remove their start and end events 
 		 * along with their related edges.
