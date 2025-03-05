@@ -20,24 +20,22 @@ AssertThatBlock:
 ;
 
 GenericScriptBlock:
-    assignment =[expr::Variable | ID] ':=' 'script-call' params = ScriptParametersBlock
+    assignment = Variable ':=' 'script-call' params = ScriptParametersCustom
 ;
 
-ScriptParametersBlock:
-    (
-        '{'
-        'using-variable' ':'   paramsVariable  = Expression
-        ('with-positional-args' ':' positionalField = STRING ) ?
-        '}'
-    )
-    | (
-        '{'
-            'path' ':'   scriptName=STRING
-            ('positional-args' ':'  paramsPositional = ExpressionArray  ) ?
-            ('named-args' ':'       paramsNamed      = ExpressionMap ) ?
-        '}' 
-    )
+ScriptParametersCustom:
+    '{'
+        'script-path' ':'   scriptPath = STRING
+        ('positional-args' ':'  paramsPositional = ExpressionArray  ) ?
+        ('named-args' ':'       paramsNamed      = ExpressionMap ) ?
+    '}' 
 ;
+//ScriptParametersFromVariable:
+//    '{'
+//        'using-variable' ':'   paramsVariable  = Expression
+//        ('with-positional-args' ':' positionalField = STRING ) ?
+//    '}'
+//;
 
 enum MARGIN_TYPE:
     ABSOLUTE='absolute'
@@ -70,7 +68,7 @@ AssertMatch:
 ;
 
 AssertSize:
-    'has-size' itLen=INT
+    'has-size' outLen=INT
 ;
 
 // Assertion of XPath outputs
@@ -100,11 +98,7 @@ XPathItem: {XPathItem}
 ;
 
 AssertXPathValidations: {AssertXPathValidations}
-    ( xpathItem = XPathItem ) validation = AssertionXPathValidationTypes
-;
-
-AssertionXPathValidationTypes:
-    AssertionValueValidationTypes
+    ( xpathItem = XPathItem ) validation = (AssertEq | AssertClose | AssertMatch | AssertSize)
 ;
 
 // Assertion of XMLFile outputs
@@ -175,382 +169,382 @@ NumericOrArray:
     item = JsonNumeric | '[' (values+=JsonNumeric) (',' values+=JsonNumeric)* ']'
 ;
 
-// Borrowed from: github.com/TypeFox/yang-lsp
-
-SchemaNode :
-    DataSchemaNode |
-    Extension |
-    Feature |
-    Grouping |
-    Identity |
-    Notification  |
-    Rpc |
-    XpathAction |
-    Choice |
-    Case |
-    Input |
-    Output |
-    Typedef
-;
-
-Extension:
-    'extension' name=StringValue StatementEnd
-;
-
-Feature:
-    'feature' name=StringValue StatementEnd
-;
-
-Grouping:
-    'grouping' name=StringValue StatementEnd
-;
-
-Identity:
-    'identity' name=StringValue StatementEnd
-;
-
-Notification:
-    'notification' name=StringValue StatementEnd
-;
-
-Rpc:
-    'rpc' name=StringValue StatementEnd
-;
-
-XpathAction:
-    'action' name=StringValue StatementEnd
-;
-
-Choice:
-    'choice' name=StringValue StatementEnd
-;
-
-Case:
-    'case' name=StringValue StatementEnd
-;
-
-Input:
-    {Input} 'input' (name=StringValue)? StatementEnd
-;
-
-Output:
-    {Output} 'output' (name=StringValue)? StatementEnd
-;
-
-Typedef: 
-    'typedef' name=StringValue StatementEnd
-;
-
-DataSchemaNode :
-    Anydata |
-    Anyxml |
-    Container |
-    List |
-    Leaf |
-    LeafList
-;
-
-Anydata:
-    'anydata' name=StringValue StatementEnd
-;
-
-Anyxml:
-    'anyxml' name=StringValue StatementEnd
-;
-
-Container:
-    'container' name=StringValue StatementEnd
-;
-
-List:
-    'list' name=StringValue StatementEnd
-;
-
-Leaf :
-    'leaf' name=StringValue StatementEnd 
-;
-
-LeafList:
-    'leaf-list' name=StringValue StatementEnd
-;
-
-
-
-fragment StatementEnd returns Statement:
-    ('{'
-        substatements+=Statement*
-    '}' | ';')
-;
-
-
-Statement:
-      SchemaNode //|
-//      OtherStatement
-;
-
-/////////////////////////////////
-// Xpath 1.0
-/////////////////////////////////
-
-XpathExpression returns XpathExpression:
-    { UnparsedXpath } '<<<<' text=STRING '>>>>'
-    | ParsedXpathExpression;
-
-ParsedXpathExpression returns XpathExpression:  
-    XpathOrExpr
-;
-
-XpathOrExpr returns XpathExpression:  
-    XpathAndExpr ({XpathOrOperation.left=current} operator='or' right=XpathAndExpr)*
-;
-
-XpathAndExpr returns XpathExpression:  
-    XpathEqualityExpr ({XpathAndOperation.left=current} operator='and' right=XpathEqualityExpr)*
-;
-
-XpathEqualityExpr returns XpathExpression:  
-    XpathRelationalExpr ({XpathEqualityOperation.left=current} operator=('='|'!=') right=XpathRelationalExpr)*
-;
-
-XpathRelationalExpr returns XpathExpression : 
-    XpathAdditiveExpr ({XpathRelationalOperation.left=current} operator=('<'|'>'|'<='|'>=') right=XpathAdditiveExpr)*
-;
-
-XpathAdditiveExpr returns XpathExpression :  
-    XpathMultiplicativeExpr ({XpathAdditiveOperation.left=current} operator=('+'|'-') right=XpathMultiplicativeExpr)*
-;
-
-XpathMultiplicativeExpr returns XpathExpression :  
-    XpathUnaryExpr ({XpathMultiplicativeOperation.left=current} operator=('*'|'div'|'mod') right=XpathMultiplicativeExpr)?
-;
-
-XpathUnaryExpr returns XpathExpression :
-    {XpathUnaryOperation} operator='-' target=XpathUnionExpr
-    | XpathUnionExpr
-;
-
-XpathUnionExpr returns XpathExpression :  
-     XpathPathExpr ({XpathUnionOperation.left=current} operator='|' right=XpathUnionExpr)?
-;
-
-
-XpathPathExpr returns XpathExpression :  
-     XpathFilterExpr ({XpathLocation.target=current} '/' ->(isDescendants?='/')? step=XpathStep ({XpathFilter.target = current} '[' predicate=XpathExpression ']')*)*
-;
-
-XpathFilterExpr returns XpathExpression : 
-    XpathPrimaryExpr ({XpathFilter.target = current} '[' predicate=XpathExpression ']')*
-;
-
-XpathPrimaryExpr returns XpathExpression :  
-     {XpathVariableReference} '$' name=QNAME
-  |  '(' XpathExpression ')'
-  |  {XpathStringLiteral} value=STRING
-  |  {XpathNumberLiteral} value=INT //NUMBER  
-  |  {XpathFunctionCall} name=QNAME '(' ( args+=XpathExpression ( ',' args+=XpathExpression )* )? ')'
-  |  {RelativePath} step=XpathStep
-  |  {AbsolutePath} '/' ->(isDescendants?='/')? ->step=XpathStep?
-;
-
-XpathStep returns XpathStep :
-      {CurrentRef} ref=[SchemaNode|Dot]
-    | {ParentRef} ref=[SchemaNode|DotDot]
-    | {AbbrevAttributeStep} '@' attributeName=(XpathIDOrKw)  
-    | (axis=XpathAxisName ':' ':')? node=XpathNodeTest
-;
-
-Dot : '.';
-DotDot : '..';
-
-XpathNodeTest:  
-     XpathNameTest
-  |  {XpathNodeType} name=XpathNodeType '(' ')'
-  |  {ProcessingInstruction} 'processing-instruction' '(' instruction=STRING ')'
-;
-
-XpathNameTest:  
-    (prefix=ID ':')? ref = [SchemaNode|XpathIDOrKw]
-;
-
-XpathNodeType:  
-     'comment'
-  |  'text'
-  |  'node'
-;
-  
-XpathAxisName:  
-     'ancestor'
-  |  'ancestor-or-self'
-  |  'attribute'
-  |  'child'
-  |  'descendant'
-  |  'descendant-or-self'
-  |  'following'
-  |  'following-sibling'
-  |  'namespace'
-  |  'parent'
-  |  'preceding'
-  |  'preceding-sibling'
-  |  'self'
-;
-
-XpathIDOrKw :
-    ID | 'div' | 'and' | 'or' | 'mod' | XpathAxisName | XpathNodeType | '*'
-;
-
-
-// Dummy rules for type hierarchy
-
-XpathBinaryOperation:
-    XpathOrOperation | XpathAndOperation | XpathEqualityOperation | XpathRelationalOperation | XpathAdditiveOperation | XpathMultiplicativeOperation;
-
-XpathOrOperation:
-    left=XpathExpression '#dummy#' operator='or' right=XpathExpression;
-
-XpathAndOperation:
-    left=XpathExpression '#dummy#' operator='and' right=XpathExpression;
-
-XpathEqualityOperation:
-    left=XpathExpression '#dummy#' operator=('='|'!=') right=XpathExpression;
-
-XpathRelationalOperation:
-    left=XpathExpression '#dummy#' operator=('<'|'>'|'<='|'>=') right=XpathExpression;
-
-XpathAdditiveOperation:
-    left=XpathExpression '#dummy#' operator=('+'|'-') right=XpathExpression;
-
-XpathMultiplicativeOperation:
-    left=XpathExpression '#dummy#' operator=('*'|'div'|'mod') right=XpathExpression;
-
-// Leafref path
-
-QNAME:
-    (IdOrKw ':')? id=IdOrKw
-;
-
-StringValue :
-    STRING+
-;
-
-IdOrKw :
-    ID | BUILTIN_TYPE | KEYWORD
-;
-
-QualifiedTypeName:
-    ((ID | KEYWORD | LEXICAL_OPERATOR) ':')? (ID|KEYWORD)
-;
-
-BUILTIN_TYPE :
-   'binary' | 
-   'bits' |
-   'boolean' |
-   'decimal64' |
-   'empty' |
-   'enumeration' |
-   'identityref' |
-   'instance-identifier' |
-   'int8' |
-   'int16' |
-   'int32' |
-   'int64' |
-   'leafref'|
-   'string'|
-   'uint8' |
-   'uint16' |
-   'uint32' |
-   'uint64' |
-   'union'
-;
-
-KEYWORD :
-    STATEMENT_KEYWORD
-    // other keywords
-    | 'add'
-    | 'current'
-    | 'delete'
-    | 'deprecated'
-    | 'false'
-    | 'or'
-    | 'max'
-    | 'min'
-    | 'not-supported'
-    | 'obsolete'
-    | 'replace'
-    | 'system'
-    | 'true'
-    | 'unbounded'
-    | 'user'
-;
-
-STATEMENT_KEYWORD :
-    'action'
-| 'anydata'
-| 'anyxml'
-| 'argument'
-| 'augment'
-| 'base'
-| 'belongs-to'
-| 'bit'
-| 'case'
-| 'choice'
-| 'config'
-| 'contact'
-| 'container'
-| 'default'
-| 'description'
-| 'enum'
-| 'error-app-tag'
-| 'error-message'
-| 'extension'
-| 'deviation'
-| 'deviate'
-| 'feature'
-| 'fraction-digits'
-| 'grouping'
-| 'identity'
-| 'if-feature'
-| 'import'
-| 'include'
-| 'input'
-| 'key'
-| 'leaf'
-| 'leaf-list'
-| 'length'
-| 'list'
-| 'mandatory'
-| 'max-elements'
-| 'min-elements'
-| 'modifier'
-| 'module'
-| 'must'
-| 'namespace'
-| 'notification'
-| 'ordered-by'
-| 'organization'
-| 'output'
-| 'path'
-| 'pattern'
-| 'position'
-| 'prefix'
-| 'presence'
-| 'range'
-| 'reference'
-| 'refine'
-| 'require-instance'
-| 'revision'
-| 'revision-date'
-| 'rpc'
-| 'status'
-| 'submodule'
-| 'type'
-| 'typedef'
-| 'unique'
-| 'units'
-| 'uses'
-| 'value'
-| 'when'
-| 'yang-version'
-| 'yin-element'
-;
-
-terminal LEXICAL_OPERATOR : 'a lexical operator'; //'and' | 'or' | 'mod' | 'div';
+//// Borrowed from: github.com/TypeFox/yang-lsp
+//
+//SchemaNode :
+//    DataSchemaNode |
+//    Extension |
+//    Feature |
+//    Grouping |
+//    Identity |
+//    Notification  |
+//    Rpc |
+//    XpathAction |
+//    Choice |
+//    Case |
+//    Input |
+//    Output |
+//    Typedef
+//;
+//
+//Extension:
+//    'extension' name=StringValue StatementEnd
+//;
+//
+//Feature:
+//    'feature' name=StringValue StatementEnd
+//;
+//
+//Grouping:
+//    'grouping' name=StringValue StatementEnd
+//;
+//
+//Identity:
+//    'identity' name=StringValue StatementEnd
+//;
+//
+//Notification:
+//    'notification' name=StringValue StatementEnd
+//;
+//
+//Rpc:
+//    'rpc' name=StringValue StatementEnd
+//;
+//
+//XpathAction:
+//    'action' name=StringValue StatementEnd
+//;
+//
+//Choice:
+//    'choice' name=StringValue StatementEnd
+//;
+//
+//Case:
+//    'case' name=StringValue StatementEnd
+//;
+//
+//Input:
+//    {Input} 'input' (name=StringValue)? StatementEnd
+//;
+//
+//Output:
+//    {Output} 'output' (name=StringValue)? StatementEnd
+//;
+//
+//Typedef: 
+//    'typedef' name=StringValue StatementEnd
+//;
+//
+//DataSchemaNode :
+//    Anydata |
+//    Anyxml |
+//    Container |
+//    List |
+//    Leaf |
+//    LeafList
+//;
+//
+//Anydata:
+//    'anydata' name=StringValue StatementEnd
+//;
+//
+//Anyxml:
+//    'anyxml' name=StringValue StatementEnd
+//;
+//
+//Container:
+//    'container' name=StringValue StatementEnd
+//;
+//
+//List:
+//    'list' name=StringValue StatementEnd
+//;
+//
+//Leaf :
+//    'leaf' name=StringValue StatementEnd 
+//;
+//
+//LeafList:
+//    'leaf-list' name=StringValue StatementEnd
+//;
+//
+//
+//
+//fragment StatementEnd returns Statement:
+//    ('{'
+//        substatements+=Statement*
+//    '}' | ';')
+//;
+//
+//
+//Statement:
+//      SchemaNode //|
+////      OtherStatement
+//;
+//
+///////////////////////////////////
+//// Xpath 1.0
+///////////////////////////////////
+//
+//XpathExpression returns XpathExpression:
+//    { UnparsedXpath } '<<<<' text=STRING '>>>>'
+//    | ParsedXpathExpression;
+//
+//ParsedXpathExpression returns XpathExpression:  
+//    XpathOrExpr
+//;
+//
+//XpathOrExpr returns XpathExpression:  
+//    XpathAndExpr ({XpathOrOperation.left=current} operator='or' right=XpathAndExpr)*
+//;
+//
+//XpathAndExpr returns XpathExpression:  
+//    XpathEqualityExpr ({XpathAndOperation.left=current} operator='and' right=XpathEqualityExpr)*
+//;
+//
+//XpathEqualityExpr returns XpathExpression:  
+//    XpathRelationalExpr ({XpathEqualityOperation.left=current} operator=('='|'!=') right=XpathRelationalExpr)*
+//;
+//
+//XpathRelationalExpr returns XpathExpression : 
+//    XpathAdditiveExpr ({XpathRelationalOperation.left=current} operator=('<'|'>'|'<='|'>=') right=XpathAdditiveExpr)*
+//;
+//
+//XpathAdditiveExpr returns XpathExpression :  
+//    XpathMultiplicativeExpr ({XpathAdditiveOperation.left=current} operator=('+'|'-') right=XpathMultiplicativeExpr)*
+//;
+//
+//XpathMultiplicativeExpr returns XpathExpression :  
+//    XpathUnaryExpr ({XpathMultiplicativeOperation.left=current} operator=('*'|'div'|'mod') right=XpathMultiplicativeExpr)?
+//;
+//
+//XpathUnaryExpr returns XpathExpression :
+//    {XpathUnaryOperation} operator='-' target=XpathUnionExpr
+//    | XpathUnionExpr
+//;
+//
+//XpathUnionExpr returns XpathExpression :  
+//     XpathPathExpr ({XpathUnionOperation.left=current} operator='|' right=XpathUnionExpr)?
+//;
+//
+//
+//XpathPathExpr returns XpathExpression :  
+//     XpathFilterExpr ({XpathLocation.target=current} '/' ->(isDescendants?='/')? step=XpathStep ({XpathFilter.target = current} '[' predicate=XpathExpression ']')*)*
+//;
+//
+//XpathFilterExpr returns XpathExpression : 
+//    XpathPrimaryExpr ({XpathFilter.target = current} '[' predicate=XpathExpression ']')*
+//;
+//
+//XpathPrimaryExpr returns XpathExpression :  
+//     {XpathVariableReference} '$' name=QNAME
+//  |  '(' XpathExpression ')'
+//  |  {XpathStringLiteral} value=STRING
+//  |  {XpathNumberLiteral} value=INT //NUMBER  
+//  |  {XpathFunctionCall} name=QNAME '(' ( args+=XpathExpression ( ',' args+=XpathExpression )* )? ')'
+//  |  {RelativePath} step=XpathStep
+//  |  {AbsolutePath} '/' ->(isDescendants?='/')? ->step=XpathStep?
+//;
+//
+//XpathStep returns XpathStep :
+//      {CurrentRef} ref=[SchemaNode|Dot]
+//    | {ParentRef} ref=[SchemaNode|DotDot]
+//    | {AbbrevAttributeStep} '@' attributeName=(XpathIDOrKw)  
+//    | (axis=XpathAxisName ':' ':')? node=XpathNodeTest
+//;
+//
+//Dot : '.';
+//DotDot : '..';
+//
+//XpathNodeTest:  
+//     XpathNameTest
+//  |  {XpathNodeType} name=XpathNodeType '(' ')'
+//  |  {ProcessingInstruction} 'processing-instruction' '(' instruction=STRING ')'
+//;
+//
+//XpathNameTest:  
+//    (prefix=ID ':')? ref = [SchemaNode|XpathIDOrKw]
+//;
+//
+//XpathNodeType:  
+//     'comment'
+//  |  'text'
+//  |  'node'
+//;
+//  
+//XpathAxisName:  
+//     'ancestor'
+//  |  'ancestor-or-self'
+//  |  'attribute'
+//  |  'child'
+//  |  'descendant'
+//  |  'descendant-or-self'
+//  |  'following'
+//  |  'following-sibling'
+//  |  'namespace'
+//  |  'parent'
+//  |  'preceding'
+//  |  'preceding-sibling'
+//  |  'self'
+//;
+//
+//XpathIDOrKw :
+//    ID | 'div' | 'and' | 'or' | 'mod' | XpathAxisName | XpathNodeType | '*'
+//;
+//
+//
+//// Dummy rules for type hierarchy
+//
+//XpathBinaryOperation:
+//    XpathOrOperation | XpathAndOperation | XpathEqualityOperation | XpathRelationalOperation | XpathAdditiveOperation | XpathMultiplicativeOperation;
+//
+//XpathOrOperation:
+//    left=XpathExpression '#dummy#' operator='or' right=XpathExpression;
+//
+//XpathAndOperation:
+//    left=XpathExpression '#dummy#' operator='and' right=XpathExpression;
+//
+//XpathEqualityOperation:
+//    left=XpathExpression '#dummy#' operator=('='|'!=') right=XpathExpression;
+//
+//XpathRelationalOperation:
+//    left=XpathExpression '#dummy#' operator=('<'|'>'|'<='|'>=') right=XpathExpression;
+//
+//XpathAdditiveOperation:
+//    left=XpathExpression '#dummy#' operator=('+'|'-') right=XpathExpression;
+//
+//XpathMultiplicativeOperation:
+//    left=XpathExpression '#dummy#' operator=('*'|'div'|'mod') right=XpathExpression;
+//
+//// Leafref path
+//
+//QNAME:
+//    (IdOrKw ':')? id=IdOrKw
+//;
+//
+//StringValue :
+//    STRING+
+//;
+//
+//IdOrKw :
+//    ID | BUILTIN_TYPE | KEYWORD
+//;
+//
+//QualifiedTypeName:
+//    ((ID | KEYWORD | LEXICAL_OPERATOR) ':')? (ID|KEYWORD)
+//;
+//
+//BUILTIN_TYPE :
+//   'binary' | 
+//   'bits' |
+//   'boolean' |
+//   'decimal64' |
+//   'empty' |
+//   'enumeration' |
+//   'identityref' |
+//   'instance-identifier' |
+//   'int8' |
+//   'int16' |
+//   'int32' |
+//   'int64' |
+//   'leafref'|
+//   'string'|
+//   'uint8' |
+//   'uint16' |
+//   'uint32' |
+//   'uint64' |
+//   'union'
+//;
+//
+//KEYWORD :
+//    STATEMENT_KEYWORD
+//    // other keywords
+//    | 'add'
+//    | 'current'
+//    | 'delete'
+//    | 'deprecated'
+//    | 'false'
+//    | 'or'
+//    | 'max'
+//    | 'min'
+//    | 'not-supported'
+//    | 'obsolete'
+//    | 'replace'
+//    | 'system'
+//    | 'true'
+//    | 'unbounded'
+//    | 'user'
+//;
+//
+//STATEMENT_KEYWORD :
+//    'action'
+//| 'anydata'
+//| 'anyxml'
+//| 'argument'
+//| 'augment'
+//| 'base'
+//| 'belongs-to'
+//| 'bit'
+//| 'case'
+//| 'choice'
+//| 'config'
+//| 'contact'
+//| 'container'
+//| 'default'
+//| 'description'
+//| 'enum'
+//| 'error-app-tag'
+//| 'error-message'
+//| 'extension'
+//| 'deviation'
+//| 'deviate'
+//| 'feature'
+//| 'fraction-digits'
+//| 'grouping'
+//| 'identity'
+//| 'if-feature'
+//| 'import'
+//| 'include'
+//| 'input'
+//| 'key'
+//| 'leaf'
+//| 'leaf-list'
+//| 'length'
+//| 'list'
+//| 'mandatory'
+//| 'max-elements'
+//| 'min-elements'
+//| 'modifier'
+//| 'module'
+//| 'must'
+//| 'namespace'
+//| 'notification'
+//| 'ordered-by'
+//| 'organization'
+//| 'output'
+//| 'path'
+//| 'pattern'
+//| 'position'
+//| 'prefix'
+//| 'presence'
+//| 'range'
+//| 'reference'
+//| 'refine'
+//| 'require-instance'
+//| 'revision'
+//| 'revision-date'
+//| 'rpc'
+//| 'status'
+//| 'submodule'
+//| 'type'
+//| 'typedef'
+//| 'unique'
+//| 'units'
+//| 'uses'
+//| 'value'
+//| 'when'
+//| 'yang-version'
+//| 'yin-element'
+//;
+//
+//terminal LEXICAL_OPERATOR : 'a lexical operator'; //'and' | 'or' | 'mod' | 'div';
