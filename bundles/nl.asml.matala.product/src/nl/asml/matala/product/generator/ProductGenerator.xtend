@@ -78,6 +78,7 @@ import nl.esi.comma.expressions.expression.ExpressionUnary
 import nl.esi.comma.expressions.expression.ExpressionNot
 import nl.esi.comma.expressions.expression.ExpressionMinus
 import nl.esi.comma.expressions.expression.ExpressionPlus
+import nl.asml.matala.product.generator.assertThat.AssertionsHelper
 
 /**
  * Generates code from your *.ps model files on save.
@@ -426,6 +427,11 @@ class ProductGenerator extends AbstractGenerator {
 					constraints.add(new Constraint(printConstraint(c as RefConstraint), ""))
 			}
 		}
+		if(v.dataAssertions !== null) {
+            for(c : v.dataAssertions.constr) {
+                println(AssertionsHelper.printAssertion(c));
+            }
+        }
 		return constraints
 	}
 	

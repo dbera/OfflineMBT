@@ -43,17 +43,14 @@ enum MARGIN_TYPE:
     | NONE='none';
 
 MargingItem:
-    type=MARGIN_TYPE '(' (marginVal=JsonNumeric)? ')';
+    type=MARGIN_TYPE '(' (marginVal=FLOAT)? ')';
 
 // Assertion of Value outputs
 AssertThatValue:
     '{'
-    type=AssertionValueValidationTypes
+    ( assertEq = AssertEq | assertCl = AssertClose | assertMt = AssertMatch | assertSz = AssertSize)
     '}'
 ;
-
-AssertionValueValidationTypes:
-    AssertEq | AssertClose | AssertMatch | AssertSize;
 
 AssertEq:
     'equal-to' outRef=JsonValue ('within-margin' outMrg=MargingItem)? (asRegex ?= 'as-regex')?
@@ -98,7 +95,13 @@ XPathItem: {XPathItem}
 ;
 
 AssertXPathValidations: {AssertXPathValidations}
-    ( xpathItem = XPathItem ) validation = (AssertEq | AssertClose | AssertMatch | AssertSize)
+    ( xpathItem = XPathItem ) 
+    (
+          assertEq = AssertEq 
+        | assertCl = AssertClose 
+        | assertMt = AssertMatch 
+        | assertSz = AssertSize
+    )
 ;
 
 // Assertion of XMLFile outputs
@@ -112,11 +115,7 @@ AssertThatXMLFile:
 ;
 
 AssertXmlValidations: {AssertXmlValidations}
-    ( xpathItem = XPathItem ) validation = AssertionXmlValidationTypes
-;
-
-AssertionXmlValidationTypes: 
-    AssertIdentical | AssertSimilar
+    ( xpathItem = XPathItem ) (assertIdent = AssertIdentical | assertSimil = AssertSimilar)
 ;
 
 AssertIdentical: {AssertIdentical}
@@ -158,7 +157,7 @@ JsonNumeric:
 ;
 
 JsonValue:
-    {JsonValue} STRING | {JsonValue} Expression::BOOL_LITERAL | JsonNumeric | JsonObject | JsonArray 
+    STRING | BOOL_LITERAL | JsonNumeric | JsonObject | JsonArray 
 ;
 
 StringOrArray:
