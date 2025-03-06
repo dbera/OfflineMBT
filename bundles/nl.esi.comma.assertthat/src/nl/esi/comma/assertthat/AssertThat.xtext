@@ -4,14 +4,13 @@ generate assertThat "http://www.esi.nl/comma/assertthat/AssertThat"
 
 import "http://www.esi.nl/comma/expressions/Expression" as expr
 
-DataCheckItems:
-    AssertThatBlock 
-    | GenericScriptBlock
+DataAssertionItem:
+    AssertThatBlock | GenericScriptBlock
 ;
 
 
 AssertThatBlock:
-    'assert-that' output=ExpressionBracket
+    identifier = ID ':'  'assert-that' output=ExpressionBracket
         (
               val=AssertThatValue 
             | xpath=AssertThatXPath 
@@ -26,8 +25,8 @@ GenericScriptBlock:
 ScriptParametersCustom:
     '{'
         'script-path' ':'   scriptPath = STRING
-        ('positional-args' ':'  paramsPositional = ExpressionArray  ) ?
-        ('named-args' ':'       paramsNamed      = ExpressionMap ) ?
+        ('positional-args' ':'  paramsPositional = JsonArray  ) ?
+        ('named-args' ':'       paramsNamed      = JsonObject ) ?
     '}' 
 ;
 //ScriptParametersFromVariable:
@@ -57,11 +56,11 @@ AssertEq:
 ;
 
 AssertClose:
-    'close-to' outClo=NumericOrArray ('within-margin' outMrg=MargingItem)?
+    'close-to' outClo=JsonValue ('within-margin' outMrg=MargingItem)?
 ;
 
 AssertMatch:
-    'match-regex' outRegex=StringOrArray
+    'match-regex' outRegex=JsonValue
 ;
 
 AssertSize:
@@ -96,12 +95,7 @@ XPathItem: {XPathItem}
 
 AssertXPathValidations: {AssertXPathValidations}
     ( xpathItem = XPathItem ) 
-    (
-          assertEq = AssertEq 
-        | assertCl = AssertClose 
-        | assertMt = AssertMatch 
-        | assertSz = AssertSize
-    )
+    ( assertEq = AssertEq | assertCl = AssertClose | assertMt = AssertMatch | assertSz = AssertSize)
 ;
 
 // Assertion of XMLFile outputs
@@ -126,47 +120,15 @@ AssertSimilar: {AssertSimilar}
 ;
 
 
-///// Json Grammar obtained from https://gist.github.com/nightscape/629651
+// Json Grammar obtained from https://gist.github.com/nightscape/629651
 
-JsonObject:
-    '{' (members+=JsonMember) (',' members+=JsonMember)* '}'
-;
+JsonObject: '{' (members+=JsonMember) (',' members+=JsonMember)* '}' ;
 
-JsonMember:
-    key=STRING ':' value=JsonValue
-;
+JsonMember: key=STRING ':' value=JsonValue ;
 
-JsonArray:
-    '[' (values+=JsonValue) (',' values+=JsonValue)* ']'
+JsonArray: '[' (values+=JsonValue) (',' values+=JsonValue)* ']' ;
 
-;
-
-ExpressionArray:
-    '[' (values+=Expression) (',' values+=Expression)* ']'
-;
-ExpressionMapMember:
-    key=STRING ':' value=Expression
-;
-
-ExpressionMap:
-    '{' (members+=ExpressionMapMember) (',' members+=ExpressionMapMember)* '}'
-;
-
-JsonNumeric: 
-    {JsonNumeric} (Expression::FLOAT | Expression::Long)
-;
-
-JsonValue:
-    STRING | BOOL_LITERAL | JsonNumeric | JsonObject | JsonArray 
-;
-
-StringOrArray:
-    item = STRING | '[' (values+=STRING) (',' values+=STRING)* ']'
-;
-
-NumericOrArray:
-    item = JsonNumeric | '[' (values+=JsonNumeric) (',' values+=JsonNumeric)* ']'
-;
+JsonValue: JsonObject | JsonArray | expr = Expression ;
 
 //// Borrowed from: github.com/TypeFox/yang-lsp
 //

@@ -78,7 +78,7 @@ import nl.esi.comma.expressions.expression.ExpressionUnary
 import nl.esi.comma.expressions.expression.ExpressionNot
 import nl.esi.comma.expressions.expression.ExpressionMinus
 import nl.esi.comma.expressions.expression.ExpressionPlus
-import nl.asml.matala.product.generator.assertThat.AssertionsHelper
+import nl.asml.matala.product.generator.AssertionsHelper
 
 /**
  * Generates code from your *.ps model files on save.
