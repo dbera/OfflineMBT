@@ -160,8 +160,7 @@ public class Main {
         				Element c = model.getElementById(component);
         				ArrayList<String> result = new ArrayList<String>();
         				for (Element source: model.elements.values()) {
-        					if ((isAPlace(source.getId()) || model.isActivity(source.getId())) 
-        							&& isParentComponent( c, source)) { 
+        					if (isAPlace(source.getId()) && isParentComponent(c, source)) { 
         						for(Edge e: source.getFlowOutputs()) {
         							String sourceId = e.getSrc();
         							String targetId = e.getTar();
