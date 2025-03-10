@@ -97,6 +97,7 @@ ComposeStep:
 	'input-binding' ':' input += Binding+
 	'output-data' ':' output += Binding+ (suppress?='suppress'?)
 	refs += ConstraintStep*
+	asserts += AssertStep*
 ;
 
 RunStep:
