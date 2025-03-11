@@ -287,7 +287,7 @@ public enum ExpressionFunction {
 				return Pair.of(1, "Function get expects second argument of type integer");
 			}
 			if (!subTypeOf(typeOf(args.get(2)), getBaseTypeToCheck(type0))) {
-				return Pair.of(2, "Second argument does not conform to the base type of the vector");
+				return Pair.of(2, "Third argument does not conform to the base type of the vector");
 			}
 			return null;
 		}
