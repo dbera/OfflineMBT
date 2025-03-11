@@ -116,8 +116,44 @@ public class Main {
         				return el.getId();
         			}		
         			@Override
+        			/**
+        			 * Connected components of XOR gates are collapsed for optimization. A specific gate id
+        			 * is chosen as the name for each collapsed set of gates.
+        			 * Given an xor gate X, the name of its compiled collapsed component is obtained following this 
+        			 * algorithm:
+        			 * 
+        			 * IF X is fork gate:
+        			 *   while input of X is xor-fork gate:
+        			 *     X = input
+        			 *   return id of X
+        			 * IF X is merge gate:
+        			 *   while output of X is xor gate:
+        			 *     X = output
+        			 *   return id of X
+        			 */
         			protected String getCompiledXorName(String xorId) {
-        				return repr(model.getElementById(xorId));
+        				Element xor = model.getElementById(xorId);
+        				if(model.isForkGate(xorId)) {
+        					Edge inputEdge = xor.getFlowInputs().get(0);
+        					String srcId = inputEdge.getSrc();
+        					while(model.isXor(srcId) && model.isForkGate(srcId)) {
+        						xor = model.getElementById(srcId);
+            					inputEdge = xor.getFlowInputs().get(0);
+            					srcId = inputEdge.getSrc();
+        					}
+        					return repr(xor);
+        				} else if (model.isMergeGate(xorId)) {
+        					Edge outputEdge = xor.getFlowOutputs().get(0);
+        					String tarId = outputEdge.getTar();
+        					while(model.isXor(tarId)) {
+        						xor = model.getElementById(tarId);
+            					outputEdge = xor.getFlowOutputs().get(0);
+            					tarId = outputEdge.getTar();
+        					}
+        					return repr(xor);
+        				} else {
+        					return null;
+        				}
         			}
         			@Override
         			protected String getInitialPlace (String cId) {

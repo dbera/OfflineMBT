@@ -893,13 +893,15 @@ public class Bpmn4sCompiler{
 	
 	/**
 	 * Return the name of a compiled place representing a connected component of XOR gates. 
+	 * For test generation, this is either the name of a single xor gate for singleton nets, 
+	 * or a composed name identifying all the gates in the net otherwise.
 	 */
-	protected String buildXorNetName(AbstractSet<String> xorNet) {
+	private String buildXorNetName(AbstractSet<String> xorNet) {
 		String result = "";
 		if (xorNet.size() > 1) {
 			result = "merged";
-			for(String name: xorNet) {
-				result += "_" + name;
+			for(String id: xorNet) {
+				result += "_" + repr(model.getElementById(id));
 			}	
 		}else if(xorNet.size() == 1){
 			Element elem = model.getElementById(xorNet.iterator().next());
@@ -912,9 +914,11 @@ public class Bpmn4sCompiler{
 	
 	
 	/**
-	 * For test generation, networks of connected XOR gates are merged 
+	 * Networks of connected XOR gates in the bpmn4s model are merged 
 	 * into single places in the target PN. This method returns the name
-	 * of the target place.
+	 * of the target place. For test generation we build the network of connected components 
+	 * and use all its elements to build a name. For simulation we follow a different 
+	 * algorithm which does not require to know all elements in the connected component.
 	 */
 	protected String getCompiledXorName(String xorId) {
 		Element xor = model.getElementById(xorId);
@@ -923,8 +927,8 @@ public class Bpmn4sCompiler{
 			AbstractSet<String> net = new HashSet<String>();
 			buildXorNet(xor, net);
 			result = buildXorNetName(net);
-			for(String name: net) {
-				compiledGateName.put(name, result);
+			for(String id: net) {
+				compiledGateName.put(id, result);
 			}
 		}
 		return result;
@@ -933,23 +937,28 @@ public class Bpmn4sCompiler{
 	/**
 	 * Build the Maximal Connected Component of xor gates that contains <xor> and 
 	 * add its elements to <net>. Notice that <net> is used as an accumulator for
-	 * the recursive algorithm.
+	 * the recursive algorithm. Also notice that edges from FORK gates to MERGE gates
+	 * do not build connected components, since this is not a sound transformation.
 	 */
 	private void buildXorNet(Element xor, AbstractSet<String> net) {
 		net.add(xor.getId());
 		for(Edge input: xor.getFlowInputs()) {
 			String srcId = input.getSrc();
 			if(model.isXor(srcId)) {
-				if(!net.contains(repr(model.getElementById(srcId)))) {
-					buildXorNet(model.getElementById(srcId), net);
+				if(!net.contains(srcId)) {
+					if (!(model.isForkGate(srcId) && model.isMergeGate(xor.getId()))) {
+						buildXorNet(model.getElementById(srcId), net);
+					}
 				}
 			}
 		}
 		for(Edge output: xor.getFlowOutputs()) {
 			String tarId = output.getTar();
 			if(model.isXor(tarId)) {
-				if(!net.contains(repr(model.getElementById(tarId)))) {
-					buildXorNet(model.getElementById(tarId), net);
+				if(!net.contains(tarId)) {
+					if (!(model.isMergeGate(tarId) && model.isForkGate(xor.getId()))) {
+						buildXorNet(model.getElementById(tarId), net);
+					}
 				}
 			}
 		}
