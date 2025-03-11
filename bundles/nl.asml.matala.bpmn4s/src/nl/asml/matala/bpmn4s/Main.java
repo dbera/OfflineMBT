@@ -120,12 +120,12 @@ public class Main {
         				return repr(model.getElementById(xorId));
         			}
         			@Override
-        			protected AbstractList<String> getInitialPlaces (String cId) {
+        			protected String getInitialPlace (String cId) {
         				Element c = model.getElementById(cId);
-        				ArrayList<String> result = new ArrayList<String>();
+        				String result = null;
         				Element startEv = model.getStartEvent(c);
         				if (startEv != null) {
-        					result.add(repr(startEv));
+        					result = repr(startEv);
         				}
         				return result;
         			}

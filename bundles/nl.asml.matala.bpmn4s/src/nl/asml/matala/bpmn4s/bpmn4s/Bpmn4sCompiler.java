@@ -347,25 +347,22 @@ public class Bpmn4sCompiler{
 	 * @return a String with the section
 	 * @throws InvalidModel 
 	 */
-	private String fabSpecInit(String cId) throws InvalidModel {
+	private String fabSpecInit(String cId) {
 		String init = "";
 		Element c = model.getElementById(cId);
 		String ctxName = c.getContextName();
 		String ctxDataType = c.getContextDataType();
 		String ctxInit = c.getContextInit();
-		AbstractList<String> initPlaces = getInitialPlaces(cId);
-		for (String place: initPlaces) {
-			if (ctxDataType == "") {
-				init += String.format("%s := %s \n", sanitize(place), UNITINIT);
-			}else {
-				if (ctxInit == "") {
-					String mssg = String.format("Missing context initialization for component %s", compile(cId));
-					throw new InvalidModel(mssg);
-				} else {
-					init += replaceWord(ctxInit, ctxName, sanitize(place)) + "\n";
-				}
+		String initPlace = getInitialPlace(cId);
+		
+		if (ctxDataType == "") {
+			init += String.format("%s := %s \n", sanitize(initPlace), UNITINIT);
+		}else {
+			if (ctxInit != "") {
+				init += replaceWord(ctxInit, ctxName, sanitize(initPlace)) + "\n";
 			}
 		}
+		
 		for (Element ds: model.elements.values()) {
 			/* Data stores of bottom level components are initialized in such components. 
 			 * Other data stores are initialized in components for which they are an input/output.
@@ -387,50 +384,28 @@ public class Bpmn4sCompiler{
 	}
 	
 	/**
-	 * Collect the places which will hold context data in the target PN that need to be initialized 
-	 * for the system corresponding to component cId. To avoid spurious non-determinism,
-	 * we may avoid initializing the context in the start event place, and move the 
-	 * initialization further into the flow instead.
-	 * @param cId is the id of the component
-	 * @return
+	 * 
+	 * To avoid spurious non-determinism from immediately enabled transitions between start events and XOR gates,
+	 * we initialize the XOR gate place and not the start event place.
+	 * @param cId is the id of the component.
+	 * @return null if cId has no initial place. Otherwise, the compiled name of the initial event of cId if 
+	 * it is not followed by an XOR gate. Otherwise, the compiled name of the following XOR gate.
 	 */
-	protected AbstractList<String> getInitialPlaces (String cId) {
+	protected String getInitialPlace (String cId) {
 		Element c = model.getElementById(cId);
-		ArrayList<String> result = new ArrayList<String>();
+		String result = null;
 		Element startEvent = model.getStartEvent(c);
-		LinkedList<Element> queue = new LinkedList<Element>();
 		if (startEvent != null) {
-			queue.add(startEvent);
-		}
-		while(!queue.isEmpty()) {
-			Element next = queue.pop();
-			if (next.getType() == ElementType.START_EVENT) {
-				Element e = getNextFlowElement(next);
-				if (e.getType() == ElementType.AND_GATE) {
-					queue.add(e); // ignore the start event and init outputs of the AND gate
-				} else if (e.getType() == ElementType.TASK) {
-					result.add(repr(next)); // add the start event
-				} else if (e.getType() == ElementType.XOR_GATE) {
-					result.add(getCompiledXorName(e.getId())); // ignore the start event, and init the xor gate
-				} 
-			}else if (next.getType() == ElementType.AND_GATE) {
-				for (Edge edge: next.getFlowOutputs()) {
-					String tarId = edge.getTar();
-					if (model.isXor(tarId)) {
-						result.add(getCompiledXorName(tarId));
-					} else if (model.isAnd(tarId)) {
-						queue.add(model.getElementById(tarId));
-					} else if (model.isTask(tarId)) {
-						Element tar = model.getElementById(tarId);
-						result.add(namePlaceBetweenTransitions(edge.getId(), repr(next), repr(tar)));
-					}
-				}
+			Element e = getNextFlowElement(startEvent);
+			if (model.isXor(e.getId())) {
+				result = repr(e);
 			} else {
-				throw new InternalError(String.format("Got unexpected element type: %s.", next.getType()));
+				result = repr(startEvent);
 			}
 		}
 		return result;
 	}
+		
 	
 	/**
 	 * Replace whole word only (only match <from> if surrounded by delimiters)
@@ -903,7 +878,6 @@ public class Bpmn4sCompiler{
 	 * the compiler for simulation will return the element's id.
 	 */
 	protected String repr(Element el) {
-//		Logging.logDebug(el.getId());
 		return el.getName();
 	}
 	
@@ -916,6 +890,27 @@ public class Bpmn4sCompiler{
 		return id;
 	}
 	
+	
+	/**
+	 * Return the name of a compiled place representing a connected component of XOR gates. 
+	 */
+	protected String buildXorNetName(AbstractSet<String> xorNet) {
+		String result = "";
+		if (xorNet.size() > 1) {
+			result = "merged";
+			for(String name: xorNet) {
+				result += "_" + name;
+			}	
+		}else if(xorNet.size() == 1){
+			Element elem = model.getElementById(xorNet.iterator().next());
+			result = repr(elem);
+		}else {
+			result = null;
+		}
+		return result;
+	}
+	
+	
 	/**
 	 * For test generation, networks of connected XOR gates are merged 
 	 * into single places in the target PN. This method returns the name
@@ -927,14 +922,7 @@ public class Bpmn4sCompiler{
 		if(result == null) {
 			AbstractSet<String> net = new HashSet<String>();
 			buildXorNet(xor, net);
-			if (net.size() > 1) {
-				result = "merged";
-				for(String name: net) {
-					result += "_" + name;
-				}	
-			}else {
-				result = xor.getName();
-			}
+			result = buildXorNetName(net);
 			for(String name: net) {
 				compiledGateName.put(name, result);
 			}
@@ -948,7 +936,7 @@ public class Bpmn4sCompiler{
 	 * the recursive algorithm.
 	 */
 	private void buildXorNet(Element xor, AbstractSet<String> net) {
-		net.add(repr(xor));
+		net.add(xor.getId());
 		for(Edge input: xor.getFlowInputs()) {
 			String srcId = input.getSrc();
 			if(model.isXor(srcId)) {
