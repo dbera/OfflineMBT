@@ -11,10 +11,10 @@ DataAssertionItem:
 
 AssertThatBlock:
     identifier = ID ':'  'assert-that' output=ExpressionBracket
-        (
-              val=AssertThatValue 
-            | xpath=AssertThatXPath 
-            | xmlFiles=AssertThatXMLFile
+        assertType = (
+              AssertThatValue 
+            | AssertThatXPath 
+            | AssertThatXMLFile
         )
 ;
 
@@ -37,9 +37,9 @@ ScriptParametersCustom:
 //;
 
 enum MARGIN_TYPE:
-    ABSOLUTE='absolute'
-    | RELATIVE='relative'
-    | NONE='none';
+    ABSOLUTE='Absolute'
+    | RELATIVE='Relative'
+    | NONE='None';
 
 MargingItem:
     type=MARGIN_TYPE '(' (marginVal=FLOAT)? ')';
@@ -47,24 +47,24 @@ MargingItem:
 // Assertion of Value outputs
 AssertThatValue:
     '{'
-    ( assertEq = AssertEq | assertCl = AssertClose | assertMt = AssertMatch | assertSz = AssertSize)
+    comparisonType = ( AssertEq | AssertClose | AssertMatch | AssertSize )
     '}'
 ;
 
 AssertEq:
-    'equal-to' outRef=JsonValue ('within-margin' outMrg=MargingItem)? (asRegex ?= 'as-regex')?
+    'equal-to' reference=JsonValue ('within-margin' outMrg=MargingItem)? (asRegex ?= 'as-regex')?
 ;
 
 AssertClose:
-    'close-to' outClo=JsonValue ('within-margin' outMrg=MargingItem)?
+    'close-to' reference=JsonValue ('within-margin' outMrg=MargingItem)?
 ;
 
 AssertMatch:
-    'match-regex' outRegex=JsonValue
+    'match-regex' reference=JsonValue
 ;
 
 AssertSize:
-    'has-size' outLen=INT
+    'has-size' reference=INT
 ;
 
 // Assertion of XPath outputs
@@ -95,7 +95,7 @@ XPathItem: {XPathItem}
 
 AssertXPathValidations: {AssertXPathValidations}
     ( xpathItem = XPathItem ) 
-    ( assertEq = AssertEq | assertCl = AssertClose | assertMt = AssertMatch | assertSz = AssertSize)
+    comparisonType = ( AssertEq | AssertClose | AssertMatch | AssertSize)
 ;
 
 // Assertion of XMLFile outputs
@@ -109,7 +109,7 @@ AssertThatXMLFile:
 ;
 
 AssertXmlValidations: {AssertXmlValidations}
-    ( xpathItem = XPathItem ) (assertIdent = AssertIdentical | assertSimil = AssertSimilar)
+    ( xpathItem = XPathItem ) comparisonType = (AssertIdentical | AssertSimilar)
 ;
 
 AssertIdentical: {AssertIdentical}
@@ -121,6 +121,8 @@ AssertSimilar: {AssertSimilar}
 
 
 // Json Grammar obtained from https://gist.github.com/nightscape/629651
+
+JsonElements: JsonObject | JsonMember | JsonArray | JsonValue ;
 
 JsonObject: '{' (members+=JsonMember) (',' members+=JsonMember)* '}' ;
 
