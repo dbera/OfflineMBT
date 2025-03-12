@@ -8,49 +8,14 @@
         <relativePath>../../</relativePath>
     </parent>
 
-    <artifactId>nl.asml.matala.product.lsp.server</artifactId>
+    <artifactId>nl.esi.comma.project.standard.cli</artifactId>
     <packaging>eclipse-plugin</packaging>
-
-    <name>nl.asml.matala.product.lsp.server - Product Language LSP Server</name>
 
     <build>
         <plugins>
             <plugin>
-                <artifactId>maven-resources-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>copy-docs</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-
-                        <configuration>
-                            <outputDirectory>${project.build.directory}/dist</outputDirectory>
-                            <resources>
-                                <resource>
-                                    <directory>${basedir}/doc</directory>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
                 <artifactId>maven-dependency-plugin</artifactId>
                 <executions>
-                    <execution>
-                        <id>unpack-jre</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>unpack-dependencies</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>${project.build.directory}/dist</outputDirectory>
-                            <includeArtifactIds>org.eclipse.justj.openjdk.hotspot.jre.minimal.stripped.win32.x86_64</includeArtifactIds>
-                            <includes>jre/**/*</includes>
-                        </configuration>
-                    </execution>
                     <execution>
                         <id>copy-dependencies</id>
                         <phase>package</phase>
@@ -64,35 +29,6 @@
                             <overWriteSnapshots>false</overWriteSnapshots>
                             <overWriteIfNewer>true</overWriteIfNewer>
                             <excludeTransitive>true</excludeTransitive>
-                            <excludeArtifactIds>
-                                com.ibm.icu,
-                                org.apache.ant,
-                                org.apache.commons.lang,
-                                org.apache.commons.logging,
-                                org.eclipse.core.commands,
-                                org.eclipse.core.contenttype,
-                                org.eclipse.core.expressions,
-                                org.eclipse.core.filesystem,
-                                org.eclipse.core.jobs,
-                                org.eclipse.core.resources,
-                                org.eclipse.core.variables,
-                                org.eclipse.debug.core,
-                                org.eclipse.emf.codegen.ecore,
-                                org.eclipse.emf.codegen,
-                                org.eclipse.emf.mwe.core,
-                                org.eclipse.emf.mwe.utils,
-                                org.eclipse.emf.mwe2.lib,
-                                org.eclipse.emf.mwe2.runtime,
-                                org.eclipse.equinox.app,
-                                org.eclipse.equinox.preferences,
-                                org.eclipse.jdt.core,
-                                org.eclipse.jdt.debug,
-                                org.eclipse.jdt.launching,
-                                org.eclipse.text,
-                                org.eclipse.justj.openjdk.hotspot.jre.minimal.stripped,
-                                org.eclipse.justj.openjdk.hotspot.jre.minimal.stripped.linux.x86_64,
-                                org.eclipse.justj.openjdk.hotspot.jre.minimal.stripped.win32.x86_64
-                            </excludeArtifactIds>
                         </configuration>
                     </execution>
                 </executions>
@@ -125,7 +61,7 @@
                     <transformers>
                         <transformer
                             implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                            <mainClass>${project.artifactId}.ProductServerLauncher</mainClass>
+                            <mainClass>${project.artifactId}.Main</mainClass>
                         </transformer>
                         <transformer
                             implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
@@ -141,11 +77,12 @@
                             <exclude>*:${project.artifactId}-*.source-*</exclude>
                             <!-- HINT: use the next grep command on de maven-shade-plugin warnings to produce the list below -->
                             <!-- mvn verify | tee mvn.log -->
-                            <!-- grep -e '^\[WARNING\]' mvn.log | grep -o -e 'nl.asml.matala.product.lsp.server-[^-]*' | sort -u | sed 's#\(.*\)-\(.*\)#<exclude>*:${project.artifactId}-\2-*</exclude>#g' -->
-                            <exclude>*:${project.artifactId}-Java-*</exclude>
+                            <!-- grep -e '^\[WARNING\]' mvn.log |  grep -o -e 'nl.esi.comma.project.standard.cli-[^-]*' | sort -u | sed 's#\(.*\)-\(.*\)#<exclude>*:${project.artifactId}-\2-*</exclude>#g' -->
                             <exclude>*:${project.artifactId}-aopalliance-*</exclude>
                             <exclude>*:${project.artifactId}-asm-*</exclude>
+                            <exclude>*:${project.artifactId}-camunda-*</exclude>
                             <exclude>*:${project.artifactId}-classgraph-*</exclude>
+                            <exclude>*:${project.artifactId}-com.sun.jna-*</exclude>
                             <exclude>*:${project.artifactId}-commons-*</exclude>
                             <exclude>*:${project.artifactId}-failureaccess-*</exclude>
                             <exclude>*:${project.artifactId}-gson-*</exclude>
@@ -153,25 +90,27 @@
                             <exclude>*:${project.artifactId}-guice-*</exclude>
                             <exclude>*:${project.artifactId}-jakarta.annotation-*</exclude>
                             <exclude>*:${project.artifactId}-jakarta.inject-*</exclude>
+                            <exclude>*:${project.artifactId}-jna-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.asml.matala.bpmn4s-*</exclude>
                             <exclude>*:${project.artifactId}-nl.asml.matala.product-*</exclude>
-                            <exclude>*:${project.artifactId}-nl.asml.matala.product.ide-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.actions-*</exclude>
-                            <exclude>*:${project.artifactId}-nl.esi.comma.actions.ide-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.assertthat-*</exclude>
-                            <exclude>*:${project.artifactId}-nl.esi.comma.assertthat.ide-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.esi.comma.automata-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.esi.comma.constraints-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.esi.comma.constraints.dashboard-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.expressions-*</exclude>
-                            <exclude>*:${project.artifactId}-nl.esi.comma.expressions.ide-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.esi.comma.inputspecification-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.esi.comma.project.standard-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.esi.comma.scenarios-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.esi.comma.scenarios.dashboard-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.signature-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.esi.comma.steps-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.esi.comma.systemconfig-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.esi.comma.testspecification-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.types-*</exclude>
-                            <exclude>*:${project.artifactId}-nl.esi.comma.types.ide-*</exclude>
-                            <exclude>*:${project.artifactId}-nl.esi.xtext.lsp.server-*</exclude>
                             <exclude>*:${project.artifactId}-org.aopalliance-*</exclude>
-                            <exclude>*:${project.artifactId}-org.apache.aries.spifly.dynamic.bundle-*</exclude>
-                            <exclude>*:${project.artifactId}-org.eclipse.lsp4j-*</exclude>
-                            <exclude>*:${project.artifactId}-org.eclipse.lsp4j.jsonrpc-*</exclude>
                             <exclude>*:${project.artifactId}-org.osgi.service.prefs-*</exclude>
                             <exclude>*:${project.artifactId}-reload4j-*</exclude>
-                            <exclude>*:${project.artifactId}-slf4j-*</exclude>
                         </excludes>
                     </artifactSet>
                     <filters>
@@ -200,8 +139,8 @@
                     <shadedArtifactAttached>true</shadedArtifactAttached>
                     <shadedClassifierName>uber</shadedClassifierName>
                     <minimizeJar>false</minimizeJar>
-                    <finalName>bpmn4s-lsp-server</finalName>
-                    <outputDirectory>${project.build.directory}/dist</outputDirectory>
+                    <finalName>bpmn4s-generator</finalName>
+                    <outputDirectory>${project.build.directory}</outputDirectory>
                 </configuration>
                 <executions>
                     <execution>
