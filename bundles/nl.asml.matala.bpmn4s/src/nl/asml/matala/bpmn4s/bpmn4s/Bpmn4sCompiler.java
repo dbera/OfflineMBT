@@ -350,19 +350,23 @@ public class Bpmn4sCompiler{
 	private String fabSpecInit(String cId) {
 		String init = "";
 		Element c = model.getElementById(cId);
+		
+		// Initialize context for this component
 		String ctxName = c.getContextName();
 		String ctxDataType = c.getContextDataType();
 		String ctxInit = c.getContextInit();
 		String initPlace = getInitialPlace(cId);
-		
-		if (ctxDataType == "") {
-			init += String.format("%s := %s \n", sanitize(initPlace), UNITINIT);
-		}else {
-			if (ctxInit != "") {
-				init += replaceWord(ctxInit, ctxName, sanitize(initPlace)) + "\n";
+		if (initPlace != null) {
+			if (ctxDataType == "") {
+				init += String.format("%s := %s \n", sanitize(initPlace), UNITINIT);
+			} else {
+				if (ctxInit != "") {
+					init += replaceWord(ctxInit, ctxName, sanitize(initPlace)) + "\n";
+				}
 			}
 		}
 		
+		// Initialize inputs for this component
 		for (Element ds: model.elements.values()) {
 			/* Data stores of bottom level components are initialized in such components. 
 			 * Other data stores are initialized in components for which they are an input/output.
@@ -380,6 +384,7 @@ public class Bpmn4sCompiler{
 				}
 			}
 		}
+		
 		return init == "" ? "// init\n" : "init\n" + init;
 	}
 	
