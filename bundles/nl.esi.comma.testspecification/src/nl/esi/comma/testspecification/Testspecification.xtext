@@ -68,7 +68,7 @@ TMap:
 AbstractTestSequence:
 	'Test-Scenario' ':' name = ID
 		// step += [TMap|ID]+
-		step += (AbstractStep | AssertStep)+  // | ConstraintStep 
+		step += AbstractStep+ // (AbstractStep | AssertStep)+  // | ConstraintStep 
 		
 ;
 
@@ -80,7 +80,8 @@ ConstraintStep:
 
 AssertStep:
 	'output-assertion' ':' name = ID
-	ce += ConstraintElm+
+	// ce += ConstraintElm+
+	ce += [prod::DataAssertions|QualifiedName]+
 ;
 
 ConstraintElm:
