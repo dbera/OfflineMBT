@@ -121,39 +121,34 @@ public class Main {
         			 * is chosen as the name for each collapsed set of gates.
         			 * Given an xor gate X, the name of its compiled collapsed component is obtained following this 
         			 * algorithm:
-        			 * 
+        			 * fun(X)
         			 * IF X is fork gate:
-        			 *   while input of X is xor-fork gate:
-        			 *     X = input
-        			 *   return id of X
-        			 * IF X is merge gate:
-        			 *   while output of X is xor gate:
-        			 *     X = output
-        			 *   return id of X
+        			 *   get input of X 
+        			 *   IF input is xor-fork gate:
+        			 *     return fun(X)
+        			 *   
+        			 * ELSE IF X is merge gate:
+        			 *   get output of X
+        			 *   IF output is xor gate:
+        			 *     return fun(X)
+        			 * return id of X
         			 */
         			protected String getCompiledXorName(String xorId) {
         				Element xor = model.getElementById(xorId);
-        				if(model.isForkGate(xorId)) {
+        				if (model.isForkGate(xorId)) {
         					Edge inputEdge = xor.getFlowInputs().get(0);
         					String srcId = inputEdge.getSrc();
-        					while(model.isXor(srcId) && model.isForkGate(srcId)) {
-        						xor = model.getElementById(srcId);
-            					inputEdge = xor.getFlowInputs().get(0);
-            					srcId = inputEdge.getSrc();
+        					if (model.isXor(srcId) && model.isForkGate(srcId)) {
+        						return getCompiledXorName(srcId);
         					}
-        					return repr(xor);
         				} else if (model.isMergeGate(xorId)) {
         					Edge outputEdge = xor.getFlowOutputs().get(0);
         					String tarId = outputEdge.getTar();
-        					while(model.isXor(tarId)) {
-        						xor = model.getElementById(tarId);
-            					outputEdge = xor.getFlowOutputs().get(0);
-            					tarId = outputEdge.getTar();
+        					if (model.isXor(tarId)) {
+        						return getCompiledXorName(tarId);
         					}
-        					return repr(xor);
-        				} else {
-        					return null;
-        				}
+        				} 
+        				return repr(xor);
         			}
         			@Override
         			protected String getInitialPlace (String cId) {
