@@ -14,6 +14,27 @@
     <build>
         <plugins>
             <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-docs</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/dist</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${basedir}/doc</directory>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <artifactId>maven-dependency-plugin</artifactId>
                 <executions>
                     <execution>
@@ -140,7 +161,7 @@
                     <shadedClassifierName>uber</shadedClassifierName>
                     <minimizeJar>false</minimizeJar>
                     <finalName>bpmn4s-generator</finalName>
-                    <outputDirectory>${project.build.directory}</outputDirectory>
+                    <outputDirectory>${project.build.directory}/dist</outputDirectory>
                 </configuration>
                 <executions>
                     <execution>
