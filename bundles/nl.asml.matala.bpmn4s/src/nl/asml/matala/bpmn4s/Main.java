@@ -151,63 +151,8 @@ public class Main {
         				return repr(xor);
         			}
         			@Override
-        			protected String getInitialPlace (String cId) {
-        				Element c = model.getElementById(cId);
-        				String result = null;
-        				Element startEv = model.getStartEvent(c);
-        				if (startEv != null) {
-        					result = repr(startEv);
-        				}
-        				return result;
-        			}
-        			@Override
         			protected String namePlaceBetweenTransitions(String flowId, String src, String dst) {
         				return flowId;
-        			}
-        			@Override
-        			protected List<String> localsFromStartEvents (Element c) {
-        				List<String> result = new ArrayList<String>();
-        				for (Element se: model.elements.values()) {
-        					if (se.getType().equals(ElementType.START_EVENT) && isParentComponent(c, se)) { 
-    							String datatype = mapType(c.getContextDataType() != "" ? c.getContextDataType() : UNIT_TYPE);
-    							result.add(tabulate(datatype, sanitize(repr(se))));
-        						}
-        					}
-        				return result;
-        			}
-        			@Override
-        			protected List<String> localsFromEndEvents (Element c) {
-        				List<String> result = new ArrayList<String>();
-        				for (Element se: model.elements.values()) {
-        					if (se.getType().equals(ElementType.END_EVENT) && isParentComponent(c, se)) { 
-    							String datatype = mapType(c.getContextDataType() != "" ? c.getContextDataType() : UNIT_TYPE);
-    							result.add(tabulate(datatype, sanitize(repr(se))));
-        						}
-        					}
-        				return result;
-        			}
-        			@Override
-        			protected List<String> getFlowActions(String component) {
-        				Element c = model.getElementById(component);
-        				ArrayList<String> result = new ArrayList<String>();
-        				for (Element source: model.elements.values()) {
-        					if (isAPlace(source.getId()) && isParentComponent(c, source)) { 
-        						for(Edge e: source.getFlowOutputs()) {
-        							String sourceId = e.getSrc();
-        							String targetId = e.getTar();
-        				 			if (isAPlace(targetId)) {
-        								String action = "";
-        								action += "action            " + repr(e) + "\n";
-        								action += "case              default\n";
-        								action += "with-inputs       " + sourceId + "\n";
-        								action += "produces-outputs  " + targetId + "\n";
-        								action += String.format("updates:          %s := %s\n", targetId, sourceId);
-        								result.add(action);
-        							}
-        						}
-        					}
-        				}
-        				return result;
         			}
         			@Override
         			protected Map<String, String> buildReplaceMap (Element transition) {
