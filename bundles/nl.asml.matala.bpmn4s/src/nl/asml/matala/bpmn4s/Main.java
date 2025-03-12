@@ -513,6 +513,11 @@ public class Main {
 		node.setContext(contextName != null ? contextName : "", 
 				contextTypeName != null ? contextTypeName : "", 
 						contextInit != null ? contextInit : "");
+		
+		if(type.equals(ElementType.TASK)) {
+			node.setContextUpdate(elem.getAttributeValueNs("http://bpmn4s", "ctxUpdate"));
+		}
+		
 		model.addElement(id, node);
 		if (elem instanceof FlowNode) {
 			resolveNodeEdges((FlowNode) elem, node);
@@ -522,7 +527,7 @@ public class Main {
 	static void resolveNodeEdges(FlowNode elem, Element node) {
 		for(SequenceFlow out: elem.getOutgoing()) {
 			Edge e = makeFlowEdge(out);
-			// Flow nodes may update the context
+			// Flow nodes may update the context FIXME check if can remove this contextupdate from the edge
 			String ctxUpdate = elem.getAttributeValueNs("http://bpmn4s", "ctxUpdate");
 			e.setUpdate(ctxUpdate != null ? ctxUpdate : "");
 			model.addEdge(e);

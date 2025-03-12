@@ -528,7 +528,7 @@ public class Bpmn4sCompiler{
 								// if there is in-flow, move the context between places in the PN.(**1)
 								updates += indent(postCtxName + " := " + preCtxName) + "\n";
 							}
-							String update = e.getUpdate();
+							String update = node.getContextUpdate();
 							if(update != null && update != "") {
 								update = replaceWord(update, compCtxName, postCtxName); // (**1) postCtxName == preCtxName
 								updates += indent(replaceAll(update, replaceMap)) + "\n";
