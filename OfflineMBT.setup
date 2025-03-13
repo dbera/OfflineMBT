@@ -273,6 +273,18 @@
     <description>${scope.project.label}</description>
   </setupTask>
   <setupTask
+      xsi:type="projects:ProjectsImportTask">
+    <sourceLocator
+        rootFolder="${git.clone.OfflineMBT.location}"
+        locateNestedProjects="true"/>
+  </setupTask>
+  <setupTask
+      xsi:type="maven:MavenImportTask">
+    <sourceLocator
+        rootFolder="${git.clone.OfflineMBT.location}"
+        locateNestedProjects="true"/>
+  </setupTask>
+  <setupTask
       xsi:type="setup.targlets:TargletTask">
     <targlet
         name="${scope.project.label}"
@@ -346,18 +358,6 @@
       </repositoryList>
     </targlet>
     <composedTarget>OfflineMBT - Maven Dependencies</composedTarget>
-  </setupTask>
-  <setupTask
-      xsi:type="projects:ProjectsImportTask">
-    <sourceLocator
-        rootFolder="${git.clone.OfflineMBT.location}"
-        locateNestedProjects="true"/>
-  </setupTask>
-  <setupTask
-      xsi:type="maven:MavenImportTask">
-    <sourceLocator
-        rootFolder="${git.clone.OfflineMBT.location}"
-        locateNestedProjects="true"/>
   </setupTask>
   <setupTask
       xsi:type="setup.workingsets:WorkingSetTask"
