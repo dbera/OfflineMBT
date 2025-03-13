@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?pde version="3.8"?>
+<target name="Generated from OfflineMBT" sequenceNumber="3">
+  <locations>
+    <location type="Target" uri="file:${project_loc:/nl.esi.comma.target}/nl.esi.comma.maven.target"/>
+    <location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
+      <unit id="bcpg" version="0.0.0"/>
+      <unit id="bcprov" version="0.0.0"/>
+      <unit id="bcutil" version="0.0.0"/>
+      <unit id="biz.aQute.bnd.util" version="0.0.0"/>
+      <unit id="biz.aQute.bndlib" version="0.0.0"/>
+      <unit id="biz.aQute.resolve" version="0.0.0"/>
+      <unit id="bndtools.api" version="0.0.0"/>
+      <unit id="com.google.gson" version="0.0.0"/>
+      <unit id="com.ibm.icu" version="0.0.0"/>
+      <unit id="com.sun.el.javax.el" version="0.0.0"/>
+      <unit id="jakarta.activation-api" version="0.0.0"/>
+      <unit id="jakarta.annotation-api" version="0.0.0"/>
+      <unit id="jakarta.xml.bind-api" version="0.0.0"/>
+      <unit id="org.aopalliance" version="0.0.0"/>
+      <unit id="org.apache.aries.spifly.dynamic.bundle" version="0.0.0"/>
+      <unit id="org.apache.batik.constants" version="0.0.0"/>
+      <unit id="org.apache.batik.i18n" version="0.0.0"/>
+      <unit id="org.apache.batik.util" version="0.0.0"/>
+      <unit id="org.apache.commons.commons-io" version="0.0.0"/>
+      <unit id="org.apache.commons.lang" version="0.0.0"/>
+      <unit id="org.apache.commons.lang3" version="0.0.0"/>
+      <unit id="org.apache.felix.scr" version="0.0.0"/>
+      <unit id="org.bndtools.headless.build.manager" version="0.0.0"/>
+      <unit id="org.bndtools.headless.build.plugin.gradle" version="0.0.0"/>
+      <unit id="org.bndtools.templating" version="0.0.0"/>
+      <unit id="org.bndtools.versioncontrol.ignores.manager" version="0.0.0"/>
+      <unit id="org.bndtools.versioncontrol.ignores.plugin.git" version="0.0.0"/>
+      <unit id="org.eclipse.acceleo.query.feature.group" version="0.0.0"/>
+      <unit id="org.eclipse.equinox.executable.feature.group" version="0.0.0"/>
+      <unit id="org.eclipse.jdt.annotation" version="0.0.0"/>
+      <unit id="org.eclipse.jetty.ee8.security" version="0.0.0"/>
+      <unit id="org.eclipse.jetty.ee8.server" version="0.0.0"/>
+      <unit id="org.eclipse.jetty.ee8.servlet" version="0.0.0"/>
+      <unit id="org.eclipse.jetty.http" version="0.0.0"/>
+      <unit id="org.eclipse.jetty.io" version="0.0.0"/>
+      <unit id="org.eclipse.jetty.security" version="0.0.0"/>
+      <unit id="org.eclipse.jetty.server" version="0.0.0"/>
+      <unit id="org.eclipse.jetty.servlet-api" version="0.0.0"/>
+      <unit id="org.eclipse.jetty.session" version="0.0.0"/>
+      <unit id="org.eclipse.jetty.util" version="0.0.0"/>
+      <unit id="org.eclipse.lsp4e" version="0.0.0"/>
+      <unit id="org.eclipse.orbit.xml-apis-ext" version="0.0.0"/>
+      <unit id="org.eclipse.sdk.feature.group" version="0.0.0"/>
+      <unit id="org.eclipse.xtext.sdk.feature.group" version="0.0.0"/>
+      <unit id="org.jsoup" version="0.0.0"/>
+      <unit id="org.kohsuke.args4j" version="0.0.0"/>
+      <unit id="org.mortbay.jasper.apache-el" version="0.0.0"/>
+      <unit id="org.mortbay.jasper.apache-jsp" version="0.0.0"/>
+      <unit id="org.objectweb.asm.commons" version="0.0.0"/>
+      <unit id="org.osgi.namespace.contract" version="0.0.0"/>
+      <unit id="org.osgi.namespace.extender" version="0.0.0"/>
+      <unit id="org.osgi.namespace.service" version="0.0.0"/>
+      <unit id="org.osgi.service.coordinator" version="0.0.0"/>
+      <unit id="org.osgi.service.repository" version="0.0.0"/>
+      <unit id="slf4j.api" version="0.0.0"/>
+      <repository location="https://download.eclipse.org/releases/2024-09"/>
+    </location>
+    <location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
+      <unit id="io.github.classgraph.classgraph" version="0.0.0"/>
+      <unit id="slf4j.reload4j" version="0.0.0"/>
+      <repository location="https://download.eclipse.org/tools/orbit/simrel/orbit-aggregation/2024-09"/>
+    </location>
+    <location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
+      <unit id="net.sourceforge.plantuml.ecore.feature.feature.group" version="0.0.0"/>
+      <repository location="http://hallvard.github.io/plantuml"/>
+    </location>
+    <location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
+      <unit id="org.eclipse.justj.openjdk.hotspot.jre.minimal.stripped.feature.group" version="0.0.0"/>
+      <repository location="https://download.eclipse.org/justj/jres/21/updates/release/21.0.4"/>
+    </location>
+    <location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
+      <unit id="javax.annotation" version="0.0.0"/>
+      <unit id="org.apache.commons.jxpath" version="0.0.0"/>
+      <unit id="org.apache.poi.feature.feature.group" version="0.0.0"/>
+      <unit id="org.eclipse.ecf.filetransfer.httpclient45.feature.feature.group" version="0.0.0"/>
+      <unit id="org.obeonetwork.m2doc.feature.feature.group" version="0.0.0"/>
+      <repository location="https://s3-eu-west-1.amazonaws.com/obeo-m2doc-releases/3.2.0/repository/"/>
+    </location>
+    <location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
+      <unit id="de.itemis.xtext.antlr.feature.feature.group" version="0.0.0"/>
+      <repository location="https://download.itemis.com/updates/releases/2.1.1/"/>
+    </location>
+    <location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
+      <unit id="org.python.pydev.feature.feature.group" version="0.0.0"/>
+      <repository location="https://www.pydev.org/updates/"/>
+    </location>
+  </locations>
+</target>
