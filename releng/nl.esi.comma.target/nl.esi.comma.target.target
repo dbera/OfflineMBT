@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <?pde version="3.8"?>
-<target name="Generated from OfflineMBT" sequenceNumber="3">
+<target name="Generated from OfflineMBT" sequenceNumber="4">
   <locations>
     <location type="Target" uri="file:${project_loc:/nl.esi.comma.target}/nl.esi.comma.maven.target"/>
     <location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
@@ -31,7 +31,6 @@
       <unit id="org.bndtools.templating" version="0.0.0"/>
       <unit id="org.bndtools.versioncontrol.ignores.manager" version="0.0.0"/>
       <unit id="org.bndtools.versioncontrol.ignores.plugin.git" version="0.0.0"/>
-      <unit id="org.eclipse.acceleo.query.feature.group" version="0.0.0"/>
       <unit id="org.eclipse.equinox.executable.feature.group" version="0.0.0"/>
       <unit id="org.eclipse.jdt.annotation" version="0.0.0"/>
       <unit id="org.eclipse.jetty.ee8.security" version="0.0.0"/>
@@ -46,6 +45,7 @@
       <unit id="org.eclipse.jetty.util" version="0.0.0"/>
       <unit id="org.eclipse.lsp4e" version="0.0.0"/>
       <unit id="org.eclipse.orbit.xml-apis-ext" version="0.0.0"/>
+      <unit id="org.eclipse.osgi.services" version="0.0.0"/>
       <unit id="org.eclipse.sdk.feature.group" version="0.0.0"/>
       <unit id="org.eclipse.xtext.sdk.feature.group" version="0.0.0"/>
       <unit id="org.jsoup" version="0.0.0"/>
@@ -79,7 +79,6 @@
       <unit id="org.apache.commons.jxpath" version="0.0.0"/>
       <unit id="org.apache.poi.feature.feature.group" version="0.0.0"/>
       <unit id="org.eclipse.ecf.filetransfer.httpclient45.feature.feature.group" version="0.0.0"/>
-      <unit id="org.obeonetwork.m2doc.feature.feature.group" version="0.0.0"/>
       <repository location="https://s3-eu-west-1.amazonaws.com/obeo-m2doc-releases/3.2.0/repository/"/>
     </location>
     <location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
