@@ -8,7 +8,6 @@ Require-Bundle: com.google.inject,
  nl.asml.matala.product,
  nl.esi.comma.inputspecification,
  nl.esi.comma.testspecification,
- nl.esi.comma.project.standard,
- org.antlr.runtime;bundle-version="[3.2.0,4.0.0)"
+ nl.esi.comma.project.standard
 Automatic-Module-Name: nl.esi.comma.project.standard.cli
 Bundle-RequiredExecutionEnvironment: JavaSE-21
