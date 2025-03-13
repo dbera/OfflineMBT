@@ -17,7 +17,7 @@
                 <artifactId>maven-resources-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>copy-docs</id>
+                        <id>copy-dist</id>
                         <phase>package</phase>
                         <goals>
                             <goal>copy-resources</goal>
@@ -27,7 +27,7 @@
                             <outputDirectory>${project.build.directory}/dist</outputDirectory>
                             <resources>
                                 <resource>
-                                    <directory>${basedir}/doc</directory>
+                                    <directory>${basedir}/dist</directory>
                                 </resource>
                             </resources>
                         </configuration>
@@ -48,7 +48,7 @@
                             <outputDirectory>${project.build.directory}/libs</outputDirectory>
                             <overWriteReleases>false</overWriteReleases>
                             <overWriteSnapshots>false</overWriteSnapshots>
-                            <overWriteIfNewer>true</overWriteIfNewer>
+                            <overWriteIfNewer>false</overWriteIfNewer>
                             <excludeTransitive>true</excludeTransitive>
                             <excludeArtifactIds>
                                 com.ibm.icu,
