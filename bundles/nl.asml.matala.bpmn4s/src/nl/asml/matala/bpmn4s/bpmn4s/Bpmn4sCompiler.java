@@ -356,6 +356,7 @@ public class Bpmn4sCompiler{
 		String ctxDataType = c.getContextDataType();
 		String ctxInit = c.getContextInit();
 		String initPlace = getInitialPlace(cId);
+
 		if (initPlace != null) {
 			if (ctxDataType == "") {
 				init += String.format("%s := %s \n", sanitize(initPlace), UNITINIT);
@@ -403,7 +404,7 @@ public class Bpmn4sCompiler{
 		if (startEvent != null) {
 			Element e = getNextFlowElement(startEvent);
 			if (model.isXor(e.getId())) {
-				result = repr(e);
+				result = compile(e.getId());
 			} else {
 				result = repr(startEvent);
 			}
