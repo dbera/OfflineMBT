@@ -407,7 +407,7 @@ class JsonHelper {
 
 	public static String jsonValue(JsonValue reference) {
 		// TODO Auto-generated method stub
-		return null;
+		return reference.toString();
 	}
 
 }

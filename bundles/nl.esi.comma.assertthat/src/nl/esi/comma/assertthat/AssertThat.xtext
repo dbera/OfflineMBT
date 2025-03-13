@@ -8,14 +8,8 @@ DataAssertionItem:
     AssertThatBlock | GenericScriptBlock
 ;
 
-
 AssertThatBlock:
-    identifier = ID ':'  'assert-that' output=ExpressionBracket
-        assertType = (
-              AssertThatValue 
-            | AssertThatXPath 
-            | AssertThatXMLFile
-        )
+    identifier = ID ':'  'assert-that' output=ExpressionBracket val = AssertValidation
 ;
 
 GenericScriptBlock:
@@ -44,31 +38,39 @@ enum MARGIN_TYPE:
 MargingItem:
     type=MARGIN_TYPE '(' (marginVal=FLOAT)? ')';
 
+AssertValidation:
+    AssertThatValue | AssertThatXPaths | AssertThatXMLFile
+;
+
 // Assertion of Value outputs
 AssertThatValue:
     '{'
-    comparisonType = ( AssertEq | AssertClose | AssertMatch | AssertSize )
+    comparisonType = ComparisonsForSingleReference
     '}'
 ;
 
-AssertEq:
-    'equal-to' reference=JsonValue ('within-margin' outMrg=MargingItem)? (asRegex ?= 'as-regex')?
+ComparisonsForSingleReference:
+    AssertThatValueEq | AssertThatValueClose | AssertThatValueMatch | AssertThatValueSize
 ;
 
-AssertClose:
-    'close-to' reference=JsonValue ('within-margin' outMrg=MargingItem)?
+AssertThatValueEq:
+    'equal-to' reference=JsonValue ('within-margin' margin=MargingItem)? (asRegex ?= 'as-regex')?
 ;
 
-AssertMatch:
+AssertThatValueClose:
+    'close-to' reference=JsonValue ('within-margin' margin=MargingItem)?
+;
+
+AssertThatValueMatch:
     'match-regex' reference=JsonValue
 ;
 
-AssertSize:
-    'has-size' reference=INT
+AssertThatValueSize:
+    'has-size' reference=Long
 ;
 
-// Assertion of XPath outputs
-AssertThatXPath:
+// Assertion of XPaths outputs
+AssertThatXPaths:
     '{' 
     assertRef += AssertXPathValidations+ 
     ( namespace = AssertNamespace )? 
@@ -77,52 +79,52 @@ AssertThatXPath:
     '}'
 ;
 
+AssertXPathValidations: {AssertXPathValidations}
+    'value-by-xpath' '(' xpath = STRING  ( ',' 'log-id' ':=' loggingId = STRING )? ')'
+    comparisonType = ComparisonsForSingleReference
+;
+
 AssertNamespace: {AssertNamespace}
-      'using-namespace-context' namespaceMap = JsonObject
+    'using-namespace-context' namespaceMap = JsonObject
 ;
 
 AssertGlobalMargin: {AssertGlobalMargin}
-    'using-global-margin' globalMrg = MargingItem
+    'using-global-margin' margin = MargingItem
 ;
 
 AssertGlobalRegex: {AssertGlobalRegex}
-     globalRegex ?= 'using-all-strings-as-regex'
-;
-
-XPathItem: {XPathItem}
-    'value-by-xpath' '(' xpathExpr = STRING  ( ',' 'log-id' ':=' loggingId = STRING )? ')'
-;
-
-AssertXPathValidations: {AssertXPathValidations}
-    ( xpathItem = XPathItem ) 
-    comparisonType = ( AssertEq | AssertClose | AssertMatch | AssertSize)
+    globalRegex ?= 'using-all-strings-as-regex'
 ;
 
 // Assertion of XMLFile outputs
 AssertThatXMLFile:
     'and' reference = ExpressionBracket
     '{' 
-    assertRef += AssertXmlValidations+ 
+    assertRef += AssertXMLValidations+ 
     ( namespace = AssertNamespace )? 
     ( globalMargin = AssertGlobalMargin )? 
     '}'
 ;
 
-AssertXmlValidations: {AssertXmlValidations}
-    ( xpathItem = XPathItem ) comparisonType = (AssertIdentical | AssertSimilar)
+AssertXMLValidations: {AssertXMLValidations}
+    'value-by-xpath' '(' xpath = STRING  ( ',' 'log-id' ':=' loggingId = STRING )? ')'
+    comparisonType = ComparisonsForMultiReference
 ;
 
-AssertIdentical: {AssertIdentical}
-    areIdentical ?= 'are-identical' 
-;
-AssertSimilar: {AssertSimilar}
-    areSimilar ?= 'are-similar' ('within-margin' localMargin=MargingItem)?
+ComparisonsForMultiReference:
+    AssertThatValueIdentical | AssertThatValueSimilar
 ;
 
+AssertThatValueIdentical: {AssertThatValueIdentical}
+    identical ?= 'are-identical' 
+;
+AssertThatValueSimilar: {AssertThatValueSimilar}
+    similar ?= 'are-similar' ('within-margin' margin=MargingItem)?
+;
 
 // Json Grammar obtained from https://gist.github.com/nightscape/629651
 
-JsonElements: JsonObject | JsonMember | JsonArray | JsonValue ;
+JsonElements: JsonObject | JsonMember | JsonArray ;
 
 JsonObject: '{' (members+=JsonMember) (',' members+=JsonMember)* '}' ;
 

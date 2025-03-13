@@ -513,6 +513,7 @@
         <setEntry value="org.tukaani.xz@default:default"/>
         <setEntry value="slf4j.api@default:default"/>
         <setEntry value="slf4j.reload4j@default:default"/>
+        <setEntry value="wrapped.com.github.spullara.mustache.java.compiler@default:default"/>
     </setAttribute>
     <setAttribute key="selected_workspace_bundles">
         <setEntry value="nl.asml.matala.bpmn4s@default:default"/>

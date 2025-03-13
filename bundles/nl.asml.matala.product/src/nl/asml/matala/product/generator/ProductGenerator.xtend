@@ -428,9 +428,9 @@ class ProductGenerator extends AbstractGenerator {
 			}
 		}
 		if(v.dataAssertions !== null) {
-            for(c : v.dataAssertions.constr) {
-                println(AssertionsHelper.printAssertion(c));
-            }
+		    val assertionList = AssertionsHelper.getAssertions(v.dataAssertions.constr)
+		    val scriptCallList = AssertionsHelper.getScriptCalls(v.dataAssertions.constr)
+		    System.err.println(AssertionsHelper.printAssertions(assertionList));
         }
 		return constraints
 	}
