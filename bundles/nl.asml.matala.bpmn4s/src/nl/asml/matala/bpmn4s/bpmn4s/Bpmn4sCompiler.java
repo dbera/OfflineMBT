@@ -44,7 +44,7 @@ public class Bpmn4sCompiler{
 	HashSet<String> initialized = new HashSet<String>();
 	
 	/* Connected XOR gates are collapsed to avoid spurious non-det due to immediately enabled 
-	 * transitions between them. Here we keep a map from the individual names to the
+	 * transitions between them. Here we keep a map from the individual ids to the
 	 * collapsed name in the target CPN.
 	 */
 	AbstractMap<String, String> compiledGateName = new HashMap<String, String>();
@@ -297,7 +297,7 @@ public class Bpmn4sCompiler{
 	
 	/**
 	 * START_EVENTs introduce a place if followed by a transition in the target PN. 
-	 * Otherwise we ignore them for optimization for test generation.
+	 * Otherwise we ignore them as optimization.
 	 * @param c
 	 * @return
 	 */
@@ -319,7 +319,7 @@ public class Bpmn4sCompiler{
 	
 	/**
 	 * END_EVENTs introduce a place if preceded by a transition in the PN. 
-	 * Otherwise we ignore them for optimization of test generation.
+	 * Otherwise we ignore them as optimization.
 	 * @param c
 	 * @return
 	 */	
@@ -390,7 +390,6 @@ public class Bpmn4sCompiler{
 	}
 	
 	/**
-	 * 
 	 * To avoid spurious non-determinism from immediately enabled transitions between start events and XOR gates,
 	 * we initialize the XOR gate place and not the start event place.
 	 * @param cId is the id of the component.
@@ -432,7 +431,7 @@ public class Bpmn4sCompiler{
 		return String.format("between_%s_and_%s", src, dst);
 	}
 	
-	public static <E> E getOrDefault(List<E> list, int index,E defaultValue) {
+	public static <E> E getOrDefault(List<E> list, int index, E defaultValue) {
 	      if (index < 0) {
 	          throw new IllegalArgumentException("index is less than 0: " + index);
 	      }
@@ -588,25 +587,22 @@ public class Bpmn4sCompiler{
 	}
 	
 	/**
-	 * In simulation mode, some flows between bpmn4s elements introduce transitions in the CPN. 
-	 * Imagine a flow between to XOR gates for instance. In general, if two elements are connected with a flow
-	 * and their CPN semantics is a place, then a transition needs to be added. For test generation, we optimize
-	 * the model such that this flows do not exist anymore, so that we reduce spurious non-determinism.
+	 * Flows from a fork xor gate to a merge xor gate introduce transitions in the CPN. Notice
+	 * that other flows between xor gates are optimized away when merging xor gates connected components. 
 	 */
-	protected List<String> getFlowActions(String component) {
-		return new ArrayList<String>();
-	}
-	
-	protected ArrayList<String> getInputOutputIds(Element elem) {
-		ArrayList<String> result = new ArrayList<String>();
-		for (Edge e: elem.getAllInputs()) {
-			if(isAPlace(e.getSrc())) {
-				result.add(e.getSrc());
-			}
-		}
-		for (Edge e: elem.getAllOutputs()) {
-			if(isAPlace(e.getTar())) {
-				result.add(e.getTar());
+	private List<String> getFlowActions(String component) {
+		List<String> result = new ArrayList<String>();
+		for (Edge e: model.edges) {
+			String src = e.getSrc();
+			String tar = e.getTar();
+			if(model.isXor(src) && model.isForkGate(src) &&
+					model.isXor(tar) && model.isMergeGate(tar)) {
+				String task = "action\t\t\t" + repr(e) + "\n";
+				task += "case\t\tdefault\n";
+				task += "with-inputs\t\t" + compile(src) + "\n";
+				task += "produces-outputs\t" + compile(tar) + "\n";
+				task += "updates\t\t" + compile(tar) + " := " + compile(src) + "\n";
+				result.add(task);
 			}
 		}
 		return result;
@@ -744,6 +740,7 @@ public class Bpmn4sCompiler{
 		}
 		return field;
 	}
+	
 	/**
 	 * Basic types in BPMN4S editor start with upper case, 
 	 * while in pspec they are lower cased.
@@ -762,7 +759,6 @@ public class Bpmn4sCompiler{
 	//
 	// Helper functions
 	//
-	
 	protected Boolean isAPlace (String id) {
 		Element elem = model.getElementById(id);
 		ElementType t = elem.getType();
