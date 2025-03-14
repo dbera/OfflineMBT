@@ -5,7 +5,7 @@ This readme explains howto run the BPMN4S editor, including support for writing 
 ## Starting the LSP server
 
 To get data expression editing support, the data expression language server needs to be started before loading a bpmn model.
-To start the data expression language server, simply execute the `start-server.bat` file by double clicking it.
+To start the data expression language server, simply execute the `start-lsp-server.bat` file by double clicking it.
 This will open a console, and if correct, the console will state: `... Started server socket at /0.0.0.0:9090`
 Please keep this console open during your BPMN4S modeling sessions, and just close it when you are done.
 

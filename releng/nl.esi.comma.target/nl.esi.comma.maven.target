@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?pde?>
+<!-- generated with https://github.com/eclipse-cbi/targetplatform-dsl -->
+<target name="OfflineMBT - Maven Dependencies" sequenceNumber="1741858386">
+  <locations>
+    <location includeDependencyDepth="none" includeDependencyScopes="compile" includeSource="true" missingManifest="generate" type="Maven" label="MavenCentral">
+      <dependencies>
+        <dependency>
+          <groupId>org.camunda.bpm.model</groupId>
+          <artifactId>camunda-bpmn-model</artifactId>
+          <version>7.22.0</version>
+          <type>jar</type>
+        </dependency>
+        <dependency>
+          <groupId>org.camunda.bpm.model</groupId>
+          <artifactId>camunda-xml-model</artifactId>
+          <version>7.22.0</version>
+          <type>jar</type>
+        </dependency>
+        <dependency>
+          <groupId>org.java-websocket</groupId>
+          <artifactId>Java-WebSocket</artifactId>
+          <version>1.6.0</version>
+          <type>jar</type>
+        </dependency>
+      </dependencies>
+    </location>
+  </locations>
+</target>

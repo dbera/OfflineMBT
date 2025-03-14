@@ -1,0 +1,21 @@
+target "OfflineMBT - Maven Dependencies"
+
+with configurePhase requirements source
+
+maven MavenCentral scope=compile dependencyDepth=none missingManifest=generate includeSources {
+    dependency {
+        groupId="org.camunda.bpm.model"
+        artifactId="camunda-bpmn-model"
+        version="7.22.0"
+    }
+    dependency {
+        groupId="org.camunda.bpm.model"
+        artifactId="camunda-xml-model"
+        version="7.22.0"
+    }
+    dependency {
+        groupId="org.java-websocket"
+        artifactId="Java-WebSocket"
+        version="1.6.0"
+    }
+}

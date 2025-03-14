@@ -13,7 +13,7 @@
         <release.type>latest</release.type>
 
         <java.version>21</java.version>
-        <tycho.version>4.0.9</tycho.version>
+        <tycho.version>4.0.12</tycho.version>
 
         <xtext.version>2.36.0</xtext.version>
         <xtend.version>${xtext.version}</xtend.version>
@@ -157,14 +157,22 @@
                 <artifactId>target-platform-configuration</artifactId>
                 <version>${tycho.version}</version>
                 <configuration>
+                    <!-- Let JustJ handle the execution environment. -->
+                    <!-- See https://www.eclipse.org/justj/?page=documentation for more information. -->
                     <executionEnvironment>org.eclipse.justj.openjdk.hotspot.jre.full-${java.version}</executionEnvironment>
+
+                    <!-- Configure target platform file. -->
                     <target>
-                        <artifact>
-                            <groupId>nl.esi.comma</groupId>
-                            <artifactId>nl.esi.comma.platform</artifactId>
-                            <version>${project.version}</version>
-                        </artifact>
+                        <file>
+                            ${maven.multiModuleProjectDirectory}/releng/nl.esi.comma.target/nl.esi.comma.target.target
+                        </file>
                     </target>
+
+                    <!--
+                        Configure environments.
+                        Determines which environment specific bundles will be in target platform.
+                        Also determines the products to build.
+                    -->
                     <environments>
                         <environment>
                             <os>win32</os>
@@ -177,6 +185,9 @@
                             <arch>x86_64</arch>
                         </environment>
                     </environments>
+
+                    <!-- For building and using Maven plugins during the build. -->
+                    <pomDependencies>consider</pomDependencies>
                 </configuration>
             </plugin>
 
