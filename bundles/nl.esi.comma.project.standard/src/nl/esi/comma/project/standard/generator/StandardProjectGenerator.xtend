@@ -41,6 +41,10 @@ import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
 import org.eclipse.xtext.nodemodel.util.NodeModelUtils
+import org.eclipse.emf.ecore.util.Diagnostician
+import org.eclipse.emf.common.util.Diagnostic
+import org.eclipse.emf.common.util.DiagnosticException
+import org.eclipse.emf.ecore.EObject
 
 /**
  * Generates code from your model files on save.
@@ -81,6 +85,7 @@ class StandardProjectGenerator extends AbstractGenerator {
 				val input = inputResource.allContents.head
 				if (input instanceof Product) {
 					envProduct = input as Product
+                    validate(envProduct)
 					(new ProductGenerator).doGenerate(inputResource, fsa, context)
                     if (!product.simulator) {
     					var name = envProduct.specification.name
@@ -361,6 +366,14 @@ class StandardProjectGenerator extends AbstractGenerator {
 			uri = uri.resolve(contextURI);
 		}		
 		return uri;
+	}
+	
+	def static void validate(EObject eObject) {
+	    val result = Diagnostician.INSTANCE.validate(eObject);
+	    if (result.severity == Diagnostic.ERROR) {
+	        val details = result.children.filter[severity == Diagnostic.ERROR].map['''- «message»'''].join('\n')
+	        throw new Exception(result.message + '\n' + details, new DiagnosticException(result));
+	    }
 	}
 }
 
