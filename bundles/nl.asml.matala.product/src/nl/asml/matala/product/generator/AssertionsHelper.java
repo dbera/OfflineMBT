@@ -85,7 +85,13 @@ public class AssertionsHelper {
 			type = "XMLFile";
 			parseComparison(((AssertThatXMLFile) asrt.getVal()), comparisons);
 		}
-		return SINGLE_ASSERTION_TEMPLATE.formatted(asrt.getIdentifier(), type, String.join(",\r\n\t\t", comparisons));
+		String assertionFormatted = SINGLE_ASSERTION_TEMPLATE.formatted(
+				asrt.getIdentifier(), 
+				type, 
+				String.join(",\r\n\t\t", comparisons)
+				);
+		System.out.println(assertionFormatted);
+		return assertionFormatted;
 	}
 
 	private static void parseComparison(AssertThatValue assertion, List<String> comparisons) {
@@ -135,19 +141,19 @@ public class AssertionsHelper {
 	}
 
 	private static void extractComparisons(AssertThatValueEq parsed, List<String> comparisons) {
-		comparisons.add("\"reference\":%s".formatted(JsonHelper.jsonValue(parsed.getReference())));
+		comparisons.add("\"reference\":%s".formatted(JsonHelper.jsonElement(parsed.getReference())));
 		extractComparisons(parsed.getMargin(), comparisons);
 		if (parsed.isAsRegex())
 			comparisons.add("\"regex\":True");
 	}
 
 	private static void extractComparisons(AssertThatValueClose parsed, List<String> comparisons) {
-		comparisons.add("\"reference\":%s".formatted(JsonHelper.jsonValue(parsed.getReference())));
+		comparisons.add("\"reference\":%s".formatted(JsonHelper.jsonElement(parsed.getReference())));
 		extractComparisons(parsed.getMargin(), comparisons);
 	}
 
 	private static void extractComparisons(AssertThatValueMatch parsed, List<String> comparisons) {
-		comparisons.add("\"reference\":%s".formatted(JsonHelper.jsonValue(parsed.getReference())));
+		comparisons.add("\"reference\":%s".formatted(JsonHelper.jsonElement(parsed.getReference())));
 		comparisons.add("\"regex\":True");
 	}
 
@@ -223,7 +229,7 @@ public class AssertionsHelper {
 
 	private static void extractComparisons(AssertNamespace item, List<String> comparisons) {
 		if (item != null)
-			comparisons.add("\"namespaces\":%s".formatted(JsonHelper.jsonValue(item.getNamespaceMap())));
+			comparisons.add("\"namespaces\":%s".formatted(JsonHelper.jsonElement(item.getNamespaceMap())));
 	}
 
 	private static void extractComparisons(AssertGlobalMargin item, List<String> comparisons) {

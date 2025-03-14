@@ -132,7 +132,7 @@ JsonMember: key=STRING ':' value=JsonValue ;
 
 JsonArray: '[' (values+=JsonValue) (',' values+=JsonValue)* ']' ;
 
-JsonValue: JsonObject | JsonArray | expr = Expression ;
+JsonValue: jsonObj = JsonObject | jsonArr = JsonArray | expr = Expression ;
 
 //// Borrowed from: github.com/TypeFox/yang-lsp
 //
