@@ -243,7 +243,7 @@ public enum ExpressionFunction {
 			if (!isVectorType(type0)) {
 				return Pair.of(0, "Function get expects first argument of type vector");
 			}
-			if (!intType.equals(typeOf(args.get(1)))) {
+			if (!subTypeOf(typeOf(args.get(1)), intType)) {
 				return Pair.of(1, "Function get expects second argument of type integer");
 			}
 			return null;
@@ -283,18 +283,18 @@ public enum ExpressionFunction {
 			if (!isVectorType(type0)) {
 				return Pair.of(0, "Function get expects first argument of type vector");
 			}
-			if (!intType.equals(typeOf(args.get(1)))) {
+			if (!subTypeOf(typeOf(args.get(1)), intType)) {
 				return Pair.of(1, "Function get expects second argument of type integer");
 			}
 			if (!subTypeOf(typeOf(args.get(2)), getBaseTypeToCheck(type0))) {
-				return Pair.of(1, "Second argument does not conform to the base type of the vector");
+				return Pair.of(2, "Third argument does not conform to the base type of the vector");
 			}
 			return null;
 		}
 
 		@Override
 		public String getDocumentation() {
-			return String.format("<T> %s(<T>, int, T)", name());
+			return String.format("<T> %s(vector<T>, int, T)", name());
 		}
 	};
 
