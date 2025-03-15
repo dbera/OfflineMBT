@@ -9,16 +9,50 @@ import java.util.HashSet
 import java.util.List
 import java.util.Map
 import java.util.Set
+import nl.asml.matala.product.product.ActionType
 import nl.asml.matala.product.product.Block
-import nl.asml.matala.product.product.Blocks
-import nl.asml.matala.product.product.DataReferences
-import nl.asml.matala.product.product.Function
 import nl.asml.matala.product.product.Product
 import nl.asml.matala.product.product.RefConstraint
-import nl.asml.matala.product.product.Specification
-import nl.asml.matala.product.product.Update
+import nl.asml.matala.product.product.SymbConstraint
 import nl.asml.matala.product.product.UpdateOutVar
 import nl.asml.matala.product.product.VarRef
+import nl.esi.comma.actions.actions.AssignmentAction
+import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
+import nl.esi.comma.expressions.expression.ExpressionAddition
+import nl.esi.comma.expressions.expression.ExpressionAnd
+import nl.esi.comma.expressions.expression.ExpressionAny
+import nl.esi.comma.expressions.expression.ExpressionBulkData
+import nl.esi.comma.expressions.expression.ExpressionConstantBool
+import nl.esi.comma.expressions.expression.ExpressionConstantInt
+import nl.esi.comma.expressions.expression.ExpressionConstantReal
+import nl.esi.comma.expressions.expression.ExpressionConstantString
+import nl.esi.comma.expressions.expression.ExpressionDivision
+import nl.esi.comma.expressions.expression.ExpressionEnumLiteral
+import nl.esi.comma.expressions.expression.ExpressionEqual
+import nl.esi.comma.expressions.expression.ExpressionFunctionCall
+import nl.esi.comma.expressions.expression.ExpressionGeq
+import nl.esi.comma.expressions.expression.ExpressionGreater
+import nl.esi.comma.expressions.expression.ExpressionLeq
+import nl.esi.comma.expressions.expression.ExpressionLess
+import nl.esi.comma.expressions.expression.ExpressionMapRW
+import nl.esi.comma.expressions.expression.ExpressionMaximum
+import nl.esi.comma.expressions.expression.ExpressionMinimum
+import nl.esi.comma.expressions.expression.ExpressionMinus
+import nl.esi.comma.expressions.expression.ExpressionModulo
+import nl.esi.comma.expressions.expression.ExpressionMultiply
+import nl.esi.comma.expressions.expression.ExpressionNEqual
+import nl.esi.comma.expressions.expression.ExpressionNot
+import nl.esi.comma.expressions.expression.ExpressionOr
+import nl.esi.comma.expressions.expression.ExpressionPlus
+import nl.esi.comma.expressions.expression.ExpressionPower
+import nl.esi.comma.expressions.expression.ExpressionQuantifier
+import nl.esi.comma.expressions.expression.ExpressionRecord
+import nl.esi.comma.expressions.expression.ExpressionRecordAccess
+import nl.esi.comma.expressions.expression.ExpressionSubtraction
+import nl.esi.comma.expressions.expression.ExpressionUnary
+import nl.esi.comma.expressions.expression.ExpressionVariable
+import nl.esi.comma.expressions.expression.ExpressionVector
+import nl.esi.comma.expressions.expression.Field
 import nl.esi.comma.expressions.expression.Variable
 import nl.esi.comma.types.generator.TypesZ3Generator
 import nl.esi.comma.types.types.RecordField
@@ -33,51 +67,7 @@ import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
-import nl.esi.comma.actions.actions.ActionList
-import nl.esi.comma.actions.actions.Action
-import nl.esi.comma.actions.actions.AssignmentAction
-import nl.esi.comma.expressions.generator.ExpressionsCommaGenerator
-import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
-import org.eclipse.emf.ecore.EObject
-import nl.esi.comma.expressions.expression.ExpressionRecordAccess
-import nl.esi.comma.expressions.expression.ExpressionVariable
-import nl.esi.comma.expressions.expression.ExpressionRecord
-import nl.esi.comma.expressions.expression.Field
-import nl.esi.comma.expressions.expression.ExpressionMapRW
-import nl.esi.comma.expressions.expression.ExpressionEnumLiteral
-import nl.esi.comma.expressions.expression.ExpressionConstantInt
-import nl.esi.comma.expressions.expression.ExpressionConstantString
-import nl.esi.comma.expressions.expression.ExpressionVector
-import nl.esi.comma.expressions.expression.ExpressionConstantBool
-import nl.esi.comma.expressions.expression.ExpressionConstantReal
-import nl.esi.comma.expressions.expression.ExpressionAny
-import nl.esi.comma.expressions.expression.ExpressionBulkData
-import nl.esi.comma.expressions.expression.ExpressionFunctionCall
-import nl.esi.comma.expressions.expression.ExpressionQuantifier
-import nl.esi.comma.expressions.expression.ExpressionBracket
-import nl.asml.matala.product.product.SymbConstraint
-import nl.asml.matala.product.product.DataConstraints
-import nl.asml.matala.product.product.ActionType
-import nl.esi.comma.expressions.expression.ExpressionAnd
-import nl.esi.comma.expressions.expression.ExpressionOr
-import nl.esi.comma.expressions.expression.ExpressionEqual
-import nl.esi.comma.expressions.expression.ExpressionNEqual
-import nl.esi.comma.expressions.expression.ExpressionGeq
-import nl.esi.comma.expressions.expression.ExpressionGreater
-import nl.esi.comma.expressions.expression.ExpressionLeq
-import nl.esi.comma.expressions.expression.ExpressionLess
-import nl.esi.comma.expressions.expression.ExpressionAddition
-import nl.esi.comma.expressions.expression.ExpressionSubtraction
-import nl.esi.comma.expressions.expression.ExpressionMultiply
-import nl.esi.comma.expressions.expression.ExpressionDivision
-import nl.esi.comma.expressions.expression.ExpressionMaximum
-import nl.esi.comma.expressions.expression.ExpressionMinimum
-import nl.esi.comma.expressions.expression.ExpressionModulo
-import nl.esi.comma.expressions.expression.ExpressionPower
-import nl.esi.comma.expressions.expression.ExpressionUnary
-import nl.esi.comma.expressions.expression.ExpressionNot
-import nl.esi.comma.expressions.expression.ExpressionMinus
-import nl.esi.comma.expressions.expression.ExpressionPlus
+import nl.asml.matala.product.product.Update
 
 /**
  * Generates code from your *.ps model files on save.
@@ -171,7 +161,10 @@ class ProductGenerator extends AbstractGenerator {
 					val block = b.block
 					for(f : block.functions) {
 						for(u : f.updates) {
-						    if(u.actionType.equals(ActionType.COMPOSE) || u.actionType.equals(ActionType.RUN)) {
+						    if(u.actionType.equals(ActionType.COMPOSE) 
+						        || u.actionType.equals(ActionType.RUN)
+						        || u.actionType.equals(ActionType.ASSERT)
+						    ) {
 						        listOfAssertTransitions.add(block.name+"_" + f.name + "_" + u.name)
 						    }
 							// 30.01.2025 commented out
@@ -338,12 +331,17 @@ class ProductGenerator extends AbstractGenerator {
 					// pnet.add_expression(tr.name, block.name + "_" + v.ref.name, 
 					//						"Variable('v_" + block.name+"_" + v.ref.name + "')", PType.IN)
 					pnet.add_expression(tr.name, v.ref.name, 
-											"Variable('v_" + v.ref.name + "')", PType.IN, getConstraintTxt(v))
+											"Variable('v_" + v.ref.name + "')",
+											 PType.IN, getConstraintTxt(v))
 				}
 				if(update.guard!==null) {
 					val (String) => String fn = [s|"json.loads(v_"+s+", object_pairs_hook=Data().int_keys)"]
 					System.out.println("	> guard: " + SnakesHelper.expression(update.guard, fn))
-					pnet.add_guard_expression(tr.name, "Expression('" + SnakesHelper.expression(update.guard, fn) + "')")	
+					pnet.add_guard_expression(tr.name, "Expression('" + SnakesHelper.expression(update.guard, fn) + "')")
+				}
+				if(update.dataAssertions!==null) {
+				    System.out.println("\t> assert: " + (new Utils()).printConstraint(update.dataAssertions)) 
+				    pnet.add_assert_expression_ref(tr.name, (new Utils()).printConstraint(update.dataAssertions))
 				}
 				if(update.updateOutputVar!==null) 
 				{
@@ -403,7 +401,6 @@ class ProductGenerator extends AbstractGenerator {
 		return new Pair(pnet, methodTxt)
 	}
 	
-	
 	def getConstraintTxt(VarRef v) {
 		var constraints = new ArrayList<Constraint>
 		if(v.dataConstraints !== null) {
@@ -415,7 +412,7 @@ class ProductGenerator extends AbstractGenerator {
 				// constraints to comma expression. 27.08.2024
 				// Check if boolean expression or assignment action
 //				constraints.add(new Constraint(c.name, (new ExpressionsCommaGenerator()).exprToComMASyntax(c.symbExpr).toString()))
-				constraints.add(new Constraint(printConstraint(c as SymbConstraint), ""))
+				constraints.add(new Constraint((new Utils()).printConstraint(c as SymbConstraint), ""))
 			}
 		}
 		if(v.dataReferences !== null) {
@@ -423,60 +420,12 @@ class ProductGenerator extends AbstractGenerator {
 				val (String) => String fn = [s|s]
 				for(a : c.act.actions)
 //					constraints.add(new Constraint(c.name, SnakesHelper.commaAction(a, fn, "")))
-					constraints.add(new Constraint(printConstraint(c as RefConstraint), ""))
+					constraints.add(new Constraint((new Utils()).printConstraint(c as RefConstraint), ""))
 			}
 		}
 		return constraints
 	}
-	
-	dispatch def String printConstraint(SymbConstraint sref) {
-        return printConstraint(sref.eContainer as DataConstraints) + "." + sref.name
-    }	
-	dispatch def String printConstraint(RefConstraint ref) {
-		return printConstraint(ref.eContainer as DataReferences) + "." + ref.name
-	}
-	
-	dispatch def String printConstraint(DataConstraints ref) {
-        return printConstraint(ref.eContainer as VarRef)
-    }
-    
-	dispatch def String printConstraint(DataReferences ref) {
-		return printConstraint(ref.eContainer as VarRef)
-	}
-	
-	dispatch def String printConstraint(VarRef ref) {
-		return printConstraint(ref.eContainer as UpdateOutVar)
-	}
-	
-	dispatch def String printConstraint(UpdateOutVar ref) {
-		return printConstraint(ref.eContainer as Update)
-	}
-	
-	dispatch def String printConstraint(Update ref) {
-		return printConstraint(ref.eContainer as Function) + "." + ref.name
-	}
-	
-	dispatch def String printConstraint(Function ref) {
-		return printConstraint(ref.eContainer as Block) + "." + ref.name
-	}
-	
-	dispatch def String printConstraint(Variable ref) {
-		return printConstraint(ref.eContainer as Block) + "." + ref.name
-	}
-	
-	dispatch def String printConstraint(Block ref) {
-		return printConstraint(ref.eContainer as Blocks) + "." + ref.name
-	}
-	
-	dispatch def String printConstraint(Blocks ref) {
-		return printConstraint(ref.eContainer as Specification)
-	}
-	
-	dispatch def String printConstraint(Specification ref) {
-		return ref.name
-	}
-
-	
+		
 	def generateTestSCNTxt(String name, Product prod, String pSpecFile) {
 		return
 		'''
@@ -502,12 +451,14 @@ class ProductGenerator extends AbstractGenerator {
 		    step_dependencies = []
 		    map_transition_assert = {}
 		    constraint_dict = {}
+		    tr_assert_ref_dict = {}
 		
-		    def __init__(self, _mapTrAssert, _constraint_dict):
+		    def __init__(self, _mapTrAssert, _constraint_dict, _tr_assert_ref_dict):
 		        self.step_list = []
 		        self.step_dependencies = []
 		        self.map_transition_assert = _mapTrAssert
 		        self.constraint_dict = _constraint_dict
+		        self.tr_assert_ref_dict = _tr_assert_ref_dict
 		
 		    def generate_viz(self, idx, output_dir):
 		        txt = "@startuml\n"
@@ -583,8 +534,10 @@ class ProductGenerator extends AbstractGenerator {
 		                    if not "null" in parts[1]:
 		                        type_name = " step-type: \"%s\"" % parts[1] 
 		                    txt += "run-step-name: %s%s\n" % (new_name, type_name)
-		                else:
+		                elif "COMPOSE" in parts[2]:
 		                    txt += "compose-step-name: %s\n" % new_name
+		                else:
+		                    txt += "assert-step-name: %s\n" % new_name
 		                for elm in self.step_dependencies:
 		                    if elm.step_name == name:
 		                        parts = elm.depends_on.split("@")
@@ -612,6 +565,9 @@ class ProductGenerator extends AbstractGenerator {
 		                                txt += "data-references: %s\n" % k
 		                                for entry in constr.centry:
 		                                    txt += "%s\n" % entry.name
+		                if name.rsplit("_",1)[0] in self.tr_assert_ref_dict.keys():
+		                    txt += "output-assertion: %s\n" % new_name
+		                    txt += "%s\n" % self.tr_assert_ref_dict[name.rsplit("_",1)[0]]
 		            else:
 		                name = step.step_name
 		                idata = step.input_data
@@ -634,6 +590,9 @@ class ProductGenerator extends AbstractGenerator {
 		                                txt += "\ndata-references: %s\n" % k
 		                                for entry in constr.centry:
 		                                    txt += "%s : \"%s\"\n" % (entry.name, entry.constr.replace('"','\\"'))
+		                if name.rsplit("_",1)[0] in self.tr_assert_ref_dict.keys():
+		                    txt += "output-assertion: %s\n" % new_name
+		                    txt += "%s\n" % self.tr_assert_ref_dict[name.rsplit("_",1)[0]]
 		                txt += "\n"
 		        txt += '\ngenerate-file "./vfab2_scenario/"\n\n'
 		        fname = output_dir / f"_scenario{str(idx)}.tspec"
@@ -990,9 +949,13 @@ class ProductGenerator extends AbstractGenerator {
 				place = p
 
 				if(v.ref.type.type instanceof SimpleTypeDecl)
-					pnet.add_expression(tr.name, p, "Value(" + SnakesHelper.defaultValue(v.ref.type.type) + ")", PType.OUT, getConstraintTxt(v))
+					pnet.add_expression(tr.name, p, 
+					   "Value(" + SnakesHelper.defaultValue(v.ref.type.type) + ")", 
+					   PType.OUT, getConstraintTxt(v))
 				else
-					pnet.add_expression(tr.name, p, "Expression('Data().execute_" + executeFnName + "_" + place + generateVarListTxt(input_var_list) + "')", PType.OUT, getConstraintTxt(v))	
+					pnet.add_expression(tr.name, p, 
+					   "Expression('Data().execute_" + executeFnName + "_" + place + generateVarListTxt(input_var_list) + "')", 
+					   PType.OUT, getConstraintTxt(v))	
 			}
 		} 
 		else 
@@ -1003,9 +966,13 @@ class ProductGenerator extends AbstractGenerator {
 			place = v.ref.name
 			/* 23.01.24 */
 			if(v.ref.type.type instanceof SimpleTypeDecl)
-				pnet.add_expression(tr.name, v.ref.name, "Expression('" + SnakesHelper.defaultValue(v.ref.type.type) + "')", PType.OUT, getConstraintTxt(v))
+				pnet.add_expression(tr.name, v.ref.name, 
+				    "Expression('" + SnakesHelper.defaultValue(v.ref.type.type) + "')", 
+				    PType.OUT, getConstraintTxt(v))
 			else
-				pnet.add_expression(tr.name, v.ref.name, "Expression('Data().execute_" + executeFnName + "_" + place + generateVarListTxt(input_var_list) + "')", PType.OUT, getConstraintTxt(v))
+				pnet.add_expression(tr.name, v.ref.name, 
+				    "Expression('Data().execute_" + executeFnName + "_" + place + generateVarListTxt(input_var_list) + "')", 
+				    PType.OUT, getConstraintTxt(v))
 		}
 		
 		return place
@@ -1029,9 +996,13 @@ class ProductGenerator extends AbstractGenerator {
 				pnet.add_output_arc(tr.name, p)
 				//pnet.add_expression(tr.name, p, "Expression('1')", PType.OUT)
 				if(v.ref.type.type instanceof SimpleTypeDecl)
-					pnet.add_expression(tr.name, p, "Value(" + SnakesHelper.defaultValue(v.ref.type.type) + ")", PType.OUT, getConstraintTxt(v))
+					pnet.add_expression(tr.name, p, 
+					   "Value(" + SnakesHelper.defaultValue(v.ref.type.type) + ")", 
+					   PType.OUT, getConstraintTxt(v))
 				else
-					pnet.add_expression(tr.name, p, "Expression('Data().get_" + vtype + "()')", PType.OUT, getConstraintTxt(v))
+					pnet.add_expression(tr.name, p, 
+					   "Expression('Data().get_" + vtype + "()')", 
+					   PType.OUT, getConstraintTxt(v))
 				
 				place = p
 			}
@@ -1044,9 +1015,13 @@ class ProductGenerator extends AbstractGenerator {
 			//pnet.add_expression(tr.name, block.name+"_"+v.ref.name, "Expression('1')", PType.OUT)
 			/* 23.01.24 */
 			if(v.ref.type.type instanceof SimpleTypeDecl)
-				pnet.add_expression(tr.name, v.ref.name, "Expression('" + SnakesHelper.defaultValue(v.ref.type.type) + "')", PType.OUT, getConstraintTxt(v))
+				pnet.add_expression(tr.name, v.ref.name, 
+				    "Expression('" + SnakesHelper.defaultValue(v.ref.type.type) + "')", 
+				    PType.OUT, getConstraintTxt(v))
 			else
-				pnet.add_expression(tr.name, v.ref.name, "Expression('Data().get_" + vtype + "()')", PType.OUT, getConstraintTxt(v))
+				pnet.add_expression(tr.name, v.ref.name, 
+				    "Expression('Data().get_" + vtype + "()')", 
+				    PType.OUT, getConstraintTxt(v))
 			
 			/* Commented DB 06.02.2025 */
 			// None of the other places have block name in prefix. 

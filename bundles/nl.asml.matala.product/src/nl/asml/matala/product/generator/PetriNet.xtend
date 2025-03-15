@@ -11,15 +11,17 @@ class PetriNet {
 	public var transitions = new ArrayList<Transition>
 	public var input_arcs = new HashMap<String,List<String>>  // transition -> list of places
 	public var output_arcs = new HashMap<String,List<String>> // transition -> list of places
-	public var map_transition_assertions = new HashMap<String,List<String>> // transition -> list of places to assert on
+	//TODO Rename the function below and across all references. 
+	public var map_transition_assertions = new HashMap<String,List<String>> // transition -> list of places to assert on 
 	public var arc_expressions = new ArrayList<ArcExpression>
 	public var guard_expressions = new HashMap<String,String> // transition -> expression
+	public var assert_expressions = new HashMap<String,String> // transition <TYPE: ASSERT> -> expression reference
 	public var internal_places = new ArrayList<Place>
 	public var init_place_expression_map = new HashMap<String, List<String>>
 	
 	
 	def add_to_map_transition_assertions(String tname, String assertion_place) {
-	    System.out.println("   DEBUG: " + assertion_place)
+	    // System.out.println("   DEBUG: " + assertion_place)
 		if(map_transition_assertions.keySet.contains(tname)) {
 			if(!map_transition_assertions.get(tname).contains(assertion_place)) {
 				map_transition_assertions.get(tname).add(assertion_place)
@@ -77,6 +79,10 @@ class PetriNet {
 		guard_expressions.put(t,txt)
 	}
 	
+	def add_assert_expression_ref(String t, String txt) {
+        assert_expressions.put(t,txt)
+    }
+	
 	def display() {
 		System.out.println("********* Petri Net ***************")
 		System.out.println(" > Places ")
@@ -86,8 +92,11 @@ class PetriNet {
 		System.out.println("	> Transition ")
 		for(t : transitions){
 			if(guard_expressions.containsKey(t.name))
-				System.out.println("	> name: " + t.name + " block-name: " + t.bname + " guard: " + guard_expressions.get(t))
+			     System.out.println("	> name: " + t.name + " block-name: " + t.bname + " guard: " + guard_expressions.get(t.name))
 			else System.out.println("	> name: " + t.name + " block-name: " + t.bname)
+			
+			if(assert_expressions.containsKey(t.name))
+                 System.out.println("\t> name: " + t.name + " block-name: " + t.bname + " assert-ref: " + assert_expressions.get(t.name))
 		}
 		System.out.println("	> Input Arcs ")
 		for(k : input_arcs.keySet) {
@@ -471,22 +480,22 @@ class PetriNet {
 		            # map_transition_modes_to_name[k + "_" + pprint.pformat(elm.items(), width=60, compact=True,depth=5)] = k + "_" + str(cnt)
 		            cnt = cnt + 1
 		    
-		    txt = '\n// import "<insert valid step specification file>"\n\ncontext-map\n\n'
-		    for k,v in map_transition_modes_to_name.items():
+		    # txt = '\n// import "<insert valid step specification file>"\n\ncontext-map\n\n'
+		    # for k,v in map_transition_modes_to_name.items():
 		        # print(k)
 		        # print(v)
-		        step_txt = v
-		        if step_txt.split("_")[0] in listOfEnvBlocks:
-		            txt += 'abstract-step %s\n' %(v)
-		            txt += '    with /* %s */\n' %(k)
-		            txt += '    // -> <refer to a step sequence>\n'
+		        # step_txt = v
+		        # if step_txt.split("_")[0] in listOfEnvBlocks:
+		            # txt += 'abstract-step %s\n' %(v)
+		            # txt += '    with /* %s */\n' %(k)
+		            # txt += '    // -> <refer to a step sequence>\n'
 		    
-		    fname = p.tspec_dir / "_cm.tspec"
-		    os.makedirs(os.path.dirname(fname), exist_ok=True)
-		    with open(fname, 'w') as f:
-		        f.write(txt)
+		    # fname = p.tspec_dir / "_cm.tspec"
+		    # os.makedirs(os.path.dirname(fname), exist_ok=True)
+		    # with open(fname, 'w') as f:
+		        # f.write(txt)
 		    
-		    print("[INFO] Created context mapper.")
+		    # print("[INFO] Created context mapper.")
 		    
 		    _txt = []
 		    constraint_list = []
@@ -507,6 +516,11 @@ class PetriNet {
 		    	«ENDIF»
 		    «ENDFOR»
 		    
+		    tr_assert_ref_dict = {}
+		    «FOR tname : assert_expressions.keySet»
+		      tr_assert_ref_dict["«tname»"] = "«assert_expressions.get(tname)»"
+		    «ENDFOR»
+		    
 		    idx = 0
 		    # txt = ''
 		    map_transition_assert = {«FOR elm : map_transition_assertions.keySet SEPARATOR ','»'«elm»': [«FOR v : map_transition_assertions.get(elm) SEPARATOR ','»'«v»'«ENDFOR»]«ENDFOR»}
@@ -516,7 +530,7 @@ class PetriNet {
 		    for entry in pn.visitedTList:
 		        # txt = ''
 		        if entry:
-		            _test_scn = TestSCN(map_transition_assert, constraint_dict)
+		            _test_scn = TestSCN(map_transition_assert, constraint_dict, tr_assert_ref_dict)
 		            idx = idx + 1
 		            # txt += '\nimport "_cm.tspec"\n\nabstract-test-definition\n\nTest-Scenario : s%s \n' % (idx)
 		            j = 0
