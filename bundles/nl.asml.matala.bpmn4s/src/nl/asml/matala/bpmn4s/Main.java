@@ -111,73 +111,53 @@ public class Main {
         	Bpmn4sCompiler compiler;
         	if (simulation) {
         		compiler = new Bpmn4sCompiler() {
+        			
         			@Override
         			protected String repr(Element el) {
         				return el.getId();
-        			}		
+        			}
+        			
         			@Override
+        			/**
+        			 * Connected components of XOR gates are collapsed for optimization. A specific gate id
+        			 * is chosen as the name for each collapsed set of gates.
+        			 * Given an xor gate X, the name of its compiled collapsed component is obtained following this 
+        			 * algorithm:
+        			 * fun(X)
+        			 * IF X is fork gate:
+        			 *   get input of X 
+        			 *   IF input is xor-fork gate:
+        			 *     return fun(X)
+        			 *   
+        			 * ELSE IF X is merge gate:
+        			 *   get output of X
+        			 *   IF output is xor gate:
+        			 *     return fun(X)
+        			 * return id of X
+        			 */
         			protected String getCompiledXorName(String xorId) {
-        				return repr(model.getElementById(xorId));
+        				Element xor = model.getElementById(xorId);
+        				if (model.isForkGate(xorId)) {
+        					Edge inputEdge = xor.getFlowInputs().get(0);
+        					String srcId = inputEdge.getSrc();
+        					if (model.isXor(srcId) && model.isForkGate(srcId)) {
+        						return getCompiledXorName(srcId);
+        					}
+        				} else if (model.isMergeGate(xorId)) {
+        					Edge outputEdge = xor.getFlowOutputs().get(0);
+        					String tarId = outputEdge.getTar();
+        					if (model.isXor(tarId)) {
+        						return getCompiledXorName(tarId);
+        					}
+        				} 
+        				return repr(xor);
         			}
-        			@Override
-        			protected AbstractList<String> getInitialPlaces (String cId) {
-        				Element c = model.getElementById(cId);
-        				ArrayList<String> result = new ArrayList<String>();
-        				Element startEv = model.getStartEvent(c);
-        				if (startEv != null) {
-        					result.add(repr(startEv));
-        				}
-        				return result;
-        			}
+        			
         			@Override
         			protected String namePlaceBetweenTransitions(String flowId, String src, String dst) {
         				return flowId;
         			}
-        			@Override
-        			protected List<String> localsFromStartEvents (Element c) {
-        				List<String> result = new ArrayList<String>();
-        				for (Element se: model.elements.values()) {
-        					if (se.getType().equals(ElementType.START_EVENT) && isParentComponent(c, se)) { 
-    							String datatype = mapType(c.getContextDataType() != "" ? c.getContextDataType() : UNIT_TYPE);
-    							result.add(tabulate(datatype, sanitize(repr(se))));
-        						}
-        					}
-        				return result;
-        			}
-        			@Override
-        			protected List<String> localsFromEndEvents (Element c) {
-        				List<String> result = new ArrayList<String>();
-        				for (Element se: model.elements.values()) {
-        					if (se.getType().equals(ElementType.END_EVENT) && isParentComponent(c, se)) { 
-    							String datatype = mapType(c.getContextDataType() != "" ? c.getContextDataType() : UNIT_TYPE);
-    							result.add(tabulate(datatype, sanitize(repr(se))));
-        						}
-        					}
-        				return result;
-        			}
-        			@Override
-        			protected List<String> getFlowActions(String component) {
-        				Element c = model.getElementById(component);
-        				ArrayList<String> result = new ArrayList<String>();
-        				for (Element source: model.elements.values()) {
-        					if (isAPlace(source.getId()) && isParentComponent(c, source)) { 
-        						for(Edge e: source.getFlowOutputs()) {
-        							String sourceId = e.getSrc();
-        							String targetId = e.getTar();
-        				 			if (isAPlace(targetId)) {
-        								String action = "";
-        								action += "action            " + repr(e) + "\n";
-        								action += "case              default\n";
-        								action += "with-inputs       " + sourceId + "\n";
-        								action += "produces-outputs  " + targetId + "\n";
-        								action += String.format("updates:          %s := %s\n", targetId, sourceId);
-        								result.add(action);
-        							}
-        						}
-        					}
-        				}
-        				return result;
-        			}
+        			
         			@Override
         			protected Map<String, String> buildReplaceMap (Element transition) {
         				Map<String, String> replaceMap = new HashMap<String, String>();
@@ -186,6 +166,21 @@ public class Main {
         					replaceMap.put(model.getElementById(id).getName(), compile(id));
         				}
         				return replaceMap;
+        			}
+        			
+        			private ArrayList<String> getInputOutputIds(Element elem) {
+        				ArrayList<String> result = new ArrayList<String>();
+        				for (Edge e: elem.getAllInputs()) {
+        					if(isAPlace(e.getSrc())) {
+        						result.add(e.getSrc());
+        					}
+        				}
+        				for (Edge e: elem.getAllOutputs()) {
+        					if(isAPlace(e.getTar())) {
+        						result.add(e.getTar());
+        					}
+        				}
+        				return result;
         			}
         		};
         	}else {
@@ -482,6 +477,11 @@ public class Main {
 		node.setContext(contextName != null ? contextName : "", 
 				contextTypeName != null ? contextTypeName : "", 
 						contextInit != null ? contextInit : "");
+		
+		if(type.equals(ElementType.TASK)) {
+			node.setContextUpdate(elem.getAttributeValueNs("http://bpmn4s", "ctxUpdate"));
+		}
+		
 		model.addElement(id, node);
 		if (elem instanceof FlowNode) {
 			resolveNodeEdges((FlowNode) elem, node);
@@ -491,7 +491,7 @@ public class Main {
 	static void resolveNodeEdges(FlowNode elem, Element node) {
 		for(SequenceFlow out: elem.getOutgoing()) {
 			Edge e = makeFlowEdge(out);
-			// Flow nodes may update the context
+			// Flow nodes may update the context FIXME check if can remove this contextupdate from the edge
 			String ctxUpdate = elem.getAttributeValueNs("http://bpmn4s", "ctxUpdate");
 			e.setUpdate(ctxUpdate != null ? ctxUpdate : "");
 			model.addEdge(e);
