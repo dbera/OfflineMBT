@@ -68,7 +68,7 @@ TMap:
 AbstractTestSequence:
 	'Test-Scenario' ':' name = ID
 		// step += [TMap|ID]+
-		step += (AbstractStep | AssertStep)+  // | ConstraintStep 
+		step += AbstractStep+ // (AbstractStep | AssertStep)+  // | ConstraintStep 
 		
 ;
 
@@ -80,7 +80,8 @@ ConstraintStep:
 
 AssertStep:
 	'output-assertion' ':' name = ID
-	ce += ConstraintElm+
+	// ce += ConstraintElm+
+	ce += [prod::DataAssertions|QualifiedName]+
 ;
 
 ConstraintElm:
@@ -88,7 +89,7 @@ ConstraintElm:
 ;
 
 AbstractStep:
-	ComposeStep | RunStep
+	ComposeStep | RunStep | AssertionStep
 ;
 
 ComposeStep:
@@ -97,7 +98,6 @@ ComposeStep:
 	'input-binding' ':' input += Binding+
 	'output-data' ':' output += Binding+ (suppress?='suppress'?)
 	refs += ConstraintStep*
-	asserts += AssertStep*
 ;
 
 RunStep:
@@ -106,6 +106,14 @@ RunStep:
 	stepRef += StepReference*
 	'input-binding' ':' input += Binding+
 	'output-data' ':' output += Binding+ (suppress?='suppress'?) // do not generate these in concrete TSpec
+;
+
+AssertionStep:
+    'assert-step-name' ':' name = ID
+    stepRef += StepReference*
+    'input-binding' ':' input += Binding+
+    'output-data' ':' output += Binding+ (suppress?='suppress'?)
+    asserts += AssertStep*
 ;
 
 StepReference:

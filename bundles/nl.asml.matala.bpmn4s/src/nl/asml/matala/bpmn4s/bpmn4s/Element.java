@@ -1,6 +1,8 @@
 package nl.asml.matala.bpmn4s.bpmn4s;
 
+//import java.util.AbstractMap;
 import java.util.ArrayList;
+//import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -19,7 +21,18 @@ public class Element {
 			this.init = init;
 		}
 	}
-		
+	
+	// Tasks may update context
+	String context_update = null;
+	
+	public void setContextUpdate(String update) {
+		context_update = update;
+	}
+	
+	public String getContextUpdate() {
+		return context_update;
+	}
+
 	final ElementType type;
 	final ElementType subtype;
 	
