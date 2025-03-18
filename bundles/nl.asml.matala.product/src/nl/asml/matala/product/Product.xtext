@@ -121,7 +121,7 @@ SymbConstraint:
 
 DataAssertions: {DataAssertions}
     'assertions' name = ID '{' 
-        constr += DataCheckItems*
+        constr += DataAssertionItem*
      '}'
 ;
 
