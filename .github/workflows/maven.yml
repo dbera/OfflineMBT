@@ -34,6 +34,12 @@ jobs:
         name: bpmn4s-lsp-server
         path: bundles/nl.asml.matala.product.lsp.server/target/dist
         retention-days: 10
+    - name: Attach LSP Client Languages
+      uses: actions/upload-artifact@v4
+      with:
+        name: bpmn4s-lsp-client
+        path: bundles/nl.asml.matala.product.lsp.editor/language/grammars
+        retention-days: 10
     - name: Attach Generator
       uses: actions/upload-artifact@v4
       with:
