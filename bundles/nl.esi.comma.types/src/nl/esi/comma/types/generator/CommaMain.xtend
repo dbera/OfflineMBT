@@ -92,9 +92,25 @@ class CommaMain {
 	static final String OPT_TESTSPECIFICATION_C = 'ts'
 	static final String OPT_TESTSPECIFICATION_DESCRIPTION = 'Location of Test Specification'
 	
+    static final String OPT_PRODUCTSPECIFICATION = 'productpecification'
+    static final String OPT_PRODUCTSPECIFICATION_C = 'ps'
+    static final String OPT_PRODUCTSPECIFICATION_DESCRIPTION = 'Location of Product Specification'
+
+    static final String OPT_STANDARDPROJECT = 'standardproject'
+    static final String OPT_STANDARDPROJECT_C = 'prj'
+    static final String OPT_STANDARDPROJECT_DESCRIPTION = 'Location of Project File'
+
 	static final String OPT_TESTSPECIFICATIONOUTPUT = 'TestspecOutput'
 	static final String OPT_TESTSPECIFICATIONOUTPUT_C = 'tsOutput'
 	static final String OPT_TESTSPECIFICATIONOUTPUT_DESCRIPTION = 'Output location of the Test Specification Product'
+	
+    static final String OPT_PRODUCTSPECIFICATIONOUTPUT = 'ProductspecOutput'
+    static final String OPT_PRODUCTSPECIFICATIONOUTPUT_C = 'psOutput'
+    static final String OPT_PRODUCTSPECIFICATIONOUTPUT_DESCRIPTION = 'Output location of the Product Specification'
+
+    static final String OPT_STANDARDPROJECTOUTPUT = 'standardProjectOutput'
+    static final String OPT_STANDARDPROJECTOUTPUT_C = 'prjOutput'
+    static final String OPT_STANDARDPROJECTOUTPUT_DESCRIPTION = 'Output location of the Standard Project File'
 	
 	static final String OPT_STEPSFILES = 'StepsFiles'
 	static final String OPT_STEPSFILES_C = 'sl'
@@ -192,6 +208,12 @@ class CommaMain {
 			if (cmdLine.hasOption(OPT_TESTSPECIFICATION)){
 				testSpecificationOPT(cmdLine, options)
 			}
+			if (cmdLine.hasOption(OPT_PRODUCTSPECIFICATION)){
+                productSpecificationOPT(cmdLine, options)
+            }
+            if (cmdLine.hasOption(OPT_STANDARDPROJECT)){
+                standardProjectOPT(cmdLine, options)
+            }
 			
 			if (cmdLine.hasOption(OPT_ORIGINALFEATURES)
 				&& cmdLine.hasOption(OPT_UPDATEDFEATURES)
@@ -233,6 +255,69 @@ class CommaMain {
 		'''), emptyMap)
 		val resource = set.getResource(URI.createFileURI("Example.prj"), true)
 		var cliContext = new TestSpecContext(tspecPath)
+
+		// Configure and start the generator
+		fileAccess.outputPath = outputdir.toString
+		setCommaGen(fileAccess, outputdir.toString)
+		
+		generator.generate(resource, fileAccess, cliContext)
+	}
+	
+	def productSpecificationOPT(CommandLine cmdLine, Options options) {
+		// var ResourceSet set
+		val set = resourceSetProvider.get
+		val pspecPath = getLocation(cmdLine, OPT_PRODUCTSPECIFICATION)
+		val outputdir = getOutputdir(cmdLine, pspecPath, OPT_PRODUCTSPECIFICATIONOUTPUT)
+		
+		System.out.println(INFO_OUTPUT + outputdir)
+		cleanOutput(cmdLine, outputdir)
+		
+		if (pspecPath === null) {
+			System::err.println(ERR_LOCATION_MISSING)
+			showInfo(description, options)
+			System.exit(1)
+			return
+		}
+
+        //if(tsModel.allContents.head instanceof TSMain) {
+		set.createResource(URI.createURI("Example.prj")).load(new StringInputStream('''
+		Project P1 {
+			Generate Tests {
+				demo {
+					product-file "«pspecPath.fileName.toString.replace("\\","\\\\")»"
+				}
+			}
+		}
+		'''), emptyMap)
+		val resource = set.getResource(URI.createFileURI("Example.prj"), true)
+		var cliContext = new TestSpecContext(pspecPath)
+
+		// Configure and start the generator
+		fileAccess.outputPath = outputdir.toString
+		setCommaGen(fileAccess, outputdir.toString)
+		
+		generator.generate(resource, fileAccess, cliContext)
+	}
+	
+	def standardProjectOPT(CommandLine cmdLine, Options options) {
+		// var ResourceSet set
+		val set = resourceSetProvider.get
+		val prjPath = getLocation(cmdLine, OPT_STANDARDPROJECT) as Path
+		val outputdir = getOutputdir(cmdLine, prjPath, OPT_STANDARDPROJECTOUTPUT)
+		
+		System.out.println(INFO_OUTPUT + outputdir)
+		cleanOutput(cmdLine, outputdir)
+		
+		if (prjPath === null) {
+			System::err.println(ERR_LOCATION_MISSING)
+			showInfo(description, options)
+			System.exit(1)
+			return
+		}
+		
+		set.createResource(URI.createURI(prjPath.fileName.toString))
+		val resource = set.getResource(URI.createFileURI(prjPath.fileName.toString), true)
+		var cliContext = new TestSpecContext(prjPath)
 
 		// Configure and start the generator
 		fileAccess.outputPath = outputdir.toString
@@ -380,6 +465,11 @@ class CommaMain {
 		options.addOption(OPT_SPECDIFFOUTPUT_C, OPT_SPECDIFFOUTPUT, true, OPT_SPECDIFFOUTPUT_DESCRIPTION)
 		// Added
 		options.addOption(OPT_TESTSPECIFICATION_C, OPT_TESTSPECIFICATION, true, OPT_TESTSPECIFICATION_DESCRIPTION)
+		options.addOption(OPT_TESTSPECIFICATIONOUTPUT_C, OPT_TESTSPECIFICATIONOUTPUT, true, OPT_TESTSPECIFICATIONOUTPUT_DESCRIPTION)
+		options.addOption(OPT_PRODUCTSPECIFICATION_C, OPT_PRODUCTSPECIFICATION, true, OPT_PRODUCTSPECIFICATION_DESCRIPTION)
+		options.addOption(OPT_PRODUCTSPECIFICATIONOUTPUT_C, OPT_PRODUCTSPECIFICATIONOUTPUT, true, OPT_PRODUCTSPECIFICATIONOUTPUT_DESCRIPTION)
+		options.addOption(OPT_STANDARDPROJECT_C, OPT_STANDARDPROJECT, true, OPT_STANDARDPROJECT_DESCRIPTION)
+		options.addOption(OPT_STANDARDPROJECTOUTPUT_C, OPT_STANDARDPROJECTOUTPUT, true, OPT_STANDARDPROJECTOUTPUT_DESCRIPTION)
 	}
 
 	def showInfo(String description, Options options) {
