@@ -71,9 +71,7 @@ class StandardProjectGenerator extends AbstractGenerator {
 	                val outputPathURI = res.URI.trimSegments(1)
 	                val absOutputPath = CommonPlugin.resolve(outputPathURI).toFileString
                     nl.asml.matala.bpmn4s.Main.compile(absFilePath, true, absOutputPath)
-                    for (r : ResourcesPlugin.workspace.root.getProjects()) {
-                        r.refreshLocal(IResource.DEPTH_INFINITE, null)
-                    }
+                    refreshWorkspaceProjects()
                     var outputFileURI = inputFileURI.trimSegments(1)
                     productName = inputFileURI.lastSegment.replaceAll("bpmn", "ps").replaceAll(" ", "")
                     inputFileURI = outputFileURI.appendSegment(productName)
@@ -104,9 +102,7 @@ class StandardProjectGenerator extends AbstractGenerator {
     	                    System.err.println(line)
     		            }
     		            pr.destroyForcibly
-    		            for (r : ResourcesPlugin.workspace.root.getProjects()) {
-    		                r.refreshLocal(IResource.DEPTH_INFINITE, null)
-    		            }
+                        refreshWorkspaceProjects()
     					var abstractTSpecFileURI = res.URI.trimSegments(1).appendSegment("src-gen\\CPNServer\\" + name + "\\generated_scenarios")
     					var abstractTSpecAbsFilePath = CommonPlugin.resolve(abstractTSpecFileURI).toFileString
     					var lst = (new File(abstractTSpecAbsFilePath)).listFiles()
@@ -156,9 +152,7 @@ class StandardProjectGenerator extends AbstractGenerator {
 						}
 					}
 				}
-	            for (r : ResourcesPlugin.workspace.root.getProjects()) {
-	                r.refreshLocal(IResource.DEPTH_INFINITE, null)
-	            }
+                refreshWorkspaceProjects()
 				
 				// check if there are SUT products
 				if(!product.stubProducts.nullOrEmpty) {
@@ -374,6 +368,16 @@ class StandardProjectGenerator extends AbstractGenerator {
 	        val details = result.children.filter[severity == Diagnostic.ERROR].map['''- «message»'''].join('\n')
 	        throw new Exception(result.message + '\n' + details, new DiagnosticException(result));
 	    }
+    }
+
+	def static void refreshWorkspaceProjects() {
+	    if (ResourcesPlugin.plugin === null) {
+	        // Running as stand alone jar, skip refresh
+	        return;
+	    }
+        for (r : ResourcesPlugin.workspace.root.getProjects()) {
+            r.refreshLocal(IResource.DEPTH_INFINITE, null)
+        }
 	}
 }
 
