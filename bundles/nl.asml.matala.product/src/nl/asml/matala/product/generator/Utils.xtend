@@ -57,6 +57,7 @@ import nl.esi.comma.expressions.expression.Variable
 import java.util.HashMap
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
+import nl.esi.comma.expressions.expression.ExpressionMap
 
 class Utils 
 {
@@ -248,6 +249,14 @@ class Utils
 
     def dispatch ArrayList<String> findVariableAssignments(ExpressionMapRW m) {
         return findVariableAssignments(m.key)
+    }
+    
+    def dispatch ArrayList<String> findVariableAssignments(ExpressionMap m) {
+        var list = new ArrayList<String>()
+        for (p : m.pairs) {
+            list += findVariableAssignments(p.key)
+        }
+        return list
     }
 
     def dispatch ArrayList<String> findVariableAssignments(ExpressionRecordAccess r) {
