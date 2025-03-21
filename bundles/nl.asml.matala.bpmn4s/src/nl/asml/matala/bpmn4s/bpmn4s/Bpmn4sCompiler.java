@@ -53,14 +53,11 @@ public class Bpmn4sCompiler{
 	 * Throw when a non valid bpmn4s model is detected.
 	 */
 	public class InvalidModel extends Exception {
-
 		private static final long serialVersionUID = 1L;
-
 		public InvalidModel (String mssg) {
 			super(mssg);
 		}
 	}
-	
 	
 	/**
 	 * Takes a Bpmn4s <model>, flattens its activities, and compiles it into a 
@@ -367,21 +364,29 @@ public class Bpmn4sCompiler{
 			}
 		}
 		
-		// Initialize inputs for this component
-		for (Element ds: model.elements.values()) {
-			/* Data stores of bottom level components are initialized in such components. 
-			 * Other data stores are initialized in components for which they are an input/output.
-			 * In the later case, the instance attribute this.initialized is used to avoid 
-			 * double initialization. */
-			if(ds.getType() == ElementType.DATASTORE  
-					&& !initialized.contains(ds.getId())
-					&& !ds.isReferenceData()
-					&& ((isImmediateParentComponent(cId, ds)) ||
-							(c.hasDataSource(ds.getId()) || c.hasDataTarget(ds.getId())))) {   
+		// Add data store inputs that have not been initialized somewhere else
+		for (Edge e: c.getDataInputs()) {
+			Element node = model.elements.get(e.getSrc());
+			
+			if (node.getType() == ElementType.DATASTORE  && !initialized.contains(node.getId())) {
+				initialized.add(node.getId());
+				String s = node.getInit();
+				if (node.isReferenceData()) {
+					s = model.getElementById(node.getOriginDataNodeId()).getInit();
+				}
+				if (s != null && s != "") {
+					init += s.replace(node.getName(), compile(node.getId())) + "\n";
+				}
+			}
+		}
 				
+		// add locally declared data stores initializations
+		for (Element ds: model.elements.values()) {
+			if(ds.getType() == ElementType.DATASTORE  
+				&& !ds.isReferenceData()
+				&& isImmediateParentComponent(cId, ds)) {
 				if (ds.getInit() != null && ds.getInit() != "") {
 					init += ds.getInit().replace(ds.getName(), compile(ds.getId())) + "\n";
-					initialized.add(ds.getId());
 				}
 			}
 		}
@@ -721,24 +726,32 @@ public class Bpmn4sCompiler{
 	}
 
 	private String generateRecordField(Entry<String, String> e) {
-		String field = "";
 		String fieldName = e.getKey();
-		String fieldTypeName = e.getValue();
-		Bpmn4sDataType dataType = model.dataSchema.get(fieldTypeName); 
-		if (dataType instanceof ListType) {
-			ListType lst = ListType.class.cast(dataType);
-			field = String.format("%s[]\t%s\n" , mapType(lst.valueType), fieldName); 
-		} else if (dataType instanceof MapType) {
-			MapType mp = MapType.class.cast(dataType);
-			field = String.format("map<%s,%s>\t%s\n" , mapType(mp.keyType), mapType(mp.valueType), fieldName);
-		} else if (dataType instanceof SetType) {
-			SetType st = SetType.class.cast(dataType);
-			field = String.format("set<%s>\t%s\n" , mapType(st.valueType), fieldName);
+		String fieldTypeName = e.getValue();	
+		return typeToString(fieldTypeName)  + "\t" + fieldName + "\n";
+	}
+		
+	private String typeToString(String dataTypeName) {
+		Bpmn4sDataType dataType = model.dataSchema.get(dataTypeName);
+		String result = "";
+		if (dataType == null) {
+			return mapType(dataTypeName);
 		} else {
-			// record, enumerations and basic types go here
-			field = String.format("%s\t%s\n" , mapType(fieldTypeName), fieldName); 
+			if (dataType instanceof ListType) {
+				ListType lst = ListType.class.cast(dataType);
+				result = String.format("%s[]" , typeToString(lst.valueType)); 
+			} else if (dataType instanceof MapType) {
+				MapType mp = MapType.class.cast(dataType);
+				result = String.format("map<%s,%s>", typeToString(mp.keyType), typeToString(mp.valueType));
+			} else if (dataType instanceof SetType) {
+				SetType st = SetType.class.cast(dataType);			
+				result = String.format("set<%s>" , typeToString(st.valueType));
+			} else {
+				// record, enumerations and basic types go here
+				result = mapType(dataType.getName()); 
+			}
 		}
-		return field;
+		return result;
 	}
 	
 	/**
