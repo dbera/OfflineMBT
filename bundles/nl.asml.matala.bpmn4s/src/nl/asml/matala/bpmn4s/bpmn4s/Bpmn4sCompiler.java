@@ -364,21 +364,29 @@ public class Bpmn4sCompiler{
 			}
 		}
 		
-		// Initialize inputs for this component
-		for (Element ds: model.elements.values()) {
-			/* Data stores of bottom level components are initialized in such components. 
-			 * Other data stores are initialized in components for which they are an input/output.
-			 * In the later case, the instance attribute this.initialized is used to avoid 
-			 * double initialization. */
-			if(ds.getType() == ElementType.DATASTORE  
-					&& !initialized.contains(ds.getId())
-					&& !ds.isReferenceData()
-					&& ((isImmediateParentComponent(cId, ds)) ||
-							(c.hasDataSource(ds.getId()) || c.hasDataTarget(ds.getId())))) {   
+		// Add data store inputs that have not been initialized somewhere else
+		for (Edge e: c.getDataInputs()) {
+			Element node = model.elements.get(e.getSrc());
+			
+			if (node.getType() == ElementType.DATASTORE  && !initialized.contains(node.getId())) {
+				initialized.add(node.getId());
+				String s = node.getInit();
+				if (node.isReferenceData()) {
+					s = model.getElementById(node.getOriginDataNodeId()).getInit();
+				}
+				if (s != null && s != "") {
+					init += s.replace(node.getName(), compile(node.getId())) + "\n";
+				}
+			}
+		}
 				
+		// add locally declared data stores initializations
+		for (Element ds: model.elements.values()) {
+			if(ds.getType() == ElementType.DATASTORE  
+				&& !ds.isReferenceData()
+				&& isImmediateParentComponent(cId, ds)) {
 				if (ds.getInit() != null && ds.getInit() != "") {
 					init += ds.getInit().replace(ds.getName(), compile(ds.getId())) + "\n";
-					initialized.add(ds.getId());
 				}
 			}
 		}
