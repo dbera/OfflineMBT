@@ -149,6 +149,8 @@ class StandardProjectGenerator extends AbstractGenerator {
                                     Assert.isTrue(true, "this is not an abstract tspec")
                                 }
                             }
+                            Files.delete(dst)
+                            refreshWorkspaceProjects()
 						}
 					}
 				}
