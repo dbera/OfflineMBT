@@ -124,7 +124,7 @@ Binding:
 	name = [expr::Variable|QualifiedName] ':' 
 		(	strvalue = STRING
 		|	'{'
-				'start-json' jsonvals = JsonValue 'end-json'
+				'start-json' (jsonvals = TSJsonValue)? 'end-json'
 				kvPairs += NestedKeyValuesPair (',' kvPairs += NestedKeyValuesPair)*
 			'}'
 		)
@@ -135,27 +135,27 @@ NestedKeyValuesPair:
 ;
 
 /*********************************************************/
-JsonValue:
-    {JsonValue} STRING | {JsonValue} Expression::BOOL_LITERAL | JsonNumeric | JsonObject | JsonArray 
+// TODO Reuse AssertThat Grammar. DB 23.03.2025
+TSJsonValue:
+    {TSJsonValue} STRING | {TSJsonValue} Expression::BOOL_LITERAL | TSJsonNumeric | TSJsonObject | TSJsonArray 
 ;
 
-JsonNumeric: 
-    {JsonNumeric} (Expression::FLOAT | Expression::Long)
+TSJsonNumeric: 
+    {TSJsonNumeric} (Expression::FLOAT | Expression::Long)
 ;
 
-JsonObject:
-    '{' (members+=JsonMember) (',' members+=JsonMember)* '}'
+TSJsonObject:
+    '{' (members+=TSJsonMember) (',' members+=TSJsonMember)* '}'
 ;
 
-JsonMember:
-    key=STRING ':' value=JsonValue
+TSJsonMember:
+    key=STRING ':' value=TSJsonValue
 ;
 
-JsonArray:
-    '[' (values+=JsonValue) (',' values+=JsonValue)* ']'
+TSJsonArray:
+    '[' (values+=TSJsonValue) (',' values+=TSJsonValue)* ']'
 
 ;
-
 /*********************************************************/
 
 TestSequence:
