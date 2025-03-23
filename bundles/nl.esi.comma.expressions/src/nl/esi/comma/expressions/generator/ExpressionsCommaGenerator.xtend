@@ -136,7 +136,14 @@ class ExpressionsCommaGenerator extends TypesCommaGenerator {
 				var map = exprToComMASyntax(e.getArgs().get(0));
 				var key = exprToComMASyntax(e.getArgs().get(1));
 				return String.format("deleteKey(%s,%s)", map, key);
-			}		
+			} else if (e.getFunctionName().equals("at")) {
+                var lst = exprToComMASyntax(e.getArgs().get(0));
+                var idx = exprToComMASyntax(e.getArgs().get(1));
+                var v = exprToComMASyntax(e.getArgs().get(2));
+                return String.format("at(%s,%s,%s)", lst, idx, v);
+            } else if (e.getFunctionName().equals("uuid")) {
+                return String.format("uuid()");
+            }	
 	}
 
 	def dispatch CharSequence exprToComMASyntax(ExpressionVector e)

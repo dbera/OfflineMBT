@@ -124,13 +124,36 @@ Binding:
 	name = [expr::Variable|QualifiedName] ':' 
 		(	strvalue = STRING
 		|	'{'
+				'start-json' jsonvals = JsonValue 'end-json'
 				kvPairs += NestedKeyValuesPair (',' kvPairs += NestedKeyValuesPair)*
 			'}'
 		)
 ;
 
 NestedKeyValuesPair:
-	actions += Action+
+	    actions += Action+
+;
+
+/*********************************************************/
+JsonValue:
+    {JsonValue} STRING | {JsonValue} Expression::BOOL_LITERAL | JsonNumeric | JsonObject | JsonArray 
+;
+
+JsonNumeric: 
+    {JsonNumeric} (Expression::FLOAT | Expression::Long)
+;
+
+JsonObject:
+    '{' (members+=JsonMember) (',' members+=JsonMember)* '}'
+;
+
+JsonMember:
+    key=STRING ':' value=JsonValue
+;
+
+JsonArray:
+    '[' (values+=JsonValue) (',' values+=JsonValue)* ']'
+
 ;
 
 /*********************************************************/

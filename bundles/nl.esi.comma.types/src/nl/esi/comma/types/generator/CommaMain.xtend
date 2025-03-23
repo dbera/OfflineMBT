@@ -21,7 +21,7 @@ import java.nio.file.Paths
 import java.text.MessageFormat
 import java.util.ArrayList
 import java.util.List
-import net.sourceforge.plantuml.SourceFileReader
+// import net.sourceforge.plantuml.SourceFileReader // Commented DB: 23.03.2025
 import org.apache.commons.cli.DefaultParser
 import org.apache.commons.cli.CommandLine
 import org.apache.commons.cli.HelpFormatter
@@ -597,10 +597,10 @@ class CommaMain {
 			for (plantFile : plantumlFiles) {
 				println("--> " + plantFile.name)
 					
-				val reader = new SourceFileReader(plantFile);
-				if (!reader.generatedImages.isEmpty) {
-					reader.getGeneratedImages().get(0);
-				}
+//				val reader = new SourceFileReader(plantFile);
+//				if (!reader.generatedImages.isEmpty) {
+//					reader.getGeneratedImages().get(0);
+//				}
 			}
 		}
 	}
