@@ -453,7 +453,7 @@ public class Bpmn4sCompiler{
 				if( nodeType == ElementType.TASK  || nodeType == ElementType.AND_GATE ) {
 					String task = "";
 					// Name of context as defined by user at front end:
-					String compCtxName = model.getElementById(cId).getContextName();  
+					String compCtxName = model.getElementById(cId).getContextName();
 					task += "action\t\t\t" + sanitize(repr(node)) + "\n";
 					// STEP TYPE
 					String stepConf = "";
@@ -478,7 +478,7 @@ public class Bpmn4sCompiler{
 					// tasks may not have in-flow, such as in headless components. For parallel
 					// join gates, any input context should be the same (condition to join).
 					String preCtxName = null;
-					if(inFlow != null) {
+					if(inFlow != null && compCtxName != null) {
 						preCtxName = sanitize(getPNSourcePlaceName(inFlow));
 						replaceMap.put(compCtxName, preCtxName);
 					}

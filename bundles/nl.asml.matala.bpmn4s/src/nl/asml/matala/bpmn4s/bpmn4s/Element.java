@@ -159,15 +159,15 @@ public class Element {
 	}
 	
 	public String getContextName() {
-		return this.context != null ? this.context.name : "";
+		return this.context != null ? this.context.name : null;
 	}
 	
 	public String getContextDataType() {
-		return this.context != null ? this.context.dataType : "";
+		return this.context != null ? this.context.dataType : null;
 	}
 	
 	public String getContextInit() {
-		return this.context != null ? this.context.init : "";
+		return this.context != null ? this.context.init : null;
 	}
 	
 	public Boolean hasFlowSource(String id) {
