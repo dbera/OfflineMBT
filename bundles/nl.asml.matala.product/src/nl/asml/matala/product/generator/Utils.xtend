@@ -289,7 +289,7 @@ class Utils
         var list = new ArrayList<String>()
         list += "updateDict = {}\n"
         for (updateOutVar :  prod.eAllContents.filter(UpdateOutVar).toIterable) {
-            if (updateOutVar.act !== null) { // Null Pointer BugFix - DB 05.02.2025
+            if (updateOutVar.act !== null) {
                 for (act : updateOutVar.act.actions) {
                     list += findVariableAssignments(act)
                 }
@@ -408,14 +408,15 @@ class Utils
                             raise TypeError('Unsupported type')
                     txt += f"    {prefix} := {items}\n"
                 return txt
-        
+            
             «(new Utils()).printLists(prod)»
-        
+            
             def printData(self, idata):
                 txt = ""
                 for k, v in idata.items():
                     txt += "%s : {\n" % k
                     j = json.loads(v)
+                    txt += "\tstart-json " + str(j) + " end-json" + "\n"
                     for jk in j.keys():
                         txt += self.recurseJson(j[jk], "%s.%s" % (k,jk))
                     txt += "}\n"
