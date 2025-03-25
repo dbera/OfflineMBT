@@ -622,7 +622,7 @@ public class Bpmn4sCompiler{
 		ArrayList<String> result = new ArrayList<String>();
 		for (Element elem: model.elements.values()) {
 			if (model.isRunTask(elem.getId())) {
-				result.add(compile(elem.getParentComponents().getLast()));
+				result.add(sanitize(compile(elem.getParentComponents().getLast())));
 			}
 		}
 		return result;
