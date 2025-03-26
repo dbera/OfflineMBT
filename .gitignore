@@ -23,6 +23,7 @@ local.properties
 
 # maven #
 target/
+nl.esi.xtext.lsp.server/
 .polyglot.*
 .m2/
 pom.tycho
