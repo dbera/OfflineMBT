@@ -880,9 +880,9 @@ public class Bpmn4sCompiler{
 			return getCompiledXorName(elId);
 		} else if (model.isComponent(elId)) { 
 			/* Nested components are compiled with their fully qualified name. */
-			return String.join("", el.getParentComponents().stream()
+			return String.join("__", el.getParentComponents().stream()
 					.map(e -> repr(model.getElementById(e)))
-					.collect(Collectors.toList())) + repr(el);
+					.collect(Collectors.toList())) + "__" + repr(el);
 		}
 		return repr(el);
 	}
