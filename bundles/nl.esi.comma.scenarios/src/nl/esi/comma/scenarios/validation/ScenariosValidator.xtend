@@ -16,16 +16,16 @@ import org.eclipse.xtext.validation.Check
  * See https://www.eclipse.org/Xtext/documentation/303_runtime_concepts.html#validation
  */
 class ScenariosValidator extends AbstractScenariosValidator {
-	
-	@Check
-	override checkImportForValidity(Import imp){
-		
-	}
-	
-	@Check
-	def checkDuplicatedNamesInScenarios(Scenarios s){
-		checkForNameDuplications(s.scenarios, "scenario", null)
-	}
+//	
+//	@Check
+//	override checkImportForValidity(Import imp){
+//		
+//	}
+//	
+//	@Check
+//	def checkDuplicatedNamesInScenarios(Scenarios s){
+//		checkForNameDuplications(s.scenarios, "scenario", null)
+//	}
 
 	// Check Disabled: DB
 	// Command can be follwed by Arguments and then a reply.

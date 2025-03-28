@@ -137,11 +137,23 @@ NestedKeyValuesPair:
 /*********************************************************/
 // TODO Reuse AssertThat Grammar. DB 23.03.2025
 TSJsonValue:
-    {TSJsonValue} STRING | {TSJsonValue} Expression::BOOL_LITERAL | TSJsonNumeric | TSJsonObject | TSJsonArray 
+    TSJsonString | TSJsonBool | TSJsonFloat | TSJsonLong | TSJsonObject | TSJsonArray 
 ;
 
-TSJsonNumeric: 
-    {TSJsonNumeric} (Expression::FLOAT | Expression::Long)
+TSJsonString:
+    value = STRING
+;
+
+TSJsonBool:
+    value = Expression::BOOL_LITERAL
+;
+
+TSJsonFloat: 
+    value = Expression::FLOAT
+;
+
+TSJsonLong: 
+    value = Expression::Long
 ;
 
 TSJsonObject:

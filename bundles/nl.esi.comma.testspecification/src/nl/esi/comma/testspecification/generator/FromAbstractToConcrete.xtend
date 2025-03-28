@@ -17,6 +17,13 @@ import nl.esi.comma.testspecification.testspecification.RunStep
 import nl.esi.comma.testspecification.testspecification.StepReference
 import org.eclipse.emf.common.util.BasicEList
 import org.eclipse.emf.common.util.EList
+import nl.esi.comma.testspecification.testspecification.TSJsonValue
+import nl.esi.comma.testspecification.testspecification.TSJsonObject
+import nl.esi.comma.testspecification.testspecification.TSJsonArray
+import nl.esi.comma.testspecification.testspecification.TSJsonString
+import nl.esi.comma.testspecification.testspecification.TSJsonBool
+import nl.esi.comma.testspecification.testspecification.TSJsonFloat
+import nl.esi.comma.testspecification.testspecification.TSJsonLong
 
 class FromAbstractToConcrete 
 {
@@ -229,25 +236,33 @@ class FromAbstractToConcrete
         var kv = ""
         if (!step.suppress) {
             for (o : step.output) {
-                kv += printKVInputPairs(prefix, o.name.name, o.kvPairs)
+                kv += printKVInputPairs(prefix, o.name.name, o.kvPairs, o.jsonvals)
             }
         }
         return kv
     }
 
-    def printKVInputPairs(String prefix, String field, EList<NestedKeyValuesPair> pairs) {
+    def printKVInputPairs(String prefix, String field, EList<NestedKeyValuesPair> pairs, TSJsonValue json) {
         var kv = ""
         for (p : pairs) {
             for (a : p.actions) {
-                kv += prefix + "." + field + printRecord("", "", null, a as RecordFieldAssignmentAction) + "\n"
+                kv += prefix + "." + field + printRecord("", "", null, a as RecordFieldAssignmentAction, json) + "\n"
             }
         }
         return kv
     }
 
-    def printRecord(String stepName, String prefix, EList<StepReference> stepRef, RecordFieldAssignmentAction rec) {
+    def printRecord(String stepName, String prefix, EList<StepReference> stepRef, RecordFieldAssignmentAction rec, TSJsonValue json) {
         var field = printField(rec.fieldAccess, false)
-        var value = (new ExpressionGenerator(stepRef,stepName)).exprToComMASyntax(rec.exp)
+        var cleaned = field.replaceFirst(".", "")
+        var keys = cleaned.split("[.]")
+        if (keys.isNullOrEmpty) {
+            var tmp = new ArrayList<String>()
+            tmp.add(cleaned)
+            keys = tmp
+        }
+        var value = getJsonValue(json, keys)
+//        var value = (new ExpressionGenerator(stepRef,stepName)).exprToComMASyntax(rec.exp)
         var p = (rec.exp instanceof ExpressionVector || rec.exp instanceof ExpressionFunctionCall) ? "" : prefix
         return field + " := " + p + value
     }
@@ -257,10 +272,46 @@ class FromAbstractToConcrete
     }
 
     dispatch def String printField(ExpressionVariable exp, boolean printVar) {
-        if(printVar) return exp.getVariable().getName()
-        else return ""
+        if (printVar) {
+            return exp.getVariable().getName()
+        } else {
+            return ""
+        }
     }
 
+    dispatch def String getJsonValue(TSJsonObject json, String[] keys) {
+        var el = json.members.filter[n | n.key.equalsIgnoreCase(keys.first)].get(0)
+        var newKeys = new ArrayList<String>()
+        var first = true
+        for (k : keys) {
+            if (!first) {
+                newKeys.add(k)
+            }
+            first = false
+        }
+        var rVal = getJsonValue(el.value, newKeys) 
+        return rVal
+    }
+
+    dispatch def String getJsonValue(TSJsonString json, String[] keys) {
+        return "\"" + json.value + "\""
+    }
+
+    dispatch def String getJsonValue(TSJsonBool json, String[] keys) {
+        return json.value.toString
+    }
+
+    dispatch def String getJsonValue(TSJsonFloat json, String[] keys) {
+        return json.value.toString
+    }
+
+    dispatch def String getJsonValue(TSJsonLong json, String[] keys) {
+        return json.value.toString
+    }
+
+    dispatch def String getJsonValue(TSJsonArray json, String[] keys) {
+        return "FIXME"
+    }
 
 	def generateTypesFile(String sys, List<String> typesImports) {
 		var typ = ""
