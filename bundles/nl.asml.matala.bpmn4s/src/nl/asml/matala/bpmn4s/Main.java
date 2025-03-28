@@ -474,9 +474,7 @@ public class Main {
 		if(contextInit != null && contextInit.strip().startsWith("=")) {
 			contextInit = contextInit.substring(1); // FIXME due to issues with bpmn4s editor lsp integration
 		}
-		node.setContext(contextName != null ? contextName : "", 
-				contextTypeName != null ? contextTypeName : "", 
-						contextInit != null ? contextInit : "");
+		node.setContext(contextName, contextTypeName, contextInit);
 		
 		if(type.equals(ElementType.TASK)) {
 			node.setContextUpdate(elem.getAttributeValueNs("http://bpmn4s", "ctxUpdate"));
