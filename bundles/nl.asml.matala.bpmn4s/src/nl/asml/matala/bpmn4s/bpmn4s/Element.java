@@ -107,7 +107,11 @@ public class Element {
 	}
 	
 	public String getOriginDataNodeId() {
-		return this.originDataNodeId;
+		if (this.isReferenceData()) {
+			return this.originDataNodeId;
+		} else {
+			return this.id;
+		}
 	}
 	
 	public Element setOriginDataNodeId(String id) {

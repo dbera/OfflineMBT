@@ -368,8 +368,9 @@ public class Bpmn4sCompiler{
 		for (Edge e: c.getDataInputs()) {
 			Element node = model.elements.get(e.getSrc());
 			
-			if (node.getType() == ElementType.DATASTORE  && !initialized.contains(node.getId())) {
-				initialized.add(node.getId());
+			if (node.getType() == ElementType.DATASTORE  && !initialized.contains(node.getOriginDataNodeId())) {
+				Logging.logDebug(String.format("Initializing %s in %s" , node.getName(), c.getName()));;
+				initialized.add(node.getOriginDataNodeId());
 				String s = node.getInit();
 				if (node.isReferenceData()) {
 					s = model.getElementById(node.getOriginDataNodeId()).getInit();
