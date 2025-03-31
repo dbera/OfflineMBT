@@ -7,7 +7,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package nl.asml.matala.product.generator;
+package nl.esi.comma.assertthat.generator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -108,7 +108,7 @@ class JsonHelper {
 	}
 
 	public static String jsonElement(JsonValue elem) {
-		if (elem.getExpr() instanceof Expression) { return SnakesHelper.expression(elem.getExpr(), t->t); }
+		if (elem.getExpr() instanceof Expression) { return AssertionsHelper.expression(elem.getExpr(), t->t); }
 		if (elem.getJsonArr() instanceof JsonArray) { return jsonElement(elem.getJsonArr()); }
 		if (elem.getJsonObj() instanceof JsonObject) { return jsonElement(elem.getJsonObj()); } 
 		

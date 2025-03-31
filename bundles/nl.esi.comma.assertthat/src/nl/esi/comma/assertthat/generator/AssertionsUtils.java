@@ -1,4 +1,4 @@
-package nl.asml.matala.product.generator;
+package nl.esi.comma.assertthat.generator;
 
 import java.util.ArrayList;
 import java.util.List;
