@@ -367,9 +367,7 @@ public class Bpmn4sCompiler{
 		// Add data store inputs that have not been initialized somewhere else
 		for (Edge e: c.getDataInputs()) {
 			Element node = model.elements.get(e.getSrc());
-			
 			if (node.getType() == ElementType.DATASTORE  && !initialized.contains(node.getOriginDataNodeId())) {
-				Logging.logDebug(String.format("Initializing %s in %s" , node.getName(), c.getName()));;
 				initialized.add(node.getOriginDataNodeId());
 				String s = node.getInit();
 				if (node.isReferenceData()) {
@@ -836,7 +834,10 @@ public class Bpmn4sCompiler{
 	 * but PSpec is more restrictive so we replace them.
 	 */
 	protected String sanitize(String str) {
-		String result = str.replaceAll("\\p{Zs}+", "").replace(".", "");
+		String result = str
+				.replaceAll("\\p{Zs}+", "__")
+				.replace(".", "_CLN_")
+				.replace("?", "_QMK_");
 		return result;
 	}
 
