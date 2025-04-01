@@ -70,7 +70,7 @@ class StandardProjectGenerator extends AbstractGenerator {
 	            if (inputFileURI.fileExtension.equalsIgnoreCase("bpmn")) {
 	                val outputPathURI = res.URI.trimSegments(1)
 	                val absOutputPath = CommonPlugin.resolve(outputPathURI).toFileString
-                    nl.asml.matala.bpmn4s.Main.compile(absFilePath, true, absOutputPath)
+                    nl.asml.matala.bpmn4s.Main.compile(absFilePath, product.simulator, absOutputPath)
                     refreshWorkspaceProjects()
                     var outputFileURI = inputFileURI.trimSegments(1)
                     productName = inputFileURI.lastSegment.replaceAll("bpmn", "ps").replaceAll(" ", "")

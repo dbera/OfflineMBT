@@ -162,7 +162,7 @@ class PetriNet {
 	{
 		if(inout_places.contains(p.name) || init_places.contains(p.name)) {
 			if(p.custom_type instanceof SimpleTypeDecl) 
-				return '''self.n.add_place(Place('«p.name»', «SnakesHelper.defaultValue(p.custom_type)»))'''
+				return '''self.n.add_place(Place('«p.name»', «SnakesHelper.defaultValue(p.custom_type, null)»))'''
 			else return '''self.n.add_place(Place('«p.name»', Data().get_«p.custom_type.name»()))'''
 		} else {
 			return '''self.n.add_place(Place('«p.name»'))'''
