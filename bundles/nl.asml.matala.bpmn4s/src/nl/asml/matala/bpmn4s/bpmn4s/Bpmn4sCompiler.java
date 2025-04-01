@@ -29,7 +29,7 @@ import nl.asml.matala.bpmn4s.Logging;
 public class Bpmn4sCompiler{
 	
 	protected final String UNIT_TYPE = "UNIT";
-	private final String UNITINIT = "UNIT{ __uuid__ = uuid(),\nunit = 0 }";
+	private final String UNIT_INIT = "UNIT { __uuid__ = uuid(), unit = 0 }";
 
 	// The model being compiled to pspec
 	protected Bpmn4s model = null;
@@ -356,7 +356,7 @@ public class Bpmn4sCompiler{
 
 		if (initPlace != null) {
 			if (ctxDataType == "") {
-				init += String.format("%s := %s \n", sanitize(initPlace), UNITINIT);
+				init += String.format("%s := %s \n", sanitize(initPlace), UNIT_INIT);
 			} else {
 				if (ctxInit != "") {
 					init += replaceWord(ctxInit, ctxName, sanitize(initPlace)) + "\n";
@@ -479,7 +479,7 @@ public class Bpmn4sCompiler{
 					// tasks may not have in-flow, such as in headless components. For parallel
 					// join gates, any input context should be the same (condition to join).
 					String preCtxName = null;
-					if(inFlow != null && compCtxName != null) {
+					if(inFlow != null) {
 						preCtxName = sanitize(getPNSourcePlaceName(inFlow));
 						replaceMap.put(compCtxName, preCtxName);
 					}

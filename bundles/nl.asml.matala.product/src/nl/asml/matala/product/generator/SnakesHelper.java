@@ -66,14 +66,14 @@ import nl.esi.comma.types.types.TypeDecl;
 import nl.esi.comma.types.types.VectorTypeDecl;
 
 class SnakesHelper {
-	static String defaultValue(TypeDecl type) {
+	static String defaultValue(TypeDecl type, String targetName) {
 		if (type instanceof SimpleTypeDecl) {
 			SimpleTypeDecl t = (SimpleTypeDecl) type;
-			if (t.getBase() != null) return defaultValue(t.getBase());
+			if (t.getBase() != null) return defaultValue(t.getBase(), targetName);
 			else if (t.getName().equals("int")) return "0";
 			else if (t.getName().equals("real")) return "0.0";
 			else if (t.getName().equals("bool")) return "True";
-			else if (t.getName().equals("string")) return "\"\"";
+			else if (t.getName().equals("string")) return "__uuid__".equals(targetName) ? "uuid.uuid4().hex" : "\"\"";
 			else return "\"\""; // Custom types without base (e.g. type DateTime)
 		} else if (type instanceof VectorTypeDecl) {
 			return "[]";
@@ -82,9 +82,9 @@ class SnakesHelper {
 			return String.format("\"%s:%s\"", t.getName(), t.getLiterals().get(0).getName());
 		} else if (type instanceof MapTypeDecl) {
 			return "{}";
-		} else if (type instanceof RecordTypeDecl) {
-			String value = ((RecordTypeDecl) type).getFields().stream()
-				.map(f -> String.format("\"%s\":%s", f.getName(), defaultValue(f.getType().getType())))
+		} else if (type instanceof RecordTypeDecl recType) {
+			String value = recType.getFields().stream()
+				.map(f -> String.format("\"%s\":%s", f.getName(), defaultValue(f.getType().getType(), f.getName())))
 				.collect(Collectors.joining(","));
 			return String.format("{%s}", value);
 		} 
