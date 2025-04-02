@@ -408,7 +408,7 @@ class ProductGenerator extends AbstractGenerator {
 
 				if(v.ref.type.type instanceof SimpleTypeDecl)
 					pnet.add_expression(tr.name, p, 
-					   "Value(" + SnakesHelper.defaultValue(v.ref.type.type) + ")", 
+					   "Value(" + SnakesHelper.defaultValue(v.ref.type.type, v.ref.name) + ")", 
 					   PType.OUT, getConstraintTxt(v))
 				else
 					pnet.add_expression(tr.name, p, 
@@ -425,7 +425,7 @@ class ProductGenerator extends AbstractGenerator {
 			/* 23.01.24 */
 			if(v.ref.type.type instanceof SimpleTypeDecl)
 				pnet.add_expression(tr.name, v.ref.name, 
-				    "Expression('" + SnakesHelper.defaultValue(v.ref.type.type) + "')", 
+				    "Expression('" + SnakesHelper.defaultValue(v.ref.type.type, v.ref.name) + "')", 
 				    PType.OUT, getConstraintTxt(v))
 			else
 				pnet.add_expression(tr.name, v.ref.name, 
@@ -455,7 +455,7 @@ class ProductGenerator extends AbstractGenerator {
 				//pnet.add_expression(tr.name, p, "Expression('1')", PType.OUT)
 				if(v.ref.type.type instanceof SimpleTypeDecl)
 					pnet.add_expression(tr.name, p, 
-					   "Value(" + SnakesHelper.defaultValue(v.ref.type.type) + ")", 
+					   "Value(" + SnakesHelper.defaultValue(v.ref.type.type, v.ref.name) + ")", 
 					   PType.OUT, getConstraintTxt(v))
 				else
 					pnet.add_expression(tr.name, p, 
@@ -474,7 +474,7 @@ class ProductGenerator extends AbstractGenerator {
 			/* 23.01.24 */
 			if(v.ref.type.type instanceof SimpleTypeDecl)
 				pnet.add_expression(tr.name, v.ref.name, 
-				    "Expression('" + SnakesHelper.defaultValue(v.ref.type.type) + "')", 
+				    "Expression('" + SnakesHelper.defaultValue(v.ref.type.type, v.ref.name) + "')", 
 				    PType.OUT, getConstraintTxt(v))
 			else
 				pnet.add_expression(tr.name, v.ref.name, 

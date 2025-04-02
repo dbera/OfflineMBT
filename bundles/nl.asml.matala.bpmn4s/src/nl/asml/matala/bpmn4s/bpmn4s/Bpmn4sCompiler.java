@@ -5,13 +5,11 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.AbstractList;
 import java.util.AbstractMap;
 import java.util.AbstractSet;
-import java.util.HashMap;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -29,7 +27,7 @@ import nl.asml.matala.bpmn4s.Logging;
 public class Bpmn4sCompiler{
 	
 	protected final String UNIT_TYPE = "UNIT";
-	private final String UNITINIT = "UNIT{ unit=0 }";
+	private final String UNIT_INIT = "UNIT { __uuid__ = uuid(), unit = 0 }";
 
 	// The model being compiled to pspec
 	protected Bpmn4s model = null;
@@ -53,14 +51,11 @@ public class Bpmn4sCompiler{
 	 * Throw when a non valid bpmn4s model is detected.
 	 */
 	public class InvalidModel extends Exception {
-
 		private static final long serialVersionUID = 1L;
-
 		public InvalidModel (String mssg) {
 			super(mssg);
 		}
 	}
-	
 	
 	/**
 	 * Takes a Bpmn4s <model>, flattens its activities, and compiles it into a 
@@ -359,7 +354,7 @@ public class Bpmn4sCompiler{
 
 		if (initPlace != null) {
 			if (ctxDataType == "") {
-				init += String.format("%s := %s \n", sanitize(initPlace), UNITINIT);
+				init += String.format("%s := %s \n", sanitize(initPlace), UNIT_INIT);
 			} else {
 				if (ctxInit != "") {
 					init += replaceWord(ctxInit, ctxName, sanitize(initPlace)) + "\n";
@@ -367,21 +362,30 @@ public class Bpmn4sCompiler{
 			}
 		}
 		
-		// Initialize inputs for this component
-		for (Element ds: model.elements.values()) {
-			/* Data stores of bottom level components are initialized in such components. 
-			 * Other data stores are initialized in components for which they are an input/output.
-			 * In the later case, the instance attribute this.initialized is used to avoid 
-			 * double initialization. */
-			if(ds.getType() == ElementType.DATASTORE  
-					&& !initialized.contains(ds.getId())
-					&& !ds.isReferenceData()
-					&& ((isImmediateParentComponent(cId, ds)) ||
-							(c.hasDataSource(ds.getId()) || c.hasDataTarget(ds.getId())))) {   
+		// Add data store inputs that have not been initialized somewhere else
+		for (Edge e: c.getDataInputs()) {
+			Element node = model.elements.get(e.getSrc());
+			
+			if (node.getType() == ElementType.DATASTORE  && !initialized.contains(node.getOriginDataNodeId())) {
+				Logging.logDebug(String.format("Initializing %s in %s" , node.getName(), c.getName()));;
+				initialized.add(node.getOriginDataNodeId());
+				String s = node.getInit();
+				if (node.isReferenceData()) {
+					s = model.getElementById(node.getOriginDataNodeId()).getInit();
+				}
+				if (s != null && s != "") {
+					init += s.replace(node.getName(), compile(node.getId())) + "\n";
+				}
+			}
+		}
 				
+		// add locally declared data stores initializations
+		for (Element ds: model.elements.values()) {
+			if(ds.getType() == ElementType.DATASTORE  
+				&& !ds.isReferenceData()
+				&& isImmediateParentComponent(cId, ds)) {
 				if (ds.getInit() != null && ds.getInit() != "") {
 					init += ds.getInit().replace(ds.getName(), compile(ds.getId())) + "\n";
-					initialized.add(ds.getId());
 				}
 			}
 		}
@@ -448,7 +452,7 @@ public class Bpmn4sCompiler{
 				if( nodeType == ElementType.TASK  || nodeType == ElementType.AND_GATE ) {
 					String task = "";
 					// Name of context as defined by user at front end:
-					String compCtxName = model.getElementById(cId).getContextName();  
+					String compCtxName = model.getElementById(cId).getContextName();
 					task += "action\t\t\t" + sanitize(repr(node)) + "\n";
 					// STEP TYPE
 					String stepConf = "";
@@ -475,7 +479,9 @@ public class Bpmn4sCompiler{
 					String preCtxName = null;
 					if(inFlow != null) {
 						preCtxName = sanitize(getPNSourcePlaceName(inFlow));
-						replaceMap.put(compCtxName, preCtxName);
+						if (compCtxName != null) {
+							replaceMap.put(compCtxName, preCtxName);
+						}
 					}
 					// INPUTS
 					ArrayList<String> inputs = new ArrayList<String>();
@@ -617,7 +623,7 @@ public class Bpmn4sCompiler{
 		ArrayList<String> result = new ArrayList<String>();
 		for (Element elem: model.elements.values()) {
 			if (model.isRunTask(elem.getId())) {
-				result.add(compile(elem.getParentComponents().getLast()));
+				result.add(sanitize(compile(elem.getParentComponents().getLast())));
 			}
 		}
 		return result;
@@ -693,7 +699,7 @@ public class Bpmn4sCompiler{
 	public String generateTypes() {
 		String types = new String("");
 		// UNIT_TYPE is the type for undefined contexts.
-		types += String.format("record %s {\n\tint\tunit\n}\n\n", UNIT_TYPE);
+		types += String.format("record %s {\n\tstring __uuid__\n\tint\tunit\n}\n\n", UNIT_TYPE);
 		for (Bpmn4sDataType d: model.dataSchema.values()) {
 			if(d instanceof RecordType) {
 				RecordType rec = RecordType.class.cast(d);
@@ -721,24 +727,32 @@ public class Bpmn4sCompiler{
 	}
 
 	private String generateRecordField(Entry<String, String> e) {
-		String field = "";
 		String fieldName = e.getKey();
-		String fieldTypeName = e.getValue();
-		Bpmn4sDataType dataType = model.dataSchema.get(fieldTypeName); 
-		if (dataType instanceof ListType) {
-			ListType lst = ListType.class.cast(dataType);
-			field = String.format("%s[]\t%s\n" , mapType(lst.valueType), fieldName); 
-		} else if (dataType instanceof MapType) {
-			MapType mp = MapType.class.cast(dataType);
-			field = String.format("map<%s,%s>\t%s\n" , mapType(mp.keyType), mapType(mp.valueType), fieldName);
-		} else if (dataType instanceof SetType) {
-			SetType st = SetType.class.cast(dataType);
-			field = String.format("set<%s>\t%s\n" , mapType(st.valueType), fieldName);
+		String fieldTypeName = e.getValue();	
+		return typeToString(fieldTypeName)  + "\t" + fieldName + "\n";
+	}
+		
+	private String typeToString(String dataTypeName) {
+		Bpmn4sDataType dataType = model.dataSchema.get(dataTypeName);
+		String result = "";
+		if (dataType == null) {
+			return mapType(dataTypeName);
 		} else {
-			// record, enumerations and basic types go here
-			field = String.format("%s\t%s\n" , mapType(fieldTypeName), fieldName); 
+			if (dataType instanceof ListType) {
+				ListType lst = ListType.class.cast(dataType);
+				result = String.format("%s[]" , typeToString(lst.valueType)); 
+			} else if (dataType instanceof MapType) {
+				MapType mp = MapType.class.cast(dataType);
+				result = String.format("map<%s,%s>", typeToString(mp.keyType), typeToString(mp.valueType));
+			} else if (dataType instanceof SetType) {
+				SetType st = SetType.class.cast(dataType);			
+				result = String.format("set<%s>" , typeToString(st.valueType));
+			} else {
+				// record, enumerations and basic types go here
+				result = mapType(dataType.getName()); 
+			}
 		}
-		return field;
+		return result;
 	}
 	
 	/**
@@ -867,9 +881,9 @@ public class Bpmn4sCompiler{
 			return getCompiledXorName(elId);
 		} else if (model.isComponent(elId)) { 
 			/* Nested components are compiled with their fully qualified name. */
-			return String.join("", el.getParentComponents().stream()
+			return String.join("__", el.getParentComponents().stream()
 					.map(e -> repr(model.getElementById(e)))
-					.collect(Collectors.toList())) + repr(el);
+					.collect(Collectors.toList())) + "__" + repr(el);
 		}
 		return repr(el);
 	}
