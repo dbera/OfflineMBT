@@ -36,15 +36,6 @@ class AssertThatValueEqualTo extends AssertionAbstract {
 	public Boolean asRegex = null;
 }
 
-//class AssertThatValueCloseTo extends AssertionAbstract {
-//	public JsonObject referenceApprox = null;
-//	public WithinMargin margin = null;
-//}
-//
-//class AssertThatValueMatchRegex extends AssertionAbstract {
-//	public JsonArray referenceRegex = null;
-//}
-
 class AssertThatValueHasSize extends AssertionAbstract {
 	public Integer referenceSize = null;
 }
