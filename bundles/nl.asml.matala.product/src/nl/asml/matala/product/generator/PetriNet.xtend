@@ -236,11 +236,12 @@ class PetriNet {
 		            for mode in tmodes:
 		                enabled_transition_modes[t] = tmodes
 		                print('\n')
-		                print(' Enabled-transition-name: ', t)
-		                print('    # with-input-modes: ')
-		                for key, value in mode.dict().items():
-		                    json_data = json.loads(value)
-		                    print('      - var: ', key, '  ->  value:\n', json.dumps(json_data, indent=2))
+		                print('Enabled-transition: ', t)
+		                print('    - with inputs: ', mode.dict())
+		                # print('    # with-input-modes: ')
+		                # for key, value in mode.dict().items():
+		                #    json_data = json.loads(value)
+		                #    print('      - var: ', key, '  ->  value:\n', json.dumps(json_data, indent=2))
 		                # print('     > with mode: ', mode.dict())
 		
 		        # print(enabled_transition_modes)
@@ -258,26 +259,28 @@ class PetriNet {
 		        for k1, v1 in choices.items():
 		            print('\n')
 		            print('Possible-choices: ')
-		            print('    + choice: ', k1, ':')
-		            for k2, v2 in v1[1].items():
-		                json_data = json.loads(v2)
-		                print('    + key: ', k2, ' with-mode:\n', json.dumps(json_data, indent=2))
+		            print(k1, ' : ', v1)
+		            # print('    + choice: ', k1, ':')
+		            # for k2, v2 in v1[1].items():
+		            #    json_data = json.loads(v2)
+		            #    print('    + key: ', k2, ' with-mode:\n', json.dumps(json_data, indent=2))
 		
 		        if not dead_marking:
 		            print('\n')
-		            value = input(" Enter Choice: ")
+		            value = input("Enter Choice: ")
 		            print('\n')
-		            print(' - Selected transition: ', choices.get(int(value)))
+		            print('****************************************************************')
+		            print('Selected transition: ', choices.get(int(value)))
 		            t, m = choices.get(int(value))
 		            t.fire(m)
 		            print('\n')
-		            print(' [ Transition Fired! ]')
+		            print('[ Transition Fired! ]')
 		            print('\n')
-		            print(' Resulting Marking: ')
+		            print('Current Marking: ')
 		            for k in n.get_marking():
 		                ms = n.get_marking()[k]
 		                json_data = json.loads(ms.items()[0])
-		                print('    + Place: ', k, ' has Token:\n', json.dumps(json_data, indent=2))
+		                print('    + Place: ', k, ' has token: ', json.dumps(json_data))
 		            print('****************************************************************')
 		            # self.generatePlantUML(n, True)
 		        else:
@@ -322,7 +325,8 @@ class PetriNet {
 				 HashMap<String,List<String>> mapOfSuppressTransitionVars,
 				 List<String> inout_places, 
 				 List<String> init_places, 
-				 int depth_limit
+				 int depth_limit,
+				 int num_tests
 	) {
 		'''
 		import datetime
@@ -359,6 +363,7 @@ class PetriNet {
 		    SavedMarking = Marking()
 		    
 		    # test generation data
+		    numTestCases = 0
 		    listOfEnvBlocks = []
 		    listOfSUTActions = []
 		    mapOfSuppressTransitionVars = {}
@@ -383,7 +388,7 @@ class PetriNet {
 		        «inputArcsTxt»
 		        «outputArcsTxt»
 		    
-		    «print_SCNGen»
+		    «print_SCNGen(num_tests)»
 		    
 		    def initializeTestGeneration(self):
 		        # map_of_transition_modes = {}
@@ -807,7 +812,7 @@ class PetriNet {
 		'''
 	}
 	
-	def print_SCNGen() {
+	def print_SCNGen(int num_tests) {
 		return
 		'''
 	    def getCurrentMarking(self):
@@ -845,14 +850,21 @@ class PetriNet {
 	        # print(currentVertex)
 	        # print(self.visitedList)
 	        # print(visitedT)
+	        if self.numTestCases >= «num_tests»:
+	            print(' [RG-INFO] max test cases reached! Terminating path. ')
+	            return
 	        if depth > limit:
 	            print('	[RG-INFO] depth limit is reached.')
 	            self.visitedTList.append(list(visitedT))
 	            self.visitedTProdList.append(list(visitedTP))
+	            self.numTestCases = self.numTestCases + 1
+	            return
 	        elif currentVertex in self.visitedList:
 	            print('	[RG-INFO] current vertex is already visited.')
 	            self.visitedTList.append(list(visitedT))
 	            self.visitedTProdList.append(list(visitedTP))
+	            self.numTestCases = self.numTestCases + 1
+	            return
 	        else:
 	            self.visitedList.add(currentVertex)
 	            state_space.goto(currentVertex)
@@ -861,6 +873,8 @@ class PetriNet {
 	                print('	[RG-INFO] deadlock detected.')
 	                self.visitedTList.append(list(visitedT))
 	                self.visitedTProdList.append(list(visitedTP))
+	                self.numTestCases = self.numTestCases + 1
+	                return
 	            else:
 	                for elm in state_space.successors():
 	                    state_space.goto(currentVertex)
