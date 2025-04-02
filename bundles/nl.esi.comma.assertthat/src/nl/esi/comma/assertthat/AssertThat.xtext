@@ -13,22 +13,22 @@ AssertThatBlock:
 ;
 
 GenericScriptBlock:
-    assignment = Variable ':=' 'script-call' params = ScriptParametersCustom
+    assignment = Variable ':=' 'script-call' params = (ScriptParametersCustom | ScriptParametersFromVariable)
 ;
 
 ScriptParametersCustom:
     '{'
-        'script-path' ':'   scriptPath = STRING
-        ('positional-args' ':'  paramsPositional = JsonArray  ) ?
-        ('named-args' ':'       paramsNamed      = JsonObject ) ?
+        'using-path' ':'   scriptPath = STRING
+        ('with-args' ':' (args+=JsonValue) (',' args+=JsonValue)? ) ?
     '}' 
 ;
-//ScriptParametersFromVariable:
-//    '{'
-//        'using-variable' ':'   paramsVariable  = Expression
-//        ('with-positional-args' ':' positionalField = STRING ) ?
-//    '}'
-//;
+
+ScriptParametersFromVariable:
+    '{'
+        'using-variable' ':'   paramsVariable  = Expression
+        ('with-positional-args' ':' positionalField = STRING ) ?
+    '}'
+;
 
 enum MARGIN_TYPE:
     ABSOLUTE='Absolute'
