@@ -5,13 +5,11 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.AbstractList;
 import java.util.AbstractMap;
 import java.util.AbstractSet;
-import java.util.HashMap;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -481,7 +479,9 @@ public class Bpmn4sCompiler{
 					String preCtxName = null;
 					if(inFlow != null) {
 						preCtxName = sanitize(getPNSourcePlaceName(inFlow));
-						replaceMap.put(compCtxName, preCtxName);
+						if (compCtxName != null) {
+							replaceMap.put(compCtxName, preCtxName);
+						}
 					}
 					// INPUTS
 					ArrayList<String> inputs = new ArrayList<String>();
