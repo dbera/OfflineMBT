@@ -66,9 +66,17 @@ import nl.esi.comma.expressions.expression.ExpressionVariable;
 import nl.esi.comma.expressions.expression.ExpressionVector;
 import nl.esi.comma.expressions.expression.QUANTIFIER;
 
+/**
+ * 
+ */
 public class AssertionsHelper {
 
-	static List<AssertThatBlock> getAssertions(EList<DataAssertionItem> assertionItemsList) {
+	/**
+	 * Filters all AssertThatBlock items from an EList of DataAssertionItem
+	 * @param assertionItemsList
+	 * @return List of AssertThatBlock objects
+	 */
+	public static List<AssertThatBlock> getAssertions(EList<DataAssertionItem> assertionItemsList) {
 		List<AssertThatBlock> list = new ArrayList<>();
 		for (DataAssertionItem item : assertionItemsList)
 			if (item instanceof AssertThatBlock)
@@ -76,7 +84,12 @@ public class AssertionsHelper {
 		return list;
 	}
 
-	static List<GenericScriptBlock> getScriptCalls(EList<DataAssertionItem> assertionItemsList) {
+	/**
+	 * Filters all GenericScriptBlock items from an EList of DataAssertionItem
+	 * @param assertionItemsList
+	 * @return List of GenericScriptBlock objects
+	 */
+	public static List<GenericScriptBlock> getScriptCalls(EList<DataAssertionItem> assertionItemsList) {
 		List<GenericScriptBlock> list = new ArrayList<>();
 		for (DataAssertionItem item : assertionItemsList)
 			if (item instanceof GenericScriptBlock)
@@ -84,7 +97,12 @@ public class AssertionsHelper {
 		return list;
 	}
 
-	static String printAssertions(List<AssertThatBlock> assertList) {
+	/**
+	 * Parses a list of AssertThatBlock objects into string format.
+	 * @param assertList
+	 * @return String representation of a list of assertions.
+	 */
+	public static String printAssertions(List<AssertThatBlock> assertList) {
 		String ASSERTS_TEMPLATE = "asserts=[\r\n\t%s\r\n]";
 
 		List<String> assertionList = new ArrayList<>();
@@ -94,9 +112,18 @@ public class AssertionsHelper {
 		return String.format(ASSERTS_TEMPLATE, String.join(",", assertionList));
 	}
 
+	/**
+	 * Parses an assertion block into a string, as in the reference.kvp format.
+	 * The string representation includes an assertion identifier, its type, and input parameters.
+	 * Input parameters include the output value to be verified and the parameters accepted by its
+	 * respective type (i.e., Value, XPaths, XMLFile).
+	 * @param asrt Assertion block to be parsed into string
+	 * @return string representation of an assertion block
+	 */
 	private static String parseAssertThat(AssertThatBlock asrt) {
 		String type = "xxxx";
 		List<String> comparisons = new ArrayList<>();
+		// the assertion template with ID, type, and input parameters
 		String SINGLE_ASSERTION_TEMPLATE = """
 				{
 				\t"id":"%s", "type":"%s",
@@ -107,29 +134,50 @@ public class AssertionsHelper {
 				""";
 		comparisons.add(String.format("\"output\":\"%s\"", expression(asrt.getOutput(), t -> t)));
 		if (asrt.getVal() instanceof AssertThatValue) {
+			// assertion of type Value
 			type = "Value";
 			parseComparison(((AssertThatValue) asrt.getVal()), comparisons);
 		} else if (asrt.getVal() instanceof AssertThatXPaths) {
+			// assertion of type XPaths
 			type = "XPaths";
 			parseComparison(((AssertThatXPaths) asrt.getVal()), comparisons);
 		} else if (asrt.getVal() instanceof AssertThatXMLFile) {
+			// assertion of type XMLFile
 			type = "XMLFile";
 			parseComparison(((AssertThatXMLFile) asrt.getVal()), comparisons);
 		}
+		// fills in the gaps in the assertion template
 		String assertionFormatted = SINGLE_ASSERTION_TEMPLATE.formatted(
 				asrt.getIdentifier(), 
 				type, 
 				String.join(",\r\n\t\t", comparisons)
 				);
-		System.out.println(assertionFormatted);
 		return assertionFormatted;
 	}
 
+	/**
+	 * Parses input parameters of an assertion of Value type 
+	 * into string format. Strings for each parameters are added in the comparisons list. 
+	 * @param assertion Assertion of type value to be parsed into string
+	 * @param comparisons List of string representation of each input parameter.
+	 */
 	private static void parseComparison(AssertThatValue assertion, List<String> comparisons) {
 		ComparisonsForSingleReference comparisonType = assertion.getComparisonType();
 		extractSingleComparison(comparisonType, comparisons);
 	}
 
+	
+	/**  
+	 * Parses input parameters of an assertion of Value or XPaths type 
+	 * for comparing observed output against a single reference value (in an xpath, for XPaths) w.r.t. 
+	 * - their precise difference (equal-to), 
+	 * - their absolute or relative difference (close-to),
+	 * - a regular expression (match-regex),
+	 * - its length, given the observed output is a string/array/map (has-size).
+	 * If this object is not a known subclass of ComparisonsForSingleReference, an exception will be thrown
+	 * @param comparisonType Reference value used for verifying whether the observed output is the same (equal-to), approximately equal (close-to), matches with a regular expression (match-regex), or has a given length (has-size)
+	 * @param comparisons List of string representation of each input parameter.
+	 */
 	private static void extractSingleComparison(ComparisonsForSingleReference comparisonType,
 			List<String> comparisons) {
 		if (comparisonType instanceof AssertThatValueEq)
@@ -144,6 +192,15 @@ public class AssertionsHelper {
 			throw new RuntimeException("Not supported");
 	}
 
+	/**
+	 * Parses input parameters of an assertion of XMLFile type 
+	 * for comparing outputs observed in a list of XPaths of two XML files w.r.t. 
+	 * - their precise difference (are-identical), 
+	 * - their absolute or relative difference (are-similar),
+	 * If this object is not a known subclass of ComparisonsForMultiReference, an exception will be thrown
+	 * @param comparisonType Reference value used for verifying whether the observed output is the same (are-similar), or approximately equal (are-similar).
+	 * @param comparisons List of string representation of each input parameter.
+	 */
 	private static void extractMultiComparison(ComparisonsForMultiReference comparisonType, List<String> comparisons) {
 		if (comparisonType instanceof AssertThatValueIdentical)
 			extractComparisons(((AssertThatValueIdentical) comparisonType), comparisons);
@@ -153,14 +210,32 @@ public class AssertionsHelper {
 			throw new RuntimeException("Not supported");
 	}
 
+	/**
+	 * Parses input parameters of an assertion of XMLFile type for checking their equality. 
+	 * No string will be added to @comparisons, as no additional parameter is needed for checking equality.
+	 * @param parsed input parameter for checking equality
+	 * @param comparisons List of string representation of each input parameter.
+	 */
 	private static void extractComparisons(AssertThatValueIdentical parsed, List<String> comparisons) {
 		// Do nothing!
 	}
 
+	/**
+	 * Parses input parameters of an assertion of XMLFile type for checking their delta. 
+	 * A string representation to its margin/delta may be added to @comparisons.
+	 * @param parsed input parameter for checking the closeness of a number given a certain margin.
+	 * @param comparisons List of string representation of each input parameter.
+	 */
 	private static void extractComparisons(AssertThatValueSimilar parsed, List<String> comparisons) {
 		extractComparisons(parsed.getMargin(), comparisons);
 	}
 
+	/**
+	 * Adds input parameters for an assertion of that checks equality. 
+	 * It can also add parameters for using reference value as REGEX.
+	 * @param parsed input parameter for checking the equality, which may optionally be a REGEX.
+	 * @param comparisons List of string representation of each input parameter.
+	 */
 	private static void extractComparisons(AssertThatValueEq parsed, List<String> comparisons) {
 		comparisons.add("\"reference\":%s".formatted(JsonHelper.jsonElement(parsed.getReference())));
 		extractComparisons(parsed.getMargin(), comparisons);
@@ -168,21 +243,42 @@ public class AssertionsHelper {
 			comparisons.add("\"regex\":True");
 	}
 
+	/**
+	 * Adds input parameters for an assertion that checks how close a reference value is to an observed output. 
+	 * A margin delta value can also be added to the comparison.
+	 * @param parsed input parameter for checking the similarity margin between two values.
+	 * @param comparisons List of string representation of each input parameter.
+	 */
 	private static void extractComparisons(AssertThatValueClose parsed, List<String> comparisons) {
 		comparisons.add("\"reference\":%s".formatted(JsonHelper.jsonElement(parsed.getReference())));
 		extractComparisons(parsed.getMargin(), comparisons);
 	}
 
+	/**
+	 * Checks if a reference REGEX matches with an observed string (output)
+	 * @param parsed assertion parameter
+	 * @param comparisons regex used as reference and parameter setting assertion as a REGEX checking
+	 */
 	private static void extractComparisons(AssertThatValueMatch parsed, List<String> comparisons) {
 		comparisons.add("\"reference\":%s".formatted(JsonHelper.jsonElement(parsed.getReference())));
 		comparisons.add("\"regex\":True");
 	}
 
+	/**
+	 * Checks if an observed array/list/map (output) has size given as reference
+	 * @param parsed assertion parameter
+	 * @param comparisons expected size for an array/list/map
+	 */
 	private static void extractComparisons(AssertThatValueSize parsed, List<String> comparisons) {
 		comparisons.add("\"reference\":%s".formatted(parsed.getReference()));
 		comparisons.add("\"size_compare\":True");
 	}
 
+	/**
+	 * Adds margin (delta) for a close-to and are-similar assertion input parameter
+	 * @param mrg margin considered
+	 * @param comparisons list of input parameters for an assertion
+	 */
 	private static void extractComparisons(MargingItem mrg, List<String> comparisons) {
 		if (mrg instanceof MargingItem) {
 			String marginTypeStr = MARGIN_TYPE.NONE.getLiteral();
@@ -197,6 +293,12 @@ public class AssertionsHelper {
 		}
 	}
 
+	/**
+	 * Checks values in a series of XPaths of an XML file.
+	 * Assertion may also include a namespace, a global margin and a global flag for using strings as Regex
+	 * @param assertion assertion for checking values in a series of XPaths.
+	 * @param comparisons
+	 */
 	private static void parseComparison(AssertThatXPaths assertion, List<String> comparisons) {
 		extractXPathComparisons(assertion.getAssertRef(), comparisons);
 
@@ -208,6 +310,11 @@ public class AssertionsHelper {
 			extractComparisons(assertion.getGlobalRegex(), comparisons);
 	}
 
+	/**
+	 * Indication of XPaths to have their values checked
+	 * @param assertRef
+	 * @param comparisons
+	 */
 	private static void extractXPathComparisons(EList<AssertXPathValidations> assertRef, List<String> comparisons) {
 		List<String> xpathList = new ArrayList<String>();
 		for (AssertXPathValidations anAssert : assertRef) {
@@ -220,6 +327,11 @@ public class AssertionsHelper {
 		comparisons.add("\"xpaths\":[%s]".formatted(xpaths));
 	}
 
+	
+	/** Validation for an Xpath
+	 * @param item
+	 * @param comparisons
+	 */
 	private static void extractComparisons(AssertXPathValidations item, List<String> comparisons) {
 		if (item.getLoggingId() != null)
 			comparisons.add("\"id\":%s".formatted(item.getLoggingId()));
@@ -227,20 +339,41 @@ public class AssertionsHelper {
 		extractSingleComparison(item.getComparisonType(), comparisons);
 	}
 
+	/** 
+	 * Adds namespace for an XPath/XMLFile validation for 
+	 * @param item
+	 * @param comparisons
+	 */
 	private static void extractComparisons(AssertNamespace item, List<String> comparisons) {
 		if (item != null)
 			comparisons.add("\"namespaces\":%s".formatted(JsonHelper.jsonElement(item.getNamespaceMap())));
 	}
 
+	/**
+	 * Adds global margin for an XPath assertion.
+	 * @param item
+	 * @param comparisons
+	 */
 	private static void extractComparisons(AssertGlobalMargin item, List<String> comparisons) {
 		extractComparisons(item.getMargin(), comparisons);
 	}
 
+	/**
+	 * Adds global flag to use strings as Regex in an XPath/XMLFile assertion.
+	 * @param item
+	 * @param comparisons
+	 */
 	private static void extractComparisons(AssertGlobalRegex item, List<String> comparisons) {
 		if (item != null)
 			comparisons.add("\"regex\":True");
 	}
 
+	/**
+	 * Assertion for an XML file
+	 * Assertion may also include a namespace and a global margin.
+	 * @param assertion
+	 * @param comparisons
+	 */
 	private static void parseComparison(AssertThatXMLFile assertion, List<String> comparisons) {
 		extractXMLComparisons(assertion.getAssertRef(), comparisons);
 
@@ -250,6 +383,11 @@ public class AssertionsHelper {
 			extractComparisons(assertion.getGlobalMargin(), comparisons);
 	}
 
+	/**
+	 * Extracts series of assertion input parameters for checking two xml files
+	 * @param assertRef
+	 * @param comparisons
+	 */
 	private static void extractXMLComparisons(EList<AssertXMLValidations> assertRef, List<String> comparisons) {
 		List<String> xpathList = new ArrayList<String>();
 		for (AssertXMLValidations anAssert : assertRef) {
@@ -262,6 +400,11 @@ public class AssertionsHelper {
 		comparisons.add("\"xpaths\":[%s]".formatted(xpaths));
 	}
 
+	/**
+	 * Validates xpath in an XML file
+	 * @param item
+	 * @param comparisons
+	 */
 	private static void extractComparisons(AssertXMLValidations item, List<String> comparisons) {
 		if (item.getLoggingId() != null)
 			comparisons.add("\"id\":%s".formatted(item.getLoggingId()));
@@ -269,7 +412,13 @@ public class AssertionsHelper {
 		extractMultiComparison(item.getComparisonType(), comparisons);
 	}
 
-	//TODO Adapt expression helper to FAST format 
+	/**
+	 * Parses an expression into the kvp format
+	 * *TODO* Adapt expression helper to FAST format 
+	 * @param expression expression to be parsed
+	 * @param variablePrefix function to help in parsing expression
+	 * @return
+	 */
 	static String expression(Expression expression, Function<String, String> variablePrefix) {
 		if (expression instanceof ExpressionConstantInt) {
 			return Long.toString(((ExpressionConstantInt) expression).getValue());
