@@ -71,13 +71,6 @@ import nl.esi.comma.expressions.generator.ExpressionsCommaGenerator;
  * Parser for json elements, objects, and arrays
  */
 class JsonHelper {
-	static String defaultValue(JsonElements elem) {
-		if (elem instanceof JsonObject) {} 
-		if (elem instanceof JsonArray) {}
-		if (elem instanceof JsonMember) {}
-		if (elem instanceof JsonValue) {}
-		throw new RuntimeException("Not supported");
-	}
 
 	/**
 	 * Parses a json object, which includes a series of string-typed keys, and 
