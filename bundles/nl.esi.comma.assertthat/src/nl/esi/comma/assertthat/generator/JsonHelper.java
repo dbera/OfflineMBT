@@ -67,6 +67,9 @@ import nl.esi.comma.expressions.expression.ExpressionVector;
 import nl.esi.comma.expressions.expression.QUANTIFIER;
 import nl.esi.comma.expressions.generator.ExpressionsCommaGenerator;
 
+/**
+ * Parser for json elements, objects, and arrays
+ */
 class JsonHelper {
 	static String defaultValue(JsonElements elem) {
 		if (elem instanceof JsonObject) {} 
@@ -76,6 +79,12 @@ class JsonHelper {
 		throw new RuntimeException("Not supported");
 	}
 
+	/**
+	 * Parses a json object, which includes a series of string-typed keys, and 
+	 * a json value (which can be another json object, an array or expression)
+	 * @param elem
+	 * @return
+	 */
 	public static String jsonElement(JsonObject elem) {
 		String jsonFormat = "{\r\n%s\r\n}";
 
@@ -89,12 +98,22 @@ class JsonHelper {
 		return jsonFormatted;
 	}
 
+	/**
+	 * parses a json member into a "key:value" string format
+	 * @param elem
+	 * @return
+	 */
 	public static String jsonElement(JsonMember elem) {
 		String jsonFormat = "\"%s\" : %s";
 		String jsonFormatted = jsonFormat.formatted(elem.getKey(), jsonElement(elem.getValue()));
 		return jsonFormatted;
 	}
 	
+	/**
+	 * Parses an array of json elements into string.
+	 * @param elem
+	 * @return
+	 */
 	public static String jsonElement(JsonArray elem) {
 		String jsonFormat = "[%s]";
 		List<String> membersListStr = new ArrayList<>();
@@ -107,6 +126,13 @@ class JsonHelper {
 		return jsonFormatted;
 	}
 
+	
+	/**
+	 * Parses a json value, which can be an expression, or a json array or object.
+	 * Anything else will throw an exception
+	 * @param elem
+	 * @return
+	 */
 	public static String jsonElement(JsonValue elem) {
 		if (elem.getExpr() instanceof Expression) { return AssertionsHelper.expression(elem.getExpr(), t->t); }
 		if (elem.getJsonArr() instanceof JsonArray) { return jsonElement(elem.getJsonArr()); }
