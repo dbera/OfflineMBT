@@ -11,4 +11,4 @@ cd models
 set simulator_file=%script_drive%%script_path%\models\CPNServer.py
 echo Starting simulator:  %simulator_file%
 
-c:/Users/dnascime/opt/venv/python310/Scripts/python.exe  "%simulator_file%"
+python "%simulator_file%"
