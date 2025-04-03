@@ -286,16 +286,20 @@ class Utils
     }   
 
     def printLists(Product prod) {
-        var list = new ArrayList<String>()
-        list += "updateDict = {}\n"
-        for (updateOutVar :  prod.eAllContents.filter(UpdateOutVar).toIterable) {
-            if (updateOutVar.act !== null) {
-                for (act : updateOutVar.act.actions) {
-                    list += findVariableAssignments(act)
-                }
-            }
-        }
-        return list.join("")
+        return new ArrayList<String>()
+        /* Commented DB. 03.04.2025. 
+         * Design Decision: Use JSON Structures and Types information in abstract TSpec to reconstruct ComMA expressions.
+         */
+//        var list = new ArrayList<String>()
+//        list += "updateDict = {}\n"
+//        for (updateOutVar :  prod.eAllContents.filter(UpdateOutVar).toIterable) {
+//            if (updateOutVar.act !== null) {
+//                for (act : updateOutVar.act.actions) {
+//                    list += findVariableAssignments(act)
+//                }
+//            }
+//        }
+//        return list.join("")
     }
 
     def usageList(Product prod) {
@@ -384,6 +388,7 @@ class Utils
                 with open(fname, 'w') as f:
                     f.write(txt)
         
+            # Deprecated. To be Removed. DB 03.04.2025
             def recurseJson(self, items, prefix):
                 txt = ""
                 try:
@@ -418,7 +423,7 @@ class Utils
                     j = json.loads(v)
                     txt += "\tstart-json " + str(j) + " end-json" + "\n"
                     # for jk in j.keys():
-                        # txt += self.recurseJson(j[jk], "%s.%s" % (k,jk))
+                    #     txt += self.recurseJson(j[jk], "%s.%s" % (k,jk))
                     txt += "}\n"
                 return txt
                 
