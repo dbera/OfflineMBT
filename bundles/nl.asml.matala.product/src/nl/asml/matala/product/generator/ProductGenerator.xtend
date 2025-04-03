@@ -205,10 +205,6 @@ class ProductGenerator extends AbstractGenerator {
 			
 			var name = prod.specification.name
 			fsa.generateFile('CPNServer//' + prod.specification.name + '//' + name + '.py', pnet.toSnakes(name, name, listOfEnvBlocks, listOfAssertTransitions, mapOfSuppressTransitionVars, inout_places, init_places, depth_limit, num_tests))
-			fsa.generateFile('CPNServer//' + prod.specification.name + '//' + 'server.py', (new FlaskSimulationGenerator).generateServer(name))
-			fsa.generateFile('CPNserver.py', (new FlaskSimulationGenerator).generateCPNServer)
-			fsa.generateFile('CPNclient.py', (new FlaskSimulationGenerator).generateCPNClient(prod.specification.name))
-			fsa.generateFile('CPNServer//' + prod.specification.name + '//' + 'client.py', (new FlaskSimulationGenerator).generateClient)
 			fsa.generateFile('CPNServer//' + prod.specification.name + '//' + name + '_Simulation.py', pnet.toSnakesSimulation)
 			
             // generate utils for HTTP server
@@ -220,6 +216,9 @@ class ProductGenerator extends AbstractGenerator {
             )
 			fsa.generateFile('CPNServer//' + prod.specification.name + '//' + name + '_data.py', (new Utils()).getDataContainerClass(dataGetterTxt, methodTxt))
 			fsa.generateFile('CPNServer//' + prod.specification.name + '//' + name + '_TestSCN.py', (new Utils()).generateTestSCNTxt(prod.specification.name + "_types", prod, resource.URI.lastSegment))
+            fsa.generateFile('__init__.py', 
+                (new FlaskSimulationGenerator).generateInitForSrcGen()
+            )
 		}
 	}
 	
