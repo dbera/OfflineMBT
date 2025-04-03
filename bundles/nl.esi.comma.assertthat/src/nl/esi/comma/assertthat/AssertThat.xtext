@@ -20,8 +20,8 @@ ScriptParametersCustom:
     '{'
         'using-path' ':'   scriptPath = STRING
         ('with-args' ':' '{'
-            (argsType+=SCRIPT_PARAM_TYPE args+=JsonElements) 
-            (',' argsType+=SCRIPT_PARAM_TYPE args+=JsonElements)?
+            (argType+=SCRIPT_PARAM_TYPE argVal+=JsonElements) 
+            (',' argType+=SCRIPT_PARAM_TYPE argVal+=JsonElements)?
         '}')?
     '}' 
 ;
