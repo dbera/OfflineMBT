@@ -97,6 +97,8 @@ class ProductGenerator extends AbstractGenerator {
 		
 		var depth_limit = prod.specification.limit 
 		
+		var num_tests = prod.specification.numTests
+		
 		var import_list = new ArrayList<String>
 		var var_decl_map = new HashMap<String,String>
 		
@@ -202,7 +204,7 @@ class ProductGenerator extends AbstractGenerator {
 			}
 			
 			var name = prod.specification.name
-			fsa.generateFile('CPNServer//' + prod.specification.name + '//' + name + '.py', pnet.toSnakes(name, name, listOfEnvBlocks, listOfAssertTransitions, mapOfSuppressTransitionVars, inout_places, init_places, depth_limit))
+			fsa.generateFile('CPNServer//' + prod.specification.name + '//' + name + '.py', pnet.toSnakes(name, name, listOfEnvBlocks, listOfAssertTransitions, mapOfSuppressTransitionVars, inout_places, init_places, depth_limit, num_tests))
 			fsa.generateFile('CPNServer//' + prod.specification.name + '//' + 'server.py', (new FlaskSimulationGenerator).generateServer(name))
 			fsa.generateFile('CPNserver.py', (new FlaskSimulationGenerator).generateCPNServer)
 			fsa.generateFile('CPNclient.py', (new FlaskSimulationGenerator).generateCPNClient(prod.specification.name))
