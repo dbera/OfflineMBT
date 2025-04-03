@@ -417,8 +417,8 @@ class Utils
                     txt += "%s : {\n" % k
                     j = json.loads(v)
                     txt += "\tstart-json " + str(j) + " end-json" + "\n"
-                    for jk in j.keys():
-                        txt += self.recurseJson(j[jk], "%s.%s" % (k,jk))
+                    # for jk in j.keys():
+                        # txt += self.recurseJson(j[jk], "%s.%s" % (k,jk))
                     txt += "}\n"
                 return txt
                 
