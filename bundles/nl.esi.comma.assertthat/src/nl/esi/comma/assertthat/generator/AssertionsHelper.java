@@ -208,6 +208,18 @@ public class AssertionsHelper {
 		return assertionFormatted;
 	}
 	
+	/**
+	 * Parses input parameters of a script-call, which include.
+	 * - the script ID, derived from the variable to which the script result will be assigned 
+	 * - the path to the script to be executed
+	 * - the list of input parameters,
+	 * - its length, given the observed output is a string/array/map (has-size).
+	 * @param comparisonType Reference value used for verifying whether the observed output is the same (equal-to), approximately equal (close-to), matches with a regular expression (match-regex), or has a given length (has-size)
+	 * @param comparisons List of string representation of each input parameter.
+
+	 * @param params
+	 * @param scrptparams
+	 */
 	private static void extractScriptParameters(ScriptParametersCustom params, List<String> scrptparams) {
 		int nargs = params.getArgVal().size();
 		for (int i = 0; i < nargs; i++) {
@@ -219,10 +231,22 @@ public class AssertionsHelper {
 		}
 	}
 	
+	/**
+	 * Parses type of an input parameter into string
+	 * @param param
+	 * @param scrptparams
+	 */
 	private static void extractScriptParameters(SCRIPT_PARAM_TYPE param, List<String> scrptparams) {
 		scrptparams.add("\"type\":%s".formatted(param.getLiteral()));
 	}
 	
+	/**
+	 * Parses value assigned to an input parameter of script-call. Values can: 
+	 * - be of type JsonObject or JsonArray, or 
+	 * - be also paired with a name (provided by a JsonMember parameter)
+	 * @param param key-value pair (via JsonbMember), JsonObject or JsonArray
+	 * @param scrptparams
+	 */
 	private static void extractScriptParameters(JsonElements param, List<String> scrptparams) {
 		String value_str = "XXX";
 		if(param instanceof JsonMember) {
