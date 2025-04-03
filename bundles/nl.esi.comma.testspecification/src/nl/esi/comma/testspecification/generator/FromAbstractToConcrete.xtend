@@ -128,7 +128,7 @@ class FromAbstractToConcrete
     // Gets the list of referenced compose steps
     // RULE. Exactly one referenced Compose Step. 
     def getComposeSteps(RunStep rstep) {
-        var listOfComposeSteps = new ArrayList<ComposeStep>
+        var listOfComposeSteps = new HashSet<ComposeStep>
         for(elm : rstep.stepRef) {
             for(cstep: atd.eAllContents.filter(ComposeStep).toIterable) {
                 if(elm.refStep.name.equals(cstep.name)) {

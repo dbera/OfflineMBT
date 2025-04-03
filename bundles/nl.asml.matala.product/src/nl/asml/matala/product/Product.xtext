@@ -37,7 +37,7 @@ Specification:
 		blocks += Blocks+
 		('SUT-blocks' envBlock += [Block|QualifiedName]*)?
 		'depth-limits' limit = INT
-		'num-tests' numTests = INT
+		('num-tests' numTests = INT)?
 	'}'
 ;
 

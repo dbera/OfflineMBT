@@ -850,9 +850,11 @@ class PetriNet {
 	        # print(currentVertex)
 	        # print(self.visitedList)
 	        # print(visitedT)
-	        if self.numTestCases >= «num_tests»:
-	            print(' [RG-INFO] max test cases reached! Terminating path. ')
-	            return
+	        «IF num_tests !== 0»
+	            if self.numTestCases >= «num_tests»:
+	                print(' [RG-INFO] max test cases reached! Terminating path. ')
+	                return
+	        «ENDIF»
 	        if depth > limit:
 	            print('	[RG-INFO] depth limit is reached.')
 	            self.visitedTList.append(list(visitedT))
