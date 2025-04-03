@@ -134,5 +134,19 @@ class JsonHelper {
 		throw new RuntimeException("Not supported");
 	}
 	
+	/**
+	 * Parses a json value, which can be an expression, or a json array or object.
+	 * Anything else will throw an exception
+	 * @param elem
+	 * @return
+	 */
+	public static String jsonElement(JsonElements elem) {
+		if (elem instanceof JsonObject) { return jsonElement((JsonObject)elem); } 
+		if (elem instanceof JsonMember) { return jsonElement((JsonMember)elem); } 
+		if (elem instanceof JsonArray) { return jsonElement((JsonArray)elem); }
+		
+		throw new RuntimeException("Not supported");
+	}
+	
 }
 

@@ -26,8 +26,14 @@ import nl.esi.comma.assertthat.assertThat.ComparisonsForMultiReference;
 import nl.esi.comma.assertthat.assertThat.ComparisonsForSingleReference;
 import nl.esi.comma.assertthat.assertThat.DataAssertionItem;
 import nl.esi.comma.assertthat.assertThat.GenericScriptBlock;
+import nl.esi.comma.assertthat.assertThat.JsonArray;
+import nl.esi.comma.assertthat.assertThat.JsonElements;
+import nl.esi.comma.assertthat.assertThat.JsonMember;
+import nl.esi.comma.assertthat.assertThat.JsonObject;
 import nl.esi.comma.assertthat.assertThat.MARGIN_TYPE;
 import nl.esi.comma.assertthat.assertThat.MargingItem;
+import nl.esi.comma.assertthat.assertThat.SCRIPT_PARAM_TYPE;
+import nl.esi.comma.assertthat.assertThat.ScriptParametersCustom;
 import nl.esi.comma.expressions.expression.Expression;
 import nl.esi.comma.expressions.expression.ExpressionAddition;
 import nl.esi.comma.expressions.expression.ExpressionAnd;
@@ -96,7 +102,22 @@ public class AssertionsHelper {
 				list.add((GenericScriptBlock) item);
 		return list;
 	}
-
+	
+	/**
+	 * Parses a list of GenericScriptBlock objects into string format.
+	 * @param assertList
+	 * @return String representation of a list of assertions.
+	 */
+	public static String printScriptCall(List<GenericScriptBlock> scriptcallList) {
+		String ASSERTS_TEMPLATE = "asserts=[\r\n\t%s\r\n]";
+		
+		List<String> assertionList = new ArrayList<>();
+		for (GenericScriptBlock scriptBlock : scriptcallList) {
+			assertionList.add(parseScriptCall(scriptBlock));
+		}
+		return String.format(ASSERTS_TEMPLATE, String.join(",", assertionList));
+	}
+	
 	/**
 	 * Parses a list of AssertThatBlock objects into string format.
 	 * @param assertList
@@ -136,15 +157,15 @@ public class AssertionsHelper {
 		if (asrt.getVal() instanceof AssertThatValue) {
 			// assertion of type Value
 			type = "Value";
-			parseComparison(((AssertThatValue) asrt.getVal()), comparisons);
+			extractComparison(((AssertThatValue) asrt.getVal()), comparisons);
 		} else if (asrt.getVal() instanceof AssertThatXPaths) {
 			// assertion of type XPaths
 			type = "XPaths";
-			parseComparison(((AssertThatXPaths) asrt.getVal()), comparisons);
+			extractComparison(((AssertThatXPaths) asrt.getVal()), comparisons);
 		} else if (asrt.getVal() instanceof AssertThatXMLFile) {
 			// assertion of type XMLFile
 			type = "XMLFile";
-			parseComparison(((AssertThatXMLFile) asrt.getVal()), comparisons);
+			extractComparison(((AssertThatXMLFile) asrt.getVal()), comparisons);
 		}
 		// fills in the gaps in the assertion template
 		String assertionFormatted = SINGLE_ASSERTION_TEMPLATE.formatted(
@@ -154,6 +175,69 @@ public class AssertionsHelper {
 				);
 		return assertionFormatted;
 	}
+	
+	/**
+	 * Parses a script call block into a string, as in the reference.kvp format.
+	 * This string representation includes a script call identifier, the path to the script, 
+	 * and a list of input parameters.
+	 * Input parameters are formed by a type, 
+	 * and assigned value which may be a list, dictionary or key-value pair.
+	 * @param asrt Script call block to be parsed into string
+	 * @return string representation of a script call block
+	 */
+	private static String parseScriptCall(GenericScriptBlock scrptcall) {
+		String type = "xxxx";
+		List<String> scrptparams = new ArrayList<>();
+		// the assertion template with ID, type, and input parameters
+		String SINGLE_ASSERTION_TEMPLATE = """
+				{
+				\t"id":"%s", 
+				\t"script_path":"%s",
+				\t"parameters":{
+				\t\t%s
+				\t}
+				}
+				""";
+		extractScriptParameters(scrptcall.getParams(), scrptparams);
+//		// fills in the gaps in the assertion template
+		String assertionFormatted = SINGLE_ASSERTION_TEMPLATE.formatted(
+				scrptcall.getAssignment().getName(), 
+				scrptcall.getParams().getScriptPath(), 
+				String.join(",\r\n\t\t", scrptparams)
+				);
+		return assertionFormatted;
+	}
+	
+	private static void extractScriptParameters(ScriptParametersCustom params, List<String> scrptparams) {
+		int nargs = params.getArgVal().size();
+		for (int i = 0; i < nargs; i++) {
+			List<String> argInfo = new ArrayList<String>();
+			extractScriptParameters(params.getArgType().get(i), argInfo);
+			extractScriptParameters(params.getArgVal().get(i), argInfo);
+			String arg_str = String.join(",\r\n\t\t\t", argInfo);
+			scrptparams.add("{%s}".formatted(arg_str));
+		}
+	}
+	
+	private static void extractScriptParameters(SCRIPT_PARAM_TYPE param, List<String> scrptparams) {
+		scrptparams.add("\"type\":%s".formatted(param.getLiteral()));
+	}
+	
+	private static void extractScriptParameters(JsonElements param, List<String> scrptparams) {
+		String value_str = "XXX";
+		if(param instanceof JsonMember) {
+			JsonMember jsonkv = ((JsonMember)param);
+			scrptparams.add("\"name\":%s".formatted(jsonkv.getKey()));
+			value_str = JsonHelper.jsonElement(jsonkv.getValue());
+		}else if (param instanceof JsonObject) {
+			value_str = JsonHelper.jsonElement((JsonObject)param);
+		}else if (param instanceof JsonArray) {
+			value_str = JsonHelper.jsonElement((JsonArray)param);
+		}else {
+			throw new RuntimeException("Not supported");
+		}
+		scrptparams.add("\"value\":%s".formatted(value_str));
+	}
 
 	/**
 	 * Parses input parameters of an assertion of Value type 
@@ -161,7 +245,7 @@ public class AssertionsHelper {
 	 * @param assertion Assertion of type value to be parsed into string
 	 * @param comparisons List of string representation of each input parameter.
 	 */
-	private static void parseComparison(AssertThatValue assertion, List<String> comparisons) {
+	private static void extractComparison(AssertThatValue assertion, List<String> comparisons) {
 		ComparisonsForSingleReference comparisonType = assertion.getComparisonType();
 		extractSingleComparison(comparisonType, comparisons);
 	}
@@ -299,7 +383,7 @@ public class AssertionsHelper {
 	 * @param assertion assertion for checking values in a series of XPaths.
 	 * @param comparisons
 	 */
-	private static void parseComparison(AssertThatXPaths assertion, List<String> comparisons) {
+	private static void extractComparison(AssertThatXPaths assertion, List<String> comparisons) {
 		extractXPathComparisons(assertion.getAssertRef(), comparisons);
 
 		if (assertion.getNamespace() instanceof AssertNamespace)
@@ -374,7 +458,7 @@ public class AssertionsHelper {
 	 * @param assertion
 	 * @param comparisons
 	 */
-	private static void parseComparison(AssertThatXMLFile assertion, List<String> comparisons) {
+	private static void extractComparison(AssertThatXMLFile assertion, List<String> comparisons) {
 		extractXMLComparisons(assertion.getAssertRef(), comparisons);
 
 		if (assertion.getNamespace() instanceof AssertNamespace)
@@ -401,7 +485,7 @@ public class AssertionsHelper {
 	}
 
 	/**
-	 * Validates xpath in an XML file
+	 * Validates xpath in 
 	 * @param item
 	 * @param comparisons
 	 */
