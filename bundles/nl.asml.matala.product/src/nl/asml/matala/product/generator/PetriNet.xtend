@@ -853,9 +853,11 @@ class PetriNet {
 	        return choices
 	    
 	    def generateSCN(self, level, visitedT, visitedTP):
-	        if self.numTestCases >= «num_tests»:
-	            print(' [RG-INFO] Max test cases reached! Terminating path. ')
-	            return
+	        «IF num_tests !== 0»
+	            if self.numTestCases >= «num_tests»:
+	                print(' [RG-INFO] Max test cases reached! Terminating path. ')
+	                return
+	        «ENDIF»
 	        if level > «depth_limit»:
 	            self.visitedTList.append(list(visitedT))
 	            self.visitedTProdList.append(list(visitedTP))
