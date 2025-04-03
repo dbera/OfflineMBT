@@ -837,6 +837,7 @@ class PetriNet {
 	        _t, _m = choices.get(int(cid))
 	        _t.fire(_m)
 	        print('[INFO] Transition Fired with ID: ', cid)
+	        return _t.flow(_m)
 
 	    def getEnabledTransitions(self):
 	        enabled_transition_modes = {}
