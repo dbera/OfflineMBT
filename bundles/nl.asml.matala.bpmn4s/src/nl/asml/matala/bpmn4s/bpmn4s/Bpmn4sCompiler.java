@@ -57,6 +57,18 @@ public class Bpmn4sCompiler{
 		}
 	}
 	
+	
+	protected String removeUuids(String text) {
+		
+		String uuidInitRegex = "[\s]*__uuid__[\s]*=[\s]*uuid\\(\\)[\s]*[,]?[\n]?"; 
+		String uuidDeclRegex = "string[\s]*__uuid__[\s]*[\n]";
+		
+		text = text.replaceAll(uuidInitRegex, "");
+		text = text.replaceAll(uuidDeclRegex, "");
+				
+		return text;
+	}
+	
 	/**
 	 * Takes a Bpmn4s <model>, flattens its activities, and compiles it into a 
 	 * CPN in the language of pspec and accompanying types. The 
@@ -71,8 +83,9 @@ public class Bpmn4sCompiler{
 		this.typesFileName = modelname + ".types";
 
 		flattenActivities();
-		ps.append(generatePspec());
-		types.append(generateTypes());
+		
+		ps.append(removeUuids(generatePspec()));
+		types.append(removeUuids(generateTypes()));
 	}
 
 	/**
@@ -210,7 +223,8 @@ public class Bpmn4sCompiler{
 			}
 		}
 		result.append(String.format("\tSUT-blocks %s\n", String.join(" ", listSUTcomponents()))); 
-		result.append(String.format("\tdepth-limits %s\n}\r\n", model.getDepthLimit()));
+		result.append(String.format("\tdepth-limits %s\r\n", model.getDepthLimit()));
+		result.append(String.format("\tnum-tests %s\n}\r\n", model.getNumOfTests()));
 		return result.toString();
 	}
 

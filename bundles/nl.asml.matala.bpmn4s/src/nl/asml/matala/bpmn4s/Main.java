@@ -173,7 +173,7 @@ public class Main {
         				}
         				return replaceMap;
         			}
-        			
+
         			private ArrayList<String> getInputOutputIds(Element elem) {
         				ArrayList<String> result = new ArrayList<String>();
         				for (Edge e: elem.getAllInputs()) {
@@ -187,6 +187,11 @@ public class Main {
         					}
         				}
         				return result;
+        			}
+        			
+        			@Override
+        			protected String removeUuids(String text) {
+        				return text;
         			}
         		};
         	}else {
