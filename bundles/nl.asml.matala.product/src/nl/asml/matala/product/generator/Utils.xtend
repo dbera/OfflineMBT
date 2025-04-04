@@ -419,7 +419,7 @@ class Utils
                 for k, v in idata.items():
                     txt += "%s : {\n" % k
                     j = json.loads(v)
-                    txt += "\tstart-json " + str(j) + " end-json" + "\n"
+                    txt += "start-json " + json.dumps(j, indent=2, sort_keys=False) + " end-json" + "\n"
                     # for jk in j.keys():
                     #     txt += self.recurseJson(j[jk], "%s.%s" % (k,jk))
                     txt += "}\n"
@@ -442,11 +442,11 @@ class Utils
                             type_name = ""
                             if not "null" in parts[1]:
                                 type_name = " step-type: \"%s\"" % parts[1] 
-                            txt += "run-step-name: %s%s\n" % (new_name, type_name)
+                            txt += "\nrun-step-name: %s%s\n" % (new_name, type_name)
                         elif "COMPOSE" in parts[2]:
-                            txt += "compose-step-name: %s\n" % new_name
+                            txt += "\ncompose-step-name: %s\n" % new_name
                         else:
-                            txt += "assert-step-name: %s\n" % new_name
+                            txt += "\nassert-step-name: %s\n" % new_name
                         for elm in self.step_dependencies:
                             if elm.step_name == name:
                                 parts = elm.depends_on.split("@")
