@@ -515,7 +515,8 @@ public class Bpmn4sCompiler{
 								task += "\n";
 							}
 							if (e.getRefUpdate() != null && e.getRefUpdate() != "") {
-								task += "references {\n" + indent(replaceAll(e.getRefUpdate(), replaceMap)) + "\n}\n" ;
+								task += "references {\n" + indent(replaceAll(e.getRefUpdate(), replaceMap)) + 
+										"\n} symbolic-link\n" ;
 							}
 							if (e.getSymUpdate() != null && e.getSymUpdate() != "") {
 								task += "constraints {\n" + indent(replaceAll(e.getSymUpdate(), replaceMap)) + "\n}\n";
@@ -529,7 +530,8 @@ public class Bpmn4sCompiler{
 						} else { // then its context
 							task += "produces-outputs\t" + postCtxName + (e.isSuppressed() ? " suppress\n" : "\n");
 							if (e.getRefUpdate() != null && e.getRefUpdate() != "") {
-								task += "references {\n" + indent(replaceAll(e.getRefUpdate(), replaceMap)) + "\n}\n";
+								task += "references {\n" + indent(replaceAll(e.getRefUpdate(), replaceMap)) + 
+										"\n} symbolic-link\n";
 							}
 							if (e.getSymUpdate() != null && e.getSymUpdate() != "") {
 								task += "constraints {\n" + indent(replaceAll(e.getSymUpdate(), replaceMap)) + "\n}\n";
