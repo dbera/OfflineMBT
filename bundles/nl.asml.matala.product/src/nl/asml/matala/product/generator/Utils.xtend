@@ -414,8 +414,6 @@ class Utils
                     txt += f"    {prefix} := {items}\n"
                 return txt
             
-            «(new Utils()).printLists(prod)»
-            
             def printData(self, idata):
                 txt = ""
                 for k, v in idata.items():

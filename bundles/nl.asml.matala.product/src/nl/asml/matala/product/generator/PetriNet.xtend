@@ -446,70 +446,32 @@ class PetriNet {
 		            if entry:
 		                _test_scn = TestSCN(self.map_transition_assert, self.constraint_dict, self.tr_assert_ref_dict)
 		                idx = idx + 1
-		                # txt += '\nimport "_cm.tspec"\n\nabstract-test-definition\n\nTest-Scenario : s%s \n' % (idx)
 		                j = 0
 		                for step in entry:
-		                    # txt += "    [%s] : [%s]\n" % (step[1], step[2])
 		                    stp = step[1].name + "_" + step[2].__repr__()
-		                    # stp = step[1].name + "_" + pprint.pformat(step[2].items(), width=60, compact=True, depth=5)
-		                    # step_txt = map_transition_modes_to_name[step[1].name + "_" + step[2].__repr__()]
-		                    step_txt = self.map_transition_modes_to_name[stp]
-		                    # step_txt.split("_")[0] in listOfEnvBlocks or 
+		                    step_txt = self.map_transition_modes_to_name[stp] 
 		                    if step_txt.rsplit("_",1)[0].split("@",1)[0] in self.listOfSUTActions:
-		                        # suppress = False
-		                        # if step_txt.split("@")[0] in listOfSuppressTransitions:
-		                        # suppress = True
-		                        
 		                        # if not step_txt.split("_")[0] in self.listOfEnvBlocks:
 		                            # _step = Step(step_txt.rsplit("_",1)[0].split("@",1)[0] in self.listOfSUTActions)
 		                        # else:
 		                            # _step = Step(False)
 		                        _step = Step(False)
-		                        
-		                        # txt += "    %s\n" % (map_transition_modes_to_name[step[1].name + "_" + step[2].__repr__()])
-		                        # txt += "step-name: %s\n" % (map_transition_modes_to_name[stp])
 		                        _step.step_name = self.map_transition_modes_to_name[stp]
-		                        # txt += "    input-binding: %s\n" % (step[2].__repr__())
-		                        # txt += "input-binding:\n"
 		                        for x,y in step[2].dict().items():
-		                            # txt += "    /*\n"
-		                            # txt += "%s: %s\n" % (x,json.dumps(json.loads(y), indent=4, sort_keys=True))
 		                            _step.input_data[x.replace("v_", "", 1)] = json.dumps(json.loads(y), indent=4, sort_keys=True)
-		                            # txt += "    \n\t*/\n"
-		                        # txt += "    output-data: %s\n" % (pn.visitedTProdList[i][j])
-		                        # txt += "output-data:\n"
 		                        for x,y in self.visitedTProdList[i][j].items():
-		                            # txt += "%s:" % x
 		                            for z in y.items():
-		                                # txt += "%s\n" % (json.dumps(json.loads(z), indent=4, sort_keys=True))
 		                                if step_txt.split("@")[0] in self.mapOfSuppressTransitionVars:
 		                                    if x not in self.mapOfSuppressTransitionVars[step_txt.split("@")[0]]:
 		                                        _step.output_data[x] = json.dumps(json.loads(z), indent=4, sort_keys=True)
 		                                else:
 		                                    _step.output_data[x] = json.dumps(json.loads(z), indent=4, sort_keys=True)
-		                        # txt += "\n"
 		                        _test_scn.step_list.append(_step)
-		                            # if map_transition_assert[map_transition_modes_to_name[stp].rsplit('_', 1)[0]]:
-		                                # s.goto(step[0])
-		                                # txt += "    result-marking\n"
-		                                # txt += "\n/*\n"
-		                                # for k, v in s.net.get_marking().items():
-		                                    # if k in map_transition_assert[map_transition_modes_to_name[stp].rsplit('_', 1)[0]]:
-		                                        # txt += "\t" + k
-		                                        # txt += ":"
-		                                        # txt += "\t" + pprint.pformat(v, width=60, indent=4, compact=True, depth=2)
-		                                        # txt += "\n"
-		                                # txt += "\t*/\n"
 		                    j = j + 1
 		                _test_scn.compute_dependencies()
 		                _test_scn.generate_viz(i, output_dir=p.plantuml_dir)
 		                _test_scn.generateTSpec(i, output_dir=p.tspec_dir)
 		                _tests.list_of_test_scn.append(_test_scn)
-		                # txt += '\ngenerate-file "./vfab2_scenario/"\n\n'
-		                # fname = p.tspec_dir / "scenario" / (str(idx) +".tspec")
-		                # os.makedirs(os.path.dirname(fname), exist_ok=True)
-		                # with open(fname, 'w') as f:
-		                #    f.write(txt)
 		            i = i + 1
 		            
 		        fname = p.tspec_dir / ("tcs"+".json")
@@ -578,177 +540,25 @@ class PetriNet {
 		    print("[INFO] Finished.")
 		    b = datetime.datetime.now()
 		
-		    s.goto(0)
+		    # s.goto(0)
+		    
 		    # rg_txt = '@startuml\n'
 		    # rg_txt += '[*] --> 0\n'
 		    # for state in s:
 		        # for succ in s.successors():
 		            # rg_txt += '%s --> %s : %s\n' % (state,succ[0],succ[1])
-		    pn.rg_txt += "@enduml\n"
-		    fname = p.plantuml_dir / "rg.plantuml"
-		    with open(fname, 'w') as f:
-		        f.write(pn.rg_txt)
-		    print("[INFO] Created rg.platuml")
-		    
-		    # server = PlantUML(url='http://www.plantuml.com/plantuml/img/', basic_auth={}, form_auth={}, http_opts={}, request_opts={})
-		    # subprocess.call(['java -DPLANTUML_LIMIT_SIZE=122192', '-jar', 'plantuml-1.2023.8.jar', 'rg.plantuml'])
-		    subprocess.Popen('java -DPLANTUML_LIMIT_SIZE=122192 -jar ./lib/plantuml-1.2023.11.jar rg.plantuml',
-		                     stdout=subprocess.PIPE,
-		                     stderr=subprocess.STDOUT)
-		    #if os.path.exists(fname):
-		    #    server.processes_file(abspath(fname))
-		    # for entry in pn.visitedTList:
-		    #    print('SCN: ', entry)
-		    c = datetime.datetime.now()
-		    
-		    # listOfEnvBlocks = [«FOR elm : listOfEnvBlocks SEPARATOR ','»"«elm»"«ENDFOR»]
-		    # listOfSUTActions = [«FOR elm : listOfAssertTransitions SEPARATOR ','»"«elm»"«ENDFOR»]
-		    # mapOfSuppressTransitionVars = {«FOR k : mapOfSuppressTransitionVars.keySet SEPARATOR ','»'«k»': [«FOR v : mapOfSuppressTransitionVars.get(k) SEPARATOR ','»'«v»'«ENDFOR»]«ENDFOR»}
-		    print("[INFO] Starting Test Generation.")
-		    
-		    # map_of_transition_modes = {}
-		    # for entry in pn.visitedTList:
-		    #     if entry:
-		    #         for step in entry:
-		    #            if step[1].name in map_of_transition_modes:
-		    #                map_of_transition_modes.get(step[1].name).append(step[2])
-		    #            else:
-		    #                map_of_transition_modes[step[1].name] = [step[2]]
-		    
-		    # map_transition_modes_to_name = {}
-		    # cnt = 0
-		    # for k,v in map_of_transition_modes.items():
-		    #    # print(k)
-		    #    cnt = 0
-		    #    # modes = set(v)
-		    #    for elm in v: # modes
-		    #        # print(elm)
-		    #        map_transition_modes_to_name[k + "_" +elm.__repr__()] = k + "_" + str(cnt)
-		    #        # map_transition_modes_to_name[k + "_" + pprint.pformat(elm.items(), width=60, compact=True,depth=5)] = k + "_" + str(cnt)
-		    #        cnt = cnt + 1
-		    
-		    ## txt = '\n// import "<insert valid step specification file>"\n\ncontext-map\n\n'
-		    ## for k,v in map_transition_modes_to_name.items():
-		    #    # print(k)
-		    #    # print(v)
-		    #    # step_txt = v
-		    #    # if step_txt.split("_")[0] in listOfEnvBlocks:
-		    #        # txt += 'abstract-step %s\n' %(v)
-		    #        # txt += '    with /* %s */\n' %(k)
-		    #        # txt += '    // -> <refer to a step sequence>\n'
-		    
-		    ## fname = p.tspec_dir / "_cm.tspec"
-		    ## os.makedirs(os.path.dirname(fname), exist_ok=True)
-		    ## with open(fname, 'w') as f:
-		    #    # f.write(txt)
-		    
-		    ## print("[INFO] Created context mapper.")
-		    
-		    # _txt = []
-		    # constraint_list = []
-		    # constraint_dict = {}
-		    «FOR e : arc_expressions»
-		    	«IF !e.constraints.empty»
-		    	«FOR c : e.constraints»
-		    		# _txt.append(CEntry("«c.name»","«c.txt.replace("\"", "\\\"")»"))
-		    	«ENDFOR»
-		    	# constraint_list.append(Constraint("«e.p»","«e.type»", _txt))
-		    	# if "«e.t»" not in constraint_dict:
-		    	#    constraint_dict["«e.t»"] = constraint_list
-		    	# else:
-		    	#    constraint_dict["«e.t»"].extend(constraint_list)
-		    	# _txt = []
-		    	# constraint_list = []
-		    	«ENDIF»
-		    «ENDFOR»
-		    
-		    # tr_assert_ref_dict = {}
-		    # map_transition_assert = {}
-		    «FOR tname : assert_expressions.keySet»
-		      # tr_assert_ref_dict["«tname»"] = "«assert_expressions.get(tname)»"
-		    «ENDFOR»
-		    
-		    # map_transition_assert = {«FOR elm : map_transition_assertions.keySet SEPARATOR ','»'«elm»': [«FOR v : map_transition_assertions.get(elm) SEPARATOR ','»'«v»'«ENDFOR»]«ENDFOR»}
-		    # i = 0
-		    # idx = 0
-		    # j = 0
-		    # _tests = Tests()
-		    # for entry in pn.visitedTList:
-		    #    if entry:
-		    #        _test_scn = TestSCN(map_transition_assert, constraint_dict, tr_assert_ref_dict)
-		    #        idx = idx + 1
-		    #        # txt += '\nimport "_cm.tspec"\n\nabstract-test-definition\n\nTest-Scenario : s%s \n' % (idx)
-		    #        j = 0
-		    #        for step in entry:
-		    #            # txt += "    [%s] : [%s]\n" % (step[1], step[2])
-		    #            stp = step[1].name + "_" + step[2].__repr__()
-		    #            # stp = step[1].name + "_" + pprint.pformat(step[2].items(), width=60, compact=True, depth=5)
-		    #            # step_txt = map_transition_modes_to_name[step[1].name + "_" + step[2].__repr__()]
-		    #            step_txt = map_transition_modes_to_name[stp]
-		    #            # step_txt.split("_")[0] in listOfEnvBlocks or 
-		    #            if step_txt.rsplit("_",1)[0].split("@",1)[0] in listOfSUTActions:
-		    #                # suppress = False
-		    #                # if step_txt.split("@")[0] in listOfSuppressTransitions:
-		    #                # suppress = True
-		    #                if not step_txt.split("_")[0] in listOfEnvBlocks:
-		    #                    _step = Step(step_txt.rsplit("_",1)[0].split("@",1)[0] in listOfSUTActions)
-		    #                else:
-		    #                    _step = Step(False)
-		    #                # txt += "    %s\n" % (map_transition_modes_to_name[step[1].name + "_" + step[2].__repr__()])
-		    #                # txt += "step-name: %s\n" % (map_transition_modes_to_name[stp])
-		    #                _step.step_name = map_transition_modes_to_name[stp]
-		    #                # txt += "    input-binding: %s\n" % (step[2].__repr__())
-		    #                # txt += "input-binding:\n"
-		    #                for x,y in step[2].dict().items():
-		    #                    # txt += "    /*\n"
-		    #                    # txt += "%s: %s\n" % (x,json.dumps(json.loads(y), indent=4, sort_keys=True))
-		    #                    _step.input_data[x.replace("v_", "", 1)] = json.dumps(json.loads(y), indent=4, sort_keys=True)
-		    #                    # txt += "    \n\t*/\n"
-		    #                # txt += "    output-data: %s\n" % (pn.visitedTProdList[i][j])
-		    #                # txt += "output-data:\n"
-		    #                for x,y in pn.visitedTProdList[i][j].items():
-		    #                    # txt += "%s:" % x
-		    #                    for z in y.items():
-		    #                        # txt += "%s\n" % (json.dumps(json.loads(z), indent=4, sort_keys=True))
-		    #                        if step_txt.split("@")[0] in mapOfSuppressTransitionVars:
-		    #                            if x not in mapOfSuppressTransitionVars[step_txt.split("@")[0]]:
-		    #                                _step.output_data[x] = json.dumps(json.loads(z), indent=4, sort_keys=True)
-		    #                        else:
-		    #                            _step.output_data[x] = json.dumps(json.loads(z), indent=4, sort_keys=True)
-		    #                # txt += "\n"
-		    #                _test_scn.step_list.append(_step)
-		    #                # if map_transition_assert[map_transition_modes_to_name[stp].rsplit('_', 1)[0]]:
-		    #                    # s.goto(step[0])
-		    #                    # txt += "    result-marking\n"
-		    #                    # txt += "\n/*\n"
-		    #                    # for k, v in s.net.get_marking().items():
-		    #                        # if k in map_transition_assert[map_transition_modes_to_name[stp].rsplit('_', 1)[0]]:
-		    #                            # txt += "\t" + k
-		    #                            # txt += ":"
-		    #                            # txt += "\t" + pprint.pformat(v, width=60, indent=4, compact=True, depth=2)
-		    #                            # txt += "\n"
-		    #                    # txt += "\t*/\n"
-		    #            j = j + 1
-		    #        _test_scn.compute_dependencies()
-		    #        _test_scn.generate_viz(i, output_dir=p.plantuml_dir)
-		    #        _test_scn.generateTSpec(i, output_dir=p.tspec_dir)
-		    #        _tests.list_of_test_scn.append(_test_scn)
-		    #        # txt += '\ngenerate-file "./vfab2_scenario/"\n\n'
-		    #        # fname = p.tspec_dir / "scenario" / (str(idx) +".tspec")
-		    #        # os.makedirs(os.path.dirname(fname), exist_ok=True)
-		    #        # with open(fname, 'w') as f:
-		    #        #    f.write(txt)
-		    #    i = i + 1
-		    
-		    # fname = p.tspec_dir / ("tcs"+".json")
-		    # os.makedirs(os.path.dirname(fname), exist_ok=True)
+		    # pn.rg_txt += "@enduml\n"
+		    # fname = p.plantuml_dir / "rg.plantuml"
 		    # with open(fname, 'w') as f:
-		    #    f.write(_tests.toJSON())
-		    
+		        # f.write(pn.rg_txt)
+		    # print("[INFO] Created rg.plantuml")
+		    c = datetime.datetime.now()
+
+		    print("[INFO] Starting Test Generation.")
 		    pn.initializeTestGeneration()
 		    pn.generateTestCases()
 		    
-		    print('[INFO] Number-of-generated-scenario files: ',len(pn.visitedTList))
+		    # print('[INFO] Number-of-generated-scenario files: ',len(pn.visitedTList))
 		    print("[INFO] Test Generation Finished.")
 		    d = datetime.datetime.now()
 		    
@@ -807,7 +617,7 @@ class PetriNet {
 		    # print("[INFO] Starting Command-Line Simulation.")
 		    # Simulation().simulateUI(pn.n)
 		    
-		    # if not p.no_sim:
+		    #if not p.no_sim:
 			#    print('[SIM] Start Simulation? (Y/N) :')
 			#    value = input(" Enter Choice: ")
 			#    if value == "Y" or value == "y":
