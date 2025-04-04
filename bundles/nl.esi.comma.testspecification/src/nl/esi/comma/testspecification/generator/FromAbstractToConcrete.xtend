@@ -65,8 +65,100 @@ class FromAbstractToConcrete
 	'''
 
     /*
-     * Support Interleaving of Compose and Run Steps
+     * Support Interleaving of Compose and Run Steps. 
+     * Q1 2025.  
      */
+    def _printOutputs_(RunStep rstep) 
+    {
+        // At most one (TODO validate this)
+        // Observation: when multiple steps have indistinguishable outputs, 
+        // multiple consumes from is possible. TODO Warn user.   
+        var listOfComposeSteps = getComposeSteps(rstep)
+        var mapLHStoRHS = resolveStepReferenceExpressions(rstep, listOfComposeSteps)
+
+        // Get text for concrete data expressions
+        var txt = prepareStepInputExpressions(rstep, listOfComposeSteps)
+
+        // Append text for reference data expressions
+        for(k : mapLHStoRHS.keySet) {
+            txt += 
+            '''
+            «k» := «mapLHStoRHS.get(k)»
+            '''
+        }
+        return txt
+    }
+
+    /* TODO. Q2 2025. Yuri. 
+     * Fix JSON Object to ComMA Expression Reconstruction.
+     */
+    def prepareStepInputExpressions(RunStep rstep, HashSet<ComposeStep> listOfComposeSteps) 
+    {
+        return 
+        '''
+        «FOR composeStep : listOfComposeSteps»
+        «printKVOutputPairs(rstep.name.split("_").get(0) + "Input", composeStep)»
+        «ENDFOR»
+        '''
+    }
+
+    def resolveStepReferenceExpressions(RunStep rstep, HashSet<ComposeStep> listOfComposeSteps) 
+    {
+        // System.out.println("Run Step: " + rstep.name)
+        var mapLHStoRHS = new HashMap<String,String>
+        // Find preceding Compose Step
+        for(cstep : listOfComposeSteps) // at most one 
+        {
+            // System.out.println("    -> compose-name: " + cstep.name)
+            var refTxt = new String
+            for(cons : cstep.refs) {
+                // System.out.println("    -> constraint-var: " + cons.name)
+                for(refcons : cons.ce) {
+                    for (a : refcons.act.actions) {
+                        var constraint = _printRecord_(cstep.name, 
+                                                    rstep.name, cstep.stepRef, 
+                                                    a as RecordFieldAssignmentAction, true)
+                        refTxt += constraint.getText + "\n" 
+                        mapLHStoRHS.put(constraint.lhs, constraint.rhs)
+                    }
+                }
+            }
+            // if(!refTxt.isEmpty) System.out.println("\nLocal Constraints:\n" + refTxt)
+            var cstepList = getNestedComposeSteps(cstep, new ArrayList<ComposeStep>)
+            for(cs : cstepList) {
+                // System.out.println("        -> compose-name: " + cs.name)
+                refTxt = new String
+                for(cons : cs.refs) {
+                    // System.out.println("        -> constraint-var: " + cons.name)
+                    for(refcons : cons.ce) {
+                        for (a : refcons.act.actions) {
+                            var constraint = _printRecord_(cs.name, rstep.name, cs.stepRef, 
+                                                a as RecordFieldAssignmentAction, false)
+                            refTxt += constraint.getText + "\n"
+                            mapLHStoRHS.put(constraint.lhs, constraint.rhs) 
+                        }
+                    }
+                }
+            }
+            // if(!refTxt.isEmpty) System.out.println("\nRef Constraints:\n" + refTxt)
+        }
+        // Rewrite expressions in mapLHStoRHS
+        // TODO Validate that LHS and RHS are unique. 
+        // No collisions are allowed.
+        var refKeyList = new ArrayList<String>
+        for(k : mapLHStoRHS.keySet) {
+            for(_k : mapLHStoRHS.keySet) { 
+                if(_k.equals(mapLHStoRHS.get(k))) { // if LHS equals RHS
+                    mapLHStoRHS.put(k, mapLHStoRHS.get(_k)) // rewrite
+                    refKeyList.add(_k)
+                }
+            }
+        }
+        // remove intermediate expressions
+        for(k : refKeyList) mapLHStoRHS.remove(k)
+
+        return mapLHStoRHS
+    }
 
     def _printRecord_(String composeStepName, String runStepName, 
         EList<StepReference> stepRef, RecordFieldAssignmentAction rec, boolean isFirstCompose) {
@@ -139,101 +231,11 @@ class FromAbstractToConcrete
         listOfComposeSteps
     }
 
-    def prepareStepInputExpressions(RunStep rstep, HashSet<ComposeStep> listOfComposeSteps) 
-    {
-        return 
-        '''
-        «FOR composeStep : listOfComposeSteps»
-        «printKVOutputPairs(rstep.name.split("_").get(0) + "Input", composeStep)»
-        «ENDFOR»
-        '''
-    }
-
-    def prepareStepReferenceExpressions(RunStep rstep, HashSet<ComposeStep> listOfComposeSteps) 
-    {
-        // System.out.println("Run Step: " + rstep.name)
-        var mapLHStoRHS = new HashMap<String,String>
-        // Find preceding Compose Step
-        for(cstep : listOfComposeSteps) // at most one 
-        {
-            // System.out.println("    -> compose-name: " + cstep.name)
-            var refTxt = new String
-            for(cons : cstep.refs) {
-                // System.out.println("    -> constraint-var: " + cons.name)
-                for(refcons : cons.ce) {
-                    for (a : refcons.act.actions) {
-                        var constraint = _printRecord_(cstep.name, 
-                                                    rstep.name, cstep.stepRef, 
-                                                    a as RecordFieldAssignmentAction, true)
-                        refTxt += constraint.getText + "\n" 
-                        mapLHStoRHS.put(constraint.lhs, constraint.rhs)
-                    }
-                }
-            }
-            // if(!refTxt.isEmpty) System.out.println("\nLocal Constraints:\n" + refTxt)
-            var cstepList = getNestedComposeSteps(cstep, new ArrayList<ComposeStep>)
-            for(cs : cstepList) {
-                // System.out.println("        -> compose-name: " + cs.name)
-                refTxt = new String
-                for(cons : cs.refs) {
-                    // System.out.println("        -> constraint-var: " + cons.name)
-                    for(refcons : cons.ce) {
-                        for (a : refcons.act.actions) {
-                            var constraint = _printRecord_(cs.name, rstep.name, cs.stepRef, 
-                                                a as RecordFieldAssignmentAction, false)
-                            refTxt += constraint.getText + "\n"
-                            mapLHStoRHS.put(constraint.lhs, constraint.rhs) 
-                        }
-                    }
-                }
-            }
-            // if(!refTxt.isEmpty) System.out.println("\nRef Constraints:\n" + refTxt)
-        }
-        // Rewrite expressions in mapLHStoRHS
-        // TODO Validate that LHS and RHS are unique. 
-        // No collisions are allowed.
-        var refKeyList = new ArrayList<String>
-        for(k : mapLHStoRHS.keySet) {
-            for(_k : mapLHStoRHS.keySet) { 
-                if(_k.equals(mapLHStoRHS.get(k))) { // if LHS equals RHS
-                    mapLHStoRHS.put(k, mapLHStoRHS.get(_k)) // rewrite
-                    refKeyList.add(_k)
-                }
-            }
-        }
-        // remove intermediate expressions
-        for(k : refKeyList) mapLHStoRHS.remove(k)
-
-        return mapLHStoRHS
-    }
-
-    def _printOutputs_(RunStep rstep) 
-    {
-        // at most one (TODO validate this)
-        // Observation: when multiple steps have indistinguishable outputs, 
-        // multiple consumes from is possible.  
-        var listOfComposeSteps = getComposeSteps(rstep)
-        var mapLHStoRHS = prepareStepReferenceExpressions(rstep, listOfComposeSteps)
-
-        // Get text for concrete data expressions
-        var txt = prepareStepInputExpressions(rstep, listOfComposeSteps)
-
-        // Append text for reference data expressions
-        for(k : mapLHStoRHS.keySet) 
-        {
-            txt += 
-            '''
-            «k» := «mapLHStoRHS.get(k)»
-            '''
-            // System.out.println(" EXP: " + k + " = " + mapLHStoRHS.get(k))
-        }
-        return txt
-    }
-
     /*
      * End of Feature Update: Support Interleaving of Compose and Run Steps
-     * 
+     * Q1 2025. 
      */
+
 
     def printKVOutputPairs(String prefix, ComposeStep step) {
         var kv = ""
@@ -271,7 +273,7 @@ class FromAbstractToConcrete
         else return ""
     }
 
-
+    // Generate Types File for Concrete TSpec
 	def generateTypesFile(String sys, List<String> typesImports) {
 		var typ = ""
 		var ios = new BasicEList<Binding>()
@@ -319,6 +321,7 @@ class FromAbstractToConcrete
 		}
 	'''
 
+    // Generate Parameters File for Concrete TSpec
 	def generateParamsFile(String sys) {
 		var paramTxt = ""
 		var processedTypes = new HashSet<String>()
@@ -394,6 +397,7 @@ class StepConstraint
 }
 
 /* OLD DEPRECATED LOGIC FOR COMPOSE AND RUN STEPS */
+// Developed in Q4 2024.
 //  def printOutputs(RunStep step) '''
 //«FOR composeStep : previousComposeStep(step)»
 //«printKVOutputPairs(step.name.split("_").get(0) + "Input", composeStep)»
