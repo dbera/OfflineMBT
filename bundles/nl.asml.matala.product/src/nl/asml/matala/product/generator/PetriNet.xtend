@@ -856,14 +856,14 @@ class PetriNet {
 	    def generateSCN(self, level, visitedT, visitedTP):
 	        «IF num_tests !== 0»
 	            if self.numTestCases >= «num_tests»:
-	                print(' [RG-INFO] Max test cases reached! Terminating path. ')
+	                # print(' [RG-INFO] Max test cases reached! Terminating path. ')
 	                return
 	        «ENDIF»
 	        if level > «depth_limit»:
 	            self.visitedTList.append(list(visitedT))
 	            self.visitedTProdList.append(list(visitedTP))
 	            self.numTestCases = self.numTestCases + 1
-	            print(' [RG-INFO] Depth limit reached! Terminating path.')
+	            # print(' [RG-INFO] Depth limit reached! Terminating path.')
 	            return
 	        enabled_transition_modes = {}
 	        for t in self.n.transition():
@@ -892,7 +892,7 @@ class PetriNet {
 	                del visitedTP[-1]
 	                self.n.set_marking(currM)
 	        else:
-	            print('[RG-INFO] Dead marking found.')
+	            # print('[RG-INFO] Dead marking found.')
 	            self.visitedTList.append(list(visitedT))
 	            self.visitedTProdList.append(list(visitedTP))
 	            self.numTestCases = self.numTestCases + 1
