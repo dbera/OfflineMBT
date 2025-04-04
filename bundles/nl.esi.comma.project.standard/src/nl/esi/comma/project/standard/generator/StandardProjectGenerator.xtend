@@ -119,37 +119,39 @@ class StandardProjectGenerator extends AbstractGenerator {
                             try {
                                 resourceSet.createResource(URI.createURI(fileName)).load(tfis, emptyMap)
                             } catch (Exception ex) {} // re-registration is not a problem
-                            val testResource = EcoreUtil2.getResource(res, fileName)
-                            val test = testResource.allContents.head
-                            if (test instanceof TSMain) {
-                                if (test.model instanceof TestDefinition) {
-                                    Assert.isTrue(true, "this is a concrete tspec, not an abstract tspec")
-                                } else if (test.model instanceof AbstractTestDefinition) {
-                                    val typesImports = TestspecificationGenerator.getTypesImports(testResource)
-                                    val atd = new FromAbstractToConcrete(test.model as AbstractTestDefinition)
-                                    for (sys : atd.getSystems()) {
-                                        fsa.generateFile("types/" + sys + ".types", atd.generateTypesFile(sys, typesImports))
-                                        fsa.generateFile("parameters/" + sys + ".params", atd.generateParamsFile(sys))
-                                    }
-                                    fsa.generateFile("concrete.tspec", atd.generateConcreteTest())
-                                    val abstractTSpecURI = res.URI.trimSegments(1).appendSegment("src-gen").appendSegment("concrete.tspec")
-                                    val abstractTSpecPath = CommonPlugin.resolve(abstractTSpecURI).toFileString
-                                    val abstractTSpecFile = new FileInputStream(abstractTSpecPath)
-                                    try {
-                                        resourceSet.createResource(URI.createURI(abstractTSpecURI.toString)).load(abstractTSpecFile, emptyMap)
-                                    } catch (Exception ex) {} // re-registration is not a problem
-                                    val abstractTSpecResource = EcoreUtil2.getResource(res, abstractTSpecURI.toString)
-                                    val inputTSpec = abstractTSpecResource.allContents.head
-                                    if (inputTSpec instanceof TSMain) {
-                                        if (inputTSpec.model instanceof TestDefinition) {
-                                            (new TestspecificationGenerator).doGenerate(abstractTSpecResource, fsa, context) 
-                                        }
-                                    }
-                                } else {
-                                    Assert.isTrue(true, "this is not an abstract tspec")
-                                }
-                            }
-                            Files.delete(dst)
+
+//                            // Commented DB. TODO Abstract to Concrete TSpec is a work in progress 03.04.2025 //
+//                            val testResource = EcoreUtil2.getResource(res, fileName)
+//                            val test = testResource.allContents.head
+//                            if (test instanceof TSMain) {
+//                                if (test.model instanceof TestDefinition) {
+//                                    Assert.isTrue(true, "this is a concrete tspec, not an abstract tspec")
+//                                } else if (test.model instanceof AbstractTestDefinition) {
+//                                    val typesImports = TestspecificationGenerator.getTypesImports(testResource)
+//                                    val atd = new FromAbstractToConcrete(test.model as AbstractTestDefinition)
+//                                    for (sys : atd.getSystems()) {
+//                                        fsa.generateFile("types/" + sys + ".types", atd.generateTypesFile(sys, typesImports))
+//                                        fsa.generateFile("parameters/" + sys + ".params", atd.generateParamsFile(sys))
+//                                    }
+//                                    fsa.generateFile("concrete.tspec", atd.generateConcreteTest())
+//                                    val abstractTSpecURI = res.URI.trimSegments(1).appendSegment("src-gen").appendSegment("concrete.tspec")
+//                                    val abstractTSpecPath = CommonPlugin.resolve(abstractTSpecURI).toFileString
+//                                    val abstractTSpecFile = new FileInputStream(abstractTSpecPath)
+//                                    try {
+//                                        resourceSet.createResource(URI.createURI(abstractTSpecURI.toString)).load(abstractTSpecFile, emptyMap)
+//                                    } catch (Exception ex) {} // re-registration is not a problem
+//                                    val abstractTSpecResource = EcoreUtil2.getResource(res, abstractTSpecURI.toString)
+//                                    val inputTSpec = abstractTSpecResource.allContents.head
+//                                    if (inputTSpec instanceof TSMain) {
+//                                        if (inputTSpec.model instanceof TestDefinition) {
+//                                            (new TestspecificationGenerator).doGenerate(abstractTSpecResource, fsa, context) 
+//                                        }
+//                                    }
+//                                } else {
+//                                    Assert.isTrue(true, "this is not an abstract tspec")
+//                                }
+//                            }
+//                            Files.delete(dst)
                             refreshWorkspaceProjects()
 						}
 					}

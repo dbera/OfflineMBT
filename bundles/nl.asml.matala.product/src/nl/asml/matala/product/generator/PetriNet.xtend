@@ -334,6 +334,7 @@ class PetriNet {
 		import uuid
 		import pprint
 		import argparse
+		import random
 		from pathlib import Path
 		
 		from snakes.nets import *
@@ -388,7 +389,7 @@ class PetriNet {
 		        «inputArcsTxt»
 		        «outputArcsTxt»
 		    
-		    «print_SCNGen(num_tests)»
+		    «print_SCNGen(num_tests, depth_limit)»
 		    
 		    def initializeTestGeneration(self):
 		        # map_of_transition_modes = {}
@@ -458,10 +459,13 @@ class PetriNet {
 		                        # suppress = False
 		                        # if step_txt.split("@")[0] in listOfSuppressTransitions:
 		                        # suppress = True
-		                        if not step_txt.split("_")[0] in self.listOfEnvBlocks:
-		                            _step = Step(step_txt.rsplit("_",1)[0].split("@",1)[0] in self.listOfSUTActions)
-		                        else:
-		                            _step = Step(False)
+		                        
+		                        # if not step_txt.split("_")[0] in self.listOfEnvBlocks:
+		                            # _step = Step(step_txt.rsplit("_",1)[0].split("@",1)[0] in self.listOfSUTActions)
+		                        # else:
+		                            # _step = Step(False)
+		                        _step = Step(False)
+		                        
 		                        # txt += "    %s\n" % (map_transition_modes_to_name[step[1].name + "_" + step[2].__repr__()])
 		                        # txt += "step-name: %s\n" % (map_transition_modes_to_name[stp])
 		                        _step.step_name = self.map_transition_modes_to_name[stp]
@@ -568,7 +572,9 @@ class PetriNet {
 		    # s.draw('test-gv-graph.png')
 		    # print(" Finished Generation, writing to file.. ")
 		    print("[INFO] Starting Reachability Graph Generation")
-		    pn.generateScenarios(s,0,[],[],[],0,«depth_limit»)
+		    # pn.generateScenarios(s,0,[],[],[],0,«depth_limit»)
+		    pn.generateSCN(0,[],[])
+		    print('Num Tests: ', pn.numTestCases)
 		    print("[INFO] Finished.")
 		    b = datetime.datetime.now()
 		
@@ -812,11 +818,11 @@ class PetriNet {
 		'''
 	}
 	
-	def print_SCNGen(int num_tests) {
+	def print_SCNGen(int num_tests, int depth_limit) {
 		return
 		'''
 	    def getCurrentMarking(self):
-	        print('[INFO] Current Marking: ', self.n.get_marking())
+	        # print('[INFO] Current Marking: ', self.n.get_marking())
 	        return self.n.get_marking()
 
 	    def saveMarking(self):
@@ -831,6 +837,7 @@ class PetriNet {
 	        _t, _m = choices.get(int(cid))
 	        _t.fire(_m)
 	        print('[INFO] Transition Fired with ID: ', cid)
+	        return _t.flow(_m)
 
 	    def getEnabledTransitions(self):
 	        enabled_transition_modes = {}
@@ -845,6 +852,52 @@ class PetriNet {
 	                    chidx = chidx + 1
 	        print('[INFO] Enabled Transition Choices: ', choices)
 	        return choices
+	    
+	    def generateSCN(self, level, visitedT, visitedTP):
+	        «IF num_tests !== 0»
+	            if self.numTestCases >= «num_tests»:
+	                print(' [RG-INFO] Max test cases reached! Terminating path. ')
+	                return
+	        «ENDIF»
+	        if level > «depth_limit»:
+	            self.visitedTList.append(list(visitedT))
+	            self.visitedTProdList.append(list(visitedTP))
+	            self.numTestCases = self.numTestCases + 1
+	            print(' [RG-INFO] Depth limit reached! Terminating path.')
+	            return
+	        enabled_transition_modes = {}
+	        for t in self.n.transition():
+	            tmodes = t.modes()
+	            for mode in tmodes:
+	                enabled_transition_modes[t] = tmodes
+	        dead_marking = False
+	        if not enabled_transition_modes:
+	            dead_marking = True
+	        choices = {}
+	        idx = 0
+	        for key, value in enabled_transition_modes.items():
+	            for elm in value:
+	                choices[idx] = key, elm
+	                idx = idx + 1
+	        currM = self.getCurrentMarking()
+	        if not dead_marking:
+	            # t, m = random.choice(list(choices.values()))
+	            for t, m in choices.values():  
+	                visitedT.append((0,t,m))
+	                visitedTP.append(t.flow(m)[1])
+	                t.fire(m)
+	                self.getCurrentMarking()
+	                self.generateSCN(level+1,visitedT.copy(), visitedTP.copy())
+	                del visitedT[-1]
+	                del visitedTP[-1]
+	                self.n.set_marking(currM)
+	        else:
+	            print('[RG-INFO] Dead marking found.')
+	            self.visitedTList.append(list(visitedT))
+	            self.visitedTProdList.append(list(visitedTP))
+	            self.numTestCases = self.numTestCases + 1
+	            self.n.set_marking(currM)
+	            return
 	    
 	    def generateScenarios(self, state_space, currentVertex, visited, visitedT, visitedTP, depth, limit):
 	        # print(currentVertex)
