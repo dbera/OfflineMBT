@@ -71,20 +71,20 @@ class FromAbstractToConcrete
     def _printRecord_(String composeStepName, String runStepName, 
         EList<StepReference> stepRef, RecordFieldAssignmentAction rec, boolean isFirstCompose) {
 
-        // run block input data structure = concrete tspec step input data structure
-        var blockInputName = new String //runStepName.split("_").get(0) + "Input" 
-        var pi = new String // blockInputName + "." + runStepName
+        // Run block input data structure = Concrete TSpec step input data structure
+        var blockInputName = new String 
+        var pi = new String
 
-        // System.out.println(" FIELD: " + printField(rec.fieldAccess, true))
+        // System.out.println(" Field: " + printField(rec.fieldAccess, true))
         var field = new String
         if(isFirstCompose) {
             blockInputName = runStepName.split("_").get(0) + "Input" 
-            pi = blockInputName + "." //+ runStepName
+            pi = blockInputName + "."
             field = printField(rec.fieldAccess, true)
         } else field = printField(rec.fieldAccess, true)
 
         var value = (new ExpressionGenerator(stepRef, runStepName)).exprToComMASyntax(rec.exp)
-        // System.out.println(" Value: " + value)
+        // System.out.println(" value: " + value)
 
         if (!(rec.exp instanceof ExpressionVector || rec.exp instanceof ExpressionFunctionCall)) {
             // For record expressions. 
@@ -139,14 +139,20 @@ class FromAbstractToConcrete
         listOfComposeSteps
     }
 
-    def _printOutputs_(RunStep rstep) 
+    def prepareStepInputExpressions(RunStep rstep, HashSet<ComposeStep> listOfComposeSteps) 
     {
-        var mapLHStoRHS = new HashMap<String,String>
-        // at most one (TODO validate this)
-        var listOfComposeSteps = getComposeSteps(rstep)
+        return 
+        '''
+        «FOR composeStep : listOfComposeSteps»
+        «printKVOutputPairs(rstep.name.split("_").get(0) + "Input", composeStep)»
+        «ENDFOR»
+        '''
+    }
 
+    def prepareStepReferenceExpressions(RunStep rstep, HashSet<ComposeStep> listOfComposeSteps) 
+    {
         // System.out.println("Run Step: " + rstep.name)
-
+        var mapLHStoRHS = new HashMap<String,String>
         // Find preceding Compose Step
         for(cstep : listOfComposeSteps) // at most one 
         {
@@ -165,7 +171,6 @@ class FromAbstractToConcrete
                 }
             }
             // if(!refTxt.isEmpty) System.out.println("\nLocal Constraints:\n" + refTxt)
-
             var cstepList = getNestedComposeSteps(cstep, new ArrayList<ComposeStep>)
             for(cs : cstepList) {
                 // System.out.println("        -> compose-name: " + cs.name)
@@ -185,8 +190,7 @@ class FromAbstractToConcrete
             // if(!refTxt.isEmpty) System.out.println("\nRef Constraints:\n" + refTxt)
         }
         // Rewrite expressions in mapLHStoRHS
-        // TODO 
-        // Validate that LHS and RHS are unique. 
+        // TODO Validate that LHS and RHS are unique. 
         // No collisions are allowed.
         var refKeyList = new ArrayList<String>
         for(k : mapLHStoRHS.keySet) {
@@ -200,17 +204,23 @@ class FromAbstractToConcrete
         // remove intermediate expressions
         for(k : refKeyList) mapLHStoRHS.remove(k)
 
-        // print concrete data updates
-        var txt = 
-        '''
-        «FOR composeStep : listOfComposeSteps»
-        «printKVOutputPairs(rstep.name.split("_").get(0) + "Input", composeStep)»
-        «ENDFOR»
-        '''
-        
-        // print references
-        // if(!mapLHStoRHS.isEmpty) System.out.println(" References: ")
-        for(k : mapLHStoRHS.keySet) {
+        return mapLHStoRHS
+    }
+
+    def _printOutputs_(RunStep rstep) 
+    {
+        // at most one (TODO validate this)
+        // Observation: when multiple steps have indistinguishable outputs, 
+        // multiple consumes from is possible.  
+        var listOfComposeSteps = getComposeSteps(rstep)
+        var mapLHStoRHS = prepareStepReferenceExpressions(rstep, listOfComposeSteps)
+
+        // Get text for concrete data expressions
+        var txt = prepareStepInputExpressions(rstep, listOfComposeSteps)
+
+        // Append text for reference data expressions
+        for(k : mapLHStoRHS.keySet) 
+        {
             txt += 
             '''
             «k» := «mapLHStoRHS.get(k)»
@@ -350,6 +360,40 @@ class FromAbstractToConcrete
 
 }
 
+class StepConstraint 
+{
+    public var composeStepName = new String
+    public var runStepName = new String
+    public var lhs = new String
+    public var rhs = new String
+    public var text = new String
+
+    new(String runStepName, String composeStepName, String lhs, String rhs, String text) {
+        this.runStepName = runStepName
+        this.composeStepName = composeStepName
+        this.lhs = lhs
+        this.rhs = rhs
+        this.text = text
+    }
+    
+    def getComposeStepName() { return composeStepName }
+    def getRunStepName() { return runStepName }
+    def getLHS() { return lhs }
+    def getRHS() { return rhs }
+    def getText() { return text }
+
+    def void print(StepConstraint sc) {
+        System.out.println(" RUN-STEP-NAME: " + runStepName)
+        System.out.println(" COMPOSE-STEP-NAME: " + composeStepName)
+        sc.printLHSandRHS()
+    }
+
+    def printLHSandRHS() {
+        System.out.println("    -> LHS: " + lhs + "  RHS: " + rhs)
+    }
+}
+
+/* OLD DEPRECATED LOGIC FOR COMPOSE AND RUN STEPS */
 //  def printOutputs(RunStep step) '''
 //«FOR composeStep : previousComposeStep(step)»
 //«printKVOutputPairs(step.name.split("_").get(0) + "Input", composeStep)»
@@ -415,36 +459,3 @@ class FromAbstractToConcrete
 //      return SymbolicContraints
 //  }
 
-
-class StepConstraint 
-{
-    public var composeStepName = new String
-    public var runStepName = new String
-    public var lhs = new String
-    public var rhs = new String
-    public var text = new String
-
-    new(String runStepName, String composeStepName, String lhs, String rhs, String text) {
-        this.runStepName = runStepName
-        this.composeStepName = composeStepName
-        this.lhs = lhs
-        this.rhs = rhs
-        this.text = text
-    }
-    
-    def getComposeStepName() { return composeStepName }
-    def getRunStepName() { return runStepName }
-    def getLHS() { return lhs }
-    def getRHS() { return rhs }
-    def getText() { return text }
-
-    def void print(StepConstraint sc) {
-        System.out.println(" RUN-STEP-NAME: " + runStepName)
-        System.out.println(" COMPOSE-STEP-NAME: " + composeStepName)
-        sc.printLHSandRHS()
-    }
-
-    def printLHSandRHS() {
-        System.out.println("    -> LHS: " + lhs + "  RHS: " + rhs)
-    }
-}
