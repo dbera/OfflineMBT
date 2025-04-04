@@ -220,6 +220,9 @@ class ProductGenerator extends AbstractGenerator {
             )
 			fsa.generateFile('CPNServer//' + prod.specification.name + '//' + name + '_data.py', (new Utils()).getDataContainerClass(dataGetterTxt, methodTxt))
 			fsa.generateFile('CPNServer//' + prod.specification.name + '//' + name + '_TestSCN.py', (new Utils()).generateTestSCNTxt(prod.specification.name + "_types", prod, resource.URI.lastSegment))
+            fsa.generateFile('__init__.py', 
+                (new FlaskSimulationGenerator).generateInitForSrcGen()
+            )
 		}
 	}
 	
