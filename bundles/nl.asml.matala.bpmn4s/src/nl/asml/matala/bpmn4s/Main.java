@@ -188,11 +188,7 @@ public class Main {
         				}
         				return result;
         			}
-        			
-        			@Override
-        			protected String removeUuids(String text) {
-        				return text;
-        			}
+
         		};
         	}else {
         		compiler = new Bpmn4sCompiler();
