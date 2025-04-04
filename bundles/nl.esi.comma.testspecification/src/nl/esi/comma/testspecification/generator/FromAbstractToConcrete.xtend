@@ -236,16 +236,17 @@ class FromAbstractToConcrete
      * Q1 2025. 
      */
 
-
-    def printKVOutputPairs(String prefix, ComposeStep step) {
-        var kv = ""
-        if (!step.suppress) {
-            for (o : step.output) {
-                kv += printKVInputPairs(prefix, o.name.name, o.kvPairs)
-            }
-        }
-        return kv
-    }
+      /* Removed ComMA Expression Printing 04.04.2025 */
+      /* TODO Rewrite this function to parse JSON Object */
+      def printKVOutputPairs(String prefix, ComposeStep step) {
+          var kv = ""
+//        if (!step.suppress) {
+//            for (o : step.output) {
+//                kv += printKVInputPairs(prefix, o.name.name, o.kvPairs)
+//            }
+//        }
+          return kv
+      }
 
     def printKVInputPairs(String prefix, String field, EList<NestedKeyValuesPair> pairs) {
         var kv = ""

@@ -124,8 +124,10 @@ Binding:
 	name = [expr::Variable|QualifiedName] ':' 
 		(	strvalue = STRING
 		|	'{'
-				'start-json' (jsonvals = TSJsonValue)? 'end-json'
-				(kvPairs += NestedKeyValuesPair)? (',' kvPairs += NestedKeyValuesPair)*
+				//'start-json' 
+				(jsonvals = TSJsonValue)? 
+				//'end-json'
+				// (kvPairs += NestedKeyValuesPair)? (',' kvPairs += NestedKeyValuesPair)*
 			'}'
 		)
 ;

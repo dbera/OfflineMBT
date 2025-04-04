@@ -419,7 +419,7 @@ class Utils
                 for k, v in idata.items():
                     txt += "%s : {\n" % k
                     j = json.loads(v)
-                    txt += "start-json " + json.dumps(j, indent=2, sort_keys=False) + " end-json" + "\n"
+                    txt += json.dumps(j, indent=4, sort_keys=False) + "\n"
                     # for jk in j.keys():
                     #     txt += self.recurseJson(j[jk], "%s.%s" % (k,jk))
                     txt += "}\n"
