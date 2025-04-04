@@ -4,19 +4,12 @@ generate assertThat "http://www.esi.nl/comma/assertthat/AssertThat"
 
 import "http://www.esi.nl/comma/expressions/Expression" as expr
 
-DataCheckItems:
-    AssertThatBlock 
-    | GenericScriptBlock
+DataAssertionItem:
+    AssertThatBlock | GenericScriptBlock
 ;
 
-
 AssertThatBlock:
-    'assert-that' output=ExpressionBracket
-        (
-              val=AssertThatValue 
-            | xpath=AssertThatXPath 
-            | xmlFiles=AssertThatXMLFile
-        )
+    identifier = ID ':'  'assert-that' output=ExpressionBracket val = AssertValidation
 ;
 
 GenericScriptBlock:
@@ -25,54 +18,64 @@ GenericScriptBlock:
 
 ScriptParametersCustom:
     '{'
-        'script-path' ':'   scriptPath = STRING
-        ('positional-args' ':'  paramsPositional = ExpressionArray  ) ?
-        ('named-args' ':'       paramsNamed      = ExpressionMap ) ?
+        'using-path' ':'   scriptPath = STRING
+        ('with-args' ':' '{'
+            (argType+=SCRIPT_PARAM_TYPE argVal+=JsonElements) 
+            (',' argType+=SCRIPT_PARAM_TYPE argVal+=JsonElements)?
+        '}')?
     '}' 
 ;
-//ScriptParametersFromVariable:
-//    '{'
-//        'using-variable' ':'   paramsVariable  = Expression
-//        ('with-positional-args' ':' positionalField = STRING ) ?
-//    '}'
-//;
+
+enum SCRIPT_PARAM_TYPE:
+    OUTPUT='OUTPUT'
+    | FILE='FILE'
+    | FILE_REF='FILE_REF'
+    | VALUE='VALUE'
+    | VALUE_REF='VALUE_REF'
+    | NAME_ONLY='NAME_ONLY'
+    ;
 
 enum MARGIN_TYPE:
-    ABSOLUTE='absolute'
-    | RELATIVE='relative'
-    | NONE='none';
+    ABSOLUTE='Absolute'
+    | RELATIVE='Relative'
+    | NONE='None';
 
 MargingItem:
-    type=MARGIN_TYPE '(' (marginVal=JsonNumeric)? ')';
+    type=MARGIN_TYPE '(' (marginVal=FLOAT)? ')';
+
+AssertValidation:
+    AssertThatValue | AssertThatXPaths | AssertThatXMLFile
+;
 
 // Assertion of Value outputs
 AssertThatValue:
     '{'
-    type=AssertionValueValidationTypes
+    comparisonType = ComparisonsForSingleReference
     '}'
 ;
 
-AssertionValueValidationTypes:
-    AssertEq | AssertClose | AssertMatch | AssertSize;
-
-AssertEq:
-    'equal-to' outRef=JsonValue ('within-margin' outMrg=MargingItem)? (asRegex ?= 'as-regex')?
+ComparisonsForSingleReference:
+    AssertThatValueEq | AssertThatValueClose | AssertThatValueMatch | AssertThatValueSize
 ;
 
-AssertClose:
-    'close-to' outClo=NumericOrArray ('within-margin' outMrg=MargingItem)?
+AssertThatValueEq:
+    'equal-to' reference=JsonValue ('within-margin' margin=MargingItem)? (asRegex ?= 'as-regex')?
 ;
 
-AssertMatch:
-    'match-regex' outRegex=StringOrArray
+AssertThatValueClose:
+    'close-to' reference=JsonValue ('within-margin' margin=MargingItem)?
 ;
 
-AssertSize:
-    'has-size' outLen=INT
+AssertThatValueMatch:
+    'match-regex' reference=JsonValue
 ;
 
-// Assertion of XPath outputs
-AssertThatXPath:
+AssertThatValueSize:
+    'has-size' reference=Long
+;
+
+// Assertion of XPaths outputs
+AssertThatXPaths:
     '{' 
     assertRef += AssertXPathValidations+ 
     ( namespace = AssertNamespace )? 
@@ -81,93 +84,60 @@ AssertThatXPath:
     '}'
 ;
 
+AssertXPathValidations: {AssertXPathValidations}
+    'value-by-xpath' '(' xpath = STRING  ( ',' 'log-id' ':=' loggingId = STRING )? ')'
+    comparisonType = ComparisonsForSingleReference
+;
+
 AssertNamespace: {AssertNamespace}
-      'using-namespace-context' namespaceMap = JsonObject
+    'using-namespace-context' namespaceMap = JsonObject
 ;
 
 AssertGlobalMargin: {AssertGlobalMargin}
-    'using-global-margin' globalMrg = MargingItem
+    'using-global-margin' margin = MargingItem
 ;
 
 AssertGlobalRegex: {AssertGlobalRegex}
-     globalRegex ?= 'using-all-strings-as-regex'
-;
-
-XPathItem: {XPathItem}
-    'value-by-xpath' '(' xpathExpr = STRING  ( ',' 'log-id' ':=' loggingId = STRING )? ')'
-;
-
-AssertXPathValidations: {AssertXPathValidations}
-    ( xpathItem = XPathItem ) validation = (AssertEq | AssertClose | AssertMatch | AssertSize)
+    globalRegex ?= 'using-all-strings-as-regex'
 ;
 
 // Assertion of XMLFile outputs
 AssertThatXMLFile:
     'and' reference = ExpressionBracket
     '{' 
-    assertRef += AssertXmlValidations+ 
+    assertRef += AssertXMLValidations+ 
     ( namespace = AssertNamespace )? 
     ( globalMargin = AssertGlobalMargin )? 
     '}'
 ;
 
-AssertXmlValidations: {AssertXmlValidations}
-    ( xpathItem = XPathItem ) validation = AssertionXmlValidationTypes
+AssertXMLValidations: {AssertXMLValidations}
+    'value-by-xpath' '(' xpath = STRING  ( ',' 'log-id' ':=' loggingId = STRING )? ')'
+    comparisonType = ComparisonsForMultiReference
 ;
 
-AssertionXmlValidationTypes: 
-    AssertIdentical | AssertSimilar
+ComparisonsForMultiReference:
+    AssertThatValueIdentical | AssertThatValueSimilar
 ;
 
-AssertIdentical: {AssertIdentical}
-    areIdentical ?= 'are-identical' 
+AssertThatValueIdentical: {AssertThatValueIdentical}
+    identical ?= 'are-identical' 
 ;
-AssertSimilar: {AssertSimilar}
-    areSimilar ?= 'are-similar' ('within-margin' localMargin=MargingItem)?
-;
-
-
-///// Json Grammar obtained from https://gist.github.com/nightscape/629651
-
-JsonObject:
-    '{' (members+=JsonMember) (',' members+=JsonMember)* '}'
+AssertThatValueSimilar: {AssertThatValueSimilar}
+    similar ?= 'are-similar' ('within-margin' margin=MargingItem)?
 ;
 
-JsonMember:
-    key=STRING ':' value=JsonValue
-;
+// Json Grammar obtained from https://gist.github.com/nightscape/629651
 
-JsonArray:
-    '[' (values+=JsonValue) (',' values+=JsonValue)* ']'
+JsonElements: JsonObject | JsonMember | JsonArray ;
 
-;
+JsonObject: '{' (members+=JsonMember) (',' members+=JsonMember)* '}' ;
 
-ExpressionArray:
-    '[' (values+=Expression) (',' values+=Expression)* ']'
-;
-ExpressionMapMember:
-    key=STRING ':' value=Expression
-;
+JsonMember: key=STRING ':' value=JsonValue ;
 
-ExpressionMap:
-    '{' (members+=ExpressionMapMember) (',' members+=ExpressionMapMember)* '}'
-;
+JsonArray: '[' (values+=JsonValue) (',' values+=JsonValue)* ']' ;
 
-JsonNumeric: 
-    {JsonNumeric} (Expression::FLOAT | Expression::Long)
-;
-
-JsonValue:
-    {JsonValue} STRING | {JsonValue} Expression::BOOL_LITERAL | JsonNumeric | JsonObject | JsonArray 
-;
-
-StringOrArray:
-    item = STRING | '[' (values+=STRING) (',' values+=STRING)* ']'
-;
-
-NumericOrArray:
-    item = JsonNumeric | '[' (values+=JsonNumeric) (',' values+=JsonNumeric)* ']'
-;
+JsonValue: jsonObj = JsonObject | jsonArr = JsonArray | expr = Expression ;
 
 //// Borrowed from: github.com/TypeFox/yang-lsp
 //
