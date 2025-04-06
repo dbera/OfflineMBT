@@ -90,7 +90,8 @@ class ProductGenerator extends AbstractGenerator {
 	{	
 		var dataGetterTxt = (new TypesGenerator).generatePythonGetters(prod,resource)
 		var pnet = new PetriNet
-		var methodTxt = ''''''		
+		var methodTxt = ''''''	
+		var sutTypesList = new ArrayList<String>	
 
 		var inout_places = new ArrayList<String>
 		var init_places = new ArrayList<String>
@@ -113,6 +114,9 @@ class ProductGenerator extends AbstractGenerator {
 			}
 			import_list.add(imp.importURI)
 		}
+		
+		// DB 05.04.2025. Added to handle SUT Types List
+		if(prod.sutTypes !== null) for(typ : prod.sutTypes.type) { sutTypesList.add(typ.type.name) }
 		
 		for(b : prod.specification.blocks) {
 			var Block block = null
@@ -204,7 +208,7 @@ class ProductGenerator extends AbstractGenerator {
 			}
 			
 			var name = prod.specification.name
-			fsa.generateFile('CPNServer//' + prod.specification.name + '//' + name + '.py', pnet.toSnakes(name, name, listOfEnvBlocks, listOfAssertTransitions, mapOfSuppressTransitionVars, inout_places, init_places, depth_limit, num_tests))
+			fsa.generateFile('CPNServer//' + prod.specification.name + '//' + name + '.py', pnet.toSnakes(name, name, listOfEnvBlocks, listOfAssertTransitions, mapOfSuppressTransitionVars, inout_places, init_places, depth_limit, num_tests, sutTypesList))
 			fsa.generateFile('CPNServer//' + prod.specification.name + '//' + 'server.py', (new FlaskSimulationGenerator).generateServer(name))
 			fsa.generateFile('CPNserver.py', (new FlaskSimulationGenerator).generateCPNServer)
 			fsa.generateFile('CPNclient.py', (new FlaskSimulationGenerator).generateCPNClient(prod.specification.name))

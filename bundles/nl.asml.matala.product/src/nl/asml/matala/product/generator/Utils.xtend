@@ -425,11 +425,16 @@ class Utils
                     txt += "}\n"
                 return txt
                 
-            def generateTSpec(self, idx, output_dir):
+            def generateTSpec(self, idx, sutTypesList, output_dir):
                 txt = ""
                 txt += "import \"«pSpecFile»\"\n\n"
                 «(new Utils()).usageList(prod)»
-                txt += "abstract-test-definition\n\n"
+                txt += "\nabstract-test-definition\n\n"
+                if sutTypesList:
+                    txt += "\ntest-configuration-types {"
+                    for typ in sutTypesList:
+                        txt += "\n\t" + typ
+                    txt += "\n}\n\n"
                 txt += "Test-Scenario: S%s\n" % idx
                 for step in self.step_list:
                     if not step.is_assert:
