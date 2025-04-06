@@ -20,6 +20,7 @@ import org.eclipse.emf.common.util.EList
 import nl.esi.comma.testspecification.abstspec.generator.ReferenceExpressionHandler
 import nl.esi.comma.testspecification.abstspec.generator.Utils
 import nl.esi.comma.testspecification.abstspec.generator.ConcreteExpressionHandler
+import nl.esi.comma.testspecification.abstspec.generator.DataKVPGenerator
 
 class FromAbstractToConcrete 
 {
@@ -28,6 +29,10 @@ class FromAbstractToConcrete
 	new (AbstractTestDefinition atd) {
 		this.atd = atd
 	}
+
+    def __generateConcreteTest() {
+        return (new DataKVPGenerator()).generateFAST(atd)
+    }
 
 	def generateConcreteTest() '''
 		«FOR sys : getSystems()»
@@ -72,7 +77,7 @@ class FromAbstractToConcrete
         // Observation: when multiple steps have indistinguishable outputs, 
         // multiple consumes from is possible. TODO Warn user.   
         var listOfComposeSteps = (new Utils()).getComposeSteps(rstep, atd)
-        var mapLHStoRHS = (new ReferenceExpressionHandler()).resolveStepReferenceExpressions(rstep, listOfComposeSteps)
+        var mapLHStoRHS = (new ReferenceExpressionHandler(false)).resolveStepReferenceExpressions(rstep, listOfComposeSteps)
 
         // Get text for concrete data expressions
         var txt = (new ConcreteExpressionHandler()).prepareStepInputExpressions(rstep, listOfComposeSteps)

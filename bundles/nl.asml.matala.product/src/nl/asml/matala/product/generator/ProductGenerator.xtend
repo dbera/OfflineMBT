@@ -322,15 +322,15 @@ class ProductGenerator extends AbstractGenerator {
 							
 							// Added DB. 05.04.2025. 
 							// Support for auto constructors
-							for(v : outvar.fnOut) {
-							    System.out.println(" > auto-constructor: " + 
-							        SnakesHelper.defaultValue(v.ref.type.type, v.ref.name)
-							    )
-							    actTxt +=
-							    '''
-                                    «v.ref.name» = «SnakesHelper.defaultValue(v.ref.type.type, v.ref.name)»
-							    '''
-							}
+//							for(v : outvar.fnOut) {
+//							    System.out.println(" > auto-constructor: " + 
+//							        SnakesHelper.defaultValue(v.ref.type.type, v.ref.name)
+//							    )
+//							    actTxt +=
+//							    '''
+//                                    «v.ref.name» = «SnakesHelper.defaultValue(v.ref.type.type, v.ref.name)»
+//							    '''
+//							}
 							// End of support for auto-constructors
 							
 							for(a : outvar.act.actions) 

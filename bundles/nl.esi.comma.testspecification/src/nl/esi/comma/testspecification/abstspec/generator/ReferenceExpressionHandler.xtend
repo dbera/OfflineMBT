@@ -14,7 +14,12 @@ import nl.esi.comma.expressions.expression.ExpressionFunctionCall
 import nl.esi.comma.testspecification.testspecification.AbstractTestDefinition
 import nl.esi.comma.testspecification.generator.ExpressionGenerator
 
-class ReferenceExpressionHandler {
+class ReferenceExpressionHandler 
+{
+    var isFast = false
+    
+    new(boolean _isFast) { isFast = _isFast }
+
     /*
      * Support Interleaving of Compose and Run Steps. 
      * Q1 2025.  
@@ -87,7 +92,7 @@ class ReferenceExpressionHandler {
         // System.out.println(" Field: " + printField(rec.fieldAccess, true))
         var field = new String
         if(isFirstCompose) {
-            blockInputName = runStepName.split("_").get(0) + "Input" 
+            blockInputName = runStepName.split("_").get(0) + "Input"
             pi = blockInputName + "."
             field = (new Utils()).printField(rec.fieldAccess, true)
         } else field = (new Utils()).printField(rec.fieldAccess, true)
@@ -103,16 +108,25 @@ class ReferenceExpressionHandler {
                     // System.out.println(" Replacing: " + sd.name + " with " + sr.refStep.name)
                     if(csref.refStep instanceof RunStep && 
                         value.toString.contains(csrefdata.name)) {
-                        value = "step_" + csref.refStep.name + ".output." + value
+                        if(!isFast) value = "step_" + csref.refStep.name + ".output." + value
+                        else value = csref.refStep.name + "." + value
                     }
                 }
             }
         }
-        return new StepConstraint ( runStepName,
+        if(!isFast)
+            return new StepConstraint ( runStepName,
                                     composeStepName, 
                                     pi + field, // lhs
                                     value.toString, // rhs
                                     pi + field + " := " + value // text
+                                  )
+        else
+            return new StepConstraint ( runStepName,
+                                    composeStepName, 
+                                    field, // lhs
+                                    value.toString, // rhs
+                                    field + " = " + value // text
                                   ) 
     }
 
@@ -132,6 +146,23 @@ class ReferenceExpressionHandler {
             }
         }
         return listOfComposeSteps
+    }
+
+    def List<RunStep> getReferencedRunSteps(ComposeStep cstep, List<RunStep> listOfRunSteps) 
+    {
+        if(cstep.stepRef.isNullOrEmpty) return listOfRunSteps
+
+        for(elm : cstep.stepRef) 
+        {
+            if(elm.refStep instanceof RunStep) {
+                listOfRunSteps.add(elm.refStep as RunStep)
+                return listOfRunSteps
+            }
+            else if(elm.refStep instanceof ComposeStep) {
+                getReferencedRunSteps(elm.refStep as ComposeStep, listOfRunSteps)
+            }
+        }
+        return listOfRunSteps
     }
 
     /*

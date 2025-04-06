@@ -12,6 +12,14 @@ import nl.esi.comma.testspecification.testspecification.RunStep
 import nl.esi.comma.testspecification.testspecification.AbstractTestDefinition
 import java.util.HashSet
 import nl.esi.comma.testspecification.testspecification.ComposeStep
+import nl.esi.comma.testspecification.testspecification.TSJsonValue
+import nl.esi.comma.testspecification.testspecification.TSJsonString
+import nl.esi.comma.testspecification.testspecification.TSJsonBool
+import nl.esi.comma.testspecification.testspecification.TSJsonFloat
+import nl.esi.comma.testspecification.testspecification.TSJsonLong
+import nl.esi.comma.testspecification.testspecification.TSJsonObject
+import nl.esi.comma.testspecification.testspecification.TSJsonArray
+import nl.esi.comma.testspecification.testspecification.TSJsonMember
 
 class Utils 
 {
@@ -29,6 +37,7 @@ class Utils
         listOfComposeSteps
     }
 
+    /* ComMA Expression Handler */
     def printRecord(String stepName, String prefix, EList<StepReference> stepRef, RecordFieldAssignmentAction rec) {
         var field = printField(rec.fieldAccess, false)
         var value = (new ExpressionGenerator(stepRef,stepName)).exprToComMASyntax(rec.exp)
@@ -44,4 +53,44 @@ class Utils
         if(printVar) return exp.getVariable().getName()
         else return ""
     }
+    /* *********************** */
+    
+    dispatch def String parseJSON(TSJsonValue v) { return parseJSON(v) }
+        // TSJsonString | TSJsonBool | TSJsonFloat | TSJsonLong | TSJsonObject | TSJsonArray
+    dispatch def String parseJSON(TSJsonString v) { return v.value}
+    dispatch def String parseJSON(TSJsonBool v) { return v.value.toString }
+    dispatch def String parseJSON(TSJsonFloat v) { return v.value.toString }
+    dispatch def String parseJSON(TSJsonLong v) { return v.value.toString }
+    dispatch def String parseJSON(TSJsonObject v) { 
+        var txt = 
+        '''
+        {
+            «FOR m : v.members SEPARATOR ''','''»
+                «parseJSON(m)»
+            «ENDFOR»
+        }'''
+        return txt.toString
+    }
+    //  '{' (members+=TSJsonMember) (',' members+=TSJsonMember)* '}'
+    dispatch def String parseJSON(TSJsonMember v) { 
+        // key=STRING ':' value=TSJsonValue
+        var txt = 
+        '''
+        «v.key» : «parseJSON(v.value)»
+        '''
+        return txt
+    }
+    dispatch def String parseJSON(TSJsonArray v) { 
+        // '[' (values+=TSJsonValue)? (',' values+=TSJsonValue)* ']'
+        var txt = 
+        '''
+        [
+            «FOR value : v.values SEPARATOR ''','''»
+                «parseJSON(value)»
+            «ENDFOR»
+        ]
+        '''
+        return txt
+    }
+
 }
