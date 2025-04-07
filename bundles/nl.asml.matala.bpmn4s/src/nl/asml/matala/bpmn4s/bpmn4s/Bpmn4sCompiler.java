@@ -783,14 +783,12 @@ public class Bpmn4sCompiler{
 	 * while in pspec they are lower cased.
 	 */
 	protected String mapType(String name) {
-		String result = name;
-		if (name.equals("Int") || name.equals("String")) {
-			result = name.toLowerCase();
-		} else if (name.equals("Boolean")) {
-			result = "bool";
-		}
-		return result;
-		
+		return switch (name) {
+			case "Int", "String" -> name.toLowerCase();
+			case "Boolean" -> "bool";
+			case "Float" -> "real";
+			default -> name;
+		};
 	}
 
 	//
