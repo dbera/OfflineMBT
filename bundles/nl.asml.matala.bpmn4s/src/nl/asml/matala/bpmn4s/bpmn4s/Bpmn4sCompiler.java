@@ -502,6 +502,16 @@ public class Bpmn4sCompiler{
 					if (compiledGuard != "") {
 						task += "with-guard\t\t" + compiledGuard;
 					}
+					// ASSERTIONS
+					String assertions = node.getAssertions();
+					if(assertions != null) {
+						task += String.format(
+								"""
+								assertions default {
+								%s
+								}
+								""", assertions);
+					}
 					for(Edge e: node.getAllOutputs()) {
 						// Name of place that holds target context value for this transition:
 						String postCtxName = sanitize(getPNTargetPlaceName(e));

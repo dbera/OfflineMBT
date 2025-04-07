@@ -58,6 +58,7 @@ public class Main {
 	static final String SUBTYPE_QUEUE = "Queue";
 	static final String SUBTYPE_RUNTASK = "RunTask";
 	static final String SUBTYPE_COMPOSETASK = "ComposeTask";
+	static final String SUBTYPE_ASSERTTASK = "AssertTask";
 	
 	public static void main(String[] args) {
 		/*
@@ -303,6 +304,8 @@ public class Main {
 				taskType = ElementType.COMPOSE_TASK;
 			} else if (subTypeString.equals(SUBTYPE_RUNTASK)) {
 				taskType = ElementType.RUN_TASK;
+			} else if (subTypeString.equals(SUBTYPE_ASSERTTASK)) {
+				taskType = ElementType.ASSERT_TASK;
 			}
 		}
 		makeActionNode(modelInst, t, ElementType.TASK, taskType);
@@ -483,8 +486,17 @@ public class Main {
 		}
 		node.setContext(contextName, contextTypeName, contextInit);
 		
-		if(type.equals(ElementType.TASK)) {
+		
+		if(type.equals(ElementType.TASK) ||
+			type.equals(ElementType.COMPOSE_TASK) ||
+			type.equals(ElementType.RUN_TASK) ||
+			type.equals(ElementType.ASSERT_TASK)) 
+		{
 			node.setContextUpdate(elem.getAttributeValueNs("http://bpmn4s", "ctxUpdate"));
+		}
+
+		if(type.equals(ElementType.ASSERT_TASK)) {
+			node.setAssertions(elem.getAttributeValueNs("http://bpmn4s", "assert"));
 		}
 		
 		model.addElement(id, node);

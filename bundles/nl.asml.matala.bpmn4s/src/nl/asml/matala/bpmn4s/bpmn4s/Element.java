@@ -33,6 +33,17 @@ public class Element {
 		return context_update;
 	}
 
+	// For ASSERT tasks:
+	String assertions = null;
+	
+	public void setAssertions(String assertions) {
+		this.assertions = assertions;
+	}
+	
+	public String getAssertions() {
+		return this.assertions;
+	}
+	
 	final ElementType type;
 	final ElementType subtype;
 	
