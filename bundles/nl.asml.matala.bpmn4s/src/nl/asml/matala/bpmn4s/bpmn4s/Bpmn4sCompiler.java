@@ -57,6 +57,17 @@ public class Bpmn4sCompiler{
 		}
 	}
 	
+	protected String removeUuids(String text) {
+		
+		String uuidInitRegex = "[\s]*__uuid__[\s]*=[\s]*uuid\\(\\)[\s]*[,]?[\n]?"; 
+		String uuidDeclRegex = "string[\s]*__uuid__[\s]*[\n]";
+		
+		text = text.replaceAll(uuidInitRegex, "");
+		text = text.replaceAll(uuidDeclRegex, "");
+				
+		return text;
+	}
+	
 	/**
 	 * Takes a Bpmn4s <model>, flattens its activities, and compiles it into a 
 	 * CPN in the language of pspec and accompanying types. The 
@@ -72,8 +83,8 @@ public class Bpmn4sCompiler{
 
 		flattenActivities();
 		
-		ps.append(generatePspec());
-		types.append(generateTypes());
+		ps.append(removeUuids(generatePspec()));
+		types.append(removeUuids(generateTypes()));
 	}
 
 	/**
