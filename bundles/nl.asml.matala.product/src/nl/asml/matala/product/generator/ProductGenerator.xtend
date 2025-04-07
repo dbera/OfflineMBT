@@ -90,7 +90,8 @@ class ProductGenerator extends AbstractGenerator {
 	{	
 		var dataGetterTxt = (new TypesGenerator).generatePythonGetters(prod,resource)
 		var pnet = new PetriNet
-		var methodTxt = ''''''		
+		var methodTxt = ''''''	
+		var sutTypesList = new ArrayList<String>	
 
 		var inout_places = new ArrayList<String>
 		var init_places = new ArrayList<String>
@@ -113,6 +114,9 @@ class ProductGenerator extends AbstractGenerator {
 			}
 			import_list.add(imp.importURI)
 		}
+		
+		// DB 05.04.2025. Added to handle SUT Types List
+		if(prod.sutTypes !== null) for(typ : prod.sutTypes.type) { sutTypesList.add(typ.type.name) }
 		
 		for(b : prod.specification.blocks) {
 			var Block block = null
@@ -204,7 +208,7 @@ class ProductGenerator extends AbstractGenerator {
 			}
 			
 			var name = prod.specification.name
-			fsa.generateFile('CPNServer//' + prod.specification.name + '//' + name + '.py', pnet.toSnakes(name, name, listOfEnvBlocks, listOfAssertTransitions, mapOfSuppressTransitionVars, inout_places, init_places, depth_limit, num_tests))
+			fsa.generateFile('CPNServer//' + prod.specification.name + '//' + name + '.py', pnet.toSnakes(name, name, listOfEnvBlocks, listOfAssertTransitions, mapOfSuppressTransitionVars, inout_places, init_places, depth_limit, num_tests, sutTypesList))
 			fsa.generateFile('CPNServer//' + prod.specification.name + '//' + 'server.py', (new FlaskSimulationGenerator).generateServer(name))
 			fsa.generateFile('CPNserver.py', (new FlaskSimulationGenerator).generateCPNServer)
 			fsa.generateFile('CPNclient.py', (new FlaskSimulationGenerator).generateCPNClient(prod.specification.name))
@@ -220,6 +224,9 @@ class ProductGenerator extends AbstractGenerator {
             )
 			fsa.generateFile('CPNServer//' + prod.specification.name + '//' + name + '_data.py', (new Utils()).getDataContainerClass(dataGetterTxt, methodTxt))
 			fsa.generateFile('CPNServer//' + prod.specification.name + '//' + name + '_TestSCN.py', (new Utils()).generateTestSCNTxt(prod.specification.name + "_types", prod, resource.URI.lastSegment))
+            fsa.generateFile('__init__.py', 
+                (new FlaskSimulationGenerator).generateInitForSrcGen()
+            )
 		}
 	}
 	
@@ -311,7 +318,21 @@ class ProductGenerator extends AbstractGenerator {
 						isActionsPresent = false
 						if(outvar.act !== null) 
 						{
-							isActionsPresent = true // flag true: actions are present!
+							isActionsPresent = true
+							
+							// Added DB. 05.04.2025. 
+							// Support for auto constructors
+//							for(v : outvar.fnOut) {
+//							    System.out.println(" > auto-constructor: " + 
+//							        SnakesHelper.defaultValue(v.ref.type.type, v.ref.name)
+//							    )
+//							    actTxt +=
+//							    '''
+//                                    «v.ref.name» = «SnakesHelper.defaultValue(v.ref.type.type, v.ref.name)»
+//							    '''
+//							}
+							// End of support for auto-constructors
+							
 							for(a : outvar.act.actions) 
 							{ 
 								System.out.println("	> act: " + SnakesHelper.action(a, func,""))

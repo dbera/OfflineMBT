@@ -66,10 +66,14 @@ TMap:
 
 /*********************************************************/
 AbstractTestSequence:
+	(sutTypes = SUTTypeDecl)?
 	'Test-Scenario' ':' name = ID
 		// step += [TMap|ID]+
 		step += AbstractStep+ // (AbstractStep | AssertStep)+  // | ConstraintStep 
-		
+;
+
+SUTTypeDecl:
+    'test-configuration-types' '{' type += Type+ '}'
 ;
 
 ConstraintStep:
@@ -123,10 +127,12 @@ StepReference:
 Binding:
 	name = [expr::Variable|QualifiedName] ':' 
 		(	strvalue = STRING
-		|	'{'
-				'start-json' (jsonvals = TSJsonValue)? 'end-json'
-				(kvPairs += NestedKeyValuesPair)? (',' kvPairs += NestedKeyValuesPair)*
-			'}'
+		|	 '{'
+				//'start-json' 
+				(jsonvals = TSJsonValue)? 
+				//'end-json'
+				// (kvPairs += NestedKeyValuesPair)? (',' kvPairs += NestedKeyValuesPair)*
+			 '}'
 		)
 ;
 

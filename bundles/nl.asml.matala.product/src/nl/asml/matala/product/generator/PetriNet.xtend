@@ -326,7 +326,8 @@ class PetriNet {
 				 List<String> inout_places, 
 				 List<String> init_places, 
 				 int depth_limit,
-				 int num_tests
+				 int num_tests,
+				 List<String> sutTypesList
 	) {
 		'''
 		import datetime
@@ -364,6 +365,7 @@ class PetriNet {
 		    SavedMarking = Marking()
 		    
 		    # test generation data
+		    sutTypesList = [«FOR elm : sutTypesList SEPARATOR ''','''»'«elm»'«ENDFOR»]
 		    numTestCases = 0
 		    listOfEnvBlocks = []
 		    listOfSUTActions = []
@@ -470,7 +472,7 @@ class PetriNet {
 		                    j = j + 1
 		                _test_scn.compute_dependencies()
 		                _test_scn.generate_viz(i, output_dir=p.plantuml_dir)
-		                _test_scn.generateTSpec(i, output_dir=p.tspec_dir)
+		                _test_scn.generateTSpec(i, pn.sutTypesList, output_dir=p.tspec_dir)
 		                _tests.list_of_test_scn.append(_test_scn)
 		            i = i + 1
 		            
