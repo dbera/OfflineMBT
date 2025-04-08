@@ -1,17 +1,20 @@
 #!/usr/bin/env python3
 
 import os
+import sys
+import tempfile
 import subprocess
 
 import CPNUtils as utils
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
-BPMN4S_GEN = os.path.join("..","bpmn4s-generator.jar")
-JAVA_PATH  = os.path.join("..","jre","bin","java.exe")
-TEMP_DIR   = "tmp"; os.makedirs(TEMP_DIR, exist_ok=True)
-LOG_DIR   = "log";  os.makedirs(LOG_DIR, exist_ok=True)
+BPMN4S_GEN = os.path.join("bpmn4s-generator.jar")
+JAVA_PATH  = os.path.join("jre","bin","java.exe")
 
+TEMP_FILE   = tempfile.TemporaryDirectory(prefix=f'{utils.gensym(prefix="cpnserver_",timestamp=True)}_')
+TEMP_PATH   = TEMP_FILE.name
+sys.path.append(TEMP_PATH)
 
 # Initiating a Flask application
 app = Flask(__name__)
@@ -33,34 +36,38 @@ def build_and_load_model( model_name:str , filepath=""):
     with open(prj_filename, "w") as file1:
         prj_content = prj_template.format(model_name)
         file1.write(prj_content)
-    with open(os.path.join(LOG_DIR,f"{model_name}.log"), "a") as f_log:
-        subprocess.run([JAVA_PATH,"-jar",BPMN4S_GEN,"-l", prj_filename,"-o",".."],shell=True, stdout=f_log, stderr=f_log)
+    result = subprocess.run([JAVA_PATH,"-jar",BPMN4S_GEN,"-l", prj_filename,"-o", filepath],shell=True, capture_output=True)
+    if result.returncode != 0: 
+        raise Exception(result.stderr)
     module = utils.load_module(model_name)
     return module
 
 # The endpoint of our flask app
 @app.route(rule="/BPMNParser", methods=["POST"])
 def handle_bpmn():
+    status_code = 200
+    
     load_okay, load_fail = [], []
     _files = request.files
     for _file in _files:
         fname, fobj = _files[_file].filename, _files[_file]
-        filename = utils.gensym(prefix=f"{fname}_",timestamp=True)
-        tmp_path = os.path.join(TEMP_DIR,f"{filename}.bpmn")
+        filename = f'{fname}{utils.gensym(prefix="_",timestamp=True)}_'
+        tmp_path = os.path.join(TEMP_PATH,f"{filename}.bpmn")
         try:
             with utils.lock_handle_bpmn():
                 if utils.is_loaded_module(filename): 
                     raise Exception(F"BPMN model '{filename}' is already loaded!")
                 fobj.save(tmp_path)
-                module = build_and_load_model(filename,filepath=TEMP_DIR)
+                module = build_and_load_model(filename,filepath=TEMP_PATH)
             load_okay.append(filename)
             bpmn_dir = os.path.join(module.__path__[0],'bpmn')
             os.makedirs(bpmn_dir, exist_ok=True)
-            filename_wildcard = os.path.join(TEMP_DIR,f"{filename}.*")
+            filename_wildcard = os.path.join(TEMP_PATH,f"{filename}.*")
             utils.move(filename_wildcard, bpmn_dir)
         except Exception as e:
+            status_code = 400
             load_fail.append({filename: str(e)})
-            utils.remove(tmp_path)
+            print(str(e),file=sys.stderr)
 
     response = {'response': {
         'message': f'Package loading report',
@@ -70,7 +77,7 @@ def handle_bpmn():
         },
     }}
     # return the response as JSON
-    return jsonify(response)
+    return jsonify(response), status_code
 
 
 # The endpoint of our flask app
@@ -165,3 +172,5 @@ if __name__ == "__main__":
     # Setting host = "0.0.0.0" runs it on localhost
     app.run(host="0.0.0.0", debug=False)
 
+
+# TEMP_DIR.cleanup()
