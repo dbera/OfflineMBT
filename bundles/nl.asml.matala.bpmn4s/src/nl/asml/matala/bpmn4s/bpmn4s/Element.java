@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import nl.asml.matala.bpmn4s.Logging;
+
 
 public class Element {
 
