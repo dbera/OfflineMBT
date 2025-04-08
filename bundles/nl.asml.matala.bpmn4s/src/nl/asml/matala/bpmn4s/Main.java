@@ -501,7 +501,7 @@ public class Main {
 		}
 
 		if(type.equals(ElementType.ASSERT_TASK)) {
-			node.setAssertions(elem.getAttributeValueNs("http://bpmn4s", "assert"));
+			node.setAssertions(elem.getAttributeValueNs("http://bpmn4s", "assertions"));
 		}
 		
 		model.addElement(id, node);
