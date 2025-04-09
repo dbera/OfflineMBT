@@ -92,7 +92,7 @@ class Cpn2mcrl2Generator
                 else:
                     g = self.g.copy()
                 
-                lps = 'temp.lps'
+                lps = lps_folder + 'temp.lps'
         
                 if (counter_example):
                     g.set_expose_all()
@@ -703,19 +703,13 @@ class Cpn2mcrl2Generator
                     "name": "Task arg1 can only occur after task arg2 has occurred",
                     "type": "simple",
                     "arguments": ["Task", "Task"],
-                    "template": "<(!arg2)*>[arg1]false --double check"
+                    "template": "[(!arg2)*][arg1]false"
                 },
                 "When_A_then_eventually_B": {
                     "name": "When arg1 occurs, then eventually arg2 occurs",
                     "type": "simple",
                     "arguments": ["Task", "Task"],
                     "template": "<true*>[arg1] mu X . ([!arg2]X && <true>true)"
-                },
-                "At_termination_queue_is_empty": {
-                    "name": "When the process has terminated queue arg1 is empty",
-                    "type": "is_empty",
-                    "arguments": ["Queue"],
-                    "template": "!([!is_empty]false) || <is_empty>true"
                 }
             }
         }
