@@ -291,7 +291,6 @@ public class Bpmn4sCompiler{
 			if (isParentComponent( c, src)
 					&& (model.isAnd(srcId) || model.isTask(srcId))
 					&& (model.isAnd(tarId) || model.isTask(tarId))){
-				assert isParentComponent( c, tar);
 				String datatype = mapType(c.context.dataType != "" ? c.context.dataType : UNIT_TYPE);
 				locals += tabulate(datatype, sanitize(namePlaceBetweenTransitions(e.getId(), repr(src), repr(tar)))) + "\n";
 			}
@@ -521,23 +520,17 @@ public class Bpmn4sCompiler{
 								assertions default {
 								%s
 								}
-								""", assertions);
+								""", assertions.replaceAll("(?m)(^)", "    "));
 					}
 					for(Edge e: node.getAllOutputs()) {
 						// Name of place that holds target context value for this transition:
 						String postCtxName = sanitize(getPNTargetPlaceName(e));
 						if (model.isData(e.getTar())) {
 							task += "produces-outputs\t" + sanitize(compile(e.getTar()));
-							if (isLinked(node.getId(), e.getTar())) {
-								task += " assert\n";
-							} else if (e.isSuppressed()) {
-								task += " suppress\n";
-							} else {
-								task += "\n";
-							}
+							task += e.isSuppressed() ? " suppress\n" : "\n";
 							if (e.getRefUpdate() != null && e.getRefUpdate() != "") {
 								task += "references {\n" + indent(replaceAll(e.getRefUpdate(), replaceMap)) + 
-										"\n} symbolic-link\n" ;
+										"\n} symbolic-link\n";
 							}
 							if (e.getSymUpdate() != null && e.getSymUpdate() != "") {
 								task += "constraints {\n" + indent(replaceAll(e.getSymUpdate(), replaceMap)) + "\n}\n";
@@ -664,33 +657,6 @@ public class Bpmn4sCompiler{
 			text = replaceWord(text, k, replace.get(k));
 		}		
 		return text;
-	}
-	
-	/**
-	 * Linked data are outputs of RUN tasks which are referenced 
-	 * by a COMPOSE task.
-	 * Checking if it is referenced is not easy: it requires 
-	 * interpreting the expressions inside the references update.
-	 * Thus, I will consider them linked if they are, at the same time,
-	 * output of a RUN task and input of COMPOSE tasks.
-	 */
-	private boolean isLinked(String source, String data) {
-
-		Element d = model.getElementById(data);
-		String originDataId = d.getOriginDataNodeId(); 
-		if(model.isRunTask(source)) {
-			for(Element elem: model.elements.values()) {
-				if (model.isComposeTask(elem.getId())) {
-					for (Edge e: elem.getDataInputs()) {
-						Element src = model.getElementById(e.getSrc());
-						if (originDataId.equals(src.getOriginDataNodeId())) {
-							return true;
-						}
-					}
-				}
-			}
-		}
-		return false;
 	}
 	
 	/**
