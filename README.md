@@ -1,6 +1,10 @@
 # OfflineMBT
 Systems Modeling and Test Generation
 
+### Using mCRL2 
+
+Upon saving a `.prj` file, besides a CPNServer folder, an additional folder mCRL2 is created. Model checking can be done using `cpn2mcrl2.py`, the CLI can be inspected using `-h`.
+
 ### Development environment setup
 
 Follow these instructions to set up a development environment.

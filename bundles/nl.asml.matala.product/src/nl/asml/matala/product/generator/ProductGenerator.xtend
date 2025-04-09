@@ -69,6 +69,8 @@ import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
 import nl.asml.matala.product.product.Update
 
+import nl.asml.matala.product.mcrl2.mCRL2Generator
+
 /**
  * Generates code from your *.ps model files on save.
  */
@@ -78,6 +80,7 @@ class ProductGenerator extends AbstractGenerator {
 	override void doGenerate(Resource resource, 
 		IFileSystemAccess2 fsa, IGeneratorContext context
 	) {
+	    (new mCRL2Generator).doGenerate(resource, fsa, context)
 		var prod = resource.allContents.head
 		if(prod instanceof Product) {
 			if (prod.specification !== null) {
