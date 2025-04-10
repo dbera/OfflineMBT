@@ -14,6 +14,8 @@ import nl.esi.comma.expressions.expression.ExpressionFunctionCall
 import nl.esi.comma.testspecification.testspecification.AbstractTestDefinition
 import nl.esi.comma.testspecification.generator.ExpressionGenerator
 
+import static extension nl.esi.comma.testspecification.abstspec.generator.Utils.*
+
 class ReferenceExpressionHandler 
 {
     var isFast = false
@@ -24,12 +26,12 @@ class ReferenceExpressionHandler
      * Support Interleaving of Compose and Run Steps. 
      * Q1 2025.  
      */
-    def resolveStepReferenceExpressions(RunStep rstep, HashSet<ComposeStep> listOfComposeSteps) 
+    def resolveStepReferenceExpressions(RunStep rstep, Iterable<ComposeStep> composeSteps)
     {
         // System.out.println("Run Step: " + rstep.name)
         var mapLHStoRHS = new HashMap<String,String>
         // Find preceding Compose Step
-        for(cstep : listOfComposeSteps) // at most one 
+        for(cstep : composeSteps) // at most one 
         {
             // System.out.println("    -> compose-name: " + cstep.name)
             var refTxt = new String
@@ -94,8 +96,8 @@ class ReferenceExpressionHandler
         if(isFirstCompose) {
             blockInputName = runStepName.split("_").get(0) + "Input"
             pi = blockInputName + "."
-            field = (new Utils()).printField(rec.fieldAccess, true)
-        } else field = (new Utils()).printField(rec.fieldAccess, true)
+            field = rec.fieldAccess.printField
+        } else field = rec.fieldAccess.printField
 
         var value = (new ExpressionGenerator(stepRef, runStepName)).exprToComMASyntax(rec.exp)
         // System.out.println(" value: " + value)

@@ -75,19 +75,11 @@ import nl.asml.matala.product.product.Update
  
 class ProductGenerator extends AbstractGenerator {
 	
-	override void doGenerate(Resource resource, 
-		IFileSystemAccess2 fsa, IGeneratorContext context
-	) {
-		var prod = resource.allContents.head
-		if(prod instanceof Product) {
-			if (prod.specification !== null) {
-				generatePetriNetAndTestGeneration(prod,resource,fsa)
-			}
-		}
-	}
+	override void doGenerate(Resource res, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
+	    res.contents.filter(Product).reject[specification === null].forEach[generatePetriNetAndTestGeneration(res, fsa)]
+    }
 	
-	def generatePetriNetAndTestGeneration(Product prod, Resource resource, IFileSystemAccess2 fsa) 
-	{	
+	def generatePetriNetAndTestGeneration(Product prod, Resource resource, IFileSystemAccess2 fsa) {
 		var dataGetterTxt = (new TypesGenerator).generatePythonGetters(prod,resource)
 		var pnet = new PetriNet
 		var methodTxt = ''''''	
@@ -210,11 +202,11 @@ class ProductGenerator extends AbstractGenerator {
 			var name = prod.specification.name
 			fsa.generateFile('CPNServer//' + prod.specification.name + '//' + name + '.py', pnet.toSnakes(name, name, listOfEnvBlocks, listOfAssertTransitions, mapOfSuppressTransitionVars, inout_places, init_places, depth_limit, num_tests, sutTypesList))
 			fsa.generateFile('CPNServer//' + prod.specification.name + '//' + 'server.py', (new FlaskSimulationGenerator).generateServer(name))
-			fsa.generateFile('CPNserver.py', (new FlaskSimulationGenerator).generateCPNServer)
-			fsa.generateFile('CPNclient.py', (new FlaskSimulationGenerator).generateCPNClient(prod.specification.name))
+//			fsa.generateFile('CPNserver.py', (new FlaskSimulationGenerator).generateCPNServer)
+//			fsa.generateFile('CPNclient.py', (new FlaskSimulationGenerator).generateCPNClient(prod.specification.name))
 			fsa.generateFile('CPNServer//' + prod.specification.name + '//' + 'client.py', (new FlaskSimulationGenerator).generateClient)
 			fsa.generateFile('CPNServer//' + prod.specification.name + '//' + name + '_Simulation.py', pnet.toSnakesSimulation)
-			
+
             // generate utils for HTTP server
             fsa.generateFile('CPNServer//' + prod.specification.name + '//' + '__init__.py', 
                 (new FlaskSimulationGenerator).generateInitForCPNSpecPkg(prod)
