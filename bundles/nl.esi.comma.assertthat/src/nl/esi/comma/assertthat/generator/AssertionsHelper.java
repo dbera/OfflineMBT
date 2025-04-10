@@ -30,9 +30,9 @@ import nl.esi.comma.assertthat.assertThat.JsonArray;
 import nl.esi.comma.assertthat.assertThat.JsonElements;
 import nl.esi.comma.assertthat.assertThat.JsonMember;
 import nl.esi.comma.assertthat.assertThat.JsonObject;
+import nl.esi.comma.assertthat.assertThat.JsonValue;
 import nl.esi.comma.assertthat.assertThat.MARGIN_TYPE;
 import nl.esi.comma.assertthat.assertThat.MargingItem;
-import nl.esi.comma.assertthat.assertThat.SCRIPT_PARAM_TYPE;
 import nl.esi.comma.assertthat.assertThat.ScriptParametersCustom;
 import nl.esi.comma.expressions.expression.Expression;
 import nl.esi.comma.expressions.expression.ExpressionAddition;
@@ -202,7 +202,7 @@ public class AssertionsHelper {
 //		// fills in the gaps in the assertion template
 		String assertionFormatted = SINGLE_ASSERTION_TEMPLATE.formatted(
 				scrptcall.getAssignment().getName(), 
-				scrptcall.getParams().getScriptPath(), 
+				scrptcall.getParams().getScriptApi(), 
 				String.join(",\r\n\t\t", scrptparams)
 				);
 		return assertionFormatted;
@@ -214,54 +214,70 @@ public class AssertionsHelper {
 	 * - the path to the script to be executed
 	 * - the list of input parameters,
 	 * - its length, given the observed output is a string/array/map (has-size).
-	 * @param comparisonType Reference value used for verifying whether the observed output is the same (equal-to), approximately equal (close-to), matches with a regular expression (match-regex), or has a given length (has-size)
-	 * @param comparisons List of string representation of each input parameter.
-
+	 * 
 	 * @param params
 	 * @param scrptparams
 	 */
 	private static void extractScriptParameters(ScriptParametersCustom params, List<String> scrptparams) {
-		int nargs = params.getArgVal().size();
+		extractScriptParameters_OUTPUT(params.getScriptOut(), scrptparams);
+		int nargs = params.getScriptArgs().size();
 		for (int i = 0; i < nargs; i++) {
 			List<String> argInfo = new ArrayList<String>();
-			extractScriptParameters(params.getArgType().get(i), argInfo);
-			extractScriptParameters(params.getArgVal().get(i), argInfo);
 			String arg_str = String.join(",\r\n\t\t\t", argInfo);
 			scrptparams.add("{%s}".formatted(arg_str));
 		}
 	}
 	
-	/**
-	 * Parses type of an input parameter into string
-	 * @param param
-	 * @param scrptparams
-	 */
-	private static void extractScriptParameters(SCRIPT_PARAM_TYPE param, List<String> scrptparams) {
-		scrptparams.add("\"type\":%s".formatted(param.getLiteral()));
+	private static void extractScriptParameters_OUTPUT(String param, List<String> scrptparams) {
+		List<String> argInfo = new ArrayList<String>();
+		argInfo.add("\"type\":\"%s\"".formatted("OUTPUT"));
+		argInfo.add("\"value\":\"%s\"".formatted(param));
+		String arg_str = String.join(",\r\n\t\t\t", argInfo);
+		scrptparams.add("{%s}".formatted(arg_str));
 	}
-	
-	/**
-	 * Parses value assigned to an input parameter of script-call. Values can: 
-	 * - be of type JsonObject or JsonArray, or 
-	 * - be also paired with a name (provided by a JsonMember parameter)
-	 * @param param key-value pair (via JsonbMember), JsonObject or JsonArray
-	 * @param scrptparams
-	 */
-	private static void extractScriptParameters(JsonElements param, List<String> scrptparams) {
-		String value_str = "XXX";
-		if(param instanceof JsonMember) {
-			JsonMember jsonkv = ((JsonMember)param);
-			scrptparams.add("\"name\":%s".formatted(jsonkv.getKey()));
-			value_str = JsonHelper.jsonElement(jsonkv.getValue());
-		}else if (param instanceof JsonObject) {
-			value_str = JsonHelper.jsonElement((JsonObject)param);
-		}else if (param instanceof JsonArray) {
-			value_str = JsonHelper.jsonElement((JsonArray)param);
+
+	private static void extractScriptParameters_OTHERS(Expression param, List<String> scrptparams) {
+		List<String> argInfo = new ArrayList<String>();
+		String arg_str = String.join(",\r\n\t\t\t", argInfo);
+		scrptparams.add("{%s}".formatted(arg_str));
+
+		if(param instanceof ExpressionConstantString) {
+			scrptparams.add("\"value\":\"%s\"".formatted(((ExpressionConstantString)param).getValue()));
+		}else if(param instanceof ExpressionConstantInt) {
+			scrptparams.add("\"value\":\"%s\"".formatted(((ExpressionConstantString)param).getValue()));
+		}else if(param instanceof ExpressionConstantBool) {
+			scrptparams.add("\"value\":\"%s\"".formatted(((ExpressionConstantBool)param).isValue()));
+		}else if(param instanceof ExpressionConstantReal) {
+			scrptparams.add("\"value\":\"%s\"".formatted(((ExpressionConstantReal)param).getValue()));
+		}else if (param instanceof ExpressionRecord) {
+			ExpressionRecord eracc = (ExpressionRecord)param;
+			//scrptparams.add("\"value\":%s".formatted(expression(param, (String t) -> "")));
 		}else {
 			throw new RuntimeException("Not supported");
 		}
-		scrptparams.add("\"value\":%s".formatted(value_str));
 	}
+//
+//	/**
+//	 * Parses value assigned to an input parameter of script-call. Values can: 
+//	 * - be of type JsonObject (only first item is used) or JsonArray (list of ), or 
+//	 * - be also paired with a name (provided by a JsonMember parameter)
+//	 * @param param key-value pair (via JsonbMember), JsonObject or JsonArray
+//	 * @param scrptparams
+//	 */
+//	private static void extractScriptParameters(ScriptParameter param, List<String> scrptparams) {
+//		if(param instanceof ScriptParameterNamedOnly) {
+//			scrptparams.add("\"name\":%s".formatted(((ScriptParameterNamedOnly)param).getKeyOnly()));
+//		}else if(param instanceof ScriptParameterKeyValue) {
+//			scrptparams.add("\"name\":%s".formatted(((ScriptParameterKeyValue)param).getKey()));
+//			scrptparams.add("\"value\":%s".formatted(expression(((ScriptParameterKeyValue)param).getVal(), (String t) -> "")));
+//		}else if (param instanceof ScriptParameterPositional) {
+//			scrptparams.add("\"value\":%s".formatted(expression(((ScriptParameterPositional)param).getValOnly(), (String t) -> "")));
+//		}else {
+//			throw new RuntimeException("Not supported");
+//		}
+//	}
+	
+	
 
 	/**
 	 * Parses input parameters of an assertion of Value type 
@@ -532,135 +548,22 @@ public class AssertionsHelper {
 			return Long.toString(((ExpressionConstantInt) expression).getValue());
 		} else if (expression instanceof ExpressionConstantString) {
 			return String.format("\"%s\"", ((ExpressionConstantString) expression).getValue());
-		} else if (expression instanceof ExpressionNot) {
-			return String.format("not (%s)", expression(((ExpressionNot) expression).getSub(), variablePrefix));
 		} else if (expression instanceof ExpressionConstantReal) {
 			return Double.toString(((ExpressionConstantReal) expression).getValue());
 		} else if (expression instanceof ExpressionConstantBool) {
 			return ((ExpressionConstantBool) expression).isValue() ? "True" : "False";
-		} else if (expression instanceof ExpressionAny) {
-			return "\"*\"";
-		} else if (expression instanceof ExpressionAddition) {
-			ExpressionAddition e = (ExpressionAddition) expression;
-			return String.format("%s + %s", expression(e.getLeft(), variablePrefix), expression(e.getRight(), variablePrefix));
-		} else if (expression instanceof ExpressionSubtraction) {
-			ExpressionSubtraction e = (ExpressionSubtraction) expression;
-			return String.format("%s - %s", expression(e.getLeft(), variablePrefix), expression(e.getRight(), variablePrefix));
-		} else if (expression instanceof ExpressionMultiply) {
-			ExpressionMultiply e = (ExpressionMultiply) expression;
-			return String.format("%s * %s", expression(e.getLeft(), variablePrefix), expression(e.getRight(), variablePrefix));
-		} else if (expression instanceof ExpressionDivision) {
-			ExpressionDivision e = (ExpressionDivision) expression;
-			return String.format("%s / %s", expression(e.getLeft(), variablePrefix), expression(e.getRight(), variablePrefix));
-		} else if (expression instanceof ExpressionModulo) {
-			ExpressionModulo e = (ExpressionModulo) expression;
-			return String.format("%s % %s", expression(e.getLeft(), variablePrefix), expression(e.getRight(), variablePrefix));
-		} else if (expression instanceof ExpressionMinimum) {
-			ExpressionMinimum e = (ExpressionMinimum) expression;
-			return String.format("min(%s, %s)", expression(e.getLeft(), variablePrefix), expression(e.getRight(), variablePrefix));
-		} else if (expression instanceof ExpressionMaximum) {
-			ExpressionMaximum e = (ExpressionMaximum) expression;
-			return String.format("max(%s, %s)", expression(e.getLeft(), variablePrefix), expression(e.getRight(), variablePrefix));
-		} else if (expression instanceof ExpressionPower) {
-			ExpressionPower e = (ExpressionPower) expression;
-			return String.format("pow(%s, %s)", expression(e.getLeft(), variablePrefix), expression(e.getRight(), variablePrefix));
 		} else if (expression instanceof ExpressionVariable) {
 			ExpressionVariable v = (ExpressionVariable) expression;
-			// return String.format("%s%s", variablePrefix.apply(v.getVariable().getName()), v.getVariable().getName());
 			return String.format("%s", variablePrefix.apply(v.getVariable().getName()));
-		} else if (expression instanceof ExpressionGreater) {
-			ExpressionGreater e = (ExpressionGreater) expression;
-			return String.format("%s > %s", expression(e.getLeft(), variablePrefix), expression(e.getRight(), variablePrefix));
-		} else if (expression instanceof ExpressionLess) {
-			ExpressionLess e = (ExpressionLess) expression;
-			return String.format("%s < %s", expression(e.getLeft(), variablePrefix), expression(e.getRight(), variablePrefix));
-		} else if (expression instanceof ExpressionLeq) {
-			ExpressionLeq e = (ExpressionLeq) expression;
-			return String.format("%s <= %s", expression(e.getLeft(), variablePrefix), expression(e.getRight(), variablePrefix));
-		} else if (expression instanceof ExpressionGeq) {
-			ExpressionGeq e = (ExpressionGeq) expression;
-			return String.format("%s >= %s", expression(e.getLeft(), variablePrefix), expression(e.getRight(), variablePrefix));
-		} else if (expression instanceof ExpressionEqual) {
-			ExpressionEqual e = (ExpressionEqual) expression;
-			return String.format("%s == %s", expression(e.getLeft(), variablePrefix), expression(e.getRight(), variablePrefix));
-		} else if (expression instanceof ExpressionNEqual) {
-			ExpressionNEqual e = (ExpressionNEqual) expression;
-			return String.format("%s != %s", expression(e.getLeft(), variablePrefix), expression(e.getRight(), variablePrefix));
-		} else if (expression instanceof ExpressionAnd) {
-			ExpressionAnd e = (ExpressionAnd) expression;
-			return String.format("%s and %s", expression(e.getLeft(), variablePrefix), expression(e.getRight(), variablePrefix));
-		} else if (expression instanceof ExpressionOr) {
-			ExpressionOr e = (ExpressionOr) expression;
-			return String.format("%s or %s", expression(e.getLeft(), variablePrefix), expression(e.getRight(), variablePrefix));
 		} else if (expression instanceof ExpressionEnumLiteral) {
 			ExpressionEnumLiteral e = (ExpressionEnumLiteral) expression;
 			return String.format("\"%s:%s\"", e.getType().getName(), e.getLiteral().getName());
-		} else if (expression instanceof ExpressionVector) {
-			ExpressionVector e = (ExpressionVector) expression;
-			return String.format("[%s]", e.getElements().stream().map(ee -> expression (ee, variablePrefix)).collect(Collectors.joining(", ")));
 		} else if (expression instanceof ExpressionMinus) {
 			ExpressionMinus e = (ExpressionMinus) expression;
-			return String.format("%s * -1", expression(e.getSub(), variablePrefix));
+			return String.format("-%s", expression(e.getSub(), variablePrefix));
 		} else if (expression instanceof ExpressionPlus) {
 			ExpressionPlus e = (ExpressionPlus) expression;
 			return expression(e.getSub(), variablePrefix);
-		} else if (expression instanceof ExpressionBracket) {
-			ExpressionBracket e = (ExpressionBracket) expression;
-			//return expression(e.getSub(), variablePrefix);
-			return String.format("(%s)", expression(e.getSub(), variablePrefix));
-		} else if (expression instanceof ExpressionFunctionCall) {
-			ExpressionFunctionCall e = (ExpressionFunctionCall) expression;
-			if (e.getFunctionName().equals("add")) {
-				return String.format("%s + [%s]", expression(e.getArgs().get(0), variablePrefix), expression(e.getArgs().get(1), variablePrefix));
-			} else if (e.getFunctionName().equals("size")) {
-				return String.format("len(%s)", expression(e.getArgs().get(0), variablePrefix));
-			} else if (e.getFunctionName().equals("isEmpty")) {
-				return String.format("len(%s) == 0", expression(e.getArgs().get(0), variablePrefix));
-			} else if (e.getFunctionName().equals("contains")) {
-				return String.format("%s in %s", expression(e.getArgs().get(1), variablePrefix), expression(e.getArgs().get(0), variablePrefix));
-			} else if (e.getFunctionName().equals("abs")) {
-				return String.format("abs(%s)", expression(e.getArgs().get(0), variablePrefix));
-			} else if (e.getFunctionName().equals("asReal")) {
-				return String.format("float(%s)", expression(e.getArgs().get(0), variablePrefix));
-			} else if (e.getFunctionName().equals("hasKey")) {
-				String map = expression(e.getArgs().get(0), variablePrefix);
-				String key = expression(e.getArgs().get(1), variablePrefix);
-				return String.format("(%s in %s)", key, map);
-			} else if (e.getFunctionName().equals("get")) { // added 18.08.2024
-				String lst = expression(e.getArgs().get(0), variablePrefix);
-				String idx = expression(e.getArgs().get(1), variablePrefix);
-				return String.format("%s[%s]", lst, idx);
-			} else if (e.getFunctionName().equals("at")) {
-				String lst = expression(e.getArgs().get(0), variablePrefix);
-				String idx = expression(e.getArgs().get(1), variablePrefix);
-				String val = expression(e.getArgs().get(2), variablePrefix);
-				return String.format("%s; %s[%s] = %s", lst, lst, idx, val);
-			} else if (e.getFunctionName().equals("deleteKey")) {
-				String map = expression(e.getArgs().get(0), variablePrefix);
-				String key = expression(e.getArgs().get(1), variablePrefix);
-				return String.format("{_k: _v for _k, _v in %s.items() if _k != %s}", map, key);
-			} else if (e.getFunctionName().equals("uuid")) {
-				return String.format("uuid.uuid4().hex");
-			}
-		} else if (expression instanceof ExpressionQuantifier) {
-			ExpressionQuantifier e = (ExpressionQuantifier) expression;
-			String collection = expression(e.getCollection(), variablePrefix);
-			String it = e.getIterator().getName();
-			String condition = expression(e.getCondition(), (String variable) -> "");
-			if (e.getQuantifier() == QUANTIFIER.EXISTS) {
-				return String.format("len([%s for %s in %s if %s]) != 0", it, it, collection, condition);
-			} else if (e.getQuantifier() == QUANTIFIER.DELETE) {
-				return String.format("[%s for %s in %s if not (%s)]", it, it, collection, condition);
-			} else if (e.getQuantifier() == QUANTIFIER.FORALL) {
-				return String.format("len([%s for %s in %s if %s]) == len(%s)", it, it, collection, condition, collection);
-			}
-		} else if (expression instanceof ExpressionMap) {
-			ExpressionMap e = (ExpressionMap) expression;
-			return String.format("{%s}", e.getPairs().stream().map(p -> {
-				String key = expression(p.getKey(), variablePrefix);
-				String value = expression(p.getValue(), variablePrefix);
-				return String.format("%s: %s", key, value);
-			}).collect(Collectors.joining(", ")));
 		} else if (expression instanceof ExpressionMapRW) {
 			ExpressionMapRW e = (ExpressionMapRW) expression;
 			String map = expression(e.getMap(), variablePrefix);
