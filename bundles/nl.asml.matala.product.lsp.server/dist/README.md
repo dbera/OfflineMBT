@@ -9,7 +9,7 @@ To start the data expression language server, simply execute the `start-lsp-serv
 This will open a console, and if correct, the console will state: `... Started server socket at /0.0.0.0:9090`
 Please keep this console open during your BPMN4S modeling sessions, and just close it when you are done.
 
-## Starting the Coloured Petri Net Server (CPNServer)
+## Starting the simulation server
 
 To get simulation capabilities enabled, the CPNServer needs to be started before starting a token simulation.
 To start the CPN server, simply execute the `start-simulator.bat` file by double clicking it.
