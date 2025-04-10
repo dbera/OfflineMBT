@@ -25,5 +25,8 @@ Please click the `fx` button again when done editing.
 NOTE: The following validation error message indicates that the LSP server is not running:
       `WebSocket connection to 'ws://localhost:9090' failed.`
 
-NOTE2: The following validation error message indicates that the CPN server is not running:
+To simulate your model, please click the `Token Simulation` button at the top left of your browser window.
+This will change the palette at the top left, and now you can click the play button at the top to start simulation.
+
+NOTE: The following validation error message indicates that the simulation server is not running:
       `Failed to connect to simulation server: Failed to fetch`
