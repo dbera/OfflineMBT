@@ -99,8 +99,6 @@ def unload_module(source, package="src-gen.CPNServer") -> types.ModuleType:
 
     spec = importlib.util.find_spec(f".{source}", package=package)
     assert spec is not None, f"Package \"{package}.{source}\" not found!"
-    # module = importlib.util.module_from_spec(spec)
-    # remove(module.__path__[0])
     
     del sys.modules[f"{package}.{source}"]
     del pn[source]
