@@ -197,12 +197,16 @@ public class Bpmn4sCompiler{
 				String inOut = fabSpecInputOutput(c);
 				String local = fabSpecLocal(c);
 				String init = fabSpecInit(c.getId());
+				List<String> sutConfVars = fabSpecSutConfs(c.getId());
+				String sutConfs = sutConfVars.isEmpty() ? "" : "sut-var: " + String.join(" ", sutConfVars) + "\n"; 
 				String desc = fabSpecDescription(c.getId()); 
 				component += indent(inOut);
 				component += "\n";
 				component += indent(local);
 				component += "\n";
 				component += indent(init);
+				component += "\n";
+				component += indent(sutConfs);
 				component += "\n";
 				component += indent(desc);
 				component += "}\n\n";
@@ -212,6 +216,22 @@ public class Bpmn4sCompiler{
 		result.append(String.format("\tSUT-blocks %s\n", String.join(" ", listSUTcomponents()))); 
 		result.append(String.format("\tdepth-limits %s\n}\r\n", model.getDepthLimit()));
 		return result.toString();
+	}
+	
+	private List<String> fabSpecSutConfs(String cid) {
+		List<String> result = new ArrayList<String>();
+		for(Edge e: model.edges) {
+			Element src = model.getElementById(e.getSrc());
+			Element tar = model.getElementById(e.getTar());
+			if((tar.subtype == ElementType.RUN_TASK || 
+				tar.subtype == ElementType.COMPOSE_TASK) && 
+					tar.getParentComponents().contains(cid)) {
+				if(src.isSutConfigurations()) {
+					result.add(repr(src));
+				}
+			}
+		}
+		return result;
 	}
 
 	/**
@@ -367,7 +387,6 @@ public class Bpmn4sCompiler{
 			Element node = model.elements.get(e.getSrc());
 			
 			if (node.getType() == ElementType.DATASTORE  && !initialized.contains(node.getOriginDataNodeId())) {
-				Logging.logDebug(String.format("Initializing %s in %s" , node.getName(), c.getName()));;
 				initialized.add(node.getOriginDataNodeId());
 				String s = node.getInit();
 				if (node.isReferenceData()) {
