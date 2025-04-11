@@ -62,6 +62,7 @@ public class Element {
 	 *  we consider this node an origin node.
 	 */
 	String originDataNodeId = null;
+	boolean isSutConfigurations = false;
 	
 	public Element(ElementType type) {
 		this.type = type;
@@ -106,6 +107,10 @@ public class Element {
 		return this;
 	}
 	
+	public String getId() {
+		return this.id;
+	}
+	
 	public String getOriginDataNodeId() {
 		if (this.isReferenceData()) {
 			return this.originDataNodeId;
@@ -118,12 +123,7 @@ public class Element {
 		this.originDataNodeId = id;
 		return this;
 	}
-	
-	public String getId() {
-		return this.id;
-	}
-	
-	
+		
 	public Element setStepType(String st) {
 		stepType = st;
 		return this;
@@ -235,6 +235,14 @@ public class Element {
 	
 	public String getInit() {
 		return init;
+	}
+	
+	public void setIsSutConfigurations(boolean conf) {
+		this.isSutConfigurations = conf;
+	}
+	
+	public boolean isSutConfigurations() {
+		return isSutConfigurations;
 	}
 	
 	// For action nodes
