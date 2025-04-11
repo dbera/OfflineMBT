@@ -8,6 +8,25 @@ import nl.esi.comma.types.types.TypesPackage
 import org.eclipse.emf.common.util.URI
 import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.validation.Check
+import nl.asml.matala.product.product.Product
+import java.util.HashSet
+import java.util.Map
+import java.util.Set
+import java.util.HashMap
+import nl.esi.comma.expressions.expression.Variable
+import nl.esi.comma.expressions.expression.ExpressionVariable
+import nl.asml.matala.product.product.ProductPackage
+import nl.asml.matala.product.product.Block
+import nl.asml.matala.product.product.Function
+import nl.esi.comma.expressions.expression.ExpressionAnd
+import nl.esi.comma.expressions.expression.ExpressionOr
+import nl.esi.comma.expressions.expression.ExpressionEqual
+import java.util.stream.Collectors
+import nl.asml.matala.product.product.Update
+import nl.esi.comma.expressions.expression.Expression
+import nl.esi.comma.expressions.expression.ExpressionRecordAccess
+import nl.asml.matala.product.generator.ValidationHelper
+
 
 /**
  * This class contains custom validation rules. 
@@ -30,6 +49,115 @@ class ProductValidator extends AbstractProductValidator {
     }
     
     
+    /**
+     * Check the duplication of variables in Inputs
+     */
+     
+     @Check
+     def checkInputDuplication(Block b){ 
+            var HashSet<String> existingInputs = new HashSet<String>();
+            for (input : b.invars) {
+                if (!existingInputs.add(input.name)) {
+                    error("There exists a variable name in inputs with the same name" ,  ProductPackage.Literals.BLOCK__INVARS)  
+                }
+            }
+        }
+
+    /**
+     * Check the duplication of variables in Outputs
+     */
+     @Check
+     def checkOutputDuplication(Block b){
+           var HashSet<String> existingOutputs = new HashSet<String>();
+            for (output : b.outvars) {
+                if (!existingOutputs.add(output.name)) {
+                    error("There exists a variable name in outputs with the same name" ,  ProductPackage.Literals.BLOCK__OUTVARS)  
+                }
+            }
+        }
+    
+      /**
+     * Check the duplication of variables in Local
+     */
+     @Check
+     def checkLocalDuplication(Block b){
+        var HashSet<String> existingLocalvars = new HashSet<String>();
+            for (localvars : b.localvars) {
+                if (!existingLocalvars.add(localvars.name)) {
+                    error("There exists a variable name in local with the same name" ,  ProductPackage.Literals.BLOCK__LOCALVARS)  
+                }
+            }
+        }
+
+    
+    
+        
+    /**
+     * All variables occurring in a guard expression must have been defined as inputs of an action
+     */
+    @Check
+    def preventIlligalVariableAccess(Function f){
+          var allVariables = new HashSet<String>
+          var inputes = new HashSet<String>
+          for(update : f.updates){
+            if(update.guard !== null){
+               // Get all variables in a guard
+                val allExprVariables = EcoreUtil2::getAllContentsOfType(update.guard, ExpressionVariable)
+                for(v : allExprVariables){
+                        allVariables.add( v.variable.name)
+                   }
+                //get all the variables in input
+                 for (element : update.fnInp) {
+                        inputes.add(element.ref.name)                      
+                    } 
+                if (!inputes.containsAll(allVariables)){
+                    error("The variable used in guard is not defined in the input variables" , ProductPackage.Literals.FUNCTION__UPDATES)
+                }
+            }
+        }
+    }
+
+    /**
+     * Variables occurring in the RHS of an update expression must have been defined as inputs of an action.
+     *  LHS variable is the same as that mentioned in immediately preceding "updates". Note that attributes of this variable may be referenced in the LHS expression (record field access)
+     */
+    @Check
+    def preventIlligalVariableAccessUpdate(Function F){
+         /* Variables occurring in the RHS of an update expression must have been defined as inputs of an action. */
+           for(update : F.updates){               
+               var inputes = new HashSet<String>               
+               //get with-inputs of an action
+               for(fnInp : update.fnInp){
+                   inputes.add(fnInp.ref.name)                  
+               }  
+             for(updateOutVar :  update.updateOutputVar){
+                 var producesOutputs = new HashSet<String>
+                 for(fnOut : updateOutVar.fnOut){
+                       producesOutputs.add(fnOut.ref.name)                          
+                   }
+                 var actions = updateOutVar.act.actions
+                 var allVariables = new HashSet<String>                     
+                 for(action : actions){                      
+                    val helperAction = ValidationHelper.action(action)                              
+                    val LHSValue = helperAction.get("LHS") as String
+                    val expValue = helperAction.get("RHS") as Expression
+
+                    // all the variable in the RHS of the expression
+                    val allExprVariables = EcoreUtil2::getAllContentsOfType(expValue, ExpressionVariable)
+                    for(v : allExprVariables){
+                       allVariables.add( v.variable.name)
+                    }
+                    if (!producesOutputs.contains(LHSValue)){ 
+                       warning("The variable used in Updates Expression is not defined in the produces outputs" , ProductPackage.Literals.FUNCTION__UPDATES)
+                    }
+                    if (!inputes.containsAll(allVariables)){ 
+                      error("The variable used in Updates Expression is not defined in the input variables" , ProductPackage.Literals.FUNCTION__UPDATES)
+                     }
+                 }
+                }
+             }
+          }
+
     /* STRANGE BUG: Output Vars are Empty. Appears in Input Vars. 
      * Not appearing as problem during product generation!
     */
