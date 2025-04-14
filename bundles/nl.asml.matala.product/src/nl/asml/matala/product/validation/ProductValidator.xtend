@@ -27,91 +27,49 @@ import nl.esi.comma.expressions.expression.Expression
 import nl.esi.comma.expressions.expression.ExpressionRecordAccess
 import nl.asml.matala.product.generator.ValidationHelper
 
-
 /**
  * This class contains custom validation rules. 
- *
+ * 
  * See https://www.eclipse.org/Xtext/documentation/303_runtime_concepts.html#validation
  */
 class ProductValidator extends AbstractProductValidator {
-	@Check
+    @Check
     override checkImportForValidity(Import imp) {
-        if(!EcoreUtil2.isValidUri(imp, URI.createURI(imp.getImportURI()))) {
+        if (!EcoreUtil2.isValidUri(imp, URI.createURI(imp.getImportURI()))) {
             error("Invalid resource", imp, TypesPackage.eINSTANCE.getImport_ImportURI());
         } else {
             /*val Resource r = EcoreUtil2.getResource(imp.eResource, imp.importURI)
-            if(! (r.allContents.head instanceof InterfaceDefinition ||
-                r.allContents.head instanceof FeatureDefinition
-            ))
-                error("The imported resource is not an interface definition or a feature definition.", imp, TypesPackage.eINSTANCE.import_ImportURI)
-        }*/
+             * if(! (r.allContents.head instanceof InterfaceDefinition ||
+             *     r.allContents.head instanceof FeatureDefinition
+             * ))
+             *     error("The imported resource is not an interface definition or a feature definition.", imp, TypesPackage.eINSTANCE.import_ImportURI)
+             }*/
         }
     }
-    
-    
-    /**
-     * Check the duplication of variables in Inputs
-     */
-     
-     @Check
-     def checkInputDuplication(Block b){ 
-            var HashSet<String> existingInputs = new HashSet<String>();
-            for (input : b.invars) {
-                if (!existingInputs.add(input.name)) {
-                    error("There exists a variable name in inputs with the same name" ,  ProductPackage.Literals.BLOCK__INVARS)  
-                }
-            }
-        }
 
-    /**
-     * Check the duplication of variables in Outputs
-     */
-     @Check
-     def checkOutputDuplication(Block b){
-           var HashSet<String> existingOutputs = new HashSet<String>();
-            for (output : b.outvars) {
-                if (!existingOutputs.add(output.name)) {
-                    error("There exists a variable name in outputs with the same name" ,  ProductPackage.Literals.BLOCK__OUTVARS)  
-                }
-            }
-        }
-    
-      /**
-     * Check the duplication of variables in Local
-     */
-     @Check
-     def checkLocalDuplication(Block b){
-        var HashSet<String> existingLocalvars = new HashSet<String>();
-            for (localvars : b.localvars) {
-                if (!existingLocalvars.add(localvars.name)) {
-                    error("There exists a variable name in local with the same name" ,  ProductPackage.Literals.BLOCK__LOCALVARS)  
-                }
-            }
-        }
-
-    
-    
-        
     /**
      * All variables occurring in a guard expression must have been defined as inputs of an action
      */
     @Check
-    def preventIlligalVariableAccess(Function f){
-          var allVariables = new HashSet<String>
-          var inputes = new HashSet<String>
-          for(update : f.updates){
-            if(update.guard !== null){
-               // Get all variables in a guard
-                val allExprVariables = EcoreUtil2::getAllContentsOfType(update.guard, ExpressionVariable)
-                for(v : allExprVariables){
-                        allVariables.add( v.variable.name)
-                   }
-                //get all the variables in input
-                 for (element : update.fnInp) {
-                        inputes.add(element.ref.name)                      
-                    } 
-                if (!inputes.containsAll(allVariables)){
-                    error("The variable used in guard is not defined in the input variables" , ProductPackage.Literals.FUNCTION__UPDATES)
+    def preventIlligalVariableAccess(Function function) {
+        for (update : function.updates) {
+          //  var allVariables = new HashSet<String>
+            
+            if (update.guard !== null) {
+                val Set<String> inputs = newHashSet
+                // Get all variables in a guard 
+                var allVariables = update.guard.eAllContents.filter(ExpressionVariable).map[variable.name].toSet                
+                // get all the variables in input
+                inputs.addAll(update.fnInp.map[it.ref.name]) 
+                
+                val missingInputs = allVariables.filter[e | !inputs.contains(e)]
+
+                if (!missingInputs.empty) {                   
+                    error(
+                        "The following variables used in the guard are not defined in the input variables: " +
+                        missingInputs.join(", "),
+                        ProductPackage.Literals.FUNCTION__UPDATES
+                    )                     
                 }
             }
         }
@@ -122,122 +80,122 @@ class ProductValidator extends AbstractProductValidator {
      *  LHS variable is the same as that mentioned in immediately preceding "updates". Note that attributes of this variable may be referenced in the LHS expression (record field access)
      */
     @Check
-    def preventIlligalVariableAccessUpdate(Function F){
-         /* Variables occurring in the RHS of an update expression must have been defined as inputs of an action. */
-           for(update : F.updates){               
-               var inputes = new HashSet<String>               
-               //get with-inputs of an action
-               for(fnInp : update.fnInp){
-                   inputes.add(fnInp.ref.name)                  
-               }  
-             for(updateOutVar :  update.updateOutputVar){
-                 var producesOutputs = new HashSet<String>
-                 for(fnOut : updateOutVar.fnOut){
-                       producesOutputs.add(fnOut.ref.name)                          
-                   }
-                 var actions = updateOutVar.act.actions
-                 var allVariables = new HashSet<String>                     
-                 for(action : actions){                      
-                    val helperAction = ValidationHelper.action(action)                              
-                    val LHSValue = helperAction.get("LHS") as String
-                    val expValue = helperAction.get("RHS") as Expression
+    def preventIlligalVariableAccessUpdate(Function function) {
+        /* Variables occurring in the RHS of an update expression must have been defined as inputs of an action. */
+        for (update : function.updates) {
+            val inputs = new HashSet<String>
+            // get with-inputs of an action
+            inputs.addAll(update.fnInp.map[it.ref.name]) 
+            
+            for (updateOutVar : update.updateOutputVar) {
+                var producesOutputs = new HashSet<String>
+                producesOutputs.addAll(updateOutVar.fnOut.map[it.ref.name]) 
+                
+                var actions = updateOutVar.act.actions
+                for (action : actions) {
+                    val helperAction = ValidationHelper.getActionVariables(action)
+                    val LHSValue = helperAction.key
+                    val expValue = helperAction.value
 
                     // all the variable in the RHS of the expression
-                    val allExprVariables = EcoreUtil2::getAllContentsOfType(expValue, ExpressionVariable)
-                    for(v : allExprVariables){
-                       allVariables.add( v.variable.name)
-                    }
-                    if (!producesOutputs.contains(LHSValue)){ 
-                       warning("The variable used in Updates Expression is not defined in the produces outputs" , ProductPackage.Literals.FUNCTION__UPDATES)
-                    }
-                    if (!inputes.containsAll(allVariables)){ 
-                      error("The variable used in Updates Expression is not defined in the input variables" , ProductPackage.Literals.FUNCTION__UPDATES)
-                     }
-                 }
-                }
-             }
-          }
+                    var allVariables = expValue.eAllContents.filter(ExpressionVariable).map[variable.name].toSet   
 
-    /* STRANGE BUG: Output Vars are Empty. Appears in Input Vars. 
-     * Not appearing as problem during product generation!
-    */
-    /*
-    @Check
-    public void checkInputOutputMapping(Product p) 
-    {
-        var outVarMap = new HashMap<String,List<String>>();
-        var inVarMap  = new HashMap<String,List<String>>();
-        
-        for(var b : p.getBlock()) {
-            System.out.println(" + Parsing Block: " + b.getName());
-            for(var ov : b.getOutvars()) {
-                if(outVarMap.containsKey(b.getName())) {
-                    outVarMap.get(b.getName()).add(ov.getName());
-                    System.out.println("    Added Output: " + ov.getName());
-                }
-                else {
-                    var lst = new ArrayList<String>();
-                    lst.add(ov.getName());
-                    outVarMap.put(b.getName(), lst);
-                    System.out.println("    Added Output to Existing: " + ov.getName());
-                }
-            }
-            for(var iv : b.getInvars()) {
-                System.out.println(" - Parsing Block: " + b.getName());
-                if(inVarMap.containsKey(b.getName())) {
-                    inVarMap.get(b.getName()).add(iv.getName());
-                    System.out.println("    Added Input: " + iv.getName());
-                }
-                else {
-                    var lst = new ArrayList<String>();
-                    lst.add(iv.getName());
-                    inVarMap.put(b.getName(), lst);
-                    System.out.println("    Added Input to Existing: " + iv.getName());
+                    if (!producesOutputs.contains(LHSValue)) {
+                        warning("The variable used in Updates Expression is not defined in the produces outputs",
+                            ProductPackage.Literals.FUNCTION__UPDATES,
+                            updateOutVar.fnOut.indexOf(LHSValue)
+                            )
+                    }
+                    
+                    allVariables.removeAll(inputs)                                                          
+                    if (!inputs.containsAll(allVariables)) {
+                        error("The variable used in Updates Expression is not defined in the input variables" + allVariables.join(", "),
+                            ProductPackage.Literals.FUNCTION__UPDATES)
+                    }
                 }
             }
         }
-        
-        System.out.println(" Debug in Var: " + inVarMap);
-        System.out.println(" Debug out Var: " + outVarMap);
-        
-        for(var t : p.getTopology()) {
-            for(var f : t.getFlow()) {
-                for(var conn : f.getVarConn()) {
-                    var lkey = conn.getVarRefLHS().getBlockRef().getName();
-                    var lvalue = conn.getVarRefLHS().getVarRef().getName();
-                    var rkey = conn.getVarRefRHS().getBlockRef().getName();
-                    var rvalue = conn.getVarRefRHS().getVarRef().getName();
-                    inVarMap.get(lkey).remove(lvalue);
-                    outVarMap.get(rkey).remove(rvalue);
-                }
-            }
-        }
-        
-        System.out.println(" Debug in Var: " + inVarMap);
-        System.out.println(" Debug out Var: " + outVarMap);
-        
-        // Check what is not mapped. 
-        var txt = new String();
-        var isUnMapped = false;
-        
-        for(var k : inVarMap.keySet()) {
-            if(!inVarMap.get(k).isEmpty()) {
-                isUnMapped = true;
-                txt += "\n block: " + k + " has input: "+ inVarMap.get(k) + "with no source \n";
-            }
-        }
-        
-        for(var k : outVarMap.keySet()) {
-            if(!outVarMap.get(k).isEmpty()) {
-                isUnMapped = true;
-                txt += "\n block: " + k + " has output: "+ outVarMap.get(k) + "with no target \n";
-            }
-        }
-        
-        if(isUnMapped) {
-            error("Missing Input-Output Connections: \n" + txt, 
-                    ProductPackage.Literals.PRODUCT__TOPOLOGY);
-        }
-    }*/
-	
+    }
+
+/* STRANGE BUG: Output Vars are Empty. Appears in Input Vars. 
+ * Not appearing as problem during product generation!
+ */
+/*
+ * @Check
+ * public void checkInputOutputMapping(Product p) 
+ * {
+ *     var outVarMap = new HashMap<String,List<String>>();
+ *     var inVarMap  = new HashMap<String,List<String>>();
+ *     
+ *     for(var b : p.getBlock()) {
+ *         System.out.println(" + Parsing Block: " + b.getName());
+ *         for(var ov : b.getOutvars()) {
+ *             if(outVarMap.containsKey(b.getName())) {
+ *                 outVarMap.get(b.getName()).add(ov.getName());
+ *                 System.out.println("    Added Output: " + ov.getName());
+ *             }
+ *             else {
+ *                 var lst = new ArrayList<String>();
+ *                 lst.add(ov.getName());
+ *                 outVarMap.put(b.getName(), lst);
+ *                 System.out.println("    Added Output to Existing: " + ov.getName());
+ *             }
+ *         }
+ *         for(var iv : b.getInvars()) {
+ *             System.out.println(" - Parsing Block: " + b.getName());
+ *             if(inVarMap.containsKey(b.getName())) {
+ *                 inVarMap.get(b.getName()).add(iv.getName());
+ *                 System.out.println("    Added Input: " + iv.getName());
+ *             }
+ *             else {
+ *                 var lst = new ArrayList<String>();
+ *                 lst.add(iv.getName());
+ *                 inVarMap.put(b.getName(), lst);
+ *                 System.out.println("    Added Input to Existing: " + iv.getName());
+ *             }
+ *         }
+ *     }
+ *     
+ *     System.out.println(" Debug in Var: " + inVarMap);
+ *     System.out.println(" Debug out Var: " + outVarMap);
+ *     
+ *     for(var t : p.getTopology()) {
+ *         for(var f : t.getFlow()) {
+ *             for(var conn : f.getVarConn()) {
+ *                 var lkey = conn.getVarRefLHS().getBlockRef().getName();
+ *                 var lvalue = conn.getVarRefLHS().getVarRef().getName();
+ *                 var rkey = conn.getVarRefRHS().getBlockRef().getName();
+ *                 var rvalue = conn.getVarRefRHS().getVarRef().getName();
+ *                 inVarMap.get(lkey).remove(lvalue);
+ *                 outVarMap.get(rkey).remove(rvalue);
+ *             }
+ *         }
+ *     }
+ *     
+ *     System.out.println(" Debug in Var: " + inVarMap);
+ *     System.out.println(" Debug out Var: " + outVarMap);
+ *     
+ *     // Check what is not mapped. 
+ *     var txt = new String();
+ *     var isUnMapped = false;
+ *     
+ *     for(var k : inVarMap.keySet()) {
+ *         if(!inVarMap.get(k).isEmpty()) {
+ *             isUnMapped = true;
+ *             txt += "\n block: " + k + " has input: "+ inVarMap.get(k) + "with no source \n";
+ *         }
+ *     }
+ *     
+ *     for(var k : outVarMap.keySet()) {
+ *         if(!outVarMap.get(k).isEmpty()) {
+ *             isUnMapped = true;
+ *             txt += "\n block: " + k + " has output: "+ outVarMap.get(k) + "with no target \n";
+ *         }
+ *     }
+ *     
+ *     if(isUnMapped) {
+ *         error("Missing Input-Output Connections: \n" + txt, 
+ *                 ProductPackage.Literals.PRODUCT__TOPOLOGY);
+ *     }
+ }*/
 }
