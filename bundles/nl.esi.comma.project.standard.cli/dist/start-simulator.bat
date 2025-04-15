@@ -9,6 +9,6 @@ FOR /F "delims=" %%i IN ("%~dp0") DO (
 set simulator_file=%script_drive%%script_path%\simulator\CPNServer.py
 echo Starting simulator:  %simulator_file%
 
-python "%simulator_file%"
+%BPMN4S_PYTHON% "%simulator_file%"
 
 pause
