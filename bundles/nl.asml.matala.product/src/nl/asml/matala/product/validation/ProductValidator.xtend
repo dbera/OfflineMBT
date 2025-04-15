@@ -13,6 +13,9 @@ import java.util.HashSet
 import nl.asml.matala.product.product.ProductPackage
 import nl.asml.matala.product.product.Update
 import nl.asml.matala.product.product.Block
+import nl.esi.comma.expressions.expression.ExpressionVariable
+import nl.asml.matala.product.generator.ValidationHelper
+import java.util.Set
 
 /**
  * This class contains custom validation rules. 
@@ -107,6 +110,77 @@ class ProductValidator extends AbstractProductValidator {
                 for (localvars : entry.value) {
                     error("Duplicate variable name in local variables : " + localvars.name,
                         ProductPackage.Literals.BLOCK__LOCALVARS, block.localvars.indexOf(localvars))
+                }
+            }
+        }
+    }
+
+
+ /**
+     * All variables occurring in a guard expression must have been defined as inputs of an action
+     */
+    @Check
+    def preventIlligalVariableAccess(Function function) {
+        for (update : function.updates) {
+          //  var allVariables = new HashSet<String>
+            
+            if (update.guard !== null) {
+                val Set<String> inputs = newHashSet
+                // Get all variables in a guard 
+                var allVariables = update.guard.eAllContents.filter(ExpressionVariable).map[variable.name].toSet                
+                // get all the variables in input
+                inputs.addAll(update.fnInp.map[it.ref.name]) 
+                
+                val missingInputs = allVariables.filter[e | !inputs.contains(e)]
+
+                if (!missingInputs.empty) {                   
+                    error(
+                        "The following variables used in the guard are not defined in the input variables: " +
+                        missingInputs.join(", "),
+                        ProductPackage.Literals.FUNCTION__UPDATES
+                    )                     
+                }
+            }
+        }
+    }
+
+    /**
+     * Variables occurring in the RHS of an update expression must have been defined as inputs of an action.
+     *  LHS variable is the same as that mentioned in immediately preceding "updates". Note that attributes of this variable may be referenced in the LHS expression (record field access)
+     */
+    @Check
+    def preventIlligalVariableAccessUpdate(Function function) {
+        /* Variables occurring in the RHS of an update expression must have been defined as inputs of an action. */
+        for (update : function.updates) {
+            val inputs = new HashSet<String>
+            // get with-inputs of an action
+            inputs.addAll(update.fnInp.map[it.ref.name]) 
+            
+            for (updateOutVar : update.updateOutputVar) {
+                var producesOutputs = new HashSet<String>
+                producesOutputs.addAll(updateOutVar.fnOut.map[it.ref.name]) 
+                
+                var actions = updateOutVar.act.actions
+                for (action : actions) {
+                    val helperAction = ValidationHelper.getActionVariables(action)
+                    val LHSValue = helperAction.key
+                    val expValue = helperAction.value
+
+                    // all the variable in the RHS of the expression
+                    var allVariables = expValue.eAllContents.filter(ExpressionVariable).map[variable.name].toSet   
+
+                    if (!producesOutputs.contains(LHSValue)) {
+                        warning("The variable used in Updates Expression is not defined in the produces outputs",
+                            ProductPackage.Literals.FUNCTION__UPDATES,
+                            updateOutVar.fnOut.indexOf(LHSValue)
+                            )
+                    }
+                    
+                    allVariables.removeAll(inputs)                                                          
+                    if (!inputs.containsAll(allVariables)) {
+                        error("The variable used in Updates Expression is not defined in the input variables" + allVariables.join(", "),
+                            ProductPackage.Literals.FUNCTION__UPDATES)
+                    }
                 }
             }
         }
