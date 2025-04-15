@@ -11,7 +11,7 @@ Please keep this console open during your BPMN4S modeling sessions, and just clo
 
 ## Starting the simulation server
 
-### _Pre-requisites for running the simulation environment_
+### Pre-requisites for running the simulation environment (One time only!)
 To run the simulation server, you need ``python v3.10 (or greater)`` and the following modules:
 
 ```
