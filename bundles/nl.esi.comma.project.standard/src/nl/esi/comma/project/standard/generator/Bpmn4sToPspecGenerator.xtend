@@ -8,7 +8,8 @@ import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
 
-import static extension nl.esi.comma.project.standard.generator.FileSystemAccessUtil.*
+import static extension nl.esi.comma.types.utilities.EcoreUtil3.*
+import static extension nl.esi.comma.types.utilities.FileSystemAccessUtil.*
 
 class Bpmn4sToPspecGenerator extends AbstractGenerator {
     val boolean simulation;

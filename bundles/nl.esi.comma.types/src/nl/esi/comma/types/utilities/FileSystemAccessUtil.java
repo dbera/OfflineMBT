@@ -1,4 +1,4 @@
-package nl.esi.comma.project.standard.generator;
+package nl.esi.comma.types.utilities;
 
 import java.io.File;
 import java.io.InputStream;
@@ -8,7 +8,6 @@ import java.util.Objects;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.emf.common.CommonPlugin;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
@@ -20,10 +19,6 @@ public class FileSystemAccessUtil {
 
 	private FileSystemAccessUtil() {
 		// Empty
-	}
-
-	public static String toPath(URI uri) {
-		return uri == null ? null : CommonPlugin.resolve(uri).toFileString();
 	}
 
 	public static URI getRootURI(IFileSystemAccess2 fsa) {
@@ -44,7 +39,7 @@ public class FileSystemAccessUtil {
 
 	private static Iterable<String> list(IFileSystemAccess2 fsa, URI uri) {
 		// TODO: There should be a better way than going via java.io.File
-		return Arrays.asList(new File(toPath(uri)).list());
+		return Arrays.asList(new File(EcoreUtil3.toPath(uri)).list());
 	}
 
 	public static Resource loadResource(IFileSystemAccess2 fsa, String fileName, ResourceSet resourceSet) {

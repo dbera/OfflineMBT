@@ -3,35 +3,27 @@ grammar nl.esi.comma.project.standard.StandardProject with nl.esi.comma.types.Ty
 generate standardProject "http://www.esi.nl/comma/project/standard/StandardProject"
 
 Project:
-	'Project' name = ID 
-	'{'
-		(products += Product)?
-		(tspecs += TSpec)?
-		(statemachines += StateMachineGenerationBlock)?
+	'Project' name = ID '{'
+		(offlineBlocks += OfflineGenerationBlock)*
+		(statemachineBlocks += StateMachineGenerationBlock)*
 	'}'
 ;
 
-Product:
-	'Generate' (tests ?= 'Tests' | simulator ?= 'Simulator') '{'
-		taskname = ID '{'
-			'product-file' product = STRING
+OfflineGenerationBlock:
+	'Generate' target=OfflineGenerationTarget '{'
+		name = ID '{'
+            (('bpmn-file' bpmn = STRING) | ('product-file' product = STRING))
 			('path-to-python-exe' pythonExe = STRING)?
-			('sut-product-files' stubProducts += STRING*)?
 		'}'
 	'}'
 ;
 
-TSpec:
-    'Generate' 'FAST' '{'
-        taskname = ID '{'
-            'abstract-tspec-file' tspec = STRING
-        '}'
-    '}'
-;
+enum OfflineGenerationTarget:
+    SIMULATOR='Simulator' | TESTS='Tests' | FAST='FAST';
 
 StateMachineGenerationBlock:
 	'Conformance-Coverage-And-Test-Generation' '{'
-		taskname = ID '{'
+		name = ID '{'
 			'constraints' ('files' constraintsFiles += STRING+ | 'directories' constraintsDirs += FilePath+)
 			(visualizeSM ?= 'visualize-constraints')?
 			(printConstraints ?= 'print-constraints')?

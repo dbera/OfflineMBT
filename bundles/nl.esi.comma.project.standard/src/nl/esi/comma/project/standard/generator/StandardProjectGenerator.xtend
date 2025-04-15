@@ -5,24 +5,20 @@ package nl.esi.comma.project.standard.generator
 
 import nl.asml.matala.product.generator.ProductGenerator
 import nl.asml.matala.product.product.Product
+import nl.esi.comma.project.standard.standardProject.OfflineGenerationBlock
+import nl.esi.comma.project.standard.standardProject.OfflineGenerationTarget
 import nl.esi.comma.project.standard.standardProject.Project
 import nl.esi.comma.testspecification.generator.FromAbstractToConcrete
-import nl.esi.comma.testspecification.generator.TestspecificationGenerator
-import nl.esi.comma.testspecification.testspecification.AbstractTestDefinition
-import nl.esi.comma.testspecification.testspecification.TSMain
+import nl.esi.comma.testspecification.generator.FromConcreteToFast
 import nl.esi.comma.types.types.Import
-import org.eclipse.emf.common.util.BasicDiagnostic
-import org.eclipse.emf.common.util.Diagnostic
-import org.eclipse.emf.common.util.DiagnosticException
-import org.eclipse.emf.common.util.URI
-import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.resource.Resource
-import org.eclipse.emf.ecore.util.Diagnostician
+import org.eclipse.emf.ecore.resource.ResourceSet
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
 
-import static extension nl.esi.comma.project.standard.generator.FileSystemAccessUtil.*
+import static extension nl.esi.comma.types.utilities.EcoreUtil3.*
+import static extension nl.esi.comma.types.utilities.FileSystemAccessUtil.*
 
 /**
  * Generates code from your model files on save.
@@ -31,92 +27,77 @@ import static extension nl.esi.comma.project.standard.generator.FileSystemAccess
  */
 class StandardProjectGenerator extends AbstractGenerator {
     override doGenerate(Resource res, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
-        val resourceSet = res.resourceSet
-
-        for (productCfg : res.contents.filter(Project).flatMap[products]) {
-            val productFsa = fsa.createFolderAccess(productCfg.taskname)
-
-            var productURI = URI.createURI(productCfg.product).resolve(res.URI)
-            val productName = productURI.trimFileExtension.lastSegment
-            val productFileName = '''«productName».ps'''
-            val outputPath = productName
-
-            // TODO: Don't detect file extension, but introduce new syntax keyword for bpmn input
-            if ('bpmn'.equalsIgnoreCase(productURI.fileExtension)) {
-                val pspecFsa = productFsa.createFolderAccess('pspec')
-
-                (new Bpmn4sToPspecGenerator(productCfg.simulator))
-                    .doGenerate(resourceSet, productURI, pspecFsa, ctx)
-
-                productURI = pspecFsa.getURI(productFileName)
+        for (project : res.contents.filter(Project)) {
+            for (task : project.offlineBlocks) {
+                doGenerate(task, res.resourceSet, fsa.createFolderAccess(task.name), ctx)
             }
 
-            // Load and validate the (generated) product
-            val productRes = resourceSet.getResource(productURI, true)
-            val product = productRes.contents.filter(Product).findFirst[specification !== null]
-            if (product === null) {
-                throw new Exception('No product found in resource: ' + productURI)
-            }
-            validate(product)
-
-            // PspecToPetriNetGenerator
-            // Generate CPNServer (a.k.a. abstract Tspec generator) and Petri-nets
-            (new ProductGenerator).doGenerate(productRes, productFsa, ctx)
-
-            if (!productCfg.simulator) {
-                // Generate abstract tspec from petri-net
-                val petriNetURI = productFsa.getURI('''CPNServer/«product.specification.name»/«product.specification.name».py''')
-                val absTspecFsa = productFsa.createFolderAccess('tspec_abstract')
-                (new PetriNetToAbstractTspecGenerator()).doGenerate(resourceSet, petriNetURI, absTspecFsa, ctx)
-
-                val conTspecFsa = productFsa.createFolderAccess('tspec_concrete')
-                val fastFsa = productFsa.createFolderAccess('FAST')
-
-                for (absTspecFileName : absTspecFsa.list(ROOT_PATH).filter[endsWith('.tspec')]) {
-                    val absTspecRes = absTspecFsa.loadResource(absTspecFileName, resourceSet)
-
-                    // Fix the pspec import
-                    val productImportURI = productURI.deresolve(absTspecRes.URI)
-                    absTspecRes.allContents.filter(Import).filter[importURI == productFileName].forEach [
-                        importURI = productImportURI.toString
-                    ]
-                    absTspecRes.save(null)
-
-                    // Generate concrete tspec
-                    val typesImports = TestspecificationGenerator.getTypesImports(absTspecRes)
-                    for (absTestDef : absTspecRes.contents.filter(TSMain).map[model].filter(AbstractTestDefinition)) {
-                        val atd = new FromAbstractToConcrete(absTestDef)
-                        for (sys : atd.getSystems()) {
-                            conTspecFsa.generateFile('''types/«sys».types''',
-                                atd.generateTypesFile(sys, typesImports))
-                            conTspecFsa.generateFile('''parameters/«sys».params''',
-                                atd.generateParamsFile(sys))
-                        }
-                        conTspecFsa.generateFile('''«absTspecFileName»''', atd.generateConcreteTest())
-//                        conTspecFsa.generateFile('''data.kvp''', atd.__generateConcreteTest())
-
-                        // Generate FAST testcases
-                        (new ConcreteToFastGenerator()).doGenerate(conTspecFsa.loadResource(absTspecFileName, resourceSet), fastFsa, ctx)
-                    }
-                }
+            for (task : project.statemachineBlocks) {
+                (new StateMachineGenerator()).doGenerate(task, fsa.createFolderAccess(task.name), ctx)
             }
         }
     }
 
-    def void validate(EObject eObject) {
-        val result = Diagnostician.INSTANCE.validate(eObject)
-        if (result.severity == Diagnostic.ERROR) {
-            val details = result.children.filter[severity == Diagnostic.ERROR].map['''- «message»'''].join('\n')
-            throw new Exception(result.message + '\n' + details, new DiagnosticException(result));
-        }
-    }
+    def doGenerate(OfflineGenerationBlock task, ResourceSet rst, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
+        val productURI = if (task.bpmn.nullOrEmpty) {
+            task.eResource.resolveUri(task.product)
+        } else {
+            val bpmnUri = task.eResource.resolveUri(task.bpmn)
+            val simulator = (task.target == OfflineGenerationTarget::SIMULATOR)
+            val pspecFsa = fsa.createFolderAccess('pspec')
 
-    def void validate(Resource resource) {
-        val result = new BasicDiagnostic(class.name, 0, 'Validation of ' + resource.URI, #[resource]);
-        resource.contents.forEach[Diagnostician.INSTANCE.validate(it, result)]
-        if (result.severity == Diagnostic.ERROR) {
-            val details = result.children.filter[severity == Diagnostic.ERROR].map['''- «message»'''].join('\n')
-            throw new Exception(result.message + '\n' + details, new DiagnosticException(result));
+            (new Bpmn4sToPspecGenerator(simulator))
+                .doGenerate(rst, bpmnUri, pspecFsa, ctx)
+
+            pspecFsa.getURI(bpmnUri.trimFileExtension.appendFileExtension('ps').lastSegment)
+        }
+
+        // Load and validate the (generated) product
+        val productRes = rst.getResource(productURI, true)
+        val product = productRes.contents.filter(Product).findFirst[specification !== null]
+        if (product === null) {
+            throw new Exception('No product found in resource: ' + productURI)
+        }
+        validate(product)
+
+        // PspecToPetriNetGenerator
+        // Generate CPNServer (a.k.a. abstract Tspec generator) and Petri-nets
+        (new ProductGenerator).doGenerate(productRes, fsa, ctx)
+
+        if (task.target == OfflineGenerationTarget.SIMULATOR) {
+            return
+        }
+
+        // Generate abstract tspec from petri-net
+        val petriNetURI = fsa.getURI('''CPNServer/«product.specification.name»/«product.specification.name».py''')
+        val absTspecFsa = fsa.createFolderAccess('tspec_abstract')
+        (new PetriNetToAbstractTspecGenerator()).doGenerate(rst, petriNetURI, absTspecFsa, ctx)
+
+        for (absTspecFileName : absTspecFsa.list(ROOT_PATH).filter[endsWith('.tspec')]) {
+            val absTspecRes = absTspecFsa.loadResource(absTspecFileName, rst)
+
+            // Fix the pspec import
+            val productImportURI = productURI.deresolve(absTspecRes.URI)
+            absTspecRes.allContents.filter(Import).filter[importURI == productURI.lastSegment].forEach [
+                importURI = productImportURI.toString
+            ]
+            absTspecRes.save(null)
+            // Validate the generated abstract tspec
+            validate(absTspecRes)
+
+
+            // Generate concrete tspec
+            val conTspecFsa = fsa.createFolderAccess('tspec_concrete')
+            (new FromAbstractToConcrete()).doGenerate(absTspecRes, conTspecFsa, ctx)
+
+            val conTspecRes = conTspecFsa.loadResource(absTspecFileName, rst)
+            validate(conTspecRes)
+
+            if (task.target == OfflineGenerationTarget.FAST) {
+                // Generate FAST testcases
+                val fastFsa = fsa.createFolderAccess('FAST')
+                (new FromConcreteToFast()).doGenerate(conTspecRes, fastFsa, ctx)
+            }
         }
     }
 }

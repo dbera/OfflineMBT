@@ -76,32 +76,32 @@ class Utils
 
     // JSON utilities
 
-    static def List<TSJsonMember> getMemberValues(TSJsonValue value) {
-        return value instanceof TSJsonObject ? value.members : Collections.emptyList
+    static def List<TSJsonMember> getMemberValues(TSJsonValue json) {
+        return json instanceof TSJsonObject ? json.members : Collections.emptyList
     }
 
-    static def boolean hasMemberValue(TSJsonValue value, String member) {
-        return value instanceof TSJsonObject ? value.members.exists[key == member] : false
+    static def boolean hasMemberValue(TSJsonValue json, String member) {
+        return json instanceof TSJsonObject ? json.members.exists[key == member] : false
     }
 
-    static def TSJsonValue getMemberValue(TSJsonValue value, String member) {
-        return value instanceof TSJsonObject ? value.members.findFirst[key == member]?.value : null
+    static def TSJsonValue getMemberValue(TSJsonValue json, String member) {
+        return json instanceof TSJsonObject ? json.members.findFirst[key == member]?.value : null
     }
 
-    static def List<TSJsonValue> getItemValues(TSJsonValue value) {
-        return value instanceof TSJsonArray ? value.values : Collections.emptyList
+    static def List<TSJsonValue> getItemValues(TSJsonValue json) {
+        return json instanceof TSJsonArray ? json.values : Collections.emptyList
     }
 
-    static def String getStringValue(TSJsonValue value) {
-        return switch (value) {
+    static def String getStringValue(TSJsonValue json) {
+        return switch (json) {
             case null: null
-            TSJsonString: value.value
-            TSJsonBool: String.valueOf(value.value)
-            TSJsonFloat: String.valueOf(value.value)
-            TSJsonLong: String.valueOf(value.value)
-            TSJsonObject: value.members.join('{', ', ', '}')[key + ': ' value.stringValue]
-            TSJsonArray: value.values.join('[', ', ', ']')[stringValue]
-            default: throw new IllegalArgumentException('Unknown JSON type ' + value)
+            TSJsonString: json.value
+            TSJsonBool: String.valueOf(json.value)
+            TSJsonFloat: String.valueOf(json.value)
+            TSJsonLong: String.valueOf(json.value)
+            TSJsonObject: json.members.join('{', ', ', '}')[key + ': ' value.stringValue]
+            TSJsonArray: json.values.join('[', ', ', ']')[stringValue]
+            default: throw new IllegalArgumentException('Unknown JSON type ' + json)
         }
     }
 
