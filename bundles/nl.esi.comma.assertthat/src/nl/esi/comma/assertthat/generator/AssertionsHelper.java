@@ -199,7 +199,7 @@ public class AssertionsHelper {
 				}
 				""";
 		extractScriptParameters(scrptcall.getParams(), scrptparams);
-//		// fills in the gaps in the assertion template
+		// fills in the gaps in the assertion template
 		String assertionFormatted = SINGLE_ASSERTION_TEMPLATE.formatted(
 				scrptcall.getAssignment().getName(), 
 				scrptcall.getParams().getScriptApi(), 
@@ -256,28 +256,6 @@ public class AssertionsHelper {
 			throw new RuntimeException("Not supported");
 		}
 	}
-//
-//	/**
-//	 * Parses value assigned to an input parameter of script-call. Values can: 
-//	 * - be of type JsonObject (only first item is used) or JsonArray (list of ), or 
-//	 * - be also paired with a name (provided by a JsonMember parameter)
-//	 * @param param key-value pair (via JsonbMember), JsonObject or JsonArray
-//	 * @param scrptparams
-//	 */
-//	private static void extractScriptParameters(ScriptParameter param, List<String> scrptparams) {
-//		if(param instanceof ScriptParameterNamedOnly) {
-//			scrptparams.add("\"name\":%s".formatted(((ScriptParameterNamedOnly)param).getKeyOnly()));
-//		}else if(param instanceof ScriptParameterKeyValue) {
-//			scrptparams.add("\"name\":%s".formatted(((ScriptParameterKeyValue)param).getKey()));
-//			scrptparams.add("\"value\":%s".formatted(expression(((ScriptParameterKeyValue)param).getVal(), (String t) -> "")));
-//		}else if (param instanceof ScriptParameterPositional) {
-//			scrptparams.add("\"value\":%s".formatted(expression(((ScriptParameterPositional)param).getValOnly(), (String t) -> "")));
-//		}else {
-//			throw new RuntimeException("Not supported");
-//		}
-//	}
-	
-	
 
 	/**
 	 * Parses input parameters of an assertion of Value type 
