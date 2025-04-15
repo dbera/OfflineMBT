@@ -5,13 +5,11 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.AbstractList;
 import java.util.AbstractMap;
 import java.util.AbstractSet;
-import java.util.HashMap;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -29,7 +27,7 @@ import nl.asml.matala.bpmn4s.Logging;
 public class Bpmn4sCompiler{
 	
 	protected final String UNIT_TYPE = "UNIT";
-	private final String UNITINIT = "UNIT{ unit=0 }";
+	private final String UNIT_INIT = "UNIT { __uuid__ = uuid(), unit = 0 }";
 
 	// The model being compiled to pspec
 	protected Bpmn4s model = null;
@@ -44,7 +42,7 @@ public class Bpmn4sCompiler{
 	HashSet<String> initialized = new HashSet<String>();
 	
 	/* Connected XOR gates are collapsed to avoid spurious non-det due to immediately enabled 
-	 * transitions between them. Here we keep a map from the individual names to the
+	 * transitions between them. Here we keep a map from the individual ids to the
 	 * collapsed name in the target CPN.
 	 */
 	AbstractMap<String, String> compiledGateName = new HashMap<String, String>();
@@ -53,14 +51,11 @@ public class Bpmn4sCompiler{
 	 * Throw when a non valid bpmn4s model is detected.
 	 */
 	public class InvalidModel extends Exception {
-
 		private static final long serialVersionUID = 1L;
-
 		public InvalidModel (String mssg) {
 			super(mssg);
 		}
 	}
-	
 	
 	/**
 	 * Takes a Bpmn4s <model>, flattens its activities, and compiles it into a 
@@ -297,7 +292,7 @@ public class Bpmn4sCompiler{
 	
 	/**
 	 * START_EVENTs introduce a place if followed by a transition in the target PN. 
-	 * Otherwise we ignore them for optimization for test generation.
+	 * Otherwise we ignore them as optimization.
 	 * @param c
 	 * @return
 	 */
@@ -319,7 +314,7 @@ public class Bpmn4sCompiler{
 	
 	/**
 	 * END_EVENTs introduce a place if preceded by a transition in the PN. 
-	 * Otherwise we ignore them for optimization of test generation.
+	 * Otherwise we ignore them as optimization.
 	 * @param c
 	 * @return
 	 */	
@@ -347,90 +342,79 @@ public class Bpmn4sCompiler{
 	 * @return a String with the section
 	 * @throws InvalidModel 
 	 */
-	private String fabSpecInit(String cId) throws InvalidModel {
+	private String fabSpecInit(String cId) {
 		String init = "";
 		Element c = model.getElementById(cId);
+		
+		// Initialize context for this component
 		String ctxName = c.getContextName();
 		String ctxDataType = c.getContextDataType();
 		String ctxInit = c.getContextInit();
-		AbstractList<String> initPlaces = getInitialPlaces(cId);
-		for (String place: initPlaces) {
+		String initPlace = getInitialPlace(cId);
+
+		if (initPlace != null) {
 			if (ctxDataType == "") {
-				init += String.format("%s := %s \n", sanitize(place), UNITINIT);
-			}else {
-				if (ctxInit == "") {
-					String mssg = String.format("Missing context initialization for component %s", compile(cId));
-					throw new InvalidModel(mssg);
-				} else {
-					init += replaceWord(ctxInit, ctxName, sanitize(place)) + "\n";
+				init += String.format("%s := %s \n", sanitize(initPlace), UNIT_INIT);
+			} else {
+				if (ctxInit != "") {
+					init += replaceWord(ctxInit, ctxName, sanitize(initPlace)) + "\n";
 				}
 			}
 		}
-		for (Element ds: model.elements.values()) {
-			/* Data stores of bottom level components are initialized in such components. 
-			 * Other data stores are initialized in components for which they are an input/output.
-			 * In the later case, the instance attribute this.initialized is used to avoid 
-			 * double initialization. */
-			if(ds.getType() == ElementType.DATASTORE  
-					&& !initialized.contains(ds.getId())
-					&& !ds.isReferenceData()
-					&& ((isImmediateParentComponent(cId, ds)) ||
-							(c.hasDataSource(ds.getId()) || c.hasDataTarget(ds.getId())))) {   
+		
+		// Add data store inputs that have not been initialized somewhere else
+		for (Edge e: c.getDataInputs()) {
+			Element node = model.elements.get(e.getSrc());
+			
+			if (node.getType() == ElementType.DATASTORE  && !initialized.contains(node.getOriginDataNodeId())) {
+				Logging.logDebug(String.format("Initializing %s in %s" , node.getName(), c.getName()));;
+				initialized.add(node.getOriginDataNodeId());
+				String s = node.getInit();
+				if (node.isReferenceData()) {
+					s = model.getElementById(node.getOriginDataNodeId()).getInit();
+				}
+				if (s != null && s != "") {
+					init += s.replace(node.getName(), compile(node.getId())) + "\n";
+				}
+			}
+		}
 				
+		// add locally declared data stores initializations
+		for (Element ds: model.elements.values()) {
+			if(ds.getType() == ElementType.DATASTORE  
+				&& !ds.isReferenceData()
+				&& isImmediateParentComponent(cId, ds)) {
 				if (ds.getInit() != null && ds.getInit() != "") {
 					init += ds.getInit().replace(ds.getName(), compile(ds.getId())) + "\n";
-					initialized.add(ds.getId());
 				}
 			}
 		}
+		
 		return init == "" ? "// init\n" : "init\n" + init;
 	}
 	
 	/**
-	 * Collect the places which will hold context data in the target PN that need to be initialized 
-	 * for the system corresponding to component cId. To avoid spurious non-determinism,
-	 * we may avoid initializing the context in the start event place, and move the 
-	 * initialization further into the flow instead.
-	 * @param cId is the id of the component
-	 * @return
+	 * To avoid spurious non-determinism from immediately enabled transitions between start events and XOR gates,
+	 * we initialize the XOR gate place and not the start event place.
+	 * @param cId is the id of the component.
+	 * @return null if cId has no initial place. Otherwise, the compiled name of the initial event of cId if 
+	 * it is not followed by an XOR gate. Otherwise, the compiled name of the following XOR gate.
 	 */
-	protected AbstractList<String> getInitialPlaces (String cId) {
+	protected String getInitialPlace (String cId) {
 		Element c = model.getElementById(cId);
-		ArrayList<String> result = new ArrayList<String>();
+		String result = null;
 		Element startEvent = model.getStartEvent(c);
-		LinkedList<Element> queue = new LinkedList<Element>();
 		if (startEvent != null) {
-			queue.add(startEvent);
-		}
-		while(!queue.isEmpty()) {
-			Element next = queue.pop();
-			if (next.getType() == ElementType.START_EVENT) {
-				Element e = getNextFlowElement(next);
-				if (e.getType() == ElementType.AND_GATE) {
-					queue.add(e); // ignore the start event and init outputs of the AND gate
-				} else if (e.getType() == ElementType.TASK) {
-					result.add(repr(next)); // add the start event
-				} else if (e.getType() == ElementType.XOR_GATE) {
-					result.add(getCompiledXorName(e.getId())); // ignore the start event, and init the xor gate
-				} 
-			}else if (next.getType() == ElementType.AND_GATE) {
-				for (Edge edge: next.getFlowOutputs()) {
-					String tarId = edge.getTar();
-					if (model.isXor(tarId)) {
-						result.add(getCompiledXorName(tarId));
-					} else if (model.isAnd(tarId)) {
-						queue.add(model.getElementById(tarId));
-					} else if (model.isTask(tarId)) {
-						Element tar = model.getElementById(tarId);
-						result.add(namePlaceBetweenTransitions(edge.getId(), repr(next), repr(tar)));
-					}
-				}
+			Element e = getNextFlowElement(startEvent);
+			if (model.isXor(e.getId())) {
+				result = compile(e.getId());
 			} else {
-				throw new InternalError(String.format("Got unexpected element type: %s.", next.getType()));
+				result = repr(startEvent);
 			}
 		}
 		return result;
 	}
+		
 	
 	/**
 	 * Replace whole word only (only match <from> if surrounded by delimiters)
@@ -451,7 +435,7 @@ public class Bpmn4sCompiler{
 		return String.format("between_%s_and_%s", src, dst);
 	}
 	
-	public static <E> E getOrDefault(List<E> list, int index,E defaultValue) {
+	public static <E> E getOrDefault(List<E> list, int index, E defaultValue) {
 	      if (index < 0) {
 	          throw new IllegalArgumentException("index is less than 0: " + index);
 	      }
@@ -468,7 +452,7 @@ public class Bpmn4sCompiler{
 				if( nodeType == ElementType.TASK  || nodeType == ElementType.AND_GATE ) {
 					String task = "";
 					// Name of context as defined by user at front end:
-					String compCtxName = model.getElementById(cId).getContextName();  
+					String compCtxName = model.getElementById(cId).getContextName();
 					task += "action\t\t\t" + sanitize(repr(node)) + "\n";
 					// STEP TYPE
 					String stepConf = "";
@@ -495,7 +479,9 @@ public class Bpmn4sCompiler{
 					String preCtxName = null;
 					if(inFlow != null) {
 						preCtxName = sanitize(getPNSourcePlaceName(inFlow));
-						replaceMap.put(compCtxName, preCtxName);
+						if (compCtxName != null) {
+							replaceMap.put(compCtxName, preCtxName);
+						}
 					}
 					// INPUTS
 					ArrayList<String> inputs = new ArrayList<String>();
@@ -553,7 +539,7 @@ public class Bpmn4sCompiler{
 								// if there is in-flow, move the context between places in the PN.(**1)
 								updates += indent(postCtxName + " := " + preCtxName) + "\n";
 							}
-							String update = e.getUpdate();
+							String update = node.getContextUpdate();
 							if(update != null && update != "") {
 								update = replaceWord(update, compCtxName, postCtxName); // (**1) postCtxName == preCtxName
 								updates += indent(replaceAll(update, replaceMap)) + "\n";
@@ -607,25 +593,22 @@ public class Bpmn4sCompiler{
 	}
 	
 	/**
-	 * In simulation mode, some flows between bpmn4s elements introduce transitions in the CPN. 
-	 * Imagine a flow between to XOR gates for instance. In general, if two elements are connected with a flow
-	 * and their CPN semantics is a place, then a transition needs to be added. For test generation, we optimize
-	 * the model such that this flows do not exist anymore, so that we reduce spurious non-determinism.
+	 * Flows from a fork xor gate to a merge xor gate introduce transitions in the CPN. Notice
+	 * that other flows between xor gates are optimized away when merging xor gates connected components. 
 	 */
-	protected List<String> getFlowActions(String component) {
-		return new ArrayList<String>();
-	}
-	
-	protected ArrayList<String> getInputOutputIds(Element elem) {
-		ArrayList<String> result = new ArrayList<String>();
-		for (Edge e: elem.getAllInputs()) {
-			if(isAPlace(e.getSrc())) {
-				result.add(e.getSrc());
-			}
-		}
-		for (Edge e: elem.getAllOutputs()) {
-			if(isAPlace(e.getTar())) {
-				result.add(e.getTar());
+	private List<String> getFlowActions(String component) {
+		List<String> result = new ArrayList<String>();
+		for (Edge e: model.edges) {
+			String src = e.getSrc();
+			String tar = e.getTar();
+			if(model.isXor(src) && model.isForkGate(src) &&
+					model.isXor(tar) && model.isMergeGate(tar)) {
+				String task = "action\t\t\t" + repr(e) + "\n";
+				task += "case\t\tdefault\n";
+				task += "with-inputs\t\t" + compile(src) + "\n";
+				task += "produces-outputs\t" + compile(tar) + "\n";
+				task += "updates\t\t" + compile(tar) + " := " + compile(src) + "\n";
+				result.add(task);
 			}
 		}
 		return result;
@@ -640,7 +623,7 @@ public class Bpmn4sCompiler{
 		ArrayList<String> result = new ArrayList<String>();
 		for (Element elem: model.elements.values()) {
 			if (model.isRunTask(elem.getId())) {
-				result.add(compile(elem.getParentComponents().getLast()));
+				result.add(sanitize(compile(elem.getParentComponents().getLast())));
 			}
 		}
 		return result;
@@ -716,7 +699,7 @@ public class Bpmn4sCompiler{
 	public String generateTypes() {
 		String types = new String("");
 		// UNIT_TYPE is the type for undefined contexts.
-		types += String.format("record %s {\n\tint\tunit\n}\n\n", UNIT_TYPE);
+		types += String.format("record %s {\n\tstring __uuid__\n\tint\tunit\n}\n\n", UNIT_TYPE);
 		for (Bpmn4sDataType d: model.dataSchema.values()) {
 			if(d instanceof RecordType) {
 				RecordType rec = RecordType.class.cast(d);
@@ -744,44 +727,50 @@ public class Bpmn4sCompiler{
 	}
 
 	private String generateRecordField(Entry<String, String> e) {
-		String field = "";
 		String fieldName = e.getKey();
-		String fieldTypeName = e.getValue();
-		Bpmn4sDataType dataType = model.dataSchema.get(fieldTypeName); 
-		if (dataType instanceof ListType) {
-			ListType lst = ListType.class.cast(dataType);
-			field = String.format("%s[]\t%s\n" , mapType(lst.valueType), fieldName); 
-		} else if (dataType instanceof MapType) {
-			MapType mp = MapType.class.cast(dataType);
-			field = String.format("map<%s,%s>\t%s\n" , mapType(mp.keyType), mapType(mp.valueType), fieldName);
-		} else if (dataType instanceof SetType) {
-			SetType st = SetType.class.cast(dataType);
-			field = String.format("set<%s>\t%s\n" , mapType(st.valueType), fieldName);
-		} else {
-			// record, enumerations and basic types go here
-			field = String.format("%s\t%s\n" , mapType(fieldTypeName), fieldName); 
-		}
-		return field;
+		String fieldTypeName = e.getValue();	
+		return typeToString(fieldTypeName)  + "\t" + fieldName + "\n";
 	}
+		
+	private String typeToString(String dataTypeName) {
+		Bpmn4sDataType dataType = model.dataSchema.get(dataTypeName);
+		String result = "";
+		if (dataType == null) {
+			return mapType(dataTypeName);
+		} else {
+			if (dataType instanceof ListType) {
+				ListType lst = ListType.class.cast(dataType);
+				result = String.format("%s[]" , typeToString(lst.valueType)); 
+			} else if (dataType instanceof MapType) {
+				MapType mp = MapType.class.cast(dataType);
+				result = String.format("map<%s,%s>", typeToString(mp.keyType), typeToString(mp.valueType));
+			} else if (dataType instanceof SetType) {
+				SetType st = SetType.class.cast(dataType);			
+				result = String.format("set<%s>" , typeToString(st.valueType));
+			} else {
+				// record, enumerations and basic types go here
+				result = mapType(dataType.getName()); 
+			}
+		}
+		return result;
+	}
+	
 	/**
 	 * Basic types in BPMN4S editor start with upper case, 
 	 * while in pspec they are lower cased.
 	 */
 	protected String mapType(String name) {
-		String result = name;
-		if (name.equals("Int") || name.equals("String")) {
-			result = name.toLowerCase();
-		} else if (name.equals("Boolean")) {
-			result = "bool";
-		}
-		return result;
-		
+		return switch (name) {
+			case "Int", "String" -> name.toLowerCase();
+			case "Boolean" -> "bool";
+			case "Float" -> "real";
+			default -> name;
+		};
 	}
 
 	//
 	// Helper functions
 	//
-	
 	protected Boolean isAPlace (String id) {
 		Element elem = model.getElementById(id);
 		ElementType t = elem.getType();
@@ -890,9 +879,9 @@ public class Bpmn4sCompiler{
 			return getCompiledXorName(elId);
 		} else if (model.isComponent(elId)) { 
 			/* Nested components are compiled with their fully qualified name. */
-			return String.join("", el.getParentComponents().stream()
+			return String.join("__", el.getParentComponents().stream()
 					.map(e -> repr(model.getElementById(e)))
-					.collect(Collectors.toList())) + repr(el);
+					.collect(Collectors.toList())) + "__" + repr(el);
 		}
 		return repr(el);
 	}
@@ -903,7 +892,6 @@ public class Bpmn4sCompiler{
 	 * the compiler for simulation will return the element's id.
 	 */
 	protected String repr(Element el) {
-//		Logging.logDebug(el.getId());
 		return el.getName();
 	}
 	
@@ -916,10 +904,35 @@ public class Bpmn4sCompiler{
 		return id;
 	}
 	
+	
 	/**
-	 * For test generation, networks of connected XOR gates are merged 
+	 * Return the name of a compiled place representing a connected component of XOR gates. 
+	 * For test generation, this is either the name of a single xor gate for singleton nets, 
+	 * or a composed name identifying all the gates in the net otherwise.
+	 */
+	private String buildXorNetName(AbstractSet<String> xorNet) {
+		String result = "";
+		if (xorNet.size() > 1) {
+			result = "merged";
+			for(String id: xorNet) {
+				result += "_" + repr(model.getElementById(id));
+			}	
+		}else if(xorNet.size() == 1){
+			Element elem = model.getElementById(xorNet.iterator().next());
+			result = repr(elem);
+		}else {
+			result = null;
+		}
+		return result;
+	}
+	
+	
+	/**
+	 * Networks of connected XOR gates in the bpmn4s model are merged 
 	 * into single places in the target PN. This method returns the name
-	 * of the target place.
+	 * of the target place. For test generation we build the network of connected components 
+	 * and use all its elements to build a name. For simulation we follow a different 
+	 * algorithm which does not require to know all elements in the connected component.
 	 */
 	protected String getCompiledXorName(String xorId) {
 		Element xor = model.getElementById(xorId);
@@ -927,16 +940,9 @@ public class Bpmn4sCompiler{
 		if(result == null) {
 			AbstractSet<String> net = new HashSet<String>();
 			buildXorNet(xor, net);
-			if (net.size() > 1) {
-				result = "merged";
-				for(String name: net) {
-					result += "_" + name;
-				}	
-			}else {
-				result = xor.getName();
-			}
-			for(String name: net) {
-				compiledGateName.put(name, result);
+			result = buildXorNetName(net);
+			for(String id: net) {
+				compiledGateName.put(id, result);
 			}
 		}
 		return result;
@@ -945,23 +951,28 @@ public class Bpmn4sCompiler{
 	/**
 	 * Build the Maximal Connected Component of xor gates that contains <xor> and 
 	 * add its elements to <net>. Notice that <net> is used as an accumulator for
-	 * the recursive algorithm.
+	 * the recursive algorithm. Also notice that edges from FORK gates to MERGE gates
+	 * do not build connected components, since this is not a sound transformation.
 	 */
 	private void buildXorNet(Element xor, AbstractSet<String> net) {
-		net.add(repr(xor));
+		net.add(xor.getId());
 		for(Edge input: xor.getFlowInputs()) {
 			String srcId = input.getSrc();
 			if(model.isXor(srcId)) {
-				if(!net.contains(repr(model.getElementById(srcId)))) {
-					buildXorNet(model.getElementById(srcId), net);
+				if(!net.contains(srcId)) {
+					if (!(model.isForkGate(srcId) && model.isMergeGate(xor.getId()))) {
+						buildXorNet(model.getElementById(srcId), net);
+					}
 				}
 			}
 		}
 		for(Edge output: xor.getFlowOutputs()) {
 			String tarId = output.getTar();
 			if(model.isXor(tarId)) {
-				if(!net.contains(repr(model.getElementById(tarId)))) {
-					buildXorNet(model.getElementById(tarId), net);
+				if(!net.contains(tarId)) {
+					if (!(model.isMergeGate(tarId) && model.isForkGate(xor.getId()))) {
+						buildXorNet(model.getElementById(tarId), net);
+					}
 				}
 			}
 		}

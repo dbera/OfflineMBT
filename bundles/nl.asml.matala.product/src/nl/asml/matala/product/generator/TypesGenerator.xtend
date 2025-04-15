@@ -48,7 +48,7 @@ class TypesGenerator
 			}
 		}
 		for(type : tmodel.types) {
-			dataInstanceList.add(new DataInstance(type.name, SnakesHelper.defaultValue(type), type))
+			dataInstanceList.add(new DataInstance(type.name, SnakesHelper.defaultValue(type, null), type))
 		}
 		return dataInstanceList
 	}

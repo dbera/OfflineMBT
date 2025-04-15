@@ -51,7 +51,7 @@ Workflow {
                 generateXtendStub = true
             }
 			generator = {
-				generateXtendMain = true
+			    generateXtendStub = true
 			}
 		}
 	}

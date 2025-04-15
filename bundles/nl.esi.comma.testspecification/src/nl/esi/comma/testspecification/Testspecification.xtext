@@ -66,10 +66,14 @@ TMap:
 
 /*********************************************************/
 AbstractTestSequence:
+	(sutTypes = SUTTypeDecl)?
 	'Test-Scenario' ':' name = ID
 		// step += [TMap|ID]+
-		step += (AbstractStep | AssertStep)+  // | ConstraintStep 
-		
+		step += AbstractStep+ // (AbstractStep | AssertStep)+  // | ConstraintStep 
+;
+
+SUTTypeDecl:
+    'test-configuration-types' '{' type += Type+ '}'
 ;
 
 ConstraintStep:
@@ -80,7 +84,8 @@ ConstraintStep:
 
 AssertStep:
 	'output-assertion' ':' name = ID
-	ce += ConstraintElm+
+	// ce += ConstraintElm+
+	ce += [prod::DataAssertions|QualifiedName]+
 ;
 
 ConstraintElm:
@@ -88,7 +93,7 @@ ConstraintElm:
 ;
 
 AbstractStep:
-	ComposeStep | RunStep
+	ComposeStep | RunStep | AssertionStep
 ;
 
 ComposeStep:
@@ -97,7 +102,6 @@ ComposeStep:
 	'input-binding' ':' input += Binding+
 	'output-data' ':' output += Binding+ (suppress?='suppress'?)
 	refs += ConstraintStep*
-	asserts += AssertStep*
 ;
 
 RunStep:
@@ -108,6 +112,14 @@ RunStep:
 	'output-data' ':' output += Binding+ (suppress?='suppress'?) // do not generate these in concrete TSpec
 ;
 
+AssertionStep:
+    'assert-step-name' ':' name = ID
+    stepRef += StepReference*
+    'input-binding' ':' input += Binding+
+    'output-data' ':' output += Binding+ (suppress?='suppress'?)
+    asserts += AssertStep*
+;
+
 StepReference:
 	'consumes-from-step' ':' refStep = [AbstractStep|ID] '{' refData += [expr::Variable|QualifiedName]+ '}'
 ;
@@ -115,16 +127,57 @@ StepReference:
 Binding:
 	name = [expr::Variable|QualifiedName] ':' 
 		(	strvalue = STRING
-		|	'{'
-				kvPairs += NestedKeyValuesPair (',' kvPairs += NestedKeyValuesPair)*
-			'}'
+		|	 '{'
+				//'start-json' 
+				(jsonvals = TSJsonValue)? 
+				//'end-json'
+				// (kvPairs += NestedKeyValuesPair)? (',' kvPairs += NestedKeyValuesPair)*
+			 '}'
 		)
 ;
 
 NestedKeyValuesPair:
-	actions += Action+
+	    actions += Action+
 ;
 
+/*********************************************************/
+// TODO Reuse AssertThat Grammar. DB 23.03.2025
+TSJsonValue:
+    //{TSJsonValue} STRING | {TSJsonValue} Expression::BOOL_LITERAL | TSJsonNumeric | TSJsonObject | TSJsonArray
+     TSJsonString | TSJsonBool | TSJsonFloat | TSJsonLong | TSJsonObject | TSJsonArray 
+;
+
+//TSJsonNumeric: 
+//    {TSJsonNumeric} (Expression::FLOAT | Expression::Long)
+//;
+
+TSJsonString:
+    value = STRING
+;
+
+TSJsonBool:
+    value = Expression::BOOL_LITERAL
+;
+
+TSJsonFloat: 
+    value = Expression::FLOAT
+;
+
+TSJsonLong: 
+    value = Expression::Long
+;
+
+TSJsonObject:
+    '{' (members+=TSJsonMember) (',' members+=TSJsonMember)* '}'
+;
+
+TSJsonMember:
+    key=STRING ':' value=TSJsonValue
+;
+
+TSJsonArray:
+    {TSJsonArray} '[' (values+=TSJsonValue)? (',' values+=TSJsonValue)* ']'
+;
 /*********************************************************/
 
 TestSequence:

@@ -321,6 +321,14 @@ class FlaskSimulationGenerator
         return init_for_cpn_spec_pkg
     }
     
+    def generateInitForSrcGen() 
+    {
+        var init_for_src_gen = 
+        '''# Init file to turn src-gen (or other custom dir) as an importable package
+        '''
+        return init_for_src_gen
+    }
+    
     def generateInitForCPNServerSpecPkg(Product prod) {
         var init_for_cpn_server_spec_pkg = 
             '''

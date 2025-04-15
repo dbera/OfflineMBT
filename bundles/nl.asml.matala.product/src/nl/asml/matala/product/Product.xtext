@@ -16,8 +16,13 @@ Product:
 	imports += Import*
 	(namespace += NameSpace)*
     types += TypeDecl*
+    (sutTypes = SUTTypeDecl)?
 	( systemDecl = SystemDecl	
 	| specification = Specification)
+;
+
+SUTTypeDecl:
+    'test-configuration-types' '{' type += Type+ '}'
 ;
 
 @Override
@@ -37,6 +42,7 @@ Specification:
 		blocks += Blocks+
 		('SUT-blocks' envBlock += [Block|QualifiedName]*)?
 		'depth-limits' limit = INT
+		('num-tests' numTests = INT)?
 	'}'
 ;
 
@@ -74,15 +80,16 @@ Update:
 	('step-type' stepType = STRING 'action-type' actionType = ActionType)?
 	('with-inputs' fnInp += VarRef (',' fnInp+=VarRef)*)?
 	('with-guard' guard=Expression?)?
+	(dataAssertions = DataAssertions)? 
 	updateOutputVar += UpdateOutVar*
 ;
 
 enum ActionType:
-	INTERNAL | COMPOSE | RUN
+	INTERNAL | COMPOSE | RUN | ASSERT
 ;
 
 UpdateOutVar:
-	'produces-outputs'  fnOut += VarRef (',' fnOut+=VarRef)* (assert?='assert'?) (suppress?='suppress'?)
+	'produces-outputs'  fnOut += VarRef (',' fnOut+=VarRef)* (assert?='symbolic-link'?) (suppress?='suppress'?)
 	('updates' hiddenVars += Variable* ':' act = ActionList)?
 ;
 
@@ -91,7 +98,7 @@ VarRef:
 	ref = [expr::Variable|ID] 
 	(dataConstraints = DataConstraints)?
 	(dataReferences = DataReferences)? 
-	(dataAssertions = DataAssertions)? 
+	// (dataAssertions = DataAssertions)? 
 ;
 
 DataConstraints: {DataConstraints}
@@ -119,8 +126,8 @@ SymbConstraint:
 ///// assert-that DSL (et al.)
 
 DataAssertions: {DataAssertions}
-    'assertions' '{' 
-        constr += DataCheckItems*
+    'assertions' name = ID '{' 
+        constr += DataAssertionItem*
      '}'
 ;
 

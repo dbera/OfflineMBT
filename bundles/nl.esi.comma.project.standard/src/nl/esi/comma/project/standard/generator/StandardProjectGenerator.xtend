@@ -41,6 +41,10 @@ import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
 import org.eclipse.xtext.nodemodel.util.NodeModelUtils
+import org.eclipse.emf.ecore.util.Diagnostician
+import org.eclipse.emf.common.util.Diagnostic
+import org.eclipse.emf.common.util.DiagnosticException
+import org.eclipse.emf.ecore.EObject
 
 /**
  * Generates code from your model files on save.
@@ -66,10 +70,8 @@ class StandardProjectGenerator extends AbstractGenerator {
 	            if (inputFileURI.fileExtension.equalsIgnoreCase("bpmn")) {
 	                val outputPathURI = res.URI.trimSegments(1)
 	                val absOutputPath = CommonPlugin.resolve(outputPathURI).toFileString
-                    nl.asml.matala.bpmn4s.Main.compile(absFilePath, true, absOutputPath)
-                    for (r : ResourcesPlugin.workspace.root.getProjects()) {
-                        r.refreshLocal(IResource.DEPTH_INFINITE, null)
-                    }
+                    nl.asml.matala.bpmn4s.Main.compile(absFilePath, product.simulator, absOutputPath)
+                    refreshWorkspaceProjects()
                     var outputFileURI = inputFileURI.trimSegments(1)
                     productName = inputFileURI.lastSegment.replaceAll("bpmn", "ps").replaceAll(" ", "")
                     inputFileURI = outputFileURI.appendSegment(productName)
@@ -81,6 +83,7 @@ class StandardProjectGenerator extends AbstractGenerator {
 				val input = inputResource.allContents.head
 				if (input instanceof Product) {
 					envProduct = input as Product
+                    validate(envProduct)
 					(new ProductGenerator).doGenerate(inputResource, fsa, context)
                     if (!product.simulator) {
     					var name = envProduct.specification.name
@@ -99,9 +102,7 @@ class StandardProjectGenerator extends AbstractGenerator {
     	                    System.err.println(line)
     		            }
     		            pr.destroyForcibly
-    		            for (r : ResourcesPlugin.workspace.root.getProjects()) {
-    		                r.refreshLocal(IResource.DEPTH_INFINITE, null)
-    		            }
+                        refreshWorkspaceProjects()
     					var abstractTSpecFileURI = res.URI.trimSegments(1).appendSegment("src-gen\\CPNServer\\" + name + "\\generated_scenarios")
     					var abstractTSpecAbsFilePath = CommonPlugin.resolve(abstractTSpecFileURI).toFileString
     					var lst = (new File(abstractTSpecAbsFilePath)).listFiles()
@@ -118,6 +119,7 @@ class StandardProjectGenerator extends AbstractGenerator {
                             try {
                                 resourceSet.createResource(URI.createURI(fileName)).load(tfis, emptyMap)
                             } catch (Exception ex) {} // re-registration is not a problem
+
                             val testResource = EcoreUtil2.getResource(res, fileName)
                             val test = testResource.allContents.head
                             if (test instanceof TSMain) {
@@ -130,30 +132,34 @@ class StandardProjectGenerator extends AbstractGenerator {
                                         fsa.generateFile("types/" + sys + ".types", atd.generateTypesFile(sys, typesImports))
                                         fsa.generateFile("parameters/" + sys + ".params", atd.generateParamsFile(sys))
                                     }
-                                    fsa.generateFile("concrete.tspec", atd.generateConcreteTest())
-                                    val abstractTSpecURI = res.URI.trimSegments(1).appendSegment("src-gen").appendSegment("concrete.tspec")
-                                    val abstractTSpecPath = CommonPlugin.resolve(abstractTSpecURI).toFileString
-                                    val abstractTSpecFile = new FileInputStream(abstractTSpecPath)
-                                    try {
-                                        resourceSet.createResource(URI.createURI(abstractTSpecURI.toString)).load(abstractTSpecFile, emptyMap)
-                                    } catch (Exception ex) {} // re-registration is not a problem
-                                    val abstractTSpecResource = EcoreUtil2.getResource(res, abstractTSpecURI.toString)
-                                    val inputTSpec = abstractTSpecResource.allContents.head
-                                    if (inputTSpec instanceof TSMain) {
-                                        if (inputTSpec.model instanceof TestDefinition) {
-                                            (new TestspecificationGenerator).doGenerate(abstractTSpecResource, fsa, context) 
-                                        }
-                                    }
+                                    // Commented DB. TODO Abstract to Concrete TSpec is a work in progress 03.04.2025 //
+                                    // fsa.generateFile("concrete.tspec", atd.generateConcreteTest())
+                                    // fsa.generateFile("data.kvp", atd.__generateConcreteTest())
+
+//                                    val abstractTSpecURI = res.URI.trimSegments(1).appendSegment("src-gen").appendSegment("concrete.tspec")
+//                                    val abstractTSpecPath = CommonPlugin.resolve(abstractTSpecURI).toFileString
+//                                    val abstractTSpecFile = new FileInputStream(abstractTSpecPath)
+//                                    try {
+//                                        resourceSet.createResource(URI.createURI(abstractTSpecURI.toString)).load(abstractTSpecFile, emptyMap)
+//                                    } catch (Exception ex) {} // re-registration is not a problem
+//                                    val abstractTSpecResource = EcoreUtil2.getResource(res, abstractTSpecURI.toString)
+//                                    val inputTSpec = abstractTSpecResource.allContents.head
+//                                    if (inputTSpec instanceof TSMain) {
+//                                        if (inputTSpec.model instanceof TestDefinition) {
+//                                            // Commented DB. TODO Abstract to Concrete TSpec is a work in progress 03.04.2025 //
+//                                            // (new TestspecificationGenerator).doGenerate(abstractTSpecResource, fsa, context) 
+//                                        }
+//                                    }
                                 } else {
                                     Assert.isTrue(true, "this is not an abstract tspec")
                                 }
                             }
+                            // Files.delete(dst)
+                            refreshWorkspaceProjects()
 						}
 					}
 				}
-	            for (r : ResourcesPlugin.workspace.root.getProjects()) {
-	                r.refreshLocal(IResource.DEPTH_INFINITE, null)
-	            }
+                refreshWorkspaceProjects()
 				
 				// check if there are SUT products
 				if(!product.stubProducts.nullOrEmpty) {
@@ -361,6 +367,24 @@ class StandardProjectGenerator extends AbstractGenerator {
 			uri = uri.resolve(contextURI);
 		}		
 		return uri;
+	}
+	
+	def static void validate(EObject eObject) {
+	    val result = Diagnostician.INSTANCE.validate(eObject);
+	    if (result.severity == Diagnostic.ERROR) {
+	        val details = result.children.filter[severity == Diagnostic.ERROR].map['''- «message»'''].join('\n')
+	        throw new Exception(result.message + '\n' + details, new DiagnosticException(result));
+	    }
+    }
+
+	def static void refreshWorkspaceProjects() {
+	    if (ResourcesPlugin.plugin === null) {
+	        // Running as stand alone jar, skip refresh
+	        return;
+	    }
+        for (r : ResourcesPlugin.workspace.root.getProjects()) {
+            r.refreshLocal(IResource.DEPTH_INFINITE, null)
+        }
 	}
 }
 

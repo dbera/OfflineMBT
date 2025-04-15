@@ -59,21 +59,36 @@ import nl.esi.comma.expressions.expression.ExpressionVector;
 import nl.esi.comma.expressions.expression.QUANTIFIER;
 import nl.esi.comma.expressions.generator.ExpressionsCommaGenerator;
 import nl.esi.comma.types.types.EnumTypeDecl;
+import nl.esi.comma.types.types.MapTypeConstructor;
 import nl.esi.comma.types.types.MapTypeDecl;
 import nl.esi.comma.types.types.RecordTypeDecl;
 import nl.esi.comma.types.types.SimpleTypeDecl;
+import nl.esi.comma.types.types.Type;
 import nl.esi.comma.types.types.TypeDecl;
+import nl.esi.comma.types.types.TypeReference;
+import nl.esi.comma.types.types.VectorTypeConstructor;
 import nl.esi.comma.types.types.VectorTypeDecl;
 
 class SnakesHelper {
-	static String defaultValue(TypeDecl type) {
+	static String defaultValue(Type type, String targetName) {
+		// TypeReference | VectorTypeConstructor | MapTypeConstructor
+		if(type instanceof VectorTypeConstructor) {
+			return "[]";
+		} else if(type instanceof MapTypeConstructor) {
+			return "{" + 
+					defaultValue(type.getType(),targetName) + ":" +
+					defaultValue(((MapTypeConstructor) type).getValueType(),targetName) + 
+					"}";
+		} else { return defaultValue(type.getType(), targetName); }
+	}
+	static String defaultValue(TypeDecl type, String targetName) {
 		if (type instanceof SimpleTypeDecl) {
 			SimpleTypeDecl t = (SimpleTypeDecl) type;
-			if (t.getBase() != null) return defaultValue(t.getBase());
+			if (t.getBase() != null) return defaultValue(t.getBase(), targetName);
 			else if (t.getName().equals("int")) return "0";
 			else if (t.getName().equals("real")) return "0.0";
 			else if (t.getName().equals("bool")) return "True";
-			else if (t.getName().equals("string")) return "\"\"";
+			else if (t.getName().equals("string")) return "__uuid__".equals(targetName) ? "uuid.uuid4().hex" : "\"\"";
 			else return "\"\""; // Custom types without base (e.g. type DateTime)
 		} else if (type instanceof VectorTypeDecl) {
 			return "[]";
@@ -81,10 +96,14 @@ class SnakesHelper {
 			EnumTypeDecl t = (EnumTypeDecl) type;
 			return String.format("\"%s:%s\"", t.getName(), t.getLiterals().get(0).getName());
 		} else if (type instanceof MapTypeDecl) {
-			return "{}";
-		} else if (type instanceof RecordTypeDecl) {
-			String value = ((RecordTypeDecl) type).getFields().stream()
-				.map(f -> String.format("\"%s\":%s", f.getName(), defaultValue(f.getType().getType())))
+			return "{" + 
+					defaultValue(((MapTypeDecl) type).getConstructor().getType(), targetName) + 
+					":" +
+					defaultValue(((MapTypeDecl) type).getConstructor().getValueType().getType(), targetName) +
+					"}";
+		} else if (type instanceof RecordTypeDecl recType) {
+			String value = recType.getFields().stream()
+				.map(f -> String.format("\"%s\":%s", f.getName(), defaultValue(f.getType(), f.getName())))
 				.collect(Collectors.joining(","));
 			return String.format("{%s}", value);
 		} 

@@ -87,6 +87,14 @@ public class Bpmn4s {
 	public Boolean isXor(String id) {
 		return isNode(id) && elements.get(id).getType().equals(ElementType.XOR_GATE); 
 	}
+	
+	public Boolean isForkGate(String id) {
+		return isGate(id) && elements.get(id).getFlowOutputs().size() > 1; 
+	}
+	
+	public Boolean isMergeGate(String id) {
+		return isGate(id) && elements.get(id).getFlowInputs().size() > 1; 
+	}
 
 	public Boolean isAnd(String name) {
 		return isNode(name) && elements.get(name).getType().equals(ElementType.AND_GATE); 

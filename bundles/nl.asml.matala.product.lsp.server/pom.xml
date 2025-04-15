@@ -19,7 +19,7 @@
                 <artifactId>maven-resources-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>copy-docs</id>
+                        <id>copy-dist</id>
                         <phase>package</phase>
                         <goals>
                             <goal>copy-resources</goal>
@@ -29,7 +29,7 @@
                             <outputDirectory>${project.build.directory}/dist</outputDirectory>
                             <resources>
                                 <resource>
-                                    <directory>${basedir}/doc</directory>
+                                    <directory>${basedir}/dist</directory>
                                 </resource>
                             </resources>
                         </configuration>
@@ -141,23 +141,38 @@
                             <exclude>*:${project.artifactId}-*.source-*</exclude>
                             <!-- HINT: use the next grep command on de maven-shade-plugin warnings to produce the list below -->
                             <!-- mvn verify | tee mvn.log -->
-                            <!-- grep -e '^\[WARNING\]' mvn.log | grep -o -e 'org.eclipse.xtext.example.fowlerdsl.lsp.server.standalone-[^-]*' | sort -u | sed 's#\(.*\)-\(.*\)#<exclude>*:${project.artifactId}-\2-*</exclude>#g' -->
-							<exclude>*:${project.artifactId}-aopalliance-*</exclude>
-							<exclude>*:${project.artifactId}-asm-*</exclude>
-							<exclude>*:${project.artifactId}-classgraph-*</exclude>
-							<exclude>*:${project.artifactId}-failureaccess-*</exclude>
-							<exclude>*:${project.artifactId}-gson-*</exclude>
-							<exclude>*:${project.artifactId}-guava-*</exclude>
-							<exclude>*:${project.artifactId}-guice-*</exclude>
-							<exclude>*:${project.artifactId}-jakarta.inject-*</exclude>
-							<exclude>*:${project.artifactId}-org.aopalliance-*</exclude>
-							<exclude>*:${project.artifactId}-org.eclipse.lsp4j-*</exclude>
-							<exclude>*:${project.artifactId}-org.eclipse.lsp4j.jsonrpc-*</exclude>
-							<exclude>*:${project.artifactId}-org.eclipse.xtext.example.fowlerdsl-*</exclude>
-							<exclude>*:${project.artifactId}-org.eclipse.xtext.example.fowlerdsl.ide-*</exclude>
-							<exclude>*:${project.artifactId}-org.osgi.service.prefs-*</exclude>
-							<exclude>*:${project.artifactId}-reload4j-*</exclude>
-         				</excludes>
+                            <!-- grep -e '^\[WARNING\]' mvn.log | grep -o -e 'nl.asml.matala.product.lsp.server-[^-]*' | sort -u | sed 's#\(.*\)-\(.*\)#<exclude>*:${project.artifactId}-\2-*</exclude>#g' -->
+                            <exclude>*:${project.artifactId}-Java-*</exclude>
+                            <exclude>*:${project.artifactId}-aopalliance-*</exclude>
+                            <exclude>*:${project.artifactId}-asm-*</exclude>
+                            <exclude>*:${project.artifactId}-classgraph-*</exclude>
+                            <exclude>*:${project.artifactId}-commons-*</exclude>
+                            <exclude>*:${project.artifactId}-failureaccess-*</exclude>
+                            <exclude>*:${project.artifactId}-gson-*</exclude>
+                            <exclude>*:${project.artifactId}-guava-*</exclude>
+                            <exclude>*:${project.artifactId}-guice-*</exclude>
+                            <exclude>*:${project.artifactId}-jakarta.annotation-*</exclude>
+                            <exclude>*:${project.artifactId}-jakarta.inject-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.asml.matala.product-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.asml.matala.product.ide-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.esi.comma.actions-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.esi.comma.actions.ide-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.esi.comma.assertthat-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.esi.comma.assertthat.ide-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.esi.comma.expressions-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.esi.comma.expressions.ide-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.esi.comma.signature-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.esi.comma.types-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.esi.comma.types.ide-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.esi.xtext.lsp.server-*</exclude>
+                            <exclude>*:${project.artifactId}-org.aopalliance-*</exclude>
+                            <exclude>*:${project.artifactId}-org.apache.aries.spifly.dynamic.bundle-*</exclude>
+                            <exclude>*:${project.artifactId}-org.eclipse.lsp4j-*</exclude>
+                            <exclude>*:${project.artifactId}-org.eclipse.lsp4j.jsonrpc-*</exclude>
+                            <exclude>*:${project.artifactId}-org.osgi.service.prefs-*</exclude>
+                            <exclude>*:${project.artifactId}-reload4j-*</exclude>
+                            <exclude>*:${project.artifactId}-slf4j-*</exclude>
+                        </excludes>
                     </artifactSet>
                     <filters>
                         <filter>
