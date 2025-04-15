@@ -25,7 +25,7 @@ ScriptParametersCustom:
 ;
 
 enum MARGIN_TYPE:
-    ABSOLUTE='Absolute'
+    ABSOLUTE='absolute'
     | RELATIVE='Relative'
     | NONE='None';
 
