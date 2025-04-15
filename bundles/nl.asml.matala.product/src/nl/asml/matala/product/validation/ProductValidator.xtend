@@ -12,6 +12,7 @@ import nl.asml.matala.product.product.Function
 import java.util.HashSet
 import nl.asml.matala.product.product.ProductPackage
 import nl.asml.matala.product.product.Update
+import nl.asml.matala.product.product.Block
 
 /**
  * This class contains custom validation rules. 
@@ -34,9 +35,11 @@ class ProductValidator extends AbstractProductValidator {
         }
     }
 
+
     /**
      * Prevent Duplicate Updates in Actions
      */
+     
     @Check
     def preventDuplicationUpdatesActions(Function function) {
         for (update : function.updates) {
@@ -55,6 +58,60 @@ class ProductValidator extends AbstractProductValidator {
             }
         }
     }
+
+
+
+    /**
+     * Check the duplication of variables in Inputs
+     */
+    @Check
+    def checkInputDuplication(Block block) {
+        val existingInputs = block.invars.groupBy[input|input.name]
+        for (entry : existingInputs.entrySet) {
+            if (entry.value.size > 1) {
+                for (input : entry.value) {
+                    error("Duplicate variable name in inputs : " + input.name, ProductPackage.Literals.BLOCK__INVARS,
+                        block.invars.indexOf(input))
+                }
+            }
+
+        }
+    }
+
+
+
+    /**
+     * Check the duplication of variables in Outputs
+     */
+    @Check
+    def checkOutputDuplication(Block block) {
+        val existingOutputs = block.outvars.groupBy[output|output.name]
+        for (entry : existingOutputs.entrySet) {
+            if (entry.value.size > 1) {
+                for (output : entry.value) {
+                    error("Duplicate variable name in outputs : " + output.name, ProductPackage.Literals.BLOCK__OUTVARS,
+                        block.outvars.indexOf(output))
+                }
+            }
+        }
+    }
+
+    /**
+     * Check the duplication of variables in Local
+     */
+    @Check
+    def checkLocalDuplication(Block block) {
+        val existingLocalvars = block.localvars.groupBy[localvars|localvars.name]
+        for (entry : existingLocalvars.entrySet) {
+            if (entry.value.size > 1) {
+                for (localvars : entry.value) {
+                    error("Duplicate variable name in local variables : " + localvars.name,
+                        ProductPackage.Literals.BLOCK__LOCALVARS, block.localvars.indexOf(localvars))
+                }
+            }
+        }
+    }
+
 /* STRANGE BUG: Output Vars are Empty. Appears in Input Vars. 
  * Not appearing as problem during product generation!
  */
