@@ -91,7 +91,8 @@ class ProductGenerator extends AbstractGenerator {
 		var dataGetterTxt = (new TypesGenerator).generatePythonGetters(prod,resource)
 		var pnet = new PetriNet
 		var methodTxt = ''''''	
-		var sutTypesList = new ArrayList<String>	
+		var sutVarList = new ArrayList<String>
+		var sutTransitionMap = new HashMap<String, Set<String>> // sutvar -> transition_list (occurs in input/output)
 
 		var inout_places = new ArrayList<String>
 		var init_places = new ArrayList<String>
@@ -115,9 +116,6 @@ class ProductGenerator extends AbstractGenerator {
 			import_list.add(imp.importURI)
 		}
 		
-		// DB 05.04.2025. Added to handle SUT Types List
-		if(prod.sutTypes !== null) for(typ : prod.sutTypes.type) { sutTypesList.add(typ.type.name) }
-		
 		for(b : prod.specification.blocks) {
 			var Block block = null
 			if (b.block !== null) {
@@ -130,6 +128,11 @@ class ProductGenerator extends AbstractGenerator {
 			for(invar : block.invars) var_decl_map.put(block.name + "_" + invar.name, invar.type.type.name)
 			for(ovar : block.outvars) var_decl_map.put(block.name + "_" + ovar.name, ovar.type.type.name)
 			for(lvar : block.localvars) var_decl_map.put(block.name + "_" + lvar.name, lvar.type.type.name)
+			// Added DB 15.04.2025. To handle SUT Variables List
+            for(sutvar : block.sutVar) {
+                sutVarList.add(sutvar.name)
+                sutTransitionMap.put(sutvar.name, new HashSet<String>)
+            }
 			
 			// parse each block to derive places and transitions
 			var tuple = populatePetriNet(pnet, block)
@@ -160,6 +163,14 @@ class ProductGenerator extends AbstractGenerator {
 						    ) {
 						        listOfAssertTransitions.add(block.name+"_" + f.name + "_" + u.name)
 						    }
+						    
+						    // Added DB. 15.04.2025. Create map of sut-var to transitions
+						    for(fi : u.fnInp) {
+						        if(sutTransitionMap.containsKey(fi.ref.name)) {
+						            sutTransitionMap.get(fi.ref.name).add(block.name+"_" + f.name + "_" + u.name)
+						        }
+						    }
+						    
 							// 30.01.2025 commented out
 							/*for(fi : u.fnInp) {
 								if(fi.dataConstraints !== null) listOfAssertTransitions.add(block.name+"_" + f.name + "_" + u.name)
@@ -183,6 +194,12 @@ class ProductGenerator extends AbstractGenerator {
 					for(f : block.functions) {
 						for(u : f.updates) {
 							for(ovar : u.updateOutputVar) {
+								for(elm : ovar.fnOut) {
+								    // Added DB. 15.04.2025. Create map of sut-var to transitions
+                                    if(sutTransitionMap.containsKey(elm.ref.name)) {
+                                        sutTransitionMap.get(elm.ref.name).add(block.name+"_" + f.name + "_" + u.name)
+                                    }
+								}
 								if(ovar.suppress) {
 									// ADDED 08.11.2024 DB. Record out variables that were suppressed for a transition
 									// Is transition name present?
@@ -208,7 +225,11 @@ class ProductGenerator extends AbstractGenerator {
 			}
 			
 			var name = prod.specification.name
-			fsa.generateFile('CPNServer//' + prod.specification.name + '//' + name + '.py', pnet.toSnakes(name, name, listOfEnvBlocks, listOfAssertTransitions, mapOfSuppressTransitionVars, inout_places, init_places, depth_limit, num_tests, sutTypesList))
+			fsa.generateFile('CPNServer//' + prod.specification.name + '//' + name + '.py', pnet.toSnakes(
+			    name, name, listOfEnvBlocks, listOfAssertTransitions, 
+			    mapOfSuppressTransitionVars, inout_places, 
+			    init_places, depth_limit, num_tests, sutVarList, sutTransitionMap
+			))
 			//fsa.generateFile('CPNServer//' + prod.specification.name + '//' + 'server.py', (new FlaskSimulationGenerator).generateServer(name))
 			//fsa.generateFile('CPNserver.py', (new FlaskSimulationGenerator).generateCPNServer)
 			//fsa.generateFile('CPNclient.py', (new FlaskSimulationGenerator).generateCPNClient(prod.specification.name))

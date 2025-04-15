@@ -5,6 +5,7 @@ import java.util.HashMap
 import java.util.List
 import java.util.HashSet
 import nl.esi.comma.types.types.SimpleTypeDecl
+import java.util.Set
 
 class PetriNet {
 	public var places = new ArrayList<Place>
@@ -327,7 +328,8 @@ class PetriNet {
 				 List<String> init_places, 
 				 int depth_limit,
 				 int num_tests,
-				 List<String> sutTypesList
+				 List<String> sutVarList,
+				 HashMap<String, Set<String>> sutTransitionMap
 	) {
 		'''
 		import datetime
@@ -365,7 +367,8 @@ class PetriNet {
 		    SavedMarking = Marking()
 		    
 		    # test generation data
-		    sutTypesList = [«FOR elm : sutTypesList SEPARATOR ''','''»'«elm»'«ENDFOR»]
+		    sutTypesList = [«FOR elm : sutVarList SEPARATOR ''','''»'«elm»'«ENDFOR»]
+		    sutVarTransitionMap = {}
 		    numTestCases = 0
 		    listOfEnvBlocks = []
 		    listOfSUTActions = []
@@ -394,6 +397,7 @@ class PetriNet {
 		    «print_SCNGen(num_tests, depth_limit)»
 		    
 		    def initializeTestGeneration(self):
+		        self.sutVarTransitionMap = {«FOR elm : sutTransitionMap.keySet SEPARATOR ','»'«elm»': [«FOR v : sutTransitionMap.get(elm) SEPARATOR ','»'«v»'«ENDFOR»]«ENDFOR»}
 		        # map_of_transition_modes = {}
 		        for entry in self.visitedTList:
 		            if entry:
@@ -472,7 +476,7 @@ class PetriNet {
 		                    j = j + 1
 		                _test_scn.compute_dependencies()
 		                _test_scn.generate_viz(i, output_dir=p.plantuml_dir)
-		                _test_scn.generateTSpec(i, pn.sutTypesList, output_dir=p.tspec_dir)
+		                _test_scn.generateTSpec(i, pn.sutTypesList, pn.sutVarTransitionMap, output_dir=p.tspec_dir)
 		                _tests.list_of_test_scn.append(_test_scn)
 		            i = i + 1
 		            
