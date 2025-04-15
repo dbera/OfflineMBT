@@ -6,6 +6,7 @@ public enum ElementType {
 	TASK,
 	RUN_TASK,
 	COMPOSE_TASK,
+	ASSERT_TASK,
 	START_EVENT,
 	END_EVENT,
 	AND_GATE,
