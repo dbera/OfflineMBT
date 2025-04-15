@@ -12,14 +12,18 @@ import static extension nl.esi.comma.types.utilities.EcoreUtil3.*
 import static extension nl.esi.comma.types.utilities.FileSystemAccessUtil.*
 
 class Bpmn4sToPspecGenerator extends AbstractGenerator {
-    val boolean simulation;
+    val boolean simulation
+    val int numTests
+    val int depthLimit
 
     new() {
-        this(false)
+        this(false, 1, 300)
     }
 
-    new(boolean simulation) {
+    new(boolean simulation, int numTests, int depthLimit) {
         this.simulation = simulation
+        this.numTests = numTests
+        this.depthLimit = depthLimit
     }
 
     override doGenerate(Resource res, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
@@ -35,7 +39,7 @@ class Bpmn4sToPspecGenerator extends AbstractGenerator {
         fsa.generateFile(pspecPath, '// TODO: Generate content')
 
         // Generate the pspec file from the bpmn file
-        Main.compile(uri.toPath, simulation, fsa.rootURI.toPath)
+        Main.compile(uri.toPath, simulation, fsa.rootURI.toPath, depthLimit, numTests)
 
         // Refresh the files-system to detect the generated files
         fsa.refresh

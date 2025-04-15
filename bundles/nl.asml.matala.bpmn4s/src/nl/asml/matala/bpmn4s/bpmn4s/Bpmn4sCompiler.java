@@ -57,6 +57,17 @@ public class Bpmn4sCompiler{
 		}
 	}
 	
+	protected String removeUuids(String text) {
+		
+		String uuidInitRegex = "[\s]*__uuid__[\s]*=[\s]*uuid\\(\\)[\s]*[,]?[\n]?"; 
+		String uuidDeclRegex = "string[\s]*__uuid__[\s]*[\n]";
+		
+		text = text.replaceAll(uuidInitRegex, "");
+		text = text.replaceAll(uuidDeclRegex, "");
+				
+		return text;
+	}
+	
 	/**
 	 * Takes a Bpmn4s <model>, flattens its activities, and compiles it into a 
 	 * CPN in the language of pspec and accompanying types. The 
@@ -71,8 +82,9 @@ public class Bpmn4sCompiler{
 		this.typesFileName = modelname + ".types";
 
 		flattenActivities();
-		ps.append(generatePspec());
-		types.append(generateTypes());
+		
+		ps.append(removeUuids(generatePspec()));
+		types.append(removeUuids(generateTypes()));
 	}
 
 	/**
@@ -210,7 +222,8 @@ public class Bpmn4sCompiler{
 			}
 		}
 		result.append(String.format("\tSUT-blocks %s\n", String.join(" ", listSUTcomponents()))); 
-		result.append(String.format("\tdepth-limits %s\n}\r\n", model.getDepthLimit()));
+		result.append(String.format("\tdepth-limits %s\r\n", model.getDepthLimit()));
+		result.append(String.format("\tnum-tests %s\n}\r\n", model.getNumOfTests()));
 		return result.toString();
 	}
 
@@ -278,7 +291,6 @@ public class Bpmn4sCompiler{
 			if (isParentComponent( c, src)
 					&& (model.isAnd(srcId) || model.isTask(srcId))
 					&& (model.isAnd(tarId) || model.isTask(tarId))){
-				assert isParentComponent( c, tar);
 				String datatype = mapType(c.context.dataType != "" ? c.context.dataType : UNIT_TYPE);
 				locals += tabulate(datatype, sanitize(namePlaceBetweenTransitions(e.getId(), repr(src), repr(tar)))) + "\n";
 			}
@@ -365,9 +377,7 @@ public class Bpmn4sCompiler{
 		// Add data store inputs that have not been initialized somewhere else
 		for (Edge e: c.getDataInputs()) {
 			Element node = model.elements.get(e.getSrc());
-			
 			if (node.getType() == ElementType.DATASTORE  && !initialized.contains(node.getOriginDataNodeId())) {
-				Logging.logDebug(String.format("Initializing %s in %s" , node.getName(), c.getName()));;
 				initialized.add(node.getOriginDataNodeId());
 				String s = node.getInit();
 				if (node.isReferenceData()) {
@@ -502,20 +512,25 @@ public class Bpmn4sCompiler{
 					if (compiledGuard != "") {
 						task += "with-guard\t\t" + compiledGuard;
 					}
+					// ASSERTIONS
+					String assertions = node.getAssertions();
+					if(assertions != null) {
+						task += String.format(
+								"""
+								assertions default {
+								%s
+								}
+								""", assertions.replaceAll("(?m)(^)", "    "));
+					}
 					for(Edge e: node.getAllOutputs()) {
 						// Name of place that holds target context value for this transition:
 						String postCtxName = sanitize(getPNTargetPlaceName(e));
 						if (model.isData(e.getTar())) {
 							task += "produces-outputs\t" + sanitize(compile(e.getTar()));
-							if (isLinked(node.getId(), e.getTar())) {
-								task += " assert\n";
-							} else if (e.isSuppressed()) {
-								task += " suppress\n";
-							} else {
-								task += "\n";
-							}
+							task += e.isSuppressed() ? " suppress\n" : "\n";
 							if (e.getRefUpdate() != null && e.getRefUpdate() != "") {
-								task += "references {\n" + indent(replaceAll(e.getRefUpdate(), replaceMap)) + "\n}\n" ;
+								task += "references {\n" + indent(replaceAll(e.getRefUpdate(), replaceMap)) + 
+										"\n} symbolic-link\n";
 							}
 							if (e.getSymUpdate() != null && e.getSymUpdate() != "") {
 								task += "constraints {\n" + indent(replaceAll(e.getSymUpdate(), replaceMap)) + "\n}\n";
@@ -529,7 +544,8 @@ public class Bpmn4sCompiler{
 						} else { // then its context
 							task += "produces-outputs\t" + postCtxName + (e.isSuppressed() ? " suppress\n" : "\n");
 							if (e.getRefUpdate() != null && e.getRefUpdate() != "") {
-								task += "references {\n" + indent(replaceAll(e.getRefUpdate(), replaceMap)) + "\n}\n";
+								task += "references {\n" + indent(replaceAll(e.getRefUpdate(), replaceMap)) + 
+										"\n} symbolic-link\n";
 							}
 							if (e.getSymUpdate() != null && e.getSymUpdate() != "") {
 								task += "constraints {\n" + indent(replaceAll(e.getSymUpdate(), replaceMap)) + "\n}\n";
@@ -641,33 +657,6 @@ public class Bpmn4sCompiler{
 			text = replaceWord(text, k, replace.get(k));
 		}		
 		return text;
-	}
-	
-	/**
-	 * Linked data are outputs of RUN tasks which are referenced 
-	 * by a COMPOSE task.
-	 * Checking if it is referenced is not easy: it requires 
-	 * interpreting the expressions inside the references update.
-	 * Thus, I will consider them linked if they are, at the same time,
-	 * output of a RUN task and input of COMPOSE tasks.
-	 */
-	private boolean isLinked(String source, String data) {
-
-		Element d = model.getElementById(data);
-		String originDataId = d.getOriginDataNodeId(); 
-		if(model.isRunTask(source)) {
-			for(Element elem: model.elements.values()) {
-				if (model.isComposeTask(elem.getId())) {
-					for (Edge e: elem.getDataInputs()) {
-						Element src = model.getElementById(e.getSrc());
-						if (originDataId.equals(src.getOriginDataNodeId())) {
-							return true;
-						}
-					}
-				}
-			}
-		}
-		return false;
 	}
 	
 	/**
@@ -834,7 +823,10 @@ public class Bpmn4sCompiler{
 	 * but PSpec is more restrictive so we replace them.
 	 */
 	protected String sanitize(String str) {
-		String result = str.replaceAll("\\p{Zs}+", "").replace(".", "");
+		String result = str
+				.replaceAll("\\p{Zs}+", "__")
+				.replace(".", "_CLN_")
+				.replace("?", "_QMK_");
 		return result;
 	}
 

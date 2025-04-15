@@ -13,7 +13,9 @@ OfflineGenerationBlock:
 	'Generate' target=OfflineGenerationTarget '{'
 		name = ID '{'
             (('bpmn-file' bpmn = STRING) | ('product-file' product = STRING))
-			('path-to-python-exe' pythonExe = STRING)?
+			('num-tests' numTests = INT)?
+			('depth-limit' depthLimit = INT)?
+            ('path-to-python-exe' pythonExe = STRING)?
 		'}'
 	'}'
 ;

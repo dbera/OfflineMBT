@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import nl.asml.matala.bpmn4s.Logging;
+
 
 public class Element {
 
@@ -33,6 +35,17 @@ public class Element {
 		return context_update;
 	}
 
+	// For ASSERT tasks:
+	String assertions = null;
+	
+	public void setAssertions(String assertions) {
+		this.assertions = assertions;
+	}
+	
+	public String getAssertions() {
+		return this.assertions;
+	}
+	
 	final ElementType type;
 	final ElementType subtype;
 	
