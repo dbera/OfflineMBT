@@ -26,8 +26,8 @@ ScriptParametersCustom:
 
 enum MARGIN_TYPE:
     ABSOLUTE='absolute'
-    | RELATIVE='Relative'
-    | NONE='None';
+    | RELATIVE='relative'
+    | NONE='none';
 
 MargingItem:
     type=MARGIN_TYPE '(' (marginVal=FLOAT)? ')';
