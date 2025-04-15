@@ -11,6 +11,19 @@ Please keep this console open during your BPMN4S modeling sessions, and just clo
 
 ## Starting the simulation server
 
+### _Pre-requisites for running the simulation environment_
+To run the simulation server, you need ``python v3.10 (or greater)`` and the following modules:
+
+```
+pip install snakes 
+pip install flask flask_cors
+```
+
+Next, you must define a (local user) environment variable named ``BPMN4S_PYTHON`` 
+pointing to the ``python.exe`` of your Python 3.10+ virtual environment.
+
+### _Running the simulation server_
+
 To get simulation capabilities enabled, the CPNServer needs to be started before starting a token simulation.
 To start the CPN server, simply execute the `start-simulator.bat` file by double clicking it.
 This will open a console, and if correct, the console will state: `... Running on http://127.0.0.1:5000`
