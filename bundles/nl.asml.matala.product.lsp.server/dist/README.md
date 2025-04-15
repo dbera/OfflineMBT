@@ -22,7 +22,7 @@ pip install flask flask_cors
 Next, you must define a (local user) environment variable named ``BPMN4S_PYTHON`` 
 pointing to the ``python.exe`` of your Python 3.10+ virtual environment.
 
-### _Running the simulation server_
+### Running the simulation server
 
 To get simulation capabilities enabled, the CPNServer needs to be started before starting a token simulation.
 To start the CPN server, simply execute the `start-simulator.bat` file by double clicking it.
