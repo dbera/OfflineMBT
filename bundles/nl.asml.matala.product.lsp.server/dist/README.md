@@ -19,8 +19,10 @@ pip install snakes
 pip install flask flask_cors
 ```
 
-Next, you must define a (local user) environment variable named ``BPMN4S_PYTHON`` 
-pointing to the ``python.exe`` of your Python 3.10+ virtual environment.
+Next, you can define a environment variable named ``BPMN4S_PYTHON`` pointing to an alternative ``python.exe``.
+This environment variable will be used to start the simulation server.
+If ``BPMN4S_PYTHON`` is not defined, the standard ``python.exe`` will be used.
+
 
 ### Running the simulation server
 
