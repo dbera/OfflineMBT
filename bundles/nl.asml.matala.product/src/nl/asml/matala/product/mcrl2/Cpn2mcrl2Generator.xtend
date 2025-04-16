@@ -235,6 +235,8 @@ class Cpn2mcrl2Generator
         
         
             for prop in properties:
+                if prop['prop'] == '':
+                    continue
                 res =  model_checker.check_property(prop['prop'], arguments=prop['args'])
                 if res == 'True':
                     valid += 1
