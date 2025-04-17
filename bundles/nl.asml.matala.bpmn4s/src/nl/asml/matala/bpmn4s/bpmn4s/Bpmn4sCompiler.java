@@ -59,8 +59,8 @@ public class Bpmn4sCompiler{
 	
 	protected String removeUuids(String text) {
 		
-		String uuidInitRegex = "[\s]*__uuid__[\s]*=[\s]*uuid\\(\\)[\s]*[,]?[\n]?"; 
-		String uuidDeclRegex = "string[\s]*__uuid__[\s]*[\n]";
+		String uuidInitRegex = "__uuid__\\s*=\\s*uuid\\(\\)\\s*(,?\\s*)";
+		String uuidDeclRegex = "string\\s*__uuid__\\s*";
 		
 		text = text.replaceAll(uuidInitRegex, "");
 		text = text.replaceAll(uuidDeclRegex, "");
@@ -824,9 +824,9 @@ public class Bpmn4sCompiler{
 	 */
 	protected String sanitize(String str) {
 		String result = str
-				.replaceAll("\\p{Zs}+", "__")
 				.replace(".", "_CLN_")
-				.replace("?", "_QMK_");
+				.replace("?", "_QMK_")
+				.replaceAll("\\W+", "_");
 		return result;
 	}
 
