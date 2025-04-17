@@ -11,13 +11,16 @@ import nl.esi.comma.project.standard.standardProject.Project
 import nl.esi.comma.testspecification.generator.FromAbstractToConcrete
 import nl.esi.comma.testspecification.generator.FromConcreteToFast
 import nl.esi.comma.types.types.Import
+import nl.esi.comma.types.utilities.EcoreUtil3
+import nl.esi.comma.types.utilities.EcoreUtil3.ValidationException
+import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.emf.ecore.resource.ResourceSet
+import org.eclipse.emf.edit.ui.action.ValidateAction.EclipseResourcesUtil
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
 
-import static extension nl.esi.comma.types.utilities.EcoreUtil3.*
 import static extension nl.esi.comma.types.utilities.FileSystemAccessUtil.*
 
 /**
@@ -40,9 +43,9 @@ class StandardProjectGenerator extends AbstractGenerator {
 
     def doGenerate(OfflineGenerationBlock task, ResourceSet rst, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
         val productURI = if (task.bpmn.nullOrEmpty) {
-            task.eResource.resolveUri(task.product)
+            EcoreUtil3.resolveUri(task.eResource, task.product)
         } else {
-            val bpmnUri = task.eResource.resolveUri(task.bpmn)
+            val bpmnUri = EcoreUtil3.resolveUri(task.eResource, task.bpmn)
             val simulator = (task.target == OfflineGenerationTarget::SIMULATOR)
             val numTests = task.numTests <= 0 ? 1 : task.numTests
             val depthLimit = task.depthLimit <= 0 ? 300 : task.depthLimit
@@ -60,7 +63,7 @@ class StandardProjectGenerator extends AbstractGenerator {
         if (product === null) {
             throw new Exception('No product found in resource: ' + productURI)
         }
-        validate(product)
+        validate(productRes)
 
         // PspecToPetriNetGenerator
         // Generate CPNServer (a.k.a. abstract Tspec generator) and Petri-nets
@@ -100,6 +103,19 @@ class StandardProjectGenerator extends AbstractGenerator {
                 val fastFsa = fsa.createFolderAccess('FAST')
                 (new FromConcreteToFast()).doGenerate(conTspecRes, fastFsa, ctx)
             }
+        }
+    }
+
+    def validate(Resource res) {
+        try {
+            EcoreUtil3.validate(res)
+        } catch (ValidationException ve) {
+            if (ResourcesPlugin.plugin !== null) {
+                val util = new EclipseResourcesUtil()
+                util.deleteMarkers(res)
+                ve.cause.diagnostic.children.forEach[d | util.createMarkers(res, d)]
+            }
+            throw ve
         }
     }
 }

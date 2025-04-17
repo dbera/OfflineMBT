@@ -22,7 +22,8 @@ Require-Bundle: nl.esi.comma.types;visibility:=reexport,
  nl.esi.comma.scenarios,
  nl.esi.comma.inputspecification;bundle-version="4.2.0",
  nl.esi.comma.testspecification;bundle-version="4.2.0",
- nl.asml.matala.bpmn4s;bundle-version="4.2.0"
+ nl.asml.matala.bpmn4s;bundle-version="4.2.0",
+ org.eclipse.emf.edit.ui
 Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: nl.esi.comma.project.standard.standardProject,
  nl.esi.comma.project.standard.parser.antlr.internal,

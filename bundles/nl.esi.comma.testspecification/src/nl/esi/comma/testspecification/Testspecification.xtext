@@ -2,6 +2,7 @@ grammar nl.esi.comma.testspecification.Testspecification with nl.esi.comma.actio
 
 generate testspecification "http://www.esi.nl/comma/testspecification/Testspecification"
 
+import "http://www.eclipse.org/emf/2002/Ecore" as ecore
 import "http://www.esi.nl/comma/signature/InterfaceSignature" as sig 
 import "http://www.esi.nl/comma/types/Types" as types
 import "http://www.esi.nl/comma/expressions/Expression" as expr
@@ -156,7 +157,7 @@ TSJsonFloat:
 ;
 
 TSJsonLong: 
-    value = Expression::Long
+    value = INTEGER
 ;
 
 TSJsonObject:
@@ -247,3 +248,7 @@ EventClause:
 EventParams: {EventParams}
 	'params:' '(' (value += Expression (',' value += Expression)*)? ')' ('feature-expr:' config = Expression)?
 ;*/
+
+INTEGER returns ecore::ELong:
+    ('-')? INT
+;

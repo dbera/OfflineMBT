@@ -80,6 +80,11 @@ public class EcoreUtil3 extends EcoreUtil2 {
 		public ValidationException(Diagnostic diagnostic) {
 			super(createMessage(diagnostic), new DiagnosticException(diagnostic));
 		}
+		
+		@Override
+		public synchronized DiagnosticException getCause() {
+			return DiagnosticException.class.cast(super.getCause());
+		}
 
 		private static String createMessage(Diagnostic diagnostic) {
 			String details = diagnostic.getChildren().stream().filter(c -> c.getSeverity() == Diagnostic.ERROR)

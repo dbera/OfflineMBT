@@ -11,6 +11,7 @@ import org.eclipse.xtext.generator.IGeneratorContext
 
 import static extension nl.esi.comma.types.utilities.EcoreUtil3.*
 import static extension nl.esi.comma.types.utilities.FileSystemAccessUtil.*
+import java.util.concurrent.TimeUnit
 
 class PetriNetToAbstractTspecGenerator extends AbstractGenerator {
     val String pythonExe;
@@ -32,7 +33,8 @@ class PetriNetToAbstractTspecGenerator extends AbstractGenerator {
             pythonExe,
             uri.toPath,
             '-no_sim=TRUE',
-            '-tsdir=' + fsa.rootURI.toPath
+            '-tsdir=' + fsa.rootURI.toPath,
+            '-pudir=' + fsa.getURI('plantuml').toPath
         ])
 
         var BufferedReader i = new BufferedReader(new InputStreamReader(process.getInputStream()))
@@ -40,7 +42,7 @@ class PetriNetToAbstractTspecGenerator extends AbstractGenerator {
         while ((line = i.readLine()) !== null) {
             System.err.println(line)
         }
-        process.destroyForcibly
+        process.waitFor(10, TimeUnit::SECONDS)
 
         // Refresh the files-system to detect the generated files
         fsa.refresh
