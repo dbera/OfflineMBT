@@ -12,11 +12,8 @@ import nl.esi.comma.testspecification.generator.FromAbstractToConcrete
 import nl.esi.comma.testspecification.generator.FromConcreteToFast
 import nl.esi.comma.types.types.Import
 import nl.esi.comma.types.utilities.EcoreUtil3
-import nl.esi.comma.types.utilities.EcoreUtil3.ValidationException
-import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.emf.ecore.resource.ResourceSet
-import org.eclipse.emf.edit.ui.action.ValidateAction.EclipseResourcesUtil
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
@@ -63,7 +60,7 @@ class StandardProjectGenerator extends AbstractGenerator {
         if (product === null) {
             throw new Exception('No product found in resource: ' + productURI)
         }
-        validate(productRes)
+        EcoreUtil3.validate(productRes)
 
         // PspecToPetriNetGenerator
         // Generate CPNServer (a.k.a. abstract Tspec generator) and Petri-nets
@@ -88,7 +85,7 @@ class StandardProjectGenerator extends AbstractGenerator {
             ]
             absTspecRes.save(null)
             // Validate the generated abstract tspec
-            validate(absTspecRes)
+            EcoreUtil3.validate(absTspecRes)
 
 
             // Generate concrete tspec
@@ -96,26 +93,13 @@ class StandardProjectGenerator extends AbstractGenerator {
             (new FromAbstractToConcrete()).doGenerate(absTspecRes, conTspecFsa, ctx)
 
             val conTspecRes = conTspecFsa.loadResource(absTspecFileName, rst)
-            validate(conTspecRes)
+            EcoreUtil3.validate(conTspecRes)
 
             if (task.target == OfflineGenerationTarget.FAST) {
                 // Generate FAST testcases
                 val fastFsa = fsa.createFolderAccess('FAST')
                 (new FromConcreteToFast()).doGenerate(conTspecRes, fastFsa, ctx)
             }
-        }
-    }
-
-    def validate(Resource res) {
-        try {
-            EcoreUtil3.validate(res)
-        } catch (ValidationException ve) {
-            if (ResourcesPlugin.plugin !== null) {
-                val util = new EclipseResourcesUtil()
-                util.deleteMarkers(res)
-                ve.cause.diagnostic.children.forEach[d | util.createMarkers(res, d)]
-            }
-            throw ve
         }
     }
 }

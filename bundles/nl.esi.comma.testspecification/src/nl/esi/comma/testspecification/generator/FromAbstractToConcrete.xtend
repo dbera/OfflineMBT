@@ -25,7 +25,7 @@ class FromAbstractToConcrete extends AbstractGenerator {
         }
 
         val typesImports = getTypesImports(res)
-        for (sys : atd.getSystems()) {
+        for (sys : atd.systems) {
             fsa.generateFile('''types/«sys».types''', atd.generateTypesFile(sys, typesImports))
             fsa.generateFile('''parameters/«sys».params''', atd.generateParamsFile(sys))
         }

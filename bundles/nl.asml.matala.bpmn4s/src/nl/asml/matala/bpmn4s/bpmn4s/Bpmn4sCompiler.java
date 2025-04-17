@@ -826,7 +826,7 @@ public class Bpmn4sCompiler{
 		String result = str
 				.replace(".", "_CLN_")
 				.replace("?", "_QMK_")
-				.replaceAll("\\W+", "_");
+				.replaceAll("\\W", "");
 		return result;
 	}
 
