@@ -26,7 +26,7 @@ def build_and_load_model( model_name:str , filepath=""):
     Project project {{
       Generate Simulator {{
         simulator {{
-          product-file "{0}.bpmn"
+          bpmn-file "{0}.bpmn"
         }}
       }}
     }}
