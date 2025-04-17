@@ -39,7 +39,7 @@ class AbstractCPNControl(ABC):
 # Initializing CPN Model
 pn: typing.Dict[str, AbstractCPNControl] = {}
 
-def is_loaded_module(source, package="src-gen.CPNServer") -> bool:
+def is_loaded_module(source, package="src-gen.simulator.CPNServer") -> bool:
     """
     pre-loads file source as a module, and
     returns a CPN instance.
@@ -68,7 +68,7 @@ def gensym(length=32, prefix="gensym_", timestamp:bool=False):
 
     return prefix + symbol
 
-def load_module(source, package="src-gen.CPNServer") -> types.ModuleType:
+def load_module(source, package="src-gen.simulator.CPNServer") -> types.ModuleType:
     """
     pre-loads file source as a module, and
     returns a CPN instance.
@@ -89,7 +89,7 @@ def load_module(source, package="src-gen.CPNServer") -> types.ModuleType:
     return module
 
 
-def unload_module(source, package="src-gen.CPNServer") -> types.ModuleType:
+def unload_module(source, package="src-gen.simulator.CPNServer") -> types.ModuleType:
     """
     dereferences a module, and deletes CPN instance.
 
