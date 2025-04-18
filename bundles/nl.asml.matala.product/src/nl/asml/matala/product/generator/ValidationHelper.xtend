@@ -8,6 +8,7 @@ import nl.esi.comma.expressions.generator.ExpressionsCommaGenerator
 import nl.esi.comma.actions.actions.AssignmentAction
 import nl.esi.comma.actions.actions.IfAction
 import nl.esi.comma.actions.actions.ForAction
+import java.util.List
 
 class ValidationHelper {
 
@@ -15,36 +16,39 @@ class ValidationHelper {
      * Get variables based on the action type
      * */
     
-    def static Pair<String, Expression> getActionVariables(Action actionType) {
+    def static List<Pair<String, Expression>> getActionVariables(Action actionType) {
         switch (actionType) {
             AssignmentAction: {
-                return getAssignmentActionVar(actionType);
+               var result = new Pair<String, Expression>(actionType.getAssignment().getName(), actionType.getExp())
+                 return #[result]
             }
             RecordFieldAssignmentAction: {
                 val access = actionType.getFieldAccess() as ExpressionRecordAccess;
                 val record = (new ExpressionsCommaGenerator()).exprToComMASyntax(access.getRecord()).toString();
                 val rhsExp = actionType.getExp() as Expression;
-                return new Pair<String, Expression>(record, rhsExp);
+                var result =  new Pair<String, Expression>(record, rhsExp);
+                return #[result]
             }
             IfAction: {
-                for (a : actionType.getThenList().getActions()) {
-                    return getActionVariables(a);
+                val results = newArrayList
+
+                for (action : actionType.getThenList()?.getActions() ?: emptyList) {
+                    results.addAll(getActionVariables(action))
                 }
                 if (actionType.getElseList() !== null) {
-                    for (a : actionType.getElseList().getActions()) {
-                        return getActionVariables(a);
+                    for (action : actionType.getElseList().getActions()) {
+                        results.addAll(getActionVariables(action))
                     }
                 }
+                return results
             }
             ForAction: {
-                for (a : actionType.getDoList().getActions()) {
-                    return getActionVariables(a);
+                val results = newArrayList
+                for (action : actionType.getDoList()?.getActions()?: emptyList) {
+                    results.addAll(getActionVariables(action))
                 }
+                return  results
             }
         }
-    }
-
-    def static Pair<String, Expression> getAssignmentActionVar(AssignmentAction AssinmentExpression) {
-        return new Pair<String, Expression>(AssinmentExpression.getAssignment().getName(), AssinmentExpression.getExp())
     }
 }
