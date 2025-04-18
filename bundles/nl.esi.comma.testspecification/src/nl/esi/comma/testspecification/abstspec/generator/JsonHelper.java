@@ -7,7 +7,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package nl.esi.comma.assertthat.generator;
+package nl.esi.comma.testspecification.abstspec.generator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -79,7 +79,7 @@ class JsonHelper {
 	 * @return
 	 */
 	public static String jsonElement(JsonObject elem) {
-		String jsonFormat = "{\r\n%s\r\n}";
+		String jsonFormat = "{%s}";
 
 		List<String> membersListStr = new ArrayList<>();
 		for (JsonMember jsonMember : elem.getMembers()) {
