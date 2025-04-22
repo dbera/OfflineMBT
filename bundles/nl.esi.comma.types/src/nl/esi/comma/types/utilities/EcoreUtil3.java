@@ -1,5 +1,6 @@
 package nl.esi.comma.types.utilities;
 
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.eclipse.emf.common.CommonPlugin;
@@ -10,6 +11,7 @@ import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.util.Diagnostician;
+import org.eclipse.emf.ecore.util.EObjectValidator;
 import org.eclipse.xtext.EcoreUtil2;
 
 import nl.esi.comma.types.types.Import;
@@ -55,9 +57,14 @@ public class EcoreUtil3 extends EcoreUtil2 {
 	 * @see {@link Diagnostician#validate(EObject)}
 	 */
 	public static void validate(EObject eObject) throws ValidationException {
-		Diagnostic result = Diagnostician.INSTANCE.validate(eObject);
-		if (result.getSeverity() == Diagnostic.ERROR) {
-			throw new ValidationException(result);
+		Diagnostician diagnostician = new Diagnostician();
+		BasicDiagnostic diagnostics = diagnostician.createDefaultDiagnostic(eObject);
+		Map<Object, Object> context = diagnostician.createDefaultContext();
+
+		boolean result = diagnostician.validate(eObject, diagnostics, context);
+
+		if (!result) {
+			throw new ValidationException(diagnostics);
 		}
 	}
 
@@ -66,11 +73,18 @@ public class EcoreUtil3 extends EcoreUtil2 {
 	 * @see {@link Diagnostician#validate(EObject)}
 	 */
 	public static void validate(Resource resource) throws ValidationException {
-		BasicDiagnostic result = new BasicDiagnostic(EcoreUtil3.class.getName(), 0,
-				"Validation of " + resource.getURI(), new Object[] { resource });
-		resource.getContents().forEach(e -> Diagnostician.INSTANCE.validate(e, result));
-		if (result.getSeverity() == Diagnostic.ERROR) {
-			throw new ValidationException(result);
+		Diagnostician diagnostician = new Diagnostician();
+		BasicDiagnostic diagnostics = new BasicDiagnostic(EObjectValidator.DIAGNOSTIC_SOURCE, 0,
+				"Diagnosis of " + resource.getURI(), new Object[] { resource });
+		Map<Object, Object> context = diagnostician.createDefaultContext();
+
+		boolean result = true;
+		for (EObject eObject : resource.getContents()) {
+			result &= diagnostician.validate(eObject, diagnostics, context);
+		}
+
+		if (!result) {
+			throw new ValidationException(diagnostics);
 		}
 	}
 
@@ -80,16 +94,18 @@ public class EcoreUtil3 extends EcoreUtil2 {
 		public ValidationException(Diagnostic diagnostic) {
 			super(createMessage(diagnostic), new DiagnosticException(diagnostic));
 		}
-		
+
 		@Override
 		public synchronized DiagnosticException getCause() {
 			return DiagnosticException.class.cast(super.getCause());
 		}
 
 		private static String createMessage(Diagnostic diagnostic) {
-			String details = diagnostic.getChildren().stream().filter(c -> c.getSeverity() == Diagnostic.ERROR)
-					.map(c -> "- " + c.getMessage()).collect(Collectors.joining("\n"));
-			return diagnostic.getMessage() + (details.isEmpty() ? "" : '\n' + details);
+			String details = diagnostic.getChildren().stream()
+					.filter(c -> c.getSeverity() != Diagnostic.OK)
+					.map(c -> "- " + c.getMessage())
+					.collect(Collectors.joining("\n"));
+			return diagnostic.getMessage() + (details.isEmpty() ? "" : "\n" + details);
 		}
 	}
 }

@@ -20,6 +20,8 @@ import org.eclipse.xtext.generator.IGeneratorContext
 
 import static extension nl.esi.comma.types.utilities.FileSystemAccessUtil.*
 
+import static extension nl.esi.comma.types.utilities.EcoreUtil3.*
+
 /**
  * Generates code from your model files on save.
  * 
@@ -40,9 +42,9 @@ class StandardProjectGenerator extends AbstractGenerator {
 
     def doGenerate(OfflineGenerationBlock task, ResourceSet rst, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
         val productURI = if (task.bpmn.nullOrEmpty) {
-            EcoreUtil3.resolveUri(task.eResource, task.product)
+            task.eResource.resolveUri(task.product)
         } else {
-            val bpmnUri = EcoreUtil3.resolveUri(task.eResource, task.bpmn)
+            val bpmnUri = task.eResource.resolveUri(task.bpmn)
             val simulator = (task.target == OfflineGenerationTarget::SIMULATOR)
             val numTests = task.numTests <= 0 ? 1 : task.numTests
             val depthLimit = task.depthLimit <= 0 ? 300 : task.depthLimit
@@ -60,7 +62,7 @@ class StandardProjectGenerator extends AbstractGenerator {
         if (product === null) {
             throw new Exception('No product found in resource: ' + productURI)
         }
-        EcoreUtil3.validate(productRes)
+        productRes.validate()
 
         // PspecToPetriNetGenerator
         // Generate CPNServer (a.k.a. abstract Tspec generator) and Petri-nets
@@ -85,7 +87,7 @@ class StandardProjectGenerator extends AbstractGenerator {
             ]
             absTspecRes.save(null)
             // Validate the generated abstract tspec
-            EcoreUtil3.validate(absTspecRes)
+            absTspecRes.validate()
 
 
             // Generate concrete tspec
@@ -93,7 +95,7 @@ class StandardProjectGenerator extends AbstractGenerator {
             (new FromAbstractToConcrete()).doGenerate(absTspecRes, conTspecFsa, ctx)
 
             val conTspecRes = conTspecFsa.loadResource(absTspecFileName, rst)
-            EcoreUtil3.validate(conTspecRes)
+            conTspecRes.validate()
 
             if (task.target == OfflineGenerationTarget.FAST) {
                 // Generate FAST testcases

@@ -37,6 +37,8 @@ class Bpmn4sToPspecGenerator extends AbstractGenerator {
         // Temporary generate the file to ensure that folders exist
         val pspecPath = uri.trimFileExtension.appendFileExtension('ps').lastSegment
         fsa.generateFile(pspecPath, '// TODO: Generate content')
+        val typesPath = uri.trimFileExtension.appendFileExtension('types').lastSegment
+        fsa.generateFile(typesPath, '// TODO: Generate content')
 
         // Generate the pspec file from the bpmn file
         Main.compile(uri.toPath, simulation, fsa.rootURI.toPath, depthLimit, numTests)

@@ -243,14 +243,11 @@ class ProductGenerator extends AbstractGenerator {
 		//val (String) => String func = [s|block.name+"_"+s]
 		val (String) => String func = [s|s]
 					
-		for(act : block.initActions) {
-			System.out.println(" Init-Action LHS: " + SnakesHelper.action(act, func, "").split("=",2).get(0))
-			System.out.println(" Init-Action RHS: " + SnakesHelper.action(act, func, "").split("=",2).get(1))
+		for(act : block.initActions.map[SnakesHelper.action(it, func, "").split("=",2)].map[get(0) -> get(1)]) {
+			System.out.println(" Init-Action LHS: " + act.key)
+			System.out.println(" Init-Action RHS: " + act.value)
 			
-			pnet.add_to_init_place_expression_map(
-				SnakesHelper.action(act, func,"").split("=",2).get(0), 
-				SnakesHelper.action(act, func,"").split("=",2).get(1)
-			)
+			pnet.add_to_init_place_expression_map(act.key, act.value)
 		}
 		
 		// populate transitions
