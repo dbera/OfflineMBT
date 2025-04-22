@@ -62,9 +62,11 @@ class ConcreteExpressionHandler {
         }
     }
 
-    dispatch private def String createDeclValue(EnumTypeDecl type, TSJsonValue value) '''
-        «type.name»::«value.stringValue ?: type.literals.head.name»
-    '''
+    dispatch private def String createDeclValue(EnumTypeDecl type, TSJsonValue value) {
+        val typePrefix = type.name + '::'
+        val valueString = value.stringValue
+        return valueString.startsWith(typePrefix) ? valueString : (typePrefix + valueString)
+    }
 
     dispatch private def String createDeclValue(RecordTypeDecl type, TSJsonValue value) '''
         «type.name» {
