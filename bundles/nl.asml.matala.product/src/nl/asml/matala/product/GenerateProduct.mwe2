@@ -45,12 +45,8 @@ Workflow {
             contentAssist = nl.esi.xtext.lsp.generator.ide.contentassist.IdeContentAssistFragment2 {
                 generateXtendStub = true
             }
-			fragment = textmate.TextMateHighlightingFragment {
-			    absolutePath = "${rootPath}/nl.asml.matala.product.lsp.editor/language/grammars"
-			    override = true
-			}
 			fragment = nl.esi.xtext.lsp.generator.lezer.LezerGrammarFragment {
-                absolutePath = "${rootPath}/nl.asml.matala.product.lsp.editor/language/grammars"
+                absolutePath = "target/lezer-grammar"
                 override = true
 			}
 		}

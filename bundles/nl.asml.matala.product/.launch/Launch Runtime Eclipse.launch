@@ -12,9 +12,8 @@
     <booleanAttribute key="clearws" value="false"/>
     <booleanAttribute key="clearwslog" value="false"/>
     <stringAttribute key="configLocation" value="${workspace_loc}/.metadata/.plugins/org.eclipse.pde.core/Launch Runtime Eclipse"/>
-    <booleanAttribute key="default" value="false"/>
+    <booleanAttribute key="default" value="true"/>
     <setAttribute key="deselected_workspace_bundles">
-        <setEntry value="nl.asml.matala.product.lsp.editor"/>
         <setEntry value="nl.asml.matala.product.lsp.server"/>
         <setEntry value="nl.esi.comma.branding"/>
         <setEntry value="nl.esi.comma.product.philips"/>
@@ -101,7 +100,6 @@
         <setEntry value="org.apache.commons.commons-codec@default:default"/>
         <setEntry value="org.apache.commons.commons-io@default:default"/>
         <setEntry value="org.apache.commons.jxpath@default:default"/>
-        <setEntry value="org.apache.commons.lang3@default:default"/>
         <setEntry value="org.apache.commons.lang@default:default"/>
         <setEntry value="org.apache.commons.logging@default:default"/>
         <setEntry value="org.apache.felix.gogo.command@default:default"/>
@@ -311,13 +309,10 @@
         <setEntry value="org.eclipse.jsch.ui@default:default"/>
         <setEntry value="org.eclipse.justj.openjdk.hotspot.jre.minimal.stripped.win32.x86_64@default:false"/>
         <setEntry value="org.eclipse.justj.openjdk.hotspot.jre.minimal.stripped@default:default"/>
-        <setEntry value="org.eclipse.lsp4e@default:default"/>
         <setEntry value="org.eclipse.lsp4j.jsonrpc@default:default"/>
         <setEntry value="org.eclipse.lsp4j@default:default"/>
         <setEntry value="org.eclipse.ltk.core.refactoring@default:default"/>
         <setEntry value="org.eclipse.ltk.ui.refactoring@default:default"/>
-        <setEntry value="org.eclipse.mylyn.wikitext.markdown@default:default"/>
-        <setEntry value="org.eclipse.mylyn.wikitext@default:default"/>
         <setEntry value="org.eclipse.nebula.cwt@default:default"/>
         <setEntry value="org.eclipse.nebula.widgets.cdatetime@default:default"/>
         <setEntry value="org.eclipse.orbit.xml-apis-ext@default:default"/>
@@ -365,10 +360,6 @@
         <setEntry value="org.eclipse.team.ui@default:default"/>
         <setEntry value="org.eclipse.text.quicksearch@default:default"/>
         <setEntry value="org.eclipse.text@default:default"/>
-        <setEntry value="org.eclipse.tm4e.core@default:default"/>
-        <setEntry value="org.eclipse.tm4e.languageconfiguration@default:default"/>
-        <setEntry value="org.eclipse.tm4e.registry@default:default"/>
-        <setEntry value="org.eclipse.tm4e.ui@default:default"/>
         <setEntry value="org.eclipse.tools.layout.spy@default:default"/>
         <setEntry value="org.eclipse.ui.browser@default:default"/>
         <setEntry value="org.eclipse.ui.cheatsheets@default:default"/>
@@ -450,9 +441,6 @@
         <setEntry value="org.eclipse.xtext@default:default"/>
         <setEntry value="org.hamcrest.core@default:default"/>
         <setEntry value="org.hamcrest@default:default"/>
-        <setEntry value="org.jcodings@default:default"/>
-        <setEntry value="org.joni@default:default"/>
-        <setEntry value="org.jsoup@default:default"/>
         <setEntry value="org.junit@default:default"/>
         <setEntry value="org.kohsuke.args4j@default:default"/>
         <setEntry value="org.mortbay.jasper.apache-el@default:default"/>
@@ -503,7 +491,6 @@
         <setEntry value="org.python.pydev@default:default"/>
         <setEntry value="org.sat4j.core@default:default"/>
         <setEntry value="org.sat4j.pb@default:default"/>
-        <setEntry value="org.snakeyaml.engine@default:default"/>
         <setEntry value="org.tukaani.xz@default:default"/>
         <setEntry value="slf4j.api@default:default"/>
         <setEntry value="slf4j.reload4j@default:default"/>

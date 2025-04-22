@@ -38,7 +38,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: bpmn4s-lsp-client
-        path: bundles/nl.asml.matala.product.lsp.editor/language/grammars
+        path: bundles/nl.asml.matala.product/target/lezer-grammar
         retention-days: 10
     - name: Attach Generator
       uses: actions/upload-artifact@v4
