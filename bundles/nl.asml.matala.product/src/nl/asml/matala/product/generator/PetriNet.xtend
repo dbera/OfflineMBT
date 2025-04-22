@@ -2,10 +2,11 @@ package nl.asml.matala.product.generator
 
 import java.util.ArrayList
 import java.util.HashMap
-import java.util.List
 import java.util.HashSet
-import nl.esi.comma.types.types.SimpleTypeDecl
+import java.util.List
+import java.util.Map
 import java.util.Set
+import nl.esi.comma.types.types.SimpleTypeDecl
 
 class PetriNet {
 	public var places = new ArrayList<Place>
@@ -322,14 +323,13 @@ class PetriNet {
 	def toSnakes(String prod_name, 
 				 String topology_name, 
 				 List<String> listOfEnvBlocks,
-				 ArrayList<String> listOfAssertTransitions,
-				 HashMap<String,List<String>> mapOfSuppressTransitionVars,
+				 List<String> listOfAssertTransitions,
+				 Map<String, ? extends List<String>> mapOfSuppressTransitionVars,
 				 List<String> inout_places, 
 				 List<String> init_places, 
 				 int depth_limit,
 				 int num_tests,
-				 List<String> sutVarList,
-				 HashMap<String, Set<String>> sutTransitionMap
+				 Map<String, ? extends Set<String>> sutTransitionMap
 	) {
 		'''
 		import datetime
@@ -367,7 +367,7 @@ class PetriNet {
 		    SavedMarking = Marking()
 		    
 		    # test generation data
-		    sutTypesList = [«FOR elm : sutVarList SEPARATOR ''','''»'«elm»'«ENDFOR»]
+		    sutTypesList = [«FOR elm : sutTransitionMap.keySet SEPARATOR ','»'«elm»'«ENDFOR»]
 		    sutVarTransitionMap = {}
 		    numTestCases = 0
 		    listOfEnvBlocks = []
@@ -397,7 +397,7 @@ class PetriNet {
 		    «print_SCNGen(num_tests, depth_limit)»
 		    
 		    def initializeTestGeneration(self):
-		        self.sutVarTransitionMap = {«FOR elm : sutTransitionMap.keySet SEPARATOR ','»'«elm»': [«FOR v : sutTransitionMap.get(elm) SEPARATOR ','»'«v»'«ENDFOR»]«ENDFOR»}
+		        self.sutVarTransitionMap = {«FOR entry : sutTransitionMap.entrySet SEPARATOR ','»'«entry.key»': [«FOR v : entry.value SEPARATOR ','»'«v»'«ENDFOR»]«ENDFOR»}
 		        # map_of_transition_modes = {}
 		        for entry in self.visitedTList:
 		            if entry:

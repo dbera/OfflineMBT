@@ -210,7 +210,7 @@ public class Bpmn4sCompiler{
 				String local = fabSpecLocal(c);
 				String init = fabSpecInit(c.getId());
 				List<String> sutConfVars = fabSpecSutConfs(c.getId());
-				String sutConfs = sutConfVars.isEmpty() ? "" : "sut-var: " + String.join(" ", sutConfVars) + "\n"; 
+				String sutConfs = sutConfVars.isEmpty() ? "" : "suts " + String.join(", ", sutConfVars) + "\n";
 				String desc = fabSpecDescription(c.getId()); 
 				component += indent(inOut);
 				component += "\n";

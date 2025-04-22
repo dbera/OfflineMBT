@@ -58,8 +58,8 @@ Block:
 			('inputs' invars+=Variable* )? &
 			('outputs' outvars+=Variable* )? &
 			('local' localvars+=Variable* )? &
+            ('suts' sutvars += [expr::Variable|ID] (',' sutvars+=[expr::Variable|ID])*)? &
 			('init' initActions+=(AssignmentAction | RecordFieldAssignmentAction)*)? &
-			('sut-var' '{' sutVar += [expr::Variable|ID]* '}')? &
 			'desc' type = STRING
 		)
 		functions += Function*

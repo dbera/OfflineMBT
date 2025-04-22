@@ -88,21 +88,20 @@ class ProductGenerator extends AbstractGenerator {
 	
 	def generatePetriNetAndTestGeneration(Product prod, Resource resource, IFileSystemAccess2 fsa) 
 	{	
-		var dataGetterTxt = (new TypesGenerator).generatePythonGetters(prod,resource)
+		val dataGetterTxt = (new TypesGenerator).generatePythonGetters(prod,resource)
 		var pnet = new PetriNet
 		var methodTxt = ''''''	
-		var sutVarList = new ArrayList<String>
-		var sutTransitionMap = new HashMap<String, Set<String>> // sutvar -> transition_list (occurs in input/output)
+		val sutTransitionMap = newLinkedHashMap // sutvar -> transition_list (occurs in input/output)
 
-		var inout_places = new ArrayList<String>
-		var init_places = new ArrayList<String>
+		val inout_places = newArrayList
+		val init_places = newArrayList
 		
-		var depth_limit = prod.specification.limit 
+		val depth_limit = prod.specification.limit 
 		
-		var num_tests = prod.specification.numTests
+		val num_tests = prod.specification.numTests
 		
-		var import_list = new ArrayList<String>
-		var var_decl_map = new HashMap<String,String>
+		val import_list = newArrayList
+		val var_decl_map = newLinkedHashMap
 		
 		/* Generate Z3 Data Types */
 		for(imp : prod.imports) {
@@ -129,9 +128,8 @@ class ProductGenerator extends AbstractGenerator {
 			for(ovar : block.outvars) var_decl_map.put(block.name + "_" + ovar.name, ovar.type.type.name)
 			for(lvar : block.localvars) var_decl_map.put(block.name + "_" + lvar.name, lvar.type.type.name)
 			// Added DB 15.04.2025. To handle SUT Variables List
-            for(sutvar : block.sutVar) {
-                sutVarList.add(sutvar.name)
-                sutTransitionMap.put(sutvar.name, new HashSet<String>)
+            for(sutvar : block.sutvars) {
+                sutTransitionMap.put(sutvar.name, newLinkedHashSet)
             }
 			
 			// parse each block to derive places and transitions
@@ -228,7 +226,7 @@ class ProductGenerator extends AbstractGenerator {
 			fsa.generateFile('CPNServer//' + prod.specification.name + '//' + name + '.py', pnet.toSnakes(
 			    name, name, listOfEnvBlocks, listOfAssertTransitions, 
 			    mapOfSuppressTransitionVars, inout_places, 
-			    init_places, depth_limit, num_tests, sutVarList, sutTransitionMap
+			    init_places, depth_limit, num_tests, sutTransitionMap
 			))
 			//fsa.generateFile('CPNServer//' + prod.specification.name + '//' + 'server.py', (new FlaskSimulationGenerator).generateServer(name))
 			//fsa.generateFile('CPNserver.py', (new FlaskSimulationGenerator).generateCPNServer)
