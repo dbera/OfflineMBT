@@ -8,108 +8,239 @@ import nl.esi.comma.types.types.TypesPackage
 import org.eclipse.emf.common.util.URI
 import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.validation.Check
+import nl.asml.matala.product.product.Function
+import java.util.HashSet
+import nl.asml.matala.product.product.ProductPackage
+import nl.asml.matala.product.product.Update
+import nl.asml.matala.product.product.Block
+import nl.esi.comma.expressions.expression.ExpressionVariable
+import nl.asml.matala.product.generator.ValidationHelper
+import java.util.Set
+import java.util.List
+import org.eclipse.emf.ecore.EObject
+import nl.esi.comma.expressions.expression.Variable
 
 /**
  * This class contains custom validation rules. 
- *
+ * 
  * See https://www.eclipse.org/Xtext/documentation/303_runtime_concepts.html#validation
  */
 class ProductValidator extends AbstractProductValidator {
-	@Check
+
+    @Check
     override checkImportForValidity(Import imp) {
-        if(!EcoreUtil2.isValidUri(imp, URI.createURI(imp.getImportURI()))) {
+        if (!EcoreUtil2.isValidUri(imp, URI.createURI(imp.getImportURI()))) {
             error("Invalid resource", imp, TypesPackage.eINSTANCE.getImport_ImportURI());
         } else {
             /*val Resource r = EcoreUtil2.getResource(imp.eResource, imp.importURI)
-            if(! (r.allContents.head instanceof InterfaceDefinition ||
-                r.allContents.head instanceof FeatureDefinition
-            ))
-                error("The imported resource is not an interface definition or a feature definition.", imp, TypesPackage.eINSTANCE.import_ImportURI)
-        }*/
+             * if(! (r.allContents.head instanceof InterfaceDefinition ||
+             *     r.allContents.head instanceof FeatureDefinition
+             * ))
+             *     error("The imported resource is not an interface definition or a feature definition.", imp, TypesPackage.eINSTANCE.import_ImportURI)
+             }*/
         }
     }
-    
-    
-    /* STRANGE BUG: Output Vars are Empty. Appears in Input Vars. 
-     * Not appearing as problem during product generation!
-    */
-    /*
+
+    /**
+     * Prevent Duplicate Updates in Actions
+     */
     @Check
-    public void checkInputOutputMapping(Product p) 
-    {
-        var outVarMap = new HashMap<String,List<String>>();
-        var inVarMap  = new HashMap<String,List<String>>();
-        
-        for(var b : p.getBlock()) {
-            System.out.println(" + Parsing Block: " + b.getName());
-            for(var ov : b.getOutvars()) {
-                if(outVarMap.containsKey(b.getName())) {
-                    outVarMap.get(b.getName()).add(ov.getName());
-                    System.out.println("    Added Output: " + ov.getName());
-                }
-                else {
-                    var lst = new ArrayList<String>();
-                    lst.add(ov.getName());
-                    outVarMap.put(b.getName(), lst);
-                    System.out.println("    Added Output to Existing: " + ov.getName());
-                }
-            }
-            for(var iv : b.getInvars()) {
-                System.out.println(" - Parsing Block: " + b.getName());
-                if(inVarMap.containsKey(b.getName())) {
-                    inVarMap.get(b.getName()).add(iv.getName());
-                    System.out.println("    Added Input: " + iv.getName());
-                }
-                else {
-                    var lst = new ArrayList<String>();
-                    lst.add(iv.getName());
-                    inVarMap.put(b.getName(), lst);
-                    System.out.println("    Added Input to Existing: " + iv.getName());
+    def preventDuplicationUpdatesActions(Function function) {
+        for (update : function.updates) {
+            val groupedByName = update.updateOutputVar.flatMap[it.fnOut].groupBy[it.ref.name]
+            groupedByName.values.filter[size > 1].flatten.forEach [ output |                
+                error(
+                    "Duplicate output variable name: " + output.ref.name,
+                    output, ProductPackage.Literals.VAR_REF__REF
+                )
+            ]
+        }
+    }
+
+    /**
+     * Check the duplication of variables in Inputs
+     */
+    @Check
+    def checkInputDuplication(Block block) {
+        val existingInputs = block.invars.groupBy[input|input.name]
+        existingInputs.values.filter[size > 1].flatten.forEach [ input |
+            error("Duplicate variable name in inputs: " + input.name, ProductPackage.Literals.BLOCK__INVARS,
+                block.invars.indexOf(input))
+        ]
+    }
+
+    /**
+     * Check the duplication of variables in Outputs
+     */
+    @Check
+    def checkOutputDuplication(Block block) {
+        val existingOutputs = block.outvars.groupBy[output|output.name]
+        existingOutputs.values.filter[size > 1].flatten.forEach [ output |
+            error("Duplicate variable name in outputs: " + output.name, ProductPackage.Literals.BLOCK__OUTVARS,
+                block.outvars.indexOf(output))
+        ]
+    }
+
+    /**
+     * Check the duplication of variables in Local
+     */
+    @Check
+    def checkLocalDuplication(Block block) {
+        val existingLocalvars = block.localvars.groupBy[localvars|localvars.name]
+        existingLocalvars.values.filter[size > 1].flatten.forEach [ localvars |
+            error("Duplicate variable name in local variables: " + localvars.name,
+                ProductPackage.Literals.BLOCK__LOCALVARS, block.localvars.indexOf(localvars))
+        ]
+    }
+
+    /**
+     * All variables occurring in a guard expression must have been defined as inputs of an action
+     */
+    @Check
+    def preventIlligalVariableAccess(Function function) {
+        for (update : function.updates) {
+            if (update.guard !== null) {
+                val Set<String> inputs = newHashSet
+                // Get all variables in a guard 
+                var allVariables = update.guard.eAllContents.filter(ExpressionVariable).map[variable.name].toSet
+                // get all the variables in input
+                inputs.addAll(update.fnInp.map[it.ref.name])
+
+                val missingInputs = allVariables.filter[e|!inputs.contains(e)]
+
+                if (!missingInputs.empty) {
+                    error(
+                        "The following variables used in the guard are not defined in the input variables: " +
+                            missingInputs.join(", "), update,
+                        ProductPackage.Literals.UPDATE__GUARD
+                    )
                 }
             }
         }
-        
-        System.out.println(" Debug in Var: " + inVarMap);
-        System.out.println(" Debug out Var: " + outVarMap);
-        
-        for(var t : p.getTopology()) {
-            for(var f : t.getFlow()) {
-                for(var conn : f.getVarConn()) {
-                    var lkey = conn.getVarRefLHS().getBlockRef().getName();
-                    var lvalue = conn.getVarRefLHS().getVarRef().getName();
-                    var rkey = conn.getVarRefRHS().getBlockRef().getName();
-                    var rvalue = conn.getVarRefRHS().getVarRef().getName();
-                    inVarMap.get(lkey).remove(lvalue);
-                    outVarMap.get(rkey).remove(rvalue);
+    }
+
+    /**
+     * Variables occurring in the RHS of an update expression must have been defined as inputs of an action.
+     * LHS variable is the same as that mentioned in immediately preceding "updates". Note that attributes of this variable may be referenced in the LHS expression (record field access)
+     * 
+     */
+    @Check
+    def preventIlligalVariableAccessUpdate(Function function) {
+        /* Variables occurring in the RHS of an update expression must have been defined as inputs of an action. */
+        for (update : function.updates) {
+            val inputs = new HashSet<String>
+            // get with-inputs of an action
+            inputs.addAll(update.fnInp.map[it.ref.name])
+
+            for (updateOutVar : update.updateOutputVar) {
+                var producesOutputs = new HashSet<String>
+                producesOutputs.addAll(updateOutVar.fnOut.map[it.ref.name])
+
+                var actions = updateOutVar.act.actions
+                for (action : actions) {
+                    for (pair : ValidationHelper.getActionVariables(action)) {
+                        val LHSValue = pair.key
+                        val expValue = pair.value
+                        // all the variable in the RHS of the expression
+                        var allVariables = expValue.eAllContents.filter(ExpressionVariable).map[variable.name].toSet
+
+                        if (!producesOutputs.contains(LHSValue)) {
+                            warning(
+                                "The variable used in Updates Expression is not defined in the produces outputs: " + LHSValue, updateOutVar,
+                                ProductPackage.Literals.UPDATE_OUT_VAR__ACT          
+                            )
+                        }
+
+                        allVariables.removeAll(inputs)
+                        if (!inputs.containsAll(allVariables)) {
+                            error("The variable used in Updates Expression is not defined in the input variables: " +
+                                allVariables.join(", "),updateOutVar ,  ProductPackage.Literals.UPDATE_OUT_VAR__ACT)
+                        }
+                    }
                 }
             }
         }
-        
-        System.out.println(" Debug in Var: " + inVarMap);
-        System.out.println(" Debug out Var: " + outVarMap);
-        
-        // Check what is not mapped. 
-        var txt = new String();
-        var isUnMapped = false;
-        
-        for(var k : inVarMap.keySet()) {
-            if(!inVarMap.get(k).isEmpty()) {
-                isUnMapped = true;
-                txt += "\n block: " + k + " has input: "+ inVarMap.get(k) + "with no source \n";
-            }
-        }
-        
-        for(var k : outVarMap.keySet()) {
-            if(!outVarMap.get(k).isEmpty()) {
-                isUnMapped = true;
-                txt += "\n block: " + k + " has output: "+ outVarMap.get(k) + "with no target \n";
-            }
-        }
-        
-        if(isUnMapped) {
-            error("Missing Input-Output Connections: \n" + txt, 
-                    ProductPackage.Literals.PRODUCT__TOPOLOGY);
-        }
-    }*/
-	
+    }
+
+/* STRANGE BUG: Output Vars are Empty. Appears in Input Vars. 
+ * Not appearing as problem during product generation!
+ */
+/*
+ * @Check
+ * public void checkInputOutputMapping(Product p) 
+ * {
+ *     var outVarMap = new HashMap<String,List<String>>();
+ *     var inVarMap  = new HashMap<String,List<String>>();
+ *     
+ *     for(var b : p.getBlock()) {
+ *         System.out.println(" + Parsing Block: " + b.getName());
+ *         for(var ov : b.getOutvars()) {
+ *             if(outVarMap.containsKey(b.getName())) {
+ *                 outVarMap.get(b.getName()).add(ov.getName());
+ *                 System.out.println("    Added Output: " + ov.getName());
+ *             }
+ *             else {
+ *                 var lst = new ArrayList<String>();
+ *                 lst.add(ov.getName());
+ *                 outVarMap.put(b.getName(), lst);
+ *                 System.out.println("    Added Output to Existing: " + ov.getName());
+ *             }
+ *         }
+ *         for(var iv : b.getInvars()) {
+ *             System.out.println(" - Parsing Block: " + b.getName());
+ *             if(inVarMap.containsKey(b.getName())) {
+ *                 inVarMap.get(b.getName()).add(iv.getName());
+ *                 System.out.println("    Added Input: " + iv.getName());
+ *             }
+ *             else {
+ *                 var lst = new ArrayList<String>();
+ *                 lst.add(iv.getName());
+ *                 inVarMap.put(b.getName(), lst);
+ *                 System.out.println("    Added Input to Existing: " + iv.getName());
+ *             }
+ *         }
+ *     }
+ *     
+ *     System.out.println(" Debug in Var: " + inVarMap);
+ *     System.out.println(" Debug out Var: " + outVarMap);
+ *     
+ *     for(var t : p.getTopology()) {
+ *         for(var f : t.getFlow()) {
+ *             for(var conn : f.getVarConn()) {
+ *                 var lkey = conn.getVarRefLHS().getBlockRef().getName();
+ *                 var lvalue = conn.getVarRefLHS().getVarRef().getName();
+ *                 var rkey = conn.getVarRefRHS().getBlockRef().getName();
+ *                 var rvalue = conn.getVarRefRHS().getVarRef().getName();
+ *                 inVarMap.get(lkey).remove(lvalue);
+ *                 outVarMap.get(rkey).remove(rvalue);
+ *             }
+ *         }
+ *     }
+ *     
+ *     System.out.println(" Debug in Var: " + inVarMap);
+ *     System.out.println(" Debug out Var: " + outVarMap);
+ *     
+ *     // Check what is not mapped. 
+ *     var txt = new String();
+ *     var isUnMapped = false;
+ *     
+ *     for(var k : inVarMap.keySet()) {
+ *         if(!inVarMap.get(k).isEmpty()) {
+ *             isUnMapped = true;
+ *             txt += "\n block: " + k + " has input: "+ inVarMap.get(k) + "with no source \n";
+ *         }
+ *     }
+ *     
+ *     for(var k : outVarMap.keySet()) {
+ *         if(!outVarMap.get(k).isEmpty()) {
+ *             isUnMapped = true;
+ *             txt += "\n block: " + k + " has output: "+ outVarMap.get(k) + "with no target \n";
+ *         }
+ *     }
+ *     
+ *     if(isUnMapped) {
+ *         error("Missing Input-Output Connections: \n" + txt, 
+ *                 ProductPackage.Literals.PRODUCT__TOPOLOGY);
+ *     }
+ }*/
 }

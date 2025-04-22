@@ -84,17 +84,17 @@ class ProductGenerator extends AbstractGenerator {
 		val dataGetterTxt = (new TypesGenerator).generatePythonGetters(prod,resource)
 		var pnet = new PetriNet
 		var methodTxt = ''''''	
-		val sutTypesList = new ArrayList<String>	
+		val sutTransitionMap = newLinkedHashMap // sutvar -> transition_list (occurs in input/output)
 
-		val inout_places = new ArrayList<String>
-		val init_places = new ArrayList<String>
+		val inout_places = newArrayList
+		val init_places = newArrayList
 		
 		val depth_limit = prod.specification.limit 
 		
 		val num_tests = prod.specification.numTests
 		
-		val import_list = new ArrayList<String>
-		val var_decl_map = new HashMap<String,String>
+		val import_list = newArrayList
+		val var_decl_map = newLinkedHashMap
 		
 		/* Generate Z3 Data Types */
 		for(imp : prod.imports) {
@@ -108,15 +108,16 @@ class ProductGenerator extends AbstractGenerator {
 			import_list.add(imp.importURI)
 		}
 		
-		// DB 05.04.2025. Added to handle SUT Types List
-		if(prod.sutTypes !== null) for(typ : prod.sutTypes.type) { sutTypesList.add(typ.type.name) }
-		
 		for(b : prod.specification.blocks) {
 			val Block block = b.block ?: b.refBlock?.system
 			// populate var and its type decl in map
 			for(invar : block.invars) var_decl_map.put(block.name + "_" + invar.name, invar.type.type.name)
 			for(ovar : block.outvars) var_decl_map.put(block.name + "_" + ovar.name, ovar.type.type.name)
 			for(lvar : block.localvars) var_decl_map.put(block.name + "_" + lvar.name, lvar.type.type.name)
+			// Added DB 15.04.2025. To handle SUT Variables List
+            for(sutvar : block.sutvars) {
+                sutTransitionMap.put(sutvar.name, newLinkedHashSet)
+            }
 			
 			// parse each block to derive places and transitions
 			val tuple = populatePetriNet(pnet, block)
@@ -147,6 +148,14 @@ class ProductGenerator extends AbstractGenerator {
 						    ) {
 						        listOfAssertTransitions.add(block.name+"_" + f.name + "_" + u.name)
 						    }
+						    
+						    // Added DB. 15.04.2025. Create map of sut-var to transitions
+						    for(fi : u.fnInp) {
+						        if(sutTransitionMap.containsKey(fi.ref.name)) {
+						            sutTransitionMap.get(fi.ref.name).add(block.name+"_" + f.name + "_" + u.name)
+						        }
+						    }
+						    
 							// 30.01.2025 commented out
 							/*for(fi : u.fnInp) {
 								if(fi.dataConstraints !== null) listOfAssertTransitions.add(block.name+"_" + f.name + "_" + u.name)
@@ -170,6 +179,12 @@ class ProductGenerator extends AbstractGenerator {
 					for(f : block.functions) {
 						for(u : f.updates) {
 							for(ovar : u.updateOutputVar) {
+								for(elm : ovar.fnOut) {
+								    // Added DB. 15.04.2025. Create map of sut-var to transitions
+                                    if(sutTransitionMap.containsKey(elm.ref.name)) {
+                                        sutTransitionMap.get(elm.ref.name).add(block.name+"_" + f.name + "_" + u.name)
+                                    }
+								}
 								if(ovar.suppress) {
 									// ADDED 08.11.2024 DB. Record out variables that were suppressed for a transition
 									// Is transition name present?
@@ -194,9 +209,13 @@ class ProductGenerator extends AbstractGenerator {
 				}
 			}
 			
-			fsa.generateFile('CPNServer//' + specName + '//' + specName + '.py', pnet.toSnakes(specName, specName, listOfEnvBlocks, listOfAssertTransitions, mapOfSuppressTransitionVars, inout_places, init_places, depth_limit, num_tests, sutTypesList))
+			fsa.generateFile('CPNServer//' + specName + '//' + specName + '.py', pnet.toSnakes(
+			    specName, specName, listOfEnvBlocks, listOfAssertTransitions, 
+			    mapOfSuppressTransitionVars, inout_places, 
+			    init_places, depth_limit, num_tests, sutTransitionMap
+			))
 			//fsa.generateFile('CPNServer//' + specName + '//' + 'server.py', (new FlaskSimulationGenerator).generateServer(name))
-			//fsa.generateFile('CPNserver.py', (new FlaskSimulationGenerator).generateCPNServer)
+			//fsa.generateFile('CPNserver.py', (new FlaskSimulationGenerator).generateCPNServer)	
 			//fsa.generateFile('CPNclient.py', (new FlaskSimulationGenerator).generateCPNClient(specName))
 			//fsa.generateFile('CPNServer//' + specName + '//' + 'client.py', (new FlaskSimulationGenerator).generateClient)
 			fsa.generateFile('CPNServer//' + specName + '//' + specName + '_Simulation.py', pnet.toSnakesSimulation)

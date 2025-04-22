@@ -67,14 +67,9 @@ TMap:
 
 /*********************************************************/
 AbstractTestSequence:
-	(sutTypes = SUTTypeDecl)?
 	'Test-Scenario' ':' name = ID
 		// step += [TMap|ID]+
 		step += AbstractStep+ // (AbstractStep | AssertStep)+  // | ConstraintStep 
-;
-
-SUTTypeDecl:
-    'test-configuration-types' '{' type += Type+ '}'
 ;
 
 ConstraintStep:
@@ -103,6 +98,7 @@ ComposeStep:
 	'input-binding' ':' input += Binding+
 	'output-data' ':' output += Binding+ (suppress?='suppress'?)
 	refs += ConstraintStep*
+	('sut-var' ':' '{' varID += [expr::Variable|QualifiedName]+ '}')?
 ;
 
 RunStep:
@@ -111,6 +107,7 @@ RunStep:
 	stepRef += StepReference*
 	'input-binding' ':' input += Binding+
 	'output-data' ':' output += Binding+ (suppress?='suppress'?) // do not generate these in concrete TSpec
+	('sut-var' ':' '{' varID += [expr::Variable|QualifiedName]+ '}')?
 ;
 
 AssertionStep:
@@ -119,6 +116,7 @@ AssertionStep:
     'input-binding' ':' input += Binding+
     'output-data' ':' output += Binding+ (suppress?='suppress'?)
     asserts += AssertStep*
+    ('sut-var' ':' '{' varID += [expr::Variable|QualifiedName]+ '}')?
 ;
 
 StepReference:

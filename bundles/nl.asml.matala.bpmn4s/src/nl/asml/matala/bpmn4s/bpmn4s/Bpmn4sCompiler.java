@@ -209,12 +209,16 @@ public class Bpmn4sCompiler{
 				String inOut = fabSpecInputOutput(c);
 				String local = fabSpecLocal(c);
 				String init = fabSpecInit(c.getId());
+				List<String> sutConfVars = fabSpecSutConfs(c.getId());
+				String sutConfs = sutConfVars.isEmpty() ? "" : "suts " + String.join(", ", sutConfVars) + "\n";
 				String desc = fabSpecDescription(c.getId()); 
 				component += indent(inOut);
 				component += "\n";
 				component += indent(local);
 				component += "\n";
 				component += indent(init);
+				component += "\n";
+				component += indent(sutConfs);
 				component += "\n";
 				component += indent(desc);
 				component += "}\n\n";
@@ -225,6 +229,22 @@ public class Bpmn4sCompiler{
 		result.append(String.format("\tdepth-limits %s\r\n", model.getDepthLimit()));
 		result.append(String.format("\tnum-tests %s\n}\r\n", model.getNumOfTests()));
 		return result.toString();
+	}
+	
+	private List<String> fabSpecSutConfs(String cid) {
+		List<String> result = new ArrayList<String>();
+		for(Edge e: model.edges) {
+			Element src = model.getElementById(e.getSrc());
+			Element tar = model.getElementById(e.getTar());
+			if((tar.subtype == ElementType.RUN_TASK || 
+				tar.subtype == ElementType.COMPOSE_TASK) && 
+					tar.getParentComponents().contains(cid)) {
+				if(src.isSutConfigurations()) {
+					result.add(repr(src));
+				}
+			}
+		}
+		return result;
 	}
 
 	/**
