@@ -58,6 +58,7 @@ public class Main {
 	static final String SUBTYPE_QUEUE = "Queue";
 	static final String SUBTYPE_RUNTASK = "RunTask";
 	static final String SUBTYPE_COMPOSETASK = "ComposeTask";
+	static final String SUBTYPE_ASSERTTASK = "AssertTask";
 	
 	public static void main(String[] args) {
 		/*
@@ -70,6 +71,7 @@ public class Main {
 		boolean simulation = false;
 		String output = "";
 		int depthLimit = 300;
+		int numOfTests = 1;
 		
 		if(args.length < 1) {
 			Logging.logError("Missing model file name!");
@@ -86,16 +88,20 @@ public class Main {
 		if(args.length > 3) {
 			depthLimit = Integer.parseInt(args[3]);
 		}
-		compile(inputModel, simulation, output, depthLimit);
+		if(args.length > 4) {
+			numOfTests = Integer.parseInt(args[4]);
+		}
+		compile(inputModel, simulation, output, depthLimit, numOfTests);
 	}
 	
 	static final int DEFAULT_DEPTH_LIMIT = 300;
+	static final int DEFAULT_NUM_OF_TESTS = 1;
 	
 	public static void compile(String inputModel, boolean simulation, String outputFolder) {
-		compile(inputModel, simulation, outputFolder, DEFAULT_DEPTH_LIMIT);
+		compile(inputModel, simulation, outputFolder, DEFAULT_DEPTH_LIMIT, DEFAULT_NUM_OF_TESTS);
 	}
 	
-	public static void compile(String inputModel, boolean simulation, String outputFolder, int depthLimit) {
+	public static void compile(String inputModel, boolean simulation, String outputFolder, int depthLimit, int numOfTests) {
         BpmnModelInstance modelInst;
         try {
         	registerModelExtensionTypes();
@@ -107,6 +113,7 @@ public class Main {
         	model = new Bpmn4s();
         	model.setName(fileName);
         	model.setDepthLimit(depthLimit);
+        	model.setNumOfTests(numOfTests);
         	parseBPMN(modelInst);
         	Bpmn4sCompiler compiler;
         	if (simulation) {
@@ -167,7 +174,7 @@ public class Main {
         				}
         				return replaceMap;
         			}
-        			
+
         			private ArrayList<String> getInputOutputIds(Element elem) {
         				ArrayList<String> result = new ArrayList<String>();
         				for (Edge e: elem.getAllInputs()) {
@@ -182,6 +189,12 @@ public class Main {
         				}
         				return result;
         			}
+        			
+        			@Override
+        			protected String removeUuids(String text) {
+        				return text;
+        			}
+
         		};
         	}else {
         		compiler = new Bpmn4sCompiler();
@@ -298,6 +311,8 @@ public class Main {
 				taskType = ElementType.COMPOSE_TASK;
 			} else if (subTypeString.equals(SUBTYPE_RUNTASK)) {
 				taskType = ElementType.RUN_TASK;
+			} else if (subTypeString.equals(SUBTYPE_ASSERTTASK)) {
+				taskType = ElementType.ASSERT_TASK;
 			}
 		}
 		makeActionNode(modelInst, t, ElementType.TASK, taskType);
@@ -478,8 +493,14 @@ public class Main {
 		}
 		node.setContext(contextName, contextTypeName, contextInit);
 		
-		if(type.equals(ElementType.TASK)) {
+		
+		if(type.equals(ElementType.TASK))
+		{
 			node.setContextUpdate(elem.getAttributeValueNs("http://bpmn4s", "ctxUpdate"));
+		}
+
+		if(taskType.equals(ElementType.ASSERT_TASK)) {
+			node.setAssertions(elem.getAttributeValueNs("http://bpmn4s", "assertions"));
 		}
 		
 		model.addElement(id, node);
