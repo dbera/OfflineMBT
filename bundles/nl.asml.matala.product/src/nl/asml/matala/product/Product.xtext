@@ -16,13 +16,8 @@ Product:
 	imports += Import*
 	(namespace += NameSpace)*
     types += TypeDecl*
-    (sutTypes = SUTTypeDecl)?
 	( systemDecl = SystemDecl	
 	| specification = Specification)
-;
-
-SUTTypeDecl:
-    'test-configuration-types' '{' type += Type+ '}'
 ;
 
 @Override
@@ -63,6 +58,7 @@ Block:
 			('inputs' invars+=Variable* )? &
 			('outputs' outvars+=Variable* )? &
 			('local' localvars+=Variable* )? &
+            ('suts' sutvars += [expr::Variable|ID] (',' sutvars+=[expr::Variable|ID])*)? &
 			('init' initActions+=(AssignmentAction | RecordFieldAssignmentAction)*)? &
 			'desc' type = STRING
 		)

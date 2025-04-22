@@ -290,6 +290,8 @@ public class Main {
 		node.setDataType(dtname);
 		String init = elem.getAttributeValueNs("http://bpmn4s", "init");
 		node.setInit(init);
+		String sutConf = elem.getAttributeValueNs("http://bpmn4s", "sutConfigurations");
+		node.setIsSutConfigurations("true".equals(sutConf));
 		model.addElement(id, node);
 	}
 	
