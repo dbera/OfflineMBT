@@ -5,8 +5,11 @@ package nl.asml.matala.product.scoping;
 
 import nl.asml.matala.product.product.Block
 import nl.asml.matala.product.product.Update
+import nl.asml.matala.product.product.UpdateOutVar
+import nl.esi.comma.actions.actions.ActionsPackage
 import nl.esi.comma.expressions.expression.ExpressionPackage
 import nl.esi.comma.expressions.expression.Variable
+import org.eclipse.emf.ecore.EClass
 import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.EReference
 import org.eclipse.xtext.EcoreUtil2
@@ -22,9 +25,14 @@ import org.eclipse.xtext.scoping.Scopes
  */
 class ProductScopeProvider extends AbstractProductScopeProvider {
     override getScope(EObject context, EReference reference) {
+//        println('''getScope(«context.eClass.name», «(reference.eContainer as EClass).name»«reference.name»)''')
         return switch (context) {
             Update case reference.isTypeDeclReference: {
                 IScope.NULLSCOPE
+            }
+            UpdateOutVar case reference == ActionsPackage.Literals.ASSIGNMENT_ACTION__ASSIGNMENT,
+            UpdateOutVar case reference == ExpressionPackage.Literals.EXPRESSION_VARIABLE__VARIABLE: {
+                Scopes.scopeFor(context.fnOut.map[ref])
             }
             case reference.EType == ExpressionPackage.Literals.VARIABLE: {
                 val scope = EcoreUtil2.getContainerOfType(context, Block)
@@ -35,4 +43,7 @@ class ProductScopeProvider extends AbstractProductScopeProvider {
             }
         }
     }
+    
+    private def String getCode(EReference reference) 
+    '''«(reference.eContainer as EClass).name.toUpperCase»__«reference.name.toUpperCase»'''
 }
