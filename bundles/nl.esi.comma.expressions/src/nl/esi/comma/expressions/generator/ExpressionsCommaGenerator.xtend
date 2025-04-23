@@ -106,7 +106,7 @@ class ExpressionsCommaGenerator extends TypesCommaGenerator {
 	'''«exprToComMASyntax(e.getRecord())».«e.getField().getName()»'''
 	
 	def dispatch CharSequence exprToComMASyntax(ExpressionVariable e)
-	'''«e.getVariable().getName()»'''	
+	'''«e.getVariable().getName()»'''
 
 	def dispatch CharSequence exprToComMASyntax(ExpressionFunctionCall e)
 	'''«getFunctionText(e)»'''

@@ -83,7 +83,9 @@ class FromAbstractToConcrete extends AbstractGenerator {
         return '''
             «conDataExpr»
             «FOR entry : refDataExpr.entrySet»
-                «entry.key» := «entry.value»
+                «FOR v : entry.value»
+                    «entry.key» := «v»
+                «ENDFOR»
             «ENDFOR»
         '''
     }
