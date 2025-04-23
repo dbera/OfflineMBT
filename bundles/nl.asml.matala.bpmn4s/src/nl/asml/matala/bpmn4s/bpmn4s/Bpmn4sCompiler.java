@@ -844,7 +844,7 @@ public class Bpmn4sCompiler{
 	 */
 	protected String sanitize(String str) {
 		String result = str
-				.replace(".", "_CLN_")
+				.replace(".", "_DOT_")
 				.replace("?", "_QMK_")
 				.replaceAll("\\W", "");
 		return result;
@@ -884,18 +884,14 @@ public class Bpmn4sCompiler{
  	 * Get the compiled name for Element <el>.
 	 */
 	protected String compile(String elId) {
-		Element el = model.getElementById(elId);
 		if (model.isReferenceData(elId)) {
 			return compile(getOriginDataNode(elId));
 		} else if (model.isXor(elId)) {
 			return getCompiledXorName(elId);
-		} else if (model.isComponent(elId)) { 
-			/* Nested components are compiled with their fully qualified name. */
-			return String.join("__", el.getParentComponents().stream()
-					.map(e -> repr(model.getElementById(e)))
-					.collect(Collectors.toList())) + "__" + repr(el);
+		} else if (model.isComponent(elId)) {
+			return getCompiledComponentName(elId);
 		}
-		return repr(el);
+		return repr(model.getElementById(elId));
 	}
 	
 	/**
@@ -958,6 +954,14 @@ public class Bpmn4sCompiler{
 			}
 		}
 		return result;
+	}
+	
+	protected String getCompiledComponentName(String componentId) {
+		Element component = model.getElementById(componentId);
+		/* Nested components are compiled with their fully qualified name. */
+		return String.join("", component.getParentComponents().stream()
+				.map(e -> repr(model.getElementById(e)))
+				.collect(Collectors.toList())) + repr(component);
 	}
 	
 	/**

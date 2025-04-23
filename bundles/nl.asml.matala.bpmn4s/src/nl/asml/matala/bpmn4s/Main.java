@@ -161,6 +161,11 @@ public class Main {
         			}
         			
         			@Override
+        			protected String getCompiledComponentName(String componentId) {
+        				return repr(model.getElementById(componentId));
+        			}
+        			
+        			@Override
         			protected String namePlaceBetweenTransitions(String flowId, String src, String dst) {
         				return flowId;
         			}
