@@ -109,13 +109,16 @@ class ReferenceExpressionHandler
             for(_k : mapLHStoRHS.keySet) { 
                 var idx = 0
                 for(v : mapLHStoRHS.get(k)) {
-                    if(_k.equals(v)) { // if LHS equals RHS
-                        // replace the value at a specific index of value list
-                        mapLHStoRHS.get(k).addAll(idx, mapLHStoRHS.get(_k)) // insert list of values at idx
-                        mapLHStoRHS.get(k).remove(idx + mapLHStoRHS.get(_k).size)
-                        // mapLHStoRHS.put(k, mapLHStoRHS.get(_k)) // rewrite
-                        refKeyList.add(_k)
-                    }
+                    // if(!v.startsWith("add")) { // TODO. How to rewrite with functions? Problem for nested compose. 
+                        if(_k.equals(v)) { // if LHS equals RHS
+                            // replace the value at a specific index of value list
+                            mapLHStoRHS.get(k).addAll(idx, mapLHStoRHS.get(_k)) // insert list of values at idx
+                            if(idx + mapLHStoRHS.get(_k).size >= mapLHStoRHS.get(k).size) 
+                                mapLHStoRHS.get(k).remove(idx + mapLHStoRHS.get(_k).size)
+                            // mapLHStoRHS.put(k, mapLHStoRHS.get(_k)) // rewrite
+                            refKeyList.add(_k)
+                        }
+                    // }
                     idx++
                 }
             }
