@@ -19,10 +19,24 @@ GenericScriptBlock:
 ScriptParametersCustom:
     '{'
         ('using-api'   ':'  scriptApi = STRING)
-        ('with-args'   '{' (scriptArgs+=Expression) (',' scriptArgs+=Expression)* '}')?
+        ('with-args'   '{' (scriptArgs+=ScriptParameterNamedPositional) (',' scriptArgs+=ScriptParameterNamedPositional)* '}')?
         ('output-file' ':'  scriptOut = STRING) 
     '}' 
 ;
+
+ScriptParameterNamedPositional:
+    ScriptParameterPositional |
+    ScriptParameterNamed 
+;
+
+ScriptParameterNamed: ScriptParameterNameOnly | ScriptParameterNamedArg ;
+ScriptParameterPositional: ScriptParameterPositionalFile | ScriptParameterPositionalSimple ;
+ScriptParameterWithValue: ScriptParameterNamedArg | ScriptParameterPositionalFile | ScriptParameterPositional ;
+
+ScriptParameterNameOnly: "flag-argument"  "{" label=STRING "}" ;
+ScriptParameterNamedArg: "named-argument" "{" label=STRING "," val=Expression (file?="is-file")? "}" ;
+ScriptParameterPositionalFile: "file-argument"  "{" val = Expression "}" ;
+ScriptParameterPositionalSimple: val = Expression ;
 
 enum MARGIN_TYPE:
     ABSOLUTE='absolute'
