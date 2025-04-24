@@ -105,6 +105,8 @@ class ReferenceExpressionHandler
             }
         }*/
         // Rewrite implementation for list of values in mapLHStoRHS
+        var _mapLHStoRHS = new HashMap<String, List<String>>
+        for(k : mapLHStoRHS.keySet) { _mapLHStoRHS.put(k,new ArrayList<String>(mapLHStoRHS.get(k))) }
         for(k : mapLHStoRHS.keySet) {
             for(_k : mapLHStoRHS.keySet) { 
                 var idx = 0
@@ -112,9 +114,9 @@ class ReferenceExpressionHandler
                     // if(!v.startsWith("add")) { // TODO. How to rewrite with functions? Problem for nested compose. 
                         if(_k.equals(v)) { // if LHS equals RHS
                             // replace the value at a specific index of value list
-                            mapLHStoRHS.get(k).addAll(idx, mapLHStoRHS.get(_k)) // insert list of values at idx
-                            if(idx + mapLHStoRHS.get(_k).size >= mapLHStoRHS.get(k).size) 
-                                mapLHStoRHS.get(k).remove(idx + mapLHStoRHS.get(_k).size)
+                            _mapLHStoRHS.get(k).addAll(idx, new ArrayList<String>(_mapLHStoRHS.get(_k))) // insert list of values at idx
+                            if(idx + _mapLHStoRHS.get(_k).size <= _mapLHStoRHS.get(k).size) 
+                                _mapLHStoRHS.get(k).remove(idx + _mapLHStoRHS.get(_k).size)
                             // mapLHStoRHS.put(k, mapLHStoRHS.get(_k)) // rewrite
                             refKeyList.add(_k)
                         }
@@ -124,9 +126,9 @@ class ReferenceExpressionHandler
             }
         }
         // remove intermediate expressions
-        for(k : refKeyList) mapLHStoRHS.remove(k)
+        for(k : refKeyList) { _mapLHStoRHS.remove(k) }
 
-        return mapLHStoRHS
+        return _mapLHStoRHS
     }
 
     def _printRecord_(String varRefName, String composeStepName, String runStepName, 
