@@ -414,6 +414,9 @@ class PetriNet {
 		            # modes = set(v)
 		            for elm in v: # modes
 		                # print(elm)
+		                if k + "_" +elm.__repr__() in self.map_transition_modes_to_name:
+		                    print("WARN: duplicate modes detected with same transition")
+		                    print(k + "_" +elm.__repr__())
 		                self.map_transition_modes_to_name[k + "_" +elm.__repr__()] = k + "_" + str(cnt)
 		                # self.map_transition_modes_to_name[k + "_" + pprint.pformat(elm.items(), width=60, compact=True,depth=5)] = k + "_" + str(cnt)
 		                cnt = cnt + 1
