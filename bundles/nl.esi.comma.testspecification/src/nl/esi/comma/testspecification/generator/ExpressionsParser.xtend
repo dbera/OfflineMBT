@@ -166,7 +166,8 @@ class ExpressionsParser {
     	else if(expr.functionName.equals('contains')) 
     		return '''smVarContainer.contains(«generateExpression(expr.args.get(0), ref)», «generateExpression(expr.args.get(1), ref)»)'''
     	else if(expr.functionName.equals('add')) 
-    		return '''smVarContainer.add(«generateExpression(expr.args.get(0), ref)», «generateExpression(expr.args.get(1), ref)»)'''
+    		return '''[«generateExpression(expr.args.get(1), ref)»]'''
+    		// return '''smVarContainer.add(«generateExpression(expr.args.get(0), ref)», «generateExpression(expr.args.get(1), ref)»)'''
     	else if(expr.functionName.equals('asReal')) 
     		return '''(double)(«generateExpression(expr.args.get(0), ref)»)'''
     	else if(expr.functionName.equals('abs')) 
