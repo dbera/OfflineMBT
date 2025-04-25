@@ -123,10 +123,14 @@ class RefKVPGenerator {
         throw new RuntimeException("Not supported")
     }
     
-    def quoteIfNonConstantExpression(Expression expr) {
-        var format = "%s"
-        if (isScriptParamTypeNonConstant(expr)) format = "\"%s\""
+    def formatStringExpression(Expression expr, String format) {
         return String.format(format,AssertionsHelper.expression(expr))
+    }
+    
+    def quoteIfNonConstantExpression(Expression expr) {
+        var format = "\"['step_output']%s\""
+        if (isScriptParamTypeConstant(expr)) format = "%s"
+        return formatStringExpression(expr,format)
     }
 
     def Boolean isScriptParamTypeConstant(Expression param) {

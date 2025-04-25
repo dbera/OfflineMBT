@@ -91,7 +91,7 @@ public class AssertionsHelper {
 			String map = expression(e.getRecord(), variablePrefix);
 			return String.format("%s['%s']", map, e.getField().getName());
 		} else if (expression instanceof ExpressionVariable v) {
-			return String.format("['step_output']['%s']", variablePrefix.apply(v.getVariable().getName()));
+			return String.format("['%s']", variablePrefix.apply(v.getVariable().getName()));
 		} else if (expression instanceof ExpressionVector e) {
 			return String.format("[%s]", e.getElements().stream().map(ee -> expression (ee, variablePrefix)).collect(Collectors.joining(", ")));
 		} else if (expression instanceof ExpressionMapRW) {
