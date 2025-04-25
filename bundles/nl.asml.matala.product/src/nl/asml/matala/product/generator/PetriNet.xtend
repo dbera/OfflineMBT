@@ -281,8 +281,9 @@ class PetriNet {
 		            print('Current Marking: ')
 		            for k in n.get_marking():
 		                ms = n.get_marking()[k]
-		                json_data = json.loads(ms.items()[0])
-		                print('    + Place: ', k, ' has token: ', json.dumps(json_data))
+		                for i in ms.items():
+		                    json_data = json.loads(i)
+		                    print('    + Place: ', k, ' has token: ', json.dumps(json_data))
 		            print('****************************************************************')
 		            # self.generatePlantUML(n, True)
 		        else:
