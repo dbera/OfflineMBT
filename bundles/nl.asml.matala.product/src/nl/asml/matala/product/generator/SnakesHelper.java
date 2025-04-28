@@ -94,7 +94,7 @@ class SnakesHelper {
 			return "[]";
 		} else if (type instanceof EnumTypeDecl) {
 			EnumTypeDecl t = (EnumTypeDecl) type;
-			return String.format("\"%s:%s\"", t.getName(), t.getLiterals().get(0).getName());
+			return String.format("\"%s::%s\"", t.getName(), t.getLiterals().get(0).getName());
 		} else if (type instanceof MapTypeDecl) {
 			return "{" + 
 					defaultValue(((MapTypeDecl) type).getConstructor().getType(), targetName) + 
