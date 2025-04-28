@@ -2,11 +2,9 @@ package nl.asml.matala.bpmn4s;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.camunda.bpm.model.bpmn.Bpmn;
@@ -287,6 +285,7 @@ public class Main {
 		Element node = new Element(type, name, id);
 		String origin = getOriginDataReference(elem);
 		node.setOriginDataNodeId(origin != null ? origin : id);
+		node.setLinkedDataReferenceIds(getLinkedDataReferences(elem));
 		node.setParent(getParentId(elem));
 		node.setComponent(getParentComponents(elem));
 		String datatyperef = elem.getAttributeValueNs("http://bpmn4s", "dataTypeRef");
@@ -306,6 +305,11 @@ public class Main {
 	
 	static String getOriginDataReference(ItemAwareElement elem) {
 		return elem.getAttributeValueNs("http://bpmn4s", "originDataReference");
+	}
+	
+	static String[] getLinkedDataReferences(ItemAwareElement elem) {
+		String value = elem.getAttributeValueNs("http://bpmn4s", "linkedDataReferences");
+		return value == null ? new String[0] : value.split("\\s+");
 	}
 	
 	public static void parseTask(BpmnModelInstance modelInst, Task t) {

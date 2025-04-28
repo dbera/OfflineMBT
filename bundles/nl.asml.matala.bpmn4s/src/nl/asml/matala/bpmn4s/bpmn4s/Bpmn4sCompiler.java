@@ -10,6 +10,7 @@ import java.util.AbstractSet;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -547,14 +548,24 @@ public class Bpmn4sCompiler{
 						String postCtxName = sanitize(getPNTargetPlaceName(e));
 						if (model.isData(e.getTar())) {
 							task += "produces-outputs\t" + sanitize(compile(e.getTar()));
-							task += e.isSuppressed() ? " suppress\n" : "\n";
-							if (e.getRefUpdate() != null && e.getRefUpdate() != "") {
-								task += "references {\n" + indent(replaceAll(e.getRefUpdate(), replaceMap)) + 
-										"\n} symbolic-link\n";
-							}
 							if (e.getSymUpdate() != null && e.getSymUpdate() != "") {
-								task += "constraints {\n" + indent(replaceAll(e.getSymUpdate(), replaceMap)) + "\n}\n";
+								task += "\nconstraints {\n" + indent(replaceAll(e.getSymUpdate(), replaceMap)) + "\n}";
 							}
+							if (e.getRefUpdate() != null && e.getRefUpdate() != "") {
+								task += "\nreferences {\n" + indent(replaceAll(e.getRefUpdate(), replaceMap)) + "\n}";
+							}
+							// TODO: Support DataAssertions
+							if (model.isComposeTask(node.getId()) || model.isRunTask(node.getId())) {
+								boolean isSymbolicLink = getAllDataOutputs(e.getTar()).stream().anyMatch(
+										d -> model.isComposeTask(d.getTar()) || model.isRunTask(d.getTar()));
+								if (isSymbolicLink) {
+									task += " symbolic-link";
+								}
+							}
+							if (e.isSuppressed()) {
+								task += " suppress";
+							}
+							task += "\n";
 							if (e.isPersistent()) {
 								task += String.format("updates: %s := %s\n",  compile(e.getTar()), compile(e.getTar()));
 							}
@@ -562,14 +573,18 @@ public class Bpmn4sCompiler{
 								task += "updates:" + indent(replaceAll(e.getUpdate(), replaceMap)) + "\n";
 							}
 						} else { // then its context
-							task += "produces-outputs\t" + postCtxName + (e.isSuppressed() ? " suppress\n" : "\n");
-							if (e.getRefUpdate() != null && e.getRefUpdate() != "") {
-								task += "references {\n" + indent(replaceAll(e.getRefUpdate(), replaceMap)) + 
-										"\n} symbolic-link\n";
-							}
+							task += "produces-outputs\t" + postCtxName;
 							if (e.getSymUpdate() != null && e.getSymUpdate() != "") {
-								task += "constraints {\n" + indent(replaceAll(e.getSymUpdate(), replaceMap)) + "\n}\n";
+								task += "\nconstraints {\n" + indent(replaceAll(e.getSymUpdate(), replaceMap)) + "\n}\n";
 							}
+							if (e.getRefUpdate() != null && e.getRefUpdate() != "") {
+								task += "\nreferences {\n" + indent(replaceAll(e.getRefUpdate(), replaceMap)) + "\n}\n";
+							}
+							// TODO: Support DataAssertions
+							if (e.isSuppressed()) {
+								task += " suppress";
+							}
+							task += "\n";
 							String updates = "";
 							if (preCtxName != null) {
 								// if there is in-flow, move the context between places in the PN.(**1)
@@ -904,15 +919,27 @@ public class Bpmn4sCompiler{
 	}
 	
 	private String getOriginDataNode(String id) {
-		Element el = model.getElementById(id);
-		while(model.isReferenceData(id)) {
-			id = el.getOriginDataNodeId();
-			el = model.getElementById(id);
+		String originDataNodeId = id;
+		Element el;
+		while((el = model.getElementById(originDataNodeId)).isReferenceData()) {
+			originDataNodeId = el.getOriginDataNodeId();
 		}
-		return id;
+		return originDataNodeId;
 	}
 	
+	private List<Edge> getAllDataOutputs(String id) {
+		return collectAllDataOutputs(getOriginDataNode(id), new LinkedList<Edge>());
+	}
 	
+	private List<Edge> collectAllDataOutputs(String id, List<Edge> outputs) {
+		Element el = model.getElementById(id);
+		outputs.addAll(el.getDataOutputs());
+		for (String linkedId : el.getLinkedDataReferenceIds()) {
+			collectAllDataOutputs(linkedId, outputs);
+		}
+		return outputs;
+	}
+
 	/**
 	 * Return the name of a compiled place representing a connected component of XOR gates. 
 	 * For test generation, this is either the name of a single xor gate for singleton nets, 
