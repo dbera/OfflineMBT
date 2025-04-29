@@ -21,6 +21,7 @@ import nl.esi.comma.testspecification.abstspec.generator.ReferenceExpressionHand
 import nl.esi.comma.testspecification.abstspec.generator.Utils
 import nl.esi.comma.testspecification.abstspec.generator.ConcreteExpressionHandler
 import nl.esi.comma.testspecification.abstspec.generator.DataKVPGenerator
+import nl.esi.comma.testspecification.abstspec.generator.RefKVPGenerator
 
 class FromAbstractToConcrete 
 {
@@ -32,6 +33,10 @@ class FromAbstractToConcrete
 
     def __generateConcreteTest() {
         return (new DataKVPGenerator()).generateFAST(atd)
+    }
+
+    def __generateDatacheck() {
+        return (new RefKVPGenerator()).generateRefKVP(atd)
     }
 
 	def generateConcreteTest() '''

@@ -81,6 +81,7 @@ class TestspecificationGenerator extends AbstractGenerator
 				}
 				fsa.generateFile("concrete.tspec", atd.generateConcreteTest())
 				fsa.generateFile("data.kvp", atd.__generateConcreteTest())
+				fsa.generateFile("reference.kvp", atd.__generateDatacheck())
 			}
 			System.out.println("\n")
 			System.out.println(" ******* TEST DOCUMENTATION GENERATOR *********")
