@@ -494,7 +494,7 @@ public class Bpmn4sCompiler{
 					}
 					task += "case\t\t\t" + "default" + stepConf + "\n";
 					/* 
-					 * Updates, guards, and initializations from the bpmn4s are parsed into Strings. 
+					 * Updates, guards, assertions and initializations from the bpmn4s are parsed into Strings. 
 					 * In these strings, data stores, queues, and context are identified by their user-defined names.
 					 * Since for simulation we change this names for ids, we also need to do this in the updates 
 					 * strings. Also, both for simulation and test generation, updates and guards related to context 
@@ -541,7 +541,7 @@ public class Bpmn4sCompiler{
 								assertions default {
 								%s
 								}
-								""", assertions.replaceAll("(?m)(^)", "    "));
+								""", indent(replaceAll(assertions, replaceMap)));
 					}
 					for(Edge e: node.getAllOutputs()) {
 						// Name of place that holds target context value for this transition:
@@ -554,7 +554,6 @@ public class Bpmn4sCompiler{
 							if (e.getRefUpdate() != null && e.getRefUpdate() != "") {
 								task += "\nreferences {\n" + indent(replaceAll(e.getRefUpdate(), replaceMap)) + "\n}";
 							}
-							// TODO: Support DataAssertions
 							if (model.isComposeTask(node.getId()) || model.isRunTask(node.getId())) {
 								boolean isSymbolicLink = getAllDataOutputs(e.getTar()).stream().anyMatch(
 										d -> model.isComposeTask(d.getTar()) || model.isRunTask(d.getTar()));
@@ -580,7 +579,6 @@ public class Bpmn4sCompiler{
 							if (e.getRefUpdate() != null && e.getRefUpdate() != "") {
 								task += "\nreferences {\n" + indent(replaceAll(e.getRefUpdate(), replaceMap)) + "\n}\n";
 							}
-							// TODO: Support DataAssertions
 							if (e.isSuppressed()) {
 								task += " suppress";
 							}

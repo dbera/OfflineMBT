@@ -94,7 +94,6 @@ VarRef:
 	ref = [expr::Variable|ID] 
 	(dataConstraints = DataConstraints)?
 	(dataReferences = DataReferences)? 
-	// (dataAssertions = DataAssertions)? 
 ;
 
 DataConstraints: {DataConstraints}
