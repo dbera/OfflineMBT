@@ -1,8 +1,5 @@
 package nl.esi.comma.testspecification.abstspec.generator
 
-import java.util.ArrayList
-import org.eclipse.emf.common.util.EList
-
 import nl.esi.comma.assertthat.assertThat.AssertThatBlock
 import nl.esi.comma.assertthat.assertThat.AssertThatValue
 import nl.esi.comma.assertthat.assertThat.AssertThatValueClose
@@ -19,7 +16,6 @@ import nl.esi.comma.assertthat.assertThat.ComparisonsForSingleReference
 import nl.esi.comma.assertthat.assertThat.GenericScriptBlock
 import nl.esi.comma.assertthat.assertThat.MARGIN_TYPE
 import nl.esi.comma.assertthat.assertThat.MargingItem
-import nl.esi.comma.testspecification.testspecification.AbstractStep
 import nl.esi.comma.testspecification.testspecification.AbstractTestDefinition
 import nl.esi.comma.testspecification.testspecification.AssertionStep
 import nl.esi.comma.expressions.expression.Expression
