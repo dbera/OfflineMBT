@@ -48,11 +48,11 @@ class ReferenceExpressionHandler
                         // mapLHStoRHS.put(constraint.lhs, constraint.rhs)
                         if(mapLHStoRHS.containsKey(constraint.lhs)) {
                             var constraintList = mapLHStoRHS.get(constraint.lhs)
-                            constraintList.add(constraint.rhs)
+                            if(!constraintList.contains(constraint.rhs)) constraintList.add(constraint.rhs)
                             mapLHStoRHS.put(constraint.lhs, constraintList)
                         } else {
                             var constraintList = new ArrayList<String>
-                            constraintList.add(constraint.rhs)
+                            if(!constraintList.contains(constraint.rhs)) constraintList.add(constraint.rhs)
                             mapLHStoRHS.put(constraint.lhs, constraintList)
                         }
                     }
@@ -74,11 +74,11 @@ class ReferenceExpressionHandler
                             // mapLHStoRHS.put(constraint.lhs, constraint.rhs)
                             if(mapLHStoRHS.containsKey(constraint.lhs)) {
                                 var constraintList = mapLHStoRHS.get(constraint.lhs)
-                                constraintList.add(constraint.rhs)
+                                if(!constraintList.contains(constraint.rhs)) constraintList.add(constraint.rhs)
                                 mapLHStoRHS.put(constraint.lhs, constraintList)
                             } else {
                                 var constraintList = new ArrayList<String>
-                                constraintList.add(constraint.rhs)
+                                if(!constraintList.contains(constraint.rhs)) constraintList.add(constraint.rhs)
                                 mapLHStoRHS.put(constraint.lhs, constraintList)
                             } 
                         }
@@ -125,6 +125,10 @@ class ReferenceExpressionHandler
                 }
             }
         }
+        /*for(k : _mapLHStoRHS.keySet) {
+            for(v : _mapLHStoRHS.get(k))
+            System.out.println("    > K: " + k + " > V: " + v)
+        }*/
         // remove intermediate expressions
         for(k : refKeyList) { _mapLHStoRHS.remove(k) }
 
