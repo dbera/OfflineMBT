@@ -43,19 +43,11 @@ class RefKVPGenerator {
     def generateRefKVP(AbstractTestDefinition atd) {
         var txt = 
         '''
-            «FOR test : atd.testSeq»
-            «generateMatlabCallFragment(getScriptCalls(test.step))»
-
-            «generateAssertionsFragment(getAssertionItems(test.step))»
-            «ENDFOR»
-        '''
-        return txt
-    }
-
-    def generateMatlabCallFragment(ArrayList<GenericScriptBlock> blocks) {
-        return '''
         matlab_calls=[
-            «FOR mlcal : blocks SEPARATOR ',' »
+        «FOR test : atd.testSeq»
+            «FOR assertionStep : test.step.filter(AssertionStep) »
+            «FOR step : assertionStep.asserts » «FOR ce : step.ce»
+                «FOR mlcal : ce.constr.filter(GenericScriptBlock) SEPARATOR ',' »
                 {
                     "id":"«mlcal.assignment.name»", 
                     "script_path":"«mlcal.params.scriptApi»",
@@ -68,31 +60,37 @@ class RefKVPGenerator {
                         {
                             «IF param instanceof ScriptParameterNamed»"name": "«getScriptParamName(param)»",
                             «ENDIF»"type": "«getScriptParamType(param)»"«IF param instanceof ScriptParameterWithValue»,
-                            "value": «getScriptParamValue(param)»«ENDIF»
+                            "value": «expression(getScriptParamExpression(param))»«ENDIF»
                         }
                         «ENDFOR»
                         «ENDIF»
                     ]
                 }
+                «ENDFOR»
+            «ENDFOR»«ENDFOR»
             «ENDFOR»
         ]
-        '''
-    }
 
-    def generateAssertionsFragment(ArrayList<AssertThatBlock> blocks) {
-        return '''
         assertions = [
-            «FOR asrt : blocks SEPARATOR ',' »
+        «FOR assertionStep : test.step.filter(AssertionStep) »
+            «FOR step : assertionStep.asserts »
+            «FOR ce : step.ce»
+            «FOR asrt : ce.constr.filter(AssertThatBlock) SEPARATOR ',' »
             {
                 "id":"«asrt.identifier»", "type":"«getAssertionType(asrt.^val)»",
                 "input":{
-                    "output":«quoteIfNonConstantExpression(asrt.output.sub)»,
+                    "output":«expression(asrt.output)»,
                     «extractAssertionParams(asrt.^val)»
                 }
             }
             «ENDFOR»
+            «ENDFOR»
+            «ENDFOR»
+            «ENDFOR»
         ]
+        «ENDFOR»
         '''
+        return txt
     }
 
     def String getScriptParamType(ScriptParameterNamedPositional param){
@@ -116,30 +114,31 @@ class RefKVPGenerator {
         throw new RuntimeException("Not supported")
     }
 
-    def String getScriptParamValue(ScriptParameterWithValue param){
-        if (param instanceof ScriptParameterNamedArg) return quoteIfNonConstantExpression(param.^val)
-        if (param instanceof ScriptParameterPositionalFile) return quoteIfNonConstantExpression(param.^val)
-        if (param instanceof ScriptParameterPositional) return quoteIfNonConstantExpression(param.^val)
+    def Expression getScriptParamExpression(ScriptParameterWithValue param){
+        if (param instanceof ScriptParameterNamedArg) return param.^val
+        if (param instanceof ScriptParameterPositionalFile) return param.^val
+        if (param instanceof ScriptParameterPositional) return param.^val
         throw new RuntimeException("Not supported")
     }
-    
-    def formatStringExpression(Expression expr, String format) {
-        return String.format(format,AssertionsHelper.expression(expr))
-    }
-    
-    def quoteIfNonConstantExpression(Expression expr) {
-        var format = "\"['step_output']%s\""
-        if (isScriptParamTypeConstant(expr)) format = "%s"
-        return formatStringExpression(expr,format)
+
+    def String expression(Expression expr) {
+        return expression(expr,"['step_output']")
     }
 
-    def Boolean isScriptParamTypeConstant(Expression param) {
-        if (param instanceof ExpressionConstantBool)   return true
-        if (param instanceof ExpressionConstantInt)    return true
-        if (param instanceof ExpressionConstantReal)   return true
-        if (param instanceof ExpressionConstantString) return true
-        return false
+    def String expression(Expression expr, String prefix) {
+        // referencing variable value
+        if (expr instanceof ExpressionVariable) return String.format("\"%s%s\"", prefix, AssertionsHelper.expression(expr))
+        if (expr instanceof ExpressionRecordAccess) return String.format("\"%s%s\"", prefix, AssertionsHelper.expression(expr))
+        if (expr instanceof ExpressionMapRW) return String.format("\"%s%s\"", prefix, AssertionsHelper.expression(expr))
+        if (expr instanceof ExpressionVector) return String.format("\"%s%s\"", prefix, AssertionsHelper.expression(expr))
+        // constant values
+        if (expr instanceof ExpressionConstantBool) return String.format("%s", AssertionsHelper.expression(expr))
+        if (expr instanceof ExpressionConstantInt) return String.format("%s", AssertionsHelper.expression(expr))
+        if (expr instanceof ExpressionConstantReal) return String.format("%s", AssertionsHelper.expression(expr))
+        if (expr instanceof ExpressionConstantString) return String.format("%s", AssertionsHelper.expression(expr))
+        throw new RuntimeException("Not supported")
     }
+
 
     def Boolean isScriptParamTypeNonConstant(Expression param) {
         if (param instanceof ExpressionVariable) return true
@@ -249,36 +248,6 @@ class RefKVPGenerator {
         «extractAssertionParams(xmlfile.globalMargin.margin)»
         «ENDIF»«ENDIF»
         '''
-    }
-
-    def getScriptCalls(EList<AbstractStep> absteps){
-        var assertionSteps = absteps.filter(AssertionStep)
-        var scriptCalls = new ArrayList<GenericScriptBlock>()
-        for (step : assertionSteps) {
-            for (assert: step.asserts) {
-                for (ce : assert.ce) {
-                   for (mcal: ce.constr.filter(GenericScriptBlock)) {
-                       scriptCalls.add(mcal)
-                   }
-                }
-            }
-        }
-        return scriptCalls
-    }
-
-    def getAssertionItems(EList<AbstractStep> absteps){
-        var assertionSteps = absteps.filter(AssertionStep)
-        var assertionItems = new ArrayList<AssertThatBlock>()
-        for (step : assertionSteps) {
-            for (assert: step.asserts) {
-                for (ce : assert.ce) {
-                   for (asrt: ce.constr.filter(AssertThatBlock)) {
-                       assertionItems.add(asrt)
-                   }
-                }
-            }
-        }
-        return assertionItems
     }
 
     def getAssertionType(AssertValidation asrt){
