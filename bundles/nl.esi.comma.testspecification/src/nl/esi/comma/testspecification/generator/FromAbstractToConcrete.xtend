@@ -4,6 +4,7 @@ import java.util.HashSet
 import nl.asml.matala.product.product.Product
 import nl.esi.comma.testspecification.abstspec.generator.ConcreteExpressionHandler
 import nl.esi.comma.testspecification.abstspec.generator.DataKVPGenerator
+import nl.esi.comma.testspecification.abstspec.generator.RefKVPGenerator
 import nl.esi.comma.testspecification.abstspec.generator.ReferenceExpressionHandler
 import nl.esi.comma.testspecification.testspecification.AbstractTestDefinition
 import nl.esi.comma.testspecification.testspecification.Binding
@@ -31,6 +32,7 @@ class FromAbstractToConcrete extends AbstractGenerator {
         }
         fsa.generateFile(res.URI.lastSegment, atd.generateConcreteTest())
         fsa.generateFile('data.kvp', (new DataKVPGenerator()).generateFAST(atd))
+        fsa.generateFile("reference.kvp", (new RefKVPGenerator()).generateRefKVP(atd))
     }
 
     def private generateConcreteTest(AbstractTestDefinition atd) '''
