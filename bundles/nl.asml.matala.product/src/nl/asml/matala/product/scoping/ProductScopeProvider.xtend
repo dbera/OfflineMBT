@@ -24,6 +24,8 @@ import org.eclipse.xtext.scoping.Scopes
  */
 class ProductScopeProvider extends AbstractProductScopeProvider {
     override getScope(EObject context, EReference reference) {
+        logScope('Enter', context, reference)
+
         return switch (context) {
             Update case reference.isTypeDeclReference: {
                 IScope.NULLSCOPE

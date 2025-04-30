@@ -5,25 +5,26 @@ package nl.esi.comma.expressions.scoping
 
 import java.util.ArrayList
 import java.util.List
+import nl.esi.comma.expressions.expression.ExpressionBinary
 import nl.esi.comma.expressions.expression.ExpressionEnumLiteral
-import nl.esi.comma.expressions.expression.ExpressionFunctionCall
 import nl.esi.comma.expressions.expression.ExpressionPackage
 import nl.esi.comma.expressions.expression.ExpressionRecord
 import nl.esi.comma.expressions.expression.ExpressionRecordAccess
+import nl.esi.comma.expressions.expression.ExpressionVector
 import nl.esi.comma.expressions.expression.Field
 import nl.esi.comma.expressions.validation.ExpressionValidator
 import nl.esi.comma.signature.interfaceSignature.Signature
 import nl.esi.comma.types.types.EnumTypeDecl
 import nl.esi.comma.types.types.RecordTypeDecl
 import nl.esi.comma.types.types.TypeDecl
-import nl.esi.comma.types.types.TypesPackage
+import nl.esi.comma.types.types.TypeObject
 import nl.esi.comma.types.utilities.CommaUtilities
 import nl.esi.comma.types.utilities.TypeUtilities
-import org.eclipse.emf.ecore.EClass
 import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.EReference
+import org.eclipse.emf.ecore.EStructuralFeature
 import org.eclipse.xtext.scoping.IScope
-import org.eclipse.xtext.scoping.impl.FilteringScope
+import org.eclipse.xtext.scoping.Scopes
 
 import static org.eclipse.xtext.scoping.Scopes.*
 
@@ -36,9 +37,10 @@ import static org.eclipse.xtext.scoping.Scopes.*
 class ExpressionScopeProvider extends AbstractExpressionScopeProvider {
 
     override getScope(EObject context, EReference reference) {
+        val contextType = context.getContextType(reference)
         switch (context) {
-            ExpressionEnumLiteral case reference == ExpressionPackage.Literals.EXPRESSION_ENUM_LITERAL__LITERAL: {
-                return scopeFor(context.type.literals)
+            case contextType instanceof EnumTypeDecl  && reference == ExpressionPackage.Literals.EXPRESSION_ENUM_LITERAL__LITERAL: {
+                return scopeFor((contextType as EnumTypeDecl).literals)
             }
             ExpressionRecord case reference == ExpressionPackage.Literals.FIELD__RECORD_FIELD: {
                 return scopeFor(TypeUtilities::getAllFields(context.type))
@@ -50,18 +52,6 @@ class ExpressionScopeProvider extends AbstractExpressionScopeProvider {
             Field case reference == ExpressionPackage.Literals.FIELD__RECORD_FIELD: {
                 val rec = context.eContainer
                 return rec instanceof ExpressionRecord ? scopeFor(TypeUtilities::getAllFields(rec.type)) : IScope.NULLSCOPE
-            }
-            Field case reference == ExpressionPackage.Literals.EXPRESSION_ENUM_LITERAL__LITERAL: {
-                val enumTypeDecl = context.recordField?.type?.type
-                return enumTypeDecl instanceof EnumTypeDecl ? scopeFor(enumTypeDecl.literals) : IScope.NULLSCOPE
-            }
-            Field case reference.isTypeDeclReference: {
-                return new FilteringScope(super.getScope(context, reference)) [ desc |
-                    ExpressionValidator.subTypeOf(context.recordField?.type?.type, desc.EObjectOrProxy as TypeDecl)
-                ]
-            }
-            ExpressionFunctionCall case reference.isTypeDeclReference: {
-                return IScope.NULLSCOPE
             }
             case reference.name == 'type': {
                 val interfaces = context.eClass.EAllReferences.filter[name == 'interface']
@@ -75,8 +65,31 @@ class ExpressionScopeProvider extends AbstractExpressionScopeProvider {
         return super.getScope(context, reference)
     }
 
-    protected def isTypeDeclReference(EReference reference) {
-        return reference.EType instanceof EClass && TypesPackage.Literals.TYPE_DECL.isSuperTypeOf(reference.EType as EClass)
+    override getContextType(EObject context, EStructuralFeature reference) {
+        var TypeObject type = switch (context) {
+            Field case reference != ExpressionPackage.Literals.FIELD__RECORD_FIELD: {
+                context.recordField?.type?.type
+            }
+            ExpressionEnumLiteral case reference == ExpressionPackage.Literals.EXPRESSION_ENUM_LITERAL__LITERAL: {
+                context.type
+            }
+            ExpressionBinary case reference != ExpressionPackage.Literals.EXPRESSION_BINARY__LEFT: {
+                ExpressionValidator.typeOf(context.left)
+            }
+            ExpressionVector: {
+                val vct = ExpressionValidator.typeOf(context)
+                vct === null ? null : TypeUtilities::getElementType(vct)
+            }
+        }
+        return type
+    }
+
+    protected def scope_forEnum(TypeObject type, EReference ref) {
+        return if (type instanceof EnumTypeDecl && ref == ExpressionPackage.Literals.EXPRESSION_ENUM_LITERAL__LITERAL) {
+            Scopes.scopeFor((type as EnumTypeDecl).literals)
+        } else  {
+            IScope.NULLSCOPE
+        }
     }
 
     def scope_forType(EObject context, Signature i, EReference ref) {

@@ -14,15 +14,13 @@ import nl.esi.comma.actions.actions.NotificationEvent
 import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
 import nl.esi.comma.actions.actions.SignalEvent
 import nl.esi.comma.expressions.expression.ExpressionRecordAccess
-import nl.esi.comma.expressions.validation.ExpressionValidator
 import nl.esi.comma.signature.interfaceSignature.InterfaceEvent
 import nl.esi.comma.signature.interfaceSignature.InterfaceSignaturePackage
 import nl.esi.comma.signature.interfaceSignature.Signature
 import nl.esi.comma.signature.utilities.InterfaceUtilities
-import nl.esi.comma.types.types.TypeDecl
 import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.EReference
-import org.eclipse.xtext.scoping.impl.FilteringScope
+import org.eclipse.emf.ecore.EStructuralFeature
 
 import static org.eclipse.xtext.scoping.Scopes.*
 
@@ -39,20 +37,22 @@ class ActionsScopeProvider extends AbstractActionsScopeProvider {
             InterfaceEventInstance case reference == ActionsPackage.Literals.INTERFACE_EVENT_INSTANCE__EVENT: {
                 scope_InterfaceEventInstance_event(context as InterfaceEventInstance)
             }
-            AssignmentAction case reference.isTypeDeclReference: {
-                new FilteringScope(super.getScope(context, reference)) [ desc |
-                    ExpressionValidator.subTypeOf(context.assignment?.type?.type, desc.EObjectOrProxy as TypeDecl)
-                ]
-            }
-            RecordFieldAssignmentAction case context.fieldAccess instanceof ExpressionRecordAccess && reference.isTypeDeclReference: {
-                val recordAccess = context.fieldAccess as ExpressionRecordAccess
-                new FilteringScope(super.getScope(context, reference)) [ desc |
-                    ExpressionValidator.subTypeOf(recordAccess.field?.type?.type, desc.EObjectOrProxy as TypeDecl)
-                ]
-            }
             default:
                 super.getScope(context, reference)
         }
+    }
+
+    override getContextType(EObject context, EStructuralFeature reference) {
+        val type = switch (context) {
+            AssignmentAction case reference != ActionsPackage.Literals.ASSIGNMENT_ACTION__ASSIGNMENT: {
+                context?.assignment?.type?.type
+            }
+            RecordFieldAssignmentAction case reference != ActionsPackage.Literals.RECORD_FIELD_ASSIGNMENT_ACTION__FIELD_ACCESS: {
+                val fieldAccess = context?.fieldAccess
+                fieldAccess instanceof ExpressionRecordAccess ? fieldAccess.field?.type?.type : null
+            }
+        }
+        return type ?: super.getContextType(context, reference)
     }
 
     def scope_InterfaceEventInstance_event(InterfaceEventInstance context) {

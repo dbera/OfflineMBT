@@ -2,17 +2,17 @@ package nl.esi.comma.expressions.validation;
 
 import static nl.esi.comma.expressions.validation.ExpressionValidator.boolType;
 import static nl.esi.comma.expressions.validation.ExpressionValidator.getBaseTypeToCheck;
-import static nl.esi.comma.expressions.validation.ExpressionValidator.identical;
 import static nl.esi.comma.expressions.validation.ExpressionValidator.intType;
 import static nl.esi.comma.expressions.validation.ExpressionValidator.numeric;
 import static nl.esi.comma.expressions.validation.ExpressionValidator.realType;
 import static nl.esi.comma.expressions.validation.ExpressionValidator.stringType;
-import static nl.esi.comma.expressions.validation.ExpressionValidator.subTypeOf;
 import static nl.esi.comma.expressions.validation.ExpressionValidator.typeOf;
 import static nl.esi.comma.types.utilities.TypeUtilities.getBaseType;
 import static nl.esi.comma.types.utilities.TypeUtilities.getKeyType;
+import static nl.esi.comma.types.utilities.TypeUtilities.identical;
 import static nl.esi.comma.types.utilities.TypeUtilities.isMapType;
 import static nl.esi.comma.types.utilities.TypeUtilities.isVectorType;
+import static nl.esi.comma.types.utilities.TypeUtilities.subTypeOf;
 
 import java.util.Arrays;
 import java.util.List;

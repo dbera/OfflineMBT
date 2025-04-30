@@ -1,22 +1,28 @@
 package nl.esi.comma.types.utilities
 
-import nl.esi.comma.types.types.TypeReference
-import nl.esi.comma.types.types.VectorTypeConstructor
-import nl.esi.comma.types.types.TypeObject
-import nl.esi.comma.types.types.Type
-import nl.esi.comma.types.types.VectorTypeDecl
+import java.util.ArrayList
+import java.util.List
+import nl.esi.comma.types.types.EnumElement
+import nl.esi.comma.types.types.EnumTypeDecl
+import nl.esi.comma.types.types.MapTypeConstructor
+import nl.esi.comma.types.types.MapTypeDecl
+import nl.esi.comma.types.types.RecordField
 import nl.esi.comma.types.types.RecordTypeDecl
 import nl.esi.comma.types.types.SimpleTypeDecl
-import java.util.List
-import java.util.ArrayList
-import nl.esi.comma.types.types.EnumTypeDecl
+import nl.esi.comma.types.types.Type
 import nl.esi.comma.types.types.TypeDecl
-import nl.esi.comma.types.types.RecordField
-import nl.esi.comma.types.types.EnumElement
-import nl.esi.comma.types.types.MapTypeDecl
-import nl.esi.comma.types.types.MapTypeConstructor
+import nl.esi.comma.types.types.TypeObject
+import nl.esi.comma.types.types.TypeReference
+import nl.esi.comma.types.types.TypesFactory
+import nl.esi.comma.types.types.VectorTypeConstructor
+import nl.esi.comma.types.types.VectorTypeDecl
+import org.eclipse.emf.ecore.util.EcoreUtil
 
 class TypeUtilities {
+    public static val SimpleTypeDecl ANY_TYPE = TypesFactory.eINSTANCE.createSimpleTypeDecl() => [
+        name = 'any'
+    ]
+
 	/*
 	 * Methods for getting the type object from a type. 
 	 * Type is either a reference to a type declaration or an inline type constructor
@@ -165,6 +171,20 @@ class TypeUtilities {
 		vtd.constructor.getBaseType
 	}	
 	
+    def static dispatch TypeObject getElementType(VectorTypeConstructor vtc) {
+        if (vtc.getDimensions().size() > 1) {
+            return EcoreUtil.copy(vtc) => [
+                dimensions.removeLast
+            ]
+        } else {
+            return vtc.type
+        }
+    }
+
+    def static dispatch TypeObject getElementType(VectorTypeDecl vtd) {
+        vtd.constructor.elementType
+    }
+
 	def static dispatch int getFirstDimension(VectorTypeConstructor vtc){
 		vtc.dimensions.get(0).size
 	}
@@ -210,4 +230,62 @@ class TypeUtilities {
 		}
 		return null
 	}
+	
+   static def boolean identical(TypeObject t1, TypeObject t2) {
+        if(t1 === null || t2 === null) return false
+        
+        if(t1 instanceof SimpleTypeDecl)
+            if(t2 instanceof SimpleTypeDecl)
+                return t1.name.equals(t2.name)
+                
+        if(t1 instanceof VectorTypeConstructor)
+            if(t2 instanceof VectorTypeConstructor){
+                if(!t1.type.identical(t2.type)) return false
+                if(t1.dimensions.size != t2.dimensions.size) return false
+                for(i : 0..< t1.dimensions.size){
+                    if(t1.dimensions.get(i).size != t2.dimensions.get(i).size) return false
+                }
+                return true
+            }
+            
+        if(t1 instanceof MapTypeConstructor)
+            if(t2 instanceof MapTypeConstructor){
+                return t1.keyType.identical(t2.keyType) && t1.valueType.typeObject.identical(t2.valueType.typeObject)
+            }
+                
+        t1 === t2   
+    }
+	
+    static def boolean subTypeOf(TypeObject t1, TypeObject t2){
+        if(t1 === null || t2 === null) return false
+        if(t1.synonym(t2)) return true //reflexive case
+        if(t1.identical(ANY_TYPE)) return true //any is subtype of all types
+        if(t1 instanceof RecordTypeDecl  && t2 instanceof RecordTypeDecl) //record type subtyping
+            return getAllParents(t1 as RecordTypeDecl).contains(t2)
+            
+        if(t1 instanceof VectorTypeConstructor){
+            if(t2 instanceof VectorTypeConstructor){
+                if(!t1.type.subTypeOf(t2.type)) return false
+                if(t1.dimensions.size != t2.dimensions.size) return false
+                for(i : 0..< t1.dimensions.size){
+                    if(t1.dimensions.get(i).size != t2.dimensions.get(i).size) return false
+                }
+                return true
+            }
+        }
+        false
+    }
+    
+    static def boolean synonym(TypeObject t1, TypeObject t2){
+        if(t1 === null || t2 === null) return false
+        if(t1.identical(t2)) return true //reflexive case
+        
+        if(t1 instanceof SimpleTypeDecl)
+            if(t2 instanceof SimpleTypeDecl){
+                return (t1.base.identical(t2)) ||
+                       (t2.base.identical(t1)) ||
+                       (t1.base.identical(t2.base))
+            }
+        false
+    }
 }
