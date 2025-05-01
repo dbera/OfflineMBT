@@ -135,7 +135,7 @@ class ExpressionValidator extends AbstractExpressionValidator {
 			ExpressionRecordAccess : e.field?.type?.typeObject
 			ExpressionBulkData : bulkdataType
 			ExpressionAny : anyType
-			ExpressionFunctionCall : ExpressionFunction.valueOf(e)?.inferType(e.args)
+			ExpressionFunctionCall : ExpressionFunction.valueOf(e)?.inferType(e.args, ExpressionFunction.RETURN_ARG)
 			ExpressionVector : e.typeAnnotation?.type?.typeObject
 			ExpressionQuantifier : {
 				if(e.quantifier == QUANTIFIER::DELETE)

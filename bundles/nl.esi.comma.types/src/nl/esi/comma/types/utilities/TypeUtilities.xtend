@@ -231,43 +231,43 @@ class TypeUtilities {
 		return null
 	}
 	
-   static def boolean identical(TypeObject t1, TypeObject t2) {
+   def static boolean identical(TypeObject t1, TypeObject t2) {
         if(t1 === null || t2 === null) return false
-        
-        if(t1 instanceof SimpleTypeDecl)
-            if(t2 instanceof SimpleTypeDecl)
+
+        if (t1 instanceof SimpleTypeDecl)
+            if (t2 instanceof SimpleTypeDecl)
                 return t1.name.equals(t2.name)
-                
-        if(t1 instanceof VectorTypeConstructor)
-            if(t2 instanceof VectorTypeConstructor){
+
+        if (t1 instanceof VectorTypeConstructor)
+            if (t2 instanceof VectorTypeConstructor) {
                 if(!t1.type.identical(t2.type)) return false
                 if(t1.dimensions.size != t2.dimensions.size) return false
-                for(i : 0..< t1.dimensions.size){
+                for (i : 0 ..< t1.dimensions.size) {
                     if(t1.dimensions.get(i).size != t2.dimensions.get(i).size) return false
                 }
                 return true
             }
-            
-        if(t1 instanceof MapTypeConstructor)
-            if(t2 instanceof MapTypeConstructor){
+
+        if (t1 instanceof MapTypeConstructor)
+            if (t2 instanceof MapTypeConstructor) {
                 return t1.keyType.identical(t2.keyType) && t1.valueType.typeObject.identical(t2.valueType.typeObject)
             }
-                
-        t1 === t2   
+
+        t1 === t2
     }
-	
-    static def boolean subTypeOf(TypeObject t1, TypeObject t2){
+
+    def static boolean subTypeOf(TypeObject t1, TypeObject t2) {
         if(t1 === null || t2 === null) return false
-        if(t1.synonym(t2)) return true //reflexive case
-        if(t1.identical(ANY_TYPE)) return true //any is subtype of all types
-        if(t1 instanceof RecordTypeDecl  && t2 instanceof RecordTypeDecl) //record type subtyping
+        if(t1.synonym(t2)) return true // reflexive case
+        if(t1.identical(ANY_TYPE)) return true // any is subtype of all types
+        if (t1 instanceof RecordTypeDecl && t2 instanceof RecordTypeDecl) // record type subtyping
             return getAllParents(t1 as RecordTypeDecl).contains(t2)
-            
-        if(t1 instanceof VectorTypeConstructor){
-            if(t2 instanceof VectorTypeConstructor){
+
+        if (t1 instanceof VectorTypeConstructor) {
+            if (t2 instanceof VectorTypeConstructor) {
                 if(!t1.type.subTypeOf(t2.type)) return false
                 if(t1.dimensions.size != t2.dimensions.size) return false
-                for(i : 0..< t1.dimensions.size){
+                for (i : 0 ..< t1.dimensions.size) {
                     if(t1.dimensions.get(i).size != t2.dimensions.get(i).size) return false
                 }
                 return true
@@ -275,17 +275,26 @@ class TypeUtilities {
         }
         false
     }
-    
-    static def boolean synonym(TypeObject t1, TypeObject t2){
+
+    def static boolean synonym(TypeObject t1, TypeObject t2) {
         if(t1 === null || t2 === null) return false
-        if(t1.identical(t2)) return true //reflexive case
-        
-        if(t1 instanceof SimpleTypeDecl)
-            if(t2 instanceof SimpleTypeDecl){
-                return (t1.base.identical(t2)) ||
-                       (t2.base.identical(t1)) ||
-                       (t1.base.identical(t2.base))
+        if(t1.identical(t2)) return true // reflexive case
+        if (t1 instanceof SimpleTypeDecl)
+            if (t2 instanceof SimpleTypeDecl) {
+                return (t1.base.identical(t2)) || (t2.base.identical(t1)) || (t1.base.identical(t2.base))
             }
         false
+    }
+
+    def static String getTypeName(Type type) {
+        type.typeObject.typeName
+    }
+
+    def static String getTypeName(TypeObject type) {
+        return switch (type) {
+            TypeDecl: type.name
+            VectorTypeConstructor: '''«type.type.name»«FOR dim : type.dimensions»[]«ENDFOR»'''
+            MapTypeConstructor: '''map<«type.type.name»,«type.valueType.typeName»>'''
+        }
     }
 }

@@ -7,11 +7,13 @@ import java.util.ArrayList
 import java.util.List
 import nl.esi.comma.expressions.expression.ExpressionBinary
 import nl.esi.comma.expressions.expression.ExpressionEnumLiteral
+import nl.esi.comma.expressions.expression.ExpressionFunctionCall
 import nl.esi.comma.expressions.expression.ExpressionPackage
 import nl.esi.comma.expressions.expression.ExpressionRecord
 import nl.esi.comma.expressions.expression.ExpressionRecordAccess
 import nl.esi.comma.expressions.expression.ExpressionVector
 import nl.esi.comma.expressions.expression.Field
+import nl.esi.comma.expressions.validation.ExpressionFunction
 import nl.esi.comma.expressions.validation.ExpressionValidator
 import nl.esi.comma.signature.interfaceSignature.Signature
 import nl.esi.comma.types.types.EnumTypeDecl
@@ -75,6 +77,13 @@ class ExpressionScopeProvider extends AbstractExpressionScopeProvider {
             }
             ExpressionBinary case reference != ExpressionPackage.Literals.EXPRESSION_BINARY__LEFT: {
                 ExpressionValidator.typeOf(context.left)
+            }
+            ExpressionFunctionCall case reference != ExpressionPackage.Literals.EXPRESSION_FUNCTION_CALL__FUNCTION_NAME: {
+                val function = ExpressionFunction.valueOf(context)
+                if (function !== null) {
+                    // TODO: This only works if writing arguments in order, not when changing arguments!
+                    return function.inferType(context.args, context.args.length)
+                }
             }
             ExpressionVector: {
                 val vct = ExpressionValidator.typeOf(context)
