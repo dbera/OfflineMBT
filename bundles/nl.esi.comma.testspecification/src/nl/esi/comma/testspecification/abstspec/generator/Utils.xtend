@@ -1,96 +1,113 @@
 package nl.esi.comma.testspecification.abstspec.generator
 
-import org.eclipse.emf.common.util.EList
-import nl.esi.comma.testspecification.testspecification.StepReference
-import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
-import nl.esi.comma.testspecification.generator.ExpressionGenerator
-import nl.esi.comma.expressions.expression.ExpressionFunctionCall
-import nl.esi.comma.expressions.expression.ExpressionVector
+import java.util.Collections
+import java.util.List
 import nl.esi.comma.expressions.expression.ExpressionRecordAccess
 import nl.esi.comma.expressions.expression.ExpressionVariable
-import nl.esi.comma.testspecification.testspecification.RunStep
 import nl.esi.comma.testspecification.testspecification.AbstractTestDefinition
-import java.util.HashSet
 import nl.esi.comma.testspecification.testspecification.ComposeStep
-import nl.esi.comma.testspecification.testspecification.TSJsonValue
-import nl.esi.comma.testspecification.testspecification.TSJsonString
+import nl.esi.comma.testspecification.testspecification.RunStep
+import nl.esi.comma.testspecification.testspecification.TSJsonArray
 import nl.esi.comma.testspecification.testspecification.TSJsonBool
 import nl.esi.comma.testspecification.testspecification.TSJsonFloat
 import nl.esi.comma.testspecification.testspecification.TSJsonLong
-import nl.esi.comma.testspecification.testspecification.TSJsonObject
-import nl.esi.comma.testspecification.testspecification.TSJsonArray
 import nl.esi.comma.testspecification.testspecification.TSJsonMember
+import nl.esi.comma.testspecification.testspecification.TSJsonObject
+import nl.esi.comma.testspecification.testspecification.TSJsonString
+import nl.esi.comma.testspecification.testspecification.TSJsonValue
+import nl.esi.comma.testspecification.testspecification.TestspecificationFactory
+import nl.esi.comma.types.types.MapTypeConstructor
+import nl.esi.comma.types.types.Type
+import nl.esi.comma.types.types.TypeReference
+import nl.esi.comma.types.types.TypesFactory
+import nl.esi.comma.types.types.VectorTypeConstructor
+import org.eclipse.emf.ecore.util.EcoreUtil
 
 class Utils 
 {
+    private new() {
+        // Empty
+    }
+
+    static def getSteps(AbstractTestDefinition atd) {
+        return atd.testSeq.flatMap[step]
+    }
+
+    static def getSystem(RunStep step) {
+        return step.name.split('_').get(0)
+    }
+
     // Gets the list of referenced compose steps
-    // RULE. Exactly one referenced Compose Step. 
-    def getComposeSteps(RunStep rstep, AbstractTestDefinition atd) {
-        var listOfComposeSteps = new HashSet<ComposeStep>
-        for(elm : rstep.stepRef) {
-            for(cstep: atd.eAllContents.filter(ComposeStep).toIterable) {
-                if(elm.refStep.name.equals(cstep.name)) {
-                    listOfComposeSteps.add(cstep)
-                }
-            }
+    // RULE. Exactly one referenced Compose Step.
+    static def getComposeSteps(RunStep step) {
+        return step.stepRef.map[refStep].filter(ComposeStep)
+    }
+
+    dispatch static def String printField(ExpressionRecordAccess exp) {
+        return exp.record.printField + '.' + exp.field.name
+    }
+
+    dispatch static def String printField(ExpressionVariable exp) {
+        return exp.variable.name
+    }
+
+    // Types utilities
+
+    static def Type getOuterDimension(VectorTypeConstructor type) {
+        return if (type.dimensions.size > 1) {
+            EcoreUtil.copy(type) => [
+                dimensions.removeLast
+            ]
+        } else {
+            TypesFactory.eINSTANCE.createTypeReference => [
+                type = type.type
+            ]
         }
-        listOfComposeSteps
     }
 
-    /* ComMA Expression Handler */
-    def printRecord(String stepName, String prefix, EList<StepReference> stepRef, RecordFieldAssignmentAction rec) {
-        var field = printField(rec.fieldAccess, false)
-        var value = (new ExpressionGenerator(stepRef,stepName)).exprToComMASyntax(rec.exp)
-        var p = (rec.exp instanceof ExpressionVector || rec.exp instanceof ExpressionFunctionCall) ? "" : prefix
-        return field + " := " + p + value
+    dispatch static def String getTypeName(TypeReference type) '''
+        «type.type.name»'''
+
+    dispatch static def String getTypeName(VectorTypeConstructor type) '''
+        «type.type.name»«FOR dimension : type.dimensions»[]«ENDFOR»'''
+
+    dispatch static def String getTypeName(MapTypeConstructor type) '''
+        map<«type.type.name», «type.valueType.typeName»>'''
+
+    // JSON utilities
+
+    static def List<TSJsonMember> getMemberValues(TSJsonValue json) {
+        return json instanceof TSJsonObject ? json.members : Collections.emptyList
     }
 
-    dispatch def String printField(ExpressionRecordAccess exp, boolean printVar) {
-        return printField(exp.record, printVar) + "." + exp.field.name
+    static def boolean hasMemberValue(TSJsonValue json, String member) {
+        return json instanceof TSJsonObject ? json.members.exists[key == member] : false
     }
 
-    dispatch def String printField(ExpressionVariable exp, boolean printVar) {
-        if(printVar) return exp.getVariable().getName()
-        else return ""
+    static def TSJsonValue getMemberValue(TSJsonValue json, String member) {
+        return json instanceof TSJsonObject ? json.members.findFirst[key == member]?.value : null
     }
-    /* *********************** */
-    
-    dispatch def String parseJSON(TSJsonValue v) { return parseJSON(v) }
-        // TSJsonString | TSJsonBool | TSJsonFloat | TSJsonLong | TSJsonObject | TSJsonArray
-    dispatch def String parseJSON(TSJsonString v) { return v.value}
-    dispatch def String parseJSON(TSJsonBool v) { return v.value.toString }
-    dispatch def String parseJSON(TSJsonFloat v) { return v.value.toString }
-    dispatch def String parseJSON(TSJsonLong v) { return v.value.toString }
-    dispatch def String parseJSON(TSJsonObject v) { 
-        var txt = 
-        '''
-        {
-            «FOR m : v.members SEPARATOR ''','''»
-                «parseJSON(m)»
-            «ENDFOR»
-        }'''
-        return txt.toString
+
+    static def List<TSJsonValue> getItemValues(TSJsonValue json) {
+        return json instanceof TSJsonArray ? json.values : Collections.emptyList
     }
-    //  '{' (members+=TSJsonMember) (',' members+=TSJsonMember)* '}'
-    dispatch def String parseJSON(TSJsonMember v) { 
-        // key=STRING ':' value=TSJsonValue
-        var txt = 
-        '''
-        «v.key» : «parseJSON(v.value)»
-        '''
-        return txt
+
+    static def String getStringValue(TSJsonValue json) {
+        return switch (json) {
+            case null: null
+            TSJsonString: json.value
+            TSJsonBool: String.valueOf(json.value)
+            TSJsonFloat: String.valueOf(json.value)
+            TSJsonLong: String.valueOf(json.value)
+            TSJsonObject: json.members.join('{', ', ', '}')[key + ': ' value.stringValue]
+            TSJsonArray: json.values.join('[', ', ', ']')[stringValue]
+            default: throw new IllegalArgumentException('Unknown JSON type ' + json)
+        }
     }
-    dispatch def String parseJSON(TSJsonArray v) { 
-        // '[' (values+=TSJsonValue)? (',' values+=TSJsonValue)* ']'
-        var txt = 
-        '''
-        [
-            «FOR value : v.values SEPARATOR ''','''»
-                «parseJSON(value)»
-            «ENDFOR»
+
+    static def TSJsonString toJsonString(String text) {
+        return TestspecificationFactory.eINSTANCE.createTSJsonString => [
+            value = text
         ]
-        '''
-        return txt
     }
-
 }

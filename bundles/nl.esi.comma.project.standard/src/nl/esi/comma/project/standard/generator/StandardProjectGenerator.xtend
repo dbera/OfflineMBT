@@ -3,48 +3,24 @@
  */
 package nl.esi.comma.project.standard.generator
 
-import java.io.BufferedReader
-import java.io.File
-import java.io.FileInputStream
-import java.io.FilenameFilter
-import java.io.InputStream
-import java.io.InputStreamReader
-import java.nio.file.Files
-import java.nio.file.Paths
-import java.nio.file.StandardCopyOption
-import java.util.ArrayList
-import java.util.List
-import java.util.function.Consumer
 import nl.asml.matala.product.generator.ProductGenerator
 import nl.asml.matala.product.product.Product
-import nl.esi.comma.automata.AlgorithmType
-import nl.esi.comma.constraints.constraints.Constraints
-import nl.esi.comma.constraints.generator.ConstraintsAnalysisAndGeneration
-import nl.esi.comma.project.standard.standardProject.FilePath
+import nl.esi.comma.project.standard.standardProject.OfflineGenerationBlock
+import nl.esi.comma.project.standard.standardProject.OfflineGenerationTarget
 import nl.esi.comma.project.standard.standardProject.Project
-import nl.esi.comma.project.standard.standardProject.StateMachineGenerationBlock
-import nl.esi.comma.scenarios.scenarios.Scenarios
 import nl.esi.comma.testspecification.generator.FromAbstractToConcrete
-import nl.esi.comma.testspecification.generator.TestspecificationGenerator
-import nl.esi.comma.testspecification.testspecification.AbstractTestDefinition
-import nl.esi.comma.testspecification.testspecification.TSMain
-import nl.esi.comma.testspecification.testspecification.TestDefinition
-import org.eclipse.core.resources.IResource
-import org.eclipse.core.resources.ResourcesPlugin
-import org.eclipse.core.runtime.Assert
-import org.eclipse.emf.common.CommonPlugin
-import org.eclipse.emf.common.util.EList
-import org.eclipse.emf.common.util.URI
+import nl.esi.comma.testspecification.generator.FromConcreteToFast
+import nl.esi.comma.types.types.Import
+import nl.esi.comma.types.utilities.EcoreUtil3
 import org.eclipse.emf.ecore.resource.Resource
-import org.eclipse.xtext.EcoreUtil2
+import org.eclipse.emf.ecore.resource.ResourceSet
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
-import org.eclipse.xtext.nodemodel.util.NodeModelUtils
-import org.eclipse.emf.ecore.util.Diagnostician
-import org.eclipse.emf.common.util.Diagnostic
-import org.eclipse.emf.common.util.DiagnosticException
-import org.eclipse.emf.ecore.EObject
+
+import static extension nl.esi.comma.types.utilities.FileSystemAccessUtil.*
+
+import static extension nl.esi.comma.types.utilities.EcoreUtil3.*
 
 /**
  * Generates code from your model files on save.
@@ -52,355 +28,80 @@ import org.eclipse.emf.ecore.EObject
  * See https://www.eclipse.org/Xtext/documentation/303_runtime_concepts.html#code-generation
  */
 class StandardProjectGenerator extends AbstractGenerator {
-	var Resource resource
-	var StateMachineGenerationBlock task
-    List<Constraints> constraints
-	
-	override doGenerate(Resource res, IFileSystemAccess2 fsa, IGeneratorContext context) {
-		if (res.allContents.head instanceof Project) {
-            val resourceSet = res.resourceSet
-            val project = res.contents.head as Project
-            var Product envProduct
-            var stubProductList = new ArrayList<Product>
-            for (product : project.products) {
-            	// resolve environment product and generate petri net 
-            	var productName = product.product
-	            var inputFileURI = res.URI.trimSegments(1).appendSegment(productName)
-	            var absFilePath = CommonPlugin.resolve(inputFileURI).toFileString
-	            if (inputFileURI.fileExtension.equalsIgnoreCase("bpmn")) {
-	                val outputPathURI = res.URI.trimSegments(1)
-	                val absOutputPath = CommonPlugin.resolve(outputPathURI).toFileString
-	                val numTests = product.numTests.intValue() == 0? 1 : product.numTests.intValue() 
-	                val depthLimit = product.depthLimit.intValue() == 0? 300 : product.depthLimit.intValue 
-                    nl.asml.matala.bpmn4s.Main.compile(absFilePath, product.simulator, absOutputPath, depthLimit, numTests)
-                    refreshWorkspaceProjects()
-                    var outputFileURI = inputFileURI.trimSegments(1)
-                    productName = inputFileURI.lastSegment.replaceAll("bpmn", "ps").replaceAll(" ", "")
-                    inputFileURI = outputFileURI.appendSegment(productName)
-                    absFilePath = CommonPlugin.resolve(inputFileURI).toFileString
-	            }
-	            val fis = new FileInputStream(absFilePath)
-	            resourceSet.createResource(URI.createURI(productName)).load(fis, emptyMap)
-				val inputResource = EcoreUtil2.getResource(res, productName)
-				val input = inputResource.allContents.head
-				if (input instanceof Product) {
-					envProduct = input as Product
-                    validate(envProduct)
-					(new ProductGenerator).doGenerate(inputResource, fsa, context)
-                    if (!product.simulator) {
-    					var name = envProduct.specification.name
-    					var pythonPathURI = res.URI.trimSegments(1).appendSegment("src-gen\\CPNServer").appendSegment(name)
-    					var pythonFileURI = pythonPathURI.appendSegment(name + ".py")
-    					var pythonAbsPath = CommonPlugin.resolve(pythonPathURI.appendSegment("generated_scenarios")).toFileString
-    					var pythonAbsFile = CommonPlugin.resolve(pythonFileURI).toFileString
-    					var pythonExe = "python.exe"
-    					if (!product.pythonExe.nullOrEmpty) {
-    						pythonExe = product.pythonExe
-    					}
-    		            var Process pr = Runtime.getRuntime().exec(pythonExe + " " + pythonAbsFile + " -no_sim=TRUE -tsdir=" + pythonAbsPath)
-    		            var BufferedReader i = new BufferedReader(new InputStreamReader(pr.getInputStream()))
-    		            var String line = null
-    	                while ((line = i.readLine()) !== null) {
-    	                    System.err.println(line)
-    		            }
-    		            pr.destroyForcibly
-                        refreshWorkspaceProjects()
-    					var abstractTSpecFileURI = res.URI.trimSegments(1).appendSegment("src-gen\\CPNServer\\" + name + "\\generated_scenarios")
-    					var abstractTSpecAbsFilePath = CommonPlugin.resolve(abstractTSpecFileURI).toFileString
-    					var lst = (new File(abstractTSpecAbsFilePath)).listFiles()
-    					for (f : lst.filter[n | !n.name.equalsIgnoreCase("_cm.tspec") && !n.name.equalsIgnoreCase("tcs.json") && n.name.contains(".tspec")]) {
-    						var src = Paths.get(f.toURI)
-    						var fileName = src.fileName.toString
-    						var path = res.URI.trimSegments(1).appendSegment(fileName)
-    						var dstAbsFilePath = CommonPlugin.resolve(path).toFileString
-    						var dst = Paths.get(dstAbsFilePath)
-    
-    						Files.copy(src, dst, StandardCopyOption.REPLACE_EXISTING)
-                            val tfis = new FileInputStream(dst.toFile)
-    
-                            try {
-                                resourceSet.createResource(URI.createURI(fileName)).load(tfis, emptyMap)
-                            } catch (Exception ex) {} // re-registration is not a problem
-
-                            val testResource = EcoreUtil2.getResource(res, fileName)
-                            val test = testResource.allContents.head
-                            if (test instanceof TSMain) {
-                                if (test.model instanceof TestDefinition) {
-                                    Assert.isTrue(true, "this is a concrete tspec, not an abstract tspec")
-                                } else if (test.model instanceof AbstractTestDefinition) {
-                                    val typesImports = TestspecificationGenerator.getTypesImports(testResource)
-                                    val atd = new FromAbstractToConcrete(test.model as AbstractTestDefinition)
-                                    for (sys : atd.getSystems()) {
-                                        fsa.generateFile("types/" + sys + ".types", atd.generateTypesFile(sys, typesImports))
-                                        fsa.generateFile("parameters/" + sys + ".params", atd.generateParamsFile(sys))
-                                    }
-                                    // Commented DB. TODO Abstract to Concrete TSpec is a work in progress 03.04.2025 //
-                                    // fsa.generateFile("concrete.tspec", atd.generateConcreteTest())
-                                    // fsa.generateFile("data.kvp", atd.__generateConcreteTest())
-
-//                                    val abstractTSpecURI = res.URI.trimSegments(1).appendSegment("src-gen").appendSegment("concrete.tspec")
-//                                    val abstractTSpecPath = CommonPlugin.resolve(abstractTSpecURI).toFileString
-//                                    val abstractTSpecFile = new FileInputStream(abstractTSpecPath)
-//                                    try {
-//                                        resourceSet.createResource(URI.createURI(abstractTSpecURI.toString)).load(abstractTSpecFile, emptyMap)
-//                                    } catch (Exception ex) {} // re-registration is not a problem
-//                                    val abstractTSpecResource = EcoreUtil2.getResource(res, abstractTSpecURI.toString)
-//                                    val inputTSpec = abstractTSpecResource.allContents.head
-//                                    if (inputTSpec instanceof TSMain) {
-//                                        if (inputTSpec.model instanceof TestDefinition) {
-//                                            // Commented DB. TODO Abstract to Concrete TSpec is a work in progress 03.04.2025 //
-//                                            // (new TestspecificationGenerator).doGenerate(abstractTSpecResource, fsa, context) 
-//                                        }
-//                                    }
-                                } else {
-                                    Assert.isTrue(true, "this is not an abstract tspec")
-                                }
-                            }
-                            // Files.delete(dst)
-                            refreshWorkspaceProjects()
-						}
-					}
-				}
-                refreshWorkspaceProjects()
-				
-				// check if there are SUT products
-				if(!product.stubProducts.nullOrEmpty) {
-					// resolve each SUT product and generate petri net
-					for(stubProd : product.stubProducts) {
-						val _inputFileURI = res.URI.trimSegments(1).appendSegment(stubProd)
-			            val _absFilePath = CommonPlugin.resolve(_inputFileURI).toFileString
-			            val _fis = new FileInputStream(_absFilePath)
-			            resourceSet.createResource(URI.createURI(stubProd)).load(_fis, emptyMap)
-						val _inputResource = EcoreUtil2.getResource(res, stubProd)
-						val _input = _inputResource.allContents.head
-						if (_input instanceof Product) {
-							stubProductList.add(_input)
-							(new ProductGenerator).doGenerate(_inputResource, fsa, context)
-							// System.out.println(" Stub Generated. ")
-						}
-					}
-					// generate online MBT controller
-					(new ProductGenerator).generateOnlineMBTController(envProduct, 
-							stubProductList.get(0), fsa, context)
-				}
-			}
-            for (tspec : project.tspecs) {
-                val inputFileURI = res.URI.trimSegments(1).appendSegment(tspec.tspec)
-                val absFilePath = CommonPlugin.resolve(inputFileURI).toFileString
-                val fis = new FileInputStream(absFilePath)
-                resourceSet.createResource(URI.createURI(tspec.tspec)).load(fis, emptyMap)
-                val inputResource = EcoreUtil2.getResource(res, tspec.tspec)
-                val input = inputResource.allContents.head
-                if (input instanceof TSMain) {
-                    if (input.model instanceof TestDefinition) {
-                        Assert.isTrue(true, "this is a concrete tspec, not an abstract tspec")
-                    } else if (input.model instanceof AbstractTestDefinition) {
-                        val typesImports = TestspecificationGenerator.getTypesImports(inputResource)
-                        val atd = new FromAbstractToConcrete(input.model as AbstractTestDefinition)
-                        for (sys : atd.getSystems()) {
-                            fsa.generateFile("types/" + sys + ".types", atd.generateTypesFile(sys, typesImports))
-                            fsa.generateFile("parameters/" + sys + ".params", atd.generateParamsFile(sys))
-                        }
-                        fsa.generateFile("concrete.tspec", atd.generateConcreteTest())
-                        val abstractTSpecURI = res.URI.trimSegments(1).appendSegment("src-gen").appendSegment("concrete.tspec")
-                        val abstractTSpecPath = CommonPlugin.resolve(abstractTSpecURI).toFileString
-                        val abstractTSpecFile = new FileInputStream(abstractTSpecPath)
-                        resourceSet.createResource(URI.createURI(abstractTSpecURI.toString)).load(abstractTSpecFile, emptyMap)
-                        val abstractTSpecResource = EcoreUtil2.getResource(res, abstractTSpecURI.toString)
-                        val inputTSpec = abstractTSpecResource.allContents.head
-                        if (inputTSpec instanceof TSMain) {
-                            if (inputTSpec.model instanceof TestDefinition) {
-                                (new TestspecificationGenerator).doGenerate(abstractTSpecResource, fsa, context) 
-                                // TODO: test this
-                            }
-                        }
-                    } else {
-                        Assert.isTrue(true, "this is not an abstract tspec")
-                    }
-                }
+    override doGenerate(Resource res, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
+        for (project : res.contents.filter(Project)) {
+            for (task : project.offlineBlocks) {
+                doGenerate(task, res.resourceSet, fsa.createFolderAccess(task.name), ctx)
             }
-			
-			
-            for (task : project.statemachines) {
-            	this.task = task
-            	this.resource = task.eResource
-    			setConstraints
-		        var Resource scnResource = null
-       	        var isCoCoGen = task.checkCoCo
-		        var isVisualize = task.isVisualizeSM
-		        
-		        var isTestGen = false
-		        var AlgorithmType algorithm;
-		        var Integer timeout = null;
-		        var Integer similarity = 75;
-		        if(task.testGen !== null) {
-		            isTestGen = true
-		            if (task.testGen.timeout != 0) timeout = task.testGen.timeout;
-		            if (task.testGen.algorithmBfs) algorithm = AlgorithmType.BFS;
-		            if (task.testGen.algorithmDfs) algorithm = AlgorithmType.DFS;
-		            if (task.testGen.algorithmPrefix) algorithm = AlgorithmType.PREFIX;
-		            if (task.testGen.algorithmPrefixMinimized) algorithm = AlgorithmType.PREFIX_MINIMIZED;
-		            if (task.testGen.algorithmPrefixSuffix) algorithm = AlgorithmType.PREFIX_SUFFIX;
-		            if (task.testGen.algorithmPrefixSuffixMinimized) algorithm = AlgorithmType.PREFIX_SUFFIX_MINIMIZED;
-		            if (task.testGen.similarity != 0) similarity = task.testGen.similarity 
-		        }
-            	
-            	if(task.scenarioFile !== null) {
-		            scnResource = EcoreUtil2.getResource(resource, task.scenarioFile)
-		            if(scnResource === null) {
-		                throw new Exception(task.scenarioFile + " Could not be resolved.")
-		            }
-		            var scn_head = scnResource.allContents.head
-		            if(scn_head !== null && scn_head instanceof Scenarios) {
-		                //System.out.println("Scenario File Found")
-		                if(!(scn_head as Scenarios).specFlowScenarios.isNullOrEmpty) {
-		                    if(task.testGen !== null) {
-		                        //System.out.println("SpecFlow Scenarios Found: " + scn_head.specFlowScenarios.size)
-		                        (new ConstraintsAnalysisAndGeneration).generateStateMachine(resource, fsa, constraints, 
-		                                                                task.taskname, scn_head as Scenarios, 0, isVisualize, isCoCoGen, 
-		                                                                isTestGen, algorithm, 
-		                                                                task.testGen.k, task.testGen.skipAny, 
-		                                                                task.testGen.skipDuplicateSelfLoop,
-		                                                                task.testGen.skipSelfLoop,
-		                                                                timeout, similarity, task.printConstraints)
-		                    } else
-		                        (new ConstraintsAnalysisAndGeneration).generateStateMachine(resource, fsa, constraints, 
-		                                                                task.taskname, scn_head as Scenarios, 0, isVisualize, isCoCoGen, 
-		                                                                isTestGen, algorithm, 1, false, false, false,
-		                                                                timeout, similarity, task.printConstraints)
-		                                                                
-		                } else { System.out.println("Did not find SpecFlow scenarios in Scenario file!") }
-		            } 
-		            else { System.out.println("Did not find Scenarios file!") }
-		        } 
-		        else {
-//		            if(constraints.isEmpty) throw createException("Could not find any constraints file", resource, StateMachineGenerationTask)
-		            if(task.testGen !== null)
-		                (new ConstraintsAnalysisAndGeneration).generateStateMachine(resource, fsa, constraints, 
-		                                                                task.taskname, null, 0, isVisualize, isCoCoGen, isTestGen, 
-		                                                                algorithm, task.testGen.k, task.testGen.skipAny, 
-		                                                                task.testGen.skipDuplicateSelfLoop,
-		                                                                task.testGen.skipSelfLoop,
-		                                                                timeout, similarity, task.printConstraints)
-		            else
-		                (new ConstraintsAnalysisAndGeneration).generateStateMachine(resource, fsa, constraints, 
-		                                                                task.taskname, null, 0, isVisualize, isCoCoGen, isTestGen, 
-		                                                                algorithm, 1, false, false, false,
-		                                                                timeout, similarity, task.printConstraints)
-		        }
-			}	
-		}
-	}
-	
-	
-	def setConstraints() {
-		constraints = new ArrayList<Constraints>
-		for (sourcePath : task.constraintsFiles) {
-			var constrResource = getConstraintsResource(sourcePath)
-			if (constrResource !== null){
-				constraints.add(constrResource)
-			} else {
-				throw new Exception("Constraints to StateMachine Task: Could not find file: " + NodeModelUtils.getNode(constrResource).text + "\n\n")
-			}
-		}
-		
-		getConstraintsResourcesFromDirs(task.constraintsDirs).forEach[addConstraints]
-	}
-	
-	def getConstraintsResourcesFromDirs(EList<FilePath> directories) {
-		val resources = new ArrayList<Resource>
-		for (location : directories) {
-			var uri = resource.resolveUri(location.path)	 		
-			if(uri.isPlatform) {
-				val platform = uri.toPlatformString(true)
-				val IResource eclipseResource = ResourcesPlugin.workspace.root.findMember(platform)				
-				uri =  URI.createFileURI(eclipseResource.rawLocation.toOSString);		
-			}
-			
-			val traceFiler = new FilenameFilter() {
-				override accept(File dir, String name) {
-					(name.endsWith(".constraints"))
-				}
-			}
-			
-			val dir = new File(uri.toFileString)
-			if (dir.exists && dir.isDirectory) {
-				for (file : dir.listFiles(traceFiler)) {
-					val res = resource.resourceSet.getResource(URI.createFileURI(file.path), true)				
-					if(res !== null) {
-						resources.add(res)
-					} else { 
-//						errors.add("Constraints resource could not be loaded: " + file.path +".")
-					}
-				}
-			} else {
-//				errors.add("Constraints dir did not exist or is not a directory. " + dir.path)
-			}
-		}
-		resources
-	}
-	
-	def addConstraints(Resource res) {
-		val head = res.allContents.head
-		if(head instanceof Constraints) {
-			constraints.add(head);
-		} else {
-			throw new Exception("Constraints to StateMachine Task: File did not contain the Constraints syntax" + res.URI + "\n\n")				
-		}
-	}
-	
-	def getConstraintsResource(String path) {
-		val constraintResource = EcoreUtil2.getResource(resource, path)
-		if(constraintResource === null){
-			throw new Exception(constraintResource + "Constraints File Could not be resolved.")
-		}
-		val head = constraintResource.allContents.head
-		if(head instanceof Constraints){
-			return head
-		} else {
-			throw new Exception(constraintResource + " Did not contain the expected 'Constraints' model.")
-		}
-	}
-	
-	def static resolveUri(Resource context, String path) {
-		val contextURI = context.getURI();
-		var uri = URI.createFileURI(path)
-		if (contextURI.isHierarchical() && !contextURI.isRelative() && (uri.isRelative() && !uri.isEmpty())) {
-			uri = uri.resolve(contextURI);
-		}		
-		return uri;
-	}
-	
-	def static void validate(EObject eObject) {
-	    val result = Diagnostician.INSTANCE.validate(eObject);
-	    if (result.severity == Diagnostic.ERROR) {
-	        val details = result.children.filter[severity == Diagnostic.ERROR].map['''- «message»'''].join('\n')
-	        throw new Exception(result.message + '\n' + details, new DiagnosticException(result));
-	    }
-    }
 
-	def static void refreshWorkspaceProjects() {
-	    if (ResourcesPlugin.plugin === null) {
-	        // Running as stand alone jar, skip refresh
-	        return;
-	    }
-        for (r : ResourcesPlugin.workspace.root.getProjects()) {
-            r.refreshLocal(IResource.DEPTH_INFINITE, null)
+            for (task : project.statemachineBlocks) {
+                (new StateMachineGenerator()).doGenerate(task, fsa.createFolderAccess(task.name), ctx)
+            }
         }
-	}
-}
-
-class StreamGobbler implements Runnable {
-    InputStream inputStream;
-    Consumer<String> consumer;
-
-    new(InputStream inputStream, Consumer<String> consumer) {
-        this.inputStream = inputStream;
-        this.consumer = consumer;
     }
 
-    override run() {
-        new BufferedReader(new InputStreamReader(inputStream)).lines().forEach(consumer);
+    def doGenerate(OfflineGenerationBlock task, ResourceSet rst, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
+        val productURI = if (task.bpmn.nullOrEmpty) {
+            task.eResource.resolveUri(task.product)
+        } else {
+            val bpmnUri = task.eResource.resolveUri(task.bpmn)
+            val simulator = (task.target == OfflineGenerationTarget::SIMULATOR)
+            val numTests = task.numTests <= 0 ? 1 : task.numTests
+            val depthLimit = task.depthLimit <= 0 ? 300 : task.depthLimit
+            val pspecFsa = fsa.createFolderAccess('pspec')
+
+            (new Bpmn4sToPspecGenerator(simulator, numTests, depthLimit))
+                .doGenerate(rst, bpmnUri, pspecFsa, ctx)
+
+            pspecFsa.getURI(bpmnUri.trimFileExtension.appendFileExtension('ps').lastSegment)
+        }
+
+        // Load and validate the (generated) product
+        val productRes = rst.getResource(productURI, true)
+        val product = productRes.contents.filter(Product).findFirst[specification !== null]
+        if (product === null) {
+            throw new Exception('No product found in resource: ' + productURI)
+        }
+        productRes.validate()
+
+        // PspecToPetriNetGenerator
+        // Generate CPNServer (a.k.a. abstract Tspec generator) and Petri-nets
+        (new ProductGenerator).doGenerate(productRes, fsa, ctx)
+
+        if (task.target == OfflineGenerationTarget.SIMULATOR) {
+            return
+        }
+
+        // Generate abstract tspec from petri-net
+        val petriNetURI = fsa.getURI('''CPNServer/«product.specification.name»/«product.specification.name».py''')
+        val absTspecFsa = fsa.createFolderAccess('tspec_abstract')
+        (new PetriNetToAbstractTspecGenerator()).doGenerate(rst, petriNetURI, absTspecFsa, ctx)
+
+        for (absTspecFileName : absTspecFsa.list(ROOT_PATH).filter[endsWith('.tspec')]) {
+            val absTspecRes = absTspecFsa.loadResource(absTspecFileName, rst)
+
+            // Fix the pspec import
+            val productImportURI = productURI.deresolve(absTspecRes.URI)
+            absTspecRes.allContents.filter(Import).filter[importURI == productURI.lastSegment].forEach [
+                importURI = productImportURI.toString
+            ]
+            absTspecRes.save(null)
+            // Validate the generated abstract tspec
+            absTspecRes.validate()
+
+
+            // Generate concrete tspec
+            val conTspecFsa = fsa.createFolderAccess('tspec_concrete')
+            (new FromAbstractToConcrete()).doGenerate(absTspecRes, conTspecFsa, ctx)
+
+            val conTspecRes = conTspecFsa.loadResource(absTspecFileName, rst)
+            conTspecRes.validate()
+
+            if (task.target == OfflineGenerationTarget.FAST) {
+                // Generate FAST testcases
+                val fastFsa = fsa.createFolderAccess('FAST')
+                (new FromConcreteToFast()).doGenerate(conTspecRes, fastFsa, ctx)
+            }
+        }
     }
 }
-

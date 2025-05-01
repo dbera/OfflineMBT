@@ -94,7 +94,7 @@ class SnakesHelper {
 			return "[]";
 		} else if (type instanceof EnumTypeDecl) {
 			EnumTypeDecl t = (EnumTypeDecl) type;
-			return String.format("\"%s:%s\"", t.getName(), t.getLiterals().get(0).getName());
+			return String.format("\"%s::%s\"", t.getName(), t.getLiterals().get(0).getName());
 		} else if (type instanceof MapTypeDecl) {
 			return "{" + 
 					defaultValue(((MapTypeDecl) type).getConstructor().getType(), targetName) + 
@@ -178,7 +178,7 @@ class SnakesHelper {
 			return String.format("%s or %s", expression(e.getLeft(), variablePrefix), expression(e.getRight(), variablePrefix));
 		} else if (expression instanceof ExpressionEnumLiteral) {
 			ExpressionEnumLiteral e = (ExpressionEnumLiteral) expression;
-			return String.format("\"%s:%s\"", e.getType().getName(), e.getLiteral().getName());
+			return String.format("\"%s::%s\"", e.getType().getName(), e.getLiteral().getName());
 		} else if (expression instanceof ExpressionVector) {
 			ExpressionVector e = (ExpressionVector) expression;
 			return String.format("[%s]", e.getElements().stream().map(ee -> expression (ee, variablePrefix)).collect(Collectors.joining(", ")));

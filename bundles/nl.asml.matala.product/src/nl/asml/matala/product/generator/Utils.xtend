@@ -417,12 +417,11 @@ class Utils
             def printData(self, idata):
                 txt = ""
                 for k, v in idata.items():
-                    txt += "%s : {\n" % k
+                    txt += "%s : " % k
                     j = json.loads(v)
                     txt += json.dumps(j, indent=4, sort_keys=False) + "\n"
                     # for jk in j.keys():
                     #     txt += self.recurseJson(j[jk], "%s.%s" % (k,jk))
-                    txt += "}\n"
                 return txt
                 
             def generateTSpec(self, idx, sutTypesList, sutVarTransitionMap, output_dir):

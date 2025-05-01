@@ -3,9 +3,17 @@
  */
 package nl.esi.comma.types.scoping
 
+import com.google.common.base.Predicate
+import nl.esi.comma.types.types.Type
+import nl.esi.comma.types.types.TypeObject
 import nl.esi.comma.types.types.TypesPackage
+import nl.esi.comma.types.utilities.TypeUtilities
+import org.eclipse.emf.ecore.EClass
 import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.EReference
+import org.eclipse.emf.ecore.EStructuralFeature
+import org.eclipse.xtext.resource.IEObjectDescription
+import org.eclipse.xtext.scoping.IScope
 import org.eclipse.xtext.scoping.impl.FilteringScope
 
 /**
@@ -18,16 +26,53 @@ class TypesScopeProvider extends AbstractTypesScopeProvider {
     static val SIMPLE_TYPES_BASE = #{'int', 'real', 'string'}
 
     override getScope(EObject context, EReference reference) {
-        //println(context.eClass.name + ' -> ' + reference.toPackageDeclaration)
-
-        val scope = super.getScope(context, reference)
-
+        val contextType = context.getContextType(reference)
         return switch (reference) {
             case TypesPackage.Literals.SIMPLE_TYPE_DECL__BASE: {
-                new FilteringScope(scope)[SIMPLE_TYPES_BASE.contains(name.toString)]
+                filterScope(context, reference)[SIMPLE_TYPES_BASE.contains(name.toString)]
             }
-            default: scope
+            case contextType !== null && reference.isTypeDeclReference: {
+                filterScope(context, reference) [ desc |
+                    TypeUtilities.subTypeOf(desc.EObjectOrProxy as TypeObject, contextType)
+                ]
+            }
+            default: {
+                logScope('Default', context, reference)
+                super.getScope(context, reference)
+            }
         }
+    }
+
+    def protected IScope filterScope(EObject context, EReference reference, Predicate<IEObjectDescription> filter) {
+        logScope('Filtering', context, reference)
+        return new FilteringScope(super.getScope(context, reference), filter)
+    }
+
+    def protected TypeObject getContextType(EObject context, EStructuralFeature reference) {
+        return switch (context) {
+            Type case reference != TypesPackage.Literals.TYPE__TYPE : {
+                context.type
+            }
+            default: {
+                null
+            }
+        }
+    }
+
+    def protected isTypeDeclReference(EReference reference) {
+        return reference.EType instanceof EClass && TypesPackage.Literals.TYPE_DECL.isSuperTypeOf(reference.EType as EClass)
+    }
+
+    /**
+     * TODO: Please uncomment the body of this method for debugging scoping
+     */
+    protected def void logScope(String prefix, EObject context, EReference reference) {
+//        val contextType = getContextType(context, reference)
+//        var contextTypeStr = contextType?.eClass?.name ?: 'null'
+//        if (contextType instanceof NamedElement) {
+//            contextTypeStr += ';' + contextType.name
+//        }
+//        println('''«prefix»: «context.eClass.name»(«contextTypeStr») -> «reference.toPackageDeclaration»''')
     }
 
     protected def toPackageDeclaration(EReference reference) {

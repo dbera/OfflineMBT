@@ -44,8 +44,6 @@ import nl.esi.comma.expressions.expression.InterfaceAwareType
 import nl.esi.comma.expressions.expression.QUANTIFIER
 import nl.esi.comma.signature.interfaceSignature.Signature
 import nl.esi.comma.types.types.Dimension
-import nl.esi.comma.types.types.MapTypeConstructor
-import nl.esi.comma.types.types.RecordTypeDecl
 import nl.esi.comma.types.types.SimpleTypeDecl
 import nl.esi.comma.types.types.Type
 import nl.esi.comma.types.types.TypeDecl
@@ -54,6 +52,7 @@ import nl.esi.comma.types.types.TypesFactory
 import nl.esi.comma.types.types.TypesPackage
 import nl.esi.comma.types.types.VectorTypeConstructor
 import nl.esi.comma.types.types.VectorTypeDecl
+import nl.esi.comma.types.utilities.TypeUtilities
 import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.EReference
 import org.eclipse.xtext.scoping.IScopeProvider
@@ -68,6 +67,8 @@ import static extension nl.esi.comma.types.utilities.TypeUtilities.*
 class ExpressionValidator extends AbstractExpressionValidator {
 	@Inject protected IScopeProvider scopeProvider
 	
+    protected static val SimpleTypeDecl anyType = TypeUtilities.ANY_TYPE;
+
 	protected static val SimpleTypeDecl boolType = TypesFactory.eINSTANCE.createSimpleTypeDecl() => [
 	    name = 'bool'
 	]
@@ -83,9 +84,6 @@ class ExpressionValidator extends AbstractExpressionValidator {
 	protected static val SimpleTypeDecl voidType = TypesFactory.eINSTANCE.createSimpleTypeDecl() => [
         name = 'void'
     ]
-	protected static val SimpleTypeDecl anyType = TypesFactory.eINSTANCE.createSimpleTypeDecl() => [
-        name = 'any'
-    ]
 	protected static val SimpleTypeDecl idType = TypesFactory.eINSTANCE.createSimpleTypeDecl() => [
         name = 'id'
     ]
@@ -96,64 +94,6 @@ class ExpressionValidator extends AbstractExpressionValidator {
     static def boolean numeric(TypeObject t) {
         return t.subTypeOf(intType) || t.subTypeOf(realType)
     }
-	
-	static def boolean identical(TypeObject t1, TypeObject t2) {
-		if(t1 === null || t2 === null) return false
-		
-		if(t1 instanceof SimpleTypeDecl)
-			if(t2 instanceof SimpleTypeDecl)
-				return t1.name.equals(t2.name)
-				
-		if(t1 instanceof VectorTypeConstructor)
-			if(t2 instanceof VectorTypeConstructor){
-				if(!t1.type.identical(t2.type)) return false
-				if(t1.dimensions.size != t2.dimensions.size) return false
-				for(i : 0..< t1.dimensions.size){
-					if(t1.dimensions.get(i).size != t2.dimensions.get(i).size) return false
-				}
-				return true
-			}
-			
-		if(t1 instanceof MapTypeConstructor)
-			if(t2 instanceof MapTypeConstructor){
-				return t1.keyType.identical(t2.keyType) && t1.valueType.typeObject.identical(t2.valueType.typeObject)
-			}
-				
-		t1 === t2	
-	}
-	
-	static def boolean subTypeOf(TypeObject t1, TypeObject t2){
-		if(t1 === null || t2 === null) return false
-		if(t1.synonym(t2)) return true //reflexive case
-		if(t1.identical(anyType)) return true //any is subtype of all types
-		if(t1 instanceof RecordTypeDecl  && t2 instanceof RecordTypeDecl) //record type subtyping
-			return getAllParents(t1 as RecordTypeDecl).contains(t2)
-			
-		if(t1 instanceof VectorTypeConstructor){
-			if(t2 instanceof VectorTypeConstructor){
-				if(!t1.type.subTypeOf(t2.type)) return false
-				if(t1.dimensions.size != t2.dimensions.size) return false
-				for(i : 0..< t1.dimensions.size){
-					if(t1.dimensions.get(i).size != t2.dimensions.get(i).size) return false
-				}
-				return true
-			}
-		}
-		false
-	}
-	
-	static def boolean synonym(TypeObject t1, TypeObject t2){
-		if(t1 === null || t2 === null) return false
-		if(t1.identical(t2)) return true //reflexive case
-		
-		if(t1 instanceof SimpleTypeDecl)
-			if(t2 instanceof SimpleTypeDecl){
-				return (t1.base.identical(t2)) ||
-				       (t2.base.identical(t1)) ||
-				       (t1.base.identical(t2.base))
-			}
-		false
-	}
 	
 	//Type computation. No checking is performed. If the type cannot be determined, null is returned
 	static def TypeObject typeOf(Expression e) {
@@ -195,7 +135,7 @@ class ExpressionValidator extends AbstractExpressionValidator {
 			ExpressionRecordAccess : e.field?.type?.typeObject
 			ExpressionBulkData : bulkdataType
 			ExpressionAny : anyType
-			ExpressionFunctionCall : ExpressionFunction.valueOf(e)?.inferType(e.args)
+			ExpressionFunctionCall : ExpressionFunction.valueOf(e)?.inferType(e.args, ExpressionFunction.RETURN_ARG)
 			ExpressionVector : e.typeAnnotation?.type?.typeObject
 			ExpressionQuantifier : {
 				if(e.quantifier == QUANTIFIER::DELETE)

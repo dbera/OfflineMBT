@@ -281,8 +281,9 @@ class PetriNet {
 		            print('Current Marking: ')
 		            for k in n.get_marking():
 		                ms = n.get_marking()[k]
-		                json_data = json.loads(ms.items()[0])
-		                print('    + Place: ', k, ' has token: ', json.dumps(json_data))
+		                for i in ms.items():
+		                    json_data = json.loads(i)
+		                    print('    + Place: ', k, ' has token: ', json.dumps(json_data))
 		            print('****************************************************************')
 		            # self.generatePlantUML(n, True)
 		        else:
@@ -414,6 +415,10 @@ class PetriNet {
 		            # modes = set(v)
 		            for elm in v: # modes
 		                # print(elm)
+		                if k + "_" +elm.__repr__() in self.map_transition_modes_to_name:
+		                    print("WARN: duplicate modes detected for same transition.")
+		                    print(k + "_" +elm.__repr__())
+		                    print("WARN: references to the above transitions are ambigous!")
 		                self.map_transition_modes_to_name[k + "_" +elm.__repr__()] = k + "_" + str(cnt)
 		                # self.map_transition_modes_to_name[k + "_" + pprint.pformat(elm.items(), width=60, compact=True,depth=5)] = k + "_" + str(cnt)
 		                cnt = cnt + 1

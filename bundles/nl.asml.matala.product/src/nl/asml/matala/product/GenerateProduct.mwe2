@@ -46,7 +46,7 @@ Workflow {
                 generateXtendStub = true
             }
 			fragment = nl.esi.xtext.lsp.generator.lezer.LezerGrammarFragment {
-                absolutePath = "target/lezer-grammar"
+                absolutePath = "${rootPath}/nl.asml.matala.product/target/lezer-grammar"
                 override = true
 			}
 		}

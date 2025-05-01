@@ -10,6 +10,7 @@ import java.util.AbstractSet;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -59,8 +60,8 @@ public class Bpmn4sCompiler{
 	
 	protected String removeUuids(String text) {
 		
-		String uuidInitRegex = "[\s]*__uuid__[\s]*=[\s]*uuid\\(\\)[\s]*[,]?[\n]?"; 
-		String uuidDeclRegex = "string[\s]*__uuid__[\s]*[\n]";
+		String uuidInitRegex = "__uuid__\\s*=\\s*uuid\\(\\)\\s*(,?\\s*)";
+		String uuidDeclRegex = "string\\s*__uuid__\\s*";
 		
 		text = text.replaceAll(uuidInitRegex, "");
 		text = text.replaceAll(uuidDeclRegex, "");
@@ -493,7 +494,7 @@ public class Bpmn4sCompiler{
 					}
 					task += "case\t\t\t" + "default" + stepConf + "\n";
 					/* 
-					 * Updates, guards, and initializations from the bpmn4s are parsed into Strings. 
+					 * Updates, guards, assertions and initializations from the bpmn4s are parsed into Strings. 
 					 * In these strings, data stores, queues, and context are identified by their user-defined names.
 					 * Since for simulation we change this names for ids, we also need to do this in the updates 
 					 * strings. Also, both for simulation and test generation, updates and guards related to context 
@@ -540,21 +541,30 @@ public class Bpmn4sCompiler{
 								assertions default {
 								%s
 								}
-								""", assertions.replaceAll("(?m)(^)", "    "));
+								""", indent(replaceAll(assertions, replaceMap)));
 					}
 					for(Edge e: node.getAllOutputs()) {
 						// Name of place that holds target context value for this transition:
 						String postCtxName = sanitize(getPNTargetPlaceName(e));
 						if (model.isData(e.getTar())) {
 							task += "produces-outputs\t" + sanitize(compile(e.getTar()));
-							task += e.isSuppressed() ? " suppress\n" : "\n";
-							if (e.getRefUpdate() != null && e.getRefUpdate() != "") {
-								task += "references {\n" + indent(replaceAll(e.getRefUpdate(), replaceMap)) + 
-										"\n} symbolic-link\n";
-							}
 							if (e.getSymUpdate() != null && e.getSymUpdate() != "") {
-								task += "constraints {\n" + indent(replaceAll(e.getSymUpdate(), replaceMap)) + "\n}\n";
+								task += "\nconstraints {\n" + indent(replaceAll(e.getSymUpdate(), replaceMap)) + "\n}";
 							}
+							if (e.getRefUpdate() != null && e.getRefUpdate() != "") {
+								task += "\nreferences {\n" + indent(replaceAll(e.getRefUpdate(), replaceMap)) + "\n}";
+							}
+							if (model.isComposeTask(node.getId()) || model.isRunTask(node.getId())) {
+								boolean isSymbolicLink = getAllDataOutputs(e.getTar()).stream().anyMatch(
+										d -> model.isComposeTask(d.getTar()) || model.isRunTask(d.getTar()));
+								if (isSymbolicLink) {
+									task += " symbolic-link";
+								}
+							}
+							if (e.isSuppressed()) {
+								task += " suppress";
+							}
+							task += "\n";
 							if (e.isPersistent()) {
 								task += String.format("updates: %s := %s\n",  compile(e.getTar()), compile(e.getTar()));
 							}
@@ -562,14 +572,17 @@ public class Bpmn4sCompiler{
 								task += "updates:" + indent(replaceAll(e.getUpdate(), replaceMap)) + "\n";
 							}
 						} else { // then its context
-							task += "produces-outputs\t" + postCtxName + (e.isSuppressed() ? " suppress\n" : "\n");
-							if (e.getRefUpdate() != null && e.getRefUpdate() != "") {
-								task += "references {\n" + indent(replaceAll(e.getRefUpdate(), replaceMap)) + 
-										"\n} symbolic-link\n";
-							}
+							task += "produces-outputs\t" + postCtxName;
 							if (e.getSymUpdate() != null && e.getSymUpdate() != "") {
-								task += "constraints {\n" + indent(replaceAll(e.getSymUpdate(), replaceMap)) + "\n}\n";
+								task += "\nconstraints {\n" + indent(replaceAll(e.getSymUpdate(), replaceMap)) + "\n}\n";
 							}
+							if (e.getRefUpdate() != null && e.getRefUpdate() != "") {
+								task += "\nreferences {\n" + indent(replaceAll(e.getRefUpdate(), replaceMap)) + "\n}\n";
+							}
+							if (e.isSuppressed()) {
+								task += " suppress";
+							}
+							task += "\n";
 							String updates = "";
 							if (preCtxName != null) {
 								// if there is in-flow, move the context between places in the PN.(**1)
@@ -844,9 +857,9 @@ public class Bpmn4sCompiler{
 	 */
 	protected String sanitize(String str) {
 		String result = str
-				.replaceAll("\\p{Zs}+", "__")
-				.replace(".", "_CLN_")
-				.replace("?", "_QMK_");
+				.replace(".", "_DOT_")
+				.replace("?", "_QMK_")
+				.replaceAll("\\W", "");
 		return result;
 	}
 
@@ -884,18 +897,14 @@ public class Bpmn4sCompiler{
  	 * Get the compiled name for Element <el>.
 	 */
 	protected String compile(String elId) {
-		Element el = model.getElementById(elId);
 		if (model.isReferenceData(elId)) {
 			return compile(getOriginDataNode(elId));
 		} else if (model.isXor(elId)) {
 			return getCompiledXorName(elId);
-		} else if (model.isComponent(elId)) { 
-			/* Nested components are compiled with their fully qualified name. */
-			return String.join("__", el.getParentComponents().stream()
-					.map(e -> repr(model.getElementById(e)))
-					.collect(Collectors.toList())) + "__" + repr(el);
+		} else if (model.isComponent(elId)) {
+			return getCompiledComponentName(elId);
 		}
-		return repr(el);
+		return repr(model.getElementById(elId));
 	}
 	
 	/**
@@ -908,15 +917,27 @@ public class Bpmn4sCompiler{
 	}
 	
 	private String getOriginDataNode(String id) {
-		Element el = model.getElementById(id);
-		while(model.isReferenceData(id)) {
-			id = el.getOriginDataNodeId();
-			el = model.getElementById(id);
+		String originDataNodeId = id;
+		Element el;
+		while((el = model.getElementById(originDataNodeId)).isReferenceData()) {
+			originDataNodeId = el.getOriginDataNodeId();
 		}
-		return id;
+		return originDataNodeId;
 	}
 	
+	private List<Edge> getAllDataOutputs(String id) {
+		return collectAllDataOutputs(getOriginDataNode(id), new LinkedList<Edge>());
+	}
 	
+	private List<Edge> collectAllDataOutputs(String id, List<Edge> outputs) {
+		Element el = model.getElementById(id);
+		outputs.addAll(el.getDataOutputs());
+		for (String linkedId : el.getLinkedDataReferenceIds()) {
+			collectAllDataOutputs(linkedId, outputs);
+		}
+		return outputs;
+	}
+
 	/**
 	 * Return the name of a compiled place representing a connected component of XOR gates. 
 	 * For test generation, this is either the name of a single xor gate for singleton nets, 
@@ -958,6 +979,14 @@ public class Bpmn4sCompiler{
 			}
 		}
 		return result;
+	}
+	
+	protected String getCompiledComponentName(String componentId) {
+		Element component = model.getElementById(componentId);
+		/* Nested components are compiled with their fully qualified name. */
+		return String.join("", component.getParentComponents().stream()
+				.map(e -> repr(model.getElementById(e)))
+				.collect(Collectors.toList())) + repr(component);
 	}
 	
 	/**

@@ -12,7 +12,10 @@ import nl.esi.comma.expressions.expression.Pair
 import nl.esi.comma.expressions.expression.TypeAnnotation
 import nl.esi.comma.expressions.services.ExpressionGrammarAccess
 import nl.esi.comma.expressions.validation.ExpressionFunction
+import nl.esi.comma.types.types.EnumTypeDecl
 import nl.esi.comma.types.types.Type
+import nl.esi.comma.types.types.TypeReference
+import nl.esi.comma.types.utilities.TypeUtilities
 import org.eclipse.xtext.Assignment
 import org.eclipse.xtext.ParserRule
 import org.eclipse.xtext.RuleCall
@@ -85,6 +88,12 @@ class ExpressionIdeProposalProvider extends AbstractExpressionIdeProposalProvide
     }
 
     protected def createDefaultValueEntry(TypeAnnotation typeAnn, String targetName, ContentAssistContext context, IIdeContentProposalAcceptor acceptor) {
+        val typeObj = TypeUtilities.getTypeObject(typeAnn.type)
+        if (TypeUtilities::isVectorType(typeObj) && TypeUtilities::getElementType(typeObj) instanceof EnumTypeDecl) {
+            createEnumValues(TypeUtilities::getElementType(typeObj) as EnumTypeDecl, context, acceptor)
+            return;
+        }
+
         try {
             val defaultValue = ProposalHelper.defaultValue(typeAnn, targetName)
             val proposal = proposalCreator.createProposal(defaultValue, context, [ entry |
@@ -102,6 +111,11 @@ class ExpressionIdeProposalProvider extends AbstractExpressionIdeProposalProvide
     }
 
     protected def createDefaultValue(Type type, String targetName, ContentAssistContext context, IIdeContentProposalAcceptor acceptor) {
+        if (type instanceof TypeReference && type.type instanceof EnumTypeDecl) {
+            createEnumValues(type.type as EnumTypeDecl, context, acceptor)
+            return;
+        }
+
         try {
             val defaultValue = ProposalHelper.defaultValue(type, targetName)
             val proposal = proposalCreator.createProposal(defaultValue, context, [ entry |
@@ -115,6 +129,19 @@ class ExpressionIdeProposalProvider extends AbstractExpressionIdeProposalProvide
             }
         } catch (UnsupportedTypeException e) {
             // Ignore
+        }
+    }
+
+    protected def createEnumValues(EnumTypeDecl type, ContentAssistContext context, IIdeContentProposalAcceptor acceptor) {
+        for (literal : type.literals) {
+            val value = '''«type.name»::«literal.name»'''
+            val proposal = proposalCreator.createProposal(value, context, [ entry |
+                entry.kind = ContentAssistEntry.KIND_FIELD
+                entry.label = value
+            ])
+            if (proposal !== null) {
+                acceptor.accept(proposal, TEMPLATE_DEFAULT_PRIORITY);
+            }
         }
     }
 

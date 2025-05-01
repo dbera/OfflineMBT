@@ -3,22 +3,26 @@
  */
 package nl.asml.matala.product.validation
 
+import java.util.HashSet
+import java.util.Set
+import nl.asml.matala.product.product.Block
+import nl.asml.matala.product.product.Function
+import nl.asml.matala.product.product.ProductPackage
+import nl.asml.matala.product.product.Update
+import nl.esi.comma.actions.actions.ActionsPackage
+import nl.esi.comma.actions.actions.AssignmentAction
+import nl.esi.comma.actions.actions.ForAction
+import nl.esi.comma.actions.actions.IfAction
+import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
+import nl.esi.comma.expressions.expression.Expression
+import nl.esi.comma.expressions.expression.ExpressionPackage
+import nl.esi.comma.expressions.expression.ExpressionVariable
+import nl.esi.comma.expressions.expression.Variable
 import nl.esi.comma.types.types.Import
 import nl.esi.comma.types.types.TypesPackage
 import org.eclipse.emf.common.util.URI
 import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.validation.Check
-import nl.asml.matala.product.product.Function
-import java.util.HashSet
-import nl.asml.matala.product.product.ProductPackage
-import nl.asml.matala.product.product.Update
-import nl.asml.matala.product.product.Block
-import nl.esi.comma.expressions.expression.ExpressionVariable
-import nl.asml.matala.product.generator.ValidationHelper
-import java.util.Set
-import java.util.List
-import org.eclipse.emf.ecore.EObject
-import nl.esi.comma.expressions.expression.Variable
 
 /**
  * This class contains custom validation rules. 
@@ -121,45 +125,62 @@ class ProductValidator extends AbstractProductValidator {
 
     /**
      * Variables occurring in the RHS of an update expression must have been defined as inputs of an action.
-     * LHS variable is the same as that mentioned in immediately preceding "updates". Note that attributes of this variable may be referenced in the LHS expression (record field access)
-     * 
+     * LHS variable is the same as that mentioned in immediately preceding "updates". 
+     * Note that attributes of this variable may be referenced in the LHS expression (record field access)
      */
     @Check
-    def preventIlligalVariableAccessUpdate(Function function) {
+    def void preventIlligalVariableAccess(Update update) {
         /* Variables occurring in the RHS of an update expression must have been defined as inputs of an action. */
-        for (update : function.updates) {
-            val inputs = new HashSet<String>
-            // get with-inputs of an action
-            inputs.addAll(update.fnInp.map[it.ref.name])
-
-            for (updateOutVar : update.updateOutputVar) {
-                var producesOutputs = new HashSet<String>
-                producesOutputs.addAll(updateOutVar.fnOut.map[it.ref.name])
-
-                var actions = updateOutVar.act.actions
-                for (action : actions) {
-                    for (pair : ValidationHelper.getActionVariables(action)) {
-                        val LHSValue = pair.key
-                        val expValue = pair.value
-                        // all the variable in the RHS of the expression
-                        var allVariables = expValue.eAllContents.filter(ExpressionVariable).map[variable.name].toSet
-
-                        if (!producesOutputs.contains(LHSValue)) {
-                            warning(
-                                "The variable used in Updates Expression is not defined in the produces outputs: " + LHSValue, updateOutVar,
-                                ProductPackage.Literals.UPDATE_OUT_VAR__ACT          
-                            )
-                        }
-
-                        allVariables.removeAll(inputs)
-                        if (!inputs.containsAll(allVariables)) {
-                            error("The variable used in Updates Expression is not defined in the input variables: " +
-                                allVariables.join(", "),updateOutVar ,  ProductPackage.Literals.UPDATE_OUT_VAR__ACT)
-                        }
-                    }
-                }
-            }
+        for (updateOutVar : update.updateOutputVar.reject[act === null]) {
+            val inputs = update.fnInp.map[ref].toSet
+            val outputs = updateOutVar.fnOut.map[ref].toSet
+            updateOutVar.act.actions.forEach[preventIlligalVariableAccess(inputs, outputs)]
         }
+    }
+
+    private dispatch def void preventIlligalVariableAccess(AssignmentAction action, Set<Variable> inputs, Set<Variable> outputs) {
+        if (!outputs.contains(action.assignment)) {
+            error('''Variable '«action.assignment.name»' is not defined as an output''', action, ActionsPackage.Literals.ASSIGNMENT_ACTION__ASSIGNMENT)
+        }
+        action.exp?.preventIlligalVariableAccess(inputs, Direction::input)
+        // As the variable is now assigned, we can also use it as input (imperative programming)
+        inputs += action.assignment
+    }
+
+    private dispatch def void preventIlligalVariableAccess(RecordFieldAssignmentAction action, Set<Variable> inputs, Set<Variable> outputs) {
+        action.fieldAccess?.preventIlligalVariableAccess(outputs, Direction::output)
+        action.exp?.preventIlligalVariableAccess(inputs, Direction::input)
+    }
+
+    private dispatch def void preventIlligalVariableAccess(ForAction action, Set<Variable> inputs, Set<Variable> outputs) {
+        action.exp?.preventIlligalVariableAccess(inputs, Direction::input)
+        if (action.doList !== null) {
+            val doInputs = new HashSet(inputs)
+            doInputs += action.^var
+            action.doList.actions.forEach[preventIlligalVariableAccess(doInputs, outputs)]
+        }
+    }
+
+    private dispatch def void preventIlligalVariableAccess(IfAction action, Set<Variable> inputs, Set<Variable> outputs) {
+        action.guard?.preventIlligalVariableAccess(inputs, Direction::input)
+        if (action.thenList !== null) {
+            action.thenList.actions.forEach[preventIlligalVariableAccess(inputs, outputs)]
+        }
+        if (action.thenList !== null) {
+            action.thenList.actions.forEach[preventIlligalVariableAccess(inputs, outputs)]
+        }
+    }
+
+    private enum Direction { input, output }
+
+    private dispatch def void preventIlligalVariableAccess(ExpressionVariable exprVar, Set<Variable> variables, Direction direction) {
+        if (!variables.contains(exprVar.variable)) {
+            error('''Variable '«exprVar.variable.name»' is not defined as an «direction»''', exprVar, ExpressionPackage.Literals.EXPRESSION_VARIABLE__VARIABLE)
+        }
+    }
+
+    private dispatch def void preventIlligalVariableAccess(Expression expr, Set<Variable> variables, Direction direction) {
+        expr.eContents.filter(Expression).forEach[preventIlligalVariableAccess(variables, direction)]
     }
 
 /* STRANGE BUG: Output Vars are Empty. Appears in Input Vars. 

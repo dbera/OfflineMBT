@@ -1,257 +1,181 @@
 package nl.esi.comma.testspecification.generator
 
-import java.util.ArrayList
-import java.util.HashMap
 import java.util.HashSet
-import java.util.List
-import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
-import nl.esi.comma.expressions.expression.ExpressionFunctionCall
-import nl.esi.comma.expressions.expression.ExpressionRecordAccess
-import nl.esi.comma.expressions.expression.ExpressionVariable
-import nl.esi.comma.expressions.expression.ExpressionVector
-import nl.esi.comma.testspecification.testspecification.AbstractTestDefinition
-import nl.esi.comma.testspecification.testspecification.Binding
-import nl.esi.comma.testspecification.testspecification.ComposeStep
-import nl.esi.comma.testspecification.testspecification.NestedKeyValuesPair
-import nl.esi.comma.testspecification.testspecification.RunStep
-import nl.esi.comma.testspecification.testspecification.StepReference
-import org.eclipse.emf.common.util.BasicEList
-import org.eclipse.emf.common.util.EList
-import nl.esi.comma.testspecification.abstspec.generator.ReferenceExpressionHandler
-import nl.esi.comma.testspecification.abstspec.generator.Utils
+import nl.asml.matala.product.product.Product
 import nl.esi.comma.testspecification.abstspec.generator.ConcreteExpressionHandler
 import nl.esi.comma.testspecification.abstspec.generator.DataKVPGenerator
 import nl.esi.comma.testspecification.abstspec.generator.RefKVPGenerator
+import nl.esi.comma.testspecification.abstspec.generator.ReferenceExpressionHandler
+import nl.esi.comma.testspecification.testspecification.AbstractTestDefinition
+import nl.esi.comma.testspecification.testspecification.Binding
+import nl.esi.comma.testspecification.testspecification.RunStep
+import nl.esi.comma.testspecification.testspecification.TSMain
+import org.eclipse.emf.ecore.resource.Resource
+import org.eclipse.xtext.generator.AbstractGenerator
+import org.eclipse.xtext.generator.IFileSystemAccess2
+import org.eclipse.xtext.generator.IGeneratorContext
 
-class FromAbstractToConcrete 
-{
-	protected AbstractTestDefinition atd
+import static extension nl.esi.comma.testspecification.abstspec.generator.Utils.*
+import static extension nl.esi.comma.types.utilities.EcoreUtil3.*
 
-	new (AbstractTestDefinition atd) {
-		this.atd = atd
-	}
+class FromAbstractToConcrete extends AbstractGenerator {
+    override doGenerate(Resource res, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
+        val atd = res.contents.filter(TSMain).map[model].filter(AbstractTestDefinition).head
+        if (atd === null) {
+            throw new Exception('No abstract tspec found in resource: ' + res.URI)
+        }
 
-    def __generateConcreteTest() {
-        return (new DataKVPGenerator()).generateFAST(atd)
+        val typesImports = getTypesImports(res)
+        for (sys : atd.systems) {
+            fsa.generateFile('''types/«sys».types''', atd.generateTypesFile(sys, typesImports))
+            fsa.generateFile('''parameters/«sys».params''', atd.generateParamsFile(sys))
+        }
+        fsa.generateFile(res.URI.lastSegment, atd.generateConcreteTest())
+        fsa.generateFile('data.kvp', (new DataKVPGenerator()).generateFAST(atd))
+        fsa.generateFile("reference.kvp", (new RefKVPGenerator()).generateRefKVP(atd))
     }
 
-    def __generateDatacheck() {
-        return (new RefKVPGenerator()).generateRefKVP(atd)
-    }
+    def private generateConcreteTest(AbstractTestDefinition atd) '''
+        «FOR sys : atd.systems»
+            import "parameters/«sys».params"
+        «ENDFOR»
+        
+        Test-Purpose    "The purpose of this test is..."
+        Background      "The background of this test is..."
+        
+        test-sequence from_abstract_to_concrete {
+            test_single_sequence
+        }
+        
+        step-sequence test_single_sequence {
+        «FOR test : atd.testSeq»
+            «FOR step : test.step.filter(RunStep)»
+                
+                step-id    step_«step.name»
+                step-type  «step.stepType.get(0)»
+                step-input «step.system»Input
+                «IF !_printOutputs_(step).toString.nullOrEmpty»
+                    ref-to-step-output
+                        «_printOutputs_(step)»
+                «ENDIF»
+            «ENDFOR»
+        «ENDFOR»
+        }
+        
+        generate-file "./vfab2_scenario/FAST/generated_FAST/"
+        
+        step-parameters
+        «FOR test : atd.testSeq»
+            «FOR step : test.step.filter(RunStep)»
+                «step.stepType.get(0)» step_«step.name»
+            «ENDFOR»
+        «ENDFOR»
+    '''
 
-	def generateConcreteTest() '''
-		«FOR sys : getSystems()»
-		import "parameters/«sys».params"
-		«ENDFOR»
-		
-		Test-Purpose 	"The purpose of this test is..."
-		Background 		"The background of this test is..."
-		
-		test-sequence from_abstract_to_concrete {
-			test_single_sequence
-		}
-		
-		step-sequence test_single_sequence {
-		«FOR test : atd.testSeq»
-			«FOR step : test.step.filter(RunStep)»
-			
-			step-id    step_«step.name»
-			step-type  «step.stepType.get(0)»
-			step-input «step.name.split("_").get(0)»Input
-			«IF !_printOutputs_(step).toString.nullOrEmpty»
-			ref-to-step-output
-				«_printOutputs_(step)»
-			«ENDIF»
-			«ENDFOR»
-		«ENDFOR»
-		}
-		
-		generate-file "./vfab2_scenario/FAST/generated_FAST/"
-		
-		step-parameters
-		«FOR test : atd.testSeq»
-		«FOR step : test.step.filter(RunStep)»
-		«step.stepType.get(0)» step_«step.name»
-		«ENDFOR»
-		«ENDFOR»
-	'''
-
-    def _printOutputs_(RunStep rstep) 
-    {
+    def private _printOutputs_(RunStep rstep) {
         // At most one (TODO validate this)
         // Observation: when multiple steps have indistinguishable outputs, 
         // multiple consumes from is possible. TODO Warn user.   
-        var listOfComposeSteps = (new Utils()).getComposeSteps(rstep, atd)
-        var mapLHStoRHS = (new ReferenceExpressionHandler(false)).resolveStepReferenceExpressions(rstep, listOfComposeSteps)
-
+        val composeSteps = rstep.composeSteps
         // Get text for concrete data expressions
-        var txt = (new ConcreteExpressionHandler()).prepareStepInputExpressions(rstep, listOfComposeSteps)
-
+        var conDataExpr = (new ConcreteExpressionHandler()).prepareStepInputExpressions(rstep, composeSteps)
         // Append text for reference data expressions
-        for(k : mapLHStoRHS.keySet) {
-            txt += 
-            '''
-            «k» := «mapLHStoRHS.get(k)»
-            '''
-        }
-        return txt
+        val refDataExpr = (new ReferenceExpressionHandler(false)).resolveStepReferenceExpressions(rstep, composeSteps)
+
+        return '''
+            «conDataExpr»
+            «FOR entry : refDataExpr.entrySet»
+                «FOR v : entry.value»
+                    «entry.key» := «v»
+                «ENDFOR»
+            «ENDFOR»
+        '''
     }
-    
+
     // Generate Types File for Concrete TSpec
-	def generateTypesFile(String sys, List<String> typesImports) {
-		var typ = ""
-		var ios = new BasicEList<Binding>()
-		for (s : atd.eAllContents.filter(RunStep).filter[s | s.name.split("_").get(0).equalsIgnoreCase(sys)].toIterable) {
-			for (t : s.stepType) {
-				typ = t
-			}
-			ios.addAll(s.input)
-			ios.addAll(s.output)
-			// for (p : previousComposeStep(s)) {
-			for (p : (new Utils()).getComposeSteps(s, atd)) {
-				ios.addAll(p.input)
-				ios.addAll(p.output)
-			}
-		}
-		var uniqueIos = new BasicEList<Binding>()
-		for (io : ios) {
-			if (!uniqueIos.exists[u | u.name == io.name]) {
-				uniqueIos.add(io)
-			}
-		}
-		return printTypes(uniqueIos, typ, typesImports)
-	}
+    def generateTypesFile(AbstractTestDefinition atd, String system, Iterable<String> typesImports) {
+        var type = ''
+        val ios = newLinkedHashMap
+        for (rstep : atd.getRunSteps(system)) {
+            if (!rstep.stepType.isEmpty) {
+                type = rstep.stepType.last
+            }
+            rstep.input.forEach[i|ios.putIfAbsent(i.name, i)]
+            rstep.output.forEach[o|ios.putIfAbsent(o.name, o)]
+            for (cstep : rstep.composeSteps) {
+                cstep.input.forEach[i|ios.putIfAbsent(i.name, i)]
+                cstep.output.forEach[o|ios.putIfAbsent(o.name, o)]
+            }
+        }
+        return printTypes(ios.values, type, typesImports)
+    }
 
     // Print types for each step
-	def printTypes(EList<Binding> ios, String type, List<String> typesImports) '''
-		«FOR ti : typesImports»
-		import "«ti»"
-		«ENDFOR»
-		
-		record «type» {
-			«type»Input input
-			«type»Output output
-		}
-		
-		record «type»Input {
-			«FOR i : ios» 
-			«i.name.type.type.name» «i.name.name»
-			«ENDFOR»
-		}
-		
-		record «type»Output {
-			«FOR o : ios» 
-			«o.name.type.type.name» «o.name.name»
-			«ENDFOR»
-		}
-	'''
+    def private printTypes(Iterable<Binding> ios, String type, Iterable<String> typesImports) '''
+        «FOR ti : typesImports»
+            import "«ti»"
+        «ENDFOR»
+        
+        record «type» {
+            «type»Input input
+            «type»Output output
+        }
+        
+        record «type»Input {
+            «FOR i : ios» 
+                «i.name.type.type.name» «i.name.name»
+            «ENDFOR»
+        }
+        
+        record «type»Output {
+            «FOR o : ios» 
+                «o.name.type.type.name» «o.name.name»
+            «ENDFOR»
+        }
+    '''
 
     // Generate Parameters File for Concrete TSpec
-	def generateParamsFile(String sys) {
-		var paramTxt = ""
-		var processedTypes = new HashSet<String>()
-		for (s : atd.eAllContents.filter(RunStep).filter[s | s.name.split("_").get(0).equalsIgnoreCase(sys)].toIterable) {
-			for (t : s.stepType) {
-				if (processedTypes.add(t)) { // true if not in set
-					paramTxt += printParams(s, t)
-				}
-			}
-		}
-		return paramTxt
-	}
+    def private generateParamsFile(AbstractTestDefinition atd, String system) {
+        var paramTxt = ''
+        val processedTypes = new HashSet<String>()
+        for (step : atd.getRunSteps(system)) {
+            for (type : step.stepType.filter[processedTypes.add(it)]) {
+                paramTxt += printParams(step, type)
+            }
+        }
+        return paramTxt
+    }
 
-	def printParams(RunStep step, String type) {
-		var sys = step.name.split("_").get(0)
-		return '''
-		import "../types/«sys».types"
-		
-		data-instances
-		«type»Input «sys»Input
-		«type»Output «sys»Output
-		
-		data-implementation
-		// Empty
-		
-		path-prefix "./vfab2_scenario/FAST/generated_FAST/dataset/"
-		var-ref «sys»Input -> file-name "«sys»Input.json"
-		var-ref «sys»Output -> file-name "«sys»Output.json"
-		'''
-	}
+    def private printParams(RunStep step, String type) '''
+        import "../types/«step.system».types"
+        
+        data-instances
+        «type»Input «step.system»Input
+        «type»Output «step.system»Output
+        
+        data-implementation
+        // Empty
+        
+        path-prefix "./vfab2_scenario/FAST/generated_FAST/dataset/"
+        var-ref «step.system»Input -> file-name "«step.system»Input.json"
+        var-ref «step.system»Output -> file-name "«step.system»Output.json"
+    '''
 
-	def getSystems() {
-		var bbs = new HashSet<String>()
-		for (s : atd.eAllContents.filter(RunStep).toIterable) {
-			bbs.add(s.name.split("_").get(0))
-		}
-		return bbs
-	}
+    def private getSystems(AbstractTestDefinition atd) {
+        return atd.steps.filter(RunStep).map[system].toSet
+    }
+
+    def private getRunSteps(AbstractTestDefinition atd, String sys) {
+        return atd.steps.filter(RunStep).filter[system == sys]
+    }
+
+    def private Iterable<String> getTypesImports(Resource res) {
+        val typesImports = newLinkedHashSet
+        for (psImport : res.contents.filter(TSMain).flatMap[imports].filter[importURI.endsWith('.ps')]) {
+            for (typesImport : psImport.resource.contents.filter(Product).flatMap[imports].filter[importURI.endsWith('.types')]) {
+                typesImports += typesImport.resolveUri.toString
+            }
+        }
+        return typesImports;
+    }
 }
-
-
-/* OLD DEPRECATED LOGIC FOR COMPOSE AND RUN STEPS */
-// Developed in Q4 2024.
-//  def printOutputs(RunStep step) '''
-//«FOR composeStep : previousComposeStep(step)»
-//«printKVOutputPairs(step.name.split("_").get(0) + "Input", composeStep)»
-//«ENDFOR»
-//«FOR symbolicStep : previousSymbolicContraint(step)»
-//«printSymbolicContraint(step.name.split("_").get(0) + "Input", symbolicStep, previousRunStep(step), previousComposeStep(step))»
-//«ENDFOR»
-//  '''
-
-//  def printSymbolicContraint(String prefix, ConstraintStep step, EList<RunStep> runSteps, EList<ComposeStep> composeSteps) {
-//      var sc = ""
-//      for (s : step.ce) {
-//          for (a : s.act.actions) {
-//              for (rs : runSteps.filter[r | r !== null && !r.suppress]) {
-//                  for (cs : composeSteps) {
-//                      var pi = prefix + "." + step.name
-//                      var po = "step_" + rs.name + ".output."
-//                      sc += pi + printRecord(prefix, po, cs.stepRef, a as RecordFieldAssignmentAction) + "\n"
-//                  }
-//              }
-//          }
-//      }
-//      return sc
-//  }
-//
-//  def previousRunStep(RunStep step) {
-//      var composeSteps = new BasicEList<RunStep>()
-//      var AbstractStep prev
-//      for (absStep : atd.eAllContents.filter(AbstractStep).toIterable) {
-//          if (absStep === step) {
-//              composeSteps.add(prev as RunStep)
-//          }
-//          if (absStep instanceof RunStep) {
-//              prev = absStep
-//          }
-//      }
-//      return composeSteps
-//  }
-//
-//  def previousComposeStep(RunStep step) {
-//      var composeSteps = new BasicEList<ComposeStep>()
-//      var AbstractStep prev
-//      for (absStep : atd.eAllContents.filter(AbstractStep).toIterable) {
-//          if (absStep === step) {
-//              composeSteps.add(prev as ComposeStep)
-//          }
-//          prev = absStep
-//      }
-//      return composeSteps
-//  }
-//
-//  def previousSymbolicContraint(RunStep step) {
-//      var SymbolicContraints = new BasicEList<ConstraintStep>()
-//      var ConstraintStep prev = null
-//      for (testSeq : atd.testSeq) {
-//          for (s : testSeq.step) {
-//              if (s === step && prev !== null) {
-//                  SymbolicContraints.add(prev)
-//              }
-//              prev = (s instanceof ConstraintStep) ? s as ConstraintStep : null
-//          }
-//      }
-//      return SymbolicContraints
-//  }
-

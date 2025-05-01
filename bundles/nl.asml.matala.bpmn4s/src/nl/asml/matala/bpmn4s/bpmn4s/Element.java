@@ -7,8 +7,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import nl.asml.matala.bpmn4s.Logging;
-
 
 public class Element {
 
@@ -75,6 +73,7 @@ public class Element {
 	 *  we consider this node an origin node.
 	 */
 	String originDataNodeId = null;
+	String[] linkedDataReferenceIds = new String[0];
 	boolean isSutConfigurations = false;
 	
 	public Element(ElementType type) {
@@ -137,6 +136,15 @@ public class Element {
 		return this;
 	}
 		
+	public String[] getLinkedDataReferenceIds() {
+		return linkedDataReferenceIds;
+	}
+	
+	public Element setLinkedDataReferenceIds(String[] ids) {
+		this.linkedDataReferenceIds = ids;
+		return this;
+	}
+
 	public Element setStepType(String st) {
 		stepType = st;
 		return this;

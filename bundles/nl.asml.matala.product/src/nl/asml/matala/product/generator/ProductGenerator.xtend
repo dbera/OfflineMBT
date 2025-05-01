@@ -75,19 +75,12 @@ import nl.asml.matala.product.product.Update
  
 class ProductGenerator extends AbstractGenerator {
 	
-	override void doGenerate(Resource resource, 
-		IFileSystemAccess2 fsa, IGeneratorContext context
-	) {
-		var prod = resource.allContents.head
-		if(prod instanceof Product) {
-			if (prod.specification !== null) {
-				generatePetriNetAndTestGeneration(prod,resource,fsa)
-			}
-		}
-	}
+	override void doGenerate(Resource res, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
+	    res.contents.filter(Product).reject[specification === null].forEach[generatePetriNetAndTestGeneration(res, fsa)]
+    }
 	
-	def generatePetriNetAndTestGeneration(Product prod, Resource resource, IFileSystemAccess2 fsa) 
-	{	
+	def generatePetriNetAndTestGeneration(Product prod, Resource resource, IFileSystemAccess2 fsa) {
+	    val specName = prod.specification.name
 		val dataGetterTxt = (new TypesGenerator).generatePythonGetters(prod,resource)
 		var pnet = new PetriNet
 		var methodTxt = ''''''	
@@ -110,19 +103,13 @@ class ProductGenerator extends AbstractGenerator {
 			var typeInst = typeResource.allContents.head
 			if(typeInst instanceof TypesModel) {
 				var txt = (new TypesZ3Generator).generateAllUserDefinedTypes(typeInst) 
-				fsa.generateFile('CPNServer//' + prod.specification.name + '//Z3//' + prod.specification.name + '_z3types.py', txt)
+				fsa.generateFile('CPNServer//' + specName + '//Z3//' + specName + '_z3types.py', txt)
 			}
 			import_list.add(imp.importURI)
 		}
 		
 		for(b : prod.specification.blocks) {
-			var Block block = null
-			if (b.block !== null) {
-				block = b.block
-			}
-			if (b.refBlock !== null) {
-				block = b.refBlock.system
-			}
+			val Block block = b.block ?: b.refBlock?.system
 			// populate var and its type decl in map
 			for(invar : block.invars) var_decl_map.put(block.name + "_" + invar.name, invar.type.type.name)
 			for(ovar : block.outvars) var_decl_map.put(block.name + "_" + ovar.name, ovar.type.type.name)
@@ -133,14 +120,14 @@ class ProductGenerator extends AbstractGenerator {
             }
 			
 			// parse each block to derive places and transitions
-			var tuple = populatePetriNet(pnet, block)
+			val tuple = populatePetriNet(pnet, block)
 			pnet = tuple.key
 			methodTxt += tuple.value		
 		}
 		
-		fsa.generateFile('CPNServer//' + prod.specification.name + '//' + prod.specification.name + '_types.py', (new Utils()).toTypes(prod.specification.name + "_types", import_list, var_decl_map))
-		fsa.generateFile('CPNServer//' + prod.specification.name + '//plantuml//' + prod.specification.name + '_model.plantuml', pnet.toPlantUML(pnet, false))
-		fsa.generateFile('CPNServer//' + prod.specification.name + '//plantuml//' + prod.specification.name + '_system.plantuml', pnet.toPlantUML(pnet, true))
+		fsa.generateFile('CPNServer//' + specName + '//' + specName + '_types.py', (new Utils()).toTypes(specName + "_types", import_list, var_decl_map))
+		fsa.generateFile('CPNServer//' + specName + '//plantuml//' + specName + '_model.plantuml', pnet.toPlantUML(pnet, false))
+		fsa.generateFile('CPNServer//' + specName + '//plantuml//' + specName + '_system.plantuml', pnet.toPlantUML(pnet, true))
 		
 		pnet.display
 		
@@ -185,7 +172,7 @@ class ProductGenerator extends AbstractGenerator {
 				}
 			}
 			// transition names -> list of output variables that were suppressed
-			var mapOfSuppressTransitionVars = new HashMap<String,List<String>>
+			val mapOfSuppressTransitionVars = new HashMap<String,List<String>>
 			for(b : prod.specification.blocks) {
 				if (b.block !== null) {
 					val block = b.block
@@ -222,30 +209,29 @@ class ProductGenerator extends AbstractGenerator {
 				}
 			}
 			
-			var name = prod.specification.name
-			fsa.generateFile('CPNServer//' + prod.specification.name + '//' + name + '.py', pnet.toSnakes(
-			    name, name, listOfEnvBlocks, listOfAssertTransitions, 
+			fsa.generateFile('CPNServer//' + specName + '//' + specName + '.py', pnet.toSnakes(
+			    specName, specName, listOfEnvBlocks, listOfAssertTransitions, 
 			    mapOfSuppressTransitionVars, inout_places, 
 			    init_places, depth_limit, num_tests, sutTransitionMap
 			))
-			//fsa.generateFile('CPNServer//' + prod.specification.name + '//' + 'server.py', (new FlaskSimulationGenerator).generateServer(name))
-			//fsa.generateFile('CPNserver.py', (new FlaskSimulationGenerator).generateCPNServer)
-			//fsa.generateFile('CPNclient.py', (new FlaskSimulationGenerator).generateCPNClient(prod.specification.name))
-			//fsa.generateFile('CPNServer//' + prod.specification.name + '//' + 'client.py', (new FlaskSimulationGenerator).generateClient)
-			fsa.generateFile('CPNServer//' + prod.specification.name + '//' + name + '_Simulation.py', pnet.toSnakesSimulation)
-			
+			//fsa.generateFile('CPNServer//' + specName + '//' + 'server.py', (new FlaskSimulationGenerator).generateServer(name))
+			//fsa.generateFile('CPNserver.py', (new FlaskSimulationGenerator).generateCPNServer)	
+			//fsa.generateFile('CPNclient.py', (new FlaskSimulationGenerator).generateCPNClient(specName))
+			//fsa.generateFile('CPNServer//' + specName + '//' + 'client.py', (new FlaskSimulationGenerator).generateClient)
+			fsa.generateFile('CPNServer//' + specName + '//' + specName + '_Simulation.py', pnet.toSnakesSimulation)
+
             // generate utils for HTTP server
-            fsa.generateFile('CPNServer//' + prod.specification.name + '//' + '__init__.py', 
+            fsa.generateFile('CPNServer//' + specName + '//' + '__init__.py', 
                 (new FlaskSimulationGenerator).generateInitForCPNSpecPkg(prod)
             )
-            fsa.generateFile('CPNServer//' + '__init__.py', 
-                (new FlaskSimulationGenerator).generateInitForCPNServerSpecPkg(prod)
-            )
-			fsa.generateFile('CPNServer//' + prod.specification.name + '//' + name + '_data.py', (new Utils()).getDataContainerClass(dataGetterTxt, methodTxt))
-			fsa.generateFile('CPNServer//' + prod.specification.name + '//' + name + '_TestSCN.py', (new Utils()).generateTestSCNTxt(prod.specification.name + "_types", prod, resource.URI.lastSegment))
-            fsa.generateFile('__init__.py', 
-                (new FlaskSimulationGenerator).generateInitForSrcGen()
-            )
+//            fsa.generateFile('CPNServer//' + '__init__.py', 
+//                (new FlaskSimulationGenerator).generateInitForCPNServerSpecPkg(prod)
+//            )
+			fsa.generateFile('CPNServer//' + specName + '//' + specName + '_data.py', (new Utils()).getDataContainerClass(dataGetterTxt, methodTxt))
+			fsa.generateFile('CPNServer//' + specName + '//' + specName + '_TestSCN.py', (new Utils()).generateTestSCNTxt(specName + "_types", prod, resource.URI.lastSegment))
+//            fsa.generateFile('__init__.py', 
+//                (new FlaskSimulationGenerator).generateInitForSrcGen()
+//            )
 		}
 	}
 	
@@ -276,14 +262,11 @@ class ProductGenerator extends AbstractGenerator {
 		//val (String) => String func = [s|block.name+"_"+s]
 		val (String) => String func = [s|s]
 					
-		for(act : block.initActions) {
-			System.out.println(" Init-Action LHS: " + SnakesHelper.action(act, func, "").split("=",2).get(0))
-			System.out.println(" Init-Action RHS: " + SnakesHelper.action(act, func, "").split("=",2).get(1))
+		for(act : block.initActions.map[SnakesHelper.action(it, func, "").split("=",2)].map[get(0) -> get(1)]) {
+			System.out.println(" Init-Action LHS: " + act.key)
+			System.out.println(" Init-Action RHS: " + act.value)
 			
-			pnet.add_to_init_place_expression_map(
-				SnakesHelper.action(act, func,"").split("=",2).get(0), 
-				SnakesHelper.action(act, func,"").split("=",2).get(1)
-			)
+			pnet.add_to_init_place_expression_map(act.key, act.value)
 		}
 		
 		// populate transitions
