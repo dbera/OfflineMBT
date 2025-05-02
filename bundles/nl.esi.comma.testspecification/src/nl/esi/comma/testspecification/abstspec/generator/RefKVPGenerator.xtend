@@ -35,6 +35,7 @@ import nl.esi.comma.assertthat.assertThat.ScriptParameterNamedArg
 import nl.esi.comma.assertthat.assertThat.ScriptParameterPositional
 import nl.esi.comma.assertthat.assertThat.ScriptParameterPositionalFile
 import nl.esi.comma.expressions.expression.ExpressionBracket
+import nl.esi.comma.testspecification.testspecification.RunStep
 
 class RefKVPGenerator {
     def generateRefKVP(AbstractTestDefinition atd) {
@@ -57,7 +58,7 @@ class RefKVPGenerator {
                         {
                             «IF param instanceof ScriptParameterNamed»"name": "«getScriptParamName(param)»",
                             «ENDIF»"type": "«getScriptParamType(param)»"«IF param instanceof ScriptParameterWithValue»,
-                            "value": «expression(getScriptParamExpression(param))»«ENDIF»
+                            "value": «expression(param, step)»«ENDIF»
                         }
                         «ENDFOR»
                         «ENDIF»
@@ -77,7 +78,7 @@ class RefKVPGenerator {
                 {
                     "id":"«asrt.identifier»", "type":"«getAssertionType(asrt.^val)»",
                     "input":{
-                        "output":«expression(asrt.output)»,
+                        "output":«expression(asrt, step)»,
                         «extractAssertionParams(asrt.^val)»
                     }
                 }
@@ -118,20 +119,46 @@ class RefKVPGenerator {
         throw new RuntimeException("Not supported")
     }
 
-    def String expression(Expression expr) {
-        var prefix = getExpressionPrefix(expr)
+    def String expression(AssertThatBlock asrt, AssertionStep step) {
+        var expr = asrt.output
+        var prefix = getExpressionPrefix(expr,step)
         return expression(expr,prefix)
     }
-    
-    def String getExpressionPrefix(Expression expr) {
-        if (expr instanceof ExpressionBracket) return getExpressionPrefix(expr.sub)
-        if (expr instanceof ExpressionRecordAccess) return getExpressionPrefix(expr.record)
-        if (expr instanceof ExpressionMapRW) return getExpressionPrefix(expr.map)
+
+    def String expression(ScriptParameterWithValue param, AssertionStep step) {
+        var expr = getScriptParamExpression(param)
+        var prefix = getExpressionPrefix(expr,step)
+        return expression(expr,prefix)
+    }
+
+    def String getExpressionPrefix(Expression expr, AssertionStep step) {
+        if (expr instanceof ExpressionBracket) return getExpressionPrefix(expr.sub,step)
+        if (expr instanceof ExpressionRecordAccess) return getExpressionPrefix(expr.record,step)
+        if (expr instanceof ExpressionMapRW) return getExpressionPrefix(expr.map,step)
         if (expr instanceof ExpressionVariable) {
             var vari = expr.variable
             if (vari.eContainer instanceof GenericScriptBlock) return "['matlab_script']"
-            else return "['step_output']"
+            else return "['step_output']"+getExpressionInfix(expr, step)
         }
+        if (expr instanceof ExpressionConstantBool) return ""
+        if (expr instanceof ExpressionConstantInt) return ""
+        if (expr instanceof ExpressionConstantReal) return ""
+        if (expr instanceof ExpressionConstantString) return ""
+        throw new RuntimeException("Not supported")
+    }
+
+    private def String getExpressionInfix(ExpressionVariable expr, AssertionStep assertStep) {
+        for (consumesFrom : assertStep.stepRef) {
+            if(consumesFrom.refStep instanceof RunStep){
+                for (step : consumesFrom.refData) {
+                	// TODO check if this is the right way to find the step from which an input is consumed
+                	if (step.name == expr.variable.name){ 
+                	    return String.format("['%s']",consumesFrom.refStep.name)
+                	}
+                }
+            }
+        }
+        return "" // TODO Check if this exception case is correct
     }
 
     def String expression(Expression expr, String prefix) {
