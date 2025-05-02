@@ -272,6 +272,7 @@ class RefKVPGenerator {
     }
     def String extractAssertionParams(AssertThatXMLFile xmlfile) {
         return '''
+        "reference":«expression(xmlfile.reference,"")»,
         "xpaths":[
                 «FOR anAssert : xmlfile.assertRef SEPARATOR ","»
                     {
