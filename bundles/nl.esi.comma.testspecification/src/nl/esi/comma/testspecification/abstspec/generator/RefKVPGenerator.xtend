@@ -34,16 +34,17 @@ import nl.esi.comma.assertthat.assertThat.ScriptParameterWithValue
 import nl.esi.comma.assertthat.assertThat.ScriptParameterNamedArg
 import nl.esi.comma.assertthat.assertThat.ScriptParameterPositional
 import nl.esi.comma.assertthat.assertThat.ScriptParameterPositionalFile
+import nl.esi.comma.expressions.expression.ExpressionBracket
 
 class RefKVPGenerator {
     def generateRefKVP(AbstractTestDefinition atd) {
         var txt = 
         '''
         matlab_calls=[
-        «FOR test : atd.testSeq»
-            «FOR assertionStep : test.step.filter(AssertionStep) »
-            «FOR step : assertionStep.asserts » «FOR ce : step.ce»
-                «FOR mlcal : ce.constr.filter(GenericScriptBlock) SEPARATOR ',' »
+        «FOR testseq : atd.testSeq»
+            «FOR step : testseq.step » «IF step instanceof AssertionStep»
+            «FOR asrtce : step.asserts » «FOR ce : asrtce.ce»
+                «FOR mlcal : ce.script SEPARATOR ',' »
                 {
                     "id":"«mlcal.assignment.name»", 
                     "script_path":"«mlcal.params.scriptApi»",
@@ -64,27 +65,27 @@ class RefKVPGenerator {
                 }
                 «ENDFOR»
             «ENDFOR»«ENDFOR»
-            «ENDFOR»
+            «ENDIF»«ENDFOR»
+        «ENDFOR»
         ]
 
         assertions = [
-        «FOR assertionStep : test.step.filter(AssertionStep) »
-            «FOR step : assertionStep.asserts »
-            «FOR ce : step.ce»
-            «FOR asrt : ce.constr.filter(AssertThatBlock) SEPARATOR ',' »
-            {
-                "id":"«asrt.identifier»", "type":"«getAssertionType(asrt.^val)»",
-                "input":{
-                    "output":«expression(asrt.output)»,
-                    «extractAssertionParams(asrt.^val)»
+        «FOR testseq : atd.testSeq»
+            «FOR step : testseq.step » «IF step instanceof AssertionStep»
+            «FOR asrtce : step.asserts » «FOR ce : asrtce.ce»
+                «FOR asrt : ce.constr SEPARATOR ',' »
+                {
+                    "id":"«asrt.identifier»", "type":"«getAssertionType(asrt.^val)»",
+                    "input":{
+                        "output":«expression(asrt.output)»,
+                        «extractAssertionParams(asrt.^val)»
+                    }
                 }
-            }
-            «ENDFOR»
-            «ENDFOR»
-            «ENDFOR»
-            «ENDFOR»
-        ]
+                «ENDFOR»
+            «ENDFOR»«ENDFOR»
+            «ENDIF»«ENDFOR»
         «ENDFOR»
+        ]
         '''
         return txt
     }
@@ -118,10 +119,23 @@ class RefKVPGenerator {
     }
 
     def String expression(Expression expr) {
-        return expression(expr,"['step_output']")
+        var prefix = getExpressionPrefix(expr)
+        return expression(expr,prefix)
+    }
+    
+    def String getExpressionPrefix(Expression expr) {
+        if (expr instanceof ExpressionBracket) return getExpressionPrefix(expr.sub)
+        if (expr instanceof ExpressionRecordAccess) return getExpressionPrefix(expr.record)
+        if (expr instanceof ExpressionMapRW) return getExpressionPrefix(expr.map)
+        if (expr instanceof ExpressionVariable) {
+            var vari = expr.variable
+            if (vari.eContainer instanceof GenericScriptBlock) return "['matlab_script']"
+            else return "['step_output']"
+        }
     }
 
     def String expression(Expression expr, String prefix) {
+        if (expr instanceof ExpressionBracket) return expression(expr.sub,prefix)
         // referencing variable value
         if (expr instanceof ExpressionVariable) return String.format("\"%s%s\"", prefix, AssertionsHelper.expression(expr))
         if (expr instanceof ExpressionRecordAccess) return String.format("\"%s%s\"", prefix, AssertionsHelper.expression(expr))
