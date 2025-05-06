@@ -6,15 +6,14 @@ import java.io.IOException
 import java.io.InputStreamReader
 import java.io.PrintWriter
 import java.util.ArrayList
+import java.util.Arrays
 import java.util.HashMap
 import java.util.HashSet
 import java.util.List
 import java.util.Map
 import java.util.Set
-import java.util.regex.Pattern
-import org.eclipse.xtext.generator.IFileSystemAccess2
 import java.util.StringTokenizer
-import java.util.Arrays
+import org.eclipse.xtext.generator.IFileSystemAccess2
 
 class ConstraintStateMachine 
 {

@@ -41,7 +41,7 @@ class InterfaceSignatureValidator extends AbstractInterfaceSignatureValidator {
 		for(import : root.imports){
 			val importedFilename = URI.createURI(import.importURI).trimFileExtension.lastSegment
 			if(importedFilename.equals(sigFilename))
-				error("“Imported type file should have a different name than the current signature file.", import, TypesPackage.Literals.IMPORT__IMPORT_URI)
+				error("Imported type file should have a different name than the current signature file.", import, TypesPackage.Literals.IMPORT__IMPORT_URI)
 		}
 	}
 	

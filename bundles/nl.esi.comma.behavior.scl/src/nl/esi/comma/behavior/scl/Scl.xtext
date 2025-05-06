@@ -150,7 +150,7 @@ ChainSuccession:
 	 	 eitherB?= 'either'? refB += Ref+ ('within' minVal = INT ('-' maxVal = INT)? 'ms')?
 ;
 
-// A occurs if and only if followed by B with no A and B (C, D…) in between
+// A occurs if and only if followed by B with no A and B (C, D...) in between
 AlternateSuccession:
 	'<!>' eitherA?= 'either'? refA += Ref+ ('occurs')? 'if-and-only-if-followed-by' 
 		  eitherB?= 'either'? refB += Ref+ 'with' 

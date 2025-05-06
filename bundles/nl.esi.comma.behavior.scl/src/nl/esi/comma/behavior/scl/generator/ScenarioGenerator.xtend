@@ -90,32 +90,32 @@ class ScenarioGenerator {
         var ctx = ActionType.PRE_CONDITION
                 
         '''
-			Feature: «constraint»
+			Feature: Â«constraintÂ»
 			
-			«FOR stepList : SCNList»
-				Scenario: «constraint»_«idx»
-				«{idx++ ""}»
-				«{ctx = ActionType.PRE_CONDITION ""}»
-				«{stepIdx = 0 ""}»
-				«FOR step : stepList»
-					«IF ctx.equals(getStepType(step, acts))»
-						«IF stepIdx == 0»
-							«getGherkinType(ctx)» «step»
-						«ELSE»
-							«ActionType.CONJUNCTION» «step»
-						«ENDIF»
-					«ELSE»
-						«IF stepIdx == 0»
-							«getGherkinType(ctx)» «step»
-						«ELSE»
-							«{ctx = getStepType(step, acts) ""}»
-							«getGherkinType(ctx)» «step»
-						«ENDIF»
-					«ENDIF»
-					«{stepIdx++ ""}»
-				«ENDFOR»
+			Â«FOR stepList : SCNListÂ»
+				Scenario: Â«constraintÂ»_Â«idxÂ»
+				Â«{idx++ ""}Â»
+				Â«{ctx = ActionType.PRE_CONDITION ""}Â»
+				Â«{stepIdx = 0 ""}Â»
+				Â«FOR step : stepListÂ»
+					Â«IF ctx.equals(getStepType(step, acts))Â»
+						Â«IF stepIdx == 0Â»
+							Â«getGherkinType(ctx)Â» Â«stepÂ»
+						Â«ELSEÂ»
+							Â«ActionType.CONJUNCTIONÂ» Â«stepÂ»
+						Â«ENDIFÂ»
+					Â«ELSEÂ»
+						Â«IF stepIdx == 0Â»
+							Â«getGherkinType(ctx)Â» Â«stepÂ»
+						Â«ELSEÂ»
+							Â«{ctx = getStepType(step, acts) ""}Â»
+							Â«getGherkinType(ctx)Â» Â«stepÂ»
+						Â«ENDIFÂ»
+					Â«ENDIFÂ»
+					Â«{stepIdx++ ""}Â»
+				Â«ENDFORÂ»
 				
-			«ENDFOR»
+			Â«ENDFORÂ»
 		'''
     }
 
@@ -124,20 +124,20 @@ class ScenarioGenerator {
         var stepIdx = 0
         
 	'''
-		«FOR stepList : SCNList»
+		Â«FOR stepList : SCNListÂ»
 			fab_chip_recipe := 
 			ChipRecipe { 
 				lots = <map<int, Lot>> { 
-			«{idx++ ""}»
-			«{stepIdx = 1 ""}»
-			«FOR step : stepList SEPARATOR ','»
-						// «step»
-						«IF !step.equals("ANY") && exprMap.containsKey(step)»«exprMap.get(step).replaceAll("lot :=", stepIdx + " ->")»«ENDIF»
-				«{stepIdx++ ""}»
-			«ENDFOR»
+			Â«{idx++ ""}Â»
+			Â«{stepIdx = 1 ""}Â»
+			Â«FOR step : stepList SEPARATOR ','Â»
+						// Â«stepÂ»
+						Â«IF !step.equals("ANY") && exprMap.containsKey(step)Â»Â«exprMap.get(step).replaceAll("lot :=", stepIdx + " ->")Â»Â«ENDIFÂ»
+				Â«{stepIdx++ ""}Â»
+			Â«ENDFORÂ»
 				}
 			}
-		«ENDFOR»
+		Â«ENDFORÂ»
 	'''
    	}
 
@@ -146,18 +146,18 @@ class ScenarioGenerator {
         var stepIdx = 0
                 
         '''
-			Recipe-Name: «constraint»
+			Recipe-Name: Â«constraintÂ»
 			
-			«FOR stepList : SCNList»
-				Recipe: «constraint»_«idx»
-				«{idx++ ""}»
-				«{stepIdx = 0 ""}»
-				«FOR step : stepList»
-						«IF !step.equals("ANY")»«step» «IF exprMap.containsKey(step)» : «exprMap.get(step)»«ENDIF»«ENDIF»
-					«{stepIdx++ ""}»
-				«ENDFOR»
+			Â«FOR stepList : SCNListÂ»
+				Recipe: Â«constraintÂ»_Â«idxÂ»
+				Â«{idx++ ""}Â»
+				Â«{stepIdx = 0 ""}Â»
+				Â«FOR step : stepListÂ»
+						Â«IF !step.equals("ANY")Â»Â«stepÂ» Â«IF exprMap.containsKey(step)Â» : Â«exprMap.get(step)Â»Â«ENDIFÂ»Â«ENDIFÂ»
+					Â«{stepIdx++ ""}Â»
+				Â«ENDFORÂ»
 				
-			«ENDFOR»
+			Â«ENDFORÂ»
 		'''
     }
 }
