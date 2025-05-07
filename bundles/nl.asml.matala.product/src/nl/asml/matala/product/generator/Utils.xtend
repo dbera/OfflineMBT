@@ -435,6 +435,7 @@ class Utils
                         name = step.step_name
                         idata = step.input_data
                         odata = step.output_data
+                        osuppress = step.output_suppress
                         parts = name.split("@")
                         new_name = parts[0] + parts[3]
                         raw_name = parts[0]
@@ -470,8 +471,8 @@ class Utils
                                             txt += "%s\n" % entry.name
                         txt += "output-data:\n"
                         txt += self.printData(odata)
-                        # if step.is_suppress:
-                        # txt += "suppress\n"
+                        if osuppress:
+                            txt += "suppress(%s)\n" % ", ".join(osuppress)
                         for k, v in odata.items():
                             if k in sutVarTransitionMap:
                                 for tr in sutVarTransitionMap[k]:
@@ -544,6 +545,7 @@ class Utils
             step_name = ""
             input_data = {}
             output_data = {}
+            output_suppress = []
             is_assert = False
             # mapOfSuppressTransitionVars = {}
         
@@ -551,6 +553,7 @@ class Utils
                 self.step_name = ""
                 self.input_data = {}
                 self.output_data = {}
+                self.output_suppress = {}
                 self.is_assert = _is_assert
                 # self.mapOfSuppressTransitionVars = mapOfSuppressTransitionVars
         

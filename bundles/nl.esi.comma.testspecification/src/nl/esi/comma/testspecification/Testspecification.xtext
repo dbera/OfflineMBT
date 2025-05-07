@@ -96,7 +96,7 @@ ComposeStep:
 	'compose-step-name' ':' name = ID
 	stepRef += StepReference*
 	'input-binding' ':' input += Binding+
-	'output-data' ':' output += Binding+ (suppress?='suppress'?)
+	'output-data' ':' output += Binding+ (suppress=Suppress)? // do not generate these in concrete TSpec
 	refs += ConstraintStep*
 	('sut-var' ':' '{' varID += [expr::Variable|QualifiedName]+ '}')?
 ;
@@ -106,7 +106,7 @@ RunStep:
 	('step-type' ':' stepType += STRING)?
 	stepRef += StepReference*
 	'input-binding' ':' input += Binding+
-	'output-data' ':' output += Binding+ (suppress?='suppress'?) // do not generate these in concrete TSpec
+	'output-data' ':' output += Binding+ (suppress=Suppress)? // do not generate these in concrete TSpec
 	('sut-var' ':' '{' varID += [expr::Variable|QualifiedName]+ '}')?
 ;
 
@@ -114,7 +114,7 @@ AssertionStep:
     'assert-step-name' ':' name = ID
     stepRef += StepReference*
     'input-binding' ':' input += Binding+
-    'output-data' ':' output += Binding+ (suppress?='suppress'?)
+    'output-data' ':' output += Binding+ (suppress=Suppress)? // do not generate these in concrete TSpec
     asserts += AssertStep*
     ('sut-var' ':' '{' varID += [expr::Variable|QualifiedName]+ '}')?
 ;
@@ -125,6 +125,14 @@ StepReference:
 
 Binding:
 	name = [expr::Variable|QualifiedName] ':' jsonvals = TSJsonValue
+;
+
+Suppress: {Suppress}
+    'suppress' ('(' fields+=SuppressVarFieldExp (',' fields+=SuppressVarFieldExp)* ')')?
+;
+
+SuppressVarFieldExp returns expr::Expression:
+    ExpressionVariable | FieldAccessExp
 ;
 
 NestedKeyValuesPair:

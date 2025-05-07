@@ -15,7 +15,8 @@ import static extension nl.esi.comma.testspecification.abstspec.generator.Utils.
 
 class ConcreteExpressionHandler {
     def prepareStepInputExpressions(RunStep rstep, Iterable<ComposeStep> composeSteps) '''
-        «FOR output : composeSteps.reject[suppress].flatMap[output]»
+«««     FIXME: YBLA handle suppress record fields
+        «FOR output : composeSteps.filter[suppress === null].flatMap[output]»
             «printVariable(rstep.system + 'Input.' + output.name.name, output.name.type, output.jsonvals)»
         «ENDFOR»
     '''

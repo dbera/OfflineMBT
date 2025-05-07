@@ -13,6 +13,8 @@ import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.util.Diagnostician;
 import org.eclipse.emf.ecore.util.EObjectValidator;
 import org.eclipse.xtext.EcoreUtil2;
+import org.eclipse.xtext.resource.XtextResource;
+import org.eclipse.xtext.serializer.ISerializer;
 
 import nl.esi.comma.types.types.Import;
 
@@ -50,6 +52,20 @@ public class EcoreUtil3 extends EcoreUtil2 {
 			referenceURI = referenceURI.resolve(contextURI);
 		}
 		return referenceURI;
+	}
+	
+	/**
+	 * Serialized an {@link EObject} to text, using its loaded {@link XtextResource}.
+	 */
+	public static String serialize(EObject eObject) {
+		Resource resource = eObject.eResource();
+		if (resource instanceof XtextResource xtextResource) {
+			ISerializer serializer = xtextResource.getResourceServiceProvider().get(ISerializer.class);
+			if (serializer != null) {
+				return serializer.serialize(eObject);
+			}
+		}
+		throw new RuntimeException("Failed to serialize EObject: " + eObject);
 	}
 
 	/**

@@ -325,7 +325,7 @@ class PetriNet {
 				 String topology_name, 
 				 List<String> listOfEnvBlocks,
 				 List<String> listOfAssertTransitions,
-				 Map<String, ? extends List<String>> mapOfSuppressTransitionVars,
+				 Map<String, ? extends Set<String>> mapOfSuppressTransitionVars,
 				 List<String> inout_places, 
 				 List<String> init_places, 
 				 int depth_limit,
@@ -472,11 +472,13 @@ class PetriNet {
 		                            _step.input_data[x.replace("v_", "", 1)] = json.dumps(json.loads(y), indent=4, sort_keys=True)
 		                        for x,y in self.visitedTProdList[i][j].items():
 		                            for z in y.items():
-		                                if step_txt.split("@")[0] in self.mapOfSuppressTransitionVars:
-		                                    if x not in self.mapOfSuppressTransitionVars[step_txt.split("@")[0]]:
-		                                        _step.output_data[x] = json.dumps(json.loads(z), indent=4, sort_keys=True)
-		                                else:
-		                                    _step.output_data[x] = json.dumps(json.loads(z), indent=4, sort_keys=True)
+		                                #if step_txt.split("@")[0] in self.mapOfSuppressTransitionVars:
+		                                #    if x not in self.mapOfSuppressTransitionVars[step_txt.split("@")[0]]:
+		                                #        _step.output_data[x] = json.dumps(json.loads(z), indent=4, sort_keys=True)
+		                                #else:
+		                                _step.output_data[x] = json.dumps(json.loads(z), indent=4, sort_keys=True)
+		                        if step_txt.split("@")[0] in self.mapOfSuppressTransitionVars:
+		                            _step.output_suppress = self.mapOfSuppressTransitionVars[step_txt.split("@")[0]]
 		                        _test_scn.step_list.append(_step)
 		                    j = j + 1
 		                _test_scn.compute_dependencies()

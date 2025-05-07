@@ -14,6 +14,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import nl.asml.matala.bpmn4s.Logging;
@@ -563,6 +564,14 @@ public class Bpmn4sCompiler{
 							}
 							if (e.isSuppressed()) {
 								task += " suppress";
+							} else {
+								Set<String> suppressedFields = collectSuppressedFields(
+										model.getElementById(e.getTar()).getDataType(),
+										sanitize(compile(e.getTar())) + '.',
+										new HashSet<String>());
+								if (!suppressedFields.isEmpty()) {
+									task += suppressedFields.stream().collect(Collectors.joining(", "," suppress(", ")"));
+								}
 							}
 							task += "\n";
 							if (e.isPersistent()) {
@@ -606,6 +615,20 @@ public class Bpmn4sCompiler{
 		desc.addAll(getFlowActions(cId));
 		
 		return "desc \"" + compile(cId) + "_Model\"\n\n" + String.join("\n", desc);
+	}
+
+	private Set<String> collectSuppressedFields(String dataTypeName, String prefix, Set<String> fields) {
+		Bpmn4sDataType dataType = model.dataSchema.get(dataTypeName);
+		if (dataType instanceof RecordType recType) {
+			for(Map.Entry<String, String> field : recType.fields.entrySet()) {
+				if (recType.isSuppressed(field.getKey())) {
+					fields.add(prefix + field.getKey());
+				} else {
+					collectSuppressedFields(field.getValue(), prefix + field.getKey() + '.', fields);
+				}
+			}
+		}
+		return fields;
 	}
 
 	/**

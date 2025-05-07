@@ -85,7 +85,7 @@ enum ActionType:
 ;
 
 UpdateOutVar:
-	'produces-outputs'  fnOut += VarRef (',' fnOut+=VarRef)* (assert?='symbolic-link'?) (suppress?='suppress'?)
+	'produces-outputs'  fnOut += VarRef (',' fnOut+=VarRef)* (assert?='symbolic-link'?) (suppress=Suppress)?
 	('updates' hiddenVars += Variable* ':' act = ActionList)?
 ;
 
@@ -94,6 +94,14 @@ VarRef:
 	ref = [expr::Variable|ID] 
 	(dataConstraints = DataConstraints)?
 	(dataReferences = DataReferences)? 
+;
+
+Suppress: {Suppress}
+    'suppress' ('(' fields+=SuppressVarFieldExp (',' fields+=SuppressVarFieldExp)* ')')?
+;
+
+SuppressVarFieldExp returns expr::Expression:
+    ExpressionVariable | FieldAccessExp
 ;
 
 DataConstraints: {DataConstraints}

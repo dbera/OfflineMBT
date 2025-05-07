@@ -379,7 +379,8 @@ public class Main {
 				}
 			}
 			ftype = ftype.equals("") ? tref : ftype;
-			rec.addField(fname, ftype);
+			Boolean fSuppress = "true".equalsIgnoreCase(f.getAttributeValue("suppressUpdate"));
+			rec.addField(fname, ftype, fSuppress);
 		}
 		return rec;
 	}
