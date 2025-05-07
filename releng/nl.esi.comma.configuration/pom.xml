@@ -1,4 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Copyright (c) 2024, 2025 TNO-ESI
+
+    See the NOTICE file(s) distributed with this work for additional
+    information regarding copyright ownership.
+
+    This program and the accompanying materials are made available
+    under the terms of the MIT License which is available at
+    https://opensource.org/licenses/MIT
+
+    SPDX-License-Identifier: MIT
+
+-->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -33,8 +47,31 @@
         <sonar.test.inclusions>**/*Test*/**</sonar.test.inclusions>
         <sonar.exclusions>/src-gen/**,/*Test*/**,**/*Formatter.java</sonar.exclusions>
 
+        <!-- https://mycila.carbou.me/license-maven-plugin/ -->
+        <license.maven.plugin.version>4.6</license.maven.plugin.version>
+
         <mwe2-workflow>PLEASE SPECIFY THE 'mwe2-workflow' PROPERTY IN YOUR MAVEN POM</mwe2-workflow>
     </properties>
+
+    <scm>
+        <connection>scm:git:git@github.com:dbera/OfflineMBT.git</connection>
+        <developerConnection>scm:git:git@github.com:dbera/OfflineMBT.git</developerConnection>
+        <url>https://github.com/dbera/OfflineMBT</url>
+        <tag>HEAD</tag>
+    </scm>
+
+    <organization>
+        <name>TNO - ESI</name>
+        <url>https://esi.nl/</url>
+    </organization>
+
+    <licenses>
+        <license>
+            <name>MIT</name>
+            <url>https://opensource.org/licenses/MIT</url>
+            <comments>SPDX-License-Identifier: MIT</comments>
+        </license>
+    </licenses>
 
     <build>
         <extensions>
@@ -145,6 +182,80 @@
         </pluginManagement>
 
         <plugins>
+            <!-- Enable license header check. -->
+            <plugin>
+                <groupId>com.mycila</groupId>
+                <artifactId>license-maven-plugin</artifactId>
+                <version>${license.maven.plugin.version}</version>
+                <configuration>
+                    <failIfUnknown>true</failIfUnknown>
+                    <mapping>
+                        <ant>XML_STYLE</ant>
+                        <exsd>XML_STYLE</exsd>
+                        <ini>SCRIPT_STYLE</ini>
+                        <mwe2>JAVADOC_STYLE</mwe2>
+                        <product>XML_STYLE</product>
+                        <xtend>JAVADOC_STYLE</xtend>
+                        <xtext>JAVADOC_STYLE</xtext>
+                        <qvto>JAVADOC_STYLE</qvto>
+                        <bat>BATCH</bat>
+                        <cmd>BATCH</cmd>
+                        <plantuml>APOSTROPHE_STYLE</plantuml>
+                        <asciidoc>ASCIIDOC_STYLE</asciidoc>
+                        <adoc>ASCIIDOC_STYLE</adoc>
+                        <csv>SCRIPT_STYLE</csv>
+                        <Jenkinsfile>DOUBLESLASH_STYLE</Jenkinsfile>
+                        <mappings>SCRIPT_STYLE</mappings>
+                        <tpd>JAVADOC_STYLE</tpd>
+                        <types>JAVADOC_STYLE</types>
+                        <tsx>SLASHSTAR_STYLE</tsx>
+                    </mapping>
+                    <licenseSets>
+                        <licenseSet>
+                            <header>${session.executionRootDirectory}/releng/nl.esi.comma.configuration/license_header.txt</header>
+                            <useDefaultExcludes>true</useDefaultExcludes>
+                            <excludes>
+                                <exclude>src-gen/**</exclude>
+                                <exclude>xtend-gen/**</exclude>
+                                <exclude>templates/**</exclude>
+                                <exclude>**/*.aird</exclude>
+                                <exclude>**/*.e4xmi</exclude>
+                                <exclude>**/*.ecore</exclude>
+                                <exclude>**/*.genmodel</exclude>
+                                <exclude>**/*.launch</exclude>
+                                <exclude>**/*.odesign</exclude>
+                                <exclude>**/*.orig</exclude>
+                                <exclude>**/*.setup</exclude>
+                                <exclude>**/*.target</exclude>
+                                <exclude>**/*.trace</exclude>
+                                <exclude>**/*.txt</exclude>
+                                <exclude>**/*.xmi</exclude>
+                                <exclude>**/*.sln</exclude>
+                                <exclude>**/*.vcxproj*</exclude>
+                                <exclude>**/.checkstyle</exclude>
+                                <exclude>**/.env</exclude>
+                                <exclude>**/.babelrc</exclude>
+                                <exclude>.META-INF_MANIFEST.MF</exclude>
+                                <exclude>.polyglot.*</exclude>
+                                <exclude>.Xauthority*</exclude>
+                                <exclude>checkstyle.xml</exclude>
+                                <exclude>plugin.xml_gen</exclude>
+                                <exclude>pom.tycho</exclude>
+                            </excludes>
+                        </licenseSet>
+                    </licenseSets>
+                </configuration>
+                <executions>
+                    <!-- use the cmd line `mvn license:format` to add headers -->
+                    <execution>
+                        <id>checkLicenseHeaders</id>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
             <plugin>
                 <groupId>org.eclipse.tycho</groupId>
                 <artifactId>tycho-maven-plugin</artifactId>
