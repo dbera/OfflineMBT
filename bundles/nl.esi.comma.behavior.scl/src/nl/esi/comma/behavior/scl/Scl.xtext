@@ -1,3 +1,15 @@
+/**
+ * Copyright (c) 2024, 2025 TNO-ESI
+ *
+ * See the NOTICE file(s) distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This program and the accompanying materials are made available
+ * under the terms of the MIT License which is available at
+ * https://opensource.org/licenses/MIT
+ *
+ * SPDX-License-Identifier: MIT
+ */
 grammar nl.esi.comma.behavior.scl.Scl with nl.esi.comma.actions.Actions // with nl.esi.comma.expressions.Expression
 
 generate scl "http://www.esi.nl/comma/behavior/scl/Scl"
@@ -150,7 +162,7 @@ ChainSuccession:
 	 	 eitherB?= 'either'? refB += Ref+ ('within' minVal = INT ('-' maxVal = INT)? 'ms')?
 ;
 
-// A occurs if and only if followed by B with no A and B (C, D…) in between
+// A occurs if and only if followed by B with no A and B (C, D...) in between
 AlternateSuccession:
 	'<!>' eitherA?= 'either'? refA += Ref+ ('occurs')? 'if-and-only-if-followed-by' 
 		  eitherB?= 'either'? refB += Ref+ 'with' 
