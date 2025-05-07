@@ -74,7 +74,7 @@ public class EcoreUtil3 extends EcoreUtil2 {
 		if (resource instanceof XtextResource xtextResource) {
 			ISerializer serializer = xtextResource.getResourceServiceProvider().get(ISerializer.class);
 			if (serializer != null) {
-				return serializer.serialize(eObject);
+				return serializer.serialize(eObject).trim();
 			}
 		}
 		throw new RuntimeException("Failed to serialize EObject: " + eObject);
