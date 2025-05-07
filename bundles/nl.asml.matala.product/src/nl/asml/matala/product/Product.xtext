@@ -123,8 +123,7 @@ SymbConstraint:
 
 DataAssertions: {DataAssertions}
     'assertions' name = ID '{' 
-        script += GenericScriptBlock*
-        constr += AssertThatBlock*
+        constr += DataAssertionItem+
      '}'
 ;
 

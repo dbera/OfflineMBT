@@ -43,9 +43,9 @@ class RefKVPGenerator {
         '''
         matlab_calls=[
         «FOR testseq : atd.testSeq»
-            «FOR step : testseq.step » «IF step instanceof AssertionStep»
+            «FOR step : testseq.step.filter(AssertionStep) »
             «FOR asrtce : step.asserts » «FOR ce : asrtce.ce»
-                «FOR mlcal : ce.script SEPARATOR ',' »
+                «FOR mlcal : ce.constr.filter(GenericScriptBlock) SEPARATOR ',' »
                 {
                     "id":"«mlcal.assignment.name»", 
                     "script_path":"«mlcal.params.scriptApi»",
@@ -66,25 +66,25 @@ class RefKVPGenerator {
                 }
                 «ENDFOR»
             «ENDFOR»«ENDFOR»
-            «ENDIF»«ENDFOR»
+            «ENDFOR»
         «ENDFOR»
         ]
 
         assertions = [
         «FOR testseq : atd.testSeq»
-            «FOR step : testseq.step » «IF step instanceof AssertionStep»
+            «FOR step : testseq.step.filter(AssertionStep) » 
             «FOR asrtce : step.asserts » «FOR ce : asrtce.ce»
-                «FOR asrt : ce.constr SEPARATOR ',' »
+                «FOR asrt : ce.constr.filter(AssertThatBlock) SEPARATOR ',' »
                 {
                     "id":"«asrt.identifier»", "type":"«getAssertionType(asrt.^val)»",
                     "input":{
                         "output":«expression(asrt, step)»,
-                        «extractAssertionParams(asrt.^val)»
+                        «extractAssertionParams(asrt.^val, step)»
                     }
                 }
                 «ENDFOR»
             «ENDFOR»«ENDFOR»
-            «ENDIF»«ENDFOR»
+            «ENDFOR»
         «ENDFOR»
         ]
         '''
@@ -107,15 +107,19 @@ class RefKVPGenerator {
     }
 
     def String getScriptParamName(ScriptParameterNamed param){
-        if (param instanceof ScriptParameterNameOnly) return param.label
-        if (param instanceof ScriptParameterNamedArg) return param.label
+        switch (param){
+            ScriptParameterNameOnly: return param.label
+            ScriptParameterNamedArg: return param.label
+        }
         throw new RuntimeException("Not supported")
     }
 
     def Expression getScriptParamExpression(ScriptParameterWithValue param){
-        if (param instanceof ScriptParameterNamedArg) return param.^val
-        if (param instanceof ScriptParameterPositionalFile) return param.^val
-        if (param instanceof ScriptParameterPositional) return param.^val
+        switch (param){
+            ScriptParameterNamedArg: return param.^val
+            ScriptParameterPositionalFile: return param.^val
+            ScriptParameterPositional: return param.^val
+        }
         throw new RuntimeException("Not supported")
     }
 
@@ -132,19 +136,23 @@ class RefKVPGenerator {
     }
 
     def String getExpressionPrefix(Expression expr, AssertionStep step) {
-        if (expr instanceof ExpressionBracket) return getExpressionPrefix(expr.sub,step)
-        if (expr instanceof ExpressionRecordAccess) return getExpressionPrefix(expr.record,step)
-        if (expr instanceof ExpressionMapRW) return getExpressionPrefix(expr.map,step)
-        if (expr instanceof ExpressionVariable) {
-            var vari = expr.variable
-            if (vari.eContainer instanceof GenericScriptBlock) return "['matlab_script']"
-            else return "['step_output']"+getExpressionInfix(expr, step)
+        switch (expr){
+            ExpressionBracket: return getExpressionPrefix(expr.sub,step)
+            ExpressionRecordAccess: return getExpressionPrefix(expr.record,step)
+            ExpressionMapRW: return getExpressionPrefix(expr.map,step)
+            ExpressionVariable: return getExpressionPrefix(expr,step)
+            ExpressionConstantBool: return ""
+            ExpressionConstantInt: return ""
+            ExpressionConstantReal: return ""
+            ExpressionConstantString: return ""
         }
-        if (expr instanceof ExpressionConstantBool) return ""
-        if (expr instanceof ExpressionConstantInt) return ""
-        if (expr instanceof ExpressionConstantReal) return ""
-        if (expr instanceof ExpressionConstantString) return ""
         throw new RuntimeException("Not supported")
+    }
+
+    def String getExpressionPrefix(ExpressionVariable expr, AssertionStep step) {
+        var vari = expr.variable
+        if (vari.eContainer instanceof GenericScriptBlock) return "['matlab_script']"
+        else return "['step_output']"+getExpressionInfix(expr, step)
     }
 
     private def String getExpressionInfix(ExpressionVariable expr, AssertionStep assertStep) {
@@ -162,26 +170,29 @@ class RefKVPGenerator {
     }
 
     def String expression(Expression expr, String prefix) {
-        if (expr instanceof ExpressionBracket) return expression(expr.sub,prefix)
-        // referencing variable value
-        if (expr instanceof ExpressionVariable) return String.format("\"%s%s\"", prefix, AssertionsHelper.expression(expr))
-        if (expr instanceof ExpressionRecordAccess) return String.format("\"%s%s\"", prefix, AssertionsHelper.expression(expr))
-        if (expr instanceof ExpressionMapRW) return String.format("\"%s%s\"", prefix, AssertionsHelper.expression(expr))
-        if (expr instanceof ExpressionVector) return String.format("\"%s%s\"", prefix, AssertionsHelper.expression(expr))
-        // constant values
-        if (expr instanceof ExpressionConstantBool) return String.format("%s", AssertionsHelper.expression(expr))
-        if (expr instanceof ExpressionConstantInt) return String.format("%s", AssertionsHelper.expression(expr))
-        if (expr instanceof ExpressionConstantReal) return String.format("%s", AssertionsHelper.expression(expr))
-        if (expr instanceof ExpressionConstantString) return String.format("%s", AssertionsHelper.expression(expr))
+        switch (expr) {
+            ExpressionBracket: return expression(expr.sub,prefix)
+            // referencing variable value
+            ExpressionVariable: return String.format("\"%s%s\"", prefix, AssertionsHelper.expression(expr))
+            ExpressionRecordAccess: return String.format("\"%s%s\"", prefix, AssertionsHelper.expression(expr))
+            ExpressionMapRW: return String.format("\"%s%s\"", prefix, AssertionsHelper.expression(expr))
+            ExpressionVector: return String.format("\"%s%s\"", prefix, AssertionsHelper.expression(expr))
+            // constant values
+            ExpressionConstantBool: return String.format("%s", AssertionsHelper.expression(expr))
+            ExpressionConstantInt: return String.format("%s", AssertionsHelper.expression(expr))
+            ExpressionConstantReal: return String.format("%s", AssertionsHelper.expression(expr))
+            ExpressionConstantString: return String.format("%s", AssertionsHelper.expression(expr))
+        }
         throw new RuntimeException("Not supported")
     }
 
-
     def Boolean isScriptParamTypeNonConstant(Expression param) {
-        if (param instanceof ExpressionVariable) return true
-        if (param instanceof ExpressionRecordAccess) return true
-        if (param instanceof ExpressionMapRW) return true
-        if (param instanceof ExpressionVector) return true
+        switch (param) {
+            ExpressionVariable: return true
+            ExpressionRecordAccess: return true
+            ExpressionMapRW: return true
+            ExpressionVector: return true
+        }
         return false
     }
 
@@ -189,11 +200,17 @@ class RefKVPGenerator {
      * Parses input parameters of an assertion type into string format. 
      * @param assertion Assertion of type value, xpaths or xmlfile
      */
-    def String extractAssertionParams(AssertValidation params) {
-        if (params instanceof AssertThatValue)   return extractAssertionParams(params.comparisonType)
-        if (params instanceof AssertThatXPaths)  return extractAssertionParams(params)
-        if (params instanceof AssertThatXMLFile) return extractAssertionParams(params)
+    def String extractAssertionParams(AssertValidation params, AssertionStep step) {
+        switch (params){
+            AssertThatValue:   return extractAssertionParams(params)
+            AssertThatXPaths:  return extractAssertionParams(params)
+            AssertThatXMLFile: return extractAssertionParams(params, step)
+        }
         throw new RuntimeException("Not supported")
+    }
+
+    def String extractAssertionParams(AssertThatValue params) {
+        return extractAssertionParams(params.comparisonType)
     }
 
     /**
@@ -201,10 +218,12 @@ class RefKVPGenerator {
      * @param assertion Assertion parameters of type equality, closeness, regex-matching, size-of
      */
     def String extractAssertionParams(ComparisonsForSingleReference compType) {
-        if (compType instanceof AssertThatValueEq)    return extractAssertionParams(compType)
-        if (compType instanceof AssertThatValueClose) return extractAssertionParams(compType)
-        if (compType instanceof AssertThatValueMatch) return extractAssertionParams(compType)
-        if (compType instanceof AssertThatValueSize)  return extractAssertionParams(compType)
+        switch(compType){
+            AssertThatValueEq:     return extractAssertionParams(compType)
+            AssertThatValueClose:  return extractAssertionParams(compType)
+            AssertThatValueMatch:  return extractAssertionParams(compType)
+            AssertThatValueSize:   return extractAssertionParams(compType)
+        }
         throw new RuntimeException("Not supported")
     }
 
@@ -270,9 +289,11 @@ class RefKVPGenerator {
         "namespaces":«JsonHelper.jsonElement(paths.namespace.namespaceMap)»«ENDIF»
         '''
     }
-    def String extractAssertionParams(AssertThatXMLFile xmlfile) {
+    def String extractAssertionParams(AssertThatXMLFile xmlfile, AssertionStep step) {
+        var expr = xmlfile.reference
+        var prefix = getExpressionPrefix(expr,step)
         return '''
-        "reference":«expression(xmlfile.reference,"")»,
+        "reference":«expression(expr,prefix)»,
         "xpaths":[
                 «FOR anAssert : xmlfile.assertRef SEPARATOR ","»
                     {
@@ -289,9 +310,11 @@ class RefKVPGenerator {
     }
 
     def getAssertionType(AssertValidation asrt){
-        if (asrt instanceof AssertThatValue) return "Value" // assertion of type Value
-        if (asrt instanceof AssertThatXPaths) return "XPaths" // assertion of type XPaths
-        if (asrt instanceof AssertThatXMLFile) return "XMLFile" // assertion of type XMLFile
+        switch (asrt){
+            AssertThatValue: return "Value" // assertion of type Value
+            AssertThatXPaths: return "XPaths" // assertion of type XPaths
+            AssertThatXMLFile: return "XMLFile" // assertion of type XMLFile
+        }
         throw new RuntimeException("Not supported")
     }
 }
