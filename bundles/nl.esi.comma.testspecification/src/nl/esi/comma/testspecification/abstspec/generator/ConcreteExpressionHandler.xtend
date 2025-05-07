@@ -32,19 +32,16 @@ class ConcreteExpressionHandler {
     	val suppressVars = composeSteps.flatMap [ cstep |
 			switch (cstep.suppress) {
 				case null: newArrayList
-				case cstep.suppress.fields.isEmpty: cstep.output.map[rstep.system + 'Input.' + it.name.name]
-				default: cstep.suppress.fields.map[rstep.system + 'Input.' + it.serialize]
+				case cstep.suppress.fields.isEmpty: cstep.output.map[rstep.varPrefix + it.name.name]
+				default: cstep.suppress.fields.map[rstep.varPrefix + it.serialize]
 			}
 		].toSet
-		if (!suppressVars.isEmpty) {
-			System.err.println('Suppressing: ' + suppressVars)
-		}
 		prepareStepInputExpressions(rstep, composeSteps, suppressVars);
     }
     
     def private prepareStepInputExpressions(RunStep rstep, Iterable<ComposeStep> composeSteps, Set<String> suppressVars) '''
-        «FOR output : composeSteps.flatMap[output].reject[suppressVars.contains(rstep.system + 'Input.' + it.name.name)]»
-            «printVariable(rstep.system + 'Input.' + output.name.name, output.name.type, output.jsonvals, suppressVars)»
+        «FOR output : composeSteps.flatMap[output].reject[suppressVars.contains(rstep.varPrefix + it.name.name)]»
+            «printVariable(rstep.varPrefix + output.name.name, output.name.type, output.jsonvals, suppressVars)»
         «ENDFOR»
     '''
 
@@ -57,6 +54,8 @@ class ConcreteExpressionHandler {
             «name» := «type.createValue(value)»
         «ENDIF»
     '''
+
+    def private getVarPrefix(RunStep rstep) '''«rstep.system»Input.'''
 
     dispatch private def String createValue(TypeReference type, TSJsonValue value) {
         return createDeclValue(type.type, value)

@@ -569,6 +569,8 @@ class Utils
         
             def compare(self, _step, mapTrAssert):
                 for ipdata in self.output_data:
+                    if ipdata in self.output_suppress:
+                        continue
                     for opdata in _step.input_data:
                         if self.step_name.rsplit('_', 1)[0] in mapTrAssert:
                             if ipdata == opdata and ipdata in mapTrAssert[self.step_name.rsplit('_', 1)[0]]:
