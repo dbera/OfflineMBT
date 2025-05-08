@@ -206,15 +206,11 @@ class RefKVPGenerator {
      */
     def String extractAssertionParams(AssertValidation params, AssertionStep step) {
         switch (params){
-            AssertThatValue:   return extractAssertionParams(params)
+            AssertThatValue:   return extractAssertionParams(params.comparisonType)
             AssertThatXPaths:  return extractAssertionParams(params)
             AssertThatXMLFile: return extractAssertionParams(params, step)
         }
         throw new RuntimeException("Not supported")
-    }
-
-    def String extractAssertionParams(AssertThatValue params) {
-        return extractAssertionParams(params.comparisonType)
     }
 
     /**
