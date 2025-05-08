@@ -70,6 +70,9 @@ public class EcoreUtil3 extends EcoreUtil2 {
 	 * Serialized an {@link EObject} to text, using its loaded {@link XtextResource}.
 	 */
 	public static String serialize(EObject eObject) {
+		if (eObject == null) {
+			return null;
+		}
 		Resource resource = eObject.eResource();
 		if (resource instanceof XtextResource xtextResource) {
 			ISerializer serializer = xtextResource.getResourceServiceProvider().get(ISerializer.class);
