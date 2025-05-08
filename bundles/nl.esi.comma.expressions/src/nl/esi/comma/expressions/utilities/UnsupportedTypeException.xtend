@@ -10,7 +10,7 @@
  *
  * SPDX-License-Identifier: MIT
  */
-package nl.esi.comma.expressions.ide.contentassist;
+package nl.esi.comma.expressions.utilities;
 
 import nl.esi.comma.types.types.Type
 import nl.esi.comma.types.types.TypeDecl
