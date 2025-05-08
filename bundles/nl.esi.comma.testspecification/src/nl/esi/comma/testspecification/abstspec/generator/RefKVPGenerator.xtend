@@ -44,7 +44,8 @@ class RefKVPGenerator {
         matlab_calls=[
         «FOR testseq : atd.testSeq»
             «FOR step : testseq.step.filter(AssertionStep) »
-            «FOR asrtce : step.asserts » «FOR ce : asrtce.ce»
+            «FOR asrtce : step.asserts » 
+            «FOR ce : asrtce.ce»
                 «FOR mlcal : ce.constr.filter(GenericScriptBlock) SEPARATOR ',' »
                 {
                     "id":"«mlcal.assignment.name»", 
@@ -65,7 +66,8 @@ class RefKVPGenerator {
                     ]
                 }
                 «ENDFOR»
-            «ENDFOR»«ENDFOR»
+            «ENDFOR»
+            «ENDFOR»
             «ENDFOR»
         «ENDFOR»
         ]
@@ -73,7 +75,8 @@ class RefKVPGenerator {
         assertions = [
         «FOR testseq : atd.testSeq»
             «FOR step : testseq.step.filter(AssertionStep) » 
-            «FOR asrtce : step.asserts » «FOR ce : asrtce.ce»
+            «FOR asrtce : step.asserts »
+            «FOR ce : asrtce.ce»
                 «FOR asrt : ce.constr.filter(AssertThatBlock) SEPARATOR ',' »
                 {
                     "id":"«asrt.identifier»", "type":"«getAssertionType(asrt.^val)»",
@@ -83,7 +86,8 @@ class RefKVPGenerator {
                     }
                 }
                 «ENDFOR»
-            «ENDFOR»«ENDFOR»
+            «ENDFOR»
+            «ENDFOR»
             «ENDFOR»
         «ENDFOR»
         ]
