@@ -390,9 +390,9 @@ class Utils
                 if len(self.step_dependencies):
                     for elm in self.step_dependencies:
                         txt += "%s ..> %s : uses\n" % (elm.step_name.replace("@","_"), elm.depends_on.replace("@","_"))
-                        txt += "note on link\n"
-                        txt += "%s" % elm.payload
-                        txt += "\nend note\n"
+                        # txt += "note on link\n"
+                        # txt += "%s" % elm.payload
+                        # txt += "\nend note\n"
                 txt += "@enduml"
         
                 fname = output_dir / f"scenario{str(idx)}.plantuml"
