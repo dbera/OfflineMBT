@@ -12,6 +12,7 @@
  */
 package nl.esi.comma.testspecification.abstspec.generator
 
+import java.util.Set
 import nl.esi.comma.testspecification.testspecification.ComposeStep
 import nl.esi.comma.testspecification.testspecification.RunStep
 import nl.esi.comma.testspecification.testspecification.TSJsonValue
@@ -26,16 +27,21 @@ import nl.esi.comma.types.types.VectorTypeConstructor
 import static extension nl.esi.comma.testspecification.abstspec.generator.Utils.*
 
 class ConcreteExpressionHandler {
-    def prepareStepInputExpressions(RunStep rstep, Iterable<ComposeStep> composeSteps) '''
-        «FOR output : composeSteps.reject[suppress].flatMap[output]»
-            «printVariable(rstep.system + 'Input.' + output.name.name, output.name.type, output.jsonvals)»
+    def prepareStepInputExpressions(RunStep rstep, Iterable<ComposeStep> composeSteps) {
+        val suppressVars = composeSteps.flatMap[suppressedVarFields].map[rstep.inputVar + '.' + it].toSet
+        prepareStepInputExpressions(rstep, composeSteps, suppressVars);
+    }
+
+    def private prepareStepInputExpressions(RunStep rstep, Iterable<ComposeStep> composeSteps, Set<String> suppressVars) '''
+        «FOR output : composeSteps.flatMap[output].reject[suppressVars.contains(rstep.inputVar + '.' + it.name.name)]»
+            «printVariable(rstep.inputVar + '.' + output.name.name, output.name.type, output.jsonvals, suppressVars)»
         «ENDFOR»
     '''
 
-    def private String printVariable(String name, Type type, TSJsonValue value) '''
+    def private String printVariable(String name, Type type, TSJsonValue value, Set<String> suppressVars) '''
         «IF type instanceof TypeReference && type.type instanceof RecordTypeDecl»
-            «FOR field : (type.type as RecordTypeDecl).fields.filter[f|value.hasMemberValue(f.name)]»
-                «printVariable(name + '.' + field.name, field.type, value.getMemberValue(field.name))»
+            «FOR field : (type.type as RecordTypeDecl).fields.filter[f|value.hasMemberValue(f.name)].reject[suppressVars.contains(name + '.' + it.name)]»
+                «printVariable(name + '.' + field.name, field.type, value.getMemberValue(field.name), suppressVars)»
             «ENDFOR»
         «ELSE»
             «name» := «type.createValue(value)»

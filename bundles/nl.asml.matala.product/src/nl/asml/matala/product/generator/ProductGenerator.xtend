@@ -17,7 +17,6 @@ package nl.asml.matala.product.generator
 
 import java.util.ArrayList
 import java.util.HashMap
-import java.util.HashSet
 import java.util.List
 import java.util.Map
 import java.util.Set
@@ -26,60 +25,19 @@ import nl.asml.matala.product.product.Block
 import nl.asml.matala.product.product.Product
 import nl.asml.matala.product.product.RefConstraint
 import nl.asml.matala.product.product.SymbConstraint
-import nl.asml.matala.product.product.UpdateOutVar
 import nl.asml.matala.product.product.VarRef
-import nl.esi.comma.actions.actions.AssignmentAction
-import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
-import nl.esi.comma.expressions.expression.ExpressionAddition
-import nl.esi.comma.expressions.expression.ExpressionAnd
-import nl.esi.comma.expressions.expression.ExpressionAny
-import nl.esi.comma.expressions.expression.ExpressionBulkData
-import nl.esi.comma.expressions.expression.ExpressionConstantBool
-import nl.esi.comma.expressions.expression.ExpressionConstantInt
-import nl.esi.comma.expressions.expression.ExpressionConstantReal
-import nl.esi.comma.expressions.expression.ExpressionConstantString
-import nl.esi.comma.expressions.expression.ExpressionDivision
-import nl.esi.comma.expressions.expression.ExpressionEnumLiteral
-import nl.esi.comma.expressions.expression.ExpressionEqual
-import nl.esi.comma.expressions.expression.ExpressionFunctionCall
-import nl.esi.comma.expressions.expression.ExpressionGeq
-import nl.esi.comma.expressions.expression.ExpressionGreater
-import nl.esi.comma.expressions.expression.ExpressionLeq
-import nl.esi.comma.expressions.expression.ExpressionLess
-import nl.esi.comma.expressions.expression.ExpressionMapRW
-import nl.esi.comma.expressions.expression.ExpressionMaximum
-import nl.esi.comma.expressions.expression.ExpressionMinimum
-import nl.esi.comma.expressions.expression.ExpressionMinus
-import nl.esi.comma.expressions.expression.ExpressionModulo
-import nl.esi.comma.expressions.expression.ExpressionMultiply
-import nl.esi.comma.expressions.expression.ExpressionNEqual
-import nl.esi.comma.expressions.expression.ExpressionNot
-import nl.esi.comma.expressions.expression.ExpressionOr
-import nl.esi.comma.expressions.expression.ExpressionPlus
-import nl.esi.comma.expressions.expression.ExpressionPower
-import nl.esi.comma.expressions.expression.ExpressionQuantifier
-import nl.esi.comma.expressions.expression.ExpressionRecord
-import nl.esi.comma.expressions.expression.ExpressionRecordAccess
-import nl.esi.comma.expressions.expression.ExpressionSubtraction
-import nl.esi.comma.expressions.expression.ExpressionUnary
-import nl.esi.comma.expressions.expression.ExpressionVariable
-import nl.esi.comma.expressions.expression.ExpressionVector
-import nl.esi.comma.expressions.expression.Field
-import nl.esi.comma.expressions.expression.Variable
 import nl.esi.comma.types.generator.TypesZ3Generator
-import nl.esi.comma.types.types.RecordField
 import nl.esi.comma.types.types.RecordTypeDecl
 import nl.esi.comma.types.types.SimpleTypeDecl
-import nl.esi.comma.types.types.Type
 import nl.esi.comma.types.types.TypeDecl
 import nl.esi.comma.types.types.TypesModel
-import nl.esi.comma.types.types.VectorTypeConstructor
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
-import nl.asml.matala.product.product.Update
+
+import static extension nl.esi.comma.types.utilities.EcoreUtil3.serialize
 
 /**
  * Generates code from your *.ps model files on save.
@@ -154,29 +112,31 @@ class ProductGenerator extends AbstractGenerator {
 					val block = b.block
 					for(f : block.functions) {
 						for(u : f.updates) {
+                            val transitionName = block.name + "_" + f.name + "_" + u.name
+
 						    if(u.actionType.equals(ActionType.COMPOSE) 
 						        || u.actionType.equals(ActionType.RUN)
 						        || u.actionType.equals(ActionType.ASSERT)
 						    ) {
-						        listOfAssertTransitions.add(block.name+"_" + f.name + "_" + u.name)
+						        listOfAssertTransitions.add(transitionName)
 						    }
 						    
 						    // Added DB. 15.04.2025. Create map of sut-var to transitions
 						    for(fi : u.fnInp) {
 						        if(sutTransitionMap.containsKey(fi.ref.name)) {
-						            sutTransitionMap.get(fi.ref.name).add(block.name+"_" + f.name + "_" + u.name)
+						            sutTransitionMap.get(fi.ref.name).add(transitionName)
 						        }
 						    }
 						    
 							// 30.01.2025 commented out
 							/*for(fi : u.fnInp) {
-								if(fi.dataConstraints !== null) listOfAssertTransitions.add(block.name+"_" + f.name + "_" + u.name)
+								if(fi.dataConstraints !== null) listOfAssertTransitions.add(transitionName)
 							}*/
 							//for(ovar : u.updateOutputVar) {
-							    // if(ovar.assert) listOfAssertTransitions.add(block.name+"_" + f.name + "_" + u.name)
+							    // if(ovar.assert) listOfAssertTransitions.add(transitionName)
 								// 30.01.2025 commented out and replaced with line above. 
 								/*for(fo : ovar.fnOut) {
-									if(fo.dataConstraints !== null) listOfAssertTransitions.add(block.name+"_" + f.name + "_" + u.name)
+									if(fo.dataConstraints !== null) listOfAssertTransitions.add(transitionName)
 								}*/
 							//}
 						}
@@ -184,36 +144,28 @@ class ProductGenerator extends AbstractGenerator {
 				}
 			}
 			// transition names -> list of output variables that were suppressed
-			val mapOfSuppressTransitionVars = new HashMap<String,List<String>>
+			val mapOfSuppressTransitionVars = new HashMap<String,Set<String>>
 			for(b : prod.specification.blocks) {
 				if (b.block !== null) {
 					val block = b.block
 					for(f : block.functions) {
 						for(u : f.updates) {
+						    val transitionName = block.name + "_" + f.name + "_" + u.name
+
 							for(ovar : u.updateOutputVar) {
 								for(elm : ovar.fnOut) {
 								    // Added DB. 15.04.2025. Create map of sut-var to transitions
                                     if(sutTransitionMap.containsKey(elm.ref.name)) {
-                                        sutTransitionMap.get(elm.ref.name).add(block.name+"_" + f.name + "_" + u.name)
+                                        sutTransitionMap.get(elm.ref.name).add(transitionName)
                                     }
 								}
-								if(ovar.suppress) {
-									// ADDED 08.11.2024 DB. Record out variables that were suppressed for a transition
-									// Is transition name present?
-									if(mapOfSuppressTransitionVars.containsKey(block.name+"_" + f.name + "_" + u.name)) {
-										for(elm : ovar.fnOut) {
-											// 08.11.2024 Assumption is that produces output does not have multiple vars (|ovar.fnOut| = 1)
-											mapOfSuppressTransitionVars.get(block.name+"_" + f.name + "_" + u.name).add(elm.ref.name)
-										}
-									} else {
-										for(elm : ovar.fnOut) {
-											// 08.11.2024 Assumption is that produces output does not have multiple vars (|ovar.fnOut| = 1)
-											var strList = new ArrayList<String>() 
-											strList.add(elm.ref.name)
-											mapOfSuppressTransitionVars.put(block.name+"_" + f.name + "_" + u.name, strList)
-										}
-									}
-									// listOfSuppressTransitions.add(block.name+"_" + f.name + "_" + u.name)
+								if(ovar.suppress !== null) {
+								    val suppressedVars = mapOfSuppressTransitionVars.computeIfAbsent(transitionName)[newLinkedHashSet]
+								    if (ovar.suppress.varFields.isEmpty) {
+                                        suppressedVars += ovar.fnOut.map[ref.name]
+								    } else {
+								        suppressedVars += ovar.suppress.varFields.map[serialize]
+								    }
 								}
 							}
 						}
