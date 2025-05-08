@@ -161,10 +161,10 @@ class ProductGenerator extends AbstractGenerator {
 								}
 								if(ovar.suppress !== null) {
 								    val suppressedVars = mapOfSuppressTransitionVars.computeIfAbsent(transitionName)[newLinkedHashSet]
-								    if (ovar.suppress.fields.isEmpty) {
+								    if (ovar.suppress.varFields.isEmpty) {
                                         suppressedVars += ovar.fnOut.map[ref.name]
 								    } else {
-								        suppressedVars += ovar.suppress.fields.map[serialize]
+								        suppressedVars += ovar.suppress.varFields.map[serialize]
 								    }
 								}
 							}

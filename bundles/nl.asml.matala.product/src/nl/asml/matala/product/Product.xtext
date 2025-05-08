@@ -109,7 +109,7 @@ VarRef:
 ;
 
 Suppress: {Suppress}
-    'suppress' ('(' fields+=SuppressVarFieldExp (',' fields+=SuppressVarFieldExp)* ')')?
+    'suppress' ('(' varFields+=SuppressVarFieldExp (',' varFields+=SuppressVarFieldExp)* ')')?
 ;
 
 SuppressVarFieldExp returns expr::Expression:

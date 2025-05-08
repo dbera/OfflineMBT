@@ -25,23 +25,16 @@ import nl.esi.comma.types.types.TypeReference
 import nl.esi.comma.types.types.VectorTypeConstructor
 
 import static extension nl.esi.comma.testspecification.abstspec.generator.Utils.*
-import static extension nl.esi.comma.types.utilities.EcoreUtil3.serialize
 
 class ConcreteExpressionHandler {
     def prepareStepInputExpressions(RunStep rstep, Iterable<ComposeStep> composeSteps) {
-    	val suppressVars = composeSteps.flatMap [ cstep |
-			switch (cstep.suppress) {
-				case null: newArrayList
-				case cstep.suppress.fields.isEmpty: cstep.output.map[rstep.varPrefix + it.name.name]
-				default: cstep.suppress.fields.map[rstep.varPrefix + it.serialize]
-			}
-		].toSet
-		prepareStepInputExpressions(rstep, composeSteps, suppressVars);
+        val suppressVars = composeSteps.flatMap[suppressedVarFields].map[rstep.inputVar + '.' + it].toSet
+        prepareStepInputExpressions(rstep, composeSteps, suppressVars);
     }
-    
+
     def private prepareStepInputExpressions(RunStep rstep, Iterable<ComposeStep> composeSteps, Set<String> suppressVars) '''
-        «FOR output : composeSteps.flatMap[output].reject[suppressVars.contains(rstep.varPrefix + it.name.name)]»
-            «printVariable(rstep.varPrefix + output.name.name, output.name.type, output.jsonvals, suppressVars)»
+        «FOR output : composeSteps.flatMap[output].reject[suppressVars.contains(rstep.inputVar + '.' + it.name.name)]»
+            «printVariable(rstep.inputVar + '.' + output.name.name, output.name.type, output.jsonvals, suppressVars)»
         «ENDFOR»
     '''
 
@@ -54,8 +47,6 @@ class ConcreteExpressionHandler {
             «name» := «type.createValue(value)»
         «ENDIF»
     '''
-
-    def private getVarPrefix(RunStep rstep) '''«rstep.system»Input.'''
 
     dispatch private def String createValue(TypeReference type, TSJsonValue value) {
         return createDeclValue(type.type, value)

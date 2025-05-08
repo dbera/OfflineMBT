@@ -18,6 +18,7 @@ import nl.esi.comma.testspecification.testspecification.ComposeStep
 import nl.esi.comma.testspecification.testspecification.RunStep
 
 import static extension nl.esi.comma.testspecification.abstspec.generator.Utils.*
+import static extension nl.esi.comma.types.utilities.EcoreUtil3.serialize
 
 class DataKVPGenerator 
 {
@@ -30,13 +31,14 @@ class DataKVPGenerator
                 in.data.suts = [ ]
                 in.data.steps = [
                     { "id" : "«step.name»", "type" : "«step.stepType.head.replaceAll("_dot_",".")»", "input_file" : "",
-                        "parameters" : {
+                        "parameters": {
                             «FOR ref : step.stepRef»
                                 «IF ref.refStep instanceof ComposeStep»«generateStepRefs(ref.refStep as ComposeStep)»«ENDIF»
                             «ENDFOR»
                         }
                         "JSON" : {
-                            file-name: ""   file-path = ""
+                            "file-name": ""
+                            "file-path": ""
                             «generateExpressionText(step,atd)»
                         }
                     }
@@ -47,7 +49,7 @@ class DataKVPGenerator
         return txt
     }
 
-    def generateStepRefs(ComposeStep cs) 
+    def private generateStepRefs(ComposeStep cs) 
     {
         var txt = ''''''
         var runSteps = (new ReferenceExpressionHandler(true)).
@@ -61,7 +63,7 @@ class DataKVPGenerator
         return txt
     }
 
-    def generateExpressionText(RunStep rstep, AbstractTestDefinition atd) {
+    def private generateExpressionText(RunStep rstep, AbstractTestDefinition atd) {
         // At most one (TODO validate this)
         // Observation: when multiple steps have indistinguishable outputs, 
         // multiple consumes from is possible. TODO Warn user.   
@@ -80,27 +82,21 @@ class DataKVPGenerator
         return txt
     }
     
-    def prepareStepInputExpressions(RunStep rstep, Iterable<ComposeStep> composeSteps) 
+    def private prepareStepInputExpressions(RunStep rstep, Iterable<ComposeStep> composeSteps) 
     {
         return 
         '''
         «FOR composeStep : composeSteps»
-            «printJSONOutput(rstep.name.split("_").get(0) + "Input", composeStep)»
+            «printJSONOutput(rstep.inputVar, composeStep)»
         «ENDFOR»
         '''
     }
 
-    def printJSONOutput(String prefix, ComposeStep step) {
-        var kv = ""
-        if (step.suppress === null) {
-            for (o : step.output) {
-                kv += o.jsonvals.stringValue 
-                // printKVInputPairs(prefix, o.name.name, o.kvPairs)
-            }
-        } else if (!step.suppress.fields.isEmpty) {
-            // FIXME: YBLA handle suppress record fields
-            throw new RuntimeException('Suppressing record fields is not yet supported.')
-        }
-        return kv
+    def private String printJSONOutput(CharSequence prefix, ComposeStep cstep) {
+        // FIXME: Not supporting suppressed record fields yet, only suppressed variables are supported
+        val suppressVars = cstep.suppressedVarFields.toSet
+        return '''«FOR out : cstep.output.reject[suppressVars.contains(it.name.name)]»
+            "«out.name.name»": «out.jsonvals.serialize»
+        «ENDFOR»'''
     }
 }
