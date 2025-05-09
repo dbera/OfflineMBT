@@ -87,7 +87,11 @@ class StandardProjectGenerator extends AbstractGenerator {
         // Generate abstract tspec from petri-net
         val petriNetURI = fsa.getURI('''CPNServer/«product.specification.name»/«product.specification.name».py''')
         val absTspecFsa = fsa.createFolderAccess('tspec_abstract')
-        (new PetriNetToAbstractTspecGenerator()).doGenerate(rst, petriNetURI, absTspecFsa, ctx)
+        var pnAbsTspec = new PetriNetToAbstractTspecGenerator()
+        if (task.pythonExe instanceof String) {
+            pnAbsTspec = new PetriNetToAbstractTspecGenerator(task.pythonExe)
+        }
+        pnAbsTspec.doGenerate(rst, petriNetURI, absTspecFsa, ctx)
 
         for (absTspecFileName : absTspecFsa.list(ROOT_PATH).filter[endsWith('.tspec')]) {
             val absTspecRes = absTspecFsa.loadResource(absTspecFileName, rst)
