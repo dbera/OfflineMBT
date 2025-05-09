@@ -70,6 +70,10 @@ public class Bpmn4s {
 	public Boolean isRunTask(String id) {
 		return elements.containsKey(id) && elements.get(id).getSubType().equals(ElementType.RUN_TASK);
 	}
+
+	public Boolean isAssertTask(String id) {
+		return elements.containsKey(id) && elements.get(id).getSubType().equals(ElementType.ASSERT_TASK);
+	}
 	
 	public Boolean isComposeTask(String id) {
 		return elements.containsKey(id) && elements.get(id).getSubType().equals(ElementType.COMPOSE_TASK);
