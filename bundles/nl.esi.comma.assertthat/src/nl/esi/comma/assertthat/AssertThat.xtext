@@ -1,3 +1,15 @@
+/**
+ * Copyright (c) 2024, 2025 TNO-ESI
+ *
+ * See the NOTICE file(s) distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This program and the accompanying materials are made available
+ * under the terms of the MIT License which is available at
+ * https://opensource.org/licenses/MIT
+ *
+ * SPDX-License-Identifier: MIT
+ */
 grammar nl.esi.comma.assertthat.AssertThat with nl.esi.comma.actions.Actions
 
 generate assertThat "http://www.esi.nl/comma/assertthat/AssertThat"
@@ -18,27 +30,30 @@ GenericScriptBlock:
 
 ScriptParametersCustom:
     '{'
-        'using-path' ':'   scriptPath = STRING
-        ('with-args' ':' '{'
-            (argType+=SCRIPT_PARAM_TYPE argVal+=JsonElements) 
-            (',' argType+=SCRIPT_PARAM_TYPE argVal+=JsonElements)?
-        '}')?
+        ('using-api'   ':'  scriptApi = STRING)
+        ('with-args'   '{' (scriptArgs+=ScriptParameterNamedPositional) (',' scriptArgs+=ScriptParameterNamedPositional)* '}')?
+        ('output-file' ':'  scriptOut = STRING) 
     '}' 
 ;
 
-enum SCRIPT_PARAM_TYPE:
-    OUTPUT='OUTPUT'
-    | FILE='FILE'
-    | FILE_REF='FILE_REF'
-    | VALUE='VALUE'
-    | VALUE_REF='VALUE_REF'
-    | NAME_ONLY='NAME_ONLY'
-    ;
+ScriptParameterNamedPositional:
+    ScriptParameterPositional |
+    ScriptParameterNamed 
+;
+
+ScriptParameterNamed: ScriptParameterNameOnly | ScriptParameterNamedArg ;
+ScriptParameterPositional: ScriptParameterPositionalFile | ScriptParameterPositionalSimple ;
+ScriptParameterWithValue: ScriptParameterNamedArg | ScriptParameterPositionalFile | ScriptParameterPositional ;
+
+ScriptParameterNameOnly: "flag-argument"  "{" label=STRING "}" ;
+ScriptParameterNamedArg: "named-argument" "{" label=STRING "," val=Expression (file?="is-file")? "}" ;
+ScriptParameterPositionalFile: "file-argument"  "{" val = Expression "}" ;
+ScriptParameterPositionalSimple: val = Expression ;
 
 enum MARGIN_TYPE:
-    ABSOLUTE='Absolute'
-    | RELATIVE='Relative'
-    | NONE='None';
+    ABSOLUTE='absolute'
+    | RELATIVE='relative'
+    | NONE='none';
 
 MargingItem:
     type=MARGIN_TYPE '(' (marginVal=FLOAT)? ')';

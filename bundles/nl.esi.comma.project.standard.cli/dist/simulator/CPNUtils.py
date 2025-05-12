@@ -1,3 +1,16 @@
+#
+# Copyright (c) 2024, 2025 TNO-ESI
+#
+# See the NOTICE file(s) distributed with this work for additional
+# information regarding copyright ownership.
+#
+# This program and the accompanying materials are made available
+# under the terms of the MIT License which is available at
+# https://opensource.org/licenses/MIT
+#
+# SPDX-License-Identifier: MIT
+#
+
 import typing, types
 import sys, string, shutil, secrets
 import importlib.util
@@ -39,7 +52,7 @@ class AbstractCPNControl(ABC):
 # Initializing CPN Model
 pn: typing.Dict[str, AbstractCPNControl] = {}
 
-def is_loaded_module(source, package="src-gen.CPNServer") -> bool:
+def is_loaded_module(source, package="src-gen.simulator.CPNServer") -> bool:
     """
     pre-loads file source as a module, and
     returns a CPN instance.
@@ -68,7 +81,7 @@ def gensym(length=32, prefix="gensym_", timestamp:bool=False):
 
     return prefix + symbol
 
-def load_module(source, package="src-gen.CPNServer") -> types.ModuleType:
+def load_module(source, package="src-gen.simulator.CPNServer") -> types.ModuleType:
     """
     pre-loads file source as a module, and
     returns a CPN instance.
@@ -89,7 +102,7 @@ def load_module(source, package="src-gen.CPNServer") -> types.ModuleType:
     return module
 
 
-def unload_module(source, package="src-gen.CPNServer") -> types.ModuleType:
+def unload_module(source, package="src-gen.simulator.CPNServer") -> types.ModuleType:
     """
     dereferences a module, and deletes CPN instance.
 
@@ -99,8 +112,6 @@ def unload_module(source, package="src-gen.CPNServer") -> types.ModuleType:
 
     spec = importlib.util.find_spec(f".{source}", package=package)
     assert spec is not None, f"Package \"{package}.{source}\" not found!"
-    module = importlib.util.module_from_spec(spec)
-    remove(module.__path__[0])
     
     del sys.modules[f"{package}.{source}"]
     del pn[source]

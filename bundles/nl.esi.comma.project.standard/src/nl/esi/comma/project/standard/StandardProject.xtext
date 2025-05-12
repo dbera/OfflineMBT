@@ -1,39 +1,43 @@
+/**
+ * Copyright (c) 2024, 2025 TNO-ESI
+ *
+ * See the NOTICE file(s) distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This program and the accompanying materials are made available
+ * under the terms of the MIT License which is available at
+ * https://opensource.org/licenses/MIT
+ *
+ * SPDX-License-Identifier: MIT
+ */
 grammar nl.esi.comma.project.standard.StandardProject with nl.esi.comma.types.Types
 
 generate standardProject "http://www.esi.nl/comma/project/standard/StandardProject"
 
 Project:
-	'Project' name = ID 
-	'{'
-		(products += Product)?
-		(tspecs += TSpec)?
-		(statemachines += StateMachineGenerationBlock)?
+	'Project' name = ID '{'
+		(offlineBlocks += OfflineGenerationBlock)*
+		(statemachineBlocks += StateMachineGenerationBlock)*
 	'}'
 ;
 
-Product:
-	'Generate' (tests ?= 'Tests' | simulator ?= 'Simulator') '{'
-		taskname = ID '{'
-			'product-file' product = STRING
-			('path-to-python-exe' pythonExe = STRING)?
-			('sut-product-files' stubProducts += STRING*)?
+OfflineGenerationBlock:
+	'Generate' target=OfflineGenerationTarget '{'
+		name = ID '{'
+            (('bpmn-file' bpmn = STRING) | ('product-file' product = STRING))
 			('num-tests' numTests = INT)?
 			('depth-limit' depthLimit = INT)?
+            ('path-to-python-exe' pythonExe = STRING)?
 		'}'
 	'}'
 ;
 
-TSpec:
-    'Generate' 'FAST' '{'
-        taskname = ID '{'
-            'abstract-tspec-file' tspec = STRING
-        '}'
-    '}'
-;
+enum OfflineGenerationTarget:
+    SIMULATOR='Simulator' | TESTS='Tests' | FAST='FAST';
 
 StateMachineGenerationBlock:
 	'Conformance-Coverage-And-Test-Generation' '{'
-		taskname = ID '{'
+		name = ID '{'
 			'constraints' ('files' constraintsFiles += STRING+ | 'directories' constraintsDirs += FilePath+)
 			(visualizeSM ?= 'visualize-constraints')?
 			(printConstraints ?= 'print-constraints')?

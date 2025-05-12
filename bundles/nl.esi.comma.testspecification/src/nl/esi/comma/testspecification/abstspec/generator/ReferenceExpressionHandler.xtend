@@ -1,3 +1,15 @@
+/**
+ * Copyright (c) 2024, 2025 TNO-ESI
+ *
+ * See the NOTICE file(s) distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This program and the accompanying materials are made available
+ * under the terms of the MIT License which is available at
+ * https://opensource.org/licenses/MIT
+ *
+ * SPDX-License-Identifier: MIT
+ */
 package nl.esi.comma.testspecification.abstspec.generator
 
 import nl.esi.comma.testspecification.testspecification.RunStep
@@ -14,6 +26,9 @@ import nl.esi.comma.expressions.expression.ExpressionFunctionCall
 import nl.esi.comma.testspecification.testspecification.AbstractTestDefinition
 import nl.esi.comma.testspecification.generator.ExpressionGenerator
 
+import static extension nl.esi.comma.testspecification.abstspec.generator.Utils.*
+import nl.asml.matala.product.product.VarRef
+
 class ReferenceExpressionHandler 
 {
     var isFast = false
@@ -24,24 +39,34 @@ class ReferenceExpressionHandler
      * Support Interleaving of Compose and Run Steps. 
      * Q1 2025.  
      */
-    def resolveStepReferenceExpressions(RunStep rstep, HashSet<ComposeStep> listOfComposeSteps) 
+    def resolveStepReferenceExpressions(RunStep rstep, Iterable<ComposeStep> composeSteps)
     {
         // System.out.println("Run Step: " + rstep.name)
-        var mapLHStoRHS = new HashMap<String,String>
+        var mapLHStoRHS = new HashMap<String,List<String>>
         // Find preceding Compose Step
-        for(cstep : listOfComposeSteps) // at most one 
+        for(cstep : composeSteps) // at most one 
         {
             // System.out.println("    -> compose-name: " + cstep.name)
             var refTxt = new String
             for(cons : cstep.refs) {
                 // System.out.println("    -> constraint-var: " + cons.name)
                 for(refcons : cons.ce) {
+                    var varRefName = (refcons.eContainer.eContainer as VarRef).ref.name
                     for (a : refcons.act.actions) {
-                        var constraint = _printRecord_(cstep.name, 
+                        var constraint = _printRecord_(varRefName, cstep.name, 
                                                     rstep.name, cstep.stepRef, 
                                                     a as RecordFieldAssignmentAction, true)
-                        refTxt += constraint.getText + "\n" 
-                        mapLHStoRHS.put(constraint.lhs, constraint.rhs)
+                        refTxt += constraint.getText + "\n"
+                        // mapLHStoRHS.put(constraint.lhs, constraint.rhs)
+                        if(mapLHStoRHS.containsKey(constraint.lhs)) {
+                            var constraintList = mapLHStoRHS.get(constraint.lhs)
+                            if(!constraintList.contains(constraint.rhs)) constraintList.add(constraint.rhs)
+                            mapLHStoRHS.put(constraint.lhs, constraintList)
+                        } else {
+                            var constraintList = new ArrayList<String>
+                            if(!constraintList.contains(constraint.rhs)) constraintList.add(constraint.rhs)
+                            mapLHStoRHS.put(constraint.lhs, constraintList)
+                        }
                     }
                 }
             }
@@ -53,36 +78,76 @@ class ReferenceExpressionHandler
                 for(cons : cs.refs) {
                     // System.out.println("        -> constraint-var: " + cons.name)
                     for(refcons : cons.ce) {
+                        var varRefName = (refcons.eContainer.eContainer as VarRef).ref.name
                         for (a : refcons.act.actions) {
-                            var constraint = _printRecord_(cs.name, rstep.name, cs.stepRef, 
+                            var constraint = _printRecord_(varRefName, cs.name, rstep.name, cs.stepRef, 
                                                 a as RecordFieldAssignmentAction, false)
                             refTxt += constraint.getText + "\n"
-                            mapLHStoRHS.put(constraint.lhs, constraint.rhs) 
+                            // mapLHStoRHS.put(constraint.lhs, constraint.rhs)
+                            if(mapLHStoRHS.containsKey(constraint.lhs)) {
+                                var constraintList = mapLHStoRHS.get(constraint.lhs)
+                                if(!constraintList.contains(constraint.rhs)) constraintList.add(constraint.rhs)
+                                mapLHStoRHS.put(constraint.lhs, constraintList)
+                            } else {
+                                var constraintList = new ArrayList<String>
+                                if(!constraintList.contains(constraint.rhs)) constraintList.add(constraint.rhs)
+                                mapLHStoRHS.put(constraint.lhs, constraintList)
+                            } 
                         }
                     }
                 }
             }
             // if(!refTxt.isEmpty) System.out.println("\nRef Constraints:\n" + refTxt)
         }
+        /*for(k : mapLHStoRHS.keySet) {
+            for(v : mapLHStoRHS.get(k))
+            System.out.println("    > K: " + k + " > V: " + v)
+        }*/
         // Rewrite expressions in mapLHStoRHS
         // TODO Validate that LHS and RHS are unique. 
         // No collisions are allowed.
         var refKeyList = new ArrayList<String>
-        for(k : mapLHStoRHS.keySet) {
+        // Commented to rewrite with list values in mapLHStoRHS
+        /*for(k : mapLHStoRHS.keySet) {
             for(_k : mapLHStoRHS.keySet) { 
                 if(_k.equals(mapLHStoRHS.get(k))) { // if LHS equals RHS
                     mapLHStoRHS.put(k, mapLHStoRHS.get(_k)) // rewrite
                     refKeyList.add(_k)
                 }
             }
+        }*/
+        // Rewrite implementation for list of values in mapLHStoRHS
+        var _mapLHStoRHS = new HashMap<String, List<String>>
+        for(k : mapLHStoRHS.keySet) { _mapLHStoRHS.put(k,new ArrayList<String>(mapLHStoRHS.get(k))) }
+        for(k : mapLHStoRHS.keySet) {
+            for(_k : mapLHStoRHS.keySet) { 
+                var idx = 0
+                for(v : mapLHStoRHS.get(k)) {
+                    // if(!v.startsWith("add")) { // TODO. How to rewrite with functions? Problem for nested compose. 
+                        if(_k.equals(v)) { // if LHS equals RHS
+                            // replace the value at a specific index of value list
+                            _mapLHStoRHS.get(k).addAll(idx, new ArrayList<String>(_mapLHStoRHS.get(_k))) // insert list of values at idx
+                            if(idx + _mapLHStoRHS.get(_k).size <= _mapLHStoRHS.get(k).size) 
+                                _mapLHStoRHS.get(k).remove(idx + _mapLHStoRHS.get(_k).size)
+                            // mapLHStoRHS.put(k, mapLHStoRHS.get(_k)) // rewrite
+                            refKeyList.add(_k)
+                        }
+                    // }
+                    idx++
+                }
+            }
         }
+        /*for(k : _mapLHStoRHS.keySet) {
+            for(v : _mapLHStoRHS.get(k))
+            System.out.println("    > K: " + k + " > V: " + v)
+        }*/
         // remove intermediate expressions
-        for(k : refKeyList) mapLHStoRHS.remove(k)
+        for(k : refKeyList) { _mapLHStoRHS.remove(k) }
 
-        return mapLHStoRHS
+        return _mapLHStoRHS
     }
 
-    def _printRecord_(String composeStepName, String runStepName, 
+    def _printRecord_(String varRefName, String composeStepName, String runStepName, 
         EList<StepReference> stepRef, RecordFieldAssignmentAction rec, boolean isFirstCompose) {
 
         // Run block input data structure = Concrete TSpec step input data structure
@@ -94,26 +159,29 @@ class ReferenceExpressionHandler
         if(isFirstCompose) {
             blockInputName = runStepName.split("_").get(0) + "Input"
             pi = blockInputName + "."
-            field = (new Utils()).printField(rec.fieldAccess, true)
-        } else field = (new Utils()).printField(rec.fieldAccess, true)
-
-        var value = (new ExpressionGenerator(stepRef, runStepName)).exprToComMASyntax(rec.exp)
-        // System.out.println(" value: " + value)
-
-        if (!(rec.exp instanceof ExpressionVector || rec.exp instanceof ExpressionFunctionCall)) {
-            // For record expressions. 
-            // The rest is handled as override functions in ExpressionGenerator.
-            for(csref : stepRef) {
-                for(csrefdata : csref.refData) {
-                    // System.out.println(" Replacing: " + sd.name + " with " + sr.refStep.name)
-                    if(csref.refStep instanceof RunStep && 
-                        value.toString.contains(csrefdata.name)) {
-                        if(!isFast) value = "step_" + csref.refStep.name + ".output." + value
-                        else value = csref.refStep.name + "." + value
-                    }
-                }
-            }
+            field = rec.fieldAccess.printField
+        } else {
+            blockInputName = "step_" + composeStepName + ".output."
+            pi = blockInputName
+            field = rec.fieldAccess.printField
         }
+
+        var value = (new ExpressionGenerator(stepRef, runStepName, varRefName)).exprToComMASyntax(rec.exp)
+
+//        if (!(rec.exp instanceof ExpressionVector || rec.exp instanceof ExpressionFunctionCall)) {
+//            // For record expressions. 
+//            // The rest is handled as override functions in ExpressionGenerator.
+//            for(csref : stepRef) {
+//                for(csrefdata : csref.refData) {
+//                    // System.out.println(" Replacing: " + sd.name + " with " + sr.refStep.name)
+//                    if(csref.refStep instanceof RunStep && 
+//                        value.toString.contains(csrefdata.name)) {
+//                        if(!isFast) value = "step_" + csref.refStep.name + ".output." + value
+//                        else value = csref.refStep.name + "." + value
+//                    }
+//                }
+//            }
+//        }
         if(!isFast)
             return new StepConstraint ( runStepName,
                                     composeStepName, 

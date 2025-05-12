@@ -1,11 +1,14 @@
 /*
- * Copyright (c) 2021 Contributors to the Eclipse Foundation
+ * Copyright (c) 2024, 2025 TNO-ESI
  *
- * This program and the accompanying materials are made
- * available under the terms of the Eclipse Public License 2.0
- * which is available at https://www.eclipse.org/legal/epl-2.0/
+ * See the NOTICE file(s) distributed with this work for additional
+ * information regarding copyright ownership.
  *
- * SPDX-License-Identifier: EPL-2.0
+ * This program and the accompanying materials are made available
+ * under the terms of the MIT License which is available at
+ * https://opensource.org/licenses/MIT
+ *
+ * SPDX-License-Identifier: MIT
  */
 package nl.asml.matala.product.generator;
 
@@ -94,7 +97,7 @@ class SnakesHelper {
 			return "[]";
 		} else if (type instanceof EnumTypeDecl) {
 			EnumTypeDecl t = (EnumTypeDecl) type;
-			return String.format("\"%s:%s\"", t.getName(), t.getLiterals().get(0).getName());
+			return String.format("\"%s::%s\"", t.getName(), t.getLiterals().get(0).getName());
 		} else if (type instanceof MapTypeDecl) {
 			return "{" + 
 					defaultValue(((MapTypeDecl) type).getConstructor().getType(), targetName) + 
@@ -178,7 +181,7 @@ class SnakesHelper {
 			return String.format("%s or %s", expression(e.getLeft(), variablePrefix), expression(e.getRight(), variablePrefix));
 		} else if (expression instanceof ExpressionEnumLiteral) {
 			ExpressionEnumLiteral e = (ExpressionEnumLiteral) expression;
-			return String.format("\"%s:%s\"", e.getType().getName(), e.getLiteral().getName());
+			return String.format("\"%s::%s\"", e.getType().getName(), e.getLiteral().getName());
 		} else if (expression instanceof ExpressionVector) {
 			ExpressionVector e = (ExpressionVector) expression;
 			return String.format("[%s]", e.getElements().stream().map(ee -> expression (ee, variablePrefix)).collect(Collectors.joining(", ")));

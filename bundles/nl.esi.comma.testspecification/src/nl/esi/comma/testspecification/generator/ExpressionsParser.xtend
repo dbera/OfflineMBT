@@ -1,3 +1,15 @@
+/**
+ * Copyright (c) 2024, 2025 TNO-ESI
+ *
+ * See the NOTICE file(s) distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This program and the accompanying materials are made available
+ * under the terms of the MIT License which is available at
+ * https://opensource.org/licenses/MIT
+ *
+ * SPDX-License-Identifier: MIT
+ */
 package nl.esi.comma.testspecification.generator
 
 import nl.esi.comma.expressions.expression.ExpressionAny
@@ -166,7 +178,8 @@ class ExpressionsParser {
     	else if(expr.functionName.equals('contains')) 
     		return '''smVarContainer.contains(«generateExpression(expr.args.get(0), ref)», «generateExpression(expr.args.get(1), ref)»)'''
     	else if(expr.functionName.equals('add')) 
-    		return '''smVarContainer.add(«generateExpression(expr.args.get(0), ref)», «generateExpression(expr.args.get(1), ref)»)'''
+    		return '''[«generateExpression(expr.args.get(1), ref)»]'''
+    		// return '''smVarContainer.add(«generateExpression(expr.args.get(0), ref)», «generateExpression(expr.args.get(1), ref)»)'''
     	else if(expr.functionName.equals('asReal')) 
     		return '''(double)(«generateExpression(expr.args.get(0), ref)»)'''
     	else if(expr.functionName.equals('abs')) 

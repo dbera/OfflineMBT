@@ -1,10 +1,23 @@
+/**
+ * Copyright (c) 2024, 2025 TNO-ESI
+ *
+ * See the NOTICE file(s) distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This program and the accompanying materials are made available
+ * under the terms of the MIT License which is available at
+ * https://opensource.org/licenses/MIT
+ *
+ * SPDX-License-Identifier: MIT
+ */
 package nl.esi.comma.testspecification.abstspec.generator
 
-import nl.esi.comma.testspecification.testspecification.AbstractTestDefinition
-import nl.esi.comma.testspecification.testspecification.RunStep
-import java.util.HashSet
-import nl.esi.comma.testspecification.testspecification.ComposeStep
 import java.util.ArrayList
+import nl.esi.comma.testspecification.testspecification.AbstractTestDefinition
+import nl.esi.comma.testspecification.testspecification.ComposeStep
+import nl.esi.comma.testspecification.testspecification.RunStep
+
+import static extension nl.esi.comma.testspecification.abstspec.generator.Utils.*
 
 class DataKVPGenerator 
 {
@@ -52,11 +65,11 @@ class DataKVPGenerator
         // At most one (TODO validate this)
         // Observation: when multiple steps have indistinguishable outputs, 
         // multiple consumes from is possible. TODO Warn user.   
-        var listOfComposeSteps = (new Utils()).getComposeSteps(rstep, atd)
+        var composeSteps = rstep.composeSteps
         var mapLHStoRHS = (new ReferenceExpressionHandler(true)).
-                resolveStepReferenceExpressions(rstep, listOfComposeSteps)
+                resolveStepReferenceExpressions(rstep, composeSteps)
         // Get text for concrete data expressions
-        var txt = prepareStepInputExpressions(rstep, listOfComposeSteps)
+        var txt = prepareStepInputExpressions(rstep, composeSteps)
         // Append text for reference data expressions
         for(k : mapLHStoRHS.keySet) {
             txt += 
@@ -67,11 +80,11 @@ class DataKVPGenerator
         return txt
     }
     
-    def prepareStepInputExpressions(RunStep rstep, HashSet<ComposeStep> listOfComposeSteps) 
+    def prepareStepInputExpressions(RunStep rstep, Iterable<ComposeStep> composeSteps) 
     {
         return 
         '''
-        «FOR composeStep : listOfComposeSteps»
+        «FOR composeStep : composeSteps»
             «printJSONOutput(rstep.name.split("_").get(0) + "Input", composeStep)»
         «ENDFOR»
         '''
@@ -81,7 +94,7 @@ class DataKVPGenerator
         var kv = ""
         if (!step.suppress) {
             for (o : step.output) {
-                kv += (new Utils()).parseJSON(o.jsonvals) 
+                kv += o.jsonvals.stringValue 
                 // printKVInputPairs(prefix, o.name.name, o.kvPairs)
             }
         }

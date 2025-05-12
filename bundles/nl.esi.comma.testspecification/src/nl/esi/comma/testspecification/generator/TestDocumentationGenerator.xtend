@@ -1,8 +1,23 @@
+/**
+ * Copyright (c) 2024, 2025 TNO-ESI
+ *
+ * See the NOTICE file(s) distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This program and the accompanying materials are made available
+ * under the terms of the MIT License which is available at
+ * https://opensource.org/licenses/MIT
+ *
+ * SPDX-License-Identifier: MIT
+ */
 package nl.esi.comma.testspecification.generator
 
 import java.util.ArrayList
+import java.util.HashMap
+import java.util.List
 import nl.esi.comma.actions.actions.AssignmentAction
 import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
+import nl.esi.comma.expressions.expression.Variable
 import nl.esi.comma.inputspecification.inputSpecification.APIDefinition
 import nl.esi.comma.inputspecification.inputSpecification.Main
 import nl.esi.comma.inputspecification.inputSpecification.SUTDefinition
@@ -10,12 +25,11 @@ import nl.esi.comma.testspecification.testspecification.TSMain
 import nl.esi.comma.testspecification.testspecification.TestDefinition
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.EcoreUtil2
+import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
-import java.util.HashMap
-import java.util.List
-import nl.esi.comma.expressions.expression.Variable
+import org.eclipse.xtext.generator.IGeneratorContext
 
-class TestDocumentationGenerator 
+class TestDocumentationGenerator extends AbstractGenerator
 {
 	var mapConfigurationsToFeatures = new HashMap<String, List<String>>
 	
@@ -54,6 +68,10 @@ class TestDocumentationGenerator
 		
 	}
 	
+    override doGenerate(Resource res, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
+        generateDocumentationForAllVariants(res, fsa)
+    }
+
 	def generateDocumentationForAllVariants(Resource resource, IFileSystemAccess2 fsa) {
 		computeSUTConfigurationsAndFeatures(resource)
 		// iterate over each valid configuration defined in sut.params

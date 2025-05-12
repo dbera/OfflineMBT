@@ -1,47 +1,90 @@
+/**
+ * Copyright (c) 2024, 2025 TNO-ESI
+ *
+ * See the NOTICE file(s) distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This program and the accompanying materials are made available
+ * under the terms of the MIT License which is available at
+ * https://opensource.org/licenses/MIT
+ *
+ * SPDX-License-Identifier: MIT
+ */
 package nl.esi.comma.testspecification.abstspec.generator
 
-import nl.esi.comma.testspecification.testspecification.RunStep
-import java.util.HashSet
 import nl.esi.comma.testspecification.testspecification.ComposeStep
-import org.eclipse.emf.common.util.EList
-import nl.esi.comma.testspecification.testspecification.NestedKeyValuesPair
-import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
+import nl.esi.comma.testspecification.testspecification.RunStep
+import nl.esi.comma.testspecification.testspecification.TSJsonValue
+import nl.esi.comma.types.types.EnumTypeDecl
+import nl.esi.comma.types.types.MapTypeConstructor
+import nl.esi.comma.types.types.RecordTypeDecl
+import nl.esi.comma.types.types.SimpleTypeDecl
+import nl.esi.comma.types.types.Type
+import nl.esi.comma.types.types.TypeReference
+import nl.esi.comma.types.types.VectorTypeConstructor
 
-class ConcreteExpressionHandler 
-{
-    /* TODO. Q2 2025. Yuri. 
-     * Fix JSON Object to ComMA Expression Reconstruction.
-     */
-    def prepareStepInputExpressions(RunStep rstep, HashSet<ComposeStep> listOfComposeSteps) 
-    {
-        return 
-        '''
-        «FOR composeStep : listOfComposeSteps»
-        «printKVOutputPairs(rstep.name.split("_").get(0) + "Input", composeStep)»
+import static extension nl.esi.comma.testspecification.abstspec.generator.Utils.*
+
+class ConcreteExpressionHandler {
+    def prepareStepInputExpressions(RunStep rstep, Iterable<ComposeStep> composeSteps) '''
+        «FOR output : composeSteps.reject[suppress].flatMap[output]»
+            «printVariable(rstep.system + 'Input.' + output.name.name, output.name.type, output.jsonvals)»
         «ENDFOR»
-        '''
+    '''
+
+    def private String printVariable(String name, Type type, TSJsonValue value) '''
+        «IF type instanceof TypeReference && type.type instanceof RecordTypeDecl»
+            «FOR field : (type.type as RecordTypeDecl).fields.filter[f|value.hasMemberValue(f.name)]»
+                «printVariable(name + '.' + field.name, field.type, value.getMemberValue(field.name))»
+            «ENDFOR»
+        «ELSE»
+            «name» := «type.createValue(value)»
+        «ENDIF»
+    '''
+
+    dispatch private def String createValue(TypeReference type, TSJsonValue value) {
+        return createDeclValue(type.type, value)
     }
 
-    /* Removed ComMA Expression Printing 04.04.2025 */
-    /* TODO Rewrite this function to parse JSON Object */
-    def printKVOutputPairs(String prefix, ComposeStep step) {
-        var kv = ""
-//      if (!step.suppress) {
-//          for (o : step.output) {
-//              kv += printKVInputPairs(prefix, o.name.name, o.kvPairs)
-//          }
-//      }
-        return kv
-    }
+    dispatch private def String createValue(VectorTypeConstructor type, TSJsonValue value) '''
+        <«type.typeName»>[
+            «FOR itemValue : value.itemValues SEPARATOR ','
+            »«createValue(type.outerDimension, itemValue)»«
+            ENDFOR»
+        ]
+    '''
 
-    def printKVInputPairs(String prefix, String field, EList<NestedKeyValuesPair> pairs) {
-        var kv = ""
-        for (p : pairs) {
-            for (a : p.actions) {
-                kv += prefix + "." + field + (new Utils()).printRecord("", "", null, a as RecordFieldAssignmentAction) + "\n"
-            }
+    dispatch private def String createValue(MapTypeConstructor type, TSJsonValue value) '''
+        <«type.typeName»>{
+            «FOR memberValue : value.memberValues SEPARATOR ','
+            »«createDeclValue(type.type, memberValue.key.toJsonString)» -> «createValue(type.valueType, memberValue.value)»«
+            ENDFOR»
         }
-        return kv
+    '''
+
+    dispatch private def String createDeclValue(SimpleTypeDecl type, TSJsonValue value) {
+        if (type.base !== null) {
+            return type.base.createDeclValue(value)
+        }
+        return switch (type.name) {
+            case 'int',
+            case 'real',
+            case 'bool': value.stringValue
+            default: '''"«value.stringValue»"'''
+        }
     }
 
+    dispatch private def String createDeclValue(EnumTypeDecl type, TSJsonValue value) {
+        val typePrefix = type.name + '::'
+        val valueString = value.stringValue
+        return valueString.startsWith(typePrefix) ? valueString : (typePrefix + valueString)
+    }
+
+    dispatch private def String createDeclValue(RecordTypeDecl type, TSJsonValue value) '''
+        «type.name» {
+            «FOR field : type.fields.filter[f|value.hasMemberValue(f.name)] SEPARATOR ','»
+                «field.name» = «field.type.createValue(value.getMemberValue(field.name))»
+            «ENDFOR»
+        }
+    '''
 }

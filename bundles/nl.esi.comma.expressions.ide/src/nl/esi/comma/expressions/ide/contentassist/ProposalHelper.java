@@ -1,11 +1,14 @@
 /*
- * Copyright (c) 2021 Contributors to the Eclipse Foundation
+ * Copyright (c) 2024, 2025 TNO-ESI
  *
- * This program and the accompanying materials are made
- * available under the terms of the Eclipse Public License 2.0
- * which is available at https://www.eclipse.org/legal/epl-2.0/
+ * See the NOTICE file(s) distributed with this work for additional
+ * information regarding copyright ownership.
  *
- * SPDX-License-Identifier: EPL-2.0
+ * This program and the accompanying materials are made available
+ * under the terms of the MIT License which is available at
+ * https://opensource.org/licenses/MIT
+ *
+ * SPDX-License-Identifier: MIT
  */
 package nl.esi.comma.expressions.ide.contentassist;
 
@@ -63,31 +66,23 @@ import nl.esi.comma.types.types.TypeDecl;
 import nl.esi.comma.types.types.TypeReference;
 import nl.esi.comma.types.types.VectorTypeConstructor;
 import nl.esi.comma.types.types.VectorTypeDecl;
+import nl.esi.comma.types.utilities.TypeUtilities;
 
 public class ProposalHelper {
-	public static String getTypeName(Type type) throws UnsupportedTypeException {
-		if (type instanceof TypeReference) {
-			return type.getType().getName();
-		} else if (type instanceof VectorTypeConstructor vecType) {
-			final StringBuilder name = new StringBuilder(type.getType().getName());
-			vecType.getDimensions().forEach(d -> name.append("[]"));
-			return name.toString();
-		} else if (type instanceof MapTypeConstructor mapType) {
-			return "map<" + type.getType().getName() + ", " + getTypeName(mapType.getValueType()) + ">";
-		}
-		throw new UnsupportedTypeException(type);
+	public static String getTypeName(Type type) {
+		return TypeUtilities.getTypeName(type);
 	}
 	
-	public static String getTypeName(TypeAnnotation typeAnn) throws UnsupportedTypeException {
+	public static String getTypeName(TypeAnnotation typeAnn) {
 		final Type type = typeAnn.getType();
 		if (type instanceof TypeReference) {
-			return type.getType().getName();
+			return TypeUtilities.getTypeName(type.getType());
 		} else if (type instanceof VectorTypeConstructor vecType) {
-			return getTypeName(getOuterDimension(vecType));
-		} else if (type instanceof MapTypeConstructor mapType) {
-			return "map.entry<" + type.getType().getName() + ", " + getTypeName(mapType.getValueType()) + ">";
+			return TypeUtilities.getTypeName(TypeUtilities.getElementType(vecType));
+		} else if (type instanceof MapTypeConstructor) {
+			return TypeUtilities.getTypeName(type).replaceFirst("^map<", "map.entry<");
 		}
-		throw new UnsupportedTypeException(type);
+		return null;
 	}
 
 	public static String defaultValue(TypeAnnotation typeAnn, String targetName) throws UnsupportedTypeException {

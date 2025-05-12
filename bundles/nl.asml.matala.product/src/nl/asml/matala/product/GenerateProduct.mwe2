@@ -1,3 +1,15 @@
+/**
+ * Copyright (c) 2024, 2025 TNO-ESI
+ *
+ * See the NOTICE file(s) distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This program and the accompanying materials are made available
+ * under the terms of the MIT License which is available at
+ * https://opensource.org/licenses/MIT
+ *
+ * SPDX-License-Identifier: MIT
+ */
 module nl.asml.matala.product.GenerateProduct
 
 import org.eclipse.xtext.xtext.generator.*
@@ -45,12 +57,8 @@ Workflow {
             contentAssist = nl.esi.xtext.lsp.generator.ide.contentassist.IdeContentAssistFragment2 {
                 generateXtendStub = true
             }
-			fragment = textmate.TextMateHighlightingFragment {
-			    absolutePath = "${rootPath}/nl.asml.matala.product.lsp.editor/language/grammars"
-			    override = true
-			}
 			fragment = nl.esi.xtext.lsp.generator.lezer.LezerGrammarFragment {
-                absolutePath = "${rootPath}/nl.asml.matala.product.lsp.editor/language/grammars"
+                absolutePath = "${rootPath}/nl.asml.matala.product/target/lezer-grammar"
                 override = true
 			}
 		}

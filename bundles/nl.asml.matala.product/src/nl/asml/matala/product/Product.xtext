@@ -1,3 +1,15 @@
+/**
+ * Copyright (c) 2024, 2025 TNO-ESI
+ *
+ * See the NOTICE file(s) distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This program and the accompanying materials are made available
+ * under the terms of the MIT License which is available at
+ * https://opensource.org/licenses/MIT
+ *
+ * SPDX-License-Identifier: MIT
+ */
 grammar nl.asml.matala.product.Product with nl.esi.comma.assertthat.AssertThat
 
 generate product "http://www.asml.nl/matala/product/Product"
@@ -16,13 +28,8 @@ Product:
 	imports += Import*
 	(namespace += NameSpace)*
     types += TypeDecl*
-    (sutTypes = SUTTypeDecl)?
 	( systemDecl = SystemDecl	
 	| specification = Specification)
-;
-
-SUTTypeDecl:
-    'test-configuration-types' '{' type += Type+ '}'
 ;
 
 @Override
@@ -63,6 +70,7 @@ Block:
 			('inputs' invars+=Variable* )? &
 			('outputs' outvars+=Variable* )? &
 			('local' localvars+=Variable* )? &
+            ('suts' sutvars += [expr::Variable|ID] (',' sutvars+=[expr::Variable|ID])*)? &
 			('init' initActions+=(AssignmentAction | RecordFieldAssignmentAction)*)? &
 			'desc' type = STRING
 		)
@@ -98,7 +106,6 @@ VarRef:
 	ref = [expr::Variable|ID] 
 	(dataConstraints = DataConstraints)?
 	(dataReferences = DataReferences)? 
-	// (dataAssertions = DataAssertions)? 
 ;
 
 DataConstraints: {DataConstraints}

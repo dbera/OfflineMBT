@@ -1,9 +1,23 @@
+/**
+ * Copyright (c) 2024, 2025 TNO-ESI
+ *
+ * See the NOTICE file(s) distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This program and the accompanying materials are made available
+ * under the terms of the MIT License which is available at
+ * https://opensource.org/licenses/MIT
+ *
+ * SPDX-License-Identifier: MIT
+ */
 package nl.asml.matala.product.generator
 
 import java.util.ArrayList
 import java.util.HashMap
-import java.util.List
 import java.util.HashSet
+import java.util.List
+import java.util.Map
+import java.util.Set
 import nl.esi.comma.types.types.SimpleTypeDecl
 
 class PetriNet {
@@ -279,8 +293,9 @@ class PetriNet {
 		            print('Current Marking: ')
 		            for k in n.get_marking():
 		                ms = n.get_marking()[k]
-		                json_data = json.loads(ms.items()[0])
-		                print('    + Place: ', k, ' has token: ', json.dumps(json_data))
+		                for i in ms.items():
+		                    json_data = json.loads(i)
+		                    print('    + Place: ', k, ' has token: ', json.dumps(json_data))
 		            print('****************************************************************')
 		            # self.generatePlantUML(n, True)
 		        else:
@@ -321,13 +336,13 @@ class PetriNet {
 	def toSnakes(String prod_name, 
 				 String topology_name, 
 				 List<String> listOfEnvBlocks,
-				 ArrayList<String> listOfAssertTransitions,
-				 HashMap<String,List<String>> mapOfSuppressTransitionVars,
+				 List<String> listOfAssertTransitions,
+				 Map<String, ? extends List<String>> mapOfSuppressTransitionVars,
 				 List<String> inout_places, 
 				 List<String> init_places, 
 				 int depth_limit,
 				 int num_tests,
-				 List<String> sutTypesList
+				 Map<String, ? extends Set<String>> sutTransitionMap
 	) {
 		'''
 		import datetime
@@ -365,7 +380,8 @@ class PetriNet {
 		    SavedMarking = Marking()
 		    
 		    # test generation data
-		    sutTypesList = [«FOR elm : sutTypesList SEPARATOR ''','''»'«elm»'«ENDFOR»]
+		    sutTypesList = [«FOR elm : sutTransitionMap.keySet SEPARATOR ','»'«elm»'«ENDFOR»]
+		    sutVarTransitionMap = {}
 		    numTestCases = 0
 		    listOfEnvBlocks = []
 		    listOfSUTActions = []
@@ -394,6 +410,7 @@ class PetriNet {
 		    «print_SCNGen(num_tests, depth_limit)»
 		    
 		    def initializeTestGeneration(self):
+		        self.sutVarTransitionMap = {«FOR entry : sutTransitionMap.entrySet SEPARATOR ','»'«entry.key»': [«FOR v : entry.value SEPARATOR ','»'«v»'«ENDFOR»]«ENDFOR»}
 		        # map_of_transition_modes = {}
 		        for entry in self.visitedTList:
 		            if entry:
@@ -410,6 +427,10 @@ class PetriNet {
 		            # modes = set(v)
 		            for elm in v: # modes
 		                # print(elm)
+		                if k + "_" +elm.__repr__() in self.map_transition_modes_to_name:
+		                    print("WARN: duplicate modes detected for same transition.")
+		                    print(k + "_" +elm.__repr__())
+		                    print("WARN: references to the above transitions are ambigous!")
 		                self.map_transition_modes_to_name[k + "_" +elm.__repr__()] = k + "_" + str(cnt)
 		                # self.map_transition_modes_to_name[k + "_" + pprint.pformat(elm.items(), width=60, compact=True,depth=5)] = k + "_" + str(cnt)
 		                cnt = cnt + 1
@@ -472,7 +493,7 @@ class PetriNet {
 		                    j = j + 1
 		                _test_scn.compute_dependencies()
 		                _test_scn.generate_viz(i, output_dir=p.plantuml_dir)
-		                _test_scn.generateTSpec(i, pn.sutTypesList, output_dir=p.tspec_dir)
+		                _test_scn.generateTSpec(i, pn.sutTypesList, pn.sutVarTransitionMap, output_dir=p.tspec_dir)
 		                _tests.list_of_test_scn.append(_test_scn)
 		            i = i + 1
 		            

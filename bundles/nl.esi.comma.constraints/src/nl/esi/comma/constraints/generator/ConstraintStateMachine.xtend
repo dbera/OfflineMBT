@@ -1,3 +1,15 @@
+/**
+ * Copyright (c) 2024, 2025 TNO-ESI
+ *
+ * See the NOTICE file(s) distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This program and the accompanying materials are made available
+ * under the terms of the MIT License which is available at
+ * https://opensource.org/licenses/MIT
+ *
+ * SPDX-License-Identifier: MIT
+ */
 package nl.esi.comma.constraints.generator
 
 import dk.brics.automaton.Automaton
@@ -6,15 +18,14 @@ import java.io.IOException
 import java.io.InputStreamReader
 import java.io.PrintWriter
 import java.util.ArrayList
+import java.util.Arrays
 import java.util.HashMap
 import java.util.HashSet
 import java.util.List
 import java.util.Map
 import java.util.Set
-import java.util.regex.Pattern
-import org.eclipse.xtext.generator.IFileSystemAccess2
 import java.util.StringTokenizer
-import java.util.Arrays
+import org.eclipse.xtext.generator.IFileSystemAccess2
 
 class ConstraintStateMachine 
 {

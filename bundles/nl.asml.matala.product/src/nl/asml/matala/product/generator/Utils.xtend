@@ -1,3 +1,15 @@
+/**
+ * Copyright (c) 2024, 2025 TNO-ESI
+ *
+ * See the NOTICE file(s) distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This program and the accompanying materials are made available
+ * under the terms of the MIT License which is available at
+ * https://opensource.org/licenses/MIT
+ *
+ * SPDX-License-Identifier: MIT
+ */
 package nl.asml.matala.product.generator
 
 import java.util.ArrayList
@@ -417,24 +429,18 @@ class Utils
             def printData(self, idata):
                 txt = ""
                 for k, v in idata.items():
-                    txt += "%s : {\n" % k
+                    txt += "%s : " % k
                     j = json.loads(v)
                     txt += json.dumps(j, indent=4, sort_keys=False) + "\n"
                     # for jk in j.keys():
                     #     txt += self.recurseJson(j[jk], "%s.%s" % (k,jk))
-                    txt += "}\n"
                 return txt
                 
-            def generateTSpec(self, idx, sutTypesList, output_dir):
+            def generateTSpec(self, idx, sutTypesList, sutVarTransitionMap, output_dir):
                 txt = ""
                 txt += "import \"«pSpecFile»\"\n\n"
                 «(new Utils()).usageList(prod)»
                 txt += "\nabstract-test-definition\n\n"
-                if sutTypesList:
-                    txt += "\ntest-configuration-types {"
-                    for typ in sutTypesList:
-                        txt += "\n\t" + typ
-                    txt += "\n}\n\n"
                 txt += "Test-Scenario: S%s\n" % idx
                 for step in self.step_list:
                     if not step.is_assert:
@@ -443,6 +449,7 @@ class Utils
                         odata = step.output_data
                         parts = name.split("@")
                         new_name = parts[0] + parts[3]
+                        raw_name = parts[0]
                         if "RUN" in parts[2]:
                             type_name = ""
                             if not "null" in parts[1]:
@@ -461,7 +468,12 @@ class Utils
                                 txt += " }\n"
                         txt += "input-binding:\n"
                         txt += self.printData(idata)
+                        isSutVarPresent = False
                         for k, v in idata.items():
+                            if k in sutVarTransitionMap:
+                                for tr in sutVarTransitionMap[k]:
+                                    if tr == raw_name:
+                                       isSutVarPresent = True
                             if name.rsplit("_",1)[0] in self.constraint_dict:
                                 for constr in self.constraint_dict[name.rsplit("_",1)[0]]:
                                     if constr.var_ref == k and constr.dir == "IN":
@@ -473,6 +485,10 @@ class Utils
                         # if step.is_suppress:
                         # txt += "suppress\n"
                         for k, v in odata.items():
+                            if k in sutVarTransitionMap:
+                                for tr in sutVarTransitionMap[k]:
+                                    if tr == raw_name:
+                                       isSutVarPresent = True
                             if name.rsplit("_",1)[0] in self.constraint_dict:
                                 for constr in self.constraint_dict[name.rsplit("_",1)[0]]:
                                     if constr.var_ref == k and constr.dir == "OUT":
@@ -482,7 +498,12 @@ class Utils
                         if name.rsplit("_",1)[0] in self.tr_assert_ref_dict.keys():
                             txt += "output-assertion: %s\n" % new_name
                             txt += "%s\n" % self.tr_assert_ref_dict[name.rsplit("_",1)[0]]
-                    else:
+                        if isSutVarPresent:
+                            txt += "sut-var: { "
+                            for _v in sutVarTransitionMap:
+                                txt += "%s " % _v
+                            txt += " }\n"
+                    else: # deprecated branch.
                         name = step.step_name
                         idata = step.input_data
                         odata = step.output_data

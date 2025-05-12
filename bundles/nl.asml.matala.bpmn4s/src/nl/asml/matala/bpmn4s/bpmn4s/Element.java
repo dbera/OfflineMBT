@@ -1,3 +1,15 @@
+/*
+ * Copyright (c) 2024, 2025 TNO-ESI
+ *
+ * See the NOTICE file(s) distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This program and the accompanying materials are made available
+ * under the terms of the MIT License which is available at
+ * https://opensource.org/licenses/MIT
+ *
+ * SPDX-License-Identifier: MIT
+ */
 package nl.asml.matala.bpmn4s.bpmn4s;
 
 //import java.util.AbstractMap;
@@ -6,8 +18,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import nl.asml.matala.bpmn4s.Logging;
 
 
 public class Element {
@@ -75,6 +85,8 @@ public class Element {
 	 *  we consider this node an origin node.
 	 */
 	String originDataNodeId = null;
+	String[] linkedDataReferenceIds = new String[0];
+	boolean isSutConfigurations = false;
 	
 	public Element(ElementType type) {
 		this.type = type;
@@ -119,6 +131,10 @@ public class Element {
 		return this;
 	}
 	
+	public String getId() {
+		return this.id;
+	}
+	
 	public String getOriginDataNodeId() {
 		if (this.isReferenceData()) {
 			return this.originDataNodeId;
@@ -131,12 +147,16 @@ public class Element {
 		this.originDataNodeId = id;
 		return this;
 	}
-	
-	public String getId() {
-		return this.id;
+		
+	public String[] getLinkedDataReferenceIds() {
+		return linkedDataReferenceIds;
 	}
 	
-	
+	public Element setLinkedDataReferenceIds(String[] ids) {
+		this.linkedDataReferenceIds = ids;
+		return this;
+	}
+
 	public Element setStepType(String st) {
 		stepType = st;
 		return this;
@@ -248,6 +268,14 @@ public class Element {
 	
 	public String getInit() {
 		return init;
+	}
+	
+	public void setIsSutConfigurations(boolean conf) {
+		this.isSutConfigurations = conf;
+	}
+	
+	public boolean isSutConfigurations() {
+		return isSutConfigurations;
 	}
 	
 	// For action nodes
