@@ -3,6 +3,8 @@ package nl.esi.comma.testspecification.generator
 import nl.esi.comma.actions.actions.AssignmentAction
 import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
 import nl.esi.comma.expressions.expression.Expression
+import nl.esi.comma.expressions.expression.ExpressionMap
+import nl.esi.comma.expressions.expression.ExpressionRecord
 import nl.esi.comma.expressions.expression.ExpressionRecordAccess
 import nl.esi.comma.expressions.expression.ExpressionVector
 import nl.esi.comma.expressions.utilities.ProposalHelper
@@ -63,9 +65,11 @@ class MergeConcreteDataAssigments {
     }
 
     def dispatch private static Expression mergeData(Expression left, Expression right, String defaultValue) {
-        return if (left.serialize == defaultValue) {
+//        println('''mergeData<Val>(«left.serialize.unformat», «right.serialize.unformat», «defaultValue.unformat»)''')
+
+        return if (left.serialize.unformat == defaultValue.unformat) {
             right
-        } else if (right.serialize == defaultValue) {
+        } else if (right.serialize.unformat == defaultValue.unformat) {
             left
         } else {
             throw new RuntimeException('Cannot merge')
@@ -73,7 +77,35 @@ class MergeConcreteDataAssigments {
     }
 
     def dispatch private static Expression mergeData(ExpressionVector left, ExpressionVector right, String defaultValue) {
+//        println('''mergeData<Vec>(«left.serialize.unformat», «right.serialize.unformat», «defaultValue.unformat»)''')
+
         right.elements += left.elements
         return right
+    }
+
+    def dispatch private static Expression mergeData(ExpressionMap left, ExpressionMap right, String defaultValue) {
+//        println('''mergeData<Map>(«left.serialize.unformat», «right.serialize.unformat», «defaultValue.unformat»)''')
+
+        right.pairs += left.pairs
+        return right
+    }
+
+    def dispatch private static Expression mergeData(ExpressionRecord left, ExpressionRecord right, String defaultValue) {
+//        println('''mergeData<Rec>(«left.serialize.unformat», «right.serialize.unformat», «defaultValue.unformat»)''')
+
+        val leftFields = left.fields.toMap[recordField]
+        for (rightField : right.fields) {
+            val leftField = leftFields.remove(rightField.recordField)
+            if (leftField !== null) {
+                val fieldDefaultValue = ProposalHelper.defaultValue(rightField.recordField.type, rightField.recordField.name)
+                rightField.exp = mergeData(leftField.exp, rightField.exp, fieldDefaultValue)
+            }
+        }
+        right.fields += leftFields.values
+        return right
+    }
+
+    def private static String unformat(String text) {
+        return text.trim.replaceAll("\\s+", "");
     }
 }
