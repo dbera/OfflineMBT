@@ -293,11 +293,13 @@ class FromConcreteToFast extends AbstractGenerator {
         
         // generate data.kvp file
         fsa.generateFile(testDefFilePath + "data.kvp", generateFASTScenarioFile)
+        /* Added DB: 12.05.2025. Support PlantUML Generation for Review */
+        fsa.generateFile(testDefFilePath + "viz.plantuml", (new DocGen).generatePlantUMLFile(listStepInstances, new HashMap<String, List<String>>)) 
         
         // Generate JSON data files and vfd.xml
         generateJSONDataAndVFDFiles(testDefFilePath, fsa, modelInst)
     }
-    
+
     def private getCMStepRef(ContextMap cm) {
         var mapActToStepSequence = new HashMap<String,StepSequence>
         for(elm : cm.TMap) {
