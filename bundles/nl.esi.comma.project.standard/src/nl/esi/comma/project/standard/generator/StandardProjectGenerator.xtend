@@ -23,16 +23,14 @@ import nl.esi.comma.project.standard.standardProject.Project
 import nl.esi.comma.testspecification.generator.FromAbstractToConcrete
 import nl.esi.comma.testspecification.generator.FromConcreteToFast
 import nl.esi.comma.types.types.Import
-import nl.esi.comma.types.utilities.EcoreUtil3
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.emf.ecore.resource.ResourceSet
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
 
-import static extension nl.esi.comma.types.utilities.FileSystemAccessUtil.*
-
 import static extension nl.esi.comma.types.utilities.EcoreUtil3.*
+import static extension nl.esi.comma.types.utilities.FileSystemAccessUtil.*
 
 /**
  * Generates code from your model files on save.
@@ -87,11 +85,7 @@ class StandardProjectGenerator extends AbstractGenerator {
         // Generate abstract tspec from petri-net
         val petriNetURI = fsa.getURI('''CPNServer/«product.specification.name»/«product.specification.name».py''')
         val absTspecFsa = fsa.createFolderAccess('tspec_abstract')
-        var pnAbsTspec = new PetriNetToAbstractTspecGenerator()
-        if (task.pythonExe instanceof String) {
-            pnAbsTspec = new PetriNetToAbstractTspecGenerator(task.pythonExe)
-        }
-        pnAbsTspec.doGenerate(rst, petriNetURI, absTspecFsa, ctx)
+        (new PetriNetToAbstractTspecGenerator(task.pythonExe)).doGenerate(rst, petriNetURI, absTspecFsa, ctx)
 
         for (absTspecFileName : absTspecFsa.list(ROOT_PATH).filter[endsWith('.tspec')]) {
             val absTspecRes = absTspecFsa.loadResource(absTspecFileName, rst)
