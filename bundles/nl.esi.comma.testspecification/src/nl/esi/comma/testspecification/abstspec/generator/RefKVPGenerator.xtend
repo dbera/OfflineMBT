@@ -43,7 +43,7 @@ class RefKVPGenerator {
         '''
         matlab_calls=[
         «FOR testseq : atd.testSeq»
-            «FOR step : testseq.step.filter(AssertionStep) »
+            «FOR step : atd.testSeq.flatMap[testseq].step.filter(AssertionStep) »
             «FOR asrtce : step.asserts » 
             «FOR ce : asrtce.ce»
                 «FOR mlcal : step.asserts.flatMap[ce].flatMap[constr].filter(GenericScriptBlock) SEPARATOR ',' »
