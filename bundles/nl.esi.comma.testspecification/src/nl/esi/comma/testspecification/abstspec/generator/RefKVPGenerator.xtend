@@ -46,7 +46,7 @@ class RefKVPGenerator {
             «FOR step : testseq.step.filter(AssertionStep) »
             «FOR asrtce : step.asserts » 
             «FOR ce : asrtce.ce»
-                «FOR mlcal : step.asserts.flatMap[ce].flatMap[constr].filter(GenericScriptBlock) SEPARATOR ',' »
+                «FOR mlcal : ce.constr.filter(GenericScriptBlock) SEPARATOR ',' »
                 {
                     "id":"«mlcal.assignment.name»", 
                     "script_path":"«mlcal.params.scriptApi»",
