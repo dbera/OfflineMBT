@@ -47,7 +47,7 @@ import nl.esi.comma.project.standard.generator.StandardProjectGenerator;
 
 /**
  * CommaSuite Project Generator class used by UI implementations. (i.e.
- * {@link LaunchShortcut and @link GenerationHandler})
+ * {@link LaunchShortcut})
  * 
  */
 public class ProjectUIGenerator implements IRunnableWithProgress {

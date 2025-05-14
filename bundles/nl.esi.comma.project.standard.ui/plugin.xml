@@ -67,11 +67,6 @@
 				</and>
 			</activeWhen>
 		</handler>
-		<!-- Generator context menu handler -->
-		<handler 
-			class="nl.esi.comma.project.standard.ui.StandardProjectExecutableExtensionFactory:nl.esi.comma.project.ui.handler.GenerationHandler" 
-			commandId = "nl.esi.comma.project.ui.handler.GenerationCommand">
-		</handler>
 	</extension>
 	<extension point="org.eclipse.core.expressions.definitions">
 		<definition id="nl.esi.comma.project.standard.StandardProject.Editor.opened">
@@ -648,13 +643,6 @@
 				</visibleWhen>
 			</command>
 		</menuContribution>
-	</extension>
-	<extension
-		point="org.eclipse.ui.handlers">
-		<handler 
-			class="nl.esi.comma.doc.template.ImportTemplateHandler" 
-			commandId = "nl.esi.comma.doc.template.ImportTemplateCommand">
-		</handler>
 	</extension>
 	<extension
        point="org.eclipse.ui.commands">

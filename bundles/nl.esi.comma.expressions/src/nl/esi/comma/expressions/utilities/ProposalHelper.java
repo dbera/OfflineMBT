@@ -10,7 +10,7 @@
  *
  * SPDX-License-Identifier: MIT
  */
-package nl.esi.comma.expressions.ide.contentassist;
+package nl.esi.comma.expressions.utilities;
 
 import java.util.function.Function;
 import java.util.stream.Collectors;

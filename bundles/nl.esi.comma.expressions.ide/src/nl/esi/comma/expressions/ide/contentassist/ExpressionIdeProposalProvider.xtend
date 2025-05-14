@@ -23,6 +23,8 @@ import nl.esi.comma.expressions.expression.MapTypeConstructor
 import nl.esi.comma.expressions.expression.Pair
 import nl.esi.comma.expressions.expression.TypeAnnotation
 import nl.esi.comma.expressions.services.ExpressionGrammarAccess
+import nl.esi.comma.expressions.utilities.ProposalHelper
+import nl.esi.comma.expressions.utilities.UnsupportedTypeException
 import nl.esi.comma.expressions.validation.ExpressionFunction
 import nl.esi.comma.types.types.EnumTypeDecl
 import nl.esi.comma.types.types.Type
