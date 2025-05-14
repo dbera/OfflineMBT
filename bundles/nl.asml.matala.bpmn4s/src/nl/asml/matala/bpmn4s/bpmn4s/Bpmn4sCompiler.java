@@ -569,9 +569,9 @@ public class Bpmn4sCompiler{
 							if (e.getRefUpdate() != null && e.getRefUpdate() != "") {
 								task += "\nreferences {\n" + indent(replaceAll(e.getRefUpdate(), replaceMap)) + "\n}";
 							}
-							if (model.isComposeTask(node.getId()) || model.isRunTask(node.getId())) {
+							if (model.isExecutionTask(node.getId())) {
 								boolean isSymbolicLink = getAllDataOutputs(e.getTar()).stream().anyMatch(
-										d -> model.isComposeTask(d.getTar()) || model.isRunTask(d.getTar()));
+										d -> model.isExecutionTask(d.getTar()));
 								if (isSymbolicLink) {
 									task += " symbolic-link";
 								}
