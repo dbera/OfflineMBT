@@ -43,7 +43,7 @@ import static extension nl.esi.comma.types.utilities.EcoreUtil3.*
 
 class FromConcreteToFast extends AbstractGenerator {
     /* TODO this should come from project task? Investigate and Implement it. */
-    var record_path_for_lot_def = "TwinscanControllerInput.concrete_expose_job.lot_definition" 
+    var record_path_for_lot_def = "ReferenceFabModelTWINSCANtooladapterandSUTTWINSCANSUTExposeInput.twinscan_expose_input.lot_definition" 
     var record_lot_def_file_name = "lot_definition"
     var record_lot_def_file_path_prefix = "./vfab2_scenario/FAST/generated_FAST/dataset/"
     
