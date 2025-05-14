@@ -14,7 +14,7 @@ import nl.esi.comma.testspecification.testspecification.TestDefinition
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.emf.ecore.util.EcoreUtil
 
-import static extension nl.esi.comma.types.utilities.EcoreUtil3.serialize
+import static extension nl.esi.comma.types.utilities.EcoreUtil3.*
 
 class MergeConcreteDataAssigments {
     def static void transform(Resource resource) {
@@ -28,12 +28,12 @@ class MergeConcreteDataAssigments {
     def private static void mergeDataAssignments(RefStep refStep) {
         val assignments = newHashMap
         refStep.input.actions.filter(AssignmentAction).toList.forEach[ action |
-            action.mergeData(assignments.put(action.assignment.serialize, action))
+            action.mergeData(assignments.put(action.assignment.serialize(true), action))
         ]
 
         val recordFieldAssignments = newHashMap
         refStep.input.actions.filter(RecordFieldAssignmentAction).toList.forEach[ action |
-            action.mergeData(recordFieldAssignments.put(action.fieldAccess.serialize, action))
+            action.mergeData(recordFieldAssignments.put(action.fieldAccess.serialize(true), action))
         ]
     }
 
@@ -57,6 +57,7 @@ class MergeConcreteDataAssigments {
         val recordAccess = right.fieldAccess as ExpressionRecordAccess
         val defaultValue = ProposalHelper.defaultValue(recordAccess.field.type, recordAccess.field.name)
         try {
+            //println('''mergeData(«left.exp.serialize.unformat», «right.exp.serialize.unformat», «defaultValue.unformat»)''')
             right.exp = mergeData(left.exp, right.exp, defaultValue)
             EcoreUtil.delete(left)
         } catch (RuntimeException e) {
@@ -65,8 +66,6 @@ class MergeConcreteDataAssigments {
     }
 
     def dispatch private static Expression mergeData(Expression left, Expression right, String defaultValue) {
-//        println('''mergeData<Val>(«left.serialize.unformat», «right.serialize.unformat», «defaultValue.unformat»)''')
-
         return if (left.serialize.unformat == defaultValue.unformat) {
             right
         } else if (right.serialize.unformat == defaultValue.unformat) {
@@ -77,22 +76,16 @@ class MergeConcreteDataAssigments {
     }
 
     def dispatch private static Expression mergeData(ExpressionVector left, ExpressionVector right, String defaultValue) {
-//        println('''mergeData<Vec>(«left.serialize.unformat», «right.serialize.unformat», «defaultValue.unformat»)''')
-
         right.elements += left.elements
         return right
     }
 
     def dispatch private static Expression mergeData(ExpressionMap left, ExpressionMap right, String defaultValue) {
-//        println('''mergeData<Map>(«left.serialize.unformat», «right.serialize.unformat», «defaultValue.unformat»)''')
-
         right.pairs += left.pairs
         return right
     }
 
     def dispatch private static Expression mergeData(ExpressionRecord left, ExpressionRecord right, String defaultValue) {
-//        println('''mergeData<Rec>(«left.serialize.unformat», «right.serialize.unformat», «defaultValue.unformat»)''')
-
         val leftFields = left.fields.toMap[recordField]
         for (rightField : right.fields) {
             val leftField = leftFields.remove(rightField.recordField)

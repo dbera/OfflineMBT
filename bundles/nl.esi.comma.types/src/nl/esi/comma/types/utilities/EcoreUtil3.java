@@ -25,8 +25,13 @@ import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.util.Diagnostician;
 import org.eclipse.emf.ecore.util.EObjectValidator;
 import org.eclipse.xtext.EcoreUtil2;
+import org.eclipse.xtext.nodemodel.INode;
+import org.eclipse.xtext.resource.SaveOptions;
 import org.eclipse.xtext.resource.XtextResource;
 import org.eclipse.xtext.serializer.ISerializer;
+
+import com.google.inject.Guice;
+import com.google.inject.Module;
 
 import nl.esi.comma.types.types.Import;
 
@@ -66,21 +71,45 @@ public class EcoreUtil3 extends EcoreUtil2 {
 		return referenceURI;
 	}
 	
-	/**
-	 * Serialized an {@link EObject} to text, using its loaded {@link XtextResource}.
-	 */
-	public static String serialize(EObject eObject) {
+	public static <T extends EObject> T unformat(T eObject) {
 		if (eObject == null) {
 			return null;
 		}
-		Resource resource = eObject.eResource();
-		if (resource instanceof XtextResource xtextResource) {
-			ISerializer serializer = xtextResource.getResourceServiceProvider().get(ISerializer.class);
-			if (serializer != null) {
-				return serializer.serialize(eObject).trim();
-			}
+		removeFormatting(eObject);
+		eObject.eAllContents().forEachRemaining(EcoreUtil3::removeFormatting);
+		return eObject;
+	}
+
+	private static void removeFormatting(EObject eObject) {
+		eObject.eAdapters().removeIf(e -> e instanceof INode);
+	}
+
+	public static String serialize(EObject eObject) {
+		return serialize(eObject, false);
+	}
+
+	/**
+	 * Serialized an {@link EObject} to text, either using the {@link Module modules} or loaded {@link XtextResource}.
+	 */
+	public static String serialize(EObject eObject, boolean format, com.google.inject.Module... modules) {
+		if (eObject == null) {
+			return null;
 		}
-		throw new RuntimeException("Failed to serialize EObject: " + eObject);
+		ISerializer serializer = null;
+		if (modules != null && modules.length > 0) {
+			serializer = Guice.createInjector(modules).getInstance(ISerializer.class);
+		} else if (eObject.eResource() instanceof XtextResource xtextResource) {
+			serializer = xtextResource.getResourceServiceProvider().get(ISerializer.class);
+		}
+		
+		if (serializer == null) {
+			throw new RuntimeException("Failed to serialize EObject: " + eObject);
+		}
+		SaveOptions.Builder opt = SaveOptions.newBuilder();
+		if (format) {
+			opt.format();
+		}
+		return serializer.serialize(eObject, opt.getOptions()).trim();
 	}
 
 	/**

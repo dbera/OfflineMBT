@@ -40,11 +40,21 @@ class TypeUtilities {
 	 * Type is either a reference to a type declaration or an inline type constructor
 	 */
 	def static TypeObject getTypeObject(Type t) {
-		if(t instanceof TypeReference){
+		return if (t instanceof TypeReference) {
 			t.type
-		}else{
+		} else {
 			t as TypeObject
 		}
+	}
+	
+	def static Type asType(TypeObject t) {
+        return if (t instanceof TypeDecl) {
+            TypesFactory.eINSTANCE.createTypeReference => [
+                type = t
+            ]
+        } else {
+            t as Type
+        }
 	}
 	
 	/*
