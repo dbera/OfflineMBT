@@ -22,6 +22,7 @@ import nl.esi.comma.project.standard.standardProject.OfflineGenerationTarget
 import nl.esi.comma.project.standard.standardProject.Project
 import nl.esi.comma.testspecification.generator.FromAbstractToConcrete
 import nl.esi.comma.testspecification.generator.FromConcreteToFast
+import nl.esi.comma.testspecification.generator.MergeConcreteDataAssigments
 import nl.esi.comma.types.types.Import
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.emf.ecore.resource.ResourceSet
@@ -105,6 +106,8 @@ class StandardProjectGenerator extends AbstractGenerator {
             (new FromAbstractToConcrete()).doGenerate(absTspecRes, conTspecFsa, ctx)
 
             val conTspecRes = conTspecFsa.loadResource(absTspecFileName, rst)
+            MergeConcreteDataAssigments.transform(conTspecRes)
+            conTspecRes.save(null)
             conTspecRes.validate()
 
             if (task.target == OfflineGenerationTarget.FAST) {

@@ -43,7 +43,7 @@ import static extension nl.esi.comma.types.utilities.EcoreUtil3.*
 
 class FromConcreteToFast extends AbstractGenerator {
     /* TODO this should come from project task? Investigate and Implement it. */
-    var record_path_for_lot_def = "TwinscanControllerInput.concrete_expose_job.lot_definition" 
+    var record_path_for_lot_def = "ReferenceFabModelTWINSCANtooladapterandSUTTWINSCANSUTExposeInput.twinscan_expose_input.lot_definition" 
     var record_lot_def_file_name = "lot_definition"
     var record_lot_def_file_path_prefix = "./vfab2_scenario/FAST/generated_FAST/dataset/"
     
@@ -293,11 +293,13 @@ class FromConcreteToFast extends AbstractGenerator {
         
         // generate data.kvp file
         fsa.generateFile(testDefFilePath + "data.kvp", generateFASTScenarioFile)
+        /* Added DB: 12.05.2025. Support PlantUML Generation for Review */
+        fsa.generateFile(testDefFilePath + "viz.plantuml", (new DocGen).generatePlantUMLFile(listStepInstances, new HashMap<String, List<String>>)) 
         
         // Generate JSON data files and vfd.xml
         generateJSONDataAndVFDFiles(testDefFilePath, fsa, modelInst)
     }
-    
+
     def private getCMStepRef(ContextMap cm) {
         var mapActToStepSequence = new HashMap<String,StepSequence>
         for(elm : cm.TMap) {

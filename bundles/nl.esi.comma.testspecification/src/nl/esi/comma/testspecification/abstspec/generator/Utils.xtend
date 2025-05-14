@@ -35,6 +35,8 @@ import nl.esi.comma.types.types.TypesFactory
 import nl.esi.comma.types.types.VectorTypeConstructor
 import org.eclipse.emf.ecore.util.EcoreUtil
 
+import static extension nl.esi.comma.types.utilities.EcoreUtil3.serialize
+
 class Utils 
 {
     private new() {
@@ -49,10 +51,20 @@ class Utils
         return step.name.split('_').get(0)
     }
 
+    static def getInputVar(RunStep rstep) '''«rstep.system»Input'''
+
     // Gets the list of referenced compose steps
     // RULE. Exactly one referenced Compose Step.
     static def getComposeSteps(RunStep step) {
         return step.stepRef.map[refStep].filter(ComposeStep)
+    }
+
+    static def getSuppressedVarFields(ComposeStep cstep) {
+        switch (cstep.suppress) {
+            case null: newArrayList
+            case cstep.suppress.varFields.isEmpty: cstep.output.map[it.name.name]
+            default: cstep.suppress.varFields.map[it.serialize]
+        }
     }
 
     dispatch static def String printField(ExpressionRecordAccess exp) {
@@ -111,7 +123,7 @@ class Utils
             TSJsonBool: String.valueOf(json.value)
             TSJsonFloat: String.valueOf(json.value)
             TSJsonLong: String.valueOf(json.value)
-            TSJsonObject: json.members.join('{', ', ', '}')[key + ': ' value.stringValue]
+            TSJsonObject: json.members.join('{', ', ', '}')['''«key»: «value.stringValue»''']
             TSJsonArray: json.values.join('[', ', ', ']')[stringValue]
             default: throw new IllegalArgumentException('Unknown JSON type ' + json)
         }

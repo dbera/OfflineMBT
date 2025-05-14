@@ -13,7 +13,8 @@
 package nl.asml.matala.product.generator
 
 import java.util.ArrayList
-import java.util.HashSet
+import java.util.HashMap
+import java.util.LinkedHashSet
 import java.util.Set
 import nl.asml.matala.product.product.Block
 import nl.asml.matala.product.product.Blocks
@@ -46,6 +47,7 @@ import nl.esi.comma.expressions.expression.ExpressionGeq
 import nl.esi.comma.expressions.expression.ExpressionGreater
 import nl.esi.comma.expressions.expression.ExpressionLeq
 import nl.esi.comma.expressions.expression.ExpressionLess
+import nl.esi.comma.expressions.expression.ExpressionMap
 import nl.esi.comma.expressions.expression.ExpressionMapRW
 import nl.esi.comma.expressions.expression.ExpressionMaximum
 import nl.esi.comma.expressions.expression.ExpressionMinimum
@@ -66,10 +68,8 @@ import nl.esi.comma.expressions.expression.ExpressionVariable
 import nl.esi.comma.expressions.expression.ExpressionVector
 import nl.esi.comma.expressions.expression.Field
 import nl.esi.comma.expressions.expression.Variable
-import java.util.HashMap
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
-import nl.esi.comma.expressions.expression.ExpressionMap
 
 class Utils 
 {
@@ -325,8 +325,8 @@ class Utils
     }
 
     def getUniqueVariables(Product prod) {
-        var Set<Variable> varSet = new HashSet<Variable>()
-        var Set<Variable> varSetUniqueNames = new HashSet<Variable>()
+        var Set<Variable> varSet = new LinkedHashSet<Variable>()
+        var Set<Variable> varSetUniqueNames = new LinkedHashSet<Variable>()
         for (b : prod.eAllContents.filter(Block).toIterable) {
             varSet.addAll(b.invars)
             varSet.addAll(b.outvars)
@@ -390,9 +390,9 @@ class Utils
                 if len(self.step_dependencies):
                     for elm in self.step_dependencies:
                         txt += "%s ..> %s : uses\n" % (elm.step_name.replace("@","_"), elm.depends_on.replace("@","_"))
-                        txt += "note on link\n"
-                        txt += "%s" % elm.payload
-                        txt += "\nend note\n"
+                        # txt += "note on link\n"
+                        # txt += "%s" % elm.payload
+                        # txt += "\nend note\n"
                 txt += "@enduml"
         
                 fname = output_dir / f"scenario{str(idx)}.plantuml"
@@ -447,6 +447,7 @@ class Utils
                         name = step.step_name
                         idata = step.input_data
                         odata = step.output_data
+                        osuppress = step.output_suppress
                         parts = name.split("@")
                         new_name = parts[0] + parts[3]
                         raw_name = parts[0]
@@ -482,8 +483,8 @@ class Utils
                                             txt += "%s\n" % entry.name
                         txt += "output-data:\n"
                         txt += self.printData(odata)
-                        # if step.is_suppress:
-                        # txt += "suppress\n"
+                        if osuppress:
+                            txt += "suppress(%s)\n" % ", ".join(osuppress)
                         for k, v in odata.items():
                             if k in sutVarTransitionMap:
                                 for tr in sutVarTransitionMap[k]:
@@ -556,18 +557,20 @@ class Utils
             step_name = ""
             input_data = {}
             output_data = {}
+            output_suppress = []
             is_assert = False
-            # mapOfSuppressTransitionVars = {}
         
             def __init__(self, _is_assert):
                 self.step_name = ""
                 self.input_data = {}
                 self.output_data = {}
+                self.output_suppress = []
                 self.is_assert = _is_assert
-                # self.mapOfSuppressTransitionVars = mapOfSuppressTransitionVars
         
             def compare(self, _step, mapTrAssert):
                 for ipdata in self.output_data:
+                    if ipdata in self.output_suppress:
+                        continue
                     for opdata in _step.input_data:
                         if self.step_name.rsplit('_', 1)[0] in mapTrAssert:
                             if ipdata == opdata and ipdata in mapTrAssert[self.step_name.rsplit('_', 1)[0]]:
