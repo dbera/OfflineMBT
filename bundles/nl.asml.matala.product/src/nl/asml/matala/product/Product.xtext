@@ -142,7 +142,7 @@ SymbConstraint:
 
 DataAssertions: {DataAssertions}
     'assertions' name = ID '{' 
-        constr += DataAssertionItem*
+        constr += DataAssertionItem+
      '}'
 ;
 

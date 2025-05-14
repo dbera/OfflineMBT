@@ -43,7 +43,7 @@ ScriptParameterNamedPositional:
 
 ScriptParameterNamed: ScriptParameterNameOnly | ScriptParameterNamedArg ;
 ScriptParameterPositional: ScriptParameterPositionalFile | ScriptParameterPositionalSimple ;
-ScriptParameterWithValue: ScriptParameterNamedArg | ScriptParameterPositionalFile | ScriptParameterPositional ;
+ScriptParameterWithValue: ScriptParameterNamedArg | ScriptParameterPositional ;
 
 ScriptParameterNameOnly: "flag-argument"  "{" label=STRING "}" ;
 ScriptParameterNamedArg: "named-argument" "{" label=STRING "," val=Expression (file?="is-file")? "}" ;

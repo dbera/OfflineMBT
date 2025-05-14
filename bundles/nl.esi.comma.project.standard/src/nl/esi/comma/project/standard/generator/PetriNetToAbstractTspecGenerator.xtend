@@ -29,11 +29,11 @@ class PetriNetToAbstractTspecGenerator extends AbstractGenerator {
     val String pythonExe;
 
     new() {
-        this('python.exe')
+        this(null)
     }
 
     new(String pythonExe) {
-        this.pythonExe = pythonExe
+        this.pythonExe = pythonExe ?: 'python.exe'
     }
 
     override doGenerate(Resource res, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
