@@ -60,7 +60,7 @@ class RefKVPGenerator {
             «FOR ce : asrtce.ce»
                 «FOR mlcal : ce.constr.filter(GenericScriptBlock) SEPARATOR ',' »
                 {
-                    "id":"«mlcal.assignment.name»", 
+                    "id":"«getScriptId(mlcal,step)»", 
                     "script_path":"«mlcal.params.scriptApi»",
                     "parameters":[
                         {
@@ -91,7 +91,7 @@ class RefKVPGenerator {
             «FOR ce : asrtce.ce»
                 «FOR asrt : ce.constr.filter(AssertThatBlock) SEPARATOR ',' »
                 {
-                    "id":"«asrt.identifier»", "type":"«getAssertionType(asrt.^val)»",
+                    "id":"«getScriptId(asrt,step)»", "type":"«getAssertionType(asrt.^val)»",
                     "input":{
                         "output":«expression(asrt, step)»,
                         «extractAssertionParams(asrt.^val, step)»
@@ -166,9 +166,32 @@ class RefKVPGenerator {
     }
 
     def String getExpressionPrefix(ExpressionVariable expr, AssertionStep step) {
-        var vari = expr.variable
-        if (vari.eContainer instanceof GenericScriptBlock) return "['matlab_script']"
-        else return "['step_output']"+getExpressionInfix(expr, step)
+        var vari = expr.variable.eContainer
+        if (vari instanceof GenericScriptBlock) {
+            return String.format("['matlab_script']['%s']",
+                getScriptId(vari, step)
+            )
+        }
+        else {
+            return String.format("['step_output']['%s']",
+                getExpressionInfix(expr, step)
+            )
+        }
+    }
+    
+    def String getScriptId(GenericScriptBlock block, AssertionStep assertStep) {
+        return getDatacheckId(block.assignment.name,assertStep)
+    }
+    
+    def String getScriptId(AssertThatBlock block, AssertionStep assertStep) {
+        return getDatacheckId(block.identifier,assertStep)
+    }
+    
+    def getDatacheckId(String label, AssertionStep assertStep) {
+        return String.format("%s__AT__%s",
+            label,
+            assertStep.name
+        )
     }
 
     private def String getExpressionInfix(ExpressionVariable expr, AssertionStep assertStep) {
@@ -177,7 +200,7 @@ class RefKVPGenerator {
                 for (step : consumesFrom.refData) {
                 	// TODO check if this is the right way to find the step from which an input is consumed
                 	if (step.name == expr.variable.name){ 
-                	    return String.format("['%s']",consumesFrom.refStep.name)
+                	    return consumesFrom.refStep.name
                 	}
                 }
             }
