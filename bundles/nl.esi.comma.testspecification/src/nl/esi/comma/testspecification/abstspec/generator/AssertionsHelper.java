@@ -12,11 +12,12 @@
  */
 package nl.esi.comma.testspecification.abstspec.generator;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.eclipse.emf.ecore.EObject;
+
+import nl.esi.comma.assertthat.assertThat.GenericScriptBlock;
 import nl.esi.comma.expressions.expression.Expression;
 import nl.esi.comma.expressions.expression.ExpressionBracket;
 import nl.esi.comma.expressions.expression.ExpressionConstantBool;
@@ -103,7 +104,9 @@ public class AssertionsHelper {
 			String map = expression(e.getRecord(), variablePrefix);
 			return String.format("%s['%s']", map, e.getField().getName());
 		} else if (expression instanceof ExpressionVariable v) {
-			return String.format("['%s']", variablePrefix.apply(v.getVariable().getName()));
+	        EObject vari = v.getVariable().eContainer();
+	        if (vari instanceof GenericScriptBlock) return variablePrefix.apply("");
+	        else return String.format("['%s']", variablePrefix.apply(v.getVariable().getName()));
 		} else if (expression instanceof ExpressionVector e) {
 			return String.format("[%s]", e.getElements().stream().map(ee -> expression (ee, variablePrefix)).collect(Collectors.joining(", ")));
 		} else if (expression instanceof ExpressionMapRW) {
