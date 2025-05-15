@@ -66,15 +66,12 @@ class RefKVPGenerator {
                         {
                             "type": "OUTPUT",
                             "value":"«mlcal.params.scriptOut»"
-                        }«IF ! mlcal.params.scriptArgs.empty»,
-                        «FOR param : mlcal.params.scriptArgs SEPARATOR ","»
+                        }«FOR param : mlcal.params.scriptArgs BEFORE "," SEPARATOR ","»
                         {
                             «IF param instanceof ScriptParameterNamed»"name": "«getScriptParamName(param)»",
                             «ENDIF»"type": "«getScriptParamType(param)»"«IF param instanceof ScriptParameterWithValue»,
                             "value": «expression(param, step)»«ENDIF»
-                        }
-                        «ENDFOR»
-                        «ENDIF»
+                        }«ENDFOR»
                     ]
                 }
                 «ENDFOR»
