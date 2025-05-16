@@ -54,10 +54,10 @@ class RefKVPGenerator {
         var txt = 
         '''
         matlab_calls=[
-        «FOR testseq : atd.testSeq»
-            «FOR step : testseq.step.filter(AssertionStep) »
-            «FOR asrtce : step.asserts » 
-            «FOR ce : asrtce.ce»
+        «FOR testseq : atd.testSeq  SEPARATOR ',' »
+            «FOR step : testseq.step.filter(AssertionStep)  SEPARATOR ',' »
+            «FOR asrtce : step.asserts  SEPARATOR ',' » 
+            «FOR ce : asrtce.ce  SEPARATOR ',' »
                 «FOR mlcal : ce.constr.filter(GenericScriptBlock) SEPARATOR ',' »
                 {
                     "id":"«getScriptId(mlcal,step)»", 
@@ -82,10 +82,10 @@ class RefKVPGenerator {
         ]
 
         assertions = [
-        «FOR testseq : atd.testSeq»
-            «FOR step : testseq.step.filter(AssertionStep) » 
-            «FOR asrtce : step.asserts »
-            «FOR ce : asrtce.ce»
+        «FOR testseq : atd.testSeq SEPARATOR ',' »
+            «FOR step : testseq.step.filter(AssertionStep) SEPARATOR ',' » 
+            «FOR asrtce : step.asserts SEPARATOR ',' »
+            «FOR ce : asrtce.ce SEPARATOR ',' »
                 «FOR asrt : ce.constr.filter(AssertThatBlock) SEPARATOR ',' »
                 {
                     "id":"«getScriptId(asrt,step)»", "type":"«getAssertionType(asrt.^val)»",
@@ -185,7 +185,7 @@ class RefKVPGenerator {
     }
     
     def getDatacheckId(String label, AssertionStep assertStep) {
-        return String.format("%s__AT__%s",
+        return String.format("%s__@__%s",
             label,
             assertStep.name
         )
