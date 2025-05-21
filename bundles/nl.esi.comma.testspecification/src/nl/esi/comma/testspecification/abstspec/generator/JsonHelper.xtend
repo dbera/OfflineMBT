@@ -17,6 +17,14 @@ import nl.esi.comma.assertthat.assertThat.JsonMember
 import nl.esi.comma.assertthat.assertThat.JsonObject
 import nl.esi.comma.assertthat.assertThat.JsonValue
 import nl.esi.comma.expressions.expression.Expression
+import nl.esi.comma.testspecification.testspecification.TSJsonMember
+import nl.esi.comma.testspecification.testspecification.TSJsonObject
+import nl.esi.comma.testspecification.testspecification.TSJsonArray
+import nl.esi.comma.testspecification.testspecification.TSJsonValue
+import nl.esi.comma.testspecification.testspecification.TSJsonString
+import nl.esi.comma.testspecification.testspecification.TSJsonBool
+import nl.esi.comma.testspecification.testspecification.TSJsonFloat
+import nl.esi.comma.testspecification.testspecification.TSJsonLong
 
 /**
  * Parser for json elements, objects, and arrays
@@ -34,15 +42,37 @@ class JsonHelper {
         return '''
         {
             «FOR aMember: jsonObject.members SEPARATOR ","»
-            	«jsonElement(aMember)»
+                «jsonElement(aMember)»
             «ENDFOR»
         }'''
     }
+    def static String toXMLElement(TSJsonObject jsonObject)
+        '''
+        «FOR aMember: jsonObject.members»
+        «toXMLElement(aMember)»
+        «ENDFOR»
+        '''
+    def static String toXMLElement(TSJsonArray jsonObject)
+        '''
+        «FOR aMember: jsonObject.values»
+        «toXMLElement(aMember)»
+        «ENDFOR»
+        '''
 
     /**
      * parses a json member into a "key:value" string format
      */
     def static String jsonElement(JsonMember elem)  '''"«elem.key»" : «jsonElement(elem.value)»'''
+    def static String toXMLElement(TSJsonMember elem)  
+        '''
+        «IF (isBasicType(elem.value) && elem.value != null)  »
+        <«elem.key»>«toXMLElement(elem.value)»</«elem.key»>
+        «ELSE»
+        <«elem.key»>
+            «toXMLElement(elem.value)»
+        </«elem.key»>
+        «ENDIF»
+        '''
 
     /**
      * Parses an array of json elements into string format.
@@ -67,5 +97,27 @@ class JsonHelper {
         if (elem.jsonArr instanceof JsonArray)  return jsonElement(elem.jsonArr)
         if (elem.jsonObj instanceof JsonObject) return jsonElement(elem.jsonObj) 
         throw new RuntimeException("Not supported");
+    }
+    def static boolean isBasicType(TSJsonValue elem) {
+        switch (elem) {
+            TSJsonString: return true
+            TSJsonBool:   return true
+            TSJsonFloat:  return true
+            TSJsonLong:  return true
+            TSJsonObject: return false 
+            TSJsonArray: return false 
+        	default: throw new RuntimeException("Not supported")
+    	}
+	}
+    def static String toXMLElement(TSJsonValue elem) {
+        switch (elem) {
+            TSJsonString: return elem.value
+            TSJsonBool:   return elem.value.toString
+            TSJsonFloat:  return elem.value.toString
+            TSJsonLong:  return elem.value.toString
+            TSJsonObject: return toXMLElement(elem) 
+            TSJsonArray: return toXMLElement(elem) 
+        	default: throw new RuntimeException("Not supported")
+    	}
     }
 }
