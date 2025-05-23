@@ -29,6 +29,7 @@ import org.eclipse.xtext.generator.IGeneratorContext
 
 import static extension nl.esi.comma.testspecification.abstspec.generator.Utils.*
 import static extension nl.esi.comma.types.utilities.EcoreUtil3.*
+import nl.esi.comma.testspecification.abstspec.generator.VFDXMLGenerator
 
 class FromAbstractToConcrete extends AbstractGenerator {
     override doGenerate(Resource res, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
@@ -45,6 +46,7 @@ class FromAbstractToConcrete extends AbstractGenerator {
         fsa.generateFile(res.URI.lastSegment, atd.generateConcreteTest())
         fsa.generateFile('data.kvp', (new DataKVPGenerator()).generateFAST(atd))
         fsa.generateFile("reference.kvp", (new RefKVPGenerator()).generateRefKVP(atd))
+        fsa.generateFile("vfd.xml", (new VFDXMLGenerator()).generateXMLFromSUTVars(atd))
     }
 
     def private generateConcreteTest(AbstractTestDefinition atd) '''
