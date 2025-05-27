@@ -391,7 +391,7 @@ public class Main {
 				}
 			}
 			ftype = ftype.equals("") ? tref : ftype;
-			Boolean fSuppress = "true".equalsIgnoreCase(f.getAttributeValue("suppressUpdate"));
+			Boolean fSuppress = "true".equalsIgnoreCase(f.getAttributeValueNs("http://bpmn4s", "suppressUpdate"));
 			rec.addField(fname, ftype, fSuppress);
 		}
 		return rec;
@@ -459,7 +459,7 @@ public class Main {
 			if(suppress == null) suppress = "";
 			if(update.strip().startsWith("=")) update = update.substring(1); // FIXME due to issues with bpmn4s editor lsp integration
 			Edge e = new Edge(da.getId(), Edge.EDGE_TYPE_DATA, src, update, ref_update, sym_update, dst);
-			if (suppress.equals("true")) e.makeSupressed();
+			if (suppress.equalsIgnoreCase("true")) e.makeSupressed();
 			model.addEdge(e);
 		}
 		for (DataInputAssociation da: inputs) {
@@ -516,9 +516,9 @@ public class Main {
 		node.setContext(contextName, contextTypeName, contextInit);
 		
 		
-		if(type.equals(ElementType.TASK))
-		{
+		if(type.equals(ElementType.TASK)) {
 			node.setContextUpdate(elem.getAttributeValueNs("http://bpmn4s", "ctxUpdate"));
+			node.setContextSuppressed("true".equalsIgnoreCase(elem.getAttributeValueNs("http://bpmn4s", "suppressUpdate")));
 		}
 
 		if(taskType.equals(ElementType.ASSERT_TASK)) {
@@ -526,18 +526,10 @@ public class Main {
 		}
 		
 		model.addElement(id, node);
-		if (elem instanceof FlowNode) {
-			resolveNodeEdges((FlowNode) elem, node);
-		}
-	}
-
-	static void resolveNodeEdges(FlowNode elem, Element node) {
-		for(SequenceFlow out: elem.getOutgoing()) {
-			Edge e = makeFlowEdge(out);
-			// Flow nodes may update the context FIXME check if can remove this contextupdate from the edge
-			String ctxUpdate = elem.getAttributeValueNs("http://bpmn4s", "ctxUpdate");
-			e.setUpdate(ctxUpdate != null ? ctxUpdate : "");
-			model.addEdge(e);
+		if (elem instanceof FlowNode flowNode) {
+			for(SequenceFlow out: flowNode.getOutgoing()) {
+				model.addEdge(makeFlowEdge(out));
+			}
 		}
 	}
 
@@ -547,8 +539,6 @@ public class Main {
 		String srcId = source.getId();
 		String tarId= target.getId();
 		Edge e = new Edge(elem.getId(), Edge.EDGE_TYPE_FLOW, srcId, "", "", "", tarId);
-		boolean suppress = "true".equals(source.getAttributeValueNs("http://bpmn4s", "suppressUpdate"));
-		if (suppress) e.makeSupressed();
 		return e;
 	}
 	
