@@ -72,119 +72,7 @@ class FromConcreteToFast extends AbstractGenerator {
 
         generateContents(res, fsa) // Parsing and File Generation
     }
-    
-    // This function was specifically written for transformation of abstract test cases
-    // to concrete test specification. Consider moving it somewhere dedicated!
-    def private generateAbstractTest(Resource res, IFileSystemAccess2 fsa) 
-    {
-        val modelInst = res.contents.head as TSMain // This is our abstract test spec
-        var testDefFilePath = new String
-        var mapActToStepSequence = new HashMap<String,StepSequence>
-        
-        for(imp : modelInst.imports) {
-            // expect: import of only context map type.
-            // Assumption: At most one
-            val inputCMResource = imp.resource
-            var inputCM = inputCMResource.contents.head
-            if(inputCM instanceof TSMain) {
-                if(inputCM.model instanceof ContextMap) {
-                    mapActToStepSequence = getCMStepRef(inputCM.model as ContextMap)
-                    // now we will recursively parse this files imports
-                    var TSMain _inputTSpec
-                    for(cm_imp : inputCM.imports) {
-                        // Assumption: At most one import
-                        val inputTSRes = cm_imp.resource
-                        var inputTSpec = inputTSRes.contents.head
-                        if(inputTSpec instanceof TSMain) {
-                            _inputTSpec = inputTSpec
-                            // Process TSPEC Imports.
-                            for(_imp : inputTSpec.imports) {
-                                val inputResource = _imp.resource
-                                var input = inputResource.contents.head
-                                if( input instanceof Main) {
-                                    if(input.model instanceof APIDefinition) {
-                                        val apidef = input.model as APIDefinition
-                                        for(api : apidef.apiImpl) {
-                                            for(elm : api.di)
-                                                addMapDataInstanceToFile(elm.^var.name, api.path + elm.fname)
-                                        }
-                                    } 
-                                    else if(input.model instanceof SUTDefinition) { } 
-                                    else { System.out.println("Error: Unhandled Model Type! ")}
-                                }
-                            }
-                        }
-                    }
-                    
-                    if(_inputTSpec !== null)
-                    {
-                        // Parse TSPEC Test Definition
-                        val model = _inputTSpec.model
-                        val abstract_model = modelInst.model
-                        if(model instanceof TestDefinition) 
-                        {
-                            if(abstract_model instanceof AbstractTestDefinition) 
-                                testDefFilePath = abstract_model.filePath
-                            //for(gpars : model.gparams) { addMapLocalDataVarToDataInstance(gpars.name, new String) }
-                            for(steppars : model.stepparams) { 
-                                addMapLocalStepInstance(steppars.name, steppars.type.type.name)
-                            }
-                            //for(sutpars : model.sutparams) { addMapLocalSUTVarToDataInstance(sutpars.name, new String) }
-                            for(act : model.gparamsInitActions) {
-                                var mapLHStoRHS = generateInitAssignmentAction(act)
-                                addMapLocalDataVarToDataInstance(mapLHStoRHS.key, mapLHStoRHS.value)
-                            }
-                            for(act : model.sutInitActions) {
-                                var mapLHStoRHS = generateInitAssignmentAction(act)
-                                addMapLocalSUTVarToDataInstance(mapLHStoRHS.key, mapLHStoRHS.value)
-                            }
-                            
-                            // Parse Step Sequence 
-                            val stepSequence = getAbstractStepSequence((abstract_model as AbstractTestDefinition), mapActToStepSequence)
-                            for(s : stepSequence) {
-                                var stepInst = new Step
-                                stepInst.id = s.inputVar.name //stepVar.name // was identifier
-                                stepInst.type = s.type.name
-                                stepInst.inputFile = mapDataInstanceToFile.get(s.stepVar.name).head
-                                // check if additional data was specified in a step
-                                for(ref : s.refStep) {
-                                //if(s.input!==null) {
-                                    for(act : ref.input.actions) {
-                                        if( act instanceof AssignmentAction || act instanceof RecordFieldAssignmentAction) 
-                                        {
-                                            var mapLHStoRHS = generateInitAssignmentAction(act)
-                                            stepInst.parameters.add(mapLHStoRHS)
-                                            var lhs = getLHS(act) // note key = record variable, and value = recExp
-                                            stepInst.variableName = lhs.key
-                                            stepInst.recordExp = lhs.value
-                                        }
-                                    }
-                                }
-                                listStepInstances.add(stepInst)
-                            }
-                        }
-                        
-                        // update step file names based on checking if additional data was specified. 
-                        for(step : listStepInstances) {
-                            if(!step.parameters.isEmpty) {
-                                step.inputFile = step.inputFile.replaceAll(".json", "_" + step.id + ".json")
-                            }
-                        }
-                        
-                        // Turn off during production!
-                        displayParseResults
-                        
-                        // generate data.kvp file
-                        fsa.generateFile(testDefFilePath + "data.kvp", generateFASTScenarioFile)
-                        
-                        // Generate JSON data files and vfd.xml
-                        generateJSONDataAndVFDFiles(testDefFilePath, fsa, _inputTSpec)
-                    }
-                }
-            }   
-        }
-    }
-    
+
     // Generate data.kvp and referenced JSON files
     def private generateContents(Resource res, IFileSystemAccess2 fsa)
     {
@@ -257,7 +145,10 @@ class FromConcreteToFast extends AbstractGenerator {
                                 if(stepInst.isStepRefPresent(lhs.value)) {
                                     var refStep = stepInst.getStepRefs(lhs.value)
                                     refStep.parameters.add(mapLHStoRHS)
-                                } else {                                                                
+                                    stepInst.stepRefs.add(refStep) // Added DB: 28.05.2025 
+                                    // Part of Fix to handle step references 
+                                    // When data is explicitly separated (e.g. lot definition)
+                                } else {
                                     // Create new step instance and fill all details there
                                     // Add to list of step reference of step
                                     var rstepInst = new Step
@@ -784,11 +675,33 @@ class FromConcreteToFast extends AbstractGenerator {
     def private generateFASTRefStepTxt(Step step) {
         var refTxt = new ArrayList<CharSequence>
         var refKeyList = new HashSet<String>
+        // System.out.println(" Step Name: " + step.id)
         for(kv : step.parameters) {
+            // System.out.println(" Parameters ")
+            kv.display
             for(rk : kv.refKey) {
+                // System.out.println(" KeyValue Pair:  " + rk)
                 if(!refKeyList.contains(rk)) {
+                    // System.out.println(" Added Ref Link ")
                     refTxt.add('''"_«rk»" : "«rk»"''')
                     refKeyList.add(rk)
+                }
+            }
+        }
+        // Added DB. 28.05.2025. 
+        // Fix to handle step references when data is explicitly separated (e.g. lot definition)
+        for(sref : step.stepRefs) {
+            //System.out.println(" REF Step ID: " + sref.id)
+            for(kv : sref.parameters){
+                //System.out.println(" REF STEP Parameters ")
+                //kv.display 
+                for(rk : kv.refKey) {
+                    //System.out.println(" REF STEP KeyValue Pair:  " + rk)
+                    if(!refKeyList.contains(rk)) {
+                        //System.out.println(" Added REF STEP Ref Link ")
+                        refTxt.add('''"_«rk»" : "«rk»"''')
+                        refKeyList.add(rk)
+                    }
                 }
             }
         }
