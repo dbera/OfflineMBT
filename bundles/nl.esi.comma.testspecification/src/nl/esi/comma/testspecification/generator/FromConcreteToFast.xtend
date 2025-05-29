@@ -137,7 +137,10 @@ class FromConcreteToFast extends AbstractGenerator {
                             var lhs = getLHS(act) // note key = record variable, and value = recExp
                             stepInst.variableName = lhs.key // Note DB: This is the same for all actions
                             stepInst.recordExp = lhs.value // Note DB: This keeps overwriting (record prefix)
-                            // System.out.println("DEBUG: " + lhs.value)
+                            /*System.out.println("DEBUG LHS.KEY: " + lhs.key)
+                            System.out.println("DEBUG LHS.VALUE: " + lhs.value)
+                            System.out.println("DEBUG MAP LHStoRHS: ")
+                            mapLHStoRHS.display*/
                             // System.out.println("DEBUG: " + record_path_for_lot_def)
                             if(record_path_for_lot_def.equals(lhs.value) || 
                                 record_path_for_lot_def.endsWith(lhs.value)
@@ -145,9 +148,7 @@ class FromConcreteToFast extends AbstractGenerator {
                                 if(stepInst.isStepRefPresent(lhs.value)) {
                                     var refStep = stepInst.getStepRefs(lhs.value)
                                     refStep.parameters.add(mapLHStoRHS)
-                                    stepInst.stepRefs.add(refStep) // Added DB: 28.05.2025 
-                                    // Part of Fix to handle step references 
-                                    // When data is explicitly separated (e.g. lot definition)
+                                    // stepInst.stepRefs.add(refStep)
                                 } else {
                                     // Create new step instance and fill all details there
                                     // Add to list of step reference of step
@@ -159,7 +160,8 @@ class FromConcreteToFast extends AbstractGenerator {
                                                           s.inputVar.name + ".json"*/
                                     rstepInst.variableName = record_lot_def_file_name
                                     rstepInst.recordExp = stepInst.id
-                                    stepInst.stepRefs.add(rstepInst)                    
+                                    rstepInst.parameters.add(mapLHStoRHS) // Added DB 29.05.2025
+                                    stepInst.stepRefs.add(rstepInst)
                                 }
                             } else {
                                 stepInst.parameters.add(mapLHStoRHS)
