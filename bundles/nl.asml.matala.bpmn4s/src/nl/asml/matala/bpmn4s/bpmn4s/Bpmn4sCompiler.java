@@ -602,7 +602,9 @@ public class Bpmn4sCompiler{
 							if (e.getRefUpdate() != null && e.getRefUpdate() != "") {
 								task += "\nreferences {\n" + indent(replaceAll(e.getRefUpdate(), replaceMap)) + "\n}\n";
 							}
-							if (node.isContextSuppressed()) {
+							if (node.isContextSuppressed() || // Modeler suppresses this context
+								model.getElementById(cId).context.dataType == "" // Auto constructed context is always suppressed
+								) {
 								task += " suppress";
 							} else {
 								Set<String> suppressedFields = collectSuppressedFields(
