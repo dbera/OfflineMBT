@@ -45,6 +45,17 @@ public class Element {
 		return context_update;
 	}
 
+	// Tasks may suppress context
+	boolean context_suppressed = false;
+	
+	public void setContextSuppressed(boolean suppressed) {
+		context_suppressed = suppressed;
+	}
+	
+	public boolean isContextSuppressed() {
+		return context_suppressed;
+	}
+
 	// For ASSERT tasks:
 	String assertions = null;
 	

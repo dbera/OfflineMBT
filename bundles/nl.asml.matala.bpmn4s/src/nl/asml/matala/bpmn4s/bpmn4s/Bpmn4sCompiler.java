@@ -602,8 +602,16 @@ public class Bpmn4sCompiler{
 							if (e.getRefUpdate() != null && e.getRefUpdate() != "") {
 								task += "\nreferences {\n" + indent(replaceAll(e.getRefUpdate(), replaceMap)) + "\n}\n";
 							}
-							if (e.isSuppressed()) {
+							if (node.isContextSuppressed()) {
 								task += " suppress";
+							} else {
+								Set<String> suppressedFields = collectSuppressedFields(
+										model.getElementById(cId).getContextDataType(),
+										postCtxName + '.',
+										new HashSet<String>());
+								if (!suppressedFields.isEmpty()) {
+									task += suppressedFields.stream().collect(Collectors.joining(", "," suppress(", ")"));
+								}
 							}
 							task += "\n";
 							String updates = "";
