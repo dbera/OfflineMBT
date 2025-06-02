@@ -16,6 +16,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.ArrayList
 import java.util.HashMap
+import java.util.Map
 import java.util.List
 import java.util.TreeSet
 import java.util.stream.Collectors
@@ -36,16 +37,26 @@ class VFDXMLGenerator {
     String loc=''
     String title=''
 
-    new(){ }
+    new(){
+        this(new HashMap<String,String>())
+    }
 
     new(String ns, String xsi, String loc, String title){
-        this()
-        this.ns = ns
+        this.ns=ns
         this.xsi=xsi
         this.loc=loc
         this.title=title
     }
-    
+
+    new(Map<String, String> map) {
+        this(
+            map.getOrDefault("ns",""),
+            map.getOrDefault("xsi",""),
+            map.getOrDefault("loc",""),
+            map.getOrDefault("title","")
+        )
+    }
+
     def generateXMLFromSUTVars(AbstractTestDefinition atd) 
     {
         var now = LocalDateTime.now();
