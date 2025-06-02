@@ -54,11 +54,9 @@ class RefKVPGenerator {
         var txt = 
         '''
         matlab_calls=[
-        «FOR testseq : atd.testSeq»
-            «FOR step : testseq.step.filter(AssertionStep) »
-            «FOR asrtce : step.asserts » 
-            «FOR ce : asrtce.ce»
-                «FOR mlcal : ce.constr.filter(GenericScriptBlock) SEPARATOR ',' »
+            «FOR testseq : atd.testSeq  SEPARATOR ',' »
+                «FOR step : testseq.step.filter(AssertionStep) SEPARATOR ',' »
+                «FOR mlcal : step.asserts.flatMap(a| a.ce).flatMap(i| i.constr).filter(GenericScriptBlock) SEPARATOR ',' »
                 {
                     "id":"«getScriptId(mlcal,step)»", 
                     "script_path":"«mlcal.params.scriptApi»",
@@ -68,25 +66,21 @@ class RefKVPGenerator {
                             "value":"«mlcal.params.scriptOut»"
                         }«FOR param : mlcal.params.scriptArgs BEFORE "," SEPARATOR ","»
                         {
-                            «IF param instanceof ScriptParameterNamed»"name": "«getScriptParamName(param)»",
-                            «ENDIF»"type": "«getScriptParamType(param)»"«IF param instanceof ScriptParameterWithValue»,
+                            «IF param instanceof ScriptParameterNamed»"name": "«getScriptParamName(param)»",«ENDIF»
+                            "type": "«getScriptParamType(param)»"«IF param instanceof ScriptParameterWithValue»,
                             "value": «expression(param, step)»«ENDIF»
                         }«ENDFOR»
                     ]
                 }
                 «ENDFOR»
+                «ENDFOR»
             «ENDFOR»
-            «ENDFOR»
-            «ENDFOR»
-        «ENDFOR»
         ]
 
         assertions = [
-        «FOR testseq : atd.testSeq»
-            «FOR step : testseq.step.filter(AssertionStep) » 
-            «FOR asrtce : step.asserts »
-            «FOR ce : asrtce.ce»
-                «FOR asrt : ce.constr.filter(AssertThatBlock) SEPARATOR ',' »
+            «FOR testseq : atd.testSeq  SEPARATOR ',' »
+                «FOR step : testseq.step.filter(AssertionStep) SEPARATOR ',' »
+                «FOR asrt : step.asserts.flatMap(a| a.ce).flatMap(i| i.constr).filter(AssertThatBlock) SEPARATOR ',' »
                 {
                     "id":"«getScriptId(asrt,step)»", "type":"«getAssertionType(asrt.^val)»",
                     "input":{
@@ -95,10 +89,8 @@ class RefKVPGenerator {
                     }
                 }
                 «ENDFOR»
+                «ENDFOR»
             «ENDFOR»
-            «ENDFOR»
-            «ENDFOR»
-        «ENDFOR»
         ]
         '''
         return txt
@@ -185,7 +177,7 @@ class RefKVPGenerator {
     }
     
     def getDatacheckId(String label, AssertionStep assertStep) {
-        return String.format("%s__AT__%s",
+        return String.format("%s__@__%s",
             label,
             assertStep.name
         )
