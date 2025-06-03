@@ -32,6 +32,7 @@ import org.eclipse.xtext.generator.IGeneratorContext
 
 import static extension nl.esi.comma.types.utilities.EcoreUtil3.*
 import static extension nl.esi.comma.types.utilities.FileSystemAccessUtil.*
+import java.util.HashMap
 
 /**
  * Generates code from your model files on save.
@@ -103,7 +104,8 @@ class StandardProjectGenerator extends AbstractGenerator {
 
             // Generate concrete tspec
             val conTspecFsa = fsa.createFolderAccess('tspec_concrete')
-            (new FromAbstractToConcrete()).doGenerate(absTspecRes, conTspecFsa, ctx)
+            val fromAbstractToConcreteGen = new FromAbstractToConcrete(createPropertiesMap())
+            fromAbstractToConcreteGen.doGenerate(absTspecRes, conTspecFsa, ctx)
 
             val conTspecRes = conTspecFsa.loadResource(absTspecFileName, rst)
             MergeConcreteDataAssigments.transform(conTspecRes)
@@ -113,8 +115,15 @@ class StandardProjectGenerator extends AbstractGenerator {
             if (task.target == OfflineGenerationTarget.FAST) {
                 // Generate FAST testcases
                 val fastFsa = fsa.createFolderAccess('FAST')
+                fromAbstractToConcreteGen.doGenerateFAST(absTspecRes, fastFsa, ctx)
                 (new FromConcreteToFast()).doGenerate(conTspecRes, fastFsa, ctx)
             }
         }
     }
+
+    def createPropertiesMap() {
+        var properties = new HashMap<String, String>()
+        return properties
+    }
+
 }

@@ -65,12 +65,13 @@ class JsonHelper {
     def static String jsonElement(JsonMember elem)  '''"«elem.key»" : «jsonElement(elem.value)»'''
     def static String toXMLElement(TSJsonMember elem)  
         '''
-        «IF (isBasicType(elem.value) && elem.value != null)  »
-        <«elem.key»>«toXMLElement(elem.value)»</«elem.key»>
+        «val elemKey = elem.key»
+        «IF (isBasicType(elem.value) && elem.value !== null)  »
+        <«elemKey»>«toXMLElement(elem.value)»</«elemKey»>
         «ELSE»
-        <«elem.key»>
+        <«elemKey»>
             «toXMLElement(elem.value)»
-        </«elem.key»>
+        </«elemKey»>
         «ENDIF»
         '''
 

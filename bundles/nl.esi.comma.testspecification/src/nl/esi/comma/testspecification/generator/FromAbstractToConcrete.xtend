@@ -30,8 +30,22 @@ import org.eclipse.xtext.generator.IGeneratorContext
 import static extension nl.esi.comma.testspecification.abstspec.generator.Utils.*
 import static extension nl.esi.comma.types.utilities.EcoreUtil3.*
 import nl.esi.comma.testspecification.abstspec.generator.VFDXMLGenerator
+import java.util.HashMap
+import java.util.Map
 
 class FromAbstractToConcrete extends AbstractGenerator {
+
+
+    HashMap<String, String> properties
+
+    new(){
+        this(new HashMap<String,String>())
+    }
+
+    new(HashMap<String,String> kvpair) {
+        this.properties = kvpair
+    }
+
     override doGenerate(Resource res, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
         val atd = res.contents.filter(TSMain).map[model].filter(AbstractTestDefinition).head
         if (atd === null) {
@@ -44,9 +58,22 @@ class FromAbstractToConcrete extends AbstractGenerator {
             fsa.generateFile('''parameters/«sys».params''', atd.generateParamsFile(sys))
         }
         fsa.generateFile(res.URI.lastSegment, atd.generateConcreteTest())
+        doGenerateFAST(res,fsa,ctx)
+    }
+
+    def doGenerateFAST(Resource res, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
+        val atd = res.contents.filter(TSMain).map[model].filter(AbstractTestDefinition).head
+        if (atd === null) {
+            throw new Exception('No abstract tspec found in resource: ' + res.URI)
+        }
+
         fsa.generateFile('data.kvp', (new DataKVPGenerator()).generateFAST(atd))
         fsa.generateFile("reference.kvp", (new RefKVPGenerator()).generateRefKVP(atd))
-        fsa.generateFile("vfd.xml", (new VFDXMLGenerator()).generateXMLFromSUTVars(atd))
+        fsa.generateFile("vfd.xml", (new VFDXMLGenerator(createVFDXMLPropertiesMap())).generateXMLFromSUTVars(atd))
+    }
+
+    def Map<String,String> createVFDXMLPropertiesMap() {
+        return this.properties
     }
 
     def private generateConcreteTest(AbstractTestDefinition atd) '''
