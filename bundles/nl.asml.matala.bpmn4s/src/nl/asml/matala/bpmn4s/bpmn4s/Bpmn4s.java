@@ -216,4 +216,8 @@ public class Bpmn4s {
 	public int getNumOfTests() {
 		return this.numOfTests;
 	}
+	
+	public boolean componentDefinesContext (String id) {
+		return this.isComponent(id) && this.getElementById(id).context.isDefined();
+	}
 }

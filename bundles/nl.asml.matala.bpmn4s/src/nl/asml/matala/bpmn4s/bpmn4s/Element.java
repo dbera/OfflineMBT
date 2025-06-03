@@ -32,6 +32,11 @@ public class Element {
 			this.dataType = dataType;
 			this.init = init;
 		}
+		
+		public boolean isDefined () {
+			return name != "" && name != null && dataType != "" && dataType != null;
+		}
+		
 	}
 	
 	// Tasks may update context
