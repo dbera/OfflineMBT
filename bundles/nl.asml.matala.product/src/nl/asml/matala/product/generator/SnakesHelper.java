@@ -141,7 +141,7 @@ class SnakesHelper {
 			return String.format("%s / %s", expression(e.getLeft(), variablePrefix), expression(e.getRight(), variablePrefix));
 		} else if (expression instanceof ExpressionModulo) {
 			ExpressionModulo e = (ExpressionModulo) expression;
-			return String.format("%s % %s", expression(e.getLeft(), variablePrefix), expression(e.getRight(), variablePrefix));
+			return String.format("%s %% %s", expression(e.getLeft(), variablePrefix), expression(e.getRight(), variablePrefix));
 		} else if (expression instanceof ExpressionMinimum) {
 			ExpressionMinimum e = (ExpressionMinimum) expression;
 			return String.format("min(%s, %s)", expression(e.getLeft(), variablePrefix), expression(e.getRight(), variablePrefix));
