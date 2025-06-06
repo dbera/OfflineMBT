@@ -158,8 +158,15 @@ def handle_transition_fire(uuid: str):
     pn = utils.get_cpn(uuid)
     payload = request.get_json()
     choice = payload['choice']
-    pn.fireEnabledTransition(pn.getEnabledTransitions(), choice)
-    response = {'response': {'executed_transition_idx': choice}}
+    enabled_t = pn.getEnabledTransitions()
+    _r = pn.fireEnabledTransition(enabled_t, choice)
+
+    marks_data = {}
+    for idx, item in enumerate(_r):
+        marks_data[idx] = {}
+        for k in item:
+            marks_data[idx][k] = item[k].items()  # convert multi-set to list with items()
+    response = {'response': {'executed_transition_idx': choice,'markings_produced': marks_data}}
     return jsonify(response)
 
 
