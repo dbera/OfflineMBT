@@ -51,8 +51,8 @@ import nl.esi.comma.testspecification.testspecification.RunStep
 
 class RefKVPGenerator {
     def generateRefKVP(AbstractTestDefinition atd) {
-        var constraints = atd.testSeq.flatMap(i|i.step).filter(AssertionStep)
-                                     .flatMap(i|i.asserts).flatMap(a| a.ce).flatMap(i| i.constr)
+        var constraints = atd.testSeq.flatMap[it.step].filter(AssertionStep)
+                                     .flatMap[it.asserts].flatMap[it.ce].flatMap[it.constr]
         var hasScripts = ! constraints.filter(GenericScriptBlock).empty
         var hasAsserts = ! constraints.filter(AssertThatBlock).empty
         var txt = ''
@@ -60,7 +60,7 @@ class RefKVPGenerator {
             matlab_calls=[
                 «FOR testseq : atd.testSeq  SEPARATOR ',' »
                     «FOR step : testseq.step.filter(AssertionStep) SEPARATOR ',' »
-                    «FOR mlcal : step.asserts.flatMap(a| a.ce).flatMap(i| i.constr).filter(GenericScriptBlock) SEPARATOR ',' »
+                    «FOR mlcal : step.asserts.flatMap[it.ce].flatMap[it.constr].filter(GenericScriptBlock) SEPARATOR ',' »
                     {
                         "id":"«getScriptId(mlcal,step)»", 
                         "script_path":"«mlcal.params.scriptApi»",
@@ -87,7 +87,7 @@ class RefKVPGenerator {
             asserts = [
                 «FOR testseq : atd.testSeq  SEPARATOR ',' »
                     «FOR step : testseq.step.filter(AssertionStep) SEPARATOR ',' »
-                    «FOR asrt : step.asserts.flatMap(a| a.ce).flatMap(i| i.constr).filter(AssertThatBlock) SEPARATOR ',' »
+                    «FOR asrt : step.asserts.flatMap[it.ce].flatMap[it.constr].filter(AssertThatBlock) SEPARATOR ',' »
                     {
                         "id":"«getScriptId(asrt,step)»", "type":"«getAssertionType(asrt.^val)»",
                         "input":{
