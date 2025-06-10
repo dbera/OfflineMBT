@@ -1,0 +1,9 @@
+grammar nl.esi.comma.causalgraph.CausalGraph with org.eclipse.xtext.common.Terminals
+
+generate causalGraph "http://www.esi.nl/comma/causalgraph/CausalGraph"
+
+Model:
+	greetings+=Greeting*;
+	
+Greeting:
+	'Hello' name=ID '!';

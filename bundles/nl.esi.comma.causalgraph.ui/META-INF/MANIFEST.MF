@@ -1,0 +1,25 @@
+Manifest-Version: 1.0
+Automatic-Module-Name: nl.esi.comma.causalgraph.ui
+Bundle-ManifestVersion: 2
+Bundle-Name: nl.esi.comma.causalgraph.ui
+Bundle-Vendor: My Company
+Bundle-Version: 1.0.0.qualifier
+Bundle-SymbolicName: nl.esi.comma.causalgraph.ui; singleton:=true
+Bundle-ActivationPolicy: lazy
+Require-Bundle: nl.esi.comma.causalgraph,
+ nl.esi.comma.causalgraph.ide,
+ org.eclipse.xtext.ui,
+ org.eclipse.xtext.ui.shared,
+ org.eclipse.xtext.ui.codetemplates.ui,
+ org.eclipse.ui.editors;bundle-version="3.14.300",
+ org.eclipse.ui.ide;bundle-version="3.18.500",
+ org.eclipse.ui,
+ org.eclipse.compare,
+ org.eclipse.xtext.builder,
+ org.eclipse.xtext.xbase.lib;bundle-version="2.36.0",
+ org.eclipse.xtend.lib;bundle-version="2.36.0";resolution:=optional
+Import-Package: org.apache.log4j
+Bundle-RequiredExecutionEnvironment: JavaSE-21
+Export-Package: nl.esi.comma.causalgraph.ui.internal,
+ nl.esi.comma.causalgraph.ui.quickfix
+Bundle-Activator: nl.esi.comma.causalgraph.ui.internal.CausalgraphActivator
