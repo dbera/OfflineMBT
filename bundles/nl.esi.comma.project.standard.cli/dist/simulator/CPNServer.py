@@ -166,7 +166,7 @@ def handle_transition_fire(uuid: str):
         marks_data[idx] = {}
         for k in item:
             marks_data[idx][k] = item[k].items()  # convert multi-set to list with items()
-    response = {'response': {'executed_transition_idx': choice,'markings_produced': marks_data}}
+    response = {'response': {'executed_transition_idx': choice, 'markings_consumed': marks_data[0],'markings_produced': marks_data[1]}}
     return jsonify(response)
 
 
