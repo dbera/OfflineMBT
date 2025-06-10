@@ -77,7 +77,7 @@ class RefKVPGenerator {
             «ENDFOR»
         ]
 
-        assertions = [
+        asserts = [
             «FOR testseq : atd.testSeq  SEPARATOR ',' »
                 «FOR step : testseq.step.filter(AssertionStep) SEPARATOR ',' »
                 «FOR asrt : step.asserts.flatMap(a| a.ce).flatMap(i| i.constr).filter(AssertThatBlock) SEPARATOR ',' »
@@ -310,7 +310,9 @@ class RefKVPGenerator {
                     }
                 «ENDFOR»
         ]«IF paths.namespace !== null»,
-        "namespaces":«JsonHelper.jsonElement(paths.namespace.namespaceMap)»«ENDIF»
+        "namespaces":«JsonHelper.jsonElement(paths.namespace.namespaceMap)»«ENDIF»«IF paths.globalMargin !== null»«IF paths.globalMargin.margin !== null»,
+        «extractAssertionParams(paths.globalMargin.margin)»
+        «ENDIF»«ENDIF»
         '''
     }
     def String extractAssertionParams(AssertThatXMLFile xmlfile, AssertionStep step) {
