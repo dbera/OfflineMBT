@@ -51,48 +51,56 @@ import nl.esi.comma.testspecification.testspecification.RunStep
 
 class RefKVPGenerator {
     def generateRefKVP(AbstractTestDefinition atd) {
-        var txt = 
-        '''
-        matlab_calls=[
-            «FOR testseq : atd.testSeq  SEPARATOR ',' »
-                «FOR step : testseq.step.filter(AssertionStep) SEPARATOR ',' »
-                «FOR mlcal : step.asserts.flatMap(a| a.ce).flatMap(i| i.constr).filter(GenericScriptBlock) SEPARATOR ',' »
-                {
-                    "id":"«getScriptId(mlcal,step)»", 
-                    "script_path":"«mlcal.params.scriptApi»",
-                    "parameters":[
-                        {
-                            "type": "OUTPUT",
-                            "value":"«mlcal.params.scriptOut»"
-                        }«FOR param : mlcal.params.scriptArgs BEFORE "," SEPARATOR ","»
-                        {
-                            «IF param instanceof ScriptParameterNamed»"name": "«getScriptParamName(param)»",«ENDIF»
-                            "type": "«getScriptParamType(param)»"«IF param instanceof ScriptParameterWithValue»,
-                            "value": «expression(param, step)»«ENDIF»
-                        }«ENDFOR»
-                    ]
-                }
-                «ENDFOR»
-                «ENDFOR»
-            «ENDFOR»
-        ]
-
-        assertions = [
-            «FOR testseq : atd.testSeq  SEPARATOR ',' »
-                «FOR step : testseq.step.filter(AssertionStep) SEPARATOR ',' »
-                «FOR asrt : step.asserts.flatMap(a| a.ce).flatMap(i| i.constr).filter(AssertThatBlock) SEPARATOR ',' »
-                {
-                    "id":"«getScriptId(asrt,step)»", "type":"«getAssertionType(asrt.^val)»",
-                    "input":{
-                        "output":«expression(asrt, step)»,
-                        «extractAssertionParams(asrt.^val, step)»
+        var constraints = atd.testSeq.flatMap[it.step].filter(AssertionStep)
+                                     .flatMap[it.asserts].flatMap[it.ce].flatMap[it.constr]
+        var hasScripts = ! constraints.filter(GenericScriptBlock).empty
+        var hasAsserts = ! constraints.filter(AssertThatBlock).empty
+        var txt = ''
+        if (hasScripts) txt+='''
+            matlab_calls=[
+                «FOR testseq : atd.testSeq  SEPARATOR ',' »
+                    «FOR step : testseq.step.filter(AssertionStep) SEPARATOR ',' »
+                    «FOR mlcal : step.asserts.flatMap[it.ce].flatMap[it.constr].filter(GenericScriptBlock) SEPARATOR ',' »
+                    {
+                        "id":"«getScriptId(mlcal,step)»", 
+                        "script_path":"«mlcal.params.scriptApi»",
+                        "parameters":[
+                            {
+                                "type": "OUTPUT",
+                                "value":"«mlcal.params.scriptOut»"
+                            }«FOR param : mlcal.params.scriptArgs BEFORE "," SEPARATOR ","»
+                            {
+                                «IF param instanceof ScriptParameterNamed»"name": "«getScriptParamName(param)»",«ENDIF»
+                                "type": "«getScriptParamType(param)»"«IF param instanceof ScriptParameterWithValue»,
+                                "value": «expression(param, step)»«ENDIF»
+                            }«ENDFOR»
+                        ]
                     }
-                }
+                    «ENDFOR»
+                    «ENDFOR»
                 «ENDFOR»
+            ]
+
+            '''
+
+        if (hasAsserts) txt+='''
+            asserts = [
+                «FOR testseq : atd.testSeq  SEPARATOR ',' »
+                    «FOR step : testseq.step.filter(AssertionStep) SEPARATOR ',' »
+                    «FOR asrt : step.asserts.flatMap[it.ce].flatMap[it.constr].filter(AssertThatBlock) SEPARATOR ',' »
+                    {
+                        "id":"«getScriptId(asrt,step)»", "type":"«getAssertionType(asrt.^val)»",
+                        "input":{
+                            "output":«expression(asrt, step)»,
+                            «extractAssertionParams(asrt.^val, step)»
+                        }
+                    }
+                    «ENDFOR»
+                    «ENDFOR»
                 «ENDFOR»
-            «ENDFOR»
-        ]
-        '''
+            ]
+
+            '''
         return txt
     }
 
@@ -310,7 +318,9 @@ class RefKVPGenerator {
                     }
                 «ENDFOR»
         ]«IF paths.namespace !== null»,
-        "namespaces":«JsonHelper.jsonElement(paths.namespace.namespaceMap)»«ENDIF»
+        "namespaces":«JsonHelper.jsonElement(paths.namespace.namespaceMap)»«ENDIF»«IF paths.globalMargin !== null»«IF paths.globalMargin.margin !== null»,
+        «extractAssertionParams(paths.globalMargin.margin)»
+        «ENDIF»«ENDIF»
         '''
     }
     def String extractAssertionParams(AssertThatXMLFile xmlfile, AssertionStep step) {
