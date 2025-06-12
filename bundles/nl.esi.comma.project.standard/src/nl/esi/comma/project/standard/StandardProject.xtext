@@ -22,14 +22,26 @@ Project:
 ;
 
 OfflineGenerationBlock:
-	'Generate' target=OfflineGenerationTarget '{'
-		name = ID '{'
+    'Generate' target=OfflineGenerationTarget '{'
+        name = ID '{'
             (('bpmn-file' bpmn = STRING) | ('product-file' product = STRING))
-			('num-tests' numTests = INT)?
-			('depth-limit' depthLimit = INT)?
+            ('num-tests' numTests = INT)?
+            ('depth-limit' depthLimit = INT)?
             ('path-to-python-exe' pythonExe = STRING)?
-		'}'
-	'}'
+            ('using-settings' '{'
+                ('set-variable' generatorVariables = TargetConfig)
+                ('rename-field' renameFields = TargetConfig)?
+            '}')?
+        '}'
+    '}'
+;
+
+TargetConfig: 
+    '{' item += TargetConfigItem ("," item += TargetConfigItem)* '}'
+;
+
+TargetConfigItem:
+    key = ID "=" val = STRING
 ;
 
 enum OfflineGenerationTarget:
