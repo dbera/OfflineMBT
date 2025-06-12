@@ -1,0 +1,17 @@
+Manifest-Version: 1.0
+Automatic-Module-Name: nl.esi.comma.causalgraph.ide
+Bundle-ManifestVersion: 2
+Bundle-Name: nl.esi.comma.causalgraph.ide
+Bundle-Vendor: TNO-ESI
+Bundle-Version: 4.2.0.qualifier
+Bundle-SymbolicName: nl.esi.comma.causalgraph.ide; singleton:=true
+Bundle-ActivationPolicy: lazy
+Require-Bundle: nl.esi.comma.causalgraph,
+ org.eclipse.xtext.ide,
+ org.eclipse.xtext.xbase.ide,
+ org.antlr.runtime;bundle-version="[3.2.0,3.2.1)",
+ nl.esi.comma.actions.ide;bundle-version="4.2.0"
+Bundle-RequiredExecutionEnvironment: JavaSE-21
+Export-Package: nl.esi.comma.causalgraph.ide.contentassist.antlr.internal,
+ nl.esi.comma.causalgraph.ide.contentassist.antlr,
+ nl.esi.comma.causalgraph.ide.contentassist

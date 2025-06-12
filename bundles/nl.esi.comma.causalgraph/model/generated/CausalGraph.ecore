@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" name="causalGraph" nsURI="http://www.esi.nl/comma/causalgraph/CausalGraph"
+    nsPrefix="causalGraph">
+  <eClassifiers xsi:type="ecore:EClass" name="CausalGraph">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="name" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="ns" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="className" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="graphType" eType="#//GraphType"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="vars" upperBound="-1" eType="ecore:EClass platform:/resource/nl.esi.comma.expressions/model/generated/Expression.ecore#//Variable"
+        containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="func" upperBound="-1" eType="#//FunctionCallDecl"
+        containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="nodes" upperBound="-1"
+        eType="#//Node" containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="cfedges" upperBound="-1"
+        eType="#//CFEdge" containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="dfedges" upperBound="-1"
+        eType="#//DFEdge" containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="GraphType">
+    <eLiterals name="cg" literal="CausalGraph"/>
+    <eLiterals name="ucg" value="1" literal="UnifiedCausalGraph"/>
+    <eLiterals name="rcg" value="2" literal="ReducedCausalGraph"/>
+    <eLiterals name="bdducg" value="3" literal="BDDUnifiedCausalGraph"/>
+    <eLiterals name="bddcg" value="4" literal="BDDCausalGraph"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="StepType">
+    <eLiterals name="given" literal="Given"/>
+    <eLiterals name="when" value="1" literal="When"/>
+    <eLiterals name="then" value="2" literal="Then"/>
+    <eLiterals name="and" value="3" literal="And"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Node">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="name" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="localVars" upperBound="-1"
+        eType="ecore:EClass platform:/resource/nl.esi.comma.expressions/model/generated/Expression.ecore#//Variable"
+        containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="act" upperBound="-1" eType="ecore:EClass platform:/resource/nl.esi.comma.actions/model/generated/Actions.ecore#//Action"
+        containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="stepName" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="stepArgsInitActions" upperBound="-1"
+        eType="#//KeyValuePair" containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="stepType" eType="#//StepType"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="initActions" upperBound="-1"
+        eType="ecore:EClass platform:/resource/nl.esi.comma.actions/model/generated/Actions.ecore#//Action"
+        containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="KeyValuePair">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="param" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="value" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="testCaseID" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="requirementID" unique="false"
+        upperBound="-1" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="DFEdge">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="src" eType="#//Node"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="refVarList" unique="false"
+        upperBound="-1" eType="ecore:EClass platform:/resource/nl.esi.comma.expressions/model/generated/Expression.ecore#//Variable"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="dst" eType="#//Node"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="initActions" upperBound="-1"
+        eType="ecore:EClass platform:/resource/nl.esi.comma.actions/model/generated/Actions.ecore#//Action"
+        containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="CFEdge">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="src" eType="#//Node"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="dst" eType="#//Node"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="initActions" upperBound="-1"
+        eType="ecore:EClass platform:/resource/nl.esi.comma.actions/model/generated/Actions.ecore#//Action"
+        containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="FunctionCallDecl">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="type" eType="ecore:EClass platform:/resource/nl.esi.comma.types/model/generated/Types.ecore#//Type"
+        containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="name" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="args" upperBound="-1" eType="ecore:EClass platform:/resource/nl.esi.comma.expressions/model/generated/Expression.ecore#//Variable"
+        containment="true"/>
+  </eClassifiers>
+</ecore:EPackage>
