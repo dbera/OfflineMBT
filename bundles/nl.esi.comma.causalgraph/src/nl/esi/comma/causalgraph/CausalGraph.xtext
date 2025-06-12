@@ -1,9 +1,77 @@
-grammar nl.esi.comma.causalgraph.CausalGraph with org.eclipse.xtext.common.Terminals
+/**
+ * Copyright (c) 2024, 2025 TNO-ESI
+ *
+ * See the NOTICE file(s) distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This program and the accompanying materials are made available
+ * under the terms of the MIT License which is available at
+ * https://opensource.org/licenses/MIT
+ *
+ * SPDX-License-Identifier: MIT
+ */
+ 
+grammar nl.esi.comma.causalgraph.CausalGraph with nl.esi.comma.actions.Actions
 
 generate causalGraph "http://www.esi.nl/comma/causalgraph/CausalGraph"
 
-Model:
-	greetings+=Greeting*;
-	
-Greeting:
-	'Hello' name=ID '!';
+import "http://www.esi.nl/comma/signature/InterfaceSignature" as sig 
+import "http://www.esi.nl/comma/types/Types" as types
+import "http://www.esi.nl/comma/expressions/Expression" as expr
+
+CausalGraph:
+    'graph' name=ID '{'
+        ('namespace' ns = STRING)?
+        ('class-name' className = STRING)?
+        'graph-type' graphType = GraphType
+        ('variables' vars+=Variable+)?
+        ('functions' func+=FunctionCallDecl+)?
+        nodes += Node*
+        cfedges += CFEdge*
+        dfedges += DFEdge*
+    '}'
+;
+
+enum GraphType:
+    cg = 'CausalGraph' |
+    ucg = 'UnifiedCausalGraph' |
+    rcg = 'ReducedCausalGraph' |
+    bdducg = 'BDDUnifiedCausalGraph' |
+    bddcg = 'BDDCausalGraph'
+;
+
+enum StepType:
+    given = 'Given' |
+    when = 'When' |
+    then = 'Then' |
+    and = 'And'
+;
+
+Node:
+    'node' name=ID ':' ('local-variables' localVars+=Variable+)? 'actions' act += Action+
+    ('step-name' ':' stepName = STRING)?
+    // ('step-args' ':' stepArgsInitActions+=(AssignmentAction | RecordFieldAssignmentAction)+)?
+    ('step-args' ':' stepArgsInitActions+=KeyValuePair+)?
+    ('step-type' ':' stepType = StepType)?
+    ('meta-data' initActions+=(AssignmentAction | RecordFieldAssignmentAction)+)?
+;
+
+KeyValuePair:
+    ('param' param = STRING 'value' value = STRING)?
+    'test-case-id' testCaseID = STRING 
+    'requirement-id' requirementID += STRING+
+;
+
+DFEdge: 
+    'data-flow-edge' src = [Node|ID] '-[' refVarList += [expr::Variable|ID]* ']-|>' dst = [Node|ID]
+    ('meta-data' initActions+=(AssignmentAction | RecordFieldAssignmentAction)+)?
+;
+
+CFEdge: 
+    'control-flow-edge' src = [Node|ID] '-->' dst = [Node|ID]
+    ('meta-data' initActions+=(AssignmentAction | RecordFieldAssignmentAction)+)?
+;
+
+FunctionCallDecl: type = Type name = ID
+    '(' (args += Variable (',' args += Variable)*)? ')'
+;

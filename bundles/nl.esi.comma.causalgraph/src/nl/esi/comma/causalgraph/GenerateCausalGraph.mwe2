@@ -27,6 +27,8 @@ Workflow {
 		language = StandardLanguage {
 			name = "nl.esi.comma.causalgraph.CausalGraph"
 			fileExtensions = "cg"
+			
+			referencedResource = "platform:/resource/nl.esi.comma.actions/model/generated/Actions.genmodel"
 
 			serializer = {
 				generateStub = false
