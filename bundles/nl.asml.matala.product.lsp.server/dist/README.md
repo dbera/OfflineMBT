@@ -2,6 +2,15 @@
 
 This readme explains howto run the BPMN4S editor, including support for writing and validating data expressions, as well as the transformation of BPMN models into a coloured petri net (CPN) module and its simulation via a (python-based) REST server.
 
+**!!! IMPORTANT !!!**
+
+BPMN models from version v0.3.x and earlier need to be migrated before used with v0.4.x or later.
+To migrate your model, use the following command (the original bpmn file will be backed up with an `.orig` file extension):
+
+```
+sed -e 's/__uuid__\s*=\s*uuid()\s*,\(&#10;\|\s\)*//g' -e '/<bpmn4s:field name="__uuid__" typeRef="String"/d' -i.orig <bpmn_file.bpmn>
+```
+
 ## Starting the LSP server
 
 To get data expression editing support, the data expression language server needs to be started before loading a bpmn model.
