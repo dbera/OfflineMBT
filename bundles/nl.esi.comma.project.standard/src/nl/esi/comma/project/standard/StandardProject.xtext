@@ -29,8 +29,8 @@ OfflineGenerationBlock:
             ('depth-limit' depthLimit = INT)?
             ('path-to-python-exe' pythonExe = STRING)?
             ('using-settings' '{'
-                ('generator-params' generatorParams = TargetConfig) &
-                ('field-renaming-rules' renamingRules = TargetConfig)
+                ('generator-params' generatorParams = TargetConfig) ?
+                ('field-renaming-rules' renamingRules = TargetConfig) ?
             '}')?
         '}'
     '}'
@@ -41,7 +41,7 @@ TargetConfig:
 ;
 
 TargetConfigItem:
-    key = ID ":" val = STRING
+    key = STRING ":" val = STRING
 ;
 
 enum OfflineGenerationTarget:
