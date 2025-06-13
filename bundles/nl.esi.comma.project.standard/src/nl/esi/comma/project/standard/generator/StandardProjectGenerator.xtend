@@ -20,6 +20,7 @@ import nl.asml.matala.product.product.Product
 import nl.esi.comma.project.standard.standardProject.OfflineGenerationBlock
 import nl.esi.comma.project.standard.standardProject.OfflineGenerationTarget
 import nl.esi.comma.project.standard.standardProject.Project
+import nl.esi.comma.project.standard.standardProject.TargetConfig
 import nl.esi.comma.testspecification.generator.FromAbstractToConcrete
 import nl.esi.comma.testspecification.generator.FromConcreteToFast
 import nl.esi.comma.testspecification.generator.MergeConcreteDataAssigments
@@ -104,7 +105,10 @@ class StandardProjectGenerator extends AbstractGenerator {
 
             // Generate concrete tspec
             val conTspecFsa = fsa.createFolderAccess('tspec_concrete')
-            val fromAbstractToConcreteGen = new FromAbstractToConcrete(createPropertiesMap())
+
+            val renamingRules = task.renamingRules !== null? createPropertiesMap(task.renamingRules): new HashMap()
+            val generatorParams = task.generatorParams !== null? createPropertiesMap(task.generatorParams): new HashMap()
+            val fromAbstractToConcreteGen = new FromAbstractToConcrete(renamingRules, generatorParams)
             fromAbstractToConcreteGen.doGenerate(absTspecRes, conTspecFsa, ctx)
 
             val conTspecRes = conTspecFsa.loadResource(absTspecFileName, rst)
@@ -121,9 +125,12 @@ class StandardProjectGenerator extends AbstractGenerator {
         }
     }
 
-    def createPropertiesMap() {
-        var properties = new HashMap<String, String>()
-        return properties
+    def createPropertiesMap(TargetConfig tgtConfig) {
+        var props = new HashMap<String, String>()
+        for (elem : tgtConfig.item) {
+        	props.put(elem.key,elem.^val)
+        }
+        return props
     }
 
 }
