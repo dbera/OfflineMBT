@@ -347,7 +347,6 @@ class PetriNet {
 		'''
 		import datetime
 		import json
-		import uuid
 		import pprint
 		import argparse
 		import random

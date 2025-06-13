@@ -153,8 +153,6 @@ class ExpressionsCommaGenerator extends TypesCommaGenerator {
                 var idx = exprToComMASyntax(e.getArgs().get(1));
                 var v = exprToComMASyntax(e.getArgs().get(2));
                 return String.format("at(%s,%s,%s)", lst, idx, v);
-            } else if (e.getFunctionName().equals("uuid")) {
-                return String.format("uuid()");
             }	
 	}
 

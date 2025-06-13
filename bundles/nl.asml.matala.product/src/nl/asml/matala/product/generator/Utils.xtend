@@ -643,7 +643,6 @@ class Utils
             '''
             import copy
             import json
-            import uuid
             
             
             class Data:

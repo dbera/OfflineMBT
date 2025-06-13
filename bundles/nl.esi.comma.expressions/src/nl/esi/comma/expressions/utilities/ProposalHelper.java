@@ -55,7 +55,6 @@ import nl.esi.comma.expressions.expression.ExpressionVariable;
 import nl.esi.comma.expressions.expression.ExpressionVector;
 import nl.esi.comma.expressions.expression.QUANTIFIER;
 import nl.esi.comma.expressions.expression.TypeAnnotation;
-import nl.esi.comma.expressions.validation.ExpressionFunction;
 import nl.esi.comma.types.types.EnumTypeDecl;
 import nl.esi.comma.types.types.MapTypeConstructor;
 import nl.esi.comma.types.types.MapTypeDecl;
@@ -132,7 +131,7 @@ public class ProposalHelper {
 			else if (simpleType.getName().equals("int")) return "0";
 			else if (simpleType.getName().equals("real")) return "0.0";
 			else if (simpleType.getName().equals("bool")) return "true";
-			else if (simpleType.getName().equals("string")) return "__uuid__".equals(targetName) ? ExpressionFunction.uuid + "()" : "\"\"";
+			else if (simpleType.getName().equals("string")) return "\"\"";
 			else return "\"\""; // Custom types without base (e.g. type DateTime)
 		} else if (type instanceof VectorTypeDecl) {
 			return "[]";

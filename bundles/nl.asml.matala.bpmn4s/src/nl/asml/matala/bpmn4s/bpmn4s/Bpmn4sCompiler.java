@@ -41,7 +41,7 @@ import nl.asml.matala.bpmn4s.Logging;
 public class Bpmn4sCompiler{
 	
 	protected final String UNIT_TYPE = "UNIT";
-	private final String UNIT_INIT = "UNIT { __uuid__ = uuid(), unit = 0 }";
+	private final String UNIT_INIT = "UNIT { unit = 0 }";
 
 	// The model being compiled to pspec
 	protected Bpmn4s model = null;
@@ -71,17 +71,6 @@ public class Bpmn4sCompiler{
 		}
 	}
 	
-	protected String removeUuids(String text) {
-		
-		String uuidInitRegex = "__uuid__\\s*=\\s*uuid\\(\\)\\s*(,?\\s*)";
-		String uuidDeclRegex = "string\\s*__uuid__\\s*";
-		
-		text = text.replaceAll(uuidInitRegex, "");
-		text = text.replaceAll(uuidDeclRegex, "");
-				
-		return text;
-	}
-	
 	/**
 	 * Takes a Bpmn4s <model>, flattens its activities, and compiles it into a 
 	 * CPN in the language of pspec and accompanying types. The 
@@ -97,8 +86,8 @@ public class Bpmn4sCompiler{
 
 		flattenActivities();
 		
-		ps.append(removeUuids(generatePspec()));
-		types.append(removeUuids(generateTypes()));
+		ps.append(generatePspec());
+		types.append(generateTypes());
 	}
 
 	/**
@@ -768,7 +757,7 @@ public class Bpmn4sCompiler{
 	public String generateTypes() {
 		String types = new String("");
 		// UNIT_TYPE is the type for undefined contexts.
-		types += String.format("record %s {\n\tstring __uuid__\n\tint\tunit\n}\n\n", UNIT_TYPE);
+		types += String.format("record %s {\n\tint\tunit\n}\n\n", UNIT_TYPE);
 		for (Bpmn4sDataType d: model.dataSchema.values()) {
 			if(d instanceof RecordType) {
 				RecordType rec = RecordType.class.cast(d);

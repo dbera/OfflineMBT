@@ -68,7 +68,6 @@ import nl.esi.comma.types.types.RecordTypeDecl;
 import nl.esi.comma.types.types.SimpleTypeDecl;
 import nl.esi.comma.types.types.Type;
 import nl.esi.comma.types.types.TypeDecl;
-import nl.esi.comma.types.types.TypeReference;
 import nl.esi.comma.types.types.VectorTypeConstructor;
 import nl.esi.comma.types.types.VectorTypeDecl;
 
@@ -91,7 +90,7 @@ class SnakesHelper {
 			else if (t.getName().equals("int")) return "0";
 			else if (t.getName().equals("real")) return "0.0";
 			else if (t.getName().equals("bool")) return "True";
-			else if (t.getName().equals("string")) return "__uuid__".equals(targetName) ? "uuid.uuid4().hex" : "\"\"";
+			else if (t.getName().equals("string")) return "\"\"";
 			else return "\"\""; // Custom types without base (e.g. type DateTime)
 		} else if (type instanceof VectorTypeDecl) {
 			return "[]";
@@ -226,8 +225,6 @@ class SnakesHelper {
 				String map = expression(e.getArgs().get(0), variablePrefix);
 				String key = expression(e.getArgs().get(1), variablePrefix);
 				return String.format("{_k: _v for _k, _v in %s.items() if _k != %s}", map, key);
-			} else if (e.getFunctionName().equals("uuid")) {
-				return String.format("uuid.uuid4().hex");
 			}
 		} else if (expression instanceof ExpressionQuantifier) {
 			ExpressionQuantifier e = (ExpressionQuantifier) expression;
