@@ -31,15 +31,17 @@ import org.eclipse.emf.common.util.EList
 
 class VFDXMLGenerator {
 
-    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+    static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+
     String ns=''
     String xsi=''
     String loc=''
     String title=''
 
-    new(){
-        this(new HashMap<String,String>())
-    }
+    Map<String, String> rename  = new HashMap<String,String>()
+    Map<String, String> args = new HashMap<String,String>()
+
+    new(){ }
 
     new(String ns, String xsi, String loc, String title){
         this.ns=ns
@@ -48,20 +50,21 @@ class VFDXMLGenerator {
         this.title=title
     }
 
-    new(Map<String, String> map) {
+    new(Map<String, String> params, Map<String, String> renameRules) {
         this(
-            map.getOrDefault("ns",""),
-            map.getOrDefault("xsi",""),
-            map.getOrDefault("loc",""),
-            map.getOrDefault("title","")
+            params.getOrDefault('xmlns',''),
+            params.getOrDefault('xsi',''),
+            params.getOrDefault('loc',''),
+            params.getOrDefault('title','')
         )
+        this.args.putAll(params)
+        this.rename.putAll(renameRules)
     }
 
     def generateXMLFromSUTVars(AbstractTestDefinition atd) 
     {
         var now = LocalDateTime.now();
-        var aliasField = new HashMap<String,String>()
-        
+
         var stepSutDataIn = new ArrayList<Binding>()
         var stepSutDataOut = new ArrayList<Binding>()
         for (testseq : atd.testSeq) {
@@ -71,13 +74,13 @@ class VFDXMLGenerator {
         	}
         }
         var stepSutData = removeDuplicates(stepSutDataIn,stepSutDataOut)
-        
+
         return '''
         <?xml version="1.0" encoding="UTF-8"?>
         <VirtualFabDefinition:VirtualFabDefinition xmlns:VirtualFabDefinition="«this.ns»" xmlns:xsi="«this.xsi»" xsi:schemaLocation="«this.loc»">
           <Header>
             <Title>«this.title»</Title>
-            <CreateTime>«now.format(this.formatter)»</CreateTime>
+            <CreateTime>«now.format(VFDXMLGenerator.formatter)»</CreateTime>
           </Header>
           <Definition>
             <Name>atd</Name>
@@ -85,7 +88,7 @@ class VFDXMLGenerator {
             <SUTList>
             «FOR attr : stepSutData»
                 <SUT>
-                    «JsonHelper.toXMLElement(attr.jsonvals)»
+                    «JsonHelper.toXMLElement(attr.jsonvals, this.rename)»
                 </SUT>
             «ENDFOR»
             </SUTList>
@@ -141,6 +144,14 @@ class VFDXMLGenerator {
             AssertionStep: return sequence.output
             default: throw new RuntimeException("Not supported")
         }
+    }
+
+    def setRenamingRules(Map<String, String> map) {
+        this.rename = new HashMap<String, String>(map)
+    }
+
+    def setGeneratorParams(Map<String, String> map) {
+        this.args = new HashMap<String, String>(map)
     }
 
 }

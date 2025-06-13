@@ -35,15 +35,14 @@ import java.util.Map
 
 class FromAbstractToConcrete extends AbstractGenerator {
 
+    Map<String, String> rename  = new HashMap<String,String>()
+    Map<String, String> args = new HashMap<String,String>()
 
-    HashMap<String, String> properties
+    new(){}
 
-    new(){
-        this(new HashMap<String,String>())
-    }
-
-    new(HashMap<String,String> kvpair) {
-        this.properties = kvpair
+    new(Map<String,String> rename, Map<String,String> params) {
+        this.rename = rename
+        this.args = params
     }
 
     override doGenerate(Resource res, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
@@ -69,11 +68,7 @@ class FromAbstractToConcrete extends AbstractGenerator {
 
         fsa.generateFile('data.kvp', (new DataKVPGenerator()).generateFAST(atd))
         fsa.generateFile("reference.kvp", (new RefKVPGenerator()).generateRefKVP(atd))
-        fsa.generateFile("vfd.xml", (new VFDXMLGenerator(createVFDXMLPropertiesMap())).generateXMLFromSUTVars(atd))
-    }
-
-    def Map<String,String> createVFDXMLPropertiesMap() {
-        return this.properties
+        fsa.generateFile("vfd.xml", (new VFDXMLGenerator(this.args, this.rename)).generateXMLFromSUTVars(atd))
     }
 
     def private generateConcreteTest(AbstractTestDefinition atd) '''
