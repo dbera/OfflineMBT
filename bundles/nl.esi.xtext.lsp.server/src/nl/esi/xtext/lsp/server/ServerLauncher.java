@@ -36,7 +36,7 @@ public class ServerLauncher {
 	}
 
 	protected org.eclipse.xtext.ide.server.ServerLauncher createServerLauncher(String[] args) {
-		Injector injector = Guice.createInjector(getServerModule());
+		Injector injector = Guice.createInjector(Modules.combine(new SafeServerModule(), getServerModule()));
 		return injector.getInstance(org.eclipse.xtext.ide.server.ServerLauncher.class);
 	}
 
@@ -62,10 +62,20 @@ public class ServerLauncher {
 		return new ServerModule();
 	}
 
-	protected static class RemoteServerModule extends AbstractModule {
+	protected static class SafeServerModule extends AbstractModule {
 		@Override
 		protected void configure() {
+			super.configure();
+
 			bind(IFileSystemScanner.class).to(SaveJavaIoFileSystemScanner.class);
+		}
+	}
+	
+	protected static class RemoteServerModule extends SafeServerModule {
+		@Override
+		protected void configure() {
+			super.configure();
+
 			bind(ILanguageServerShutdownAndExitHandler.class).to(ILanguageServerShutdownAndExitHandler.NullImpl.class);
 		}
 	}
