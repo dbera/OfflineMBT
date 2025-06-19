@@ -20,7 +20,7 @@ class CausalGraphGenerator extends AbstractGenerator {
         var prod = resource.allContents.head
         if(prod instanceof CausalGraph) {
             (new CausalGraphPlantUML).generatePlantUML(prod, fsa)
-            // (new CausalGraphBDD).generateBDD(prod, fsa)
+            (new CausalGraphBDD).generateBDD(prod, fsa)
         }
 	}
 }
