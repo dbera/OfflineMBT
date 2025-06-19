@@ -2,14 +2,14 @@
 <ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" name="causalGraph" nsURI="http://www.esi.nl/comma/causalgraph/CausalGraph"
     nsPrefix="causalGraph">
-  <eClassifiers xsi:type="ecore:EClass" name="CausalGraph">
+  <eClassifiers xsi:type="ecore:EClass" name="CausalGraph" eSuperTypes="platform:/resource/nl.esi.comma.types/model/generated/Types.ecore#//ModelContainer">
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="name" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="ns" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="className" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="graphType" eType="#//GraphType"/>
     <eStructuralFeatures xsi:type="ecore:EReference" name="vars" upperBound="-1" eType="ecore:EClass platform:/resource/nl.esi.comma.expressions/model/generated/Expression.ecore#//Variable"
         containment="true"/>
-    <eStructuralFeatures xsi:type="ecore:EReference" name="func" upperBound="-1" eType="#//FunctionCallDecl"
+    <eStructuralFeatures xsi:type="ecore:EReference" name="func" upperBound="-1" eType="ecore:EClass platform:/resource/nl.esi.comma.expressions/model/generated/Expression.ecore#//FunctionCallDecl"
         containment="true"/>
     <eStructuralFeatures xsi:type="ecore:EReference" name="nodes" upperBound="-1"
         eType="#//Node" containment="true"/>
@@ -67,13 +67,6 @@
     <eStructuralFeatures xsi:type="ecore:EReference" name="dst" eType="#//Node"/>
     <eStructuralFeatures xsi:type="ecore:EReference" name="initActions" upperBound="-1"
         eType="ecore:EClass platform:/resource/nl.esi.comma.actions/model/generated/Actions.ecore#//Action"
-        containment="true"/>
-  </eClassifiers>
-  <eClassifiers xsi:type="ecore:EClass" name="FunctionCallDecl">
-    <eStructuralFeatures xsi:type="ecore:EReference" name="type" eType="ecore:EClass platform:/resource/nl.esi.comma.types/model/generated/Types.ecore#//Type"
-        containment="true"/>
-    <eStructuralFeatures xsi:type="ecore:EAttribute" name="name" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
-    <eStructuralFeatures xsi:type="ecore:EReference" name="args" upperBound="-1" eType="ecore:EClass platform:/resource/nl.esi.comma.expressions/model/generated/Expression.ecore#//Variable"
         containment="true"/>
   </eClassifiers>
 </ecore:EPackage>

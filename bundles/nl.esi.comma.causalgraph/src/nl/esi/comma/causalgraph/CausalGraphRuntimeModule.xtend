@@ -3,9 +3,13 @@
  */
 package nl.esi.comma.causalgraph
 
+import nl.esi.comma.types.scoping.TypesImportUriGlobalScopeProvider
 
 /**
  * Use this class to register components to be used at runtime / without the Equinox extension registry.
  */
 class CausalGraphRuntimeModule extends AbstractCausalGraphRuntimeModule {
+    override bindIGlobalScopeProvider() {
+        return TypesImportUriGlobalScopeProvider
+    }
 }

@@ -255,12 +255,12 @@ class TypesValidator extends AbstractTypesValidator {
 		}
 	}
 	
-	@Check
-	def checkForVoidType(Type t){
-		if(t.type instanceof SimpleTypeDecl && (t.type.name.equals("void"))){
-			error("Usage of type void is not allowed", TypesPackage.Literals.TYPE__TYPE)
-		}
-	}
+//	@Check
+//	def checkForVoidType(Type t){
+//		if(t.type instanceof SimpleTypeDecl && (t.type.name.equals("void"))){
+//			error("Usage of type void is not allowed", TypesPackage.Literals.TYPE__TYPE)
+//		}
+//	}
 	
 	@Check
 	def checkForIdType(Type t){

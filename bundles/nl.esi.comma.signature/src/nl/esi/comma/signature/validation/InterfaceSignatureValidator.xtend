@@ -144,13 +144,13 @@ class InterfaceSignatureValidator extends AbstractInterfaceSignatureValidator {
 	 * Constraints:
 	 * - void type can only be used as a return type of commands
 	 */
-	@Check
-	override checkForVoidType(Type t){
-		if(t.type instanceof SimpleTypeDecl && (t.type.name.equals("void"))){
-			if( !(t.eContainer instanceof Command) )
-				error("Usage of type void is not allowed", TypesPackage.Literals.TYPE__TYPE)
-		}
-	}
+//	@Check
+//	override checkForVoidType(Type t){
+//		if(t.type instanceof SimpleTypeDecl && (t.type.name.equals("void"))){
+//			if( !(t.eContainer instanceof Command) )
+//				error("Usage of type void is not allowed", TypesPackage.Literals.TYPE__TYPE)
+//		}
+//	}
 	
 	/*
 	 * Constraints.

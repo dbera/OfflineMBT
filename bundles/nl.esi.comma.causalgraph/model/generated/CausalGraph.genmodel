@@ -56,10 +56,5 @@
       <genFeatures notify="false" createChild="false" propertySortChoices="true" ecoreFeature="ecore:EReference CausalGraph.ecore#//CFEdge/dst"/>
       <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference CausalGraph.ecore#//CFEdge/initActions"/>
     </genClasses>
-    <genClasses ecoreClass="CausalGraph.ecore#//FunctionCallDecl">
-      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference CausalGraph.ecore#//FunctionCallDecl/type"/>
-      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute CausalGraph.ecore#//FunctionCallDecl/name"/>
-      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference CausalGraph.ecore#//FunctionCallDecl/args"/>
-    </genClasses>
   </genPackages>
 </genmodel:GenModel>

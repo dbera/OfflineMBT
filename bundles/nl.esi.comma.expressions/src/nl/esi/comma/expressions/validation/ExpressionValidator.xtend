@@ -71,6 +71,7 @@ import org.eclipse.xtext.scoping.IScopeProvider
 import org.eclipse.xtext.validation.Check
 
 import static extension nl.esi.comma.types.utilities.TypeUtilities.*
+import nl.esi.comma.expressions.expression.ExpressionFnCall
 
 /*
  * This class mainly captures the ComMA type system for expressions. Constraints are not formulated
@@ -147,6 +148,7 @@ class ExpressionValidator extends AbstractExpressionValidator {
 			ExpressionRecordAccess : e.field?.type?.typeObject
 			ExpressionBulkData : bulkdataType
 			ExpressionAny : anyType
+			ExpressionFnCall : e.functionName.type.type
 			ExpressionFunctionCall : ExpressionFunction.valueOf(e)?.inferType(e.args, ExpressionFunction.RETURN_ARG)
 			ExpressionVector : e.typeAnnotation?.type?.typeObject
 			ExpressionQuantifier : {

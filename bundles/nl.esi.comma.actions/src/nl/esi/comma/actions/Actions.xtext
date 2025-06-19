@@ -33,7 +33,12 @@ Action:
 	RecordFieldAssignmentAction |
 	CommandReply |
 	EventCall |
+	FunctionCall |
 	ParallelComposition
+;
+
+FunctionCall:
+    exp = ExpressionFnCall
 ;
 
 AssignmentAction:

@@ -19,7 +19,13 @@ import "http://www.esi.nl/comma/signature/InterfaceSignature" as sig
 import "http://www.esi.nl/comma/types/Types" as types
 import "http://www.esi.nl/comma/expressions/Expression" as expr
 
+@Override
+ModelContainer returns types::ModelContainer:
+    super::ModelContainer | CausalGraph
+;
+
 CausalGraph:
+    imports += Import*
     'graph' name=ID '{'
         ('namespace' ns = STRING)?
         ('class-name' className = STRING)?
@@ -72,6 +78,6 @@ CFEdge:
     ('meta-data' initActions+=(AssignmentAction | RecordFieldAssignmentAction)+)?
 ;
 
-FunctionCallDecl: type = Type name = ID
-    '(' (args += Variable (',' args += Variable)*)? ')'
-;
+//FunctionCallDecl: type = Type name = ID
+//    '(' (args += Variable (',' args += Variable)*)? ')'
+//;
