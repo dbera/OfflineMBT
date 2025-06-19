@@ -42,6 +42,10 @@ import nl.esi.comma.expressions.expression.ExpressionNEqual
 import nl.esi.comma.expressions.expression.ExpressionAnd
 import nl.esi.comma.expressions.expression.ExpressionOr
 import nl.esi.comma.expressions.expression.ExpressionMapRW
+import nl.esi.comma.expressions.expression.ExpressionFnCall
+import nl.esi.comma.expressions.expression.Expression
+import nl.esi.comma.expressions.expression.ExpressionNot
+import nl.esi.comma.expressions.expression.ExpressionBracket
 
 class ExpressionsCommaGenerator extends TypesCommaGenerator {
 	
@@ -62,6 +66,14 @@ class ExpressionsCommaGenerator extends TypesCommaGenerator {
 
 	def dispatch CharSequence exprToComMASyntax(ExpressionAny e)
 		'''"*"'''
+	
+	// Added DB for CG. 19.06.2025
+	def dispatch CharSequence exprToComMASyntax(ExpressionNot e)
+        '''!«exprToComMASyntax(e.getSub())»'''
+
+    // Added DB for CG. 19.06.2025
+    def dispatch CharSequence exprToComMASyntax(ExpressionBracket e)
+        '''(«exprToComMASyntax(e.sub)»)'''
 	
 	def dispatch CharSequence exprToComMASyntax(ExpressionAddition e)
 		'''«exprToComMASyntax(e.getLeft())» + «exprToComMASyntax(e.getRight())»'''
@@ -119,6 +131,22 @@ class ExpressionsCommaGenerator extends TypesCommaGenerator {
 	
 	def dispatch CharSequence exprToComMASyntax(ExpressionVariable e)
 	'''«e.getVariable().getName()»'''
+
+    // Added DB for CG. 19.06.2025
+    def dispatch CharSequence exprToComMASyntax(ExpressionFnCall e)
+    {
+        var str = new String();
+        for(Expression arg : e.getArgs()) {
+            if(!str.isEmpty()) str += ", ";
+            str += exprToComMASyntax(arg);
+        }
+        var fnName = e.getFunctionName().getName();
+        fnName = fnName.replaceAll("_DOT_", ".");
+        fnName = fnName.replaceAll("_PTR_", ".");
+        fnName = fnName.replaceAll("_SCOPE_", "::");
+        fnName = fnName.replaceAll("_REF_", "->");
+        return fnName + "(" + str + ")";
+    }
 
 	def dispatch CharSequence exprToComMASyntax(ExpressionFunctionCall e)
 	'''«getFunctionText(e)»'''
