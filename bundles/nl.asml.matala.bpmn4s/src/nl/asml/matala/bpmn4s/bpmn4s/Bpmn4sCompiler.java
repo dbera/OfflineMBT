@@ -758,23 +758,24 @@ public class Bpmn4sCompiler{
 		String types = new String("");
 		// UNIT_TYPE is the type for undefined contexts.
 		types += String.format("record %s {\n\tint\tunit\n}\n\n", UNIT_TYPE);
-		for (Bpmn4sDataType d: model.dataSchema.values()) {
-			if(d instanceof RecordType) {
-				RecordType rec = RecordType.class.cast(d);
-				String type = "record " + rec.getName() + " {\n";
+		for (Bpmn4sDataType dataType: model.dataSchema.values()) {
+			if(dataType instanceof RecordType recType) {
+				String type = "record " + recType.getName() + " {\n";
 				String parameters = "";
-				for (Entry<String, String> e: rec.fields.entrySet()) {
+				for (Entry<String, String> e: recType.fields.entrySet()) {
 					parameters += generateRecordField(e);
 				}
 				type += indent(parameters) + "}\n";
 				types += type + "\n";
-			} else if(d instanceof EnumerationType) {
-				EnumerationType enumeration = EnumerationType.class.cast(d);
+			} else if(dataType instanceof EnumerationType enumType) {
 				String literals = "";
-				for (String lit :enumeration.literals.keySet()) {
-					literals += " " + lit;
+				for (Map.Entry<String, String> entry : enumType.literals.entrySet()) {
+					literals += " " + entry.getKey();
+					if (entry.getValue() != null) {
+						literals += " = " + entry.getValue();
+					}
 				}
-				String type = String.format("enum %s {%s }\n", enumeration.name, literals);
+				String type = String.format("enum %s {%s }\n", enumType.name, literals);
 				types += type + "\n";
 			} else {
 //				NOTE:  I am not compiling data types that are not records or enumerations.
