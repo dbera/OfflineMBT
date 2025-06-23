@@ -75,6 +75,8 @@ class StandardProjectGenerator extends AbstractGenerator {
         if (product === null) {
             throw new Exception('No product found in resource: ' + productURI)
         }
+        productRes.resolveAll()
+        product.imports.forEach[productRes.getResource(importURI).validate()]
         productRes.validate()
 
         // PspecToPetriNetGenerator

@@ -774,7 +774,10 @@ public class Bpmn4sCompiler{
 				for (String lit :enumeration.literals.keySet()) {
 					literals += " " + lit;
 				}
-				String type = String.format("enum %s {%s }\n", enumeration.name, literals);
+				String type = String.format("enum %s {%s }\n", enumeration.getName(), literals);
+				types += type + "\n";
+			} else if(d instanceof BaseType) {
+				String type = String.format("type %s based on %s\n", d.getName(), typeToString(d.getType()));
 				types += type + "\n";
 			} else {
 //				NOTE:  I am not compiling data types that are not records or enumerations.
