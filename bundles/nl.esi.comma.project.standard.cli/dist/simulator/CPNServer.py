@@ -15,45 +15,96 @@
 
 import os
 import sys
+import json
+import shutil
 import tempfile
 import subprocess
 
 import CPNUtils as utils
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 
 BPMN4S_GEN = os.path.join("bpmn4s-generator.jar")
 JAVA_PATH  = os.path.join("jre","bin","java.exe")
 
 TEMP_FILE   = tempfile.TemporaryDirectory(prefix=f'{utils.gensym(prefix="cpnserver_",timestamp=True)}_')
-TEMP_PATH   = TEMP_FILE.name
+TEMP_PATH   = os.path.abspath(TEMP_FILE.name)
 sys.path.append(TEMP_PATH)
 
 # Initiating a Flask application
 app = Flask(__name__)
 CORS(app)
 
-def build_and_load_model( model_name:str , filepath=""):
-    
+def build_and_load_model(model_path:str):
+
+    model_dir, model_name = os.path.split(model_path)
+    model_name, model_ext = os.path.splitext(model_name)
+    taskname:str = f"simulator"
     prj_template:str = """
     Project project {{
       Generate Simulator {{
-        simulator {{
-          bpmn-file "{0}.bpmn"
+        {0} {{
+          bpmn-file "{1}.bpmn"
         }}
       }}
     }}
     """
     
-    prj_filename:str = os.path.join(filepath,f'{model_name}.prj')
+    prj_filename:str = os.path.join(model_dir,f'{model_name}.prj')
     with open(prj_filename, "w") as file1:
-        prj_content = prj_template.format(model_name)
+        prj_content = prj_template.format(taskname,model_name)
         file1.write(prj_content)
-    result = subprocess.run([JAVA_PATH,"-jar",BPMN4S_GEN,"-l", prj_filename,"-o", filepath],shell=True, capture_output=True)
+    result = subprocess.run([JAVA_PATH,"-jar",BPMN4S_GEN,"-l", prj_filename],shell=True, capture_output=True)
     if result.returncode != 0: 
         raise Exception(result.stderr)
-    module = utils.load_module(model_name)
+    module = utils.load_module(source=model_name,package=f"src-gen.{taskname}.CPNServer")
+    bpmn_dir = os.path.join(module.__path__[0],'bpmn')
+    os.makedirs(bpmn_dir, exist_ok=True)
+    filename_wildcard = os.path.join(TEMP_PATH,f"{filename}.*")
+    utils.move(filename_wildcard, bpmn_dir)
     return module
+
+def generate_fast_tests( model_path:str, num_tests:int=1, depth_limit:int=500):
+    
+    model_dir, model_name = os.path.split(model_path)
+    model_name, model_ext = os.path.splitext(model_name)
+    taskname:str = "testgen"
+    prj_template:str = """
+    Project project {{
+      Generate FAST {{
+        {0} {{
+          bpmn-file "{1}.bpmn"
+          num-tests {2}
+          depth-limit {3}
+        }}
+      }}
+    }}
+    """
+    
+    prj_filename:str = os.path.join(model_dir,f'{model_name}.prj')
+    with open(prj_filename, "w") as file1:
+        prj_content = prj_template.format(taskname,model_name,num_tests,depth_limit)
+        file1.write(prj_content)
+    result = subprocess.run([JAVA_PATH,"-jar",BPMN4S_GEN,"-l", prj_filename],shell=True, capture_output=True)
+    if result.returncode != 0: 
+        raise Exception(result.stderr)
+    
+    # zip filename (without .zip extension)
+    zip_filename = os.path.join(model_dir,model_name)
+    # path to directory about to be zipped
+    output_dir = os.path.join(model_dir,'src-gen',taskname)
+    # store bpmn and prj files in bpmn directory 
+    bpmn_dir = os.path.join(output_dir,'bpmn')
+    os.makedirs(bpmn_dir, exist_ok=True)
+    filename_wildcard = os.path.join(model_dir,f"{model_name}.*")
+    utils.move(filename_wildcard, bpmn_dir)
+    # make zip file
+    zip_filename = shutil.make_archive(base_name=zip_filename, format='zip', root_dir=output_dir)
+    try:
+        shutil.rmtree(output_dir, ignore_errors=True)
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
+    return zip_filename
 
 # The endpoint of our flask app
 @app.route(rule="/BPMNParser", methods=["POST"])
@@ -64,19 +115,15 @@ def handle_bpmn():
     _files = request.files
     for _file in _files:
         fname, fobj = _files[_file].filename, _files[_file]
-        filename = f'{fname}{utils.gensym(prefix="_",timestamp=True)}_'
-        tmp_path = os.path.join(TEMP_PATH,f"{filename}.bpmn")
+        filename = f'{fname}{utils.gensym(prefix="_",timestamp=True)}'
+        bpmn_path = os.path.join(TEMP_PATH,f"{filename}.bpmn")
         try:
             with utils.lock_handle_bpmn():
                 if utils.is_loaded_module(filename): 
                     raise Exception(F"BPMN model '{filename}' is already loaded!")
-                fobj.save(tmp_path)
-                module = build_and_load_model(filename,filepath=TEMP_PATH)
+                fobj.save(bpmn_path)
+                module = build_and_load_model(bpmn_path)
             load_okay.append(filename)
-            bpmn_dir = os.path.join(module.__path__[0],'bpmn')
-            os.makedirs(bpmn_dir, exist_ok=True)
-            filename_wildcard = os.path.join(TEMP_PATH,f"{filename}.*")
-            utils.move(filename_wildcard, bpmn_dir)
         except Exception as e:
             status_code = 400
             load_fail.append({filename: str(e)})
@@ -91,6 +138,36 @@ def handle_bpmn():
     }}
     # return the response as JSON
     return jsonify(response), status_code
+
+
+@app.route(rule="/TestGenerator", methods=["POST"])
+def test_generator():
+    # fetch first level dict (file + generator parameters)
+    _bpmn = request.files['bpmn_file']
+    _prj = json.loads(request.form['prj_params'])
+    
+    projID = _prj['project-id']
+    generationBlock = _prj['generation-block']
+    
+    target = generationBlock['target']
+    filename = generationBlock.get('bpmn-file')
+    numTests = generationBlock['num-tests']
+    depthLimit = generationBlock['depth-limit']
+    fname, fobj = _bpmn.filename, _bpmn
+    try:
+        filename = f'{fname}{utils.gensym(prefix="_",timestamp=True)}'
+        model_path = os.path.join(TEMP_PATH,f"{filename}.bpmn")
+        fobj.save(model_path)
+        zip_fname = generate_fast_tests(model_path, num_tests=numTests, depth_limit=depthLimit)
+        zip_dir, zip_path = os.path.split(zip_fname)
+        return send_from_directory(zip_dir, zip_path, mimetype='application/zip', as_attachment=True)
+    except Exception as e:
+        status_code = 400
+        response = {'response': { 
+            'message': f'Error generating test cases from file {fname}',
+            'error': str(e)
+        }}
+        return jsonify(response), status_code
 
 
 # The endpoint of our flask app
