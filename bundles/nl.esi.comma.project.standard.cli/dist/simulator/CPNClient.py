@@ -1,8 +1,10 @@
 import requests
 import json
 
+FILENAME = 'models/Example_Model.bpmn'
+
 files = {
-    'Example_Model': ('Example_Model', open('models/Example_Model.bpmn', 'rb'), 'text/xml'),
+    'Example_Model': ('Example_Model', open(FILENAME, 'rb'), 'text/xml'),
 }
 response = requests.post(url="http://127.0.0.1:5000/BPMNParser", files=files)
 print(f'Parsing BPMN Response: {json.dumps(response.json(), indent=4)}')
@@ -39,7 +41,7 @@ prj_data = {
     'generation-block': {
             'label': 'myTestGenItem', 
             'target': 'FAST', 
-            'bpmn-file': 'Example_Model.bpmn',
+            'bpmn-file': FILENAME,
             'num-tests': 1, 
             'depth-limit': 10000 
     }
@@ -47,7 +49,7 @@ prj_data = {
 
 files = {
     'prj_params': (None, json.dumps(prj_data), 'application/json'),
-    'bpmn_file': ('Example_Model', open('models/Example_Model.bpmn', 'rb'), 'text/xml')
+    'bpmn_file': ('Example_Model', open(FILENAME, 'rb'), 'text/xml')
 }
 
 response = requests.post(url="http://127.0.0.1:5000/TestGenerator", files=files)
