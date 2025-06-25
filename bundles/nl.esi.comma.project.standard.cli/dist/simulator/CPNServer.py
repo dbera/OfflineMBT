@@ -101,9 +101,10 @@ def generate_fast_tests( model_path:str, num_tests:int=1, depth_limit:int=500):
     # make zip file
     zip_filename = shutil.make_archive(base_name=zip_filename, format='zip', root_dir=output_dir)
     try:
+        # remove generated tests 
         shutil.rmtree(output_dir, ignore_errors=True)
     except Exception as e:
-        print(f"An error occurred: {str(e)}")
+        print(f"An error occurred while deleting generated test: {str(e)}", file=sys.stderr)
     return zip_filename
 
 # The endpoint of our flask app
@@ -142,17 +143,11 @@ def handle_bpmn():
 
 @app.route(rule="/TestGenerator", methods=["POST"])
 def test_generator():
-    # fetch first level dict (file + generator parameters)
     _bpmn = request.files['bpmn_file']
-    _prj = json.loads(request.form['prj_params'])
-    
-    projID = _prj['project-id']
-    generationBlock = _prj['generation-block']
-    
-    target = generationBlock['target']
-    filename = generationBlock.get('bpmn-file')
-    numTests = generationBlock['num-tests']
-    depthLimit = generationBlock['depth-limit']
+    _args = json.loads(request.form['prj_params'])
+
+    numTests = _args.get('num-tests',1)
+    depthLimit = _args.get('depth-limit',1000)
     fname, fobj = _bpmn.filename, _bpmn
     try:
         filename = f'{fname}{utils.gensym(prefix="_",timestamp=True)}'

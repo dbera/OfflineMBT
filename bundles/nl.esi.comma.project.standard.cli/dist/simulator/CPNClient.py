@@ -37,14 +37,8 @@ response = requests.delete(url=f"http://127.0.0.1:5000/BPMNParser/{uuid}", files
 print(f'Deleting CPNServer resource: {json.dumps(response.json(), indent=4)}')
 
 prj_data = {
-    'project-id': "myProjectName",
-    'generation-block': {
-            'label': 'myTestGenItem', 
-            'target': 'FAST', 
-            'bpmn-file': FILENAME,
-            'num-tests': 1, 
-            'depth-limit': 10000 
-    }
+    'num-tests': 1, 
+    'depth-limit': 10000 
 }
 
 files = {
