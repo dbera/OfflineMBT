@@ -164,7 +164,7 @@ def handle_bpmn():
 @app.route(rule="/TestGenerator", methods=["POST"])
 def test_generator():
     _bpmn = request.files['bpmn-file']
-    _args = json.loads(request.form['prj-params'])
+    _args = json.loads(request.form['prj-params']) if 'prj-params' in request.form else {}
 
     numTests = _args.get('num-tests',1)
     depthLimit = _args.get('depth-limit',1000)
