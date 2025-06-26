@@ -85,7 +85,7 @@ class ExpressionsParser {
 	'''«expr.variable.name»'''
 	
 	def static dispatch CharSequence generateExpression(ExpressionEnumLiteral expr, CharSequence ref)      
-	'''«expr.type.name».«expr.literal.name»''' 
+	'''«expr.literal.value.value»''' 
 
 	// modify string to remove quotes for prefix: "platform:" && "setup.suts" [FAST Specific]
 	def static dispatch CharSequence generateExpression(ExpressionConstantString expr, CharSequence ref)      
