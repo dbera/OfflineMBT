@@ -60,7 +60,7 @@ def build_and_load_model(model_path:str):
     module = utils.load_module(source=model_name,package=f"src-gen.{taskname}.CPNServer")
     bpmn_dir = os.path.join(module.__path__[0],'bpmn')
     os.makedirs(bpmn_dir, exist_ok=True)
-    filename_wildcard = os.path.join(TEMP_PATH,f"{filename}.*")
+    filename_wildcard = os.path.join(TEMP_PATH,f"{model_name}.*")
     utils.move(filename_wildcard, bpmn_dir)
     return module
 
