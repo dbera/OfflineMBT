@@ -12,6 +12,7 @@
 #
 
 import re
+from subprocess import CompletedProcess
 import typing, types
 import sys, string, shutil, secrets
 import importlib.util
@@ -19,8 +20,17 @@ import glob
 import datetime
 
 from abc import ABC, abstractmethod
-from threading import Lock
 
+
+class BPMN4SException(Exception):
+    def __init__(self,cliargs:dict, result: CompletedProcess[bytes], *args):
+        super().__init__(*args)
+        self.result = result
+        self.cliargs = cliargs
+        self.stdout = result.stdout.decode('utf-8').replace('\r\n','\n')
+        self.stderr = result.stderr.decode('utf-8').replace('\r\n','\n')
+        self.returncode = result.returncode
+    
 
 class AbstractCPNControl(ABC):
 
@@ -151,7 +161,3 @@ def move(orig, dest_dir):
             shutil.move(f,dest_dir)
         except Exception as e: 
             print(e, file=sys.stderr)
-
-_lock_handle_bpmn = Lock()
-
-def lock_handle_bpmn(): return _lock_handle_bpmn

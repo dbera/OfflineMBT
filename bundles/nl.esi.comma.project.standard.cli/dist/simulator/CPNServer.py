@@ -41,9 +41,8 @@ def build_and_load_model(model_path:str):
     model_name, model_ext = os.path.splitext(model_name)
     model_name = utils.to_valid_variable_name(model_name)
     taskname:str = f"simulator"
-    prj_template:str = """
-    Project project {{
-      Generate Simulator {{
+    prj_template:str = """Project project {{
+    Generate Simulator {{
         {0} {{
           bpmn-file "{1}.bpmn"
         }}
@@ -57,13 +56,18 @@ def build_and_load_model(model_path:str):
         file1.write(prj_content)
     result = subprocess.run([JAVA_PATH,"-jar",BPMN4S_GEN,"-l", prj_filename],shell=True, capture_output=True)
     if result.returncode != 0: 
-        raise Exception(result.stderr)
+        raise utils.BPMN4SException(
+            cliargs={
+                'bpmn-file': model_name
+            }, 
+            result=result
+            )
     module = utils.load_module(source=model_name,package=f"src-gen.{taskname}.CPNServer")
     bpmn_dir = os.path.join(module.__path__[0],'bpmn')
     os.makedirs(bpmn_dir, exist_ok=True)
     filename_wildcard = os.path.join(TEMP_PATH,f"{model_name}.*")
     utils.move(filename_wildcard, bpmn_dir)
-    return module
+    return module, result
 
 def generate_fast_tests( model_path:str, num_tests:int=1, depth_limit:int=500, test_prefix=''):
     
@@ -71,8 +75,7 @@ def generate_fast_tests( model_path:str, num_tests:int=1, depth_limit:int=500, t
     model_name, model_ext = os.path.splitext(model_name)
     model_name = utils.to_valid_variable_name(model_name)
     taskname:str = f"{test_prefix}testgen"
-    prj_template:str = """
-    Project project {{
+    prj_template:str = """Project project {{
       Generate FAST {{
         {0} {{
           bpmn-file "{1}.bpmn"
@@ -89,7 +92,15 @@ def generate_fast_tests( model_path:str, num_tests:int=1, depth_limit:int=500, t
         file1.write(prj_content)
     result = subprocess.run([JAVA_PATH,"-jar",BPMN4S_GEN,"-l", prj_filename],shell=True, capture_output=True)
     if result.returncode != 0: 
-        raise Exception(result.stderr)
+        raise utils.BPMN4SException(
+            cliargs={
+                'bpmn-file': model_name,
+                'num-tests': num_tests,
+                'test-prefix': test_prefix,
+                'depth-limit': depth_limit
+            }, 
+            result=result
+            )
     
     # zip filename (without .zip extension)
     zip_filename = os.path.join(model_dir,model_name)
@@ -107,66 +118,83 @@ def generate_fast_tests( model_path:str, num_tests:int=1, depth_limit:int=500, t
         shutil.rmtree(output_dir, ignore_errors=True)
     except Exception as e:
         print(f"An error occurred while deleting generated test: {str(e)}", file=sys.stderr)
-    return zip_filename
+    return zip_filename, result
 
 # The endpoint of our flask app
 @app.route(rule="/BPMNParser", methods=["POST"])
 def handle_bpmn():
-    status_code = 200
+    _bpmn = request.files['bpmn-file']
+    fname = _bpmn.filename
+    filename = f'{fname}{utils.gensym(prefix="_",timestamp=True)}'
+    bpmn_path = os.path.join(TEMP_PATH,f"{filename}.bpmn")
     
-    load_okay, load_fail = [], []
-    _files = request.files
-    for _file in _files:
-        fname, fobj = _files[_file].filename, _files[_file]
-        filename = f'{fname}{utils.gensym(prefix="_",timestamp=True)}'
-        bpmn_path = os.path.join(TEMP_PATH,f"{filename}.bpmn")
-        try:
-            with utils.lock_handle_bpmn():
-                if utils.is_loaded_module(filename): 
-                    raise Exception(F"BPMN model '{filename}' is already loaded!")
-                fobj.save(bpmn_path)
-                module = build_and_load_model(bpmn_path)
-            load_okay.append(filename)
-        except Exception as e:
-            status_code = 400
-            load_fail.append({filename: str(e)})
-            print(str(e),file=sys.stderr)
+    status_code = 200
+    response = {'response': {'uuid': filename}}
+    try:
+        if utils.is_loaded_module(filename): 
+            raise Exception(F"BPMN model '{filename}' is already loaded!")
+        _bpmn.save(bpmn_path)
+        module, result = build_and_load_model(bpmn_path)
+        bpmn_dir = os.path.join(module.__path__[0],'bpmn')
+        os.makedirs(bpmn_dir, exist_ok=True)
+        filename_wildcard = os.path.join(TEMP_PATH,f"{filename}.*")
+        utils.move(filename_wildcard, bpmn_dir)
+        loaded = response['response']
+        loaded['message'] = 'Package loaded successfully'
+        loaded['returncode'] = result.returncode
+        loaded['stdout'] = result.stdout.decode('utf-8').replace('\r\n','\n')
+        loaded['stderr'] = result.stderr.decode('utf-8').replace('\r\n','\n')
+    except utils.BPMN4SException as e:
+        status_code = 400
+        failed = response['response']
+        failed['message'] = 'Package loading failed'
+        failed['returncode'] = e.returncode
+        failed['stdout'] = e.stdout
+        failed['stderr'] = e.stderr
+        failed['cliargs'] = e.cliargs
+    except Exception as e:
+        status_code = 400
+        failed = response['response']
+        failed['exception'] = str(e)
 
-    response = {'response': {
-        'message': f'Package loading report',
-        'module': {
-            "loaded": load_okay,
-            "failed": load_fail
-        },
-    }}
     # return the response as JSON
     return jsonify(response), status_code
 
 
 @app.route(rule="/TestGenerator", methods=["POST"])
 def test_generator():
-    _bpmn = request.files['bpmn_file']
-    _args = json.loads(request.form['prj_params'])
+    _bpmn = request.files['bpmn-file']
+    _args = json.loads(request.form['prj-params'])
 
     numTests = _args.get('num-tests',1)
     depthLimit = _args.get('depth-limit',1000)
     testPrefix = _args.get('test-prefix','')
-    fname, fobj = _bpmn.filename, _bpmn
+    
+    fname = _bpmn.filename
+    filename = f'{fname}{utils.gensym(prefix="_",timestamp=True)}'
+    model_path = os.path.join(TEMP_PATH,f"{filename}.bpmn")
+    _bpmn.save(model_path)
+    
+    status_code = 200
+    response = {'response': {'uuid': filename}}
     try:
-        filename = f'{fname}{utils.gensym(prefix="_",timestamp=True)}'
-        model_path = os.path.join(TEMP_PATH,f"{filename}.bpmn")
-        fobj.save(model_path)
-        zip_fname = generate_fast_tests(model_path, num_tests=numTests, depth_limit=depthLimit, test_prefix=testPrefix)
+        zip_fname, result = generate_fast_tests(model_path, num_tests=numTests, depth_limit=depthLimit, test_prefix=testPrefix)
         zip_dir, zip_path = os.path.split(zip_fname)
-        return send_from_directory(zip_dir, zip_path, mimetype='application/zip', as_attachment=True)
+        return send_from_directory(zip_dir, zip_path, mimetype='application/zip', as_attachment=True), status_code
+    except utils.BPMN4SException as e:
+        status_code = 400
+        failed = response['response']
+        failed['message'] = f'Error generating test cases from file {fname}'
+        failed['returncode'] = e.returncode
+        failed['stdout'] = e.stdout
+        failed['stderr'] = e.stderr
+        failed['cliargs'] = e.cliargs
     except Exception as e:
         status_code = 400
-        response = {'response': { 
-            'message': f'Error generating test cases from file {fname}',
-            'error': str(e)
-        }}
-        return jsonify(response), status_code
+        failed = response['response']
+        failed['exception'] = str(e)
 
+    return jsonify(response), status_code
 
 # The endpoint of our flask app
 @app.route(rule="/BPMNParser/<uuid>", methods=["DELETE"])
