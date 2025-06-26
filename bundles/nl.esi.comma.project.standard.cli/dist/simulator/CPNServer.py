@@ -27,7 +27,7 @@ from flask_cors import CORS
 BPMN4S_GEN = os.path.join("bpmn4s-generator.jar")
 JAVA_PATH  = os.path.join("jre","bin","java.exe")
 
-TEMP_FILE   = tempfile.TemporaryDirectory(prefix=f'{utils.gensym(prefix="cpnserver_",timestamp=True)}_')
+TEMP_FILE   = tempfile.TemporaryDirectory(prefix=f'{utils.gensym(prefix="cpnserver_",timestamp=True)}_', ignore_cleanup_errors=True)
 TEMP_PATH   = os.path.abspath(TEMP_FILE.name)
 sys.path.append(TEMP_PATH)
 
@@ -65,12 +65,12 @@ def build_and_load_model(model_path:str):
     utils.move(filename_wildcard, bpmn_dir)
     return module
 
-def generate_fast_tests( model_path:str, num_tests:int=1, depth_limit:int=500):
+def generate_fast_tests( model_path:str, num_tests:int=1, depth_limit:int=500, test_prefix=''):
     
     model_dir, model_name = os.path.split(model_path)
     model_name, model_ext = os.path.splitext(model_name)
     model_name = utils.to_valid_variable_name(model_name)
-    taskname:str = "testgen_{model_name}"
+    taskname:str = f"{test_prefix}testgen"
     prj_template:str = """
     Project project {{
       Generate FAST {{
@@ -150,12 +150,13 @@ def test_generator():
 
     numTests = _args.get('num-tests',1)
     depthLimit = _args.get('depth-limit',1000)
+    testPrefix = _args.get('test-prefix','')
     fname, fobj = _bpmn.filename, _bpmn
     try:
         filename = f'{fname}{utils.gensym(prefix="_",timestamp=True)}'
         model_path = os.path.join(TEMP_PATH,f"{filename}.bpmn")
         fobj.save(model_path)
-        zip_fname = generate_fast_tests(model_path, num_tests=numTests, depth_limit=depthLimit)
+        zip_fname = generate_fast_tests(model_path, num_tests=numTests, depth_limit=depthLimit, test_prefix=testPrefix)
         zip_dir, zip_path = os.path.split(zip_fname)
         return send_from_directory(zip_dir, zip_path, mimetype='application/zip', as_attachment=True)
     except Exception as e:
@@ -267,4 +268,3 @@ if __name__ == "__main__":
     app.run(host="0.0.0.0", debug=False)
 
     TEMP_FILE.cleanup()
-    shutil.rmtree(TEMP_FILE)
