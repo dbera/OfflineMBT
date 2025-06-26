@@ -24,6 +24,7 @@ import nl.esi.comma.expressions.expression.ExpressionConstantBool;
 import nl.esi.comma.expressions.expression.ExpressionConstantInt;
 import nl.esi.comma.expressions.expression.ExpressionConstantReal;
 import nl.esi.comma.expressions.expression.ExpressionConstantString;
+import nl.esi.comma.expressions.expression.ExpressionEnumLiteral;
 import nl.esi.comma.expressions.expression.ExpressionMapRW;
 import nl.esi.comma.expressions.expression.ExpressionMinus;
 import nl.esi.comma.expressions.expression.ExpressionPlus;
@@ -94,6 +95,8 @@ public class AssertionsHelper {
 			return String.format("'%s'", pexpr.getValue());
 		} else if (expression instanceof ExpressionConstantReal e) {
 			return Double.toString(e.getValue());
+		} else if (expression instanceof ExpressionEnumLiteral e) {
+			return Integer.toString(e.getLiteral().getValue().getValue());
 		} else if (expression instanceof ExpressionConstantBool e) {
 			return e.isValue() ? "True" : "False";
 		} else if (expression instanceof ExpressionMinus e) {
