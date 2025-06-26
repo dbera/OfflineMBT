@@ -40,6 +40,7 @@ import org.camunda.bpm.model.bpmn.instance.SubProcess;
 import org.camunda.bpm.model.bpmn.instance.Task;
 import org.camunda.bpm.model.xml.instance.ModelElementInstance;
 
+import nl.asml.matala.bpmn4s.bpmn4s.BaseType;
 import nl.asml.matala.bpmn4s.bpmn4s.Bpmn4s;
 import nl.asml.matala.bpmn4s.bpmn4s.Bpmn4sCompiler;
 import nl.asml.matala.bpmn4s.bpmn4s.Bpmn4sDataType;
@@ -339,24 +340,32 @@ public class Main {
 	}
 
 	public static void parseDataType(BpmnModelInstance modelInst, DataType dt) {
-		Bpmn4sDataType datatype = new Bpmn4sDataType("");
 		String type = dt.getAttributeValue("type");
-		if (type.equals("Record") || type.equals("Context")) {
-			datatype = parseRecord(modelInst, dt);
-		}else if(type.equals("List")) {
-			datatype = parseList(modelInst, dt);
-		}else if(type.equals("Set")) {
-			datatype = parseSet(modelInst, dt);
-		}else if(type.equals("Map")) {
-			datatype = parseMap(modelInst, dt);
-		}else if(type.equals("Enumeration")){
-			datatype = parseEnum(dt);
-		}else {
+		Bpmn4sDataType datatype = switch (type) {
+			case Bpmn4sDataType.RECORD_TYPE,
+			     Bpmn4sDataType.CONTEXT_TYPE -> parseRecord(modelInst, dt);
+			case Bpmn4sDataType.LIST_TYPE -> parseList(modelInst, dt);
+			case Bpmn4sDataType.SET_TYPE -> parseSet(modelInst, dt);
+			case Bpmn4sDataType.MAP_TYPE -> parseMap(modelInst, dt);
+			case Bpmn4sDataType.ENUM_TYPE -> parseEnum(dt);
+			case Bpmn4sDataType.STRING_TYPE,
+			     Bpmn4sDataType.INT_TYPE,
+			     Bpmn4sDataType.BOOLEAN_TYPE,
+			     Bpmn4sDataType.FLOAT_TYPE -> parseBase(dt);
+			default -> null;
+		};
+		if (datatype == null) {
 			Logging.logError(String.format("Skipping unsuported datatype %s.", type));
+		} else {
+			model.dataSchema.put(datatype.getName(), datatype);
 		}
-		model.dataSchema.put(datatype.getName(), datatype);
 	}
 	
+	public static BaseType parseBase(DataType dt) {
+		return new BaseType(dt.getAttributeValue("name"),
+				dt.getAttributeValue("type"));
+	}
+
 	public static EnumerationType parseEnum(DataType dt) {
 		EnumerationType result = new EnumerationType(dt.getAttributeValue("name"));
 		for(Literal lit: dt.getChildElementsByType(Literal.class)) {

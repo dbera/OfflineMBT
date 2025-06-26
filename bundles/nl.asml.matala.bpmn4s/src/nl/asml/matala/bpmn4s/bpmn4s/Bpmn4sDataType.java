@@ -12,48 +12,32 @@
  */
 package nl.asml.matala.bpmn4s.bpmn4s;
 
-public class Bpmn4sDataType {
+public abstract class Bpmn4sDataType {
 	
-	static final String RECORD_TYPE = "record";
-	static final String MAP_TYPE = "map";
-	static final String LIST_TYPE = "list";
-	static final String ENUM_TYPE = "enum";
-	static final String BOOL_TYPE = "boolean";
-	static final String INT_TYPE = "int";
-	static final String STRING_TYPE = "string";
-	static final String FLOAT_TYPE = "float";
-	static final String NO_TYPE = "notype";
+	public static final String ENUM_TYPE = "Enumeration";
+	public static final String CONTEXT_TYPE = "Context";
+	public static final String RECORD_TYPE = "Record";
+	public static final String LIST_TYPE = "List";
+	public static final String SET_TYPE = "Set";
+	public static final String MAP_TYPE = "Map";
+	public static final String STRING_TYPE = "String";
+	public static final String INT_TYPE = "Int";
+	public static final String BOOLEAN_TYPE = "Boolean";
+	public static final String FLOAT_TYPE = "Float";
 	
-	String name = new String();
-	String type = new String();
+	private final String name;
+	private final String type;
 	
 	public Bpmn4sDataType(String _name, String _type) {
 		name = _name;
 		type = _type;
 	}
 	
-	public Bpmn4sDataType(String _type) {
-		type = _type;
-	}
-	
-	public Bpmn4sDataType() {
-		type = NO_TYPE;
-	}
-	
-	public void setName(String _name) {
-		name = _name;
-	}
-	
 	public String getName() {
 		return name;
-	}
-	
-	public void setType(String t) {
-		type = t;
 	}
 	
 	public String getType() {
 		return type;
 	}
-
 }
