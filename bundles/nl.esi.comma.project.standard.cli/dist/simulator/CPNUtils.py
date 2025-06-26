@@ -11,6 +11,7 @@
 # SPDX-License-Identifier: MIT
 #
 
+import re
 import typing, types
 import sys, string, shutil, secrets
 import importlib.util
@@ -51,6 +52,13 @@ class AbstractCPNControl(ABC):
 
 # Initializing CPN Model
 pn: typing.Dict[str, AbstractCPNControl] = {}
+
+
+def to_valid_variable_name(s):
+    # Replace invalid characters with underscores
+    s = re.sub(r'\W|^(?=\d)', '_', s)
+    return s
+
 
 def is_loaded_module(source, package="src-gen.simulator.CPNServer") -> bool:
     """

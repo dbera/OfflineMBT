@@ -39,6 +39,7 @@ def build_and_load_model(model_path:str):
 
     model_dir, model_name = os.path.split(model_path)
     model_name, model_ext = os.path.splitext(model_name)
+    model_name = utils.to_valid_variable_name(model_name)
     taskname:str = f"simulator"
     prj_template:str = """
     Project project {{
@@ -68,7 +69,8 @@ def generate_fast_tests( model_path:str, num_tests:int=1, depth_limit:int=500):
     
     model_dir, model_name = os.path.split(model_path)
     model_name, model_ext = os.path.splitext(model_name)
-    taskname:str = "testgen"
+    model_name = utils.to_valid_variable_name(model_name)
+    taskname:str = "testgen_{model_name}"
     prj_template:str = """
     Project project {{
       Generate FAST {{
@@ -264,5 +266,5 @@ if __name__ == "__main__":
     # Setting host = "0.0.0.0" runs it on localhost
     app.run(host="0.0.0.0", debug=False)
 
-
-TEMP_FILE.cleanup()
+    TEMP_FILE.cleanup()
+    shutil.rmtree(TEMP_FILE)
