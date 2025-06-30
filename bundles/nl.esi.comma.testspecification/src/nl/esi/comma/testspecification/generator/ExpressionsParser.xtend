@@ -86,10 +86,10 @@ class ExpressionsParser {
 	
 	def static dispatch CharSequence generateExpression(ExpressionEnumLiteral expr, CharSequence ref)
 	{
-	    if (expr.literal.value === null) {
-	        return '''«expr.type.literals.indexOf(expr.literal)»'''
+	    if (expr.literal.value !== null) {
+	        return '''«expr.literal.value.value»'''
         }
-        return '''«expr.literal.value.value»''' 
+        return  '''«expr.type.literals.indexOf(expr.literal)»'''
 	}
 
 	// modify string to remove quotes for prefix: "platform:" && "setup.suts" [FAST Specific]

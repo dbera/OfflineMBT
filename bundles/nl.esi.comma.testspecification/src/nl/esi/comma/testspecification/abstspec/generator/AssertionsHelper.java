@@ -99,11 +99,11 @@ public class AssertionsHelper {
 			return Double.toString(e.getValue());
 		} else if (expression instanceof ExpressionEnumLiteral e) {
 			EnumElement e_lite = e.getLiteral();
-			if (e.getLiteral().getValue() == null) {
-				EnumTypeDecl e_type = e.getType();
-		        return Integer.toString(e_type.getLiterals().indexOf(e_lite));
+			if (e.getLiteral().getValue() != null) {
+				return Integer.toString(e_lite.getValue().getValue());
 	        }
-			return Integer.toString(e_lite.getValue().getValue());
+			EnumTypeDecl e_type = e.getType();
+	        return Integer.toString(e_type.getLiterals().indexOf(e_lite));
 		} else if (expression instanceof ExpressionConstantBool e) {
 			return e.isValue() ? "True" : "False";
 		} else if (expression instanceof ExpressionMinus e) {
