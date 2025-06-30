@@ -69,7 +69,7 @@ def build_and_load_model(model_path:str):
     utils.move(filename_wildcard, bpmn_dir)
     return module, result
 
-def generate_fast_tests( model_path:str, num_tests:int=1, depth_limit:int=500, test_prefix=''):
+def generate_fast_tests( model_path:str, num_tests:int=1, depth_limit:int=500):
     
     model_dir, model_name = os.path.split(model_path)
     model_name, model_ext = os.path.splitext(model_name)
@@ -96,7 +96,6 @@ def generate_fast_tests( model_path:str, num_tests:int=1, depth_limit:int=500, t
             cliargs={
                 'bpmn-file': model_name,
                 'num-tests': num_tests,
-                'test-prefix': test_prefix,
                 'depth-limit': depth_limit
             }, 
             result=result
@@ -168,17 +167,16 @@ def test_generator():
 
     numTests = _args.get('num-tests',1)
     depthLimit = _args.get('depth-limit',1000)
-    testPrefix = _args.get('test-prefix','')
-    
+
     fname = _bpmn.filename
     filename = f'{fname}{utils.gensym(prefix="_",timestamp=True)}'
     model_path = os.path.join(TEMP_PATH,f"{filename}.bpmn")
     _bpmn.save(model_path)
-    
+
     status_code = 200
     response = {'response': {'uuid': filename}}
     try:
-        zip_fname, result = generate_fast_tests(model_path, num_tests=numTests, depth_limit=depthLimit, test_prefix=testPrefix)
+        zip_fname, result = generate_fast_tests(model_path, num_tests=numTests, depth_limit=depthLimit)
         zip_dir, zip_path = os.path.split(zip_fname)
         return send_from_directory(zip_dir, zip_path, mimetype='application/zip', as_attachment=True), status_code
     except utils.BPMN4SException as e:
