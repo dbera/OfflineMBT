@@ -31,6 +31,7 @@ class BPMN4SException(Exception):
         self.stderr = result.stderr.decode('utf-8').replace('\r\n','\n')
         self.returncode = result.returncode
     
+from threading import Lock
 
 class AbstractCPNControl(ABC):
 
@@ -161,3 +162,7 @@ def move(orig, dest_dir):
             shutil.move(f,dest_dir)
         except Exception as e: 
             print(e, file=sys.stderr)
+
+_lock_handle_bpmn = Lock()
+
+def lock_handle_bpmn(): return _lock_handle_bpmn
