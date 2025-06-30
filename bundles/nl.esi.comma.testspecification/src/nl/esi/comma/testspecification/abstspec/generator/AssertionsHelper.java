@@ -31,6 +31,8 @@ import nl.esi.comma.expressions.expression.ExpressionPlus;
 import nl.esi.comma.expressions.expression.ExpressionRecordAccess;
 import nl.esi.comma.expressions.expression.ExpressionVariable;
 import nl.esi.comma.expressions.expression.ExpressionVector;
+import nl.esi.comma.types.types.EnumElement;
+import nl.esi.comma.types.types.EnumTypeDecl;
 
 /**
  *
@@ -96,7 +98,12 @@ public class AssertionsHelper {
 		} else if (expression instanceof ExpressionConstantReal e) {
 			return Double.toString(e.getValue());
 		} else if (expression instanceof ExpressionEnumLiteral e) {
-			return Integer.toString(e.getLiteral().getValue().getValue());
+			EnumElement e_lite = e.getLiteral();
+			if (e.getLiteral().getValue() == null) {
+				EnumTypeDecl e_type = e.getType();
+		        return Integer.toString(e_type.getLiterals().indexOf(e_lite));
+	        }
+			return Integer.toString(e_lite.getValue().getValue());
 		} else if (expression instanceof ExpressionConstantBool e) {
 			return e.isValue() ? "True" : "False";
 		} else if (expression instanceof ExpressionMinus e) {

@@ -84,8 +84,13 @@ class ExpressionsParser {
 	//'''«IF JavaGeneratorUtilities::isStateMachineVariable(expr.variable)»«ref»«expr.variable.name»«ELSE»«expr.variable.name»«ENDIF»'''
 	'''«expr.variable.name»'''
 	
-	def static dispatch CharSequence generateExpression(ExpressionEnumLiteral expr, CharSequence ref)      
-	'''«expr.literal.value.value»''' 
+	def static dispatch CharSequence generateExpression(ExpressionEnumLiteral expr, CharSequence ref)
+	{
+	    if (expr.literal.value === null) {
+	        return '''«expr.type.literals.indexOf(expr.literal)»'''
+        }
+        return '''«expr.literal.value.value»''' 
+	}
 
 	// modify string to remove quotes for prefix: "platform:" && "setup.suts" [FAST Specific]
 	def static dispatch CharSequence generateExpression(ExpressionConstantString expr, CharSequence ref)      
