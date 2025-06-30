@@ -11,6 +11,8 @@
 # SPDX-License-Identifier: MIT
 #
 
+import re
+from subprocess import CompletedProcess
 import typing, types
 import sys, string, shutil, secrets
 import importlib.util
@@ -19,6 +21,15 @@ import datetime
 
 from abc import ABC, abstractmethod
 from threading import Lock
+
+class BPMN4SException(Exception):
+    def __init__(self,cliargs:dict, result: CompletedProcess[bytes], *args):
+        super().__init__(*args)
+        self.result = result
+        self.cliargs = cliargs
+        self.stdout = result.stdout.decode('utf-8').replace('\r\n','\n')
+        self.stderr = result.stderr.decode('utf-8').replace('\r\n','\n')
+        self.returncode = result.returncode
 
 
 class AbstractCPNControl(ABC):
@@ -51,6 +62,13 @@ class AbstractCPNControl(ABC):
 
 # Initializing CPN Model
 pn: typing.Dict[str, AbstractCPNControl] = {}
+
+
+def to_valid_variable_name(s):
+    # Replace invalid characters with underscores
+    s = re.sub(r'\W|^(?=\d)', '_', s)
+    return s
+
 
 def is_loaded_module(source, package="src-gen.simulator.CPNServer") -> bool:
     """
