@@ -24,12 +24,15 @@ import nl.esi.comma.expressions.expression.ExpressionConstantBool;
 import nl.esi.comma.expressions.expression.ExpressionConstantInt;
 import nl.esi.comma.expressions.expression.ExpressionConstantReal;
 import nl.esi.comma.expressions.expression.ExpressionConstantString;
+import nl.esi.comma.expressions.expression.ExpressionEnumLiteral;
 import nl.esi.comma.expressions.expression.ExpressionMapRW;
 import nl.esi.comma.expressions.expression.ExpressionMinus;
 import nl.esi.comma.expressions.expression.ExpressionPlus;
 import nl.esi.comma.expressions.expression.ExpressionRecordAccess;
 import nl.esi.comma.expressions.expression.ExpressionVariable;
 import nl.esi.comma.expressions.expression.ExpressionVector;
+import nl.esi.comma.types.types.EnumElement;
+import nl.esi.comma.types.types.EnumTypeDecl;
 
 /**
  *
@@ -94,6 +97,13 @@ public class AssertionsHelper {
 			return String.format("'%s'", pexpr.getValue());
 		} else if (expression instanceof ExpressionConstantReal e) {
 			return Double.toString(e.getValue());
+		} else if (expression instanceof ExpressionEnumLiteral e) {
+			EnumElement e_lite = e.getLiteral();
+			if (e.getLiteral().getValue() != null) {
+				return Integer.toString(e_lite.getValue().getValue());
+	        }
+			EnumTypeDecl e_type = e.getType();
+	        return Integer.toString(e_type.getLiterals().indexOf(e_lite));
 		} else if (expression instanceof ExpressionConstantBool e) {
 			return e.isValue() ? "True" : "False";
 		} else if (expression instanceof ExpressionMinus e) {
