@@ -20,7 +20,7 @@ import glob
 import datetime
 
 from abc import ABC, abstractmethod
-
+from threading import Lock
 
 class BPMN4SException(Exception):
     def __init__(self,cliargs:dict, result: CompletedProcess[bytes], *args):
@@ -30,8 +30,7 @@ class BPMN4SException(Exception):
         self.stdout = result.stdout.decode('utf-8').replace('\r\n','\n')
         self.stderr = result.stderr.decode('utf-8').replace('\r\n','\n')
         self.returncode = result.returncode
-    
-from threading import Lock
+
 
 class AbstractCPNControl(ABC):
 
