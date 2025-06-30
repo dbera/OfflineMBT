@@ -74,7 +74,7 @@ def generate_fast_tests( model_path:str, num_tests:int=1, depth_limit:int=500):
     model_dir, model_name = os.path.split(model_path)
     model_name, model_ext = os.path.splitext(model_name)
     model_name = utils.to_valid_variable_name(model_name)
-    taskname:str = f"{test_prefix}testgen"
+    taskname:str = f"testgen"
     prj_template:str = """Project project {{
       Generate FAST {{
         {0} {{
