@@ -469,11 +469,11 @@ public class Bpmn4sCompiler{
 	}
 	
 	public static <E> E getOrDefault(List<E> list, int index, E defaultValue) {
-	      if (index < 0) {
-	          throw new IllegalArgumentException("index is less than 0: " + index);
-	      }
-	      return index <= list.size() - 1 ? list.get(index) : defaultValue;
-     }
+	    if (index < 0) {
+	        throw new IllegalArgumentException("index is less than 0: " + index);
+	    }
+	    return index <= list.size() - 1 ? list.get(index) : defaultValue;
+    }
 	
 	
 	private String fabSpecDescription(String cId) {
@@ -500,11 +500,12 @@ public class Bpmn4sCompiler{
 					/* 
 					 * Updates, guards, assertions and initializations from the bpmn4s are parsed into Strings. 
 					 * In these strings, data stores, queues, and context are identified by their user-defined names.
-					 * Since for simulation we change this names for ids, we also need to do this in the updates 
-					 * strings. Also, both for simulation and test generation, updates and guards related to context 
-					 * variables need to be renamed since we hold the context in different places through the PN. 
-					 * FIXME: Unfortunately, interpreting the update to make a proper renaming is too much work, so for now 
-					 * we hack it around by doing string replace and hopping there is no unfortunate name collision.
+					 * For simulation we compile these names to ids. This change needs to be reflected also in the 
+					 * aforementioned strings. Also, both for simulation and test generation, updates and guards related 
+					 * to context variables need to be renamed since we hold the context in different places through the 
+					 * PN. FIXME: Unfortunately, interpreting these strings to make a proper renaming is too much work, 
+					 * so for now we hack it around by doing string replace and hopping there is no unfortunate name 
+					 * collision.
 					 */
 					Map<String, String> replaceMap = buildReplaceMap(node);
 					Edge inFlow = getOrDefault(node.getFlowInputs(), 0, null);
