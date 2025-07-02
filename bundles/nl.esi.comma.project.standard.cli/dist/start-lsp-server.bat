@@ -13,6 +13,6 @@
 
 @ECHO OFF
 
-.\jre\bin\java.exe -jar .\bpmn4s-lsp-server.jar %*
+.\jre\bin\java.exe -cp .\bpmn4s-toolchain.jar nl.asml.matala.product.lsp.server.ProductServerLauncher %*
 
 pause
