@@ -52,6 +52,18 @@
                 <artifactId>maven-dependency-plugin</artifactId>
                 <executions>
                     <execution>
+                        <id>unpack-jre</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>unpack-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/dist</outputDirectory>
+                            <includeArtifactIds>org.eclipse.justj.openjdk.hotspot.jre.minimal.stripped.win32.x86_64</includeArtifactIds>
+                            <includes>jre/**/*</includes>
+                        </configuration>
+                    </execution>
+                    <execution>
                         <id>copy-dependencies</id>
                         <phase>package</phase>
                         <goals>
@@ -87,7 +99,10 @@
                                 org.eclipse.jdt.core,
                                 org.eclipse.jdt.debug,
                                 org.eclipse.jdt.launching,
-                                org.eclipse.text
+                                org.eclipse.text,
+                                org.eclipse.justj.openjdk.hotspot.jre.minimal.stripped,
+                                org.eclipse.justj.openjdk.hotspot.jre.minimal.stripped.linux.x86_64,
+                                org.eclipse.justj.openjdk.hotspot.jre.minimal.stripped.win32.x86_64
                             </excludeArtifactIds>
                         </configuration>
                     </execution>
@@ -199,7 +214,7 @@
                     <shadedArtifactAttached>true</shadedArtifactAttached>
                     <shadedClassifierName>uber</shadedClassifierName>
                     <minimizeJar>false</minimizeJar>
-                    <finalName>bpmn4s-generator</finalName>
+                    <finalName>bpmn4s-toolchain</finalName>
                     <outputDirectory>${project.build.directory}/dist</outputDirectory>
                 </configuration>
                 <executions>

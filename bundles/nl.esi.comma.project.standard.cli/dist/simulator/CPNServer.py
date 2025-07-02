@@ -24,7 +24,7 @@ import CPNUtils as utils
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 
-BPMN4S_GEN = os.path.join("bpmn4s-generator.jar")
+BPMN4S_GEN = os.path.join("bpmn4s-toolchain.jar")
 JAVA_PATH  = os.path.join("jre","bin","java.exe")
 
 TEMP_FILE   = tempfile.TemporaryDirectory(prefix=f'{utils.gensym(prefix="cpnserver_",timestamp=True)}_', ignore_cleanup_errors=True)
