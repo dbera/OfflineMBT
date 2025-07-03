@@ -41,7 +41,10 @@ class ConcreteExpressionHandler {
     def private String printVariable(String name, Type type, TSJsonValue value, Set<String> suppressVars) '''
         «IF type instanceof TypeReference && type.type instanceof RecordTypeDecl»
             «FOR field : (type.type as RecordTypeDecl).fields.filter[f|value.hasMemberValue(f.name)].reject[suppressVars.contains(name + '.' + it.name)]»
-                «printVariable(name + '.' + field.name, field.type, value.getMemberValue(field.name), suppressVars)»
+                «val f_name = name + '.' + field.name»
+                «val f_type= field.type»
+                «val f_value = value.getMemberValue(field.name)»
+                «f_name» := «f_type.createValue(f_value)»
             «ENDFOR»
         «ELSE»
             «name» := «type.createValue(value)»
