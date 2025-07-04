@@ -10,7 +10,7 @@
  *
  * SPDX-License-Identifier: MIT
  */
-package nl.esi.comma.testspecification.generator
+package nl.esi.comma.testspecification.generator.to.fast
 
 import nl.esi.comma.expressions.expression.ExpressionAny
 import nl.esi.comma.expressions.expression.ExpressionRecordAccess
@@ -48,7 +48,6 @@ import nl.esi.comma.expressions.expression.ExpressionQuantifier
 import nl.esi.comma.expressions.expression.VectorTypeConstructor
 import nl.esi.comma.expressions.expression.ExpressionMap
 import nl.esi.comma.expressions.expression.ExpressionMapRW
-import nl.esi.comma.expressions.validation.ExpressionValidator
 
 class ExpressionsParser {
 	

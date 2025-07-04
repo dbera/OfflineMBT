@@ -10,14 +10,13 @@
  *
  * SPDX-License-Identifier: MIT
  */
-package nl.esi.comma.testspecification.generator
+package nl.esi.comma.testspecification.generator.to.concrete
 
 import java.util.HashSet
 import nl.asml.matala.product.product.Product
-import nl.esi.comma.testspecification.abstspec.generator.ConcreteExpressionHandler
-import nl.esi.comma.testspecification.abstspec.generator.DataKVPGenerator
-import nl.esi.comma.testspecification.abstspec.generator.RefKVPGenerator
-import nl.esi.comma.testspecification.abstspec.generator.ReferenceExpressionHandler
+import nl.esi.comma.testspecification.generator.to.fast.DataKVPGenerator
+import nl.esi.comma.testspecification.generator.to.fast.RefKVPGenerator
+import nl.esi.comma.testspecification.generator.to.fast.VFDXMLGenerator
 import nl.esi.comma.testspecification.testspecification.AbstractTestDefinition
 import nl.esi.comma.testspecification.testspecification.Binding
 import nl.esi.comma.testspecification.testspecification.RunStep
@@ -27,9 +26,8 @@ import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
 
-import static extension nl.esi.comma.testspecification.abstspec.generator.Utils.*
+import static extension nl.esi.comma.testspecification.generator.utils.Utils.*
 import static extension nl.esi.comma.types.utilities.EcoreUtil3.*
-import nl.esi.comma.testspecification.abstspec.generator.VFDXMLGenerator
 import java.util.HashMap
 import java.util.Map
 

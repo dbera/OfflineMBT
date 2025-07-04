@@ -15,6 +15,8 @@ package nl.esi.comma.testspecification.generator
 import java.util.HashMap
 import java.util.ArrayList
 import java.util.List
+import nl.esi.comma.testspecification.generator.utils.Step
+import nl.esi.comma.testspecification.generator.utils.KeyValue
 
 class TestSpecificationInstance 
 {

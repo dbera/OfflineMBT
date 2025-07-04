@@ -24,6 +24,9 @@ import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
 
 import static extension nl.esi.comma.types.utilities.FileSystemAccessUtil.*
+import nl.esi.comma.testspecification.generator.to.concrete.FromAbstractToConcrete
+import nl.esi.comma.testspecification.generator.to.fast.FromConcreteToFast
+import nl.esi.comma.testspecification.generator.to.docgen.FromConcreteToDocumentation
 
 /**
  * Generates code from your model files on save.
@@ -44,6 +47,6 @@ class TestspecificationGenerator extends AbstractGenerator {
         System.out.println("\n")
         System.out.println(" ******* TEST DOCUMENTATION GENERATOR *********")
         System.out.println("\n")
-        (new TestDocumentationGenerator).doGenerate(res, fsa.createFolderAccess('doc'), ctx)
+        (new FromConcreteToDocumentation).doGenerate(res, fsa.createFolderAccess('doc'), ctx)
     }
 }

@@ -10,7 +10,7 @@
  *
  * SPDX-License-Identifier: MIT
  */
-package nl.esi.comma.testspecification.abstspec.generator
+package nl.esi.comma.testspecification.generator.to.fast
 
 import nl.esi.comma.assertthat.assertThat.JsonArray
 import nl.esi.comma.assertthat.assertThat.JsonMember

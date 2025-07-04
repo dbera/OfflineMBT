@@ -10,24 +10,22 @@
  *
  * SPDX-License-Identifier: MIT
  */
-package nl.esi.comma.testspecification.abstspec.generator
+package nl.esi.comma.testspecification.generator.to.concrete
 
-import nl.esi.comma.testspecification.testspecification.RunStep
-import java.util.HashSet
-import nl.esi.comma.testspecification.testspecification.ComposeStep
-import java.util.HashMap
-import java.util.ArrayList
 import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
-import org.eclipse.emf.common.util.EList
+import nl.esi.comma.testspecification.testspecification.ComposeStep
+import nl.esi.comma.testspecification.testspecification.RunStep
 import nl.esi.comma.testspecification.testspecification.StepReference
-import java.util.List
-import nl.esi.comma.expressions.expression.ExpressionVector
-import nl.esi.comma.expressions.expression.ExpressionFunctionCall
-import nl.esi.comma.testspecification.testspecification.AbstractTestDefinition
-import nl.esi.comma.testspecification.generator.ExpressionGenerator
 
-import static extension nl.esi.comma.testspecification.abstspec.generator.Utils.*
+import java.util.List
+import java.util.ArrayList
+import java.util.HashMap
+
+import org.eclipse.emf.common.util.EList
+
+import static extension nl.esi.comma.testspecification.generator.utils.Utils.*
 import nl.asml.matala.product.product.VarRef
+import nl.esi.comma.testspecification.generator.to.concrete.ExpressionGenerator
 
 class ReferenceExpressionHandler 
 {

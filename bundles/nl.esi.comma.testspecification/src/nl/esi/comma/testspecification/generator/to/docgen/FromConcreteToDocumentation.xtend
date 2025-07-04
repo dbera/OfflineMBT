@@ -10,7 +10,7 @@
  *
  * SPDX-License-Identifier: MIT
  */
-package nl.esi.comma.testspecification.generator
+package nl.esi.comma.testspecification.generator.to.docgen
 
 import java.util.ArrayList
 import java.util.HashMap
@@ -21,6 +21,8 @@ import nl.esi.comma.expressions.expression.Variable
 import nl.esi.comma.inputspecification.inputSpecification.APIDefinition
 import nl.esi.comma.inputspecification.inputSpecification.Main
 import nl.esi.comma.inputspecification.inputSpecification.SUTDefinition
+import nl.esi.comma.testspecification.generator.TestSpecificationInstance
+import nl.esi.comma.testspecification.generator.utils.Step
 import nl.esi.comma.testspecification.testspecification.TSMain
 import nl.esi.comma.testspecification.testspecification.TestDefinition
 import org.eclipse.emf.ecore.resource.Resource
@@ -29,7 +31,7 @@ import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
 
-class TestDocumentationGenerator extends AbstractGenerator
+class FromConcreteToDocumentation extends AbstractGenerator
 {
 	var mapConfigurationsToFeatures = new HashMap<String, List<String>>
 	
@@ -122,7 +124,6 @@ class TestDocumentationGenerator extends AbstractGenerator
 		var tsInst = new TestSpecificationInstance
 		var testDefFilePath = new String
 		var mapStepSeqToSteps = new HashMap<String,List<String>>
-		var _sutHandler = new ConcreteSUTHandler // limitation: atmost one SUT definition file per tspec
 		
 		// check if the resource
 		if(resource.allContents.head instanceof TSMain) {
@@ -140,10 +141,6 @@ class TestDocumentationGenerator extends AbstractGenerator
 								for(elm : api.di) 
 									tsInst.addMapDataInstanceToFile(elm.^var.name, api.path + elm.fname)
 							}
-						} 
-						else if(input.model instanceof SUTDefinition) {
-							_sutHandler.generateConcreteSoSUTMap(input.model as SUTDefinition)
-							// _sutHandler.display
 						} 
 						else { System.out.println("Error: Unhandled Model Type! ")}
 					} // Processed Input Specification
@@ -237,7 +234,7 @@ class TestDocumentationGenerator extends AbstractGenerator
 				fsa.generateFile(configName + ".plantuml", plantUMLTxt)
 				
 				// Generate MD File
-				var mdTxt = (new DocGen).generateMDFile(tsInst, mapStepToInputData, _sutHandler, featureList, configName)
+				var mdTxt = (new DocGen).generateMDFile(tsInst, mapStepToInputData, featureList, configName)
 				fsa.generateFile(configName + "_doc.md", mdTxt)
 				
 				// Turn off during production!

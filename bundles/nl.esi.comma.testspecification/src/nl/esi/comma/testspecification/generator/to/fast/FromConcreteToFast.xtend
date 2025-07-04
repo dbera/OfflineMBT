@@ -10,7 +10,7 @@
  *
  * SPDX-License-Identifier: MIT
  */
-package nl.esi.comma.testspecification.generator
+package nl.esi.comma.testspecification.generator.to.fast
 
 import java.util.ArrayList
 import java.util.HashMap
@@ -24,10 +24,8 @@ import nl.esi.comma.expressions.expression.Expression
 import nl.esi.comma.expressions.expression.ExpressionRecordAccess
 import nl.esi.comma.expressions.expression.ExpressionVariable
 import nl.esi.comma.inputspecification.inputSpecification.APIDefinition
-import nl.esi.comma.inputspecification.inputSpecification.LISVCP
 import nl.esi.comma.inputspecification.inputSpecification.Main
 import nl.esi.comma.inputspecification.inputSpecification.SUTDefinition
-import nl.esi.comma.inputspecification.inputSpecification.TWINSCANKT
 import nl.esi.comma.testspecification.testspecification.AbstractStep
 import nl.esi.comma.testspecification.testspecification.AbstractTestDefinition
 import nl.esi.comma.testspecification.testspecification.ContextMap
@@ -40,13 +38,13 @@ import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
 
 import static extension nl.esi.comma.types.utilities.EcoreUtil3.*
+import nl.esi.comma.testspecification.generator.utils.KeyValue
+import nl.esi.comma.testspecification.generator.utils.Step
+import nl.esi.comma.testspecification.generator.utils.JSONData
+import nl.esi.comma.testspecification.generator.to.fast.ExpressionsParser
 
 class FromConcreteToFast extends AbstractGenerator {
-    /* TODO this should come from project task? Investigate and Implement it. */
-    var record_path_for_lot_def = "ReferenceFabModelTWINSCANtooladapterandSUTTWINSCANSUTExposeInput.twinscan_expose_input.lot_definition" 
-    var record_lot_def_file_name = "lot_definition"
-    var record_lot_def_file_path_prefix = "./vfab2_scenario/FAST/generated_FAST/dataset/"
-    
+
     // In-Memory Data Structures corresponding *.tspec (captured in resource object)
     var mapLocalDataVarToDataInstance = new HashMap<String, List<String>>
     var mapLocalStepInstance = new HashMap<String, List<String>>
@@ -137,35 +135,7 @@ class FromConcreteToFast extends AbstractGenerator {
                             var lhs = getLHS(act) // note key = record variable, and value = recExp
                             stepInst.variableName = lhs.key // Note DB: This is the same for all actions
                             stepInst.recordExp = lhs.value // Note DB: This keeps overwriting (record prefix)
-                            /*System.out.println("DEBUG LHS.KEY: " + lhs.key)
-                            System.out.println("DEBUG LHS.VALUE: " + lhs.value)
-                            System.out.println("DEBUG MAP LHStoRHS: ")
-                            mapLHStoRHS.display*/
-                            // System.out.println("DEBUG: " + record_path_for_lot_def)
-                            if(record_path_for_lot_def.equals(lhs.value) || 
-                                record_path_for_lot_def.endsWith(lhs.value)
-                            ) {
-                                if(stepInst.isStepRefPresent(lhs.value)) {
-                                    var refStep = stepInst.getStepRefs(lhs.value)
-                                    refStep.parameters.add(mapLHStoRHS)
-                                    // stepInst.stepRefs.add(refStep)
-                                } else {
-                                    // Create new step instance and fill all details there
-                                    // Add to list of step reference of step
-                                    var rstepInst = new Step
-                                    rstepInst.id = lhs.value
-                                    rstepInst.type = s.type.name
-                                    rstepInst.inputFile = record_lot_def_file_path_prefix /*+ 
-                                                          record_lot_def_file_name + "_" + 
-                                                          s.inputVar.name + ".json"*/
-                                    rstepInst.variableName = record_lot_def_file_name
-                                    rstepInst.recordExp = stepInst.id
-                                    rstepInst.parameters.add(mapLHStoRHS) // Added DB 29.05.2025
-                                    stepInst.stepRefs.add(rstepInst)
-                                }
-                            } else {
-                                stepInst.parameters.add(mapLHStoRHS)
-                            }
+                            stepInst.parameters.add(mapLHStoRHS)
                         }
                     }
                 }
@@ -186,8 +156,6 @@ class FromConcreteToFast extends AbstractGenerator {
         
         // generate data.kvp file
         fsa.generateFile(testDefFilePath + "data.kvp", generateFASTScenarioFile)
-        /* Added DB: 12.05.2025. Support PlantUML Generation for Review */
-        fsa.generateFile(testDefFilePath + "viz.plantuml", (new DocGen).generatePlantUMLFile(listStepInstances, new HashMap<String, List<String>>)) 
         
         // Generate JSON data files and vfd.xml
         generateJSONDataAndVFDFiles(testDefFilePath, fsa, modelInst)
@@ -409,10 +377,6 @@ class FromConcreteToFast extends AbstractGenerator {
                     }
                     // dataInst.display
                     JSONDataFileContents.add(dataInst)
-                } else if(input.model instanceof SUTDefinition) {
-                    val sutDef = input.model as SUTDefinition
-                    // generate XML-File! => vfd.xml
-                    fsa.generateFile(testDefFilePath + "vfd.xml", generateVFDFile(sutDef))
                 }
             }
             
@@ -708,115 +672,6 @@ class FromConcreteToFast extends AbstractGenerator {
             }
         }
         return refTxt
-    }
-    
-    
-    def private generateVFDFile(SUTDefinition sDef) {
-        var def = sDef.generic.virtualFabDefinition
-        var xsi = sDef.generic.XSI
-        var loc = sDef.generic.schemaLocation
-        var title = sDef.generic.title
-        var sutsname = sDef.sut.name
-        var sutsdesc = sDef.sut.desc
-        '''
-        <?xml version="1.0" encoding="UTF-8"?>
-        <VirtualFabDefinition:VirtualFabDefinition xmlns:VirtualFabDefinition="«def»" xmlns:xsi="«xsi»" xsi:schemaLocation="«loc»">
-          <Header>
-            <Title>«title»</Title>
-            <CreateTime>2022-03-03T09:12:12</CreateTime>
-          </Header>
-          <Definition>
-            <Name>«sutsname»</Name>
-            <Description>«sutsdesc»</Description>
-            <SUTList>
-            «FOR sut : sDef.sut.sutDefRef»
-                «IF sut instanceof TWINSCANKT»
-                    «generateTwinScanTxt(sut)»
-                «ELSEIF sut instanceof LISVCP»
-                    «generateLisTxt(sut)»
-                «ENDIF»
-            «ENDFOR»
-            </SUTList>
-          </Definition>
-        </VirtualFabDefinition:VirtualFabDefinition>
-        '''
-    }
-    
-    def private generateTwinScanTxt(TWINSCANKT ts) {
-        var name = ts.name
-        var type = ts.type
-        var scn_param_name = ts.scenarioParameterName
-        var machine_id = ts.machineID
-        var cpu = ts.CPU
-        var memory = ts.memory
-        var machine_type = ts.machineType
-        var useExisting = ts.useExisting
-        var swbaseline = ts.baseline
-        
-        '''
-        <SUT>
-            <SutType>«type»</SutType>
-            <Name>«name»</Name>
-            <ScenarioParameterName>«scn_param_name»</ScenarioParameterName>
-            <TWINSCAN-KT>
-                <MachineID>«machine_id»</MachineID>
-                <CPU>«cpu»</CPU>
-                <Memory>«memory»</Memory>
-                <MachineType>«machine_type»</MachineType>
-                <UseExisting>«useExisting»</UseExisting>
-                <Baseline>«swbaseline»</Baseline>
-                «IF !ts.options.empty»
-                <OptionList>
-                «FOR elm : ts.options»
-                    <Option>
-                        <OptionName>«elm.optionname»</OptionName>
-                        <OptionValue>«elm.value»</OptionValue>
-                        <IsSVP>«elm.isIsSVP»</IsSVP>
-                    </Option>
-                «ENDFOR»
-                </OptionList>
-                «ENDIF»
-                «IF !ts.commands.empty»
-                <RunCommands>
-                    <PostConfiguration>
-                        <CommandList>
-                            «FOR elm : ts.commands»
-                            <Command>«elm»</Command>
-                            «ENDFOR»
-                        </CommandList>
-                    </PostConfiguration>
-                 </RunCommands>
-                 «ENDIF»
-            </TWINSCAN-KT>
-        </SUT>
-        '''
-    }
-    
-    def private generateLisTxt(LISVCP lis) {
-        var name = lis.name
-        var type = lis.type
-        var scn_param_name = lis.scenarioParameterName
-        var address = lis.address
-        
-        '''
-              <SUT>
-                <SutType>«type»</SutType>
-                <Name>«name»</Name>
-                <ScenarioParameterName>«scn_param_name»</ScenarioParameterName>
-                <LIS-VCP>
-                  <Address>«address»</Address>
-                  <JobConfigList>
-                  «FOR elm : lis.jobConfigList»
-                    <JobConfig>
-                      <ApplicationId>«elm.appID»</ApplicationId>
-                      <FunctionId>«elm.fnId»</FunctionId>
-                      <ActiveDocumentCollection>«elm.isActDocColl»</ActiveDocumentCollection>
-                    </JobConfig>
-                  «ENDFOR»
-                  </JobConfigList>
-                </LIS-VCP>
-              </SUT>
-        '''
     }
     
     def private displayParseResults() {
