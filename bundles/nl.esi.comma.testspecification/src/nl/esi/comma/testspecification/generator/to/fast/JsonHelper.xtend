@@ -12,21 +12,21 @@
  */
 package nl.esi.comma.testspecification.generator.to.fast
 
+import java.util.HashMap
+import java.util.Map
 import nl.esi.comma.assertthat.assertThat.JsonArray
 import nl.esi.comma.assertthat.assertThat.JsonMember
 import nl.esi.comma.assertthat.assertThat.JsonObject
 import nl.esi.comma.assertthat.assertThat.JsonValue
 import nl.esi.comma.expressions.expression.Expression
-import nl.esi.comma.testspecification.testspecification.TSJsonMember
-import nl.esi.comma.testspecification.testspecification.TSJsonObject
 import nl.esi.comma.testspecification.testspecification.TSJsonArray
-import nl.esi.comma.testspecification.testspecification.TSJsonValue
-import nl.esi.comma.testspecification.testspecification.TSJsonString
 import nl.esi.comma.testspecification.testspecification.TSJsonBool
 import nl.esi.comma.testspecification.testspecification.TSJsonFloat
 import nl.esi.comma.testspecification.testspecification.TSJsonLong
-import java.util.Map
-import java.util.HashMap
+import nl.esi.comma.testspecification.testspecification.TSJsonMember
+import nl.esi.comma.testspecification.testspecification.TSJsonObject
+import nl.esi.comma.testspecification.testspecification.TSJsonString
+import nl.esi.comma.testspecification.testspecification.TSJsonValue
 
 /**
  * Parser for json elements, objects, and arrays

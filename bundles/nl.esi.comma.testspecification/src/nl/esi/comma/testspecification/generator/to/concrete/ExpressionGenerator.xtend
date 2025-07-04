@@ -12,10 +12,10 @@
  */
 package nl.esi.comma.testspecification.generator.to.concrete
 
+import nl.esi.comma.expressions.expression.ExpressionVariable
 import nl.esi.comma.expressions.generator.ExpressionsCommaGenerator
 import nl.esi.comma.testspecification.testspecification.StepReference
 import org.eclipse.emf.common.util.EList
-import nl.esi.comma.expressions.expression.ExpressionVariable
 
 class ExpressionGenerator extends ExpressionsCommaGenerator {
 	EList<StepReference> stepRef

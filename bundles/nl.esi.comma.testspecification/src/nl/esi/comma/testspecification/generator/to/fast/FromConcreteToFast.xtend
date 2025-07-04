@@ -26,6 +26,10 @@ import nl.esi.comma.expressions.expression.ExpressionVariable
 import nl.esi.comma.inputspecification.inputSpecification.APIDefinition
 import nl.esi.comma.inputspecification.inputSpecification.Main
 import nl.esi.comma.inputspecification.inputSpecification.SUTDefinition
+import nl.esi.comma.testspecification.generator.to.docgen.DocGen
+import nl.esi.comma.testspecification.generator.utils.JSONData
+import nl.esi.comma.testspecification.generator.utils.KeyValue
+import nl.esi.comma.testspecification.generator.utils.Step
 import nl.esi.comma.testspecification.testspecification.AbstractStep
 import nl.esi.comma.testspecification.testspecification.AbstractTestDefinition
 import nl.esi.comma.testspecification.testspecification.ContextMap
@@ -38,11 +42,6 @@ import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
 
 import static extension nl.esi.comma.types.utilities.EcoreUtil3.*
-import nl.esi.comma.testspecification.generator.utils.KeyValue
-import nl.esi.comma.testspecification.generator.utils.Step
-import nl.esi.comma.testspecification.generator.utils.JSONData
-import nl.esi.comma.testspecification.generator.to.fast.ExpressionsParser
-import nl.esi.comma.testspecification.generator.to.docgen.DocGen
 
 class FromConcreteToFast extends AbstractGenerator {
     /* TODO this should come from project task? Investigate and Implement it. */

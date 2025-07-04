@@ -12,7 +12,9 @@
  */
 package nl.esi.comma.testspecification.generator.to.concrete
 
+import java.util.HashMap
 import java.util.HashSet
+import java.util.Map
 import nl.asml.matala.product.product.Product
 import nl.esi.comma.testspecification.generator.to.fast.DataKVPGenerator
 import nl.esi.comma.testspecification.generator.to.fast.RefKVPGenerator
@@ -28,8 +30,6 @@ import org.eclipse.xtext.generator.IGeneratorContext
 
 import static extension nl.esi.comma.testspecification.generator.utils.Utils.*
 import static extension nl.esi.comma.types.utilities.EcoreUtil3.*
-import java.util.HashMap
-import java.util.Map
 
 class FromAbstractToConcrete extends AbstractGenerator {
 

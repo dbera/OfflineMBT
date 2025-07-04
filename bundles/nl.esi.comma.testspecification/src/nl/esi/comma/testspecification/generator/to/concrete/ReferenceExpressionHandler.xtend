@@ -12,20 +12,17 @@
  */
 package nl.esi.comma.testspecification.generator.to.concrete
 
+import java.util.ArrayList
+import java.util.HashMap
+import java.util.List
+import nl.asml.matala.product.product.VarRef
 import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
 import nl.esi.comma.testspecification.testspecification.ComposeStep
 import nl.esi.comma.testspecification.testspecification.RunStep
 import nl.esi.comma.testspecification.testspecification.StepReference
-
-import java.util.List
-import java.util.ArrayList
-import java.util.HashMap
-
 import org.eclipse.emf.common.util.EList
 
 import static extension nl.esi.comma.testspecification.generator.utils.Utils.*
-import nl.asml.matala.product.product.VarRef
-import nl.esi.comma.testspecification.generator.to.concrete.ExpressionGenerator
 
 class ReferenceExpressionHandler 
 {
