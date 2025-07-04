@@ -10,7 +10,7 @@
  *
  * SPDX-License-Identifier: MIT
  */
-package nl.esi.comma.testspecification.abstspec.generator
+package nl.esi.comma.testspecification.generator.to.concrete
 
 import java.util.Set
 import nl.esi.comma.testspecification.testspecification.ComposeStep
@@ -24,7 +24,7 @@ import nl.esi.comma.types.types.Type
 import nl.esi.comma.types.types.TypeReference
 import nl.esi.comma.types.types.VectorTypeConstructor
 
-import static extension nl.esi.comma.testspecification.abstspec.generator.Utils.*
+import static extension nl.esi.comma.testspecification.generator.utils.Utils.*
 
 class ConcreteExpressionHandler {
     def prepareStepInputExpressions(RunStep rstep, Iterable<ComposeStep> composeSteps) {

@@ -1,4 +1,4 @@
-package nl.esi.comma.testspecification.generator
+package nl.esi.comma.testspecification.generator.utils
 
 import nl.esi.comma.actions.actions.AssignmentAction
 import nl.esi.comma.actions.actions.RecordFieldAssignmentAction

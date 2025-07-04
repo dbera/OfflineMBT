@@ -10,16 +10,12 @@
  *
  * SPDX-License-Identifier: MIT
  */
-package nl.esi.comma.testspecification.generator
+package nl.esi.comma.testspecification.generator.to.concrete
 
-import nl.esi.comma.expressions.expression.ExpressionFunctionCall
+import nl.esi.comma.expressions.expression.ExpressionVariable
 import nl.esi.comma.expressions.generator.ExpressionsCommaGenerator
 import nl.esi.comma.testspecification.testspecification.StepReference
 import org.eclipse.emf.common.util.EList
-import nl.esi.comma.expressions.expression.ExpressionVector
-import java.util.ArrayList
-import nl.esi.comma.expressions.expression.ExpressionRecordAccess
-import nl.esi.comma.expressions.expression.ExpressionVariable
 
 class ExpressionGenerator extends ExpressionsCommaGenerator {
 	EList<StepReference> stepRef

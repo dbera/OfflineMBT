@@ -10,7 +10,7 @@
  *
  * SPDX-License-Identifier: MIT
  */
-package nl.esi.comma.testspecification.abstspec.generator
+package nl.esi.comma.testspecification.generator.utils
 
 import java.util.Collections
 import java.util.List
