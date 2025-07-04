@@ -42,9 +42,14 @@ import nl.esi.comma.testspecification.generator.utils.KeyValue
 import nl.esi.comma.testspecification.generator.utils.Step
 import nl.esi.comma.testspecification.generator.utils.JSONData
 import nl.esi.comma.testspecification.generator.to.fast.ExpressionsParser
+import nl.esi.comma.testspecification.generator.to.docgen.DocGen
 
 class FromConcreteToFast extends AbstractGenerator {
-
+    /* TODO this should come from project task? Investigate and Implement it. */
+    var record_path_for_lot_def = "ReferenceFabModelTWINSCANtooladapterandSUTTWINSCANSUTExposeInput.twinscan_expose_input.lot_definition" 
+    var record_lot_def_file_name = "lot_definition"
+    var record_lot_def_file_path_prefix = "./vfab2_scenario/FAST/generated_FAST/dataset/"
+    
     // In-Memory Data Structures corresponding *.tspec (captured in resource object)
     var mapLocalDataVarToDataInstance = new HashMap<String, List<String>>
     var mapLocalStepInstance = new HashMap<String, List<String>>
@@ -135,7 +140,35 @@ class FromConcreteToFast extends AbstractGenerator {
                             var lhs = getLHS(act) // note key = record variable, and value = recExp
                             stepInst.variableName = lhs.key // Note DB: This is the same for all actions
                             stepInst.recordExp = lhs.value // Note DB: This keeps overwriting (record prefix)
-                            stepInst.parameters.add(mapLHStoRHS)
+                            /*System.out.println("DEBUG LHS.KEY: " + lhs.key)
+                            System.out.println("DEBUG LHS.VALUE: " + lhs.value)
+                            System.out.println("DEBUG MAP LHStoRHS: ")
+                            mapLHStoRHS.display*/
+                            // System.out.println("DEBUG: " + record_path_for_lot_def)
+                            if(record_path_for_lot_def.equals(lhs.value) || 
+                                record_path_for_lot_def.endsWith(lhs.value)
+                            ) {
+                                if(stepInst.isStepRefPresent(lhs.value)) {
+                                    var refStep = stepInst.getStepRefs(lhs.value)
+                                    refStep.parameters.add(mapLHStoRHS)
+                                    // stepInst.stepRefs.add(refStep)
+                                } else {
+                                    // Create new step instance and fill all details there
+                                    // Add to list of step reference of step
+                                    var rstepInst = new Step
+                                    rstepInst.id = lhs.value
+                                    rstepInst.type = s.type.name
+                                    rstepInst.inputFile = record_lot_def_file_path_prefix /*+ 
+                                                          record_lot_def_file_name + "_" + 
+                                                          s.inputVar.name + ".json"*/
+                                    rstepInst.variableName = record_lot_def_file_name
+                                    rstepInst.recordExp = stepInst.id
+                                    rstepInst.parameters.add(mapLHStoRHS) // Added DB 29.05.2025
+                                    stepInst.stepRefs.add(rstepInst)
+                                }
+                            } else {
+                                stepInst.parameters.add(mapLHStoRHS)
+                            }
                         }
                     }
                 }
@@ -156,6 +189,8 @@ class FromConcreteToFast extends AbstractGenerator {
         
         // generate data.kvp file
         fsa.generateFile(testDefFilePath + "data.kvp", generateFASTScenarioFile)
+        /* Added DB: 12.05.2025. Support PlantUML Generation for Review */
+        fsa.generateFile(testDefFilePath + "viz.plantuml", (new DocGen).generatePlantUMLFile(listStepInstances, new HashMap<String, List<String>>)) 
         
         // Generate JSON data files and vfd.xml
         generateJSONDataAndVFDFiles(testDefFilePath, fsa, modelInst)
