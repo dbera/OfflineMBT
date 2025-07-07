@@ -30,24 +30,24 @@ ModelType:
 ;
 
 SUTDefinition:
-    ('sut-instances' vars+=Variable+)
-    ('sut-init' initActions+=(AssignmentAction | RecordFieldAssignmentAction)+)?
-    ('sut-implementation' sutImpl += SUTAPIImplementation+)?
-    ('sut-definition'
-        ('var-to-suts' '{' varToSut += VarToSUT+ '}')?
-        configSpace += ConfigurationSpace+
-        sutDef += SUTDef+ 
-        sut = SUT
-        'generate-file' file = STRING
-    )?
+	('sut-instances' vars+=Variable+)
+	('sut-init' initActions+=(AssignmentAction | RecordFieldAssignmentAction)+)?
+	('sut-implementation' sutImpl += SUTAPIImplementation+)?
+	('sut-definition'
+		('var-to-suts' '{' varToSut += VarToSUT+ '}')?
+		configSpace += ConfigurationSpace+
+		sutDef += SUTDef+ 
+		sut = SUT
+		'generate-file' file = STRING
+	)?
 ;
 
 ConfigurationSpace:
-    'test-configuration' name = ID '{' feature += [expr::Variable|ID]+ '}'
+	'test-configuration' name = ID '{' feature += [expr::Variable|ID]+ '}'
 ;
 
 VarToSUT:
-    varref = [expr::Variable|ID] '->' sutref = [SUTDef|ID]
+	varref = [expr::Variable|ID] '->' sutref = [SUTDef|ID]
 ;
 
 APIDefinition:
@@ -86,7 +86,7 @@ Step:
 ;
 
 /*Param:
-    name=ID ':' value += STRING+
+	name=ID ':' value += STRING+
 ;*/
 
 @Override
@@ -95,11 +95,11 @@ ModelContainer returns types::ModelContainer:
 ;
 
 SUT:
-    'suts' '{'
-        'sut-name' name = ID
-        'description' desc = STRING
-        'sut-defs' sutDefRef += [SUTDef|ID]+
-    '}'
+	'suts' '{'
+		'sut-name' name = ID
+		'description' desc = STRING
+		'sut-defs' sutDefRef += [SUTDef|ID]+
+	'}'
 ;
 
 SUTDef:
@@ -110,42 +110,41 @@ SUTDef:
 
 
 /*Applications:
-    
+	
 ;*/
 
 
 //////////////////////// OBSOLETE ////////////////////////////////
 
-
 TagText:
-    (command ?= 'command')? 'tag' tag += (EventTag | EventOutcomeTag)+
+	(command ?= 'command')? 'tag' tag += (EventTag | EventOutcomeTag)+
 ;
 
 EventTag:
-    'action' eventTag = STRING
+	'action' eventTag = STRING
 ;
 
 EventOutcomeTag:
-    'data' (value += Expression (',' value += Expression)*)? '->' eventOutcomeTag = STRING
+	'data' (value += Expression (',' value += Expression)*)? '->' eventOutcomeTag = STRING
 ;
 
 /*EventData:
-    'state:' state = [sm::State] ('select-transition-clause-id:' evtInst += EventInstance+ )? params += EventParams*
+	'state:' state = [sm::State] ('select-transition-clause-id:' evtInst += EventInstance+ )? params += EventParams*
 ;*/
 
 Tail:
-    ('non-trigger:' niEvent = [sig::InterfaceEvent])
-    (tags += TagText*)
+	('non-trigger:' niEvent = [sig::InterfaceEvent])
+	(tags += TagText*)
 ;
 
 EventInstance:
-    '(' instanceID = INT ':' '(' evtCl += EventClause+ ')' params += EventParams* ')'
+	'(' instanceID = INT ':' '(' evtCl += EventClause+ ')' params += EventParams* ')'
 ;
 
 EventClause:
-    clauseID = INT | ',' clauseID = INT
+	clauseID = INT | ',' clauseID = INT
 ;
 
 EventParams: {EventParams}
-    'params:' '(' (value += Expression (',' value += Expression)*)? ')' ('feature-expr:' config = Expression)?
+	'params:' '(' (value += Expression (',' value += Expression)*)? ')' ('feature-expr:' config = Expression)?
 ;
