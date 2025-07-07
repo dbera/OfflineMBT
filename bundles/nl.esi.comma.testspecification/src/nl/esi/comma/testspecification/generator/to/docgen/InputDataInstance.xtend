@@ -18,7 +18,6 @@ import nl.esi.comma.actions.actions.AssignmentAction
 import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
 import nl.esi.comma.inputspecification.inputSpecification.APIDefinition
 import nl.esi.comma.inputspecification.inputSpecification.Main
-import nl.esi.comma.inputspecification.inputSpecification.SUTDefinition
 import nl.esi.comma.testspecification.generator.TestSpecificationInstance
 import nl.esi.comma.testspecification.generator.utils.JSONData
 import nl.esi.comma.testspecification.testspecification.TSMain
@@ -51,10 +50,6 @@ class InputDataInstance
 					}
 					// dataInst.display
 					JSONDataFileContents.add(dataInst)
-				} else if(input.model instanceof SUTDefinition) {
-					val sutDef = input.model as SUTDefinition
-					// TODO map from variable to SUT ID 
-					// TODO Needed for variability.
 				}
 			}
 			

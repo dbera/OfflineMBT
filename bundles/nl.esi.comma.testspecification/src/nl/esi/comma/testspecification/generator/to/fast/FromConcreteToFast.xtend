@@ -25,7 +25,6 @@ import nl.esi.comma.expressions.expression.ExpressionRecordAccess
 import nl.esi.comma.expressions.expression.ExpressionVariable
 import nl.esi.comma.inputspecification.inputSpecification.APIDefinition
 import nl.esi.comma.inputspecification.inputSpecification.Main
-import nl.esi.comma.inputspecification.inputSpecification.SUTDefinition
 import nl.esi.comma.testspecification.generator.to.docgen.DocGen
 import nl.esi.comma.testspecification.generator.utils.JSONData
 import nl.esi.comma.testspecification.generator.utils.KeyValue
@@ -92,13 +91,6 @@ class FromConcreteToFast extends AbstractGenerator {
                         for(elm : api.di)
                             addMapDataInstanceToFile(elm.^var.name, api.path + elm.fname)
                     }
-                } else if(input.model instanceof SUTDefinition) {
-                    /*val sutdef = input.model as SUTDefinition
-                    for(sut : sutdef.sutImpl) {
-                        for(elm : sut.di) {
-                            addMapSUTInstanceToFile(elm.^var.name, sut.path + elm.fname)    
-                        }
-                    }*/ // assumption is its a standard vfd.xml file. See dedicated generator later.
                 } else { System.out.println("Error: Unhandled Model Type! ")}
             }
         }

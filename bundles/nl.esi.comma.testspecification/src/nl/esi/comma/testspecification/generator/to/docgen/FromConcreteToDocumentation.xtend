@@ -20,7 +20,6 @@ import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
 import nl.esi.comma.expressions.expression.Variable
 import nl.esi.comma.inputspecification.inputSpecification.APIDefinition
 import nl.esi.comma.inputspecification.inputSpecification.Main
-import nl.esi.comma.inputspecification.inputSpecification.SUTDefinition
 import nl.esi.comma.testspecification.generator.TestSpecificationInstance
 import nl.esi.comma.testspecification.generator.utils.Step
 import nl.esi.comma.testspecification.testspecification.TSMain
@@ -52,16 +51,6 @@ class FromConcreteToDocumentation extends AbstractGenerator
 									tsInst.addMapDataInstanceToFile(elm.^var.name, api.path + elm.fname)
 							}
 						} */
-						//else 
-						if(input.model instanceof SUTDefinition) {
-							val sutDef = input.model as SUTDefinition
-							for(conf : sutDef.configSpace) {
-								mapConfigurationsToFeatures.put(conf.name, new ArrayList<String>)
-								for(f : conf.feature) {
-									mapConfigurationsToFeatures.get(conf.name).add(f.name)
-								}
-							}
-						} 
 						// else { System.out.println("Error: Unhandled Model Type! ")}
 					} // Processed Input Specification
 				} // Finished Processing Imports (input specifications)
