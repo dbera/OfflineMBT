@@ -26,30 +26,9 @@ Main:
 ;
 
 ModelType:
-	APIDefinition | SUTDefinition | TestDefinition
+	APIDefinition | TestDefinition
 ;
 
-SUTDefinition:
-	('sut-instances' vars+=Variable+)
-	('sut-init' initActions+=(AssignmentAction | RecordFieldAssignmentAction)+)?
-	('sut-implementation' sutImpl += SUTAPIImplementation+)?
-	('sut-definition'
-		('var-to-suts' '{' varToSut += VarToSUT+ '}')?
-		configSpace += ConfigurationSpace+
-		sutDef += SUTDef+ 
-		sut = SUT
-		'generate-file' file = STRING
-		generic = Generic
-	)?
-;
-
-ConfigurationSpace:
-	'test-configuration' name = ID '{' feature += [expr::Variable|ID]+ '}'
-;
-
-VarToSUT:
-	varref = [expr::Variable|ID] '->' sutref = [SUTDef|ID]
-;
 
 APIDefinition:
 	'data-instances' vars+=Variable+
@@ -86,118 +65,48 @@ Step:
 	//('local-parameters' localParams += Param+)? 
 ;
 
-/*Param:
-	name=ID ':' value += STRING+
-;*/
-
 @Override
 ModelContainer returns types::ModelContainer:
 	super::ModelContainer | Main
 ;
 
-Generic:
-	'meta-data' '{'
-		'def' VirtualFabDefinition = STRING
-		'xsi' XSI = STRING
-		'loc' SchemaLocation = STRING
-		'title' Title = STRING
-	'}'	
-;
-
-
-SUT:
-	'suts' '{'
-		'sut-name' name = ID
-		'description' desc = STRING
-		'sut-defs' sutDefRef += [SUTDef|ID]+
-	'}'
-;
-
-SUTDef:
-	TWINSCANKT | LISVCP
-;
-
-TWINSCANKT:
-	'twinscan-kt' '{'
-		'twinscan-name' name = ID
-		'type' type = STRING
-		'scenario-param-name' ScenarioParameterName = STRING
-		'machine-id' machineID = STRING
-		'cpu-cores' CPU = INT
-		'memory-size' Memory = INT
-		'machine-type' MachineType = STRING
-		(useExisting?='use-existing')?
-		'sw-baseline' baseline = STRING
-		'opts' '{'
-			options += Option*
-		 '}'
-		 'commands' commands += STRING*
-	'}'
-;
-
-Option:
-	'{' 'opt-name' optionname = STRING
-		'opt-value' value = STRING
-		(isSVP?='svp')? 
-	'}'
-;
-
-LISVCP:
-	'lis-vcp' '{'
-		'lis-name' name = ID
-		'type' type = STRING
-		'scenario-param-name' ScenarioParameterName = STRING
-		'address' address = STRING
-		'job-config-list' '{' 
-			jobConfigList += JobConfig*
-		'}'
-	'}'
-;
-
-JobConfig:
-	'{' 
-		'app-id' appID = STRING
-		'fun-id'	 fnId = STRING
-		(actDocColl?='active-document-collection')? 
-	'}' 
-;
-
 /*Applications:
-	
+    
 ;*/
 
 
 //////////////////////// OBSOLETE ////////////////////////////////
 
+
 TagText:
-	(command ?= 'command')? 'tag' tag += (EventTag | EventOutcomeTag)+
+    (command ?= 'command')? 'tag' tag += (EventTag | EventOutcomeTag)+
 ;
 
 EventTag:
-	'action' eventTag = STRING
+    'action' eventTag = STRING
 ;
 
 EventOutcomeTag:
-	'data' (value += Expression (',' value += Expression)*)? '->' eventOutcomeTag = STRING
+    'data' (value += Expression (',' value += Expression)*)? '->' eventOutcomeTag = STRING
 ;
 
 /*EventData:
-	'state:' state = [sm::State] ('select-transition-clause-id:' evtInst += EventInstance+ )? params += EventParams*
+    'state:' state = [sm::State] ('select-transition-clause-id:' evtInst += EventInstance+ )? params += EventParams*
 ;*/
 
 Tail:
-	('non-trigger:' niEvent = [sig::InterfaceEvent])
-	(tags += TagText*)
+    ('non-trigger:' niEvent = [sig::InterfaceEvent])
+    (tags += TagText*)
 ;
 
 EventInstance:
-	'(' instanceID = INT ':' '(' evtCl += EventClause+ ')' params += EventParams* ')'
+    '(' instanceID = INT ':' '(' evtCl += EventClause+ ')' params += EventParams* ')'
 ;
 
 EventClause:
-	clauseID = INT | ',' clauseID = INT
+    clauseID = INT | ',' clauseID = INT
 ;
 
 EventParams: {EventParams}
-	'params:' '(' (value += Expression (',' value += Expression)*)? ')' ('feature-expr:' config = Expression)?
+    'params:' '(' (value += Expression (',' value += Expression)*)? ')' ('feature-expr:' config = Expression)?
 ;
