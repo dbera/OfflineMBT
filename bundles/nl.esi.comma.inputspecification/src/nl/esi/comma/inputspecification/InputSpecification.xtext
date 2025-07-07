@@ -26,9 +26,29 @@ Main:
 ;
 
 ModelType:
-	APIDefinition | TestDefinition
+	APIDefinition | SUTDefinition | TestDefinition
 ;
 
+SUTDefinition:
+    ('sut-instances' vars+=Variable+)
+    ('sut-init' initActions+=(AssignmentAction | RecordFieldAssignmentAction)+)?
+    ('sut-implementation' sutImpl += SUTAPIImplementation+)?
+    ('sut-definition'
+        ('var-to-suts' '{' varToSut += VarToSUT+ '}')?
+        configSpace += ConfigurationSpace+
+        sutDef += SUTDef+ 
+        sut = SUT
+        'generate-file' file = STRING
+    )?
+;
+
+ConfigurationSpace:
+    'test-configuration' name = ID '{' feature += [expr::Variable|ID]+ '}'
+;
+
+VarToSUT:
+    varref = [expr::Variable|ID] '->' sutref = [SUTDef|ID]
+;
 
 APIDefinition:
 	'data-instances' vars+=Variable+
@@ -65,10 +85,29 @@ Step:
 	//('local-parameters' localParams += Param+)? 
 ;
 
+/*Param:
+    name=ID ':' value += STRING+
+;*/
+
 @Override
 ModelContainer returns types::ModelContainer:
 	super::ModelContainer | Main
 ;
+
+SUT:
+    'suts' '{'
+        'sut-name' name = ID
+        'description' desc = STRING
+        'sut-defs' sutDefRef += [SUTDef|ID]+
+    '}'
+;
+
+SUTDef:
+    'define-sut' '{'
+        name = ID
+    '}'
+;
+
 
 /*Applications:
     
