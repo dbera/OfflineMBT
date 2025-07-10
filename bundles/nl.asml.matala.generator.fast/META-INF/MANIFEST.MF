@@ -1,0 +1,13 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: FAST Generators
+Bundle-SymbolicName: nl.asml.matala.generator.fast
+Bundle-Version: 4.2.0.qualifier
+Bundle-Vendor: ASML
+Automatic-Module-Name: nl.asml.matala.generator.fast
+Bundle-RequiredExecutionEnvironment: JavaSE-21
+Require-Bundle: com.google.guava,
+ org.eclipse.xtext.xbase.lib,
+ org.eclipse.xtend.lib,
+ org.eclipse.xtend.lib.macro,
+ nl.esi.comma.testspecification
