@@ -1,0 +1,13 @@
+Manifest-Version: 1.0
+Automatic-Module-Name: nl.esi.comma.abstrracttestspecification
+Bundle-ManifestVersion: 2
+Bundle-Name: nl.esi.comma.abstrracttestspecification
+Bundle-Vendor: My Company
+Bundle-Version: 1.0.0.qualifier
+Bundle-SymbolicName: nl.esi.comma.abstrracttestspecification; singleton:=true
+Bundle-ActivationPolicy: lazy
+Require-Bundle: org.eclipse.xtext,
+ org.eclipse.xtext.xbase,
+ org.eclipse.equinox.common;bundle-version="3.16.0",
+ nl.asml.matala.product
+Bundle-RequiredExecutionEnvironment: JavaSE-21

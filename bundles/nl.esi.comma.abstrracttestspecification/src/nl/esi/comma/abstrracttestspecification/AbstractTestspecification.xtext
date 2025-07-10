@@ -1,0 +1,15 @@
+grammar nl.esi.comma.abstrracttestspecification.AbstractTestspecification with org.eclipse.xtext.common.Terminals
+
+generate abstractTestspecification "http://www.esi.nl/comma/abstrracttestspecification/AbstractTestspecification"
+
+import "http://www.eclipse.org/emf/2002/Ecore" as ecore
+import "http://www.esi.nl/comma/types/Types" as types
+import "http://www.esi.nl/comma/expressions/Expression" as expr
+import "http://www.esi.nl/comma/actions/Actions" as actions
+import "http://www.asml.nl/matala/product/Product" as prod
+
+Model:
+	greetings+=Greeting*;
+	
+Greeting:
+	'Hello' name=ID '!';
