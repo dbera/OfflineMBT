@@ -26,6 +26,8 @@ jobs:
       with:
         java-version: 21
         java-distribution: temurin
+    - name: Check license headers
+      run: mvn -B -U -fae license:check --file pom.xml
     - name: Build with Maven
       run: mvn -B -U -fae package --file pom.xml
     - name: Attach LSP Client Languages
