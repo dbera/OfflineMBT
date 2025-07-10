@@ -16,9 +16,6 @@ import java.util.HashMap
 import java.util.HashSet
 import java.util.Map
 import nl.asml.matala.product.product.Product
-import nl.esi.comma.testspecification.generator.to.fast.DataKVPGenerator
-import nl.esi.comma.testspecification.generator.to.fast.RefKVPGenerator
-import nl.esi.comma.testspecification.generator.to.fast.VFDXMLGenerator
 import nl.esi.comma.testspecification.testspecification.AbstractTestDefinition
 import nl.esi.comma.testspecification.testspecification.Binding
 import nl.esi.comma.testspecification.testspecification.RunStep

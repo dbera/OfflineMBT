@@ -1,4 +1,4 @@
-package nl.esi.comma.testspecification.generator.to.fast;
+package nl.esi.comma.testspecification.generator.to.concrete;
 
 import java.util.Comparator;
 import java.util.List;

@@ -10,7 +10,7 @@
  *
  * SPDX-License-Identifier: MIT
  */
-package nl.esi.comma.testspecification.generator.to.fast
+package nl.esi.comma.testspecification.generator.to.concrete
 
 import nl.esi.comma.assertthat.assertThat.AssertThatBlock
 import nl.esi.comma.assertthat.assertThat.AssertThatValue
