@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <launchConfiguration type="org.eclipse.emf.mwe2.launch.Mwe2LaunchConfigurationType">
     <booleanAttribute key="org.eclipse.debug.core.ATTR_FORCE_SYSTEM_CONSOLE_ENCODING" value="false"/>
-    <stringAttribute key="org.eclipse.debug.core.ATTR_REFRESH_SCOPE" value="${working_set:&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&#13;&#10;&lt;resources&gt;&#13;&#10;&lt;item path=&quot;/nl.esi.comma.causalgraph&quot; type=&quot;4&quot;/&gt;&#13;&#10;&lt;item path=&quot;/nl.esi.comma.causalgraph.ide&quot; type=&quot;4&quot;/&gt;&#13;&#10;&lt;item path=&quot;/nl.esi.comma.causalgraph.ui&quot; type=&quot;4&quot;/&gt;&#13;&#10;&lt;/resources&gt;}"/>
+    <stringAttribute key="org.eclipse.debug.core.ATTR_REFRESH_SCOPE" value="${working_set:&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&#13;&#10;&lt;resources&gt;&#13;&#10;&lt;item path=&quot;/nl.esi.comma.abstracttestspecification&quot; type=&quot;4&quot;/&gt;&#13;&#10;&lt;item path=&quot;/nl.esi.comma.abstracttestspecification.ide&quot; type=&quot;4&quot;/&gt;&#13;&#10;&lt;item path=&quot;/nl.esi.comma.abstracttestspecification.ui&quot; type=&quot;4&quot;/&gt;&#13;&#10;&lt;/resources&gt;}"/>
     <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
-        <listEntry value="/nl.esi.comma.causalgraph"/>
+        <listEntry value="/nl.esi.comma.abstracttestspecification"/>
     </listAttribute>
     <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
         <listEntry value="4"/>
@@ -16,8 +16,8 @@
     <booleanAttribute key="org.eclipse.jdt.launching.ATTR_SHOW_CODEDETAILS_IN_EXCEPTION_MESSAGES" value="true"/>
     <booleanAttribute key="org.eclipse.jdt.launching.ATTR_USE_CLASSPATH_ONLY_JAR" value="false"/>
     <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="org.eclipse.emf.mwe2.launch.runtime.Mwe2Launcher"/>
-    <stringAttribute key="org.eclipse.jdt.launching.MODULE_NAME" value="nl.esi.comma.causalgraph"/>
-    <stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="nl.esi.comma.causalgraph.GenerateCausalGraph"/>
-    <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="nl.esi.comma.causalgraph"/>
+    <stringAttribute key="org.eclipse.jdt.launching.MODULE_NAME" value="nl.esi.comma.abstracttestspecification"/>
+    <stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="src/nl/esi/comma/abstracttestspecification/GenerateAbstractTestspecification.mwe2"/>
+    <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="nl.esi.comma.abstracttestspecification"/>
     <stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-Xmx512m"/>
 </launchConfiguration>

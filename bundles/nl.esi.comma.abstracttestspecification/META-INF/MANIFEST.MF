@@ -1,0 +1,29 @@
+Manifest-Version: 1.0
+Automatic-Module-Name: nl.esi.comma.abstracttestspecification
+Bundle-ManifestVersion: 2
+Bundle-Name: Abstract Test Specification
+Bundle-Vendor: TNO-ESI
+Bundle-Version: 4.2.0.qualifier
+Bundle-SymbolicName: nl.esi.comma.abstracttestspecification; singleton:=true
+Bundle-ActivationPolicy: lazy
+Require-Bundle: org.eclipse.xtext,
+ org.eclipse.xtext.xbase,
+ org.eclipse.equinox.common;bundle-version="3.16.0",
+ nl.asml.matala.product,
+ org.eclipse.emf.ecore,
+ org.eclipse.xtext.xbase.lib;bundle-version="2.36.0",
+ org.eclipse.xtend.lib;bundle-version="2.36.0",
+ org.eclipse.emf.common,
+ org.antlr.runtime;bundle-version="[3.2.0,3.2.1)"
+Bundle-RequiredExecutionEnvironment: JavaSE-21
+Export-Package: nl.esi.comma.abstracttestspecification.validation,
+ nl.esi.comma.abstracttestspecification.parser.antlr.internal,
+ nl.esi.comma.abstracttestspecification,
+ nl.esi.comma.abstracttestspecification.services,
+ nl.esi.comma.abstracttestspecification.abstractTestspecification,
+ nl.esi.comma.abstracttestspecification.abstractTestspecification.impl,
+ nl.esi.comma.abstracttestspecification.parser.antlr,
+ nl.esi.comma.abstracttestspecification.scoping,
+ nl.esi.comma.abstracttestspecification.abstractTestspecification.util,
+ nl.esi.comma.abstracttestspecification.serializer
+Import-Package: org.apache.log4j
