@@ -8,5 +8,9 @@ Bundle-SymbolicName: nl.esi.comma.abstrracttestspecification.ide; singleton:=tru
 Bundle-ActivationPolicy: lazy
 Require-Bundle: nl.esi.comma.abstrracttestspecification,
  org.eclipse.xtext.ide,
- org.eclipse.xtext.xbase.ide
+ org.eclipse.xtext.xbase.ide,
+ org.antlr.runtime;bundle-version="[3.2.0,3.2.1)"
 Bundle-RequiredExecutionEnvironment: JavaSE-21
+Export-Package: nl.esi.comma.abstrracttestspecification.ide.contentassist,
+ nl.esi.comma.abstrracttestspecification.ide.contentassist.antlr,
+ nl.esi.comma.abstrracttestspecification.ide.contentassist.antlr.internal

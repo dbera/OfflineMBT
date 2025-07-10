@@ -9,5 +9,21 @@ Bundle-ActivationPolicy: lazy
 Require-Bundle: org.eclipse.xtext,
  org.eclipse.xtext.xbase,
  org.eclipse.equinox.common;bundle-version="3.16.0",
- nl.asml.matala.product
+ nl.asml.matala.product,
+ org.eclipse.emf.ecore,
+ org.eclipse.xtext.xbase.lib;bundle-version="2.36.0",
+ org.eclipse.xtend.lib;bundle-version="2.36.0",
+ org.eclipse.emf.common,
+ org.antlr.runtime;bundle-version="[3.2.0,3.2.1)"
 Bundle-RequiredExecutionEnvironment: JavaSE-21
+Export-Package: nl.esi.comma.abstrracttestspecification.validation,
+ nl.esi.comma.abstrracttestspecification.parser.antlr.internal,
+ nl.esi.comma.abstrracttestspecification,
+ nl.esi.comma.abstrracttestspecification.services,
+ nl.esi.comma.abstrracttestspecification.abstractTestspecification,
+ nl.esi.comma.abstrracttestspecification.abstractTestspecification.impl,
+ nl.esi.comma.abstrracttestspecification.parser.antlr,
+ nl.esi.comma.abstrracttestspecification.scoping,
+ nl.esi.comma.abstrracttestspecification.abstractTestspecification.util,
+ nl.esi.comma.abstrracttestspecification.serializer
+Import-Package: org.apache.log4j
