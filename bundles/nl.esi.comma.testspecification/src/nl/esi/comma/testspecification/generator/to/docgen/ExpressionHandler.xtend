@@ -10,16 +10,18 @@
  *
  * SPDX-License-Identifier: MIT
  */
-package nl.esi.comma.testspecification.generator
+package nl.esi.comma.testspecification.generator.to.docgen
 
-import nl.esi.comma.actions.actions.AssignmentAction
-import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
-import nl.esi.comma.expressions.expression.ExpressionRecordAccess
-import nl.esi.comma.expressions.expression.Expression
-import nl.esi.comma.expressions.expression.ExpressionVariable
-import java.util.regex.Pattern
 import java.util.HashMap
 import java.util.List
+import java.util.regex.Pattern
+import nl.esi.comma.actions.actions.AssignmentAction
+import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
+import nl.esi.comma.expressions.expression.Expression
+import nl.esi.comma.expressions.expression.ExpressionRecordAccess
+import nl.esi.comma.expressions.expression.ExpressionVariable
+import nl.esi.comma.testspecification.generator.to.fast.ExpressionsParser
+import nl.esi.comma.testspecification.generator.utils.KeyValue
 
 class ExpressionHandler 
 {

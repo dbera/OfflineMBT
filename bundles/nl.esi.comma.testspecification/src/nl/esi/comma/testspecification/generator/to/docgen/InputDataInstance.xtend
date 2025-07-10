@@ -10,18 +10,19 @@
  *
  * SPDX-License-Identifier: MIT
  */
-package nl.esi.comma.testspecification.generator
+package nl.esi.comma.testspecification.generator.to.docgen
 
-import nl.esi.comma.testspecification.testspecification.TSMain
-import org.eclipse.xtext.generator.IFileSystemAccess2
-import org.eclipse.xtext.EcoreUtil2
 import java.util.ArrayList
-import org.eclipse.emf.ecore.resource.Resource
-import nl.esi.comma.inputspecification.inputSpecification.APIDefinition
+import java.util.HashMap
 import nl.esi.comma.actions.actions.AssignmentAction
 import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
-import nl.esi.comma.inputspecification.inputSpecification.SUTDefinition
-import java.util.HashMap
+import nl.esi.comma.inputspecification.inputSpecification.APIDefinition
+import nl.esi.comma.inputspecification.inputSpecification.Main
+import nl.esi.comma.testspecification.generator.TestSpecificationInstance
+import nl.esi.comma.testspecification.generator.utils.JSONData
+import nl.esi.comma.testspecification.testspecification.TSMain
+import org.eclipse.emf.ecore.resource.Resource
+import org.eclipse.xtext.EcoreUtil2
 
 class InputDataInstance 
 {
@@ -36,7 +37,7 @@ class InputDataInstance
 			val inputResource = EcoreUtil2.getResource(resource, imp.importURI)
 			var input = inputResource.allContents.head
 			var JSONDataFileContents = new ArrayList<JSONData>
-			if( input instanceof nl.esi.comma.inputspecification.inputSpecification.Main) {
+			if( input instanceof Main) {
 				if(input.model instanceof APIDefinition) {
 					val apiDef = input.model as APIDefinition
 					var dataInst = new JSONData
@@ -49,10 +50,6 @@ class InputDataInstance
 					}
 					// dataInst.display
 					JSONDataFileContents.add(dataInst)
-				} else if(input.model instanceof SUTDefinition) {
-					val sutDef = input.model as SUTDefinition
-					// TODO map from variable to SUT ID 
-					// TODO Needed for variability.
 				}
 			}
 			

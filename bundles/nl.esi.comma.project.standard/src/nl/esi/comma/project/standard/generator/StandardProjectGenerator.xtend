@@ -21,9 +21,9 @@ import nl.esi.comma.project.standard.standardProject.OfflineGenerationBlock
 import nl.esi.comma.project.standard.standardProject.OfflineGenerationTarget
 import nl.esi.comma.project.standard.standardProject.Project
 import nl.esi.comma.project.standard.standardProject.TargetConfig
-import nl.esi.comma.testspecification.generator.FromAbstractToConcrete
-import nl.esi.comma.testspecification.generator.FromConcreteToFast
-import nl.esi.comma.testspecification.generator.MergeConcreteDataAssigments
+import nl.esi.comma.testspecification.generator.to.concrete.FromAbstractToConcrete
+import nl.esi.comma.testspecification.generator.to.fast.FromConcreteToFast
+import nl.esi.comma.testspecification.generator.utils.MergeConcreteDataAssigments
 import nl.esi.comma.types.types.Import
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.emf.ecore.resource.ResourceSet

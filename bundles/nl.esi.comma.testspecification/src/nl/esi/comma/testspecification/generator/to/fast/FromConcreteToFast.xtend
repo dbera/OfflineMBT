@@ -10,7 +10,7 @@
  *
  * SPDX-License-Identifier: MIT
  */
-package nl.esi.comma.testspecification.generator
+package nl.esi.comma.testspecification.generator.to.fast
 
 import java.util.ArrayList
 import java.util.HashMap
@@ -24,10 +24,11 @@ import nl.esi.comma.expressions.expression.Expression
 import nl.esi.comma.expressions.expression.ExpressionRecordAccess
 import nl.esi.comma.expressions.expression.ExpressionVariable
 import nl.esi.comma.inputspecification.inputSpecification.APIDefinition
-import nl.esi.comma.inputspecification.inputSpecification.LISVCP
 import nl.esi.comma.inputspecification.inputSpecification.Main
-import nl.esi.comma.inputspecification.inputSpecification.SUTDefinition
-import nl.esi.comma.inputspecification.inputSpecification.TWINSCANKT
+import nl.esi.comma.testspecification.generator.to.docgen.DocGen
+import nl.esi.comma.testspecification.generator.utils.JSONData
+import nl.esi.comma.testspecification.generator.utils.KeyValue
+import nl.esi.comma.testspecification.generator.utils.Step
 import nl.esi.comma.testspecification.testspecification.AbstractStep
 import nl.esi.comma.testspecification.testspecification.AbstractTestDefinition
 import nl.esi.comma.testspecification.testspecification.ContextMap
@@ -90,13 +91,6 @@ class FromConcreteToFast extends AbstractGenerator {
                         for(elm : api.di)
                             addMapDataInstanceToFile(elm.^var.name, api.path + elm.fname)
                     }
-                } else if(input.model instanceof SUTDefinition) {
-                    /*val sutdef = input.model as SUTDefinition
-                    for(sut : sutdef.sutImpl) {
-                        for(elm : sut.di) {
-                            addMapSUTInstanceToFile(elm.^var.name, sut.path + elm.fname)    
-                        }
-                    }*/ // assumption is its a standard vfd.xml file. See dedicated generator later.
                 } else { System.out.println("Error: Unhandled Model Type! ")}
             }
         }
@@ -409,10 +403,6 @@ class FromConcreteToFast extends AbstractGenerator {
                     }
                     // dataInst.display
                     JSONDataFileContents.add(dataInst)
-                } else if(input.model instanceof SUTDefinition) {
-                    val sutDef = input.model as SUTDefinition
-                    // generate XML-File! => vfd.xml
-                    fsa.generateFile(testDefFilePath + "vfd.xml", generateVFDFile(sutDef))
                 }
             }
             
@@ -708,115 +698,6 @@ class FromConcreteToFast extends AbstractGenerator {
             }
         }
         return refTxt
-    }
-    
-    
-    def private generateVFDFile(SUTDefinition sDef) {
-        var def = sDef.generic.virtualFabDefinition
-        var xsi = sDef.generic.XSI
-        var loc = sDef.generic.schemaLocation
-        var title = sDef.generic.title
-        var sutsname = sDef.sut.name
-        var sutsdesc = sDef.sut.desc
-        '''
-        <?xml version="1.0" encoding="UTF-8"?>
-        <VirtualFabDefinition:VirtualFabDefinition xmlns:VirtualFabDefinition="«def»" xmlns:xsi="«xsi»" xsi:schemaLocation="«loc»">
-          <Header>
-            <Title>«title»</Title>
-            <CreateTime>2022-03-03T09:12:12</CreateTime>
-          </Header>
-          <Definition>
-            <Name>«sutsname»</Name>
-            <Description>«sutsdesc»</Description>
-            <SUTList>
-            «FOR sut : sDef.sut.sutDefRef»
-                «IF sut instanceof TWINSCANKT»
-                    «generateTwinScanTxt(sut)»
-                «ELSEIF sut instanceof LISVCP»
-                    «generateLisTxt(sut)»
-                «ENDIF»
-            «ENDFOR»
-            </SUTList>
-          </Definition>
-        </VirtualFabDefinition:VirtualFabDefinition>
-        '''
-    }
-    
-    def private generateTwinScanTxt(TWINSCANKT ts) {
-        var name = ts.name
-        var type = ts.type
-        var scn_param_name = ts.scenarioParameterName
-        var machine_id = ts.machineID
-        var cpu = ts.CPU
-        var memory = ts.memory
-        var machine_type = ts.machineType
-        var useExisting = ts.useExisting
-        var swbaseline = ts.baseline
-        
-        '''
-        <SUT>
-            <SutType>«type»</SutType>
-            <Name>«name»</Name>
-            <ScenarioParameterName>«scn_param_name»</ScenarioParameterName>
-            <TWINSCAN-KT>
-                <MachineID>«machine_id»</MachineID>
-                <CPU>«cpu»</CPU>
-                <Memory>«memory»</Memory>
-                <MachineType>«machine_type»</MachineType>
-                <UseExisting>«useExisting»</UseExisting>
-                <Baseline>«swbaseline»</Baseline>
-                «IF !ts.options.empty»
-                <OptionList>
-                «FOR elm : ts.options»
-                    <Option>
-                        <OptionName>«elm.optionname»</OptionName>
-                        <OptionValue>«elm.value»</OptionValue>
-                        <IsSVP>«elm.isIsSVP»</IsSVP>
-                    </Option>
-                «ENDFOR»
-                </OptionList>
-                «ENDIF»
-                «IF !ts.commands.empty»
-                <RunCommands>
-                    <PostConfiguration>
-                        <CommandList>
-                            «FOR elm : ts.commands»
-                            <Command>«elm»</Command>
-                            «ENDFOR»
-                        </CommandList>
-                    </PostConfiguration>
-                 </RunCommands>
-                 «ENDIF»
-            </TWINSCAN-KT>
-        </SUT>
-        '''
-    }
-    
-    def private generateLisTxt(LISVCP lis) {
-        var name = lis.name
-        var type = lis.type
-        var scn_param_name = lis.scenarioParameterName
-        var address = lis.address
-        
-        '''
-              <SUT>
-                <SutType>«type»</SutType>
-                <Name>«name»</Name>
-                <ScenarioParameterName>«scn_param_name»</ScenarioParameterName>
-                <LIS-VCP>
-                  <Address>«address»</Address>
-                  <JobConfigList>
-                  «FOR elm : lis.jobConfigList»
-                    <JobConfig>
-                      <ApplicationId>«elm.appID»</ApplicationId>
-                      <FunctionId>«elm.fnId»</FunctionId>
-                      <ActiveDocumentCollection>«elm.isActDocColl»</ActiveDocumentCollection>
-                    </JobConfig>
-                  «ENDFOR»
-                  </JobConfigList>
-                </LIS-VCP>
-              </SUT>
-        '''
     }
     
     def private displayParseResults() {

@@ -10,11 +10,13 @@
  *
  * SPDX-License-Identifier: MIT
  */
-package nl.esi.comma.testspecification.generator
+package nl.esi.comma.testspecification.generator.to.docgen
 
 import java.util.ArrayList
 import java.util.HashMap
 import java.util.List
+import nl.esi.comma.testspecification.generator.TestSpecificationInstance
+import nl.esi.comma.testspecification.generator.utils.Step
 
 class DocGen 
 {
@@ -26,7 +28,6 @@ class DocGen
 	
 	def generateMDFile(TestSpecificationInstance tsInst, 
 		HashMap<String, String> mapStepToInputData,
-		ConcreteSUTHandler _sutHandler, 
 		List<String> featureList,
 		String configName
 	) {
@@ -46,14 +47,6 @@ class DocGen
 		|--|--|--|
 		«FOR stk: tsInst.stakeholders»
 			|«stk»|
-		«ENDFOR»
-		
-		# Variants
-		«FOR feature : featureList»
-			## «_sutHandler.vartosutMap.get(feature)»
-			«FOR sutTxt : _sutHandler.concreteSUTMap.get(_sutHandler.vartosutMap.get(feature))»
-				«sutTxt»
-			«ENDFOR»
 		«ENDFOR»
 			
 		# Flow

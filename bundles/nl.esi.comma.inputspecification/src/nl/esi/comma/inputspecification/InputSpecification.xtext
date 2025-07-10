@@ -39,7 +39,6 @@ SUTDefinition:
 		sutDef += SUTDef+ 
 		sut = SUT
 		'generate-file' file = STRING
-		generic = Generic
 	)?
 ;
 
@@ -95,16 +94,6 @@ ModelContainer returns types::ModelContainer:
 	super::ModelContainer | Main
 ;
 
-Generic:
-	'meta-data' '{'
-		'def' VirtualFabDefinition = STRING
-		'xsi' XSI = STRING
-		'loc' SchemaLocation = STRING
-		'title' Title = STRING
-	'}'	
-;
-
-
 SUT:
 	'suts' '{'
 		'sut-name' name = ID
@@ -114,53 +103,11 @@ SUT:
 ;
 
 SUTDef:
-	TWINSCANKT | LISVCP
+    'define-sut' '{'
+        name = ID
+    '}'
 ;
 
-TWINSCANKT:
-	'twinscan-kt' '{'
-		'twinscan-name' name = ID
-		'type' type = STRING
-		'scenario-param-name' ScenarioParameterName = STRING
-		'machine-id' machineID = STRING
-		'cpu-cores' CPU = INT
-		'memory-size' Memory = INT
-		'machine-type' MachineType = STRING
-		(useExisting?='use-existing')?
-		'sw-baseline' baseline = STRING
-		'opts' '{'
-			options += Option*
-		 '}'
-		 'commands' commands += STRING*
-	'}'
-;
-
-Option:
-	'{' 'opt-name' optionname = STRING
-		'opt-value' value = STRING
-		(isSVP?='svp')? 
-	'}'
-;
-
-LISVCP:
-	'lis-vcp' '{'
-		'lis-name' name = ID
-		'type' type = STRING
-		'scenario-param-name' ScenarioParameterName = STRING
-		'address' address = STRING
-		'job-config-list' '{' 
-			jobConfigList += JobConfig*
-		'}'
-	'}'
-;
-
-JobConfig:
-	'{' 
-		'app-id' appID = STRING
-		'fun-id'	 fnId = STRING
-		(actDocColl?='active-document-collection')? 
-	'}' 
-;
 
 /*Applications:
 	
