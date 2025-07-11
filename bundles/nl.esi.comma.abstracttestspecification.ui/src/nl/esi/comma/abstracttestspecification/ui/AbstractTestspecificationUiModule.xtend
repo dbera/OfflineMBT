@@ -16,10 +16,17 @@
 package nl.esi.comma.abstracttestspecification.ui
 
 import org.eclipse.xtend.lib.annotations.FinalFieldsConstructor
+import nl.esi.comma.types.ide.contentassist.TypesIdeContentProposalCreator
+
+// import org.eclipse.xtext.ide.editor.contentassist.IdeContentProposalCreator
+//import nl.esi.comma.types.ide.contentassist.TypesIdeContentProposalCreator
 
 /**
  * Use this class to register components to be used within the Eclipse IDE.
  */
 @FinalFieldsConstructor
 class AbstractTestspecificationUiModule extends AbstractAbstractTestspecificationUiModule {
+    def bindIdeContentProposalCreator() {
+        return TypesIdeContentProposalCreator
+    }
 }
