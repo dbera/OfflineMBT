@@ -41,6 +41,7 @@ import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
 
 import static extension nl.esi.comma.types.utilities.EcoreUtil3.*
+import java.util.LinkedHashMap
 
 class FromConcreteToFast extends AbstractGenerator {
     /* TODO this should come from project task? Investigate and Implement it. */
@@ -292,9 +293,8 @@ class FromConcreteToFast extends AbstractGenerator {
             else recExp = '''«(record as ExpressionRecordAccess).field.name».''' + recExp
             record = (record as ExpressionRecordAccess).record
         }
-        // System.out.println(" DEBUG: " + recExp)
-        // val varExp = record as ExpressionVariable
-        mapLHStoRHS.key = field.name
+        // tracking fully-qualified field name 
+        mapLHStoRHS.key = '''«recExp».''' + field.name
         mapLHStoRHS.value = ExpressionsParser::generateExpression(exp, ref).toString
         mapLHStoRHS.refVal.add(mapLHStoRHS.value) // Added DB 14.10.2024
 
@@ -313,7 +313,8 @@ class FromConcreteToFast extends AbstractGenerator {
                 // mapLHStoRHS.value = mapLHStoRHS.value.replaceAll(elm+".output", "steps.out['" + "_" + elm + "']") // commented 26.11.2024
                 // Added REGEX 26.11.2024: remove (x) after steps.out[step.params[....]].x.y.... (assumption, always a y is present)
                 // In BPMN4S model, x represents the container of output data. So we need to filter it out for FAST. 
-                mapLHStoRHS.value = mapLHStoRHS.value.replaceAll(elm+".output" + "\\.(.*?)\\.", "steps.out[step.params['" + "_" + elm + "']].")
+                //mapLHStoRHS.value = mapLHStoRHS.value.replaceAll(elm+".output." + "\\.(.*?)\\.", "steps.out[step.params['" + "_" + elm + "']].") // commented 11.07.2025
+                mapLHStoRHS.value = mapLHStoRHS.value.replaceAll(elm+".output." , "steps.out[step.params['" + "_" + elm + "']].")
                 // System.out.println("DEBUG XY: " + mapLHStoRHS.value)
                 mapLHStoRHS.refKey.add(elm)  // reference to step
                 // Custom String Updates for FAST Syntax Peculiarities! TODO investigate solution?
@@ -432,17 +433,8 @@ class FromConcreteToFast extends AbstractGenerator {
                             fileName = getStepInstanceFileName(stepId)
                             var fileContents = mapLHStoRHS.value
                             System.out.println("Generating File: " + fileName+ " For Step: " + stepId)
-                            for(elm : mapLHStoRHS_.get(stepId)) 
-                            {
-                                var str = '''"«elm.key»" : «elm.value»'''
-                                //var StringBuilder b = new StringBuilder(mapLHStoRHS.value);
-                                var StringBuilder b = new StringBuilder(fileContents);
-                                //b.replace(mapLHStoRHS.value.lastIndexOf("}"), mapLHStoRHS.value.lastIndexOf("}"), "," + str);
-                                b.replace(fileContents.lastIndexOf("}"), fileContents.lastIndexOf("}"), "," + str);
-                                fileContents = b.toString();
-                                //mapLHStoRHS.value = b.toString();
-                            }
-                            //fsa.generateFile(fileName, mapLHStoRHS.value)
+                            var refinedMapLHStoRHS = refineListLHStoRHS(mapLHStoRHS_.get(stepId))
+                            fileContents = printRefinedMap(refinedMapLHStoRHS)
                             fsa.generateFile(fileName, fileContents)
                         }
                     } else { 
@@ -474,19 +466,8 @@ class FromConcreteToFast extends AbstractGenerator {
                 for(stepId : mapLHStoRHS_.keySet) {
                     fileName = getStepInstanceFileName(stepId)
                     System.out.println("Generating File: " + fileName+ " For Step: " + stepId)
-                    for(elm : mapLHStoRHS_.get(stepId)) {
-                        var str = 
-                        '''
-                            "«elm.key»" : «elm.value»,
-                        '''
-                        fileContents += str
-                    }
-                    fileContents =
-                    '''
-                    {
-                        «fileContents.replaceAll(",$", "")»
-                    }
-                    '''
+                    var refinedMapLHStoRHS = refineListLHStoRHS(mapLHStoRHS_.get(stepId))
+                    fileContents = printRefinedMap(refinedMapLHStoRHS)
                     fsa.generateFile(fileName, fileContents)
                     fileContents = ''''''
                 }
@@ -500,25 +481,51 @@ class FromConcreteToFast extends AbstractGenerator {
                 for(stepId : mapLHStoRHSExt.keySet) {
                     fileNameExt = stepId
                     System.out.println("Generating File: " + fileNameExt + " For Var: " + vname)
-                    for(elm : mapLHStoRHSExt.get(stepId)) {
-                        var str = 
-                        '''
-                            "«elm.key»" : «elm.value»,
-                        '''
-                        fileContentsExt += str
-                    }
-                    fileContentsExt =
-                    '''
-                    {
-                        «fileContentsExt.replaceAll(",$", "")»
-                    }
-                    '''
+                    var refinedMapLHStoRHS = refineListLHStoRHS(mapLHStoRHSExt.get(stepId))
+                    fileContentsExt = printRefinedMap(refinedMapLHStoRHS)
                     fsa.generateFile(fileNameExt, fileContentsExt)
                     fileContentsExt = ''''''
                 }
             }
         }
         return txt // TODO Remove unused variable
+    }
+
+    def String printRefinedMap(Object item) {
+        switch item{
+            Map<String,Object>: return printRefinedMap(item)
+            String: return item
+            default: throw new UnsupportedOperationException("Unsupported type")
+        }
+    }
+    
+    def String printRefinedMap(Map<String, Object> map)
+    '''
+    {
+        «FOR entry: map.entrySet() SEPARATOR ','»
+            "«entry.key»" : «printRefinedMap(entry.value)»
+        «ENDFOR»
+    }
+    '''
+    
+    def private Map<String, Object> refineListLHStoRHS(List<KeyValue> values) {
+        var mapOfMaps = new LinkedHashMap<String, Object>()
+        for (elem : values) {
+        	var fquali = elem.key.split("\\.") as List<String>
+        	var current = mapOfMaps
+        	for (var i = 1; i < fquali.length-1; i++){
+        	    var field = fquali.get(i)
+                // If the key doesn't exist or isn't a map, create a new empty map
+                if (!(current.get(field) instanceof Map)) {
+                    current.put(field , new LinkedHashMap<String, Object>());
+                }
+                // Move deeper into the nested map
+                current = current.get(field) as LinkedHashMap<String, Object>
+
+        	}
+            current.put(fquali.last,elem.value)
+        }
+        return mapOfMaps
     }
     
     def private String getStepInstanceFileName(String step_id) {
