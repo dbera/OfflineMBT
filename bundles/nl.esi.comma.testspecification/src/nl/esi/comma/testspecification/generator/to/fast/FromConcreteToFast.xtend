@@ -313,8 +313,7 @@ class FromConcreteToFast extends AbstractGenerator {
                 // mapLHStoRHS.value = mapLHStoRHS.value.replaceAll(elm+".output", "steps.out['" + "_" + elm + "']") // commented 26.11.2024
                 // Added REGEX 26.11.2024: remove (x) after steps.out[step.params[....]].x.y.... (assumption, always a y is present)
                 // In BPMN4S model, x represents the container of output data. So we need to filter it out for FAST. 
-                //mapLHStoRHS.value = mapLHStoRHS.value.replaceAll(elm+".output." + "\\.(.*?)\\.", "steps.out[step.params['" + "_" + elm + "']].") // commented 11.07.2025
-                mapLHStoRHS.value = mapLHStoRHS.value.replaceAll(elm+".output." , "steps.out[step.params['" + "_" + elm + "']].")
+                mapLHStoRHS.value = mapLHStoRHS.value.replaceAll(elm+"\\.output" + "\\.([^\\.]*)\\.", "steps.out[step.params['" + "_" + elm + "']].") // commented 11.07.2025
                 // System.out.println("DEBUG XY: " + mapLHStoRHS.value)
                 mapLHStoRHS.refKey.add(elm)  // reference to step
                 // Custom String Updates for FAST Syntax Peculiarities! TODO investigate solution?
