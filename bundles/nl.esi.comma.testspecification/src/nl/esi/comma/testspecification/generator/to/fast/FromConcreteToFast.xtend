@@ -313,7 +313,7 @@ class FromConcreteToFast extends AbstractGenerator {
                 // mapLHStoRHS.value = mapLHStoRHS.value.replaceAll(elm+".output", "steps.out['" + "_" + elm + "']") // commented 26.11.2024
                 // Added REGEX 26.11.2024: remove (x) after steps.out[step.params[....]].x.y.... (assumption, always a y is present)
                 // In BPMN4S model, x represents the container of output data. So we need to filter it out for FAST. 
-                mapLHStoRHS.value = mapLHStoRHS.value.replaceAll(elm+"\\.output" + "\\.([^\\.]*)\\.", "steps.out[step.params['" + "_" + elm + "']].")
+                mapLHStoRHS.value = mapLHStoRHS.value.replaceAll(elm+"\\.output" + "\\.(.*?)\\.", "steps.out[step.params['" + "_" + elm + "']].")
                 // System.out.println("DEBUG XY: " + mapLHStoRHS.value)
                 mapLHStoRHS.refKey.add(elm)  // reference to step
                 // Custom String Updates for FAST Syntax Peculiarities! TODO investigate solution?
@@ -510,7 +510,7 @@ class FromConcreteToFast extends AbstractGenerator {
     def private Map<String, Object> refineListLHStoRHS(List<KeyValue> values) {
         var mapOfMaps = new LinkedHashMap<String, Object>()
         for (elem : values) {
-        	var fquali = elem.key.split("\\.") as List<String>
+        	var fquali = new ArrayList<String>(elem.key.split("\\."))
         	var current = mapOfMaps
         	for (var i = 1; i < fquali.length-1; i++){
         	    var field = fquali.get(i)
@@ -520,9 +520,14 @@ class FromConcreteToFast extends AbstractGenerator {
                 }
                 // Move deeper into the nested map
                 current = current.get(field) as LinkedHashMap<String, Object>
-
         	}
             current.put(fquali.last,elem.value)
+        }
+        if (mapOfMaps.size == 1){                                             // if json map has only one element 
+            var item = mapOfMaps.getOrDefault(record_lot_def_file_name, null) // ...which is a lot_definition
+            if (item instanceof LinkedHashMap){                               // ...of record type,
+                mapOfMaps = item                                              // ...then pull it out of the value!
+            } 
         }
         return mapOfMaps
     }
