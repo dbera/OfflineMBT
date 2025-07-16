@@ -23,7 +23,6 @@ import nl.esi.comma.project.standard.standardProject.Project
 import nl.esi.comma.project.standard.standardProject.TargetConfig
 import nl.esi.comma.testspecification.generator.to.concrete.FromAbstractToConcrete
 import nl.esi.comma.testspecification.generator.to.fast.FromConcreteToFast
-import nl.esi.comma.testspecification.generator.to.fast.FromConcreteToFast_Bug
 import nl.esi.comma.testspecification.generator.utils.MergeConcreteDataAssigments
 import nl.esi.comma.types.types.Import
 import org.eclipse.emf.ecore.resource.Resource
@@ -124,11 +123,6 @@ class StandardProjectGenerator extends AbstractGenerator {
                 val fastFsa = fsa.createFolderAccess('FAST')
                 fromAbstractToConcreteGen.doGenerateFAST(absTspecRes, fastFsa, ctx)
                 (new FromConcreteToFast()).doGenerate(conTspecRes, fastFsa, ctx)
-
-                // Generate FAST Fixed (?) testcases
-                val fastFsafix = fsa.createFolderAccess('FAST_bug')
-                fromAbstractToConcreteGen.doGenerateFAST(absTspecRes, fastFsafix, ctx)
-                (new FromConcreteToFast_Bug()).doGenerate(conTspecRes, fastFsafix, ctx)
             }
         }
     }
