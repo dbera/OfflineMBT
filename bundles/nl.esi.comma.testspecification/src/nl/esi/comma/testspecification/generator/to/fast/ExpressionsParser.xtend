@@ -55,7 +55,12 @@ class ExpressionsParser {
 	'''ANY'''
 
     def static dispatch CharSequence generateExpression(ExpressionMap expr, CharSequence ref)
-	'''{«FOR e : expr.pairs SEPARATOR ', '»«generateExpression(e.key, ref)» : «generateExpression(e.value, ref)»«ENDFOR»}'''
+	'''
+	{
+    «FOR e : expr.pairs SEPARATOR ', '»
+	       «generateExpression(e.key, ref)» : «generateExpression(e.value, ref)»
+   «ENDFOR»
+	}'''
 	
 	def static dispatch CharSequence generateExpression(ExpressionMapRW expr, CharSequence ref)
 	'''«generateExpression(expr.map,ref)»[«generateExpression(expr.key,ref)»«IF expr.value !== null»->«generateExpression(expr.value,ref)»«ENDIF»]'''
@@ -66,18 +71,32 @@ class ExpressionsParser {
 
 	def static dispatch CharSequence generateExpression(ExpressionRecord expr, CharSequence ref)
 	//'''new «expr.type.name»(«IF !generateRecExpression(expr, ref).toString.contains('''ANY''')»«generateRecExpression(expr, ref)»«ENDIF»)''' 
-	'''{«generateRecExpression(expr, ref)»}'''
+	'''
+	{
+	    «generateRecExpression(expr, ref)»
+	}
+	'''
 	
 	def static CharSequence generateRecExpression(ExpressionRecord expr, CharSequence ref)
 	//'''«FOR f : expr.fields SEPARATOR ", "»«IF generateExpression(f, ref).toString.contains('''ANY''')»«JavaGeneratorUtilities::generateJavaTypeInitializer(f.recordField.type.type)»«ELSE»«generateExpression(f, ref)»«ENDIF»«ENDFOR»'''
-	'''«FOR f : expr.fields SEPARATOR ", "»«generateExpression(f, ref)»«ENDFOR»'''
+	'''
+	«FOR f : expr.fields SEPARATOR ", "»
+	   «generateExpression(f, ref)»
+	«ENDFOR»
+	'''
 
 	def static dispatch CharSequence generateExpression(Field expr, CharSequence ref)
 	'''"«expr.recordField.name»" : «generateExpression(expr.exp, ref)»'''
 
 	def static dispatch CharSequence generateExpression(ExpressionVector expr, CharSequence ref)
 	//'''new «JavaGeneratorUtilities::generateJavaDataType(expr.typeAnnotation.type.type)»«generateDim(expr)»{«FOR elm : expr.elements SEPARATOR " ,"»«IF elm instanceof ExpressionVector»«generateExpression(elm as ExpressionVector, ref)»«ELSE»«generateExpression(elm, ref)»«ENDIF»«ENDFOR»}''' 
-	'''[«FOR elm : expr.elements SEPARATOR " ,"»«IF elm instanceof ExpressionVector»«generateExpression(elm as ExpressionVector, ref)»«ELSE»«generateExpression(elm, ref)»«ENDIF»«ENDFOR»]'''
+	'''
+	[
+	   «FOR elm : expr.elements SEPARATOR " ,"»
+	       «IF elm instanceof ExpressionVector»«generateExpression(elm as ExpressionVector, ref)»«ELSE»«generateExpression(elm, ref)»«ENDIF»
+	   «ENDFOR»
+	]
+   '''
 
 	def static dispatch CharSequence generateExpression(ExpressionVariable expr, CharSequence ref)
 	//'''«IF JavaGeneratorUtilities::isStateMachineVariable(expr.variable)»«ref»«expr.variable.name»«ELSE»«expr.variable.name»«ENDIF»'''
