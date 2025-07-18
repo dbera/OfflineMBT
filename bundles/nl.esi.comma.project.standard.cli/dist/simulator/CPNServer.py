@@ -124,6 +124,7 @@ def generate_fast_tests( model_path:str, num_tests:int=1, depth_limit:int=500):
 def handle_bpmn():
     _bpmn = request.files['bpmn-file']
     fname = _bpmn.filename
+    fname = utils.to_valid_variable_name(fname)
     filename = f'{fname}{utils.gensym(prefix="_",timestamp=True)}'
     bpmn_path = os.path.join(TEMP_PATH,f"{filename}.bpmn")
     
@@ -169,6 +170,7 @@ def test_generator():
     depthLimit = _args.get('depth-limit',1000)
 
     fname = _bpmn.filename
+    fname = utils.to_valid_variable_name(fname)
     filename = f'{fname}{utils.gensym(prefix="_",timestamp=True)}'
     model_path = os.path.join(TEMP_PATH,f"{filename}.bpmn")
     _bpmn.save(model_path)
