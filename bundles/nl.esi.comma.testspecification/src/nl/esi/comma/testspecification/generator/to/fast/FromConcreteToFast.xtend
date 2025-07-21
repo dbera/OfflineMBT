@@ -42,12 +42,17 @@ import org.eclipse.xtext.generator.IGeneratorContext
 
 import static extension nl.esi.comma.types.utilities.EcoreUtil3.*
 import java.util.LinkedHashMap
+import java.util.Arrays
 
 class FromConcreteToFast extends AbstractGenerator {
     /* TODO this should come from project task? Investigate and Implement it. */
     var record_path_for_lot_def = "ReferenceFabModelTWINSCANtooladapterandSUTTWINSCANSUTExposeInput.twinscan_expose_input.lot_definition" 
     var record_lot_def_file_name = "lot_definition"
     var record_lot_def_file_path_prefix = "./vfab2_scenario/FAST/generated_FAST/dataset/"
+    
+    var record_path_for_job_def = "ReferenceFabModelYieldStartooladapterandSUTRUNYSMeasureInput.yieldstar_measure_input.job_definition" 
+    var record_job_def_file_name = "job_definition"
+    var record_job_def_file_path_prefix = "./vfab2_scenario/FAST/generated_FAST/dataset/"
     
     // In-Memory Data Structures corresponding *.tspec (captured in resource object)
     var mapLocalDataVarToDataInstance = new HashMap<String, List<String>>
@@ -150,10 +155,27 @@ class FromConcreteToFast extends AbstractGenerator {
                                     var rstepInst = new Step
                                     rstepInst.id = lhs.value
                                     rstepInst.type = s.type.name
-                                    rstepInst.inputFile = record_lot_def_file_path_prefix /*+ 
-                                                          record_lot_def_file_name + "_" + 
-                                                          s.inputVar.name + ".json"*/
+                                    rstepInst.inputFile = record_lot_def_file_path_prefix
                                     rstepInst.variableName = record_lot_def_file_name
+                                    rstepInst.recordExp = stepInst.id
+                                    rstepInst.parameters.add(mapLHStoRHS) // Added DB 29.05.2025
+                                    stepInst.stepRefs.add(rstepInst)
+                                }
+                            } else if(record_path_for_job_def.equals(lhs.value) || 
+                                record_path_for_job_def.endsWith(lhs.value)
+                            ) {
+                                if(stepInst.isStepRefPresent(lhs.value)) {
+                                    var refStep = stepInst.getStepRefs(lhs.value)
+                                    refStep.parameters.add(mapLHStoRHS)
+                                    // stepInst.stepRefs.add(refStep)
+                                } else {
+                                    // Create new step instance and fill all details there
+                                    // Add to list of step reference of step
+                                    var rstepInst = new Step
+                                    rstepInst.id = lhs.value
+                                    rstepInst.type = s.type.name
+                                    rstepInst.inputFile = record_job_def_file_path_prefix 
+                                    rstepInst.variableName = record_job_def_file_name
                                     rstepInst.recordExp = stepInst.id
                                     rstepInst.parameters.add(mapLHStoRHS) // Added DB 29.05.2025
                                     stepInst.stepRefs.add(rstepInst)
@@ -523,11 +545,18 @@ class FromConcreteToFast extends AbstractGenerator {
         	}
             current.put(fquali.last,elem.value)
         }
-        if (mapOfMaps.size == 1){                                             // if json map has only one element 
-            var item = mapOfMaps.getOrDefault(record_lot_def_file_name, null) // ...which is a lot_definition
-            if (item instanceof LinkedHashMap){                               // ...of record type,
-                mapOfMaps = item                                              // ...then pull it out of the value!
-            } 
+
+        if (mapOfMaps.size == 1){                          // if json map has only one element which is either a 
+            var field_list = Arrays.asList(
+                record_lot_def_file_name,   // ...lot_definition 
+                record_job_def_file_name    // ...job_definition
+            )
+                for (field : field_list) {
+                    var item = mapOfMaps.getOrDefault(field, null) // check if this element is 
+                    if (item instanceof LinkedHashMap){            // ...of record type and, if so,
+                        return item                                // ...then pull it out of the value!
+                }
+            }
         }
         return mapOfMaps
     }
