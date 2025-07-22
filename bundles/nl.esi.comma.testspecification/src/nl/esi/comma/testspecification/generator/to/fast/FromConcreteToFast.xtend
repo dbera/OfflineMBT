@@ -194,7 +194,7 @@ class FromConcreteToFast extends AbstractGenerator {
         // update step file names based on checking if additional data was specified. 
         for(step : listStepInstances) {
             if(!step.parameters.isEmpty) {
-                step.inputFile = step.inputFile.replaceAll(".json", "_" + step.id + ".json")
+                step.inputFile = step.inputFile.replaceFirst("[^/]+\\.json$", step.id + ".json")
             }
         }
         
