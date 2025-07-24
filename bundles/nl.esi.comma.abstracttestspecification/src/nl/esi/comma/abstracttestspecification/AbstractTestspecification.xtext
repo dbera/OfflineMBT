@@ -10,14 +10,13 @@
  *
  * SPDX-License-Identifier: MIT
  */
-grammar nl.esi.comma.abstracttestspecification.AbstractTestspecification with nl.esi.comma.actions.Actions // with org.eclipse.xtext.common.Terminals
+grammar nl.esi.comma.abstracttestspecification.AbstractTestspecification with nl.esi.comma.actions.Actions
 
 generate abstractTestspecification "http://www.esi.nl/comma/abstracttestspecification/AbstractTestspecification"
 
 import "http://www.eclipse.org/emf/2002/Ecore" as ecore
 import "http://www.esi.nl/comma/types/Types" as types
 import "http://www.esi.nl/comma/expressions/Expression" as expr
-import "http://www.esi.nl/comma/actions/Actions" as actions
 import "http://www.asml.nl/matala/product/Product" as prod
 
 TSMain:
@@ -32,18 +31,9 @@ NamedElement returns types::NamedElement:
 ;
 
 ModelType:
-    APIDefinition | TestDefinition /* concrete */| AbstractTestDefinition | ContextMap
+    AbstractTestDefinition
 ;
 
-APIDefinition:
-    ('data-instances' vars+=Variable+)
-    ('data-init' initActions+=(AssignmentAction | RecordFieldAssignmentAction)+)?
-;
-
-ContextMap:
-    {ContextMap} 'context-map'
-    tMap += TMap*
-;
 
 AbstractTestDefinition:
     {AbstractTestDefinition} 'abstract-test-definition'
@@ -51,53 +41,19 @@ AbstractTestDefinition:
     'generate-file' filePath = STRING
 ;
 
-TestDefinition:
-    {TestDefinition}
-    ('Test-Purpose' purpose = STRING)?
-    ('Background' background = STRING)?
-    ('Stakeholders' stakeholder += StakeHolder+)?
-    
-    testSeq += TestSequence* 
-    stepSeq += StepSequence*
-    'generate-file' filePath = STRING
-    ('global-parameters' gparams+=Variable+)?
-    ('step-parameters' stepparams+=Variable+)?
-    ('sut-parameters' sutparams+=Variable+)?
-    ('global-param-init' gparamsInitActions+=(AssignmentAction | RecordFieldAssignmentAction)+)?
-    ('sut-param-init' sutInitActions+=(AssignmentAction | RecordFieldAssignmentAction)+ )?
-;
-
-StakeHolder:
-    'stakeholder-name' name = STRING 
-    'function' function = STRING 
-    'comments' comments = STRING
-;
-
-TMap:
-    'abstract-step' name = ID ('with')? (mode = STRING)? ('->' stepSeqId = [StepSequence|ID])?
-;
-
-/*********************************************************/
 AbstractTestSequence:
     'Test-Scenario' ':' name = ID
-        // step += [TMap|ID]+
-        step += AbstractStep+ // (AbstractStep | AssertStep)+  // | ConstraintStep 
+        step += AbstractStep+  
 ;
 
 ConstraintStep:
     'data-references' ':' name = ID
-//  ce += ConstraintElm+
     ce += [prod::RefConstraint|QualifiedName]+  
 ;
 
 AssertStep:
     'output-assertion' ':' name = ID
-    // ce += ConstraintElm+
     ce += [prod::DataAssertions|QualifiedName]+
-;
-
-ConstraintElm:
-    name = ID ':' val = STRING
 ;
 
 AbstractStep:
@@ -136,7 +92,7 @@ StepReference:
 ;
 
 Binding:
-    name = [expr::Variable|QualifiedName] ':' jsonvals = TSJsonValue
+    name = [expr::Variable|QualifiedName] ':' jsonvals = JsonValue
 ;
 
 Suppress: {Suppress}
@@ -147,126 +103,41 @@ SuppressVarFieldExp returns expr::Expression:
     ExpressionVariable | FieldAccessExp
 ;
 
-NestedKeyValuesPair:
-        actions += Action+
+// Json Grammar obtained from https://gist.github.com/nightscape/629651
+
+JsonElements: JsonObject | JsonMember | JsonArray ;
+
+JsonObject: '{' (members+=JsonMember) (',' members+=JsonMember)* '}' ;
+
+JsonMember: key=STRING ':' value=JsonValue ;
+
+JsonArray: '[' (values+=JsonValue) (',' values+=JsonValue)* ']' ;
+
+JsonValue: 
+    JsonString | JsonBool | JsonFloat | JsonLong | JsonObject | JsonArray
+//     JsonExpression | JsonObject | JsonArray // Check if we should generalize Json grammar using ExpressionSubset
 ;
 
-/*********************************************************/
-// TODO Reuse AssertThat Grammar. DB 23.03.2025
-TSJsonValue:
-    //{TSJsonValue} STRING | {TSJsonValue} Expression::BOOL_LITERAL | TSJsonNumeric | TSJsonObject | TSJsonArray
-     TSJsonString | TSJsonBool | TSJsonFloat | TSJsonLong | TSJsonObject | TSJsonArray 
+JsonString: value = STRING ;
+
+JsonBool: value = BOOL_LITERAL ;
+
+JsonFloat: value = REAL ;
+
+JsonLong: value = INTEGER ;
+
+JsonExpression: value = ExpressionSubset;
+ExpressionSubset returns expr::Expression:
+    ExpressionBracket | 
+    //ExpressionConstantString |
+    //ExpressionConstantBool |
+    //ExpressionConstantInt | ExpressionConstantReal | 
+    ExpressionEnumLiteral |
+    ExpressionPlus | ExpressionMinus |
+    ExpressionVariable 
+    //| ExpressionRecordAccess | ExpressionVector | ExpressionMapRW
 ;
 
-//TSJsonNumeric: 
-//    {TSJsonNumeric} (Expression::FLOAT | Expression::Long)
-//;
+INTEGER returns ecore::ELong: ('-')? Expression::Long;
 
-TSJsonString:
-    value = STRING
-;
-
-TSJsonBool:
-    value = Expression::BOOL_LITERAL
-;
-
-TSJsonFloat: 
-    value = Expression::FLOAT
-;
-
-TSJsonLong: 
-    value = INTEGER
-;
-
-TSJsonObject:
-    '{' (members+=TSJsonMember) (',' members+=TSJsonMember)* '}'
-;
-
-TSJsonMember:
-    key=STRING ':' value=TSJsonValue
-;
-
-TSJsonArray:
-    {TSJsonArray} '[' (values+=TSJsonValue)? (',' values+=TSJsonValue)* ']'
-;
-/*********************************************************/
-
-TestSequence:
-    'test-sequence' name = ID '{'
-        stepSeqRef += [StepSequence|ID]+
-    '}'
-;
-
-StepSequence:
-    'step-sequence' name = ID '{'
-        step += Step+
-    '}'
-;
-
-
-Step:
-    //'step-id' identifier = ID
-    'step-id' inputVar = [expr::Variable|ID]
-    'step-type' type = [types::TypeDecl|ID]
-    'step-input' stepVar = [expr::Variable|ID]
-    ('for-features' featuresForStep += [expr::Variable|ID]+ )?
-    refStep += RefStep*
-    //('ref-to-step-output' input = ActionList)?
-    //('output-data' output = ActionList)?
-    //('local-parameters' localParams += Param+)? 
-;
-
-RefStep:
-    'ref-to-step-output' input = ActionList     ('for-features' featuresToOutput += [expr::Variable|ID]+ )?
-;
-
-Param:
-    name=ID ':' value += STRING+
-;
-
-@Override
-ModelContainer returns types::ModelContainer:
-    super::ModelContainer | TSMain
-;
-
-/*Body:
-    'trigger:' event = [sig::InterfaceEvent] data += EventData+
-    (tags += TagText*)
-;
-
-TagText:
-    (command ?= 'command')? 'tag' tag += (EventTag | EventOutcomeTag)+
-;
-
-EventTag:
-    'action' eventTag = STRING
-;
-
-EventOutcomeTag:
-    'data' (value += Expression (',' value += Expression)*)? '->' eventOutcomeTag = STRING
-;
-
-/*EventData:
-    'state:' state = [sm::State] ('select-transition-clause-id:' evtInst += EventInstance+ )? params += EventParams*
-;
-
-Tail:
-    ('non-trigger:' niEvent = [sig::InterfaceEvent])
-    (tags += TagText*)
-;
-
-EventInstance:
-    '(' instanceID = INT ':' '(' evtCl += EventClause+ ')' params += EventParams* ')'
-;
-
-EventClause:
-    clauseID = INT | ',' clauseID = INT
-;
-
-EventParams: {EventParams}
-    'params:' '(' (value += Expression (',' value += Expression)*)? ')' ('feature-expr:' config = Expression)?
-;*/
-
-INTEGER returns ecore::ELong:
-    ('-')? INT
-;
+REAL returns ecore::EDouble: ('-')? Expression::FLOAT;
