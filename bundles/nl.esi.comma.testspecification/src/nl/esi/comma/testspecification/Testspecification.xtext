@@ -32,7 +32,7 @@ NamedElement returns types::NamedElement:
 ;
 
 ModelType:
-	APIDefinition | TestDefinition /* concrete */| AbstractTestDefinition | ContextMap
+	APIDefinition | TestDefinition /* concrete */ | ContextMap
 ;
 
 APIDefinition:
@@ -43,12 +43,6 @@ APIDefinition:
 ContextMap:
 	{ContextMap} 'context-map'
 	tMap += TMap*
-;
-
-AbstractTestDefinition:
-	{AbstractTestDefinition} 'abstract-test-definition'
-	testSeq += AbstractTestSequence*
-	'generate-file' filePath = STRING
 ;
 
 TestDefinition:
@@ -74,122 +68,8 @@ StakeHolder:
 ;
 
 TMap:
-	'abstract-step' name = ID ('with')? (mode = STRING)? ('->' stepSeqId = [StepSequence|ID])?
+    'abstract-step' name = ID ('with')? (mode = STRING)? ('->' stepSeqId = [StepSequence|ID])?
 ;
-
-/*********************************************************/
-AbstractTestSequence:
-	'Test-Scenario' ':' name = ID
-		// step += [TMap|ID]+
-		step += AbstractStep+ // (AbstractStep | AssertStep)+  // | ConstraintStep 
-;
-
-ConstraintStep:
-	'data-references' ':' name = ID
-//	ce += ConstraintElm+
-	ce += [prod::RefConstraint|QualifiedName]+	
-;
-
-AssertStep:
-	'output-assertion' ':' name = ID
-	// ce += ConstraintElm+
-	ce += [prod::DataAssertions|QualifiedName]+
-;
-
-ConstraintElm:
-	name = ID ':' val = STRING
-;
-
-AbstractStep:
-	ComposeStep | RunStep | AssertionStep
-;
-
-ComposeStep:
-	'compose-step-name' ':' name = ID
-	stepRef += StepReference*
-	'input-binding' ':' input += Binding+
-	'output-data' ':' output += Binding+ (suppress=Suppress)? // do not generate these in concrete TSpec
-	refs += ConstraintStep*
-	('sut-var' ':' '{' varID += [expr::Variable|QualifiedName]+ '}')?
-;
-
-RunStep:
-	'run-step-name' ':' name = ID
-	('step-type' ':' stepType += STRING)?
-	stepRef += StepReference*
-	'input-binding' ':' input += Binding+
-	'output-data' ':' output += Binding+ (suppress=Suppress)? // do not generate these in concrete TSpec
-	('sut-var' ':' '{' varID += [expr::Variable|QualifiedName]+ '}')?
-;
-
-AssertionStep:
-    'assert-step-name' ':' name = ID
-    stepRef += StepReference*
-    'input-binding' ':' input += Binding+
-    'output-data' ':' output += Binding+ (suppress=Suppress)? // do not generate these in concrete TSpec
-    asserts += AssertStep*
-    ('sut-var' ':' '{' varID += [expr::Variable|QualifiedName]+ '}')?
-;
-
-StepReference:
-	'consumes-from-step' ':' refStep = [AbstractStep|ID] '{' refData += [expr::Variable|QualifiedName]+ '}'
-;
-
-Binding:
-	name = [expr::Variable|QualifiedName] ':' jsonvals = TSJsonValue
-;
-
-Suppress: {Suppress}
-    'suppress' ('(' varFields+=SuppressVarFieldExp (',' varFields+=SuppressVarFieldExp)* ')')?
-;
-
-SuppressVarFieldExp returns expr::Expression:
-    ExpressionVariable | FieldAccessExp
-;
-
-NestedKeyValuesPair:
-	    actions += Action+
-;
-
-/*********************************************************/
-// TODO Reuse AssertThat Grammar. DB 23.03.2025
-TSJsonValue:
-    //{TSJsonValue} STRING | {TSJsonValue} Expression::BOOL_LITERAL | TSJsonNumeric | TSJsonObject | TSJsonArray
-     TSJsonString | TSJsonBool | TSJsonFloat | TSJsonLong | TSJsonObject | TSJsonArray 
-;
-
-//TSJsonNumeric: 
-//    {TSJsonNumeric} (Expression::FLOAT | Expression::Long)
-//;
-
-TSJsonString:
-    value = STRING
-;
-
-TSJsonBool:
-    value = Expression::BOOL_LITERAL
-;
-
-TSJsonFloat: 
-    value = Expression::FLOAT
-;
-
-TSJsonLong: 
-    value = INTEGER
-;
-
-TSJsonObject:
-    '{' (members+=TSJsonMember) (',' members+=TSJsonMember)* '}'
-;
-
-TSJsonMember:
-    key=STRING ':' value=TSJsonValue
-;
-
-TSJsonArray:
-    {TSJsonArray} '[' (values+=TSJsonValue)? (',' values+=TSJsonValue)* ']'
-;
-/*********************************************************/
 
 TestSequence:
 	'test-sequence' name = ID '{'
@@ -218,55 +98,4 @@ Step:
 
 RefStep:
 	'ref-to-step-output' input = ActionList 	('for-features' featuresToOutput += [expr::Variable|ID]+ )?
-;
-
-Param:
-	name=ID ':' value += STRING+
-;
-
-@Override
-ModelContainer returns types::ModelContainer:
-	super::ModelContainer | TSMain
-;
-
-/*Body:
-	'trigger:' event = [sig::InterfaceEvent] data += EventData+
-	(tags += TagText*)
-;
-
-TagText:
-	(command ?= 'command')? 'tag' tag += (EventTag | EventOutcomeTag)+
-;
-
-EventTag:
-	'action' eventTag = STRING
-;
-
-EventOutcomeTag:
-	'data' (value += Expression (',' value += Expression)*)? '->' eventOutcomeTag = STRING
-;
-
-/*EventData:
-	'state:' state = [sm::State] ('select-transition-clause-id:' evtInst += EventInstance+ )? params += EventParams*
-;
-
-Tail:
-	('non-trigger:' niEvent = [sig::InterfaceEvent])
-	(tags += TagText*)
-;
-
-EventInstance:
-	'(' instanceID = INT ':' '(' evtCl += EventClause+ ')' params += EventParams* ')'
-;
-
-EventClause:
-	clauseID = INT | ',' clauseID = INT
-;
-
-EventParams: {EventParams}
-	'params:' '(' (value += Expression (',' value += Expression)*)? ')' ('feature-expr:' config = Expression)?
-;*/
-
-INTEGER returns ecore::ELong:
-    ('-')? INT
 ;
