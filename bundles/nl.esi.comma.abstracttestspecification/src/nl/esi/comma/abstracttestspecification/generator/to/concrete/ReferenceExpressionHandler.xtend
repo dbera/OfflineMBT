@@ -26,9 +26,6 @@ import static extension nl.esi.comma.abstracttestspecification.generator.utils.U
 
 class ReferenceExpressionHandler {
 
-//    var isFast = false
-//    
-//    new(boolean _isFast) { isFast = _isFast }
     /*
      * Support Interleaving of Compose and Run Steps. 
      * Q1 2025.  
@@ -91,23 +88,11 @@ class ReferenceExpressionHandler {
             }
         // if(!refTxt.isEmpty) System.out.println("\nRef Constraints:\n" + refTxt)
         }
-        /*for(k : mapLHStoRHS.keySet) {
-         *     for(v : mapLHStoRHS.get(k))
-         *     System.out.println("    > K: " + k + " > V: " + v)
-         }*/
+
         // Rewrite expressions in mapLHStoRHS
         // TODO Validate that LHS and RHS are unique. 
         // No collisions are allowed.
         var refKeyList = new ArrayList<String>
-        // Commented to rewrite with list values in mapLHStoRHS
-        /*for(k : mapLHStoRHS.keySet) {
-         *     for(_k : mapLHStoRHS.keySet) { 
-         *         if(_k.equals(mapLHStoRHS.get(k))) { // if LHS equals RHS
-         *             mapLHStoRHS.put(k, mapLHStoRHS.get(_k)) // rewrite
-         *             refKeyList.add(_k)
-         *         }
-         *     }
-         }*/
         // Rewrite implementation for list of values in mapLHStoRHS
         var _mapLHStoRHS = new HashMap<String, List<String>>
         for (k : mapLHStoRHS.keySet) {
@@ -131,10 +116,6 @@ class ReferenceExpressionHandler {
                 }
             }
         }
-        /*for(k : _mapLHStoRHS.keySet) {
-         *     for(v : _mapLHStoRHS.get(k))
-         *     System.out.println("    > K: " + k + " > V: " + v)
-         }*/
         // remove intermediate expressions
         for (k : refKeyList) {
             _mapLHStoRHS.remove(k)
@@ -164,21 +145,6 @@ class ReferenceExpressionHandler {
 
         var value = (new ExpressionGenerator(stepRef, runStepName, varRefName)).exprToComMASyntax(rec.exp)
 
-//        if (!(rec.exp instanceof ExpressionVector || rec.exp instanceof ExpressionFunctionCall)) {
-//            // For record expressions. 
-//            // The rest is handled as override functions in ExpressionGenerator.
-//            for(csref : stepRef) {
-//                for(csrefdata : csref.refData) {
-//                    // System.out.println(" Replacing: " + sd.name + " with " + sr.refStep.name)
-//                    if(csref.refStep instanceof RunStep && 
-//                        value.toString.contains(csrefdata.name)) {
-//                        if(!isFast) value = "step_" + csref.refStep.name + ".output." + value
-//                        else value = csref.refStep.name + "." + value
-//                    }
-//                }
-//            }
-//        }
-//        if(!isFast)
         return new StepConstraint(
             runStepName,
             composeStepName,
@@ -186,14 +152,6 @@ class ReferenceExpressionHandler {
             value.toString, // rhs
             pi + field + " := " + value // text
         )
-//        else
-//        return new StepConstraint(
-//            runStepName,
-//            composeStepName,
-//            field, // lhs
-//            value.toString, // rhs
-//            field + " = " + value // text
-//        )
     }
 
     // Gets the list of referenced compose steps by a compose step, recursively!
