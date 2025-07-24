@@ -179,20 +179,21 @@ class ReferenceExpressionHandler {
 //            }
 //        }
 //        if(!isFast)
-//            return new StepConstraint ( runStepName,
-//                                    composeStepName, 
-//                                    pi + field, // lhs
-//                                    value.toString, // rhs
-//                                    pi + field + " := " + value // text
-//                                  )
-//        else
         return new StepConstraint(
             runStepName,
             composeStepName,
-            field, // lhs
+            pi + field, // lhs
             value.toString, // rhs
-            field + " = " + value // text
+            pi + field + " := " + value // text
         )
+//        else
+//        return new StepConstraint(
+//            runStepName,
+//            composeStepName,
+//            field, // lhs
+//            value.toString, // rhs
+//            field + " = " + value // text
+//        )
     }
 
     // Gets the list of referenced compose steps by a compose step, recursively!
