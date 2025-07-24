@@ -66,6 +66,7 @@ KeyValuePair:
     ('param' param = STRING 'value' value = STRING)?
     'test-case-id' testCaseID = STRING 
     'requirement-id' requirementID += STRING+
+    ('step-number' stepNum = INT)?
 ;
 
 DFEdge: 
