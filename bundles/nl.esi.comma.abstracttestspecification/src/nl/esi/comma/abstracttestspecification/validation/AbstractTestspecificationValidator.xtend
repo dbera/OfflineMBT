@@ -15,6 +15,11 @@
  */
 package nl.esi.comma.abstracttestspecification.validation
 
+import nl.esi.comma.types.types.Import
+import nl.esi.comma.types.types.TypesPackage
+import org.eclipse.emf.common.util.URI
+import org.eclipse.xtext.EcoreUtil2
+import org.eclipse.xtext.validation.Check
 
 /**
  * This class contains custom validation rules. 
@@ -23,15 +28,18 @@ package nl.esi.comma.abstracttestspecification.validation
  */
 class AbstractTestspecificationValidator extends AbstractAbstractTestspecificationValidator {
 	
-//	public static val INVALID_NAME = 'invalidName'
-//
-//	@Check
-//	def checkGreetingStartsWithCapital(Greeting greeting) {
-//		if (!Character.isUpperCase(greeting.name.charAt(0))) {
-//			warning('Name should start with a capital', 
-//					AbstractTestspecificationPackage.Literals.GREETING__NAME,
-//					INVALID_NAME)
-//		}
-//	}
-	
+    @Check
+    override checkImportForValidity(Import imp) {
+        if (!EcoreUtil2.isValidUri(imp, URI.createURI(imp.getImportURI()))) {
+            error("Invalid resource", imp, TypesPackage.Literals.IMPORT__IMPORT_URI);
+        } else {
+            /*val Resource r = EcoreUtil2.getResource(imp.eResource, imp.importURI)
+             * if(! (r.allContents.head instanceof InterfaceDefinition ||
+             *     r.allContents.head instanceof FeatureDefinition
+             * ))
+             *     error("The imported resource is not an interface definition or a feature definition.", imp, TypesPackage.eINSTANCE.import_ImportURI)
+             }*/
+        }
+    }
+
 }
