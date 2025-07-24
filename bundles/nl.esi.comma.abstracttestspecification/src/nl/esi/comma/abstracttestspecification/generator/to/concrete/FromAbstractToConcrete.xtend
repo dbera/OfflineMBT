@@ -52,7 +52,8 @@ class FromAbstractToConcrete extends AbstractGenerator {
             fsa.generateFile('''types/«sys».types''', atd.generateTypesFile(sys, typesImports))
             fsa.generateFile('''parameters/«sys».params''', atd.generateParamsFile(sys))
         }
-        fsa.generateFile(res.URI.lastSegment, atd.generateConcreteTest())
+        val conTspecFileName = res.URI.lastSegment.replaceAll('\\.atspec$','.tspec')
+        fsa.generateFile(conTspecFileName, atd.generateConcreteTest())
     }
 
     def private generateConcreteTest(AbstractTestDefinition atd) '''
