@@ -20,8 +20,6 @@ import java.util.stream.Collectors;
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.Binding;
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.JsonArray;
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.JsonBool;
-import nl.esi.comma.abstracttestspecification.abstractTestspecification.JsonElements;
-import nl.esi.comma.abstracttestspecification.abstractTestspecification.JsonExpression;
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.JsonFloat;
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.JsonLong;
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.JsonMember;
