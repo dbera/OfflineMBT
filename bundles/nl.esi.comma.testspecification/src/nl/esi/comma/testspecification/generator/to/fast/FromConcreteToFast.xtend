@@ -29,10 +29,6 @@ import nl.esi.comma.testspecification.generator.to.docgen.DocGen
 import nl.esi.comma.testspecification.generator.utils.JSONData
 import nl.esi.comma.testspecification.generator.utils.KeyValue
 import nl.esi.comma.testspecification.generator.utils.Step
-import nl.esi.comma.testspecification.testspecification.AbstractStep
-import nl.esi.comma.testspecification.testspecification.AbstractTestDefinition
-import nl.esi.comma.testspecification.testspecification.ContextMap
-import nl.esi.comma.testspecification.testspecification.StepSequence
 import nl.esi.comma.testspecification.testspecification.TSMain
 import nl.esi.comma.testspecification.testspecification.TestDefinition
 import org.eclipse.emf.ecore.resource.Resource
@@ -210,30 +206,6 @@ class FromConcreteToFast extends AbstractGenerator {
         generateJSONDataAndVFDFiles(testDefFilePath, fsa, modelInst)
     }
 
-    def private getCMStepRef(ContextMap cm) {
-        var mapActToStepSequence = new HashMap<String,StepSequence>
-        for(elm : cm.TMap) {
-            mapActToStepSequence.put(elm.name,elm.stepSeqId)
-        }
-        return mapActToStepSequence
-    }
-    
-    def private getAbstractStepSequence(AbstractTestDefinition atd, 
-        Map<String,StepSequence> mapActToStepSequence
-    ) {
-        var listStepSequence = new ArrayList<nl.esi.comma.testspecification.testspecification.Step>
-        for(elm: atd.testSeq) {
-            for(s : elm.step) {
-                if(s instanceof AbstractStep) {
-                    if(mapActToStepSequence.get(s.name)!== null)
-                        for(st: mapActToStepSequence.get(s.name).step)
-                            listStepSequence.add(st)
-                }
-            }
-        }
-        return listStepSequence
-    }
-    
     def private getStepSequence(TestDefinition td) {
         var listStepSequence = new ArrayList<nl.esi.comma.testspecification.testspecification.Step>
         if(td.testSeq.empty) {

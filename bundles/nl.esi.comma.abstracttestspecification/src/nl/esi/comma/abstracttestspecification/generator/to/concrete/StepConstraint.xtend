@@ -10,7 +10,7 @@
  *
  * SPDX-License-Identifier: MIT
  */
-package nl.esi.comma.testspecification.generator.to.concrete
+package nl.esi.comma.abstracttestspecification.generator.to.concrete
 
 class StepConstraint 
 {

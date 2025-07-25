@@ -146,11 +146,11 @@ AssertThatValueSimilar: {AssertThatValueSimilar}
 
 JsonElements: JsonObject | JsonMember | JsonArray ;
 
-JsonObject: '{' (members+=JsonMember) (',' members+=JsonMember)* '}' ;
+JsonObject: {JsonObject} '{' (members+=JsonMember)? (',' members+=JsonMember)* '}' ;
 
 JsonMember: key=STRING ':' value=JsonValue ;
 
-JsonArray: '[' (values+=JsonValue) (',' values+=JsonValue)* ']' ;
+JsonArray: {JsonArray} '[' (values+=JsonValue)? (',' values+=JsonValue)* ']' ;
 
 JsonValue: jsonObj = JsonObject | jsonArr = JsonArray | expr = Expression ;
 

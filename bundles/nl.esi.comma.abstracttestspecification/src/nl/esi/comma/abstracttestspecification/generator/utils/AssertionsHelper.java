@@ -10,7 +10,7 @@
  *
  * SPDX-License-Identifier: MIT
  */
-package nl.esi.comma.testspecification.generator.to.concrete;
+package nl.esi.comma.abstracttestspecification.generator.utils;
 
 import java.util.function.Function;
 import java.util.stream.Collectors;

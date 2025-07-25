@@ -22,6 +22,7 @@ Require-Bundle: nl.esi.comma.types;visibility:=reexport,
  nl.esi.comma.scenarios,
  nl.esi.comma.inputspecification,
  nl.esi.comma.testspecification,
+ nl.esi.comma.abstracttestspecification,
  nl.asml.matala.bpmn4s,
  nl.asml.matala.generator.fast
 Bundle-RequiredExecutionEnvironment: JavaSE-21
