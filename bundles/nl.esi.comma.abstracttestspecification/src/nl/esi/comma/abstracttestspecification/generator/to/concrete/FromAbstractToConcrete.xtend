@@ -134,7 +134,7 @@ class FromAbstractToConcrete extends AbstractGenerator {
     // Print types for each step
     def private printTypes(Iterable<Binding> ios, String type, Iterable<String> typesImports) '''
         «FOR ti : typesImports»
-            import "«ti»"
+            import "../«ti»"
         «ENDFOR»
         
         record «type» {
@@ -196,7 +196,8 @@ class FromAbstractToConcrete extends AbstractGenerator {
             for (typesImport : psImport.resource.contents.filter(Product).flatMap[imports].filter [
                 importURI.endsWith('.types')
             ]) {
-                typesImports += typesImport.resolveUri.toString
+                val typesImportURI = typesImport.resolveUri.deresolve(res.URI)
+                typesImports += typesImportURI.toString
             }
         }
         return typesImports;
