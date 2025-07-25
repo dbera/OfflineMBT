@@ -103,41 +103,24 @@ SuppressVarFieldExp returns expr::Expression:
     ExpressionVariable | FieldAccessExp
 ;
 
-// Json Grammar obtained from https://gist.github.com/nightscape/629651
+// Json Grammar (inspired by https://gist.github.com/nightscape/629651)
 
-JsonElements: JsonObject | JsonMember | JsonArray ;
-
-JsonObject: '{' (members+=JsonMember) (',' members+=JsonMember)* '}' ;
+JsonObject: {JsonObject} '{' (members+=JsonMember)? (',' members+=JsonMember)* '}' ;
 
 JsonMember: key=STRING ':' value=JsonValue ;
 
-JsonArray: '[' (values+=JsonValue) (',' values+=JsonValue)* ']' ;
+JsonArray: {JsonArray} '[' (values+=JsonValue)? (',' values+=JsonValue)* ']' ;
 
 JsonValue: 
     JsonString | JsonBool | JsonFloat | JsonLong | JsonObject | JsonArray
-//     JsonExpression | JsonObject | JsonArray // Check if we should generalize Json grammar using ExpressionSubset
 ;
 
 JsonString: value = STRING ;
 
-JsonBool: value = BOOL_LITERAL ;
+JsonBool: value = Expression::BOOL_LITERAL ;
 
-JsonFloat: value = REAL ;
+JsonFloat: value = Expression::FLOAT ;
 
 JsonLong: value = INTEGER ;
 
-JsonExpression: value = ExpressionSubset;
-ExpressionSubset returns expr::Expression:
-    ExpressionBracket | 
-    //ExpressionConstantString |
-    //ExpressionConstantBool |
-    //ExpressionConstantInt | ExpressionConstantReal | 
-    ExpressionEnumLiteral |
-    ExpressionPlus | ExpressionMinus |
-    ExpressionVariable 
-    //| ExpressionRecordAccess | ExpressionVector | ExpressionMapRW
-;
-
 INTEGER returns ecore::ELong: ('-')? Expression::Long;
-
-REAL returns ecore::EDouble: ('-')? Expression::FLOAT;
