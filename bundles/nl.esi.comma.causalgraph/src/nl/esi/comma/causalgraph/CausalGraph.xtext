@@ -26,16 +26,27 @@ ModelContainer returns types::ModelContainer:
 
 CausalGraph:
     imports += Import*
+    ('test-case-id' ':' testID += TestID+)?
     'graph' name=ID '{'
-        ('namespace' ns = STRING)?
+        ('language-imports' imp = STRING)?
         ('class-name' className = STRING)?
+        ('variable-declarations' varDecl += VarDecl+)?
         'graph-type' graphType = GraphType
         ('variables' vars+=Variable+)?
         ('functions' func+=FunctionCallDecl+)?
-        nodes += Node*
+        nodes += Node+
+        // nodes += Node+
         cfedges += CFEdge*
         dfedges += DFEdge*
     '}'
+;
+
+VarDecl:
+    'var-name:' name = ID 'language-type:' varType = STRING
+;
+
+TestID:
+    name = ID
 ;
 
 enum GraphType:
@@ -53,25 +64,63 @@ enum StepType:
     and = 'And'
 ;
 
+// Node:
+//    'node' name=ID ':' ('local-variables' localVars+=Variable+)? 'actions' act += Action+
+//    ('step-name' ':' stepName = STRING)?
+//    // ('step-args' ':' stepArgsInitActions+=(AssignmentAction | RecordFieldAssignmentAction)+)?
+//    ('step-args' ':' stepArgsInitActions+=KeyValuePair+)?
+//    ('step-type' ':' stepType = StepType)?
+//    ('meta-data' initActions+=(AssignmentAction | RecordFieldAssignmentAction)+)?
+// ;
+
+
 Node:
-    'node' name=ID ':' ('local-variables' localVars+=Variable+)? 'actions' act += Action+
-    ('step-name' ':' stepName = STRING)?
-    // ('step-args' ':' stepArgsInitActions+=(AssignmentAction | RecordFieldAssignmentAction)+)?
-    ('step-args' ':' stepArgsInitActions+=KeyValuePair+)?
-    ('step-type' ':' stepType = StepType)?
-    ('meta-data' initActions+=(AssignmentAction | RecordFieldAssignmentAction)+)?
+    'node' name=ID ':'
+    tests += TestBody+ 
 ;
 
-KeyValuePair:
-    ('param' param = STRING 'value' value = STRING)?
-    'test-case-id' testCaseID = STRING 
-    'requirement-id' requirementID += STRING+
-    ('step-number' stepNum = INT)?
+TestBody:
+    'test' name=[TestID|ID] 
+    '{'
+        ('requirement-id' ':' reqID += ID+)?
+        'step-name' ':' stepName = STRING
+        'step-number' ':' stepNum = INT
+        'step-type' ':' stepType = StepType
+        ('step-args' ':' 
+            localVars+=Variable+ 
+            'values' ':' 
+                initActions+=(AssignmentAction | RecordFieldAssignmentAction)+
+        )?
+        'step-body' ':' 
+            'language' ':' lang = STRING
+            'code-fragment' ':' frag = STRING
+    '}'
 ;
+
+
+//KeyValuePair:
+//    ('param' param = STRING 'value' value = STRING)?
+//    'test-case-id' testCaseID = STRING 
+//    'requirement-id' requirementID += STRING+
+//    ('step-number' stepNum = INT)?
+//;
 
 DFEdge: 
-    'data-flow-edge' src = [Node|ID] '-[' refVarList += [expr::Variable|ID]* ']-|>' dst = [Node|ID]
+    'data-flow-edge' src = [Node|ID] '-[' refData += Ref+ ']-|>' dst = [Node|ID]
     ('meta-data' initActions+=(AssignmentAction | RecordFieldAssignmentAction)+)?
+;
+
+Ref:
+    RefData | RefTypedData
+;
+
+RefData:
+    // tid = [TestID|ID] ':' '{' refVarList += [expr::Variable|ID]+ '}'?
+    tid = [TestID|ID] ':' '{' refVarList += [VarDecl|ID]+ '}'?
+;
+
+RefTypedData:
+    '[T]' tid = [TestID|ID] ':' '{' refVarList += [expr::Variable|ID]+ '}'?
 ;
 
 CFEdge: 
