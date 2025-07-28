@@ -94,6 +94,7 @@ TestBody:
         'step-body' ':' 
             'language' ':' lang = STRING
             'code-fragment' ':' frag = STRING
+            // OR 'actions' act += Action+
     '}'
 ;
 
