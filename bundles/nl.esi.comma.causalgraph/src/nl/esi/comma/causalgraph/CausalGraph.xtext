@@ -24,31 +24,6 @@ ModelContainer returns types::ModelContainer:
     super::ModelContainer | CausalGraph
 ;
 
-CausalGraph:
-    imports += Import*
-    ('test-case-id' ':' testID += TestID+)?
-    'graph' name=ID '{'
-        ('language-imports' imp = STRING)?
-        ('class-name' className = STRING)?
-        ('variable-declarations' varDecl += VarDecl+)?
-        'graph-type' graphType = GraphType
-        ('variables' vars+=Variable+)?
-        ('functions' func+=FunctionCallDecl+)?
-        nodes += Node+
-        // nodes += Node+
-        cfedges += CFEdge*
-        dfedges += DFEdge*
-    '}'
-;
-
-VarDecl:
-    'var-name:' name = ID 'language-type:' varType = STRING
-;
-
-TestID:
-    name = ID
-;
-
 enum GraphType:
     cg = 'CausalGraph' |
     ucg = 'UnifiedCausalGraph' |
@@ -64,6 +39,87 @@ enum StepType:
     and = 'And'
 ;
 
+CausalGraph:
+    imports += Import*
+    scenarioIDDecl += ScenarioIDDecl*
+    'graph' name=ID '{'
+        'graph-type' graphType = GraphType
+        ('target-language-imports' imp = STRING)?
+        ('variables' vars+=(Variable|VarDecl)+)?
+        ('function-signatures' func+=FunctionCallDecl+)?
+        nodes += Node+
+        cfedges += CFEdge*
+        dfedges += DFEdge*
+    '}'
+;
+
+ScenarioIDDecl:
+    'scenario' ':' testID = TestID
+;
+
+VarDecl:
+    'var-name' ':' name = ID 'type' ':' varType = STRING
+;
+
+TestID:
+    name = ID
+;
+
+Node:
+    'node' name=ID ':'
+    'step-name' ':' stepName = STRING
+    'step-type' ':' stepType = StepType
+    ('step-args' ':' nodeVarDecls += NodeVarDecl+)?
+    tests += TestBody+ 
+;
+
+NodeVarDecl:
+    var = Variable (',')?
+;
+
+TestBody:
+    'scenario' name=[TestID|ID] 'step' stepNum = INT
+    ('requirement-id' ':' reqID += ID+)?
+    ('arg-assign' ':' initActions+=(AssignmentAction | RecordFieldAssignmentAction)+)?
+    'step-body' ':' stepBody += StepBody*
+;
+
+StepBody:
+    TypedBody | StringBody
+;
+
+StringBody:
+    id = STRING '<<' frag = STRING '>>'
+;
+
+TypedBody:
+    id = STRING 'actions' act += Action+
+;
+
+DFEdge: 
+    'data-flow-edge' src = [Node|ID] '--' refData += Ref+ '-->' dst = [Node|ID]
+    // ('meta-data' initActions+=(AssignmentAction | RecordFieldAssignmentAction)+)?
+;
+
+Ref:
+    RefData | RefTypedData
+;
+
+RefData:
+    '{' tid = [TestID|ID] ':' '[' refVarList += [VarDecl|ID]+ ']' '}'
+;
+
+RefTypedData:
+    '{' '[T]' tid = [TestID|ID] ':' '[' refVarList += [expr::Variable|ID]+ ']' '}'
+;
+
+CFEdge: 
+    'control-flow-edge' src = [Node|ID] '-->' dst = [Node|ID]
+    // ('meta-data' initActions+=(AssignmentAction | RecordFieldAssignmentAction)+)?
+;
+
+
+
 // Node:
 //    'node' name=ID ':' ('local-variables' localVars+=Variable+)? 'actions' act += Action+
 //    ('step-name' ':' stepName = STRING)?
@@ -72,33 +128,6 @@ enum StepType:
 //    ('step-type' ':' stepType = StepType)?
 //    ('meta-data' initActions+=(AssignmentAction | RecordFieldAssignmentAction)+)?
 // ;
-
-
-Node:
-    'node' name=ID ':'
-    tests += TestBody+ 
-;
-
-TestBody:
-    'test' name=[TestID|ID] 
-    '{'
-        ('requirement-id' ':' reqID += ID+)?
-        'step-name' ':' stepName = STRING
-        'step-number' ':' stepNum = INT
-        'step-type' ':' stepType = StepType
-        ('step-args' ':' 
-            localVars+=Variable+ 
-            'values' ':' 
-                initActions+=(AssignmentAction | RecordFieldAssignmentAction)+
-        )?
-        'step-body' ':' 
-            'language' ':' lang = STRING
-            'code-fragment' ':' frag = STRING
-            // OR 'actions' act += Action+
-    '}'
-;
-
-
 //KeyValuePair:
 //    ('param' param = STRING 'value' value = STRING)?
 //    'test-case-id' testCaseID = STRING 
@@ -106,28 +135,6 @@ TestBody:
 //    ('step-number' stepNum = INT)?
 //;
 
-DFEdge: 
-    'data-flow-edge' src = [Node|ID] '-[' refData += Ref+ ']-|>' dst = [Node|ID]
-    ('meta-data' initActions+=(AssignmentAction | RecordFieldAssignmentAction)+)?
-;
-
-Ref:
-    RefData | RefTypedData
-;
-
-RefData:
-    // tid = [TestID|ID] ':' '{' refVarList += [expr::Variable|ID]+ '}'?
-    tid = [TestID|ID] ':' '{' refVarList += [VarDecl|ID]+ '}'?
-;
-
-RefTypedData:
-    '[T]' tid = [TestID|ID] ':' '{' refVarList += [expr::Variable|ID]+ '}'?
-;
-
-CFEdge: 
-    'control-flow-edge' src = [Node|ID] '-->' dst = [Node|ID]
-    ('meta-data' initActions+=(AssignmentAction | RecordFieldAssignmentAction)+)?
-;
 
 //FunctionCallDecl: type = Type name = ID
 //    '(' (args += Variable (',' args += Variable)*)? ')'
