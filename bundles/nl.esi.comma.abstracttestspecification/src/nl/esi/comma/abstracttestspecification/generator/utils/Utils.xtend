@@ -17,16 +17,11 @@ import java.util.Collections
 import java.util.List
 
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractTestDefinition
-import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractTestspecificationFactory
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.ComposeStep
-import nl.esi.comma.abstracttestspecification.abstractTestspecification.JsonArray
-import nl.esi.comma.abstracttestspecification.abstractTestspecification.JsonBool
-import nl.esi.comma.abstracttestspecification.abstractTestspecification.JsonFloat
-import nl.esi.comma.abstracttestspecification.abstractTestspecification.JsonLong
-import nl.esi.comma.abstracttestspecification.abstractTestspecification.JsonMember
-import nl.esi.comma.abstracttestspecification.abstractTestspecification.JsonObject
-import nl.esi.comma.abstracttestspecification.abstractTestspecification.JsonString
-import nl.esi.comma.abstracttestspecification.abstractTestspecification.JsonValue
+import nl.esi.comma.assertthat.assertThat.JsonArray
+import nl.esi.comma.assertthat.assertThat.JsonMember
+import nl.esi.comma.assertthat.assertThat.JsonObject
+import nl.esi.comma.assertthat.assertThat.JsonValue
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.RunStep
 
 import nl.esi.comma.expressions.expression.ExpressionRecordAccess
@@ -41,6 +36,16 @@ import nl.esi.comma.types.types.VectorTypeConstructor
 import org.eclipse.emf.ecore.util.EcoreUtil
 
 import static extension nl.esi.comma.types.utilities.EcoreUtil3.serialize
+import nl.esi.comma.assertthat.assertThat.JsonExpression
+import nl.esi.comma.expressions.expression.ExpressionConstantString
+import nl.esi.comma.expressions.expression.ExpressionConstantBool
+import nl.esi.comma.expressions.expression.ExpressionConstantReal
+import nl.esi.comma.expressions.expression.ExpressionConstantInt
+import nl.esi.comma.assertthat.assertThat.AssertThatFactory
+import nl.esi.comma.expressions.expression.ExpressionFactory
+import nl.esi.comma.expressions.expression.ExpressionMinus
+import nl.esi.comma.expressions.expression.ExpressionPlus
+import nl.esi.comma.expressions.expression.Expression
 
 class Utils 
 {
@@ -124,19 +129,37 @@ class Utils
     static def String getStringValue(JsonValue json) {
         return switch (json) {
             case null: null
-            JsonString: json.value
-            JsonBool: String.valueOf(json.value)
-            JsonFloat: String.valueOf(json.value)
-            JsonLong: String.valueOf(json.value)
+            JsonExpression: {
+                var expr = json.expr
+                switch (expr) {
+                    ExpressionConstantString: expr.value
+                    ExpressionConstantBool: String.valueOf(expr.value)
+                    ExpressionConstantReal: String.valueOf(expr.value)
+                    ExpressionConstantInt: String.valueOf(expr.value)
+                    ExpressionMinus: getStringSignedValue(expr)
+                    ExpressionPlus: getStringSignedValue(expr)
+                    default: throw new IllegalArgumentException('Unknown Expression type ' + expr)
+                }
+            }
             JsonObject: json.members.join('{', ', ', '}')['''«key»: «value.stringValue»''']
             JsonArray: json.values.join('[', ', ', ']')[stringValue]
             default: throw new IllegalArgumentException('Unknown JSON type ' + json)
         }
     }
+    
+    def static String getStringSignedValue(Expression expr) {
+        switch (expr) {
+            ExpressionPlus: '+'+getStringSignedValue(expr.sub)
+            ExpressionMinus: '-'+getStringSignedValue(expr.sub)
+            ExpressionConstantReal: String.valueOf(expr.value)
+            ExpressionConstantInt: String.valueOf(expr.value)
+            default: throw new IllegalArgumentException('Unknown Expression type ' + expr)
+        }
+    }
 
-    static def JsonString toJsonString(String text) {
-        return AbstractTestspecificationFactory.eINSTANCE.createJsonString => [
-            value = text
+    static def JsonExpression toJsonString(String text) {
+        return AssertThatFactory.eINSTANCE.createJsonExpression => [
+            expr = ExpressionFactory.eINSTANCE.createExpressionConstantString => [ value = text ]
         ]
     }
 }

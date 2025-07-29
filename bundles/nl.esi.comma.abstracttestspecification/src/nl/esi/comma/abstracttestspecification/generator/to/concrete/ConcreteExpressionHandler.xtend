@@ -14,7 +14,7 @@ package nl.esi.comma.abstracttestspecification.generator.to.concrete
 
 import java.util.Set
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.ComposeStep
-import nl.esi.comma.abstracttestspecification.abstractTestspecification.JsonValue
+import nl.esi.comma.assertthat.assertThat.JsonValue
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.RunStep
 import nl.esi.comma.types.types.EnumTypeDecl
 import nl.esi.comma.types.types.MapTypeConstructor

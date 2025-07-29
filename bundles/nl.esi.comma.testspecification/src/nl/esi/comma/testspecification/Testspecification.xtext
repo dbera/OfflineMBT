@@ -10,7 +10,7 @@
  *
  * SPDX-License-Identifier: MIT
  */
-grammar nl.esi.comma.testspecification.Testspecification with nl.esi.comma.actions.Actions // with org.eclipse.xtext.common.Terminals
+grammar nl.esi.comma.testspecification.Testspecification with nl.esi.comma.assertthat.AssertThat
 
 generate testspecification "http://www.esi.nl/comma/testspecification/Testspecification"
 

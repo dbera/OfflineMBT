@@ -10,7 +10,7 @@
  *
  * SPDX-License-Identifier: MIT
  */
-grammar nl.esi.comma.abstracttestspecification.AbstractTestspecification with nl.esi.comma.actions.Actions
+grammar nl.esi.comma.abstracttestspecification.AbstractTestspecification with nl.esi.comma.assertthat.AssertThat
 
 generate abstractTestspecification "http://www.esi.nl/comma/abstracttestspecification/AbstractTestspecification"
 
@@ -18,6 +18,7 @@ import "http://www.eclipse.org/emf/2002/Ecore" as ecore
 import "http://www.esi.nl/comma/types/Types" as types
 import "http://www.esi.nl/comma/expressions/Expression" as expr
 import "http://www.asml.nl/matala/product/Product" as prod
+import "http://www.esi.nl/comma/assertthat/AssertThat" as asrt
 
 TSMain:
     imports += Import*
@@ -28,6 +29,11 @@ TSMain:
 @Override
 NamedElement returns types::NamedElement:
     name=QualifiedName | Variable
+;
+
+@Override
+ModelContainer returns types::ModelContainer:
+    super::ModelContainer | TSMain
 ;
 
 ModelType:
@@ -103,24 +109,15 @@ SuppressVarFieldExp returns expr::Expression:
     ExpressionVariable | FieldAccessExp
 ;
 
-// Json Grammar (inspired by https://gist.github.com/nightscape/629651)
+// Json Grammar
 
-JsonObject: {JsonObject} '{' (members+=JsonMember)? (',' members+=JsonMember)* '}' ;
-
-JsonMember: key=STRING ':' value=JsonValue ;
-
-JsonArray: {JsonArray} '[' (values+=JsonValue)? (',' values+=JsonValue)* ']' ;
-
-JsonValue: 
-    JsonString | JsonBool | JsonFloat | JsonLong | JsonObject | JsonArray
+@Override
+JsonExpression returns asrt::JsonExpression: 
+    expr = AbstractTestExpressionConstants
 ;
 
-JsonString: value = STRING ;
+AbstractTestExpressionConstants returns expr::Expression:
+    ExpressionConstantInt  | ExpressionConstantReal | ExpressionConstantBool | ExpressionConstantString // basic types
+    | ExpressionMinus | ExpressionPlus // signed numbers
+;
 
-JsonBool: value = Expression::BOOL_LITERAL ;
-
-JsonFloat: value = Expression::FLOAT ;
-
-JsonLong: value = INTEGER ;
-
-INTEGER returns ecore::ELong: ('-')? Expression::Long;

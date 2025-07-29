@@ -54,6 +54,9 @@ class FromAbstractToConcrete extends AbstractGenerator {
         }
         val conTspecFileName = res.URI.lastSegment.replaceAll('\\.atspec$','.tspec')
         fsa.generateFile(conTspecFileName, atd.generateConcreteTest())
+        fsa.generateFile("reference.kvp", (new RefKVPGenerator()).generateRefKVP(atd))
+        fsa.generateFile("vfd.xml", (new VFDXMLGenerator(this.args, this.rename)).generateXMLFromSUTVars(atd))
+ 
     }
 
     def private generateConcreteTest(AbstractTestDefinition atd) '''
