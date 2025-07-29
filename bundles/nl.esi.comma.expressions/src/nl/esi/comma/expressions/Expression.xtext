@@ -19,13 +19,14 @@ import "http://www.esi.nl/comma/types/Types" as types
 import "http://www.esi.nl/comma/signature/InterfaceSignature" as signature
 
 Variable: type = Type name= ID ;
-FunctionCallDecl: type = Type name = ID
-    '(' (args += Variable (',' args += Variable)*)? ')'
+
+FunctionDecl:
+    returnType = Type name = ID '(' (params += Variable (',' params += Variable)*)? ')'
 ;
 
 @Override
 NamedElement returns types::NamedElement:
-	super::NamedElement | Variable | FunctionCallDecl
+	super::NamedElement | Variable | FunctionDecl
 ;
 
 Expression: ExpressionLevel1;
@@ -117,7 +118,7 @@ ExpressionLevel9 returns Expression:
 ;
 
 ExpressionFnCall: 
-    'call' functionName = [FunctionCallDecl|ID] '(' (args += Expression (',' args += Expression)*)? ')'
+    'call' function = [FunctionDecl|ID] '(' (args += Expression (',' args += Expression)*)? ')'
 ;
 
 ExpressionBracket:

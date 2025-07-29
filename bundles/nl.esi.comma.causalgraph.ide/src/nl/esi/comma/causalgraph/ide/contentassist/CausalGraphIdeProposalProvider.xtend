@@ -15,10 +15,40 @@
  */
 package nl.esi.comma.causalgraph.ide.contentassist
 
+import com.google.inject.Inject
+import nl.esi.comma.causalgraph.services.CausalGraphGrammarAccess
+import org.eclipse.xtext.Assignment
+import org.eclipse.xtext.RuleCall
+import org.eclipse.xtext.ide.editor.contentassist.ContentAssistContext
+import org.eclipse.xtext.ide.editor.contentassist.ContentAssistEntry
+import org.eclipse.xtext.ide.editor.contentassist.IIdeContentProposalAcceptor
 
 /**
  * See https://www.eclipse.org/Xtext/documentation/310_eclipse_support.html#content-assist
  * on how to customize the content assistant.
  */
 class CausalGraphIdeProposalProvider extends AbstractCausalGraphIdeProposalProvider {
+    @Inject
+    @Extension
+    CausalGraphGrammarAccess grammarAccess
+
+    override protected _createProposals(Assignment assignment, ContentAssistContext context,
+        IIdeContentProposalAcceptor acceptor) {
+        super._createProposals(assignment, context, acceptor)
+
+        val terminal = assignment.terminal
+        if (terminal instanceof RuleCall) {
+            if (terminal.rule == BODYRule) {
+                val proposal = proposalCreator.createProposal('«»', context, [ entry |
+                    entry.kind = ContentAssistEntry.KIND_SNIPPET
+                    entry.label = '«»'
+                    entry.description = 'Code snippet'
+                    entry.documentation = 'Code snippet'
+                ])
+                if (proposal !== null) {
+                    acceptor.accept(proposal, TEMPLATE_DEFAULT_PRIORITY);
+                }
+            }
+        }
+    }
 }

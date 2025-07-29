@@ -15,7 +15,6 @@ grammar nl.esi.comma.causalgraph.CausalGraph with nl.esi.comma.actions.Actions
 
 generate causalGraph "http://www.esi.nl/comma/causalgraph/CausalGraph"
 
-import "http://www.esi.nl/comma/signature/InterfaceSignature" as sig 
 import "http://www.esi.nl/comma/types/Types" as types
 import "http://www.esi.nl/comma/expressions/Expression" as expr
 
@@ -41,101 +40,78 @@ enum StepType:
 
 CausalGraph:
     imports += Import*
-    scenarioIDDecl += ScenarioIDDecl*
-    'graph' name=ID '{'
-        'graph-type' graphType = GraphType
-        ('target-language-imports' imp = STRING)?
-        ('variables' vars+=(Variable|VarDecl)+)?
-        ('function-signatures' func+=FunctionCallDecl+)?
+    requirements += RequirementDecl+
+    scenarios += ScenarioDecl+
+    'graph' name=ID ':'
+        'type' ':' type = GraphType
+        ('language' ':' language = STRING)?
+        ('header' ':' header = BODY)?
+        ('types' ':' types += TypeDecl+)?
+        ('functions' ':' functions += FunctionDecl+)?
+        ('variables' ':' variables += Variable+)?
         nodes += Node+
-        cfedges += CFEdge*
-        dfedges += DFEdge*
-    '}'
+        'edges' ':' edges += Edge+
 ;
 
-ScenarioIDDecl:
-    'scenario' ':' testID = TestID
+RequirementDecl:
+    'requirement' name = ID
 ;
 
-VarDecl:
-    'var-name' ':' name = ID 'type' ':' varType = STRING
+ScenarioDecl:
+    'scenario' name = ID ':'
+        'requirements' ':' requirements += [RequirementDecl|ID]+
 ;
 
-TestID:
-    name = ID
+@Ov@Override
+TypeDecl returns types::TypeDecl:
+	super | AliasTypeDecl
+;
+
+AliasTypeDecl:
+    'alias' name = ID alias = STRING
 ;
 
 Node:
     'node' name=ID ':'
     'step-name' ':' stepName = STRING
     'step-type' ':' stepType = StepType
-    ('step-args' ':' nodeVarDecls += NodeVarDecl+)?
-    tests += TestBody+ 
+    ('step-parameters' ':' stepParameters += Variable+
+     'step-body' ':' stepBody = StepBody)?
+    tests += ScenarioStep+
 ;
 
-NodeVarDecl:
-    var = Variable (',')?
-;
-
-TestBody:
-    'scenario' name=[TestID|ID] 'step' stepNum = INT
-    ('requirement-id' ':' reqID += ID+)?
-    ('arg-assign' ':' initActions+=(AssignmentAction | RecordFieldAssignmentAction)+)?
-    'step-body' ':' stepBody += StepBody*
+ScenarioStep:
+    'scenario' name=[ScenarioDecl|ID] 'step' stepNumber = INT ':'
+    ( ('step-arguments' ':' stepArguments += (AssignmentAction | RecordFieldAssignmentAction)+)
+    | ('step-body' ':' stepBody = StepBody))
 ;
 
 StepBody:
-    TypedBody | StringBody
+    ActionsBody | LanguageBody
 ;
 
-StringBody:
-    id = STRING '<<' frag = STRING '>>'
+ActionsBody:
+    actions += Action+
 ;
 
-TypedBody:
-    id = STRING 'actions' act += Action+
+LanguageBody:
+    body = BODY
 ;
 
-DFEdge: 
-    'data-flow-edge' src = [Node|ID] '--' refData += Ref+ '-->' dst = [Node|ID]
-    // ('meta-data' initActions+=(AssignmentAction | RecordFieldAssignmentAction)+)?
+Edge:
+    ControlFlowEdge | DataFlowEdge
 ;
 
-Ref:
-    RefData | RefTypedData
+ControlFlowEdge:
+    source = [Node|ID] '->' target = [Node|ID]
 ;
 
-RefData:
-    '{' tid = [TestID|ID] ':' '[' refVarList += [VarDecl|ID]+ ']' '}'
+DataFlowEdge: 
+    source = [Node|ID] '-' '{' dataReferences += DataReference (',' dataReferences += DataReference)* '}' '->' target = [Node|ID]
 ;
 
-RefTypedData:
-    '{' '[T]' tid = [TestID|ID] ':' '[' refVarList += [expr::Variable|ID]+ ']' '}'
+DataReference:
+    scenario = [ScenarioDecl|ID] ':' (variables += [expr::Variable|ID] | '[' variables += [expr::Variable|ID] (',' variables += [expr::Variable|ID])* ']')
 ;
 
-CFEdge: 
-    'control-flow-edge' src = [Node|ID] '-->' dst = [Node|ID]
-    // ('meta-data' initActions+=(AssignmentAction | RecordFieldAssignmentAction)+)?
-;
-
-
-
-// Node:
-//    'node' name=ID ':' ('local-variables' localVars+=Variable+)? 'actions' act += Action+
-//    ('step-name' ':' stepName = STRING)?
-//    // ('step-args' ':' stepArgsInitActions+=(AssignmentAction | RecordFieldAssignmentAction)+)?
-//    ('step-args' ':' stepArgsInitActions+=KeyValuePair+)?
-//    ('step-type' ':' stepType = StepType)?
-//    ('meta-data' initActions+=(AssignmentAction | RecordFieldAssignmentAction)+)?
-// ;
-//KeyValuePair:
-//    ('param' param = STRING 'value' value = STRING)?
-//    'test-case-id' testCaseID = STRING 
-//    'requirement-id' requirementID += STRING+
-//    ('step-number' stepNum = INT)?
-//;
-
-
-//FunctionCallDecl: type = Type name = ID
-//    '(' (args += Variable (',' args += Variable)*)? ')'
-//;
+terminal BODY: '«' ( ('»»') | !('»') )* '»';
