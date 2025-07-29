@@ -40,8 +40,8 @@ enum StepType:
 
 CausalGraph:
     imports += Import*
-    requirements += RequirementDecl*
-    scenarios += ScenarioDecl*
+    requirements += RequirementDecl+
+    scenarios += ScenarioDecl+
     'graph' name=ID ':'
         'type' ':' type = GraphType
         ('language' ':' language = STRING)?
@@ -58,7 +58,8 @@ RequirementDecl:
 ;
 
 ScenarioDecl:
-    'scenario' name = ID
+    'scenario' name = ID ':'
+        'requirements' ':' requirements += [RequirementDecl|ID]+
 ;
 
 @Ov@Override
@@ -74,15 +75,15 @@ Node:
     'node' name=ID ':'
     'step-name' ':' stepName = STRING
     'step-type' ':' stepType = StepType
-    ('step-parameters' ':' stepParameters += Variable+)?
+    ('step-parameters' ':' stepParameters += Variable+
+     'step-body' ':' stepBody = StepBody)?
     tests += ScenarioStep+
 ;
 
 ScenarioStep:
     'scenario' name=[ScenarioDecl|ID] 'step' stepNumber = INT ':'
-    ('requirements' ':' requirements += [RequirementDecl|ID]+)?
-    ('step-arguments' ':' stepArguments += (AssignmentAction | RecordFieldAssignmentAction)+)?
-    'step-body' ':' stepBody = StepBody
+    ( ('step-arguments' ':' stepArguments += (AssignmentAction | RecordFieldAssignmentAction)+)
+    | ('step-body' ':' stepBody = StepBody))
 ;
 
 StepBody:
