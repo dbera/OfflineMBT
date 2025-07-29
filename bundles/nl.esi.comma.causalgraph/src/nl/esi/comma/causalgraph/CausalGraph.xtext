@@ -42,13 +42,13 @@ CausalGraph:
     imports += Import*
     requirements += RequirementDecl*
     scenarios += ScenarioDecl*
-    'graph' name=ID
-        'type' ':' graphType = GraphType
+    'graph' name=ID ':'
+        'type' ':' type = GraphType
         ('language' ':' language = STRING)?
         ('header' ':' header = BODY)?
         ('types' ':' types += TypeDecl+)?
-        ('functions' ':' func += FunctionDecl+)?
-        ('variables' ':' vars += Variable+)?
+        ('functions' ':' functions += FunctionDecl+)?
+        ('variables' ':' variables += Variable+)?
         nodes += Node+
         'edges' ':' edges += Edge+
 ;
@@ -74,14 +74,14 @@ Node:
     'node' name=ID ':'
     'step-name' ':' stepName = STRING
     'step-type' ':' stepType = StepType
-    ('step-parameters' ':' stepParams += Variable+)?
+    ('step-parameters' ':' stepParameters += Variable+)?
     tests += ScenarioStep+
 ;
 
 ScenarioStep:
-    'scenario' name=[ScenarioDecl|ID] 'step' stepNum = INT ':'
-    ('requirements' ':' reqID += [RequirementDecl|ID]+)?
-    ('step-arguments' ':' stepArgs += (AssignmentAction | RecordFieldAssignmentAction)+)?
+    'scenario' name=[ScenarioDecl|ID] 'step' stepNumber = INT ':'
+    ('requirements' ':' requirements += [RequirementDecl|ID]+)?
+    ('step-arguments' ':' stepArguments += (AssignmentAction | RecordFieldAssignmentAction)+)?
     'step-body' ':' stepBody = StepBody
 ;
 
@@ -102,15 +102,15 @@ Edge:
 ;
 
 ControlFlowEdge:
-    src = [Node|ID] '->' dst = [Node|ID]
+    source = [Node|ID] '->' target = [Node|ID]
 ;
 
 DataFlowEdge: 
-    src = [Node|ID] '-' '{' dataRefs += DataReference (',' dataRefs += DataReference)* '}' '->' dst = [Node|ID]
+    source = [Node|ID] '-' '{' dataReferences += DataReference (',' dataReferences += DataReference)* '}' '->' target = [Node|ID]
 ;
 
 DataReference:
-    scenario = [ScenarioDecl|ID] ':' (vars += [expr::Variable|ID] | '[' vars += [expr::Variable|ID] (',' vars += [expr::Variable|ID])* ']')
+    scenario = [ScenarioDecl|ID] ':' (variables += [expr::Variable|ID] | '[' variables += [expr::Variable|ID] (',' variables += [expr::Variable|ID])* ']')
 ;
 
 terminal BODY: '«' ( ('»»') | !('»') )* '»';
