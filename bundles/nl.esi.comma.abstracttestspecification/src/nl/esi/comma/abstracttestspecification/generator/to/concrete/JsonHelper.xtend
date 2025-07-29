@@ -23,7 +23,7 @@ import nl.esi.comma.expressions.expression.ExpressionConstantString
 import nl.esi.comma.expressions.expression.ExpressionConstantBool
 import nl.esi.comma.expressions.expression.ExpressionConstantReal
 import nl.esi.comma.expressions.expression.ExpressionConstantInt
-//import nl.esi.comma.expressions.expression.ExpressionMinus;
+import nl.esi.comma.expressions.expression.ExpressionMinus;
 
 /**
  * Parser for json elements, objects, and arrays
@@ -107,14 +107,14 @@ class JsonHelper {
                     ExpressionConstantBool: true
                     ExpressionConstantReal: true
                     ExpressionConstantInt: true
-//                    ExpressionMinus: {
-//                        val sub = expr.sub
-//                        switch (sub){
-//                            ExpressionConstantReal: true
-//                            ExpressionConstantInt: true
-//                            default: throw new RuntimeException("Not supported")
-//                        }
-//                    }
+                    ExpressionMinus: {
+                        val sub = expr.sub
+                        switch (sub){
+                            ExpressionConstantReal: true
+                            ExpressionConstantInt: true
+                            default: throw new RuntimeException("Not supported")
+                        }
+                    }
                     default: throw new RuntimeException("Not supported")
                 }
             }
@@ -135,14 +135,14 @@ class JsonHelper {
                     ExpressionConstantBool: expr.value.toString
                     ExpressionConstantReal: expr.value.toString
                     ExpressionConstantInt: expr.value.toString
-//                    ExpressionMinus: {
-//                        val sub = expr.sub
-//                        switch (sub){
-//                            ExpressionConstantReal: '-'+sub.value.toString
-//                            ExpressionConstantInt: '-'+sub.value.toString
-//                            default: throw new RuntimeException("Not supported")
-//                        }
-//                    }
+                    ExpressionMinus: {
+                        val sub = expr.sub
+                        switch (sub){
+                            ExpressionConstantReal: '-'+sub.value.toString
+                            ExpressionConstantInt: '-'+sub.value.toString
+                            default: throw new RuntimeException("Not supported")
+                        }
+                    }
                     default: throw new RuntimeException("Not supported")
                 }
             }
