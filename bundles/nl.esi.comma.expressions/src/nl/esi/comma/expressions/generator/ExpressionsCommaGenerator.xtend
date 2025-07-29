@@ -140,7 +140,7 @@ class ExpressionsCommaGenerator extends TypesCommaGenerator {
             if(!str.isEmpty()) str += ", ";
             str += exprToComMASyntax(arg);
         }
-        var fnName = e.getFunctionName().getName();
+        var fnName = e.getFunction().getName();
         fnName = fnName.replaceAll("_DOT_", ".");
         fnName = fnName.replaceAll("_PTR_", ".");
         fnName = fnName.replaceAll("_SCOPE_", "::");
