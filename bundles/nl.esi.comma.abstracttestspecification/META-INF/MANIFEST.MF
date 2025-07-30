@@ -7,9 +7,11 @@ Bundle-Version: 4.2.0.qualifier
 Bundle-SymbolicName: nl.esi.comma.abstracttestspecification; singleton:=true
 Bundle-ActivationPolicy: lazy
 Require-Bundle: org.eclipse.xtext,
+ nl.esi.comma.assertthat;visibility:=reexport,
  org.eclipse.xtext.xbase,
  org.eclipse.equinox.common;bundle-version="3.16.0",
  nl.asml.matala.product,
+ nl.esi.comma.inputspecification,
  org.eclipse.emf.ecore,
  org.eclipse.xtext.xbase.lib;bundle-version="2.36.0",
  org.eclipse.xtend.lib;bundle-version="2.36.0",
@@ -21,6 +23,8 @@ Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: nl.esi.comma.abstracttestspecification.validation,
  nl.esi.comma.abstracttestspecification.parser.antlr.internal,
  nl.esi.comma.abstracttestspecification,
+ nl.esi.comma.abstracttestspecification.generator.to.concrete,
+ nl.esi.comma.abstracttestspecification.generator.utils,
  nl.esi.comma.abstracttestspecification.services,
  nl.esi.comma.abstracttestspecification.abstractTestspecification,
  nl.esi.comma.abstracttestspecification.abstractTestspecification.impl,

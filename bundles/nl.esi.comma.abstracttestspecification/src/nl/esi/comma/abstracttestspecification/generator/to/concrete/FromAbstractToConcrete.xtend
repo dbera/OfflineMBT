@@ -1,41 +1,42 @@
 /**
  * Copyright (c) 2024, 2025 TNO-ESI
- *
+ * 
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
- *
+ * 
  * This program and the accompanying materials are made available
  * under the terms of the MIT License which is available at
  * https://opensource.org/licenses/MIT
- *
+ * 
  * SPDX-License-Identifier: MIT
  */
-package nl.esi.comma.testspecification.generator.to.concrete
+package nl.esi.comma.abstracttestspecification.generator.to.concrete
 
 import java.util.HashMap
 import java.util.HashSet
 import java.util.Map
 import nl.asml.matala.product.product.Product
-import nl.esi.comma.testspecification.testspecification.AbstractTestDefinition
-import nl.esi.comma.testspecification.testspecification.Binding
-import nl.esi.comma.testspecification.testspecification.RunStep
-import nl.esi.comma.testspecification.testspecification.TSMain
+import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractTestDefinition
+import nl.esi.comma.abstracttestspecification.abstractTestspecification.Binding
+import nl.esi.comma.abstracttestspecification.abstractTestspecification.RunStep
+import nl.esi.comma.abstracttestspecification.abstractTestspecification.TSMain
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
 
-import static extension nl.esi.comma.testspecification.generator.utils.Utils.*
+import static extension nl.esi.comma.abstracttestspecification.generator.utils.Utils.*
 import static extension nl.esi.comma.types.utilities.EcoreUtil3.*
 
 class FromAbstractToConcrete extends AbstractGenerator {
 
-    Map<String, String> rename  = new HashMap<String,String>()
-    Map<String, String> args = new HashMap<String,String>()
+    Map<String, String> rename = new HashMap<String, String>()
+    Map<String, String> args = new HashMap<String, String>()
 
-    new(){}
+    new() {
+    }
 
-    new(Map<String,String> rename, Map<String,String> params) {
+    new(Map<String, String> rename, Map<String, String> params) {
         this.rename = rename
         this.args = params
     }
@@ -51,19 +52,11 @@ class FromAbstractToConcrete extends AbstractGenerator {
             fsa.generateFile('''types/«sys».types''', atd.generateTypesFile(sys, typesImports))
             fsa.generateFile('''parameters/«sys».params''', atd.generateParamsFile(sys))
         }
-        fsa.generateFile(res.URI.lastSegment, atd.generateConcreteTest())
-        doGenerateFAST(res,fsa,ctx)
-    }
-
-    def doGenerateFAST(Resource res, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
-        val atd = res.contents.filter(TSMain).map[model].filter(AbstractTestDefinition).head
-        if (atd === null) {
-            throw new Exception('No abstract tspec found in resource: ' + res.URI)
-        }
-
-        fsa.generateFile('data.kvp', (new DataKVPGenerator()).generateFAST(atd))
+        val conTspecFileName = res.URI.lastSegment.replaceAll('\\.atspec$','.tspec')
+        fsa.generateFile(conTspecFileName, atd.generateConcreteTest())
         fsa.generateFile("reference.kvp", (new RefKVPGenerator()).generateRefKVP(atd))
         fsa.generateFile("vfd.xml", (new VFDXMLGenerator(this.args, this.rename)).generateXMLFromSUTVars(atd))
+ 
     }
 
     def private generateConcreteTest(AbstractTestDefinition atd) '''
@@ -111,7 +104,7 @@ class FromAbstractToConcrete extends AbstractGenerator {
         // Get text for concrete data expressions
         var conDataExpr = (new ConcreteExpressionHandler()).prepareStepInputExpressions(rstep, composeSteps)
         // Append text for reference data expressions
-        val refDataExpr = (new ReferenceExpressionHandler(false)).resolveStepReferenceExpressions(rstep, composeSteps)
+        val refDataExpr = (new ReferenceExpressionHandler()).resolveStepReferenceExpressions(rstep, composeSteps)
 
         return '''
             «conDataExpr»
@@ -144,7 +137,7 @@ class FromAbstractToConcrete extends AbstractGenerator {
     // Print types for each step
     def private printTypes(Iterable<Binding> ios, String type, Iterable<String> typesImports) '''
         «FOR ti : typesImports»
-            import "«ti»"
+            import "../«ti»"
         «ENDFOR»
         
         record «type» {
@@ -203,8 +196,11 @@ class FromAbstractToConcrete extends AbstractGenerator {
     def private Iterable<String> getTypesImports(Resource res) {
         val typesImports = newLinkedHashSet
         for (psImport : res.contents.filter(TSMain).flatMap[imports].filter[importURI.endsWith('.ps')]) {
-            for (typesImport : psImport.resource.contents.filter(Product).flatMap[imports].filter[importURI.endsWith('.types')]) {
-                typesImports += typesImport.resolveUri.toString
+            for (typesImport : psImport.resource.contents.filter(Product).flatMap[imports].filter [
+                importURI.endsWith('.types')
+            ]) {
+                val typesImportURI = typesImport.resolveUri.deresolve(res.URI)
+                typesImports += typesImportURI.toString
             }
         }
         return typesImports;

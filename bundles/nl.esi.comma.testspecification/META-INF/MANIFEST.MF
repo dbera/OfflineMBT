@@ -6,7 +6,7 @@ Bundle-Vendor: TNO-ESI
 Bundle-Version: 4.2.0.qualifier
 Bundle-SymbolicName: nl.esi.comma.testspecification;singleton:=true
 Bundle-ActivationPolicy: lazy
-Require-Bundle: nl.esi.comma.actions;visibility:=reexport,
+Require-Bundle: nl.esi.comma.assertthat;visibility:=reexport,
  org.eclipse.xtext,
  org.eclipse.xtext.xbase,
  org.eclipse.equinox.common;bundle-version="3.5.0",
@@ -24,7 +24,6 @@ Export-Package: nl.esi.comma.testspecification.parser.antlr.internal,
  nl.esi.comma.testspecification.parser.antlr,
  nl.esi.comma.testspecification,
  nl.esi.comma.testspecification.generator,
- nl.esi.comma.testspecification.generator.to.concrete,
  nl.esi.comma.testspecification.generator.to.fast,
  nl.esi.comma.testspecification.generator.to.docgen,
  nl.esi.comma.testspecification.generator.utils,

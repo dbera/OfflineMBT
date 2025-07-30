@@ -10,7 +10,7 @@
  *
  * SPDX-License-Identifier: MIT
  */
-package nl.esi.comma.testspecification.generator.to.concrete
+package nl.esi.comma.abstracttestspecification.generator.to.concrete
 
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -21,12 +21,12 @@ import java.util.Map
 import java.util.TreeSet
 import java.util.stream.Collectors
 import nl.esi.comma.expressions.expression.Variable
-import nl.esi.comma.testspecification.testspecification.AbstractStep
-import nl.esi.comma.testspecification.testspecification.AbstractTestDefinition
-import nl.esi.comma.testspecification.testspecification.AssertionStep
-import nl.esi.comma.testspecification.testspecification.Binding
-import nl.esi.comma.testspecification.testspecification.ComposeStep
-import nl.esi.comma.testspecification.testspecification.RunStep
+import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractStep
+import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractTestDefinition
+import nl.esi.comma.abstracttestspecification.abstractTestspecification.AssertionStep
+import nl.esi.comma.abstracttestspecification.abstractTestspecification.Binding
+import nl.esi.comma.abstracttestspecification.abstractTestspecification.ComposeStep
+import nl.esi.comma.abstracttestspecification.abstractTestspecification.RunStep
 import org.eclipse.emf.common.util.EList
 
 class VFDXMLGenerator {
@@ -68,10 +68,10 @@ class VFDXMLGenerator {
         var stepSutDataIn = new ArrayList<Binding>()
         var stepSutDataOut = new ArrayList<Binding>()
         for (testseq : atd.testSeq) {
-        	for (step : testseq.step) {
-        		stepSutDataIn.addAll(getSUTData(step.input, getSUTVars(step)))
-        		stepSutDataOut.addAll(getSUTData(step.output, getSUTVars(step)))
-        	}
+            for (step : testseq.step) {
+                stepSutDataIn.addAll(getSUTData(step.input, getSUTVars(step)))
+                stepSutDataOut.addAll(getSUTData(step.output, getSUTVars(step)))
+            }
         }
         var stepSutData = removeDuplicates(stepSutDataIn,stepSutDataOut)
 
@@ -123,10 +123,10 @@ class VFDXMLGenerator {
         '''
     def EList<Variable> getSUTVars(AbstractStep sequence) {
         switch (sequence) {
-        	ComposeStep:   return sequence.varID
-        	RunStep:       return sequence.varID
-        	AssertionStep: return sequence.varID
-        	default: throw new RuntimeException("Not supported")
+            ComposeStep:   return sequence.varID
+            RunStep:       return sequence.varID
+            AssertionStep: return sequence.varID
+            default: throw new RuntimeException("Not supported")
         }
     }
     def EList<Binding> getStepInputData(AbstractStep sequence) {

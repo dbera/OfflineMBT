@@ -21,7 +21,7 @@ import nl.esi.comma.project.standard.standardProject.OfflineGenerationBlock
 import nl.esi.comma.project.standard.standardProject.OfflineGenerationTarget
 import nl.esi.comma.project.standard.standardProject.Project
 import nl.esi.comma.project.standard.standardProject.TargetConfig
-import nl.esi.comma.testspecification.generator.to.concrete.FromAbstractToConcrete
+import nl.esi.comma.abstracttestspecification.generator.to.concrete.FromAbstractToConcrete
 import nl.esi.comma.testspecification.generator.to.fast.FromConcreteToFast
 import nl.esi.comma.testspecification.generator.utils.MergeConcreteDataAssigments
 import nl.esi.comma.types.types.Import
@@ -92,7 +92,7 @@ class StandardProjectGenerator extends AbstractGenerator {
         val absTspecFsa = fsa.createFolderAccess('tspec_abstract')
         (new PetriNetToAbstractTspecGenerator(task.pythonExe)).doGenerate(rst, petriNetURI, absTspecFsa, ctx)
 
-        for (absTspecFileName : absTspecFsa.list(ROOT_PATH).filter[endsWith('.tspec')]) {
+        for (absTspecFileName : absTspecFsa.list(ROOT_PATH).filter[endsWith('.atspec')]) {
             val absTspecRes = absTspecFsa.loadResource(absTspecFileName, rst)
 
             // Fix the pspec import
@@ -113,7 +113,8 @@ class StandardProjectGenerator extends AbstractGenerator {
             val fromAbstractToConcreteGen = new FromAbstractToConcrete(renamingRules, generatorParams)
             fromAbstractToConcreteGen.doGenerate(absTspecRes, conTspecFsa, ctx)
 
-            val conTspecRes = conTspecFsa.loadResource(absTspecFileName, rst)
+            val conTspecFileName = absTspecFileName.replaceAll('\\.atspec$','.tspec')
+            val conTspecRes = conTspecFsa.loadResource(conTspecFileName, rst)
             MergeConcreteDataAssigments.transform(conTspecRes)
             conTspecRes.save(null)
             conTspecRes.validate()
@@ -121,7 +122,6 @@ class StandardProjectGenerator extends AbstractGenerator {
             if (task.target == OfflineGenerationTarget.FAST) {
                 // Generate FAST testcases
                 val fastFsa = fsa.createFolderAccess('FAST')
-                fromAbstractToConcreteGen.doGenerateFAST(absTspecRes, fastFsa, ctx)
                 (new FromConcreteToFast()).doGenerate(conTspecRes, fastFsa, ctx)
             }
         }

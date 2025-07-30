@@ -531,7 +531,7 @@ class Utils
                             txt += "%s\n" % self.tr_assert_ref_dict[name.rsplit("_",1)[0]]
                         txt += "\n"
                 txt += '\ngenerate-file "./vfab2_scenario/"\n\n'
-                fname = output_dir / f"_scenario{str(idx)}.tspec"
+                fname = output_dir / f"_scenario{str(idx)}.atspec"
                 print(str(fname))
                 os.makedirs(os.path.dirname(fname), exist_ok=True)
                 with open(fname, 'w') as f:

@@ -9,6 +9,8 @@ Bundle-ActivationPolicy: lazy
 Require-Bundle: nl.esi.comma.testspecification;visibility:=reexport,
  nl.esi.comma.testspecification.ide,
  nl.esi.comma.actions.ui;visibility:=reexport,
+ nl.esi.comma.assertthat.ui;bundle-version="4.2.0",
+ nl.esi.comma.assertthat.ide;bundle-version="4.2.0",
  org.eclipse.xtext.ui,
  org.eclipse.xtext.ui.shared,
  org.eclipse.xtext.ui.codetemplates.ui,
