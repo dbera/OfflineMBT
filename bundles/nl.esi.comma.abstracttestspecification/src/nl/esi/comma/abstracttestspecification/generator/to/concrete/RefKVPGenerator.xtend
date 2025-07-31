@@ -10,7 +10,7 @@
  *
  * SPDX-License-Identifier: MIT
  */
-package nl.esi.comma.testspecification.generator.to.concrete
+package nl.esi.comma.abstracttestspecification.generator.to.concrete
 
 import nl.esi.comma.assertthat.assertThat.AssertThatBlock
 import nl.esi.comma.assertthat.assertThat.AssertThatValue
@@ -45,9 +45,9 @@ import nl.esi.comma.expressions.expression.ExpressionMapRW
 import nl.esi.comma.expressions.expression.ExpressionRecordAccess
 import nl.esi.comma.expressions.expression.ExpressionVariable
 import nl.esi.comma.expressions.expression.ExpressionVector
-import nl.esi.comma.testspecification.testspecification.AbstractTestDefinition
-import nl.esi.comma.testspecification.testspecification.AssertionStep
-import nl.esi.comma.testspecification.testspecification.RunStep
+import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractTestDefinition
+import nl.esi.comma.abstracttestspecification.abstractTestspecification.AssertionStep
+import nl.esi.comma.abstracttestspecification.abstractTestspecification.RunStep
 
 class RefKVPGenerator {
     def generateRefKVP(AbstractTestDefinition atd) {
@@ -195,10 +195,10 @@ class RefKVPGenerator {
         for (consumesFrom : assertStep.stepRef) {
             if(consumesFrom.refStep instanceof RunStep){
                 for (step : consumesFrom.refData) {
-                	// TODO check if this is the right way to find the step from which an input is consumed
-                	if (step.name == expr.variable.name){ 
-                	    return consumesFrom.refStep.name
-                	}
+                    // TODO check if this is the right way to find the step from which an input is consumed
+                    if (step.name == expr.variable.name){ 
+                        return consumesFrom.refStep.name
+                    }
                 }
             }
         }

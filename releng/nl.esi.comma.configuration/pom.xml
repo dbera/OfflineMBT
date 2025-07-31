@@ -215,6 +215,7 @@
                             <header>${session.executionRootDirectory}/releng/nl.esi.comma.configuration/license_header.txt</header>
                             <useDefaultExcludes>true</useDefaultExcludes>
                             <excludes>
+                                <exclude>bin/**</exclude>
                                 <exclude>src-gen/**</exclude>
                                 <exclude>xtend-gen/**</exclude>
                                 <exclude>templates/**</exclude>
@@ -237,6 +238,7 @@
                                 <exclude>**/.babelrc</exclude>
                                 <exclude>.META-INF_MANIFEST.MF</exclude>
                                 <exclude>.polyglot.*</exclude>
+                                <exclude>.tycho-consumer*</exclude>
                                 <exclude>.Xauthority*</exclude>
                                 <exclude>checkstyle.xml</exclude>
                                 <exclude>plugin.xml_gen</exclude>
@@ -252,6 +254,7 @@
                         <goals>
                             <goal>check</goal>
                         </goals>
+                        <phase>validate</phase>
                     </execution>
                 </executions>
             </plugin>

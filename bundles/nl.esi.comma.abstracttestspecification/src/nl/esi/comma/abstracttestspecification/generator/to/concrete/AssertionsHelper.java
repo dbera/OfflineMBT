@@ -10,7 +10,7 @@
  *
  * SPDX-License-Identifier: MIT
  */
-package nl.esi.comma.testspecification.generator.to.concrete;
+package nl.esi.comma.abstracttestspecification.generator.to.concrete;
 
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -27,6 +27,7 @@ import nl.esi.comma.expressions.expression.ExpressionConstantString;
 import nl.esi.comma.expressions.expression.ExpressionEnumLiteral;
 import nl.esi.comma.expressions.expression.ExpressionMapRW;
 import nl.esi.comma.expressions.expression.ExpressionMinus;
+//import nl.esi.comma.expressions.expression.ExpressionMinus;
 import nl.esi.comma.expressions.expression.ExpressionPlus;
 import nl.esi.comma.expressions.expression.ExpressionRecordAccess;
 import nl.esi.comma.expressions.expression.ExpressionVariable;
@@ -38,44 +39,6 @@ import nl.esi.comma.types.types.EnumTypeDecl;
  *
  */
 public class AssertionsHelper {
-
-	/**
-	 * Filters all GenericScriptBlock items from an EList of DataAssertionItem
-	 * @param assertionItemsList
-	 * @return List of GenericScriptBlock objects
-	 */
-//	public static List<GenericScriptBlock> getScriptCalls(EList<DataAssertionItem> assertionItemsList) {
-
-	/**
-	 * Parses a list of GenericScriptBlock objects into string format.
-	 * @param assertList
-	 * @return String representation of a list of assertions.
-	 */
-//	public static String printScriptCall(List<GenericScriptBlock> scriptcallList) {
-	/**
-	 * Parses a script call block into a string, as in the reference.kvp format.
-	 * This string representation includes a script call identifier, the path to the script,
-	 * and a list of input parameters.
-	 * Input parameters are formed by a type,
-	 * and assigned value which may be a list, dictionary or key-value pair.
-	 * @param asrt Script call block to be parsed into string
-	 * @return string representation of a script call block
-	 */
-//	public static String parseScriptCall(GenericScriptBlock scrptcall) {
-
-	/**
-	 * Parses input parameters of a script-call, which include.
-	 * - the script ID, derived from the variable to which the script result will be assigned
-	 * - the path to the script to be executed
-	 * - the list of input parameters,
-	 * - its length, given the observed output is a string/array/map (has-size).
-	 *
-	 * @param params
-	 * @param scrptparams
-	 */
-//	private static void extractScriptParameters(ScriptParametersCustom params, List<String> scrptparams) {
-//	private static void extractScriptParameters_OUTPUT(String param, List<String> scrptparams) {
-//	private static void extractScriptParameters_OTHERS(Expression param, List<String> scrptparams) {
 
 	/**
 	 * Parses an expression into the kvp format

@@ -10,7 +10,8 @@ Require-Bundle: nl.esi.comma.abstracttestspecification,
  org.eclipse.xtext.ide,
  org.eclipse.xtext.xbase.ide,
  org.antlr.runtime;bundle-version="[3.2.0,3.2.1)",
- nl.esi.comma.actions.ide;bundle-version="4.2.0"
+ nl.esi.comma.actions.ide;bundle-version="4.2.0",
+ nl.esi.comma.assertthat.ide;bundle-version="4.2.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: nl.esi.comma.abstracttestspecification.ide.contentassist,
  nl.esi.comma.abstracttestspecification.ide.contentassist.antlr,

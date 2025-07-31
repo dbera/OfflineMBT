@@ -8,6 +8,7 @@ Require-Bundle: com.google.inject,
  nl.asml.matala.product,
  nl.esi.comma.inputspecification,
  nl.esi.comma.testspecification,
+ nl.esi.comma.abstracttestspecification,
  nl.esi.comma.project.standard,
  nl.asml.matala.product.lsp.server
 Automatic-Module-Name: nl.esi.comma.project.standard.cli

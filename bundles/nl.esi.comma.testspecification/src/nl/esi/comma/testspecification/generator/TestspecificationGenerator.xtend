@@ -15,7 +15,6 @@
  */
 package nl.esi.comma.testspecification.generator
 
-import nl.esi.comma.testspecification.testspecification.AbstractTestDefinition
 import nl.esi.comma.testspecification.testspecification.TSMain
 import nl.esi.comma.testspecification.testspecification.TestDefinition
 import org.eclipse.emf.ecore.resource.Resource
@@ -24,7 +23,6 @@ import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
 
 import static extension nl.esi.comma.types.utilities.FileSystemAccessUtil.*
-import nl.esi.comma.testspecification.generator.to.concrete.FromAbstractToConcrete
 import nl.esi.comma.testspecification.generator.to.fast.FromConcreteToFast
 import nl.esi.comma.testspecification.generator.to.docgen.FromConcreteToDocumentation
 
@@ -37,9 +35,7 @@ class TestspecificationGenerator extends AbstractGenerator {
     // On save of TSPEC file, this function is called by Eclipse Framework
     override void doGenerate(Resource res, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
         for (tsMain : res.contents.filter(TSMain)) {
-            if (tsMain.model instanceof AbstractTestDefinition) {
-                (new FromAbstractToConcrete()).doGenerate(res, fsa.createFolderAccess('tspec_concrete'), ctx)
-            } else if (tsMain.model instanceof TestDefinition) {
+            if (tsMain.model instanceof TestDefinition) {
                 (new FromConcreteToFast()).doGenerate(res, fsa.createFolderAccess('FAST'), ctx)
             }
         }
