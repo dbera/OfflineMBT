@@ -236,6 +236,14 @@
                                 <exclude>**/.checkstyle</exclude>
                                 <exclude>**/.env</exclude>
                                 <exclude>**/.babelrc</exclude>
+                                <!-- Start: Matala file types -->
+                                <exclude>**/*.bpmn</exclude>
+                                <exclude>**/*.types</exclude>
+                                <exclude>**/*.ps</exclude>
+                                <exclude>**/*.atest</exclude>
+                                <exclude>**/*.test</exclude>
+                                <exclude>**/*.json</exclude>
+                                <!-- End: Matala file types -->
                                 <exclude>.META-INF_MANIFEST.MF</exclude>
                                 <exclude>.polyglot.*</exclude>
                                 <exclude>.tycho-consumer*</exclude>
