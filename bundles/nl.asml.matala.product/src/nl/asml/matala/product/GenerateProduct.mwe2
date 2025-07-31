@@ -24,6 +24,10 @@ Workflow {
 			project = StandardProjectConfig {
 				baseName = "nl.asml.matala.product"
 				rootPath = rootPath
+                runtimeTest = {
+                    root = "${rootPath}/nl.asml.matala.product.tests/"
+                    enabled = true
+                }
 				eclipsePlugin = {
 					enabled = true
 				}
