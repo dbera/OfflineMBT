@@ -15,7 +15,7 @@ Require-Bundle: org.eclipse.xtext,
  org.eclipse.emf.common,
  org.antlr.runtime;bundle-version="[3.2.0,3.2.1)",
  org.eclipse.xtend.lib;bundle-version="2.36.0",
- nl.esi.comma.actions;bundle-version="4.2.0"
+ nl.esi.comma.actions;bundle-version="4.2.0";visibility:=reexport
 Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: nl.esi.comma.causalgraph.parser.antlr.internal,
  nl.esi.comma.causalgraph.causalGraph.impl,
