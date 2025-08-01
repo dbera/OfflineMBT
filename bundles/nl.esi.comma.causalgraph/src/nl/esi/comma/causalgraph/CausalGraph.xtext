@@ -15,38 +15,12 @@ grammar nl.esi.comma.causalgraph.CausalGraph with nl.esi.comma.actions.Actions
 
 generate causalGraph "http://www.esi.nl/comma/causalgraph/CausalGraph"
 
-import "http://www.esi.nl/comma/signature/InterfaceSignature" as sig 
 import "http://www.esi.nl/comma/types/Types" as types
 import "http://www.esi.nl/comma/expressions/Expression" as expr
 
 @Override
 ModelContainer returns types::ModelContainer:
     super::ModelContainer | CausalGraph
-;
-
-CausalGraph:
-    imports += Import*
-    ('test-case-id' ':' testID += TestID+)?
-    'graph' name=ID '{'
-        ('language-imports' imp = STRING)?
-        ('class-name' className = STRING)?
-        ('variable-declarations' varDecl += VarDecl+)?
-        'graph-type' graphType = GraphType
-        ('variables' vars+=Variable+)?
-        ('functions' func+=FunctionCallDecl+)?
-        nodes += Node+
-        // nodes += Node+
-        cfedges += CFEdge*
-        dfedges += DFEdge*
-    '}'
-;
-
-VarDecl:
-    'var-name:' name = ID 'language-type:' varType = STRING
-;
-
-TestID:
-    name = ID
 ;
 
 enum GraphType:
@@ -64,71 +38,80 @@ enum StepType:
     and = 'And'
 ;
 
-// Node:
-//    'node' name=ID ':' ('local-variables' localVars+=Variable+)? 'actions' act += Action+
-//    ('step-name' ':' stepName = STRING)?
-//    // ('step-args' ':' stepArgsInitActions+=(AssignmentAction | RecordFieldAssignmentAction)+)?
-//    ('step-args' ':' stepArgsInitActions+=KeyValuePair+)?
-//    ('step-type' ':' stepType = StepType)?
-//    ('meta-data' initActions+=(AssignmentAction | RecordFieldAssignmentAction)+)?
-// ;
+CausalGraph:
+    imports += Import*
+    requirements += RequirementDecl+
+    scenarios += ScenarioDecl+
+    'graph' name=ID ':'
+        'type' ':' type = GraphType
+        ('language' ':' language = STRING)?
+        ('header' ':' header = BODY)?
+        ('types' ':' types += TypeDecl+)?
+        ('functions' ':' functions += FunctionDecl+)?
+        ('variables' ':' variables += Variable+)?
+        nodes += Node+
+        'edges' ':' edges += Edge+
+;
 
+RequirementDecl:
+    'requirement' name = ID
+;
+
+ScenarioDecl:
+    'scenario' name = ID ':'
+        'requirements' ':' requirements += [RequirementDecl|ID]+
+;
+
+@Ov@Override
+TypeDecl returns types::TypeDecl:
+	super | AliasTypeDecl
+;
+
+AliasTypeDecl:
+    'alias' name = ID alias = STRING
+;
 
 Node:
     'node' name=ID ':'
-    tests += TestBody+ 
+    'step-name' ':' stepName = STRING
+    'step-type' ':' stepType = StepType
+    ('step-parameters' ':' stepParameters += Variable+
+     'step-body' ':' stepBody = StepBody)?
+    tests += ScenarioStep+
 ;
 
-TestBody:
-    'test' name=[TestID|ID] 
-    '{'
-        ('requirement-id' ':' reqID += ID+)?
-        'step-name' ':' stepName = STRING
-        'step-number' ':' stepNum = INT
-        'step-type' ':' stepType = StepType
-        ('step-args' ':' 
-            localVars+=Variable+ 
-            'values' ':' 
-                initActions+=(AssignmentAction | RecordFieldAssignmentAction)+
-        )?
-        'step-body' ':' 
-            'language' ':' lang = STRING
-            'code-fragment' ':' frag = STRING
-            // OR 'actions' act += Action+
-    '}'
+ScenarioStep:
+    'scenario' name=[ScenarioDecl|ID] 'step' stepNumber = INT ':'
+    ( ('step-arguments' ':' stepArguments += (AssignmentAction | RecordFieldAssignmentAction)+)
+    | ('step-body' ':' stepBody = StepBody))
 ;
 
-
-//KeyValuePair:
-//    ('param' param = STRING 'value' value = STRING)?
-//    'test-case-id' testCaseID = STRING 
-//    'requirement-id' requirementID += STRING+
-//    ('step-number' stepNum = INT)?
-//;
-
-DFEdge: 
-    'data-flow-edge' src = [Node|ID] '-[' refData += Ref+ ']-|>' dst = [Node|ID]
-    ('meta-data' initActions+=(AssignmentAction | RecordFieldAssignmentAction)+)?
+StepBody:
+    ActionsBody | LanguageBody
 ;
 
-Ref:
-    RefData | RefTypedData
+ActionsBody:
+    actions += Action+
 ;
 
-RefData:
-    // tid = [TestID|ID] ':' '{' refVarList += [expr::Variable|ID]+ '}'?
-    tid = [TestID|ID] ':' '{' refVarList += [VarDecl|ID]+ '}'?
+LanguageBody:
+    body = BODY
 ;
 
-RefTypedData:
-    '[T]' tid = [TestID|ID] ':' '{' refVarList += [expr::Variable|ID]+ '}'?
+Edge:
+    ControlFlowEdge | DataFlowEdge
 ;
 
-CFEdge: 
-    'control-flow-edge' src = [Node|ID] '-->' dst = [Node|ID]
-    ('meta-data' initActions+=(AssignmentAction | RecordFieldAssignmentAction)+)?
+ControlFlowEdge:
+    source = [Node|ID] '->' target = [Node|ID]
 ;
 
-//FunctionCallDecl: type = Type name = ID
-//    '(' (args += Variable (',' args += Variable)*)? ')'
-//;
+DataFlowEdge: 
+    source = [Node|ID] '-' '{' dataReferences += DataReference (',' dataReferences += DataReference)* '}' '->' target = [Node|ID]
+;
+
+DataReference:
+    scenario = [ScenarioDecl|ID] ':' (variables += [expr::Variable|ID] | '[' variables += [expr::Variable|ID] (',' variables += [expr::Variable|ID])* ']')
+;
+
+terminal BODY: '«' ( ('»»') | !('»') )* '»';

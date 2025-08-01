@@ -31,8 +31,8 @@ class CausalGraphGenerator extends AbstractGenerator {
 	override void doGenerate(Resource resource, IFileSystemAccess2 fsa, IGeneratorContext context) {
         var prod = resource.allContents.head
         if(prod instanceof CausalGraph) {
-            // (new CausalGraphPlantUML).generatePlantUML(prod, fsa)
-            // (new CausalGraphBDD).generateBDD(prod, fsa)
+             (new CausalGraphPlantUML).generatePlantUML(prod, fsa)
+         //    (new CausalGraphBDD).generateBDD(prod, fsa)
         }
 	}
 }

@@ -15,7 +15,11 @@
  */
 package nl.esi.comma.causalgraph
 
+import nl.esi.comma.causalgraph.conversion.CausalGraphValueConverterService
+import nl.esi.comma.causalgraph.formatting.CausalGraphFormatter
 import nl.esi.comma.types.scoping.TypesImportUriGlobalScopeProvider
+import org.eclipse.xtext.conversion.IValueConverterService
+import org.eclipse.xtext.formatting.IFormatter
 
 /**
  * Use this class to register components to be used at runtime / without the Equinox extension registry.
@@ -23,5 +27,13 @@ import nl.esi.comma.types.scoping.TypesImportUriGlobalScopeProvider
 class CausalGraphRuntimeModule extends AbstractCausalGraphRuntimeModule {
     override bindIGlobalScopeProvider() {
         return TypesImportUriGlobalScopeProvider
+    }
+
+    override Class<? extends IValueConverterService> bindIValueConverterService() {
+        return CausalGraphValueConverterService
+    }
+
+    override Class<? extends IFormatter> bindIFormatter() {
+        return CausalGraphFormatter
     }
 }

@@ -72,6 +72,7 @@ import org.eclipse.xtext.validation.Check
 
 import static extension nl.esi.comma.types.utilities.TypeUtilities.*
 import nl.esi.comma.expressions.expression.ExpressionFnCall
+import static nl.esi.comma.types.utilities.TypeUtilities.subTypeOf
 
 /*
  * This class mainly captures the ComMA type system for expressions. Constraints are not formulated
@@ -148,7 +149,7 @@ class ExpressionValidator extends AbstractExpressionValidator {
 			ExpressionRecordAccess : e.field?.type?.typeObject
 			ExpressionBulkData : bulkdataType
 			ExpressionAny : anyType
-			ExpressionFnCall : e.functionName.type.type
+			ExpressionFnCall : e.function.returnType.type
 			ExpressionFunctionCall : ExpressionFunction.valueOf(e)?.inferType(e.args, ExpressionFunction.RETURN_ARG)
 			ExpressionVector : e.typeAnnotation?.type?.typeObject
 			ExpressionQuantifier : {
@@ -368,6 +369,20 @@ class ExpressionValidator extends AbstractExpressionValidator {
 			        }
 			    }
 			}
+            ExpressionFnCall: {
+                if (e.args.size != e.function.params.size) {
+                    error('''Function «e.function.name» expects «e.function.params.size» arguments.''', null)
+                } else {
+                    for (var i = 0; i < e.args.size; i++) {
+                        val paramType = e.function.params.get(i).type.typeObject
+                        val argType = typeOf(e.args.get(i))
+                        if (!subTypeOf(argType, paramType)) {
+                            error('''Function «e.function.name» expects argument «i + 1» to be of type «paramType.typeName».''',
+                                ExpressionPackage.Literals.EXPRESSION_FN_CALL__ARGS, i)
+                        }
+                    }
+                }
+            }
 			//TODO consider adding a new check if the type of the iterator is compatible with the type of
 			//the vector elements
 			ExpressionQuantifier: {

@@ -12,14 +12,11 @@
  */
 package nl.esi.comma.causalgraph.generator;
 
-import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import nl.esi.comma.actions.actions.Action;
 import nl.esi.comma.actions.actions.AssignmentAction;
-import nl.esi.comma.actions.actions.CommandReply;
-import nl.esi.comma.actions.actions.EventCall;
 import nl.esi.comma.actions.actions.ForAction;
 import nl.esi.comma.actions.actions.FunctionCall;
 import nl.esi.comma.actions.actions.IfAction;
@@ -63,9 +60,7 @@ import nl.esi.comma.expressions.expression.ExpressionSubtraction;
 import nl.esi.comma.expressions.expression.ExpressionVariable;
 import nl.esi.comma.expressions.expression.ExpressionVector;
 import nl.esi.comma.expressions.expression.QUANTIFIER;
-import nl.esi.comma.expressions.expression.Variable;
 import nl.esi.comma.expressions.generator.ExpressionsCommaGenerator;
-import nl.esi.comma.signature.interfaceSignature.DIRECTION;
 import nl.esi.comma.types.types.EnumTypeDecl;
 import nl.esi.comma.types.types.MapTypeDecl;
 import nl.esi.comma.types.types.RecordTypeDecl;
@@ -189,7 +184,7 @@ class CSharpHelper {
 				if(!str.isEmpty()) str += ", ";
 				str += expression(arg, variablePrefix);
 			}
-			String fnName = e.getFunctionName().getName();
+			String fnName = e.getFunction().getName();
 			fnName = fnName.replaceAll("_DOT_", ".");
 			fnName = fnName.replaceAll("_PTR_", ".");
 			fnName = fnName.replaceAll("_SCOPE_", "::");

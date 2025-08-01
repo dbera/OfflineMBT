@@ -24,6 +24,10 @@ Workflow {
 			project = StandardProjectConfig {
 				baseName = "nl.esi.comma.causalgraph"
 				rootPath = rootPath
+                runtimeTest = {
+                    root = "${rootPath}/nl.esi.comma.causalgraph.tests/"
+                    enabled = true
+                }
 				eclipsePlugin = {
 					enabled = true
 				}
