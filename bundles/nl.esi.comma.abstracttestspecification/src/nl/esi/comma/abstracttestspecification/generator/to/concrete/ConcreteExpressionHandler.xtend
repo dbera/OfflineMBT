@@ -25,6 +25,7 @@ import nl.esi.comma.types.types.TypeReference
 import nl.esi.comma.types.types.VectorTypeConstructor
 
 import static extension nl.esi.comma.abstracttestspecification.generator.utils.Utils.*
+import nl.esi.comma.abstracttestspecification.abstractTestspecification.AssertionStep
 
 class ConcreteExpressionHandler {
     def prepareStepInputExpressions(RunStep rstep, Iterable<ComposeStep> composeSteps) {
@@ -32,7 +33,18 @@ class ConcreteExpressionHandler {
         prepareStepInputExpressions(rstep, composeSteps, suppressVars);
     }
 
+    def prepareStepInputExpressions(AssertionStep rstep, Iterable<ComposeStep> composeSteps) {
+        val suppressVars = composeSteps.flatMap[suppressedVarFields].map[rstep.inputVar + '.' + it].toSet
+        prepareStepInputExpressions(rstep, composeSteps, suppressVars);
+    }
+
     def private prepareStepInputExpressions(RunStep rstep, Iterable<ComposeStep> composeSteps, Set<String> suppressVars) '''
+        «FOR output : composeSteps.flatMap[output].reject[suppressVars.contains(rstep.inputVar + '.' + it.name.name)]»
+            «printVariable(rstep.inputVar + '.' + output.name.name, output.name.type, output.jsonvals, suppressVars)»
+        «ENDFOR»
+    '''
+
+    def private prepareStepInputExpressions(AssertionStep rstep, Iterable<ComposeStep> composeSteps, Set<String> suppressVars) '''
         «FOR output : composeSteps.flatMap[output].reject[suppressVars.contains(rstep.inputVar + '.' + it.name.name)]»
             «printVariable(rstep.inputVar + '.' + output.name.name, output.name.type, output.jsonvals, suppressVars)»
         «ENDFOR»

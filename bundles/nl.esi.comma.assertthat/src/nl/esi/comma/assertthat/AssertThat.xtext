@@ -16,6 +16,11 @@ generate assertThat "http://www.esi.nl/comma/assertthat/AssertThat"
 
 import "http://www.esi.nl/comma/expressions/Expression" as expr
 
+DataAssertions: {DataAssertions}
+    'assertions' name = ID '{' 
+        constr += DataAssertionItem+
+     '}'
+;
 DataAssertionItem:
     AssertThatBlock | GenericScriptBlock
 ;

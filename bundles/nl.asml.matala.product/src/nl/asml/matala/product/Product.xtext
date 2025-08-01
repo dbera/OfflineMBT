@@ -135,14 +135,3 @@ RefConstraint:
 SymbConstraint:
 	name=ID ':' symbExpr = Expression
 ;
-
-//TODO Refactor as Grammar Mixins
-
-///// assert-that DSL (et al.)
-
-DataAssertions: {DataAssertions}
-    'assertions' name = ID '{' 
-        constr += DataAssertionItem+
-     '}'
-;
-

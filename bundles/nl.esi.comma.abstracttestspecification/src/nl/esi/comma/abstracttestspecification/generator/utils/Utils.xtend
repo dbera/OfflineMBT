@@ -46,6 +46,7 @@ import nl.esi.comma.expressions.expression.ExpressionFactory
 import nl.esi.comma.expressions.expression.ExpressionMinus
 import nl.esi.comma.expressions.expression.ExpressionPlus
 import nl.esi.comma.expressions.expression.Expression
+import nl.esi.comma.abstracttestspecification.abstractTestspecification.AssertionStep
 
 class Utils 
 {
@@ -61,11 +62,21 @@ class Utils
         return step.name.split('_').get(0)
     }
 
+    static def getSystem(AssertionStep step) {
+        return step.name.split('_').get(0)
+    }
+
     static def getInputVar(RunStep rstep) '''«rstep.system»Input'''
+
+    static def getInputVar(AssertionStep rstep) '''«rstep.system»Input'''
 
     // Gets the list of referenced compose steps
     // RULE. Exactly one referenced Compose Step.
     static def getComposeSteps(RunStep step) {
+        return step.stepRef.map[refStep].filter(ComposeStep)
+    }
+
+    static def getComposeSteps(AssertionStep step) {
         return step.stepRef.map[refStep].filter(ComposeStep)
     }
 

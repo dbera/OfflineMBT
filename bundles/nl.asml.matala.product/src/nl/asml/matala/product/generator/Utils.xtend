@@ -18,7 +18,7 @@ import java.util.LinkedHashSet
 import java.util.Set
 import nl.asml.matala.product.product.Block
 import nl.asml.matala.product.product.Blocks
-import nl.asml.matala.product.product.DataAssertions
+import nl.esi.comma.assertthat.assertThat.DataAssertions
 import nl.asml.matala.product.product.DataConstraints
 import nl.asml.matala.product.product.DataReferences
 import nl.asml.matala.product.product.Function

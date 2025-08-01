@@ -29,6 +29,7 @@ import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
+import nl.esi.comma.testspecification.testspecification.RunStep
 
 class FromConcreteToDocumentation extends AbstractGenerator
 {
@@ -169,7 +170,7 @@ class FromConcreteToDocumentation extends AbstractGenerator
 					
 					// Parse Step Sequence
 					val stepSequence = getStepSequence(model, mapStepSeqToSteps, featureList) // resolve test sequence to step sequences
-					for(s : stepSequence) 
+					for(s : stepSequence.filter(RunStep)) 
 					{
 						if(isConfigurationEnabled(featureList, s.featuresForStep))  
 						{
@@ -239,7 +240,7 @@ class FromConcreteToDocumentation extends AbstractGenerator
 		var listStepSequence = new ArrayList<nl.esi.comma.testspecification.testspecification.Step>
 		if(td.testSeq.empty) {
 			for(ss : td.stepSeq) {
-				for(step : ss.step) {
+				for(step : ss.step.filter(RunStep)) {
 					if(isConfigurationEnabled(featureList, step.featuresForStep)) 
 						listStepSequence.add(step)
 				}
@@ -248,7 +249,7 @@ class FromConcreteToDocumentation extends AbstractGenerator
 		else {
 			for(ts : td.testSeq) {
 				for(ss : ts.stepSeqRef) {
-					for(step : ss.step) {
+					for(step : ss.step.filter(RunStep)) {
 						if(isConfigurationEnabled(featureList, step.featuresForStep)) {
 							listStepSequence.add(step)
 							addToMapStepSeqToSteps(ss.name, step.inputVar.name, mapStepSeqToSteps)

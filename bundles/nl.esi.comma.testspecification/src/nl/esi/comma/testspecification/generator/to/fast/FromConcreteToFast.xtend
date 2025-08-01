@@ -39,6 +39,7 @@ import org.eclipse.xtext.generator.IGeneratorContext
 import static extension nl.esi.comma.types.utilities.EcoreUtil3.*
 import java.util.LinkedHashMap
 import java.util.Arrays
+import nl.esi.comma.testspecification.testspecification.RunStep
 
 class FromConcreteToFast extends AbstractGenerator {
     /* TODO this should come from project task? Investigate and Implement it. */
@@ -118,7 +119,7 @@ class FromConcreteToFast extends AbstractGenerator {
             
             // Parse Step Sequence
             val stepSequence = getStepSequence(model)
-            for(s : stepSequence) {
+            for(s : stepSequence.filter(RunStep)) {
                 var stepInst = new Step
                 stepInst.id = s.inputVar.name //stepVar.name // was identifier
                 stepInst.type = s.type.name
@@ -210,13 +211,13 @@ class FromConcreteToFast extends AbstractGenerator {
         var listStepSequence = new ArrayList<nl.esi.comma.testspecification.testspecification.Step>
         if(td.testSeq.empty) {
             for(ss : td.stepSeq) {
-                for(step : ss.step) listStepSequence.add(step)
+                for(step : ss.step.filter(RunStep)) listStepSequence.add(step)
             }
         }
         else {
             for(ts : td.testSeq) {
                 for(ss : ts.stepSeqRef) {
-                    for(step : ss.step) listStepSequence.add(step)
+                    for(step : ss.step.filter(RunStep)) listStepSequence.add(step)
                 }
             }
         }

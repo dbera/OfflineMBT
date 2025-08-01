@@ -20,6 +20,8 @@ import nl.esi.comma.abstracttestspecification.abstractTestspecification.Abstract
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.Binding
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.RunStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.TSMain
+import nl.esi.comma.abstracttestspecification.abstractTestspecification.AssertionStep
+import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractStep
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
@@ -73,15 +75,8 @@ class FromAbstractToConcrete extends AbstractGenerator {
         
         step-sequence test_single_sequence {
         «FOR test : atd.testSeq»
-            «FOR step : test.step.filter(RunStep)»
-                
-                step-id    step_«step.name»
-                step-type  «step.stepType.get(0)»
-                step-input «step.system»Input
-                «IF !_printOutputs_(step).toString.nullOrEmpty»
-                    ref-to-step-output
-                        «_printOutputs_(step)»
-                «ENDIF»
+            «FOR step : test.step.filter[it instanceof AssertionStep || it instanceof RunStep]»
+                «toConcreteStep(step)»
             «ENDFOR»
         «ENDFOR»
         }
@@ -94,6 +89,41 @@ class FromAbstractToConcrete extends AbstractGenerator {
                 «step.stepType.get(0)» step_«step.name»
             «ENDFOR»
         «ENDFOR»
+    '''
+
+    def toConcreteStep(AbstractStep step) {
+        return switch (step) {
+        	RunStep: toConcreteStep(step as RunStep)
+        	AssertionStep: toConcreteStep(step as AssertionStep)
+        	default: throw new RuntimeException("Not supported")
+        }
+    }
+    def toConcreteStep(RunStep step) '''
+        step-id    step_«step.name»
+        step-type  «step.stepType.get(0)»
+        step-input «step.system»Input
+        «IF !_printOutputs_(step).toString.nullOrEmpty»
+            ref-to-step-output
+                «_printOutputs_(step)»
+        «ENDIF»
+    '''
+
+    def toConcreteStep(AssertionStep step) '''
+        /*
+        assert-id    step_«step.name»
+        assert-input «step.system»Input
+        «FOR dass: step.asserts»
+            assertions «dass.name» { 
+                «FOR dai: dass.ce»
+                    «dai.serialize»
+                «ENDFOR»
+            }
+        «ENDFOR»
+        «IF !_printOutputs_(step).toString.nullOrEmpty»
+            ref-to-step-output
+                «_printOutputs_(step)»
+        «ENDIF»
+        */
     '''
 
     def private _printOutputs_(RunStep rstep) {
@@ -113,6 +143,26 @@ class FromAbstractToConcrete extends AbstractGenerator {
                     «entry.key» := «v»
                 «ENDFOR»
             «ENDFOR»
+        '''
+    }
+
+    def private _printOutputs_(AssertionStep astep) {
+        // At most one (TODO validate this)
+        // Observation: when multiple steps have indistinguishable outputs, 
+        // multiple consumes from is possible. TODO Warn user.   
+        val composeSteps = astep.composeSteps
+        // Get text for concrete data expressions
+        var conDataExpr = (new ConcreteExpressionHandler()).prepareStepInputExpressions(astep, composeSteps)
+//        // Append text for reference data expressions
+//        val refDataExpr = (new ReferenceExpressionHandler()).resolveStepReferenceExpressions(astep, composeSteps)
+
+        return '''
+            «conDataExpr»
+«««            «FOR entry : refDataExpr.entrySet»
+«««                «FOR v : entry.value»
+«««                    «entry.key» := «v»
+«««                «ENDFOR»
+«««            «ENDFOR»
         '''
     }
 
