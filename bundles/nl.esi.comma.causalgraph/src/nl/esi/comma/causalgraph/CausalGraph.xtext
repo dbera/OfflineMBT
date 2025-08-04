@@ -34,8 +34,8 @@ enum GraphType:
 enum StepType:
     given = 'Given' |
     when = 'When' |
-    then = 'Then' |
-    and = 'And'
+    then = 'Then' 
+    // | and = 'And'
 ;
 
 CausalGraph:
@@ -49,6 +49,7 @@ CausalGraph:
         ('types' ':' types += TypeDecl+)?
         ('functions' ':' functions += FunctionDecl+)?
         ('variables' ':' variables += Variable+)?
+        ('initializations' ':' assignments += AssignmentAction+)?
         nodes += Node+
         'edges' ':' edges += Edge+
 ;
