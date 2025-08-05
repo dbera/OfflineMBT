@@ -195,6 +195,20 @@ class ProductValidator extends AbstractProductValidator {
         expr.eContents.filter(Expression).forEach[preventIlligalVariableAccess(variables, direction)]
     }
 
+
+/**
+ * Run step must always have step type.
+ */
+ 
+ @Check
+ def checkRunStep(Update update){
+     if (update.actionType.getName.equals("RUN")){
+        if(update.stepType.isEmpty || update.stepType == "null"){
+            error("Action Type RUN must have a step-tyep defined " + update.stepType,
+                ProductPackage.Literals.UPDATE__STEP_TYPE) 
+        }
+    }
+ }
 /* STRANGE BUG: Output Vars are Empty. Appears in Input Vars. 
  * Not appearing as problem during product generation!
  */
