@@ -58,7 +58,7 @@ class CausalGraphPlantUML {
                     «renderStepBody(n.stepBody)»
                     end note
                 «ENDIF»
-                «IF n.stepBody === null»
+                «IF n.stepBody === null && scenarios.size <= 2 »
                     «FOR s : n.tests»
                         «var idx = scenarios.indexOf(s.name.name)»
                         «var col = colors.get(idx % colors.size)»
@@ -73,9 +73,9 @@ class CausalGraphPlantUML {
                         «renderStepBody(s.stepBody)»
                         «ENDIF»
                         end note
-                            «ENDFOR»
-                        «ENDIF»
                     «ENDFOR»
+                 «ENDIF»
+            «ENDFOR»
                     
             «FOR edge : cg.edges»
                 «IF edge instanceof ControlFlowEdge»
