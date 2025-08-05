@@ -147,8 +147,11 @@ class CausalGraphBDD {
 
             // parameters list
             val params = new ArrayList<String>
-            for (param : node.stepParameters)
-                params.add(param.getType().getType().getName() + ' ' + param.name)
+            for (param : node.stepParameters) {
+                val rawType = param.getType().getType().getName
+                val mappedType = if(rawType == "real") "double" else rawType
+                params.add(mappedType + " " + param.name)
+            }
 
             sb.append("    public void ").append(methodName).append("(").append(params.join(", ")).append(")\n")
             sb.append("    {\n")
