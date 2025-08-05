@@ -15,7 +15,14 @@
  */
 package nl.esi.comma.causalgraph.ui.quickfix
 
+import nl.esi.comma.causalgraph.validation.CausalGraphValidator
 import org.eclipse.xtext.ui.editor.quickfix.DefaultQuickfixProvider
+import org.eclipse.xtext.ui.editor.quickfix.Fix
+import org.eclipse.xtext.ui.editor.quickfix.IssueResolutionAcceptor
+import org.eclipse.xtext.validation.Issue
+import org.eclipse.xtext.EcoreUtil2
+import nl.esi.comma.causalgraph.causalGraph.CausalGraph
+import nl.esi.comma.causalgraph.causalGraph.CausalGraphFactory
 
 /**
  * Custom quickfixes.
@@ -24,13 +31,14 @@ import org.eclipse.xtext.ui.editor.quickfix.DefaultQuickfixProvider
  */
 class CausalGraphQuickfixProvider extends DefaultQuickfixProvider {
 
-//	@Fix(CausalGraphValidator.INVALID_NAME)
-//	def capitalizeName(Issue issue, IssueResolutionAcceptor acceptor) {
-//		acceptor.accept(issue, 'Capitalize name', 'Capitalize the name.', 'upcase.png') [
-//			context |
-//			val xtextDocument = context.xtextDocument
-//			val firstLetter = xtextDocument.get(issue.offset, 1)
-//			xtextDocument.replace(issue.offset, 1, firstLetter.toUpperCase)
-//		]
-//	}
+	@Fix(CausalGraphValidator.SCENARIO_STEP_CONTROL_FLOW)
+	def capitalizeName(Issue issue, IssueResolutionAcceptor acceptor) {
+		acceptor.accept(issue, 'Add control flow', 'Add the missing control flow dependency.', null) [ element , context |
+		    val graph = EcoreUtil2.getContainerOfType(element, CausalGraph)
+		    graph.edges += CausalGraphFactory::eINSTANCE.createControlFlowEdge() => [
+		        source = graph.nodes.findFirst[name == issue.data.get(0)]
+                target = graph.nodes.findFirst[name == issue.data.get(1)]
+		    ]
+		]
+	}
 }

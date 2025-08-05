@@ -78,11 +78,11 @@ Node:
     'step-type' ':' stepType = StepType
     ('step-parameters' ':' stepParameters += Variable+
      'step-body' ':' stepBody = StepBody)?
-    tests += ScenarioStep+
+    steps += ScenarioStep+
 ;
 
 ScenarioStep:
-    'scenario' name=[ScenarioDecl|ID] 'step' stepNumber = INT ':'
+    'scenario' scenario=[ScenarioDecl|ID] 'step' stepNumber = INT ':'
     ( ('step-arguments' ':' stepArguments += (AssignmentAction | RecordFieldAssignmentAction)+)
     | ('step-body' ':' stepBody = StepBody))
 ;

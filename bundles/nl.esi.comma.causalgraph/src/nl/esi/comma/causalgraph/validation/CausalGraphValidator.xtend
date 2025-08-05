@@ -1,13 +1,13 @@
 /**
  * Copyright (c) 2024, 2025 TNO-ESI
- *
+ * 
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
- *
+ * 
  * This program and the accompanying materials are made available
  * under the terms of the MIT License which is available at
  * https://opensource.org/licenses/MIT
- *
+ * 
  * SPDX-License-Identifier: MIT
  */
 /*
@@ -15,23 +15,72 @@
  */
 package nl.esi.comma.causalgraph.validation
 
+import java.util.List
+import java.util.Map
+import java.util.TreeMap
+import nl.esi.comma.causalgraph.causalGraph.CausalGraph
+import nl.esi.comma.causalgraph.causalGraph.CausalGraphPackage
+import nl.esi.comma.causalgraph.causalGraph.ScenarioDecl
+import nl.esi.comma.causalgraph.causalGraph.ScenarioStep
+import org.eclipse.xtext.EcoreUtil2
+import org.eclipse.xtext.validation.Check
+import nl.esi.comma.causalgraph.causalGraph.Node
 
 /**
  * This class contains custom validation rules. 
- *
+ * 
  * See https://www.eclipse.org/Xtext/documentation/303_runtime_concepts.html#validation
  */
 class CausalGraphValidator extends AbstractCausalGraphValidator {
-	
-//	public static val INVALID_NAME = 'invalidName'
-//
-//	@Check
-//	def checkGreetingStartsWithCapital(Greeting greeting) {
-//		if (!Character.isUpperCase(greeting.name.charAt(0))) {
-//			warning('Name should start with a capital', 
-//					CausalGraphPackage.Literals.GREETING__NAME,
-//					INVALID_NAME)
-//		}
-//	}
-	
+
+    public static val SCENARIO_STEP_NR_FIRST = 'ScenarioStepNumberFirst'
+    public static val SCENARIO_STEP_NR_DUPLICATE = 'ScenarioStepNumberDuplicate'
+    public static val SCENARIO_STEP_NR_SEQUENCE = 'ScenarioStepNumberSequence'
+    public static val SCENARIO_STEP_CONTROL_FLOW = 'ScenarioStepControlFlow'
+
+    @Check
+    def checkScenarioSteps(ScenarioDecl _scenario) {
+        val graph = EcoreUtil2.getContainerOfType(_scenario, CausalGraph)
+        if (graph === null) {
+            warning('Scenario should be contained by graph', null)
+        }
+        val stepNr2Steps = new TreeMap(graph.nodes.flatMap[steps].filter[scenario == _scenario].groupBy[stepNumber])
+        if (stepNr2Steps.isEmpty) {
+            warning('There are no steps defined for this scenario', null)
+        } else if (stepNr2Steps.firstKey != 1) {
+            stepNr2Steps.firstEntry.value.forEach [ step |
+                error('The first scenario step should be step number 1', step,
+                    CausalGraphPackage.Literals.SCENARIO_STEP__STEP_NUMBER, SCENARIO_STEP_NR_FIRST)
+            ]
+        }
+
+        var Map.Entry<Integer, List<ScenarioStep>> previousEntry = null
+        for (currentEntry : stepNr2Steps.entrySet) {
+            if (currentEntry.value.size > 1) {
+                for (step : currentEntry.value) {
+                    error('Scenario step number should be unique', step,
+                        CausalGraphPackage.Literals.SCENARIO_STEP__STEP_NUMBER, SCENARIO_STEP_NR_DUPLICATE)
+                }
+            }
+
+            if (previousEntry !== null) {
+                if (previousEntry.key != currentEntry.key - 1) {
+                    for (step : currentEntry.value) {
+                        error('''Expected step number «previousEntry.key + 1»''', step,
+                            CausalGraphPackage.Literals.SCENARIO_STEP__STEP_NUMBER, SCENARIO_STEP_NR_SEQUENCE)
+                    }
+                } else if (previousEntry.value.size == 1 && currentEntry.value.size == 1) {
+                    val previousNode = EcoreUtil2.getContainerOfType(previousEntry.value.head, Node)
+                    val currentNode = EcoreUtil2.getContainerOfType(currentEntry.value.head, Node)
+
+                    if (!graph.edges.exists[source == previousNode && target == currentNode]) {
+                        error('No control flow found between previous step and this step', currentEntry.value.head,
+                            null, SCENARIO_STEP_CONTROL_FLOW, previousNode.name, currentNode.name)
+                    }
+                }
+            }
+            previousEntry = currentEntry
+        }
+    }
+
 }

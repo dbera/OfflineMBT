@@ -71,7 +71,7 @@ class CausalGraphBDD {
             while (currentNode !== null) {
                 // find scenario step on this node
                 val curr = stepNum
-                val step = currentNode.tests.findFirst[s|s.name.name == sc.name && s.stepNumber == curr]
+                val step = currentNode.steps.findFirst[s|s.scenario.name == sc.name && s.stepNumber == curr]
 
                 // map enum to capitalized keyword
                 val baseKeyword = currentNode.stepType.getName().toLowerCase.toFirstUpper
@@ -120,7 +120,7 @@ class CausalGraphBDD {
         // Collect unique nodes used in any scenario
         val uniqueNodes = cg.nodes.filter [ n |
             cg.scenarios.exists [ sc |
-                n.tests.exists[t|t.name.name == sc.name]
+                n.steps.exists[t|t.scenario.name == sc.name]
             ]
         ]
 
@@ -174,8 +174,8 @@ class CausalGraphBDD {
      */
     protected def findNodeFor(CausalGraph cg, String scenario, int stepNum) {
         cg.nodes.findFirst [ n |
-            n.tests.exists [ s |
-                s.name.name == scenario && s.stepNumber == stepNum
+            n.steps.exists [ s |
+                s.scenario.name == scenario && s.stepNumber == stepNum
             ]
         ]
     }
@@ -186,8 +186,8 @@ class CausalGraphBDD {
     protected def findNextNode(CausalGraph cg, Node currentNode, String scenario, int nextStep) {
         val edge = cg.edges.filter[e|e instanceof ControlFlowEdge && (e as ControlFlowEdge).source == currentNode].
             findFirst [ e |
-                (e as ControlFlowEdge).target.tests.exists [ s |
-                    s.name.name == scenario && s.stepNumber == nextStep
+                (e as ControlFlowEdge).target.steps.exists [ s |
+                    s.scenario.name == scenario && s.stepNumber == nextStep
                 ]
             ] as ControlFlowEdge
         return if(edge !== null) (edge as ControlFlowEdge).target else null

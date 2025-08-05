@@ -31,7 +31,7 @@ class CausalGraphPlantUML {
     def toPlantUML(IFileSystemAccess2 fsa, CausalGraph cg) {
         val colors = #['#LightBlue', '#LightGreen', '#LightYellow', '#LightPink']
         val scenarios = cg.nodes
-            .flatMap[n | n.tests.map[s | s.name.name]]
+            .flatMap[n | n.steps.map[s | s.scenario.name]]
             .toSet.toList
             
         var cgTxt = ''''''
@@ -49,9 +49,9 @@ class CausalGraphPlantUML {
                 «IF n.stepBody !== null»
                     note right of «n.name»
                     step-arguments:
-                          «FOR s : n.tests SEPARATOR(", ")»
+                          «FOR s : n.steps SEPARATOR(", ")»
                               «IF !s.stepArguments.isEmpty»
-                                  «s.name.name»:«s.stepArguments.map[p|CSharpHelper.commaAction(p, [c | c], "")].join(", ")»
+                                  «s.scenario.name»:«s.stepArguments.map[p|CSharpHelper.commaAction(p, [c | c], "")].join(", ")»
                               «ENDIF» 
                           «ENDFOR»
                     step-body:
@@ -59,11 +59,11 @@ class CausalGraphPlantUML {
                     end note
                 «ENDIF»
                 «IF n.stepBody === null»
-                    «FOR s : n.tests»
-                        «var idx = scenarios.indexOf(s.name.name)»
+                    «FOR s : n.steps»
+                        «var idx = scenarios.indexOf(s.scenario.name)»
                         «var col = colors.get(idx % colors.size)»
                         note right of «n.name» «col»
-                        scenario: «s.name.name»
+                        scenario: «s.scenario.name»
                         step-number: «s.stepNumber»
                         «IF !s.stepArguments.isEmpty»
                         step-arguments:«s.stepArguments.map[p|CSharpHelper.commaAction(p, [c | c], "")].join(", ")»
@@ -107,19 +107,19 @@ class CausalGraphPlantUML {
 
     def getTestIDsFromNode(Node n) {
         var tidList = new HashSet<String>
-        for (a : n.getTests()) {
-            tidList.add(a.getName().getName())
+        for (a : n.steps) {
+            tidList.add(a.scenario.getName())
         }
         return tidList
     }
 
     def getTestIDOnEdge(Node src, Node dst) {
         val result = new HashSet<String>
-        for (stepSrc : src.tests) {
-            for (stepDst : dst.tests) {
-                if (stepSrc.name.name == stepDst.name.name
+        for (stepSrc : src.steps) {
+            for (stepDst : dst.steps) {
+                if (stepSrc.scenario.name == stepDst.scenario.name
                         && stepDst.stepNumber == stepSrc.stepNumber + 1) {
-                    result.add(stepDst.name.name)
+                    result.add(stepDst.scenario.name)
                 }
             }
         }
