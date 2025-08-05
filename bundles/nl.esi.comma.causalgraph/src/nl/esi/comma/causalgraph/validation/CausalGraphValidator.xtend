@@ -25,6 +25,8 @@ import nl.esi.comma.causalgraph.causalGraph.ScenarioStep
 import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.validation.Check
 import nl.esi.comma.causalgraph.causalGraph.Node
+import nl.esi.comma.causalgraph.causalGraph.ControlFlowEdge
+import nl.esi.comma.causalgraph.causalGraph.GraphType
 
 /**
  * This class contains custom validation rules. 
@@ -33,10 +35,35 @@ import nl.esi.comma.causalgraph.causalGraph.Node
  */
 class CausalGraphValidator extends AbstractCausalGraphValidator {
 
+    public static val NODE_NAME_UNIQUE = 'NodeNameUnique'
+    public static val NODE_STEP_UNIQUE = 'NodeStepUnique'
     public static val SCENARIO_STEP_NR_FIRST = 'ScenarioStepNumberFirst'
     public static val SCENARIO_STEP_NR_DUPLICATE = 'ScenarioStepNumberDuplicate'
     public static val SCENARIO_STEP_NR_SEQUENCE = 'ScenarioStepNumberSequence'
     public static val SCENARIO_STEP_CONTROL_FLOW = 'ScenarioStepControlFlow'
+    public static val CONTROL_FLOW_SUPERFLUOUS = 'ControlFlowSuperFluous'
+
+    @Check
+    def checkUniqueNodeNames(CausalGraph _graph) {
+        val duplicates = _graph.nodes.groupBy[name].values.filter[size > 1].flatten
+        duplicates.forEach [ node |
+            error('Node name should be unique', node,
+                CausalGraphPackage.Literals.NODE__NAME, NODE_NAME_UNIQUE)
+        ]
+    }
+
+    @Check
+    def checkUniqueNodeSteps(CausalGraph _graph) {
+        if (_graph.type == GraphType::UCG || _graph.type == GraphType::BDDUCG) {
+            return;
+        }
+
+        val duplicates = _graph.nodes.groupBy[stepType -> stepName].values.filter[size > 1].flatten
+        duplicates.forEach [ node |
+            error('The combination of step-name and step-type should be unique', node,
+                CausalGraphPackage.Literals.NODE__STEP_NAME, NODE_STEP_UNIQUE)
+        ]
+    }
 
     @Check
     def checkScenarioSteps(ScenarioDecl _scenario) {
@@ -73,7 +100,7 @@ class CausalGraphValidator extends AbstractCausalGraphValidator {
                     val previousNode = EcoreUtil2.getContainerOfType(previousEntry.value.head, Node)
                     val currentNode = EcoreUtil2.getContainerOfType(currentEntry.value.head, Node)
 
-                    if (!graph.edges.exists[source == previousNode && target == currentNode]) {
+                    if (!graph.edges.filter(ControlFlowEdge).exists[source == previousNode && target == currentNode]) {
                         error('No control flow found between previous step and this step', currentEntry.value.head,
                             null, SCENARIO_STEP_CONTROL_FLOW, previousNode.name, currentNode.name)
                     }
@@ -83,4 +110,13 @@ class CausalGraphValidator extends AbstractCausalGraphValidator {
         }
     }
 
+    @Check
+    def checkControlFlow(ControlFlowEdge _edge) {
+        val requiresControlFlow = _edge.source.steps.exists[sourceStep | _edge.target.steps.exists[targetStep |
+            sourceStep.scenario == targetStep.scenario && sourceStep.stepNumber + 1 == targetStep.stepNumber
+        ]]
+        if (!requiresControlFlow) {
+            error('No control flow required between these steps', null, CONTROL_FLOW_SUPERFLUOUS)
+        }
+    }
 }

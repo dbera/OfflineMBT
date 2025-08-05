@@ -1,13 +1,13 @@
 /**
  * Copyright (c) 2024, 2025 TNO-ESI
- *
+ * 
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
- *
+ * 
  * This program and the accompanying materials are made available
  * under the terms of the MIT License which is available at
  * https://opensource.org/licenses/MIT
- *
+ * 
  * SPDX-License-Identifier: MIT
  */
 /*
@@ -23,22 +23,30 @@ import org.eclipse.xtext.validation.Issue
 import org.eclipse.xtext.EcoreUtil2
 import nl.esi.comma.causalgraph.causalGraph.CausalGraph
 import nl.esi.comma.causalgraph.causalGraph.CausalGraphFactory
+import org.eclipse.emf.ecore.util.EcoreUtil
 
 /**
  * Custom quickfixes.
- *
+ * 
  * See https://www.eclipse.org/Xtext/documentation/310_eclipse_support.html#quick-fixes
  */
 class CausalGraphQuickfixProvider extends DefaultQuickfixProvider {
 
-	@Fix(CausalGraphValidator.SCENARIO_STEP_CONTROL_FLOW)
-	def capitalizeName(Issue issue, IssueResolutionAcceptor acceptor) {
-		acceptor.accept(issue, 'Add control flow', 'Add the missing control flow dependency.', null) [ element , context |
-		    val graph = EcoreUtil2.getContainerOfType(element, CausalGraph)
-		    graph.edges += CausalGraphFactory::eINSTANCE.createControlFlowEdge() => [
-		        source = graph.nodes.findFirst[name == issue.data.get(0)]
+    @Fix(CausalGraphValidator.SCENARIO_STEP_CONTROL_FLOW)
+    def addControlFlow(Issue issue, IssueResolutionAcceptor acceptor) {
+        acceptor.accept(issue, 'Add control flow', 'Add the missing control flow edge.', null) [ element, context |
+            val graph = EcoreUtil2.getContainerOfType(element, CausalGraph)
+            graph.edges += CausalGraphFactory::eINSTANCE.createControlFlowEdge() => [
+                source = graph.nodes.findFirst[name == issue.data.get(0)]
                 target = graph.nodes.findFirst[name == issue.data.get(1)]
-		    ]
-		]
-	}
+            ]
+        ]
+    }
+
+    @Fix(CausalGraphValidator.CONTROL_FLOW_SUPERFLUOUS)
+    def removeControlFlow(Issue issue, IssueResolutionAcceptor acceptor) {
+        acceptor.accept(issue, 'Remove control flow', 'Remove the control flow edge.', null) [ element, context |
+            EcoreUtil.delete(element)
+        ]
+    }
 }
