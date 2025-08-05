@@ -22,6 +22,8 @@ import nl.esi.comma.assertthat.assertThat.JsonArray
 import nl.esi.comma.assertthat.assertThat.JsonMember
 import nl.esi.comma.assertthat.assertThat.JsonObject
 import nl.esi.comma.assertthat.assertThat.JsonValue
+import nl.esi.comma.abstracttestspecification.abstractTestspecification.ExecutableStep
+import nl.esi.comma.abstracttestspecification.abstractTestspecification.AssertionStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.RunStep
 
 import nl.esi.comma.expressions.expression.ExpressionRecordAccess
@@ -60,8 +62,14 @@ class Utils
     static def getSystem(RunStep step) {
         return step.name.split('_').get(0)
     }
+    static def getSystem(AssertionStep step) {
+        return step.name.split('_').get(0)
+    }
+    static def getSystem(ExecutableStep step) {
+        return step.name.split('_').get(0)
+    }
 
-    static def getInputVar(RunStep rstep) '''«rstep.system»Input'''
+    static def getInputVar(ExecutableStep rstep) '''«rstep.system»Input'''
 
     // Gets the list of referenced compose steps
     // RULE. Exactly one referenced Compose Step.
@@ -69,11 +77,23 @@ class Utils
         return step.stepRef.map[refStep].filter(ComposeStep)
     }
 
+    static def getRunSteps(AssertionStep step) {
+        return step.stepRef.map[refStep].filter(RunStep)
+    }
+
     static def getSuppressedVarFields(ComposeStep cstep) {
         switch (cstep.suppress) {
             case null: newArrayList
             case cstep.suppress.varFields.isEmpty: cstep.output.map[it.name.name]
             default: cstep.suppress.varFields.map[it.serialize]
+        }
+    }
+
+    static def getSuppressedVarFields(RunStep rstep) {
+        switch (rstep.suppress) {
+            case null: newArrayList
+            case rstep.suppress.varFields.isEmpty: rstep.output.map[it.name.name]
+            default: rstep.suppress.varFields.map[it.serialize]
         }
     }
 

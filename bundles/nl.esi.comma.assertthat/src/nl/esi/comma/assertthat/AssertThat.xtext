@@ -16,16 +16,21 @@ generate assertThat "http://www.esi.nl/comma/assertthat/AssertThat"
 
 import "http://www.esi.nl/comma/expressions/Expression" as expr
 
+DataAssertions: {DataAssertions}
+    'assertions' name = ID '{' 
+        constr += DataAssertionItem+
+     '}'
+;
 DataAssertionItem:
     AssertThatBlock | GenericScriptBlock
 ;
 
 AssertThatBlock:
-    identifier = ID ':'  'assert-that' output=ExpressionBracket val = AssertValidation
+    name = ID ':'  'assert-that' output=ExpressionBracket val = AssertValidation
 ;
 
 GenericScriptBlock:
-    assignment = Variable ':=' 'script-call' params = ScriptParametersCustom
+    type = Type name= ID ':=' 'script-call' params = ScriptParametersCustom
 ;
 
 ScriptParametersCustom:
@@ -95,7 +100,7 @@ AssertThatXPaths:
     assertRef += AssertXPathValidations+ 
     ( namespace = AssertNamespace )? 
     ( globalMargin = AssertGlobalMargin )? 
-    ( globalRegex = AssertGlobalRegex )?
+    globalRegex ?= 'using-all-strings-as-regex'
     '}'
 ;
 
@@ -110,10 +115,6 @@ AssertNamespace: {AssertNamespace}
 
 AssertGlobalMargin: {AssertGlobalMargin}
     'using-global-margin' margin = MargingItem
-;
-
-AssertGlobalRegex: {AssertGlobalRegex}
-    globalRegex ?= 'using-all-strings-as-regex'
 ;
 
 // Assertion of XMLFile outputs
@@ -136,10 +137,10 @@ ComparisonsForMultiReference:
 ;
 
 AssertThatValueIdentical: {AssertThatValueIdentical}
-    identical ?= 'are-identical' 
+    'are-identical' 
 ;
 AssertThatValueSimilar: {AssertThatValueSimilar}
-    similar ?= 'are-similar' ('within-margin' margin=MargingItem)?
+    'are-similar' ('within-margin' margin=MargingItem)?
 ;
 
 // Json Grammar obtained from https://gist.github.com/nightscape/629651
