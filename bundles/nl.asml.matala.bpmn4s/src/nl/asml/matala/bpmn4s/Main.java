@@ -513,7 +513,7 @@ public class Main {
 				contextTypeName = contextTypeId;
 			}
 		}
-		if(contextInit != null && contextInit.strip().startsWith("=")) {
+		if(contextInit != null && contextInit.startsWith("=")) {
 			contextInit = contextInit.substring(1); // FIXME due to issues with bpmn4s editor lsp integration
 		}
 		node.setContext(contextName, contextTypeName, contextInit);

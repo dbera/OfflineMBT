@@ -1,0 +1,16 @@
+Manifest-Version: 1.0
+Automatic-Module-Name: nl.esi.comma.project.standard.tests
+Bundle-ManifestVersion: 2
+Bundle-Name: nl.esi.comma.project.standard.tests
+Bundle-Vendor: TNO-ESI
+Bundle-Version: 4.2.0.qualifier
+Bundle-SymbolicName: nl.esi.comma.project.standard.tests; singleton:=true
+Bundle-ActivationPolicy: lazy
+Require-Bundle: nl.esi.comma.project.standard,
+ org.eclipse.xtext.testing,
+ org.eclipse.xtext.xbase.testing,
+ org.eclipse.xtext.xbase.lib;bundle-version="2.36.0"
+Import-Package: org.junit.jupiter.api;version="[5.1.0,6.0.0)",
+ org.junit.jupiter.api.extension;version="[5.1.0,6.0.0)"
+Bundle-RequiredExecutionEnvironment: JavaSE-21
+Export-Package: nl.esi.comma.project.standard.tests;x-internal=true
