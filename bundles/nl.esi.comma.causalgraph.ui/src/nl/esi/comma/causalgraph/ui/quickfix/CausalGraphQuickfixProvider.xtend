@@ -15,15 +15,16 @@
  */
 package nl.esi.comma.causalgraph.ui.quickfix
 
+import nl.esi.comma.causalgraph.causalGraph.CausalGraph
+import nl.esi.comma.causalgraph.causalGraph.CausalGraphFactory
+import nl.esi.comma.causalgraph.causalGraph.DataFlowEdge
 import nl.esi.comma.causalgraph.validation.CausalGraphValidator
+import org.eclipse.emf.ecore.util.EcoreUtil
+import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.ui.editor.quickfix.DefaultQuickfixProvider
 import org.eclipse.xtext.ui.editor.quickfix.Fix
 import org.eclipse.xtext.ui.editor.quickfix.IssueResolutionAcceptor
 import org.eclipse.xtext.validation.Issue
-import org.eclipse.xtext.EcoreUtil2
-import nl.esi.comma.causalgraph.causalGraph.CausalGraph
-import nl.esi.comma.causalgraph.causalGraph.CausalGraphFactory
-import org.eclipse.emf.ecore.util.EcoreUtil
 
 /**
  * Custom quickfixes.
@@ -43,9 +44,20 @@ class CausalGraphQuickfixProvider extends DefaultQuickfixProvider {
         ]
     }
 
+    @Fix(CausalGraphValidator.DATA_FLOW_SUPERFLUOUS)
+    def removeDataFlow(Issue issue, IssueResolutionAcceptor acceptor) {
+        acceptor.accept(issue, 'Remove data flow', 'Remove the data flow edge.', null) [ dataReference, context |
+            val dataFlow = dataReference.eContainer as DataFlowEdge
+            // When removing the last data-reference, remove the whole data flow edge
+            EcoreUtil.delete(dataFlow.dataReferences.size == 1 ? dataFlow : dataReference)
+        ]
+    }
+
+    @Fix(CausalGraphValidator.ELEMENT_UNUSED)
     @Fix(CausalGraphValidator.CONTROL_FLOW_SUPERFLUOUS)
-    def removeControlFlow(Issue issue, IssueResolutionAcceptor acceptor) {
-        acceptor.accept(issue, 'Remove control flow', 'Remove the control flow edge.', null) [ element, context |
+    def removeRequirement(Issue issue, IssueResolutionAcceptor acceptor) {
+        val type = issue.data.get(0)
+        acceptor.accept(issue, '''Remove «type»''', '''Remove the «type».''', null) [ element, context |
             EcoreUtil.delete(element)
         ]
     }

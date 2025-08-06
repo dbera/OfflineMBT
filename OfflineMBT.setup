@@ -355,6 +355,8 @@
             url="https://download.itemis.com/updates/releases/2.1.1/"/>
         <repository
             url="https://www.pydev.org/updates/"/>
+        <repository
+            url="https://download.eclipse.org/lsat/v0.4-RC2/update-site/"/>
       </repositoryList>
     </targlet>
     <composedTarget>OfflineMBT - Maven Dependencies</composedTarget>
