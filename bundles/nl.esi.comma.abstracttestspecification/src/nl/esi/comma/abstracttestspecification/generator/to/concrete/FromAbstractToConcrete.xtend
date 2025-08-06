@@ -168,16 +168,9 @@ class FromAbstractToConcrete extends AbstractGenerator {
         val runSteps = astep.runSteps
         // Get text for concrete data expressions
         var conDataExpr = (new ConcreteExpressionHandler()).prepareStepInputExpressions(astep, runSteps)
-        // Append text for reference data expressions
-//        val refDataExpr = (new ReferenceExpressionHandler()).resolveStepReferenceExpressions(astep, runSteps)
 
         return '''
             «conDataExpr»
-«««            «FOR entry : refDataExpr.entrySet»
-«««                «FOR v : entry.value»
-«««                    «entry.key» := «v»
-«««                «ENDFOR»
-«««            «ENDFOR»
         '''
     }
 
