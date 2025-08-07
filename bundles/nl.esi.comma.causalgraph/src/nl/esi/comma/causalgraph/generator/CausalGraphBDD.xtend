@@ -80,10 +80,12 @@ class CausalGraphBDD {
             val names = group.map[e|e.key.name]
             val path = group.head.value
 
+
             var reqs = new ArrayList<String>
             for (ScenarioDecl sc : scs) {
                 for (rq : sc.getRequirements()) {
                     reqs.add(rq.getName())
+
                 }
             }
             reqs.toSet().forEach[req|content.append("@").append(req).append("\n")]
@@ -110,8 +112,8 @@ class CausalGraphBDD {
         while (node !== null) {
             // capture current step number for closure
             val currentStep = stepNum
-            val step = node.tests.findFirst [ s |
-                s.name == sc && s.stepNumber == currentStep
+            val step = node.steps.findFirst [ s |
+                s.getScenario() == sc && s.stepNumber == currentStep
             ]
             if (step !== null) {
                 val kw = node.stepType.getName().toLowerCase.toFirstUpper
@@ -152,7 +154,7 @@ class CausalGraphBDD {
         // Gather *all* parameter names used by these scenarios
         val paramNames = scenarios.flatMap [ sc |
             cg.nodes.flatMap [ n |
-                n.tests.findFirst[s|s.name.name == sc]?.stepArguments.filter[a|a instanceof AssignmentAction].map [ a |
+                n.steps.findFirst[s|s.getScenario().getName() == sc]?.stepArguments.filter[a|a instanceof AssignmentAction].map [ a |
                     (a as AssignmentAction).getAssignment().getName()
                 ]
             ]
@@ -166,8 +168,8 @@ class CausalGraphBDD {
             // Build a map from param → value for this scenario
             val argMap = new LinkedHashMap<String, String>
             for (n : cg.nodes) {
-                for (step : n.tests) {
-                    if (step.getName().name == sc) {
+                for (step : n.steps) {
+                    if (step.getScenario().name == sc) {
                         for (a : step.stepArguments.filter[arg|arg instanceof AssignmentAction].map [ arg |
                             arg as AssignmentAction
                         ]) {
@@ -195,7 +197,7 @@ class CausalGraphBDD {
         var prevKw = ""
         while (node !== null) {
             val currentStep = num
-            val step = node.tests.findFirst[s|s.name.name == sc && s.stepNumber == currentStep]
+            val step = node.steps.findFirst[s|s.getScenario().name == sc && s.stepNumber == currentStep]
             if (node.stepType != StepType.GIVEN) {
                 val kw = node.stepType.getName().toLowerCase.toFirstUpper
                 val keyword = if(kw == prevKw) "And" else kw
@@ -206,7 +208,7 @@ class CausalGraphBDD {
                 // arguments
                 val args = step.stepArguments.filter[a|a instanceof AssignmentAction].map [ a |
                     val aa = a as AssignmentAction
-                    " " + renderExpressionValue(aa.exp)
+                    renderExpressionValue(aa.exp)
                 ]
                 if(!args.empty) content.append(" with ").append(args.join(" and "))
                 content.append("\n")
@@ -228,7 +230,7 @@ class CausalGraphBDD {
         // Collect unique nodes used in any scenario
         val uniqueNodes = cg.nodes.filter [ n |
             cg.scenarios.exists [ sc |
-                n.tests.exists[t|t.name.name == sc.name]
+                n.steps.exists[t|t.scenario.name == sc.name]
             ]
         ]
 
@@ -282,8 +284,8 @@ class CausalGraphBDD {
      */
     protected def findNodeFor(CausalGraph cg, String scenario, int stepNum) {
         cg.nodes.findFirst [ n |
-            n.tests.exists [ s |
-                s.name.name == scenario && s.stepNumber == stepNum
+            n.steps.exists [ s |
+                s.scenario.name == scenario && s.stepNumber == stepNum
             ]
         ]
     }
@@ -294,8 +296,8 @@ class CausalGraphBDD {
     protected def findNextNode(CausalGraph cg, Node currentNode, String scenario, int nextStep) {
         val edge = cg.edges.filter[e|e instanceof ControlFlowEdge && (e as ControlFlowEdge).source == currentNode].
             findFirst [ e |
-                (e as ControlFlowEdge).target.tests.exists [ s |
-                    s.name.name == scenario && s.stepNumber == nextStep
+                (e as ControlFlowEdge).target.steps.exists [ s |
+                    s.scenario.name == scenario && s.stepNumber == nextStep
                 ]
             ] as ControlFlowEdge
         return if(edge !== null) (edge as ControlFlowEdge).target else null

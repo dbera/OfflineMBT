@@ -15,16 +15,21 @@ Require-Bundle: org.eclipse.xtext,
  org.eclipse.emf.common,
  org.antlr.runtime;bundle-version="[3.2.0,3.2.1)",
  org.eclipse.xtend.lib;bundle-version="2.36.0",
- nl.esi.comma.actions;bundle-version="4.2.0";visibility:=reexport
+ nl.esi.comma.actions;bundle-version="4.2.0";visibility:=reexport,
+ org.eclipse.lsat.common.xtend
 Bundle-RequiredExecutionEnvironment: JavaSE-21
-Export-Package: nl.esi.comma.causalgraph.parser.antlr.internal,
+Export-Package: nl.esi.comma.causalgraph,
+ nl.esi.comma.causalgraph.causalGraph,
  nl.esi.comma.causalgraph.causalGraph.impl,
- nl.esi.comma.causalgraph,
- nl.esi.comma.causalgraph.parser.antlr,
  nl.esi.comma.causalgraph.causalGraph.util,
- nl.esi.comma.causalgraph.scoping,
+ nl.esi.comma.causalgraph.conversion,
+ nl.esi.comma.causalgraph.formatting,
  nl.esi.comma.causalgraph.generator,
- nl.esi.comma.causalgraph.validation,
+ nl.esi.comma.causalgraph.parser.antlr,
+ nl.esi.comma.causalgraph.parser.antlr.internal,
+ nl.esi.comma.causalgraph.scoping,
  nl.esi.comma.causalgraph.serializer,
  nl.esi.comma.causalgraph.services,
- nl.esi.comma.causalgraph.causalGraph
+ nl.esi.comma.causalgraph.transform,
+ nl.esi.comma.causalgraph.utilities,
+ nl.esi.comma.causalgraph.validation

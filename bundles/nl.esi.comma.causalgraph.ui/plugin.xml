@@ -445,4 +445,12 @@
 			type="text">
 		</fileTypes>
 	</extension>
+ <extension
+       id="nl.esi.comma.causalgraph.ui.fragment"
+       point="org.eclipse.e4.workbench.model">
+    <fragment
+          apply="always"
+          uri="fragment.e4xmi">
+    </fragment>
+ </extension>
 </plugin>

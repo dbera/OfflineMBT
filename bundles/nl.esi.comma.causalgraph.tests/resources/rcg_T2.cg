@@ -1,0 +1,43 @@
+requirement R1
+requirement R2
+
+scenario T2:
+    requirements: R1 R2
+
+graph TestGraphT2:
+    type: ReducedCausalGraph
+
+    types:
+        alias hType "test-interface::HRecord"
+
+    variables:
+    int x
+    hType h
+
+    node n0:
+        step-name: "test-interface::f1(z, y)"
+        step-type: When
+        scenario T2 step 1:
+            step-body: «
+                bool y = true;
+                float z = 0.5;
+                y = function1(z);
+                if(y) {
+                    x = x + 6;
+                    z = function2(x);
+                }
+                h = test-interface::f1(z, y);
+            »
+
+    node n1:
+        step-name: "ASSERT_XY(h.a, x)"
+        step-type: Then
+        scenario T2 step 2:
+            step-body: «
+                h.a = ceil(h.a) * 4.0;
+                ASSERT_XY(h.a, x);
+            »
+
+    edges:
+        n0 -> n1
+        n1 -{T2:[x, h]}-> n0

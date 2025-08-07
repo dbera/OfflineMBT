@@ -1,13 +1,13 @@
 /**
  * Copyright (c) 2024, 2025 TNO-ESI
- *
+ * 
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
- *
+ * 
  * This program and the accompanying materials are made available
  * under the terms of the MIT License which is available at
  * https://opensource.org/licenses/MIT
- *
+ * 
  * SPDX-License-Identifier: MIT
  */
 /*
@@ -15,23 +15,195 @@
  */
 package nl.esi.comma.causalgraph.validation
 
+import java.util.List
+import java.util.Map
+import java.util.TreeMap
+import nl.esi.comma.causalgraph.causalGraph.CausalGraph
+import nl.esi.comma.causalgraph.causalGraph.CausalGraphPackage
+import nl.esi.comma.causalgraph.causalGraph.ControlFlowEdge
+import nl.esi.comma.causalgraph.causalGraph.DataFlowEdge
+import nl.esi.comma.causalgraph.causalGraph.DataReference
+import nl.esi.comma.causalgraph.causalGraph.GraphType
+import nl.esi.comma.causalgraph.causalGraph.Node
+import nl.esi.comma.causalgraph.causalGraph.RequirementDecl
+import nl.esi.comma.causalgraph.causalGraph.ScenarioDecl
+import nl.esi.comma.causalgraph.causalGraph.ScenarioStep
+import nl.esi.comma.expressions.expression.MapTypeConstructor
+import nl.esi.comma.expressions.expression.Variable
+import nl.esi.comma.types.types.Type
+import nl.esi.comma.types.types.TypeDecl
+import org.eclipse.xtext.EcoreUtil2
+import org.eclipse.xtext.validation.Check
+import nl.esi.comma.types.types.TypesPackage
 
 /**
  * This class contains custom validation rules. 
- *
+ * 
  * See https://www.eclipse.org/Xtext/documentation/303_runtime_concepts.html#validation
  */
 class CausalGraphValidator extends AbstractCausalGraphValidator {
-	
-//	public static val INVALID_NAME = 'invalidName'
-//
-//	@Check
-//	def checkGreetingStartsWithCapital(Greeting greeting) {
-//		if (!Character.isUpperCase(greeting.name.charAt(0))) {
-//			warning('Name should start with a capital', 
-//					CausalGraphPackage.Literals.GREETING__NAME,
-//					INVALID_NAME)
-//		}
-//	}
-	
+
+    public static val ELEMENT_UNUSED = 'ElementUnused'
+    public static val SCENARIO_STEP_NR_FIRST = 'ScenarioStepNumberFirst'
+    public static val SCENARIO_STEP_NR_DUPLICATE = 'ScenarioStepNumberDuplicate'
+    public static val SCENARIO_STEP_NR_SEQUENCE = 'ScenarioStepNumberSequence'
+    public static val SCENARIO_STEP_CONTROL_FLOW = 'ScenarioStepControlFlow'
+    public static val CONTROL_FLOW_SUPERFLUOUS = 'ControlFlowSuperFluous'
+    public static val DATA_FLOW_SUPERFLUOUS = 'DataFlowSuperFluous'
+
+    @Check
+    def checkUniqueNames(CausalGraph _graph) {
+        _graph.requirements.getDuplicatesBy[name].forEach [
+            error('Requirement name should be unique', it,
+                TypesPackage.Literals.NAMED_ELEMENT__NAME)
+        ]
+        _graph.scenarios.getDuplicatesBy[name].forEach [
+            error('Scenario name should be unique', it,
+                TypesPackage.Literals.NAMED_ELEMENT__NAME)
+        ]
+        _graph.types.getDuplicatesBy[name].forEach [
+            error('Type name should be unique', it,
+                TypesPackage.Literals.NAMED_ELEMENT__NAME)
+        ]
+        // TODO: Maybe relax this requirement such that function
+        // signature (i.e. incl. parameters) should be unique.
+        _graph.functions.getDuplicatesBy[name].forEach [
+            error('Function name should be unique', it,
+                TypesPackage.Literals.NAMED_ELEMENT__NAME)
+        ]
+        _graph.variables.getDuplicatesBy[name].forEach [
+            error('Variable name should be unique', it,
+                TypesPackage.Literals.NAMED_ELEMENT__NAME)
+        ]
+        _graph.nodes.getDuplicatesBy[name].forEach [
+            error('Node name should be unique', it,
+                TypesPackage.Literals.NAMED_ELEMENT__NAME)
+        ]
+    }
+
+    private static def <T> Iterable<T> getDuplicatesBy(Iterable<T> source, (T)=>Object functor) {
+        return source.groupBy(functor).values.filter[size > 1].flatten
+    }
+
+    @Check
+    def checkUnusedRequirement(RequirementDecl _requirement) {
+        val graph = EcoreUtil2.getContainerOfType(_requirement, CausalGraph)
+        if (graph !== null && !graph.scenarios.exists[requirements.contains(_requirement)]) {
+            warning('Requirement is not used', null, ELEMENT_UNUSED, 'requirement')
+        }
+    }
+
+    @Check
+    def checkUnusedScenario(ScenarioDecl _scenario) {
+        val graph = EcoreUtil2.getContainerOfType(_scenario, CausalGraph)
+        if (graph !== null && !graph.nodes.flatMap[steps].exists[scenario === _scenario]) {
+            warning('Scenario is not used', null, ELEMENT_UNUSED, 'scenario')
+        }
+    }
+
+    @Check
+    def checkUnusedType(TypeDecl _typeDecl) {
+        val graph = EcoreUtil2.getContainerOfType(_typeDecl, CausalGraph)
+        if (graph !== null && !graph.variables.exists[type.uses(_typeDecl)]) {
+            warning('Type is not used', null, ELEMENT_UNUSED, 'type')
+        }
+    }
+
+    private static def boolean uses(Type type, TypeDecl typeDecl) {
+        if (type instanceof MapTypeConstructor) {
+            if (type.valueType.uses(typeDecl)) {
+                return true;
+            }
+        }
+        return type.type === typeDecl
+    }
+
+    @Check
+    def checkUnusedVariable(CausalGraph _graph) {
+        for (Variable _variable : _graph.variables) {
+            val edgeReferences = _graph.edges.filter(DataFlowEdge).flatMap[dataReferences].flatMap[variables]
+            if (!edgeReferences.contains(_variable)) {
+                warning('Variable is not used', _variable, null, ELEMENT_UNUSED, 'variable')
+            }
+        }
+    }
+
+    @Check
+    def checkUniqueNodeSteps(CausalGraph _graph) {
+        if (_graph.type == GraphType::UCG || _graph.type == GraphType::BDDUCG) {
+            return;
+        }
+
+        val duplicates = _graph.nodes.groupBy[stepType -> stepName].values.filter[size > 1].flatten
+        duplicates.forEach [ node |
+            error('The combination of step-name and step-type should be unique', node,
+                CausalGraphPackage.Literals.NODE__STEP_NAME)
+        ]
+    }
+
+    @Check
+    def checkScenarioSteps(ScenarioDecl _scenario) {
+        val graph = EcoreUtil2.getContainerOfType(_scenario, CausalGraph)
+        if (graph === null) {
+            warning('Scenario should be contained by graph', null)
+        }
+        val stepNr2Steps = new TreeMap(graph.nodes.flatMap[steps].filter[scenario == _scenario].groupBy[stepNumber])
+        if (stepNr2Steps.isEmpty) {
+            warning('There are no steps defined for this scenario', null)
+        } else if (stepNr2Steps.firstKey != 1) {
+            stepNr2Steps.firstEntry.value.forEach [ step |
+                error('The first scenario step should be step number 1', step,
+                    CausalGraphPackage.Literals.SCENARIO_STEP__STEP_NUMBER, SCENARIO_STEP_NR_FIRST)
+            ]
+        }
+
+        var Map.Entry<Integer, List<ScenarioStep>> previousEntry = null
+        for (currentEntry : stepNr2Steps.entrySet) {
+            if (currentEntry.value.size > 1) {
+                for (step : currentEntry.value) {
+                    error('Scenario step number should be unique', step,
+                        CausalGraphPackage.Literals.SCENARIO_STEP__STEP_NUMBER, SCENARIO_STEP_NR_DUPLICATE)
+                }
+            }
+
+            if (previousEntry !== null) {
+                if (previousEntry.key != currentEntry.key - 1) {
+                    for (step : currentEntry.value) {
+                        error('''Expected step number «previousEntry.key + 1»''', step,
+                            CausalGraphPackage.Literals.SCENARIO_STEP__STEP_NUMBER, SCENARIO_STEP_NR_SEQUENCE)
+                    }
+                } else if (previousEntry.value.size == 1 && currentEntry.value.size == 1) {
+                    val previousNode = EcoreUtil2.getContainerOfType(previousEntry.value.head, Node)
+                    val currentNode = EcoreUtil2.getContainerOfType(currentEntry.value.head, Node)
+
+                    if (!graph.edges.filter(ControlFlowEdge).exists[source == previousNode && target == currentNode]) {
+                        error('No control flow found between previous step and this step', currentEntry.value.head,
+                            null, SCENARIO_STEP_CONTROL_FLOW, previousNode.name, currentNode.name)
+                    }
+                }
+            }
+            previousEntry = currentEntry
+        }
+    }
+
+    @Check
+    def checkControlFlow(ControlFlowEdge _edge) {
+        val requiresControlFlow = _edge.source.steps.exists[sourceStep | _edge.target.steps.exists[targetStep |
+            sourceStep.scenario == targetStep.scenario && sourceStep.stepNumber + 1 == targetStep.stepNumber
+        ]]
+        if (!requiresControlFlow) {
+            error('No control flow required between these nodes', null, CONTROL_FLOW_SUPERFLUOUS, 'control flow')
+        }
+    }
+
+    @Check
+    def checkDataFlow(DataReference _dataRef) {
+        val dataFlow = _dataRef.eContainer as DataFlowEdge
+        val sourceHasScenario = dataFlow.source.steps.exists[scenario == _dataRef.scenario]
+        val targetHasScenario = dataFlow.target.steps.exists[scenario == _dataRef.scenario]
+
+        if (!sourceHasScenario || !targetHasScenario) {
+            error('''No data flow possible for scenario «_dataRef.scenario.name» between these nodes''', null, DATA_FLOW_SUPERFLUOUS)
+        }
+    }
 }

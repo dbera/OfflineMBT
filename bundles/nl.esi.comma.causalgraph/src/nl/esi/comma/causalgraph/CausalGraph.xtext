@@ -20,7 +20,17 @@ import "http://www.esi.nl/comma/expressions/Expression" as expr
 
 @Override
 ModelContainer returns types::ModelContainer:
-    super::ModelContainer | CausalGraph
+    super | CausalGraph
+;
+
+@Override
+NamedElement returns types::NamedElement:
+    super | CausalGraph | RequirementDecl | ScenarioDecl | Node
+;
+
+@Override
+TypeDecl returns types::TypeDecl:
+    super | AliasTypeDecl
 ;
 
 enum GraphType:
@@ -63,11 +73,6 @@ ScenarioDecl:
         'requirements' ':' requirements += [RequirementDecl|ID]+
 ;
 
-@Ov@Override
-TypeDecl returns types::TypeDecl:
-	super | AliasTypeDecl
-;
-
 AliasTypeDecl:
     'alias' name = ID alias = STRING
 ;
@@ -78,11 +83,11 @@ Node:
     'step-type' ':' stepType = StepType
     ('step-parameters' ':' stepParameters += Variable+
      'step-body' ':' stepBody = StepBody)?
-    tests += ScenarioStep+
+    steps += ScenarioStep+
 ;
 
 ScenarioStep:
-    'scenario' name=[ScenarioDecl|ID] 'step' stepNumber = INT ':'
+    'scenario' scenario=[ScenarioDecl|ID] 'step' stepNumber = INT ':'
     ( ('step-arguments' ':' stepArguments += (AssignmentAction | RecordFieldAssignmentAction)+)
     | ('step-body' ':' stepBody = StepBody))
 ;

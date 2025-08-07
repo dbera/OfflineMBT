@@ -127,7 +127,7 @@ public class EcoreUtil3 extends EcoreUtil2 {
 			throw new ValidationException(diagnostics);
 		}
 	}
-
+	
 	/**
 	 * @throws ValidationException
 	 * @see {@link Diagnostician#validate(EObject)}
