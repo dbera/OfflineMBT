@@ -100,7 +100,7 @@ AssertThatXPaths:
     assertRef += AssertXPathValidations+ 
     ( namespace = AssertNamespace )? 
     ( globalMargin = AssertGlobalMargin )? 
-    globalRegex ?= 'using-all-strings-as-regex'
+    ( globalRegex ?= 'using-all-strings-as-regex')?
     '}'
 ;
 
