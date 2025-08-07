@@ -195,6 +195,29 @@ class ProductValidator extends AbstractProductValidator {
         expr.eContents.filter(Expression).forEach[preventIlligalVariableAccess(variables, direction)]
     }
 
+
+    /**
+     * A system block may have many RUN steps but they all must be of the same step-type
+     */
+     @Check
+    def checkMultiRunSteps(Block block) {
+        val runUpdates = block.functions.flatMap[updates].filter[actionType.getName == "RUN"]
+
+        val groupedByStepType = runUpdates.groupBy[stepType]
+
+        if (groupedByStepType.keySet.size > 1) {
+            val mostCommon = groupedByStepType.entrySet.maxBy[value.size].key
+            runUpdates.filter[stepType != mostCommon].forEach [ update |
+                error(
+                    "All stepTypes must be the same for actionType RUN (expected: " + mostCommon + ")",
+                    update,
+                    ProductPackage.Literals.UPDATE__STEP_TYPE
+                )
+            ]
+        }
+
+    }
+ 
 /* STRANGE BUG: Output Vars are Empty. Appears in Input Vars. 
  * Not appearing as problem during product generation!
  */
