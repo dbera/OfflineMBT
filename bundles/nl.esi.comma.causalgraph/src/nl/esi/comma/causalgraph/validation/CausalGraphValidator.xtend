@@ -109,18 +109,6 @@ class CausalGraphValidator extends AbstractCausalGraphValidator {
         }
     }
 
-    @Check
-    def checkUnusedVariable(Variable _variable) {
-        val graph = EcoreUtil2.getContainerOfType(_variable, CausalGraph)
-        if (graph === null) {
-            return
-        }
-        val edgeReferences = graph.edges.filter(DataFlowEdge).flatMap[dataReferences].flatMap[variables]
-        if (!edgeReferences.contains(_variable)) {
-            warning('Variable is not used', null, ELEMENT_UNUSED, 'variable')
-        }
-    }
-
     private static def boolean uses(Type type, TypeDecl typeDecl) {
         if (type instanceof MapTypeConstructor) {
             if (type.valueType.uses(typeDecl)) {
@@ -128,6 +116,16 @@ class CausalGraphValidator extends AbstractCausalGraphValidator {
             }
         }
         return type.type === typeDecl
+    }
+
+    @Check
+    def checkUnusedVariable(CausalGraph _graph) {
+        for (Variable _variable : _graph.variables) {
+            val edgeReferences = _graph.edges.filter(DataFlowEdge).flatMap[dataReferences].flatMap[variables]
+            if (!edgeReferences.contains(_variable)) {
+                warning('Variable is not used', _variable, null, ELEMENT_UNUSED, 'variable')
+            }
+        }
     }
 
     @Check
