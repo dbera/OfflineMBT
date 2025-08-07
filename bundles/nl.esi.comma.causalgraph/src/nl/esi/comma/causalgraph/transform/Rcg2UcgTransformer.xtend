@@ -15,8 +15,6 @@ import org.eclipse.xtext.EcoreUtil2
 
 import static extension nl.esi.comma.causalgraph.utilities.CausalGraphQueries.*
 import static extension org.eclipse.lsat.common.xtend.Queries.*
-import nl.esi.comma.types.utilities.EcoreUtil3
-import nl.esi.comma.expressions.expression.Variable
 
 class Rcg2UcgTransformer {
     static extension val CausalGraphFactory m_cg = CausalGraphFactory::eINSTANCE
@@ -37,11 +35,11 @@ class Rcg2UcgTransformer {
             // just not have any imports, but just inline the used types?
             imports += rcgs.flatMap[imports].toList
 
-            requirements += rcgs.flatMap[requirements].resolveNameConflicts(true)
-            scenarios += rcgs.flatMap[scenarios].resolveNameConflicts(false)
+            requirements += rcgs.flatMap[requirements].resolveNameConflicts(true, true)
+            scenarios += rcgs.flatMap[scenarios].resolveNameConflicts(false, true)
 
-            types += rcgs.flatMap[types].resolveNameConflicts(true)
-            variables += rcgs.flatMap[variables].resolveNameConflicts(true)
+            types += rcgs.flatMap[types].resolveNameConflicts(true, true)
+            variables += rcgs.flatMap[variables].resolveNameConflicts(true, false)
         ]
 
         val nodeGroups = rcgs.groupNodes
@@ -92,24 +90,29 @@ class Rcg2UcgTransformer {
         return rcgs.flatMap[nodes].groupBy[groupKey]
     }
 
-    private static def <T extends NamedElement> Iterable<T> resolveNameConflicts(Iterable<T> elements, boolean merge) {
+    private static def <T extends NamedElement> Iterable<T> resolveNameConflicts(Iterable<T> elements, boolean merge, boolean rename) {
         val mergedElements = newLinkedHashMap
+        val conflicts = newLinkedHashSet
         for (element : elements) {
             val registered = mergedElements.putIfAbsent(element.name, element)
-            if (registered !== null) {
+            if (registered !== null && registered !== element) {
                 if(merge && EcoreUtil.equals(registered, element)) {
                     // These elements can be merged, update all references to use the registered element
                     element.graph.replaceAllReferences(element, registered)
-                } else {
+                } else if (rename) {
                     // Found a conflicting type, use different names for the elements
                     registered.name = registered.graph.name + '_' + registered.name
                     mergedElements.put(registered.name, registered)
                     element.name = element.graph.name + '_' + element.name
                     mergedElements.put(element.name, element)
+                } else {
+                    // We cannot do anything alse then add the conflict, 
+                    // this will result in a non-validating model
+                    conflicts += element
                 }
             }
         }
-        return mergedElements.values.toSet
+        return mergedElements.values.union(conflicts).toSet
     }
 
     private static def getGraph(EObject eObject) {

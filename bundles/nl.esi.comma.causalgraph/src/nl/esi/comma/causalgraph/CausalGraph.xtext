@@ -61,16 +61,19 @@ CausalGraph:
         ('variables' ':' variables += Variable+)?
         ('initializations' ':' assignments += AssignmentAction+)?
         nodes += Node+
-        'edges' ':' edges += Edge+
+        ('edges' ':' edges += Edge+)?
 ;
 
 RequirementDecl:
-    'requirement' name = ID
+    'requirement' name = ID ( ':'
+        ('description' ':' description = STRING)?
+    )?
 ;
 
 ScenarioDecl:
     'scenario' name = ID ':'
         'requirements' ':' requirements += [RequirementDecl|ID]+
+        ('description' ':' description = STRING)?
 ;
 
 AliasTypeDecl:
@@ -81,15 +84,16 @@ Node:
     'node' name=ID ':'
     'step-name' ':' stepName = STRING
     'step-type' ':' stepType = StepType
-    ('step-parameters' ':' stepParameters += Variable+
-     'step-body' ':' stepBody = StepBody)?
+    ('step-parameters' ':' stepParameters += Variable+)?
+    ('step-body' ':' stepBody = StepBody)?
     steps += ScenarioStep+
 ;
 
 ScenarioStep:
-    'scenario' scenario=[ScenarioDecl|ID] 'step' stepNumber = INT ':'
-    ( ('step-arguments' ':' stepArguments += (AssignmentAction | RecordFieldAssignmentAction)+)
-    | ('step-body' ':' stepBody = StepBody))
+    'scenario' scenario=[ScenarioDecl|ID] 'step' stepNumber = INT ( ':'
+        ('step-arguments' ':' stepArguments += (AssignmentAction | RecordFieldAssignmentAction)+)?
+        ('step-body' ':' stepBody = StepBody)?
+    )?
 ;
 
 StepBody:
