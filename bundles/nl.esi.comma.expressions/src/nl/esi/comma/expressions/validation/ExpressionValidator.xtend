@@ -203,6 +203,13 @@ class ExpressionValidator extends AbstractExpressionValidator {
 	@Check
 	def checkTypingExpression(Expression e){
 		switch(e){
+		    ExpressionEqual:{
+		        val leftType = e.left.typeOf
+		        val rightType = e.right.typeOf
+                if(leftType != rightType){
+                    error("Type mismatch: actual type does not match the expected type", ExpressionPackage.Literals.EXPRESSION_BINARY__LEFT)
+                }
+		    }
 			ExpressionAnd |
 			ExpressionOr : {
 				val leftType = e.left.typeOf
