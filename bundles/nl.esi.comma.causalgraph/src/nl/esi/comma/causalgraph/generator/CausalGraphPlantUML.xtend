@@ -43,22 +43,24 @@ class CausalGraphPlantUML {
                 step-name: «n.stepName»
                 step-type: «n.stepType»
                 «IF !n.stepParameters.isEmpty»
-                    step-params: «n.stepParameters.map[p|p.name].join(", ")»
+                    step-params: «n.stepParameters.map[p|p.getType().getType().getName() + " " + p.name].join(", ")»
                 «ENDIF»        
                 }
                 «IF n.stepBody !== null»
                     note right of «n.name»
+                    «IF !n.stepParameters.isEmpty»
                     step-arguments:
                           «FOR s : n.steps SEPARATOR(", ")»
                               «IF !s.stepArguments.isEmpty»
                                   «s.scenario.name»:«s.stepArguments.map[p|CSharpHelper.commaAction(p, [c | c], "")].join(", ")»
                               «ENDIF» 
                           «ENDFOR»
+                    «ENDIF»
                     step-body:
                     «renderStepBody(n.stepBody)»
                     end note
                 «ENDIF»
-                «IF n.stepBody === null»
+                «IF n.stepBody == null && scenarios.size <= 2 »
                     «FOR s : n.steps»
                         «var idx = scenarios.indexOf(s.scenario.name)»
                         «var col = colors.get(idx % colors.size)»
@@ -73,9 +75,9 @@ class CausalGraphPlantUML {
                         «renderStepBody(s.stepBody)»
                         «ENDIF»
                         end note
-                            «ENDFOR»
-                        «ENDIF»
                     «ENDFOR»
+                 «ENDIF»
+            «ENDFOR»
                     
             «FOR edge : cg.edges»
                 «IF edge instanceof ControlFlowEdge»
