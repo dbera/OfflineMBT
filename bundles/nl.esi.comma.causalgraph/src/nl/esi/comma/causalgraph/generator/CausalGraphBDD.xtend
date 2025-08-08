@@ -80,7 +80,6 @@ class CausalGraphBDD {
             val names = group.map[e|e.key.name]
             val path = group.head.value
 
-
             var reqs = new ArrayList<String>
             for (ScenarioDecl sc : scs) {
                 for (rq : sc.getRequirements()) {
@@ -151,12 +150,14 @@ class CausalGraphBDD {
             content.append("  ").append(line).append("\n")
         }
 
-        // Gather *all* parameter names used by these scenarios
+        // Gather all parameter names used by these scenarios
         val paramNames = scenarios.flatMap [ sc |
             cg.nodes.flatMap [ n |
-                n.steps.findFirst[s|s.getScenario().getName() == sc]?.stepArguments.filter[a|a instanceof AssignmentAction].map [ a |
-                    (a as AssignmentAction).getAssignment().getName()
-                ]
+                // find the step (never null)
+                val step = n.steps.findFirst[s|s.scenario.name == sc]
+                // if stepArguments is null, fall back to empty list
+                val args = step?.stepArguments ?: #[]
+                args.filter[a|a instanceof AssignmentAction].map[a|(a as AssignmentAction).getAssignment().getName()]
             ]
         ].toSet.toList
 
