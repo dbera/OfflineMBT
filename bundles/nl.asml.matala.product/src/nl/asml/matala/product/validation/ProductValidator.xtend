@@ -194,6 +194,15 @@ class ProductValidator extends AbstractProductValidator {
     private dispatch def void preventIlligalVariableAccess(Expression expr, Set<Variable> variables, Direction direction) {
         expr.eContents.filter(Expression).forEach[preventIlligalVariableAccess(variables, direction)]
     }
+    
+    /**
+     * Name of global model should not have underscores */
+     @Check 
+     def checkBlockID(Block block){
+         if(block.name.contains("_")){
+             error("ID should not have underscores ", ProductPackage.Literals.BLOCK__NAME)
+         }
+     }
 
 /* STRANGE BUG: Output Vars are Empty. Appears in Input Vars. 
  * Not appearing as problem during product generation!
