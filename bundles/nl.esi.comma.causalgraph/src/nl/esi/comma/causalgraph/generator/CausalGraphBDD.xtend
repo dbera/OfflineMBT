@@ -21,7 +21,6 @@ import nl.esi.comma.causalgraph.causalGraph.ControlFlowEdge
 import nl.esi.comma.causalgraph.causalGraph.GraphType
 import nl.esi.comma.causalgraph.causalGraph.Node
 import nl.esi.comma.causalgraph.causalGraph.ScenarioDecl
-import nl.esi.comma.causalgraph.causalGraph.StepType
 import nl.esi.comma.expressions.expression.Expression
 import nl.esi.comma.expressions.expression.ExpressionConstantBool
 import nl.esi.comma.expressions.expression.ExpressionConstantInt
@@ -118,8 +117,7 @@ class CausalGraphBDD {
                 val kw = node.stepType.getName().toLowerCase.toFirstUpper
                 val keyword = if(kw == prevKw) "And" else kw
                 prevKw = keyword
-                val pretty = node.stepName.replaceAll("\\(.*?\\)", "").replaceAll("([a-z0-9])([A-Z])", "$1 $2").
-                    replaceAll("_", " ").trim
+                var stepName = stepNameProcessing(node.stepName)
 
                 // arguments
                 val args = step.stepArguments.filter[a|a instanceof AssignmentAction].map [ a |
@@ -127,9 +125,9 @@ class CausalGraphBDD {
                     "<" + aa.getAssignment().getName() + ">"
                 ]
                 if (!args.empty)
-                    steps.add(keyword + " " + pretty + " with " + args.join(" and "))
+                    steps.add(keyword + " " + stepName + " with " + args.join(" and "))
                 else
-                    steps.add(keyword + " " + pretty)
+                    steps.add(keyword + " " + stepName)
 
                 stepNum++
                 node = findNextNode(cg, node, sc.name, stepNum)
@@ -199,21 +197,20 @@ class CausalGraphBDD {
         while (node !== null) {
             val currentStep = num
             val step = node.steps.findFirst[s|s.getScenario().name == sc && s.stepNumber == currentStep]
-            if (node.stepType != StepType.GIVEN) {
-                val kw = node.stepType.getName().toLowerCase.toFirstUpper
-                val keyword = if(kw == prevKw) "And" else kw
-                prevKw = keyword
-                val pretty = node.stepName.replaceAll("\\(.*?\\)", "").replaceAll("([a-z0-9])([A-Z])", "$1 $2").
-                    replaceAll("_", " ").trim
-                content.append("  ").append(keyword).append(" ").append(pretty)
-                // arguments
-                val args = step.stepArguments.filter[a|a instanceof AssignmentAction].map [ a |
-                    val aa = a as AssignmentAction
-                    renderExpressionValue(aa.exp)
-                ]
-                if(!args.empty) content.append(" with ").append(args.join(" and "))
-                content.append("\n")
-            }
+
+            val kw = node.stepType.getName().toLowerCase.toFirstUpper
+            val keyword = if(kw == prevKw) "And" else kw
+            prevKw = keyword
+            var stepName = stepNameProcessing(node.stepName)
+            content.append("  ").append(keyword).append(" ").append(stepName)
+            // arguments
+            val args = step.stepArguments.filter[a|a instanceof AssignmentAction].map [ a |
+                val aa = a as AssignmentAction
+                renderExpressionValue(aa.exp)
+            ]
+            if(!args.empty) content.append(" with ").append(args.join(" and "))
+            content.append("\n")
+
             num++
             node = findNextNode(cg, node, sc, num)
         }
@@ -221,8 +218,12 @@ class CausalGraphBDD {
 
     protected def toStepDefinitions(CausalGraph cg, IFileSystemAccess2 fsa) {
         val sb = new StringBuilder
-        sb.append("using TechTalk.SpecFlow;\n")
-        sb.append("using Xunit;\n\n")
+//        sb.append("using TechTalk.SpecFlow;\n")
+//        sb.append("using Xunit;\n\n")
+        sb.append("using Reqnroll;\n")
+        sb.append("using System;\n")
+        sb.append("using Xunit;\n")
+
         sb.append("namespace GeneratedSteps\n{");
         sb.append("\n  [Binding]\n")
         sb.append("  public class ").append(cg.name).append("Steps\n")
@@ -237,24 +238,31 @@ class CausalGraphBDD {
 
         for (node : uniqueNodes) {
             val keyword = node.stepType.getName() // Given, When, Then
-            var regexPattern = node.stepName
-            val methodName = regexPattern.replaceAll('\\(.*?\\)', '')
+            // var regexPattern = node.stepName
+            var stepName = stepNameProcessing(node.stepName)
+            val methodName = stepName.replaceAll(" ", "")
 
-            // Build the regex pattern: replace each (type name) in original stepName
+            var paraGroup = new ArrayList<String>;
+            // 2) Replace each (type name) with the appropriate capture group
             for (param : node.stepParameters) {
-                // Determine literal placeholder in step text
-                val placeholder = "(" + param.getType().getType().getName() + " " + param.name + ")"
-                // Select capture group based on type
-                val group = if (param.getType().getType().getName().equalsIgnoreCase("string"))
-                        '"(.*)"'
-                    else
-                        '(.*)'
-                // Replace placeholder with regex group
-                regexPattern = regexPattern.replace(placeholder, group)
+                val typeName = param.type.type.name
+
+                // Select capture group based on type (strings are quoted)
+                val group = if (typeName.equalsIgnoreCase("string")) {
+                        "\"(.*)\""
+                    } else {
+                        "(.*)"
+                    }
+
+                paraGroup.add(group)
             }
 
-            regexPattern = regexPattern.replaceAll("([a-z0-9])([A-Z])", "$1 $2")
-            sb.append("    [").append(keyword).append("(@\"^").append(regexPattern).append("$\")]").append("\n");
+            if (!paraGroup.empty)
+                sb.append("    [").append(keyword.toLowerCase.toFirstUpper).append("(@\"^").append(stepName).append(
+                    " with ").append(paraGroup.join(" and ")).append("$\")]").append("\n")
+            else
+                sb.append("    [").append(keyword.toLowerCase.toFirstUpper).append("(@\"^").append(stepName).append(
+                    "$\")]").append("\n")
 
             // parameters list
             val params = new ArrayList<String>
@@ -272,8 +280,12 @@ class CausalGraphBDD {
 
         sb.append("  }\n")
         sb.append("}\n")
-
         fsa.generateFile(cg.name + "Steps.cs", sb.toString)
+    }
+
+    protected def stepNameProcessing(String rawStepName) {
+        return rawStepName.replaceAll("\\([^)]*\\)", "").replaceAll("([a-z0-9])([A-Z])", "$1 $2").replaceAll("_", " ").
+            trim
     }
 
     protected def escapeRegex(String text) {
