@@ -17,12 +17,17 @@ import java.util.HashSet
 import java.util.Map
 import nl.asml.matala.product.product.Product
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractTestDefinition
+import nl.esi.comma.abstracttestspecification.abstractTestspecification.AssertStep
+import nl.esi.comma.abstracttestspecification.abstractTestspecification.AssertionStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.Binding
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.ExecutableStep
-import nl.esi.comma.abstracttestspecification.abstractTestspecification.AssertionStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.RunStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.TSMain
 import nl.esi.comma.assertthat.assertThat.DataAssertionItem
+import nl.esi.comma.expressions.expression.ExpressionVariable
+import nl.esi.comma.expressions.services.ExpressionGrammarAccess
+import nl.esi.comma.types.utilities.EcoreUtil3
+import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
@@ -33,13 +38,16 @@ import static extension nl.esi.comma.types.utilities.EcoreUtil3.*
 
 class FromAbstractToConcrete extends AbstractGenerator {
 
-    Map<String, String> rename = new HashMap<String, String>()
-    Map<String, String> args = new HashMap<String, String>()
+    val ExpressionGrammarAccess expressionGrammarAccess
+    val Map<String, String> rename
+    val Map<String, String> args
 
-    new() {
+    new(ExpressionGrammarAccess expressionGrammarAccess) {
+        this(expressionGrammarAccess, new HashMap<String, String>(), new HashMap<String, String>())
     }
 
-    new(Map<String, String> rename, Map<String, String> params) {
+    new(ExpressionGrammarAccess expressionGrammarAccess, Map<String, String> rename, Map<String, String> params) {
+        this.expressionGrammarAccess = expressionGrammarAccess;
         this.rename = rename
         this.args = params
     }
@@ -60,6 +68,22 @@ class FromAbstractToConcrete extends AbstractGenerator {
         fsa.generateFile("reference.kvp", (new RefKVPGenerator()).generateRefKVP(atd))
         fsa.generateFile("vfd.xml", (new VFDXMLGenerator(this.args, this.rename)).generateXMLFromSUTVars(atd))
  
+        // FIXME: START: Example code, please remove!!!
+        val replacer = [ EObject semanticElement, EObject grammarElement |
+            return switch (grammarElement) {
+                case expressionGrammarAccess.expressionLevel9Access.expressionVariableParserRuleCall_6: {
+                    val exprVar = semanticElement as ExpressionVariable
+                    return 'prefixed_' + exprVar.variable.name
+                }
+            }
+        ]
+
+        fsa.generateFile(res.URI.trimFileExtension.appendFileExtension('txt').lastSegment, '''
+            «FOR block : res.allContents.filter(AssertStep).toIterable.flatMap[ce]»
+                «EcoreUtil3.serialize(block, replacer)»
+            «ENDFOR»
+        ''')
+        // FIXME: END: Example code, please remove!!!
     }
 
     def private generateConcreteTest(AbstractTestDefinition atd) '''
