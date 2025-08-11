@@ -15,12 +15,10 @@
  */
 package nl.esi.comma.project.standard.generator
 
-import jakarta.inject.Inject
 import java.util.HashMap
 import nl.asml.matala.product.generator.ProductGenerator
 import nl.asml.matala.product.product.Product
 import nl.esi.comma.abstracttestspecification.generator.to.concrete.FromAbstractToConcrete
-import nl.esi.comma.expressions.services.ExpressionGrammarAccess
 import nl.esi.comma.project.standard.standardProject.OfflineGenerationBlock
 import nl.esi.comma.project.standard.standardProject.OfflineGenerationTarget
 import nl.esi.comma.project.standard.standardProject.Project
@@ -45,9 +43,6 @@ import static extension org.eclipse.xtext.EcoreUtil2.*
  * See https://www.eclipse.org/Xtext/documentation/303_runtime_concepts.html#code-generation
  */
 class StandardProjectGenerator extends AbstractGenerator {
-    @Inject
-    var ExpressionGrammarAccess expressionGrammarAccess
-
     override doGenerate(Resource res, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
         for (project : res.contents.filter(Project)) {
             for (task : project.offlineBlocks) {
@@ -117,7 +112,7 @@ class StandardProjectGenerator extends AbstractGenerator {
 
             val renamingRules = task.renamingRules !== null? createPropertiesMap(task.renamingRules): new HashMap()
             val generatorParams = task.generatorParams !== null? createPropertiesMap(task.generatorParams): new HashMap()
-            val fromAbstractToConcreteGen = new FromAbstractToConcrete(expressionGrammarAccess, renamingRules, generatorParams)
+            val fromAbstractToConcreteGen = new FromAbstractToConcrete(renamingRules, generatorParams)
             fromAbstractToConcreteGen.doGenerate(absTspecRes, conTspecFsa, ctx)
 
             val conTspecFileName = absTspecFileName.replaceAll('\\.atspec$','.tspec')

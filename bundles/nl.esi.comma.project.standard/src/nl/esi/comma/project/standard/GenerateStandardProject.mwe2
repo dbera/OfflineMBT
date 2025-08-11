@@ -43,7 +43,6 @@ Workflow {
 			name = "nl.esi.comma.project.standard.StandardProject"
 			fileExtensions = "prj"
 			
-            referencedResource = "platform:/resource/nl.esi.comma.expressions/model/generated/Expression.genmodel"
 			referencedResource = "platform:/resource/nl.esi.comma.signature/model/generated/InterfaceSignature.genmodel"
 
 			serializer = {

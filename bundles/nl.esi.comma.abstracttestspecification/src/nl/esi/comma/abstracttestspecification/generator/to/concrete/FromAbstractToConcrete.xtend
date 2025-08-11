@@ -38,16 +38,14 @@ import static extension nl.esi.comma.types.utilities.EcoreUtil3.*
 
 class FromAbstractToConcrete extends AbstractGenerator {
 
-    val ExpressionGrammarAccess expressionGrammarAccess
     val Map<String, String> rename
     val Map<String, String> args
 
-    new(ExpressionGrammarAccess expressionGrammarAccess) {
-        this(expressionGrammarAccess, new HashMap<String, String>(), new HashMap<String, String>())
+    new() {
+        this(new HashMap<String, String>(), new HashMap<String, String>())
     }
 
-    new(ExpressionGrammarAccess expressionGrammarAccess, Map<String, String> rename, Map<String, String> params) {
-        this.expressionGrammarAccess = expressionGrammarAccess;
+    new(Map<String, String> rename, Map<String, String> params) {
         this.rename = rename
         this.args = params
     }
@@ -58,20 +56,14 @@ class FromAbstractToConcrete extends AbstractGenerator {
             throw new Exception('No abstract tspec found in resource: ' + res.URI)
         }
 
-        val typesImports = getTypesImports(res)
-        for (sys : atd.systems) {
-            fsa.generateFile('''types/«sys».types''', atd.generateTypesFile(sys, typesImports))
-            fsa.generateFile('''parameters/«sys».params''', atd.generateParamsFile(sys))
-        }
-        val conTspecFileName = res.URI.lastSegment.replaceAll('\\.atspec$','.tspec')
-        fsa.generateFile(conTspecFileName, atd.generateConcreteTest())
-        fsa.generateFile("reference.kvp", (new RefKVPGenerator()).generateRefKVP(atd))
-        fsa.generateFile("vfd.xml", (new VFDXMLGenerator(this.args, this.rename)).generateXMLFromSUTVars(atd))
- 
         // FIXME: START: Example code, please remove!!!
         val replacer = [ EObject semanticElement, EObject grammarElement |
+            val gaExpression = EcoreUtil3.getService(semanticElement, ExpressionGrammarAccess)
+            if (gaExpression === null) {
+                return null
+            }
             return switch (grammarElement) {
-                case expressionGrammarAccess.expressionLevel9Access.expressionVariableParserRuleCall_6: {
+                case gaExpression.expressionLevel9Access.expressionVariableParserRuleCall_6: {
                     val exprVar = semanticElement as ExpressionVariable
                     return 'prefixed_' + exprVar.variable.name
                 }
@@ -84,6 +76,17 @@ class FromAbstractToConcrete extends AbstractGenerator {
             «ENDFOR»
         ''')
         // FIXME: END: Example code, please remove!!!
+
+        val typesImports = getTypesImports(res)
+        for (sys : atd.systems) {
+            fsa.generateFile('''types/«sys».types''', atd.generateTypesFile(sys, typesImports))
+            fsa.generateFile('''parameters/«sys».params''', atd.generateParamsFile(sys))
+        }
+        val conTspecFileName = res.URI.lastSegment.replaceAll('\\.atspec$','.tspec')
+        fsa.generateFile(conTspecFileName, atd.generateConcreteTest())
+        fsa.generateFile("reference.kvp", (new RefKVPGenerator()).generateRefKVP(atd))
+        fsa.generateFile("vfd.xml", (new VFDXMLGenerator(this.args, this.rename)).generateXMLFromSUTVars(atd))
+ 
     }
 
     def private generateConcreteTest(AbstractTestDefinition atd) '''

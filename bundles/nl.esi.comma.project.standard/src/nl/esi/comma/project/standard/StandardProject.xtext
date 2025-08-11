@@ -10,7 +10,7 @@
  *
  * SPDX-License-Identifier: MIT
  */
-grammar nl.esi.comma.project.standard.StandardProject with nl.esi.comma.expressions.Expression
+grammar nl.esi.comma.project.standard.StandardProject with nl.esi.comma.types.Types
 
 generate standardProject "http://www.esi.nl/comma/project/standard/StandardProject"
 

@@ -119,6 +119,16 @@ public class EcoreUtil3 extends EcoreUtil2 {
 		return serializer.serialize(eObject, opt.getOptions()).trim();
 	}
 	
+	public static <T> T getService(EObject eObject, Class<T> serviceClazz) {
+		if (eObject == null) {
+			return null;
+		}
+		if (eObject.eResource() instanceof XtextResource xtextResource) {
+			return xtextResource.getResourceServiceProvider().get(serviceClazz);
+		}
+		return null;
+	}
+
 	/**
 	 * Serializes the {@code eObject} into text, allowing to replace parts of
 	 * descendant {@link EObject}s by means of providing a {@code replacer}. The
