@@ -15,7 +15,6 @@
  */
 package nl.asml.matala.product.generator
 
-import jakarta.inject.Inject
 import java.util.ArrayList
 import java.util.HashMap
 import java.util.List
@@ -27,15 +26,11 @@ import nl.asml.matala.product.product.Product
 import nl.asml.matala.product.product.RefConstraint
 import nl.asml.matala.product.product.SymbConstraint
 import nl.asml.matala.product.product.VarRef
-import nl.esi.comma.assertthat.assertThat.AssertThatBlock
-import nl.esi.comma.expressions.services.ExpressionGrammarAccess
 import nl.esi.comma.types.generator.TypesZ3Generator
 import nl.esi.comma.types.types.RecordTypeDecl
 import nl.esi.comma.types.types.SimpleTypeDecl
 import nl.esi.comma.types.types.TypeDecl
 import nl.esi.comma.types.types.TypesModel
-import nl.esi.comma.types.utilities.EcoreUtil3
-import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.generator.AbstractGenerator
@@ -43,33 +38,15 @@ import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
 
 import static extension nl.esi.comma.types.utilities.EcoreUtil3.serialize
-import nl.esi.comma.expressions.expression.ExpressionVariable
 
 /**
  * Generates code from your *.ps model files on save.
  */
  
 class ProductGenerator extends AbstractGenerator {
-    @Inject
-    var ExpressionGrammarAccess expressionGrammarAccess;
 	
 	override void doGenerate(Resource res, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
-//	    res.contents.filter(Product).reject[specification === null].forEach[generatePetriNetAndTestGeneration(res, fsa)]
-
-        val replacer = [ EObject semanticElement, EObject grammarElement |
-            return switch (grammarElement) {
-                case expressionGrammarAccess.expressionLevel9Access.expressionVariableParserRuleCall_6: {
-                    val exprVar = semanticElement as ExpressionVariable
-                    return 'prefixed_' + exprVar.variable.name
-                }
-            }
-        ]
-
-        fsa.generateFile(res.URI.trimFileExtension.appendFileExtension('txt').lastSegment, '''
-            «FOR block : res.allContents.filter(AssertThatBlock).toIterable»
-                «EcoreUtil3.serialize(block, replacer)»
-            «ENDFOR»
-        ''')
+	    res.contents.filter(Product).reject[specification === null].forEach[generatePetriNetAndTestGeneration(res, fsa)]
     }
 	
 	def generatePetriNetAndTestGeneration(Product prod, Resource resource, IFileSystemAccess2 fsa) {
