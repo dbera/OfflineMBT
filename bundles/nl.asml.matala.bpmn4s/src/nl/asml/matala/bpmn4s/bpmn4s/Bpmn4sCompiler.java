@@ -512,7 +512,9 @@ public class Bpmn4sCompiler{
 					if (model.isComposeTask(node.getId())) {
 						stepConf = String.format(" step-type \"%s\" action-type COMPOSE", node.getStepType());
 					} else if(model.isAssertTask(node.getId())) {
-						stepConf = String.format(" step-type \"%s\" action-type ASSERT", node.getStepType());
+						//stepConf = String.format(" step-type \"%s\" action-type ASSERT", node.getStepType());
+						// TODO: hotfix to be removed once actions of type assertion are enforced to have a type 
+						stepConf = String.format(" step-type \"%s\" action-type ASSERT", sanitize(repr(node)));
 					} else if(model.isRunTask(node.getId())) {
 						stepConf = String.format(" step-type \"%s\" action-type RUN", node.getStepType());
 					}
