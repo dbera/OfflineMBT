@@ -40,7 +40,7 @@ class CausalGraphBDD {
      */
     def generateStepDefinitions(CausalGraph cg, IFileSystemAccess2 fsa) {
         if (cg.type == GraphType.BDDUCG)
-            toStepDefinitions(cg, fsa)
+            toCSharpStepDefinitions(cg, fsa)
     }
 
     /**
@@ -203,20 +203,38 @@ class CausalGraphBDD {
             prevKw = keyword
             var stepName = stepNameProcessing(node.stepName)
             content.append("  ").append(keyword).append(" ").append(stepName)
-            // arguments
-            val args = step.stepArguments.filter[a|a instanceof AssignmentAction].map [ a |
-                val aa = a as AssignmentAction
-                renderExpressionValue(aa.exp)
+            // 1) Collect parameter names (in order)
+            val parameterNames = node.stepParameters.map[p|p.name].toList
+
+            // 2) Gather only AssignmentAction arguments (null-safe on stepArguments)
+            val assignmentArgs = (step?.stepArguments ?: #[]).filter[a|a instanceof AssignmentAction].map [ a |
+                a as AssignmentAction
             ]
-            if(!args.empty) content.append(" with ").append(args.join(" and "))
-            content.append("\n")
+
+            // 3) Build an ordered argMap aligned to parameterNames
+            val argMap = new LinkedHashMap<String, String>
+            for (pName : parameterNames) {
+                val match = assignmentArgs.findFirst[aa|argName(aa) == pName]
+                argMap.put(pName, if(match !== null) renderExpressionValue(match.exp) else "")
+            }
+
+            if (!argMap.empty) {
+                content.append(" with ").append(argMap.values.join(" and ")).append("\n")
+            } else {
+                content.append("\n")
+            }
 
             num++
             node = findNextNode(cg, node, sc, num)
         }
     }
 
-    protected def toStepDefinitions(CausalGraph cg, IFileSystemAccess2 fsa) {
+    // Helper to get the argument's name regardless of model variant
+    def String argName(AssignmentAction aa) {
+        if(aa.assignment !== null) aa.assignment.name else ""
+    }
+
+    protected def toCSharpStepDefinitions(CausalGraph cg, IFileSystemAccess2 fsa) {
         val sb = new StringBuilder
 //        sb.append("using TechTalk.SpecFlow;\n")
 //        sb.append("using Xunit;\n\n")
@@ -243,7 +261,7 @@ class CausalGraphBDD {
             val methodName = stepName.replaceAll(" ", "")
 
             var paraGroup = new ArrayList<String>;
-            // 2) Replace each (type name) with the appropriate capture group
+            // Replace each (type name) with the appropriate capture group
             for (param : node.stepParameters) {
                 val typeName = param.type.type.name
 
