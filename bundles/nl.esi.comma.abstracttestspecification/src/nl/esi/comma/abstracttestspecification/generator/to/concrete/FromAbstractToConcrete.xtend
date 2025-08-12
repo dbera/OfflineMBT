@@ -97,7 +97,19 @@ class FromAbstractToConcrete extends AbstractGenerator {
                 «step.stepType.get(0)» step_«step.name»
             «ENDFOR»
         «ENDFOR»
+        «var sutdefs = extractSUTVars(atd)»
+        «IF !sutdefs.empty»
+        sut-def-list : «JsonHelper.jsonElement(sutdefs)»
+        «ENDIF»
     '''
+    
+    def String printSutDefList(AbstractTestDefinition atd) {
+        var sutdefs = extractSUTVars(atd)
+        if (sutdefs.empty) return ''
+        return '''
+            sut-def-list : «JsonHelper.jsonElement(sutdefs)»
+        '''
+    }
     
     def printStep(ExecutableStep step) {
         return switch (step) {
