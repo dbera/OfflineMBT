@@ -14,7 +14,9 @@ package nl.esi.comma.abstracttestspecification.generator.to.concrete
 
 import java.util.HashMap
 import java.util.Map
+import java.util.List
 import nl.esi.comma.assertthat.assertThat.JsonArray
+import nl.esi.comma.assertthat.assertThat.JsonCollection
 import nl.esi.comma.assertthat.assertThat.JsonMember
 import nl.esi.comma.assertthat.assertThat.JsonObject
 import nl.esi.comma.assertthat.assertThat.JsonValue
@@ -81,6 +83,15 @@ class JsonHelper {
         return '''
         [
             «FOR element : elem.values SEPARATOR ","»
+                «jsonElement(element)»
+            «ENDFOR»
+        ]'''
+    }
+
+    def static String jsonElement(List<JsonCollection> list) {
+        return '''
+        [
+            «FOR element : list SEPARATOR ","»
                 «jsonElement(element)»
             «ENDFOR»
         ]'''

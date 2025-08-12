@@ -177,11 +177,11 @@ class RefKVPGenerator {
     }
     
     def String getScriptId(GenericScriptBlock block, AssertionStep assertStep) {
-        return getDatacheckId(block.assignment.name,assertStep)
+        return getDatacheckId(block.name,assertStep)
     }
     
     def String getScriptId(AssertThatBlock block, AssertionStep assertStep) {
-        return getDatacheckId(block.identifier,assertStep)
+        return getDatacheckId(block.name,assertStep)
     }
     
     def getDatacheckId(String label, AssertionStep assertStep) {

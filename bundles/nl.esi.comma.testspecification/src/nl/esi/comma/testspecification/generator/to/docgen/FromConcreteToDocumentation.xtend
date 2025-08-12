@@ -24,6 +24,7 @@ import nl.esi.comma.testspecification.generator.TestSpecificationInstance
 import nl.esi.comma.testspecification.generator.utils.Step
 import nl.esi.comma.testspecification.testspecification.TSMain
 import nl.esi.comma.testspecification.testspecification.TestDefinition
+import nl.esi.comma.testspecification.testspecification.RunStep
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.generator.AbstractGenerator
@@ -236,10 +237,10 @@ class FromConcreteToDocumentation extends AbstractGenerator
 	def getStepSequence(TestDefinition td, 
 		HashMap<String,List<String>> mapStepSeqToSteps, List<String> featureList
 	) {
-		var listStepSequence = new ArrayList<nl.esi.comma.testspecification.testspecification.Step>
+		var listStepSequence = new ArrayList<RunStep>
 		if(td.testSeq.empty) {
 			for(ss : td.stepSeq) {
-				for(step : ss.step) {
+				for(step : ss.step.filter(RunStep)) {
 					if(isConfigurationEnabled(featureList, step.featuresForStep)) 
 						listStepSequence.add(step)
 				}
@@ -248,7 +249,7 @@ class FromConcreteToDocumentation extends AbstractGenerator
 		else {
 			for(ts : td.testSeq) {
 				for(ss : ts.stepSeqRef) {
-					for(step : ss.step) {
+					for(step : ss.step.filter(RunStep)) {
 						if(isConfigurationEnabled(featureList, step.featuresForStep)) {
 							listStepSequence.add(step)
 							addToMapStepSeqToSteps(ss.name, step.inputVar.name, mapStepSeqToSteps)
