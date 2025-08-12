@@ -32,9 +32,12 @@ import nl.esi.comma.expressions.expression.MapTypeConstructor
 import nl.esi.comma.expressions.expression.Variable
 import nl.esi.comma.types.types.Type
 import nl.esi.comma.types.types.TypeDecl
+import nl.esi.comma.types.types.TypesPackage
 import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.validation.Check
-import nl.esi.comma.types.types.TypesPackage
+
+import static extension nl.esi.comma.causalgraph.utilities.CausalGraphQueries.*
+import nl.esi.comma.causalgraph.causalGraph.StepType
 
 /**
  * This class contains custom validation rules. 
@@ -197,13 +200,47 @@ class CausalGraphValidator extends AbstractCausalGraphValidator {
     }
 
     @Check
-    def checkDataFlow(DataReference _dataRef) {
+    def checkDataFlow(DataFlowEdge _edge) {
+        val scenarios = newHashSet
+        _edge.dataReferences.forEach[dataRef, index |
+            if (!scenarios.add(dataRef.scenario)) {
+                error('Scenario should be unique', CausalGraphPackage.Literals.DATA_FLOW_EDGE__DATA_REFERENCES, index)
+            }
+        ]
+    }
+
+    @Check
+    def checkDataReference(DataReference _dataRef) {
         val dataFlow = _dataRef.eContainer as DataFlowEdge
         val sourceHasScenario = dataFlow.source.steps.exists[scenario == _dataRef.scenario]
         val targetHasScenario = dataFlow.target.steps.exists[scenario == _dataRef.scenario]
 
         if (!sourceHasScenario || !targetHasScenario) {
             error('''No data flow possible for scenario «_dataRef.scenario.name» between these nodes''', null, DATA_FLOW_SUPERFLUOUS)
+        }
+    }
+
+    @Check
+    def checkDuplicateEdges(CausalGraph _graph) {
+        val controlFlowEdges = newHashSet
+        for (edge : _graph.edges.filter(ControlFlowEdge)) {
+            if (!controlFlowEdges.add(edge.source -> edge.target)) {
+                error('Duplicate control flow', edge, null, CONTROL_FLOW_SUPERFLUOUS, 'control flow')
+            }
+        }
+
+        val dataFlowEdges = newHashSet
+        for (edge : _graph.edges.filter(DataFlowEdge)) {
+            if (!dataFlowEdges.add(edge.source -> edge.target)) {
+                error('Duplicate data flow', edge, null)
+            }
+        }
+    }
+
+    @Check
+    def checkStepType(Node _node) {
+        if (_node.graph.type != GraphType.CG && _node.stepType == StepType::NONE) {
+            error('Step-type is required and should not be None', CausalGraphPackage.Literals.NODE__STEP_TYPE)
         }
     }
 }

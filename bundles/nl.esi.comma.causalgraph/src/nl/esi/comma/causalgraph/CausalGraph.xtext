@@ -41,10 +41,10 @@ enum GraphType:
 ;
 
 enum StepType:
+    none = 'None' |
     given = 'Given' |
     when = 'When' |
-    then = 'Then' 
-    // | and = 'And'
+    then = 'Then'
 ;
 
 CausalGraph:
