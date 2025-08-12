@@ -26,6 +26,7 @@ import nl.esi.comma.types.types.VectorTypeConstructor
 
 import static extension nl.esi.comma.abstracttestspecification.generator.utils.Utils.*
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AssertionStep
+import nl.esi.comma.expressions.expression.ExpressionVariable
 
 class ConcreteExpressionHandler {
     def prepareStepInputExpressions(RunStep rstep, Iterable<ComposeStep> composeSteps) {
@@ -43,9 +44,9 @@ class ConcreteExpressionHandler {
         prepareStepInputExpressions(astep, runSteps, suppressVars);
     }
 
-    def private prepareStepInputExpressions(AssertionStep rstep, Iterable<RunStep> composeSteps, Set<String> suppressVars) '''
-        «FOR output : composeSteps.flatMap[output].reject[suppressVars.contains(rstep.inputVar + '.' + it.name.name)]»
-            «printVariable(rstep.inputVar + '.' + output.name.name, output.name.type, output.jsonvals, suppressVars)»
+    def private prepareStepInputExpressions(AssertionStep astep, Iterable<RunStep> runSteps, Set<String> suppressVars) '''
+        «FOR output : runSteps.flatMap[output].reject[suppressVars.contains(astep.inputVar + '.' + it.name.name)]»
+            «printVariable(astep.inputVar + '.' + output.name.name, output.name.type, output.jsonvals, suppressVars)»
         «ENDFOR»
     '''
 
@@ -104,4 +105,15 @@ class ConcreteExpressionHandler {
             «ENDFOR»
         }
     '''
+
+    // Prepend the Run Step name to the ExpressionVariable name 
+    def prepareAssertionStepExpressions(AssertionStep astep, ExpressionVariable variable) {
+        val var_name = variable.variable.name
+        var rstep = astep.stepRef                                // in the (abstract) AssertionStep 
+                         .findFirst[                             // look for the (abstract) Run Step
+                             it.refData.exists[name == var_name] // from which @variable
+                         ].refStep                               // is consumed-from
+        var infix = rstep.name // get name of run step from which @variable is consumed from
+        return 'step_'+ infix + '.output.'+ var_name
+    }
 }
