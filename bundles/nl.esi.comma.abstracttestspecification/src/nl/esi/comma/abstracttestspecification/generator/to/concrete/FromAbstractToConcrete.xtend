@@ -56,27 +56,6 @@ class FromAbstractToConcrete extends AbstractGenerator {
             throw new Exception('No abstract tspec found in resource: ' + res.URI)
         }
 
-        // FIXME: START: Example code, please remove!!!
-        val replacer = [ EObject semanticElement, EObject grammarElement |
-            val gaExpression = EcoreUtil3.getService(semanticElement, ExpressionGrammarAccess)
-            if (gaExpression === null) {
-                return null
-            }
-            return switch (grammarElement) {
-                case gaExpression.expressionLevel9Access.expressionVariableParserRuleCall_6: {
-                    val exprVar = semanticElement as ExpressionVariable
-                    return 'prefixed_' + exprVar.variable.name
-                }
-            }
-        ]
-
-        fsa.generateFile(res.URI.trimFileExtension.appendFileExtension('txt').lastSegment, '''
-            «FOR block : res.allContents.filter(AssertStep).toIterable.flatMap[ce]»
-                «EcoreUtil3.serialize(block, replacer)»
-            «ENDFOR»
-        ''')
-        // FIXME: END: Example code, please remove!!!
-
         val typesImports = getTypesImports(res)
         for (sys : atd.systems) {
             fsa.generateFile('''types/«sys».types''', atd.generateTypesFile(sys, typesImports))
@@ -138,7 +117,6 @@ class FromAbstractToConcrete extends AbstractGenerator {
     '''
 
     def printStep(AssertionStep step) '''
-        /*
         assertion-id    step_«step.name»
         assertion-type  «step.stepType.get(0)»
         assertion-input «step.system»Input
@@ -149,7 +127,6 @@ class FromAbstractToConcrete extends AbstractGenerator {
             ref-to-step-output
                 «_printOutputs_(step)»
         «ENDIF»
-        */
     '''
     
     def _printAssertions(AssertionStep step) '''
@@ -165,7 +142,23 @@ class FromAbstractToConcrete extends AbstractGenerator {
     '''
     
     def printDai(DataAssertionItem item, AssertionStep step) {
-        return item.serialize
+        
+        val replacer = [ EObject semanticElement, EObject grammarElement |
+            val gaExpression = EcoreUtil3.getService(semanticElement, ExpressionGrammarAccess)
+            if (gaExpression === null) {
+                return null
+            }
+            var abs_assert = step
+            var cexpr_handler = new ConcreteExpressionHandler()
+            return switch (grammarElement) {
+                case gaExpression.expressionLevel9Access.expressionVariableParserRuleCall_6: {
+                    val exprVar = semanticElement as ExpressionVariable
+                    return cexpr_handler.prepareAssertionStepExpressions(abs_assert, exprVar)
+                }
+            }
+        ]
+        var dai_seri = EcoreUtil3.serialize(item, replacer)
+        return dai_seri
     }
 
     def private _printOutputs_(RunStep rstep) {
