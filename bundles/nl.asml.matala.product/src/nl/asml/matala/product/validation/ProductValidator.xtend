@@ -35,6 +35,7 @@ import nl.esi.comma.types.types.TypesPackage
 import org.eclipse.emf.common.util.URI
 import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.validation.Check
+import nl.asml.matala.product.product.ActionType
 
 /**
  * This class contains custom validation rules. 
@@ -202,9 +203,9 @@ class ProductValidator extends AbstractProductValidator {
  
  @Check
  def checkRunStep(Update update){
-     if (update.actionType.getName.equals("RUN")){
+     if (update.actionType == ActionType::RUN || update.actionType == ActionType::ASSERT){
         if(update.stepType.isEmpty || update.stepType == "null"){
-            error("Action Type RUN must have a step-tyep defined " + update.stepType,
+            error("Action-type RUN must have a step-tyep defined " + update.stepType,
                 ProductPackage.Literals.UPDATE__STEP_TYPE) 
         }
     }
