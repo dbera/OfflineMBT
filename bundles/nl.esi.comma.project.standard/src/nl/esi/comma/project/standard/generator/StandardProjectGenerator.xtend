@@ -124,7 +124,8 @@ class StandardProjectGenerator extends AbstractGenerator {
             if (task.target == OfflineGenerationTarget.FAST) {
                 // Generate FAST testcases
                 val fastFsa = fsa.createFolderAccess('FAST')
-                (new FromConcreteToFast()).doGenerate(conTspecRes, fastFsa, ctx)
+                val fromConcreteToFastGen = new FromConcreteToFast(renamingRules, generatorParams)
+                fromConcreteToFastGen.doGenerate(conTspecRes, fastFsa, ctx)
             }
         }
     }
