@@ -17,7 +17,6 @@ import java.util.HashSet
 import java.util.Map
 import nl.asml.matala.product.product.Product
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractTestDefinition
-import nl.esi.comma.abstracttestspecification.abstractTestspecification.AssertStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AssertionStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.Binding
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.ExecutableStep
@@ -163,7 +162,7 @@ class FromAbstractToConcrete extends AbstractGenerator {
             var abs_assert = step
             var cexpr_handler = new ConcreteExpressionHandler()
             return switch (grammarElement) {
-                case gaExpression.expressionLevel9Access.expressionVariableParserRuleCall_6: {
+                case gaExpression.expressionLevel9Access.expressionVariableParserRuleCall_7: {
                     val exprVar = semanticElement as ExpressionVariable
                     return cexpr_handler.prepareAssertionStepExpressions(abs_assert, exprVar)
                 }

@@ -27,6 +27,7 @@ import nl.esi.comma.expressions.expression.ExpressionConstantString;
 import nl.esi.comma.expressions.expression.ExpressionEnumLiteral;
 import nl.esi.comma.expressions.expression.ExpressionMapRW;
 import nl.esi.comma.expressions.expression.ExpressionMinus;
+import nl.esi.comma.expressions.expression.ExpressionNullLiteral;
 //import nl.esi.comma.expressions.expression.ExpressionMinus;
 import nl.esi.comma.expressions.expression.ExpressionPlus;
 import nl.esi.comma.expressions.expression.ExpressionRecordAccess;
@@ -67,6 +68,8 @@ public class AssertionsHelper {
 	        }
 			EnumTypeDecl e_type = e.getType();
 	        return Integer.toString(e_type.getLiterals().indexOf(e_lite));
+		} else if (expression instanceof ExpressionNullLiteral) {
+			return "null";
 		} else if (expression instanceof ExpressionConstantBool e) {
 			return e.isValue() ? "True" : "False";
 		} else if (expression instanceof ExpressionMinus e) {

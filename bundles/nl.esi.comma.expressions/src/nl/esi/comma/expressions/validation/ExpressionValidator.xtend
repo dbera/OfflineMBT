@@ -28,6 +28,7 @@ import nl.esi.comma.expressions.expression.ExpressionConstantString
 import nl.esi.comma.expressions.expression.ExpressionDivision
 import nl.esi.comma.expressions.expression.ExpressionEnumLiteral
 import nl.esi.comma.expressions.expression.ExpressionEqual
+import nl.esi.comma.expressions.expression.ExpressionFnCall
 import nl.esi.comma.expressions.expression.ExpressionFunctionCall
 import nl.esi.comma.expressions.expression.ExpressionGeq
 import nl.esi.comma.expressions.expression.ExpressionGreater
@@ -42,6 +43,7 @@ import nl.esi.comma.expressions.expression.ExpressionModulo
 import nl.esi.comma.expressions.expression.ExpressionMultiply
 import nl.esi.comma.expressions.expression.ExpressionNEqual
 import nl.esi.comma.expressions.expression.ExpressionNot
+import nl.esi.comma.expressions.expression.ExpressionNullLiteral
 import nl.esi.comma.expressions.expression.ExpressionOr
 import nl.esi.comma.expressions.expression.ExpressionPackage
 import nl.esi.comma.expressions.expression.ExpressionPlus
@@ -71,8 +73,6 @@ import org.eclipse.xtext.scoping.IScopeProvider
 import org.eclipse.xtext.validation.Check
 
 import static extension nl.esi.comma.types.utilities.TypeUtilities.*
-import nl.esi.comma.expressions.expression.ExpressionFnCall
-import static nl.esi.comma.types.utilities.TypeUtilities.subTypeOf
 
 /*
  * This class mainly captures the ComMA type system for expressions. Constraints are not formulated
@@ -145,6 +145,7 @@ class ExpressionValidator extends AbstractExpressionValidator {
 			ExpressionConstantString : stringType
 			ExpressionBracket : e.sub?.typeOf
 			ExpressionEnumLiteral : e.type
+            ExpressionNullLiteral : anyType
 			ExpressionRecord : e.type
 			ExpressionRecordAccess : e.field?.type?.typeObject
 			ExpressionBulkData : bulkdataType
