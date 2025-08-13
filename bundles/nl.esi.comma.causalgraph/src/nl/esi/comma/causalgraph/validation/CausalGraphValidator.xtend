@@ -243,4 +243,20 @@ class CausalGraphValidator extends AbstractCausalGraphValidator {
             error('Step-type is required and should not be None', CausalGraphPackage.Literals.NODE__STEP_TYPE)
         }
     }
+
+    @Check
+    def checkNodeFunction(Node _node) {
+        switch (_node.graph.type) {
+            case GraphType.RCG,
+            case GraphType.UCG: {
+                if (_node.stepType == StepType::WHEN && !_node.function) {
+                    error('''All when nodes in a «_node.graph.type.literal» should be functions''',
+                        CausalGraphPackage.Literals.NODE__FUNCTION)
+                }
+            }
+            default: { 
+                // Empty
+            }
+        }
+    }
 }
