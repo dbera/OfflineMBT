@@ -12,7 +12,11 @@
  */
 package nl.esi.comma.types.utilities;
 
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.eclipse.emf.common.CommonPlugin;
@@ -25,10 +29,13 @@ import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.util.Diagnostician;
 import org.eclipse.emf.ecore.util.EObjectValidator;
 import org.eclipse.xtext.EcoreUtil2;
+import org.eclipse.xtext.IGrammarAccess;
+import org.eclipse.xtext.nodemodel.BidiTreeIterable;
 import org.eclipse.xtext.nodemodel.INode;
 import org.eclipse.xtext.resource.SaveOptions;
 import org.eclipse.xtext.resource.XtextResource;
 import org.eclipse.xtext.serializer.ISerializer;
+import org.eclipse.xtext.util.ITextRegion;
 
 import com.google.inject.Guice;
 import com.google.inject.Module;
@@ -110,6 +117,84 @@ public class EcoreUtil3 extends EcoreUtil2 {
 			opt.format();
 		}
 		return serializer.serialize(eObject, opt.getOptions()).trim();
+	}
+	
+	public static <T> T getService(EObject eObject, Class<T> serviceClazz) {
+		if (eObject == null) {
+			return null;
+		}
+		if (eObject.eResource() instanceof XtextResource xtextResource) {
+			return xtextResource.getResourceServiceProvider().get(serviceClazz);
+		}
+		return null;
+	}
+
+	/**
+	 * Serializes the {@code eObject} into text, allowing to replace parts of
+	 * descendant {@link EObject}s by means of providing a {@code replacer}. The
+	 * {@code eObject} should be loaded in an {@link XtextResource} for this
+	 * function to work properly. The {@code replacer} should avoid to replace text
+	 * of ancestor EObjects when a replacement has already been applied to one of
+	 * its descendants.
+	 * 
+	 * @param eObject  the Xtext EObject to serialize
+	 * @param replacer A replacer that provides replacements for specific descendant
+	 *                 {@link EObject}s, returns {@code null} when no replacement is
+	 *                 required for the {@link EObject}.
+	 * @return the serialized text.
+	 */
+	public static String serialize(EObject eObject, Function<? super EObject, ? extends CharSequence> replacer) {
+		return serializeXtext(eObject, node -> {
+			return node.hasDirectSemanticElement() ? replacer.apply(node.getSemanticElement()) : null;
+		});
+	}
+
+	/**
+	 * Serializes the {@code eObject} into text, allowing to replace parts of
+	 * descendant {@link EObject}s by means of providing a {@code replacer}. The
+	 * {@code eObject} should be loaded in an {@link XtextResource} for this
+	 * function to work properly. The {@code replacer} should avoid to replace text
+	 * of ancestor EObjects when a replacement has already been applied to one of
+	 * its descendants.
+	 * 
+	 * @param eObject  the Xtext EObject to serialize
+	 * @param replacer A replacer that provides replacements for specific descendant
+	 *                 {@link EObject}s (first argument) and specific grammar rules
+	 *                 (second argument), returns {@code null} when no replacement
+	 *                 is required for the {@link EObject}.
+	 * @return the serialized text.
+	 * @see IGrammarAccess
+	 */
+	public static String serialize(EObject eObject, BiFunction<? super EObject, ? super EObject, ? extends CharSequence> replacer) {
+		return serializeXtext(eObject, node -> {
+			EObject semanticElement = node.getSemanticElement();
+			EObject grammarElement = node.getGrammarElement();
+			if (semanticElement != null && grammarElement != null) {
+				return replacer.apply(semanticElement, grammarElement);
+			}
+			return null;
+		});
+	}
+
+	private static String serializeXtext(EObject eObject, Function<? super INode, ? extends CharSequence> replacer) {
+		Optional<INode> eObjectNode = eObject.eAdapters().stream().filter(INode.class::isInstance).map(INode.class::cast).findFirst();
+		if (eObjectNode.isEmpty()) {
+			throw new IllegalArgumentException("Not an Xtext eObject");
+		}
+		ITextRegion eObjectTextRegion = eObjectNode.get().getTotalTextRegion();
+		StringBuilder text = new StringBuilder(eObjectNode.get().getText());
+		if (eObjectNode.get() instanceof BidiTreeIterable<?> iterable) {
+			for (@SuppressWarnings("unchecked") Iterator<INode> iterator = (Iterator<INode>) iterable.reverse().iterator(); iterator.hasNext();) {
+				INode node = iterator.next();
+				CharSequence replacement = replacer.apply(node);
+				if (replacement != null) {
+					int replaceStart = node.getOffset() - eObjectTextRegion.getOffset();
+					int replaceEnd = replaceStart + node.getLength();
+					text.replace(replaceStart, replaceEnd, replacement.toString());
+				}
+			}
+		}
+		return text.toString();
 	}
 
 	/**

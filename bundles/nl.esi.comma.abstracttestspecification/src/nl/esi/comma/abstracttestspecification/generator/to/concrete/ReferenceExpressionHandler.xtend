@@ -19,6 +19,7 @@ import nl.asml.matala.product.product.VarRef
 import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.ComposeStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.RunStep
+import nl.esi.comma.abstracttestspecification.abstractTestspecification.AssertionStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.StepReference
 import org.eclipse.emf.common.util.EList
 
@@ -314,6 +315,12 @@ class ReferenceExpressionHandler
             _mapLHStoRHS.remove(k)
         }*/
 
+        return _mapLHStoRHS
+    }
+
+    // Updated DB 31.07.2025. Support chaining of compose steps with functions in expressions.
+    def resolveStepReferenceExpressions(AssertionStep astep, Iterable<RunStep> runSteps) {
+        var _mapLHStoRHS = new HashMap<String, List<String>>
         return _mapLHStoRHS
     }
 

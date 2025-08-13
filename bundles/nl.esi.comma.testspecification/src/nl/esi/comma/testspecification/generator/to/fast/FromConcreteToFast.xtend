@@ -31,6 +31,7 @@ import nl.esi.comma.testspecification.generator.utils.KeyValue
 import nl.esi.comma.testspecification.generator.utils.Step
 import nl.esi.comma.testspecification.testspecification.TSMain
 import nl.esi.comma.testspecification.testspecification.TestDefinition
+import nl.esi.comma.testspecification.testspecification.RunStep
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
@@ -207,16 +208,16 @@ class FromConcreteToFast extends AbstractGenerator {
     }
 
     def private getStepSequence(TestDefinition td) {
-        var listStepSequence = new ArrayList<nl.esi.comma.testspecification.testspecification.Step>
+        var listStepSequence = new ArrayList<RunStep>
         if(td.testSeq.empty) {
             for(ss : td.stepSeq) {
-                for(step : ss.step) listStepSequence.add(step)
+                for(step : ss.step.filter(RunStep)) listStepSequence.add(step)
             }
         }
         else {
             for(ts : td.testSeq) {
                 for(ss : ts.stepSeqRef) {
-                    for(step : ss.step) listStepSequence.add(step)
+                    for(step : ss.step.filter(RunStep)) listStepSequence.add(step)
                 }
             }
         }

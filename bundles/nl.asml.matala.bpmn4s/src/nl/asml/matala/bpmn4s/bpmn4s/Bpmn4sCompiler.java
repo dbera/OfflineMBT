@@ -384,7 +384,7 @@ public class Bpmn4sCompiler{
 		// Initialize context for this component
 		String ctxName = c.getContextName();
 		String ctxDataType = c.getContextDataType();
-		String ctxInit = c.getContextInit();
+		String ctxInit = getContextInit(cId);
 		String initPlace = getInitialPlace(cId);
 
 		if (initPlace != null) {
@@ -448,6 +448,26 @@ public class Bpmn4sCompiler{
 		return result;
 	}
 		
+	/**
+	 * The context initializer is stored on the start event (if any) of the component.
+	 * @param cId is the id of the component.
+	 * @return the context initializer, or {@code null} if not set.
+	 */
+	protected String getContextInit (String cId) {
+		Element c = model.getElementById(cId);
+		Element startEvent = model.getStartEvent(c);
+		
+		String ctxInit = null;
+		if (startEvent != null) {
+			ctxInit = startEvent.getContextInit();
+		}
+		// Backwards compatibility for older BPMN4S editors and models,
+		// where the context initializer was stored on the component itself. 
+		if (ctxInit == null) {
+			return c.getContextInit();
+		}
+		return ctxInit;
+	}
 	
 	/**
 	 * Replace whole word only (only match <from> if surrounded by delimiters)
@@ -492,7 +512,9 @@ public class Bpmn4sCompiler{
 					if (model.isComposeTask(node.getId())) {
 						stepConf = String.format(" step-type \"%s\" action-type COMPOSE", node.getStepType());
 					} else if(model.isAssertTask(node.getId())) {
-						stepConf = String.format(" step-type \"%s\" action-type ASSERT", node.getStepType());
+						//stepConf = String.format(" step-type \"%s\" action-type ASSERT", node.getStepType());
+						// TODO: hotfix to be removed once actions of type assertion are enforced to have a type 
+						stepConf = String.format(" step-type \"%s\" action-type ASSERT", sanitize(repr(node)));
 					} else if(model.isRunTask(node.getId())) {
 						stepConf = String.format(" step-type \"%s\" action-type RUN", node.getStepType());
 					}

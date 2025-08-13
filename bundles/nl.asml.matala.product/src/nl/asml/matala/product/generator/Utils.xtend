@@ -18,7 +18,7 @@ import java.util.LinkedHashSet
 import java.util.Set
 import nl.asml.matala.product.product.Block
 import nl.asml.matala.product.product.Blocks
-import nl.asml.matala.product.product.DataAssertions
+import nl.esi.comma.assertthat.assertThat.DataAssertions
 import nl.asml.matala.product.product.DataConstraints
 import nl.asml.matala.product.product.DataReferences
 import nl.asml.matala.product.product.Function
@@ -459,7 +459,10 @@ class Utils
                         elif "COMPOSE" in parts[2]:
                             txt += "\ncompose-step-name: %s\n" % new_name
                         else:
-                            txt += "\nassert-step-name: %s\n" % new_name
+                            type_name = ""
+                            if not "null" in parts[1]:
+                                type_name = " assert-type: \"%s\"" % parts[1] 
+                            txt += "\nassert-step-name: %s%s\n" % (new_name, type_name)
                         for elm in self.step_dependencies:
                             if elm.step_name == name:
                                 parts = elm.depends_on.split("@")
