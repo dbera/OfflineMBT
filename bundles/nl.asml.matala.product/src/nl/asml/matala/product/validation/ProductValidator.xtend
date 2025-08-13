@@ -204,8 +204,8 @@ class ProductValidator extends AbstractProductValidator {
  @Check
  def checkRunStep(Update update){
      if (update.actionType == ActionType::RUN || update.actionType == ActionType::ASSERT){
-        if(update.stepType.isEmpty || update.stepType == "null"){
-            error("Action-type RUN must have a step-tyep defined " + update.stepType,
+        if(update.stepType.isNullOrEmpty){
+            error('''Actions with type «update.actionType.literal» must have a step-type defined''' + update.stepType,
                 ProductPackage.Literals.UPDATE__STEP_TYPE) 
         }
     }
