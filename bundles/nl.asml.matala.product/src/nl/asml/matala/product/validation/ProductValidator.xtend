@@ -35,6 +35,7 @@ import nl.esi.comma.types.types.TypesPackage
 import org.eclipse.emf.common.util.URI
 import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.validation.Check
+import nl.asml.matala.product.product.ActionType
 
 /**
  * This class contains custom validation rules. 
@@ -201,7 +202,7 @@ class ProductValidator extends AbstractProductValidator {
      */
      @Check
     def checkMultiRunSteps(Block block) {
-        val runUpdates = block.functions.flatMap[updates].filter[actionType.getName == "RUN"]
+        val runUpdates = block.functions.flatMap[updates].filter[actionType == ActionType::RUN]
 
         val groupedByStepType = runUpdates.groupBy[stepType]
 
@@ -209,7 +210,7 @@ class ProductValidator extends AbstractProductValidator {
             val mostCommon = groupedByStepType.entrySet.maxBy[value.size].key
             runUpdates.filter[stepType != mostCommon].forEach [ update |
                 error(
-                    "All stepTypes must be the same for actionType RUN (expected: " + mostCommon + ")",
+                    "All step-types must be the same for action-type RUN (expected: " + mostCommon + ")",
                     update,
                     ProductPackage.Literals.UPDATE__STEP_TYPE
                 )
