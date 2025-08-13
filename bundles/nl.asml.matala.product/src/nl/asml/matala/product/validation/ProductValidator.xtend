@@ -197,14 +197,27 @@ class ProductValidator extends AbstractProductValidator {
     }
 
     /**
-     * Name of global model should not have underscores */
-    @Check
-    def checkBlockID(Block block) {
-        if (block.name.contains("_")) {
-            error("ID should not have underscores ", ProductPackage.Literals.BLOCK__NAME)
-        }
-    }
+     * A system block may have many RUN steps but they all must be of the same step-type
+     */
+     @Check
+    def checkMultiRunSteps(Block block) {
+        val runUpdates = block.functions.flatMap[updates].filter[actionType == ActionType::RUN]
 
+        val groupedByStepType = runUpdates.groupBy[stepType]
+
+        if (groupedByStepType.keySet.size > 1) {
+            val mostCommon = groupedByStepType.entrySet.maxBy[value.size].key
+            runUpdates.filter[stepType != mostCommon].forEach [ update |
+                error(
+                    "All step-types must be the same for action-type RUN (expected: " + mostCommon + ")",
+                    update,
+                    ProductPackage.Literals.UPDATE__STEP_TYPE
+                )
+            ]
+        }
+
+    }
+ 
     /**
      * Run step must always have step type.
      */
