@@ -35,6 +35,7 @@ import nl.esi.comma.types.types.TypesPackage
 import org.eclipse.emf.common.util.URI
 import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.validation.Check
+import nl.asml.matala.product.product.ActionType
 
 /**
  * This class contains custom validation rules. 
@@ -194,15 +195,28 @@ class ProductValidator extends AbstractProductValidator {
     private dispatch def void preventIlligalVariableAccess(Expression expr, Set<Variable> variables, Direction direction) {
         expr.eContents.filter(Expression).forEach[preventIlligalVariableAccess(variables, direction)]
     }
-    
+
     /**
      * Name of global model should not have underscores */
-     @Check 
-     def checkBlockID(Block block){
-         if(block.name.contains("_")){
-             error("ID should not have underscores ", ProductPackage.Literals.BLOCK__NAME)
-         }
-     }
+    @Check
+    def checkBlockID(Block block) {
+        if (block.name.contains("_")) {
+            error("ID should not have underscores ", ProductPackage.Literals.BLOCK__NAME)
+        }
+    }
+
+    /**
+     * Run step must always have step type.
+     */
+    @Check
+    def checkRunStep(Update update) {
+        if (update.actionType == ActionType::RUN || update.actionType == ActionType::ASSERT) {
+            if (update.stepType.isNullOrEmpty) {
+                error('''Actions with type «update.actionType.literal» must have a step-type defined''' +
+                    update.stepType, ProductPackage.Literals.UPDATE__STEP_TYPE)
+            }
+        }
+    }
 
 /* STRANGE BUG: Output Vars are Empty. Appears in Input Vars. 
  * Not appearing as problem during product generation!
