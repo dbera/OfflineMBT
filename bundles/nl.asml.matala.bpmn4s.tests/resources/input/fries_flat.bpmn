@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:bpmn4s="http://bpmn4s" id="sample-diagram" targetNamespace="http://bpmn.io/schema/bpmn" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd">
-  <bpmn2:process id="Process_1" name="Fries" isExecutable="false" bpmn4s:ctxName="fries_ctx" bpmn4s:ctxTypeRef="DataType_17t5tar" bpmn4s:ctxInit="fries_ctx := FriesContext { client_id = &#34;Tom&#34; }&#10;fries_ctx := FriesContext { client_id = &#34;Bob&#34; }">
+  <bpmn2:process id="Process_1" name="Fries" isExecutable="false" bpmn4s:ctxName="fries_ctx" bpmn4s:ctxTypeRef="DataType_17t5tar">
     <bpmn2:extensionElements>
       <bpmn4s:dataTypes>
         <bpmn4s:dataType id="DataType_2v8mfd7" name="Topping" type="Record">
@@ -22,7 +22,7 @@
         </bpmn4s:dataType>
       </bpmn4s:dataTypes>
     </bpmn2:extensionElements>
-    <bpmn2:startEvent id="Event_0a5g9gv" name="start_event">
+    <bpmn2:startEvent id="Event_0a5g9gv" name="start_event" bpmn4s:ctxInit="fries_ctx := FriesContext { client_id = &#34;Tom&#34; }&#10;fries_ctx := FriesContext { client_id = &#34;Bob&#34; }">
       <bpmn2:outgoing>Flow_0yycfxe</bpmn2:outgoing>
     </bpmn2:startEvent>
     <bpmn2:sequenceFlow id="Flow_0yycfxe" sourceRef="Event_0a5g9gv" targetRef="Gateway_0dqgx0i" />
