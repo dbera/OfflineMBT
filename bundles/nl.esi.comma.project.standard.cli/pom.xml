@@ -153,8 +153,13 @@
                             <!-- HINT: use the next grep command on de maven-shade-plugin warnings to produce the list below -->
                             <!-- mvn verify | tee mvn.log -->
                             <!-- grep -e '^\[WARNING\]' mvn.log |  grep -o -e 'nl.esi.comma.project.standard.cli-[^-]*' | sort -u | sed 's#\(.*\)-\(.*\)#<exclude>*:${project.artifactId}-\2-*</exclude>#g' -->
+                            <exclude>*:${project.artifactId}-Java-*</exclude>
                             <exclude>*:${project.artifactId}-aopalliance-*</exclude>
                             <exclude>*:${project.artifactId}-asm-*</exclude>
+                            <exclude>*:${project.artifactId}-batik-*</exclude>
+                            <exclude>*:${project.artifactId}-bcpg-*</exclude>
+                            <exclude>*:${project.artifactId}-bcprov-*</exclude>
+                            <exclude>*:${project.artifactId}-bcutil-*</exclude>
                             <exclude>*:${project.artifactId}-camunda-*</exclude>
                             <exclude>*:${project.artifactId}-classgraph-*</exclude>
                             <exclude>*:${project.artifactId}-com.sun.jna-*</exclude>
@@ -163,17 +168,27 @@
                             <exclude>*:${project.artifactId}-gson-*</exclude>
                             <exclude>*:${project.artifactId}-guava-*</exclude>
                             <exclude>*:${project.artifactId}-guice-*</exclude>
+                            <exclude>*:${project.artifactId}-icu4j-*</exclude>
                             <exclude>*:${project.artifactId}-jakarta.annotation-*</exclude>
                             <exclude>*:${project.artifactId}-jakarta.inject-*</exclude>
                             <exclude>*:${project.artifactId}-jna-*</exclude>
                             <exclude>*:${project.artifactId}-nl.asml.matala.bpmn4s-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.asml.matala.generator.fast-*</exclude>
                             <exclude>*:${project.artifactId}-nl.asml.matala.product-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.asml.matala.product.ide-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.asml.matala.product.lsp.server-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.esi.comma.abstracttestspecification-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.actions-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.esi.comma.actions.ide-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.esi.comma.actions.ui-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.assertthat-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.esi.comma.assertthat.ide-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.automata-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.constraints-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.constraints.dashboard-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.expressions-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.esi.comma.expressions.ide-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.esi.comma.expressions.ui-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.inputspecification-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.project.standard-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.scenarios-*</exclude>
@@ -183,9 +198,54 @@
                             <exclude>*:${project.artifactId}-nl.esi.comma.systemconfig-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.testspecification-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.types-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.esi.comma.types.ide-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.esi.comma.types.ui-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.esi.xtext.lsp.server-*</exclude>
                             <exclude>*:${project.artifactId}-org.aopalliance-*</exclude>
+                            <exclude>*:${project.artifactId}-org.apache.aries.spifly.dynamic.bundle-*</exclude>
+                            <exclude>*:${project.artifactId}-org.apache.batik.constants-*</exclude>
+                            <exclude>*:${project.artifactId}-org.apache.batik.css-*</exclude>
+                            <exclude>*:${project.artifactId}-org.apache.batik.i18n-*</exclude>
+                            <exclude>*:${project.artifactId}-org.apache.batik.util-*</exclude>
+                            <exclude>*:${project.artifactId}-org.apache.felix.scr-*</exclude>
+                            <exclude>*:${project.artifactId}-org.apache.xmlgraphics-*</exclude>
+                            <exclude>*:${project.artifactId}-org.eclipse.compare-*</exclude>
+                            <exclude>*:${project.artifactId}-org.eclipse.debug.ui-*</exclude>
+                            <exclude>*:${project.artifactId}-org.eclipse.e4.core.di.extensions-*</exclude>
+                            <exclude>*:${project.artifactId}-org.eclipse.e4.ui.dialogs-*</exclude>
+                            <exclude>*:${project.artifactId}-org.eclipse.e4.ui.workbench.addons.swt-*</exclude>
+                            <exclude>*:${project.artifactId}-org.eclipse.e4.ui.workbench.renderers.swt-*</exclude>
+                            <exclude>*:${project.artifactId}-org.eclipse.e4.ui.workbench.swt-*</exclude>
+                            <exclude>*:${project.artifactId}-org.eclipse.equinox.p2.artifact.repository-*</exclude>
+                            <exclude>*:${project.artifactId}-org.eclipse.equinox.p2.metadata.repository-*</exclude>
+                            <exclude>*:${project.artifactId}-org.eclipse.jdt.ui-*</exclude>
+                            <exclude>*:${project.artifactId}-org.eclipse.lsp4j-*</exclude>
+                            <exclude>*:${project.artifactId}-org.eclipse.lsp4j.jsonrpc-*</exclude>
+                            <exclude>*:${project.artifactId}-org.eclipse.ltk.ui.refactoring-*</exclude>
+                            <exclude>*:${project.artifactId}-org.eclipse.orbit.xml-*</exclude>
+                            <exclude>*:${project.artifactId}-org.eclipse.search-*</exclude>
+                            <exclude>*:${project.artifactId}-org.eclipse.swt.gtk.linux.x86_64-*</exclude>
+                            <exclude>*:${project.artifactId}-org.eclipse.swt.win32.win32.x86_64-*</exclude>
+                            <exclude>*:${project.artifactId}-org.eclipse.team.ui-*</exclude>
+                            <exclude>*:${project.artifactId}-org.eclipse.ui-*</exclude>
+                            <exclude>*:${project.artifactId}-org.eclipse.ui.console-*</exclude>
+                            <exclude>*:${project.artifactId}-org.eclipse.ui.editors-*</exclude>
+                            <exclude>*:${project.artifactId}-org.eclipse.ui.ide-*</exclude>
+                            <exclude>*:${project.artifactId}-org.eclipse.ui.navigator-*</exclude>
+                            <exclude>*:${project.artifactId}-org.eclipse.ui.navigator.resources-*</exclude>
+                            <exclude>*:${project.artifactId}-org.eclipse.ui.views-*</exclude>
+                            <exclude>*:${project.artifactId}-org.eclipse.ui.workbench.texteditor-*</exclude>
+                            <exclude>*:${project.artifactId}-org.eclipse.xtext.ui-*</exclude>
+                            <exclude>*:${project.artifactId}-org.eclipse.xtext.ui.shared-*</exclude>
+                            <exclude>*:${project.artifactId}-org.osgi.service.component-*</exclude>
+                            <exclude>*:${project.artifactId}-org.osgi.service.event-*</exclude>
                             <exclude>*:${project.artifactId}-org.osgi.service.prefs-*</exclude>
+                            <exclude>*:${project.artifactId}-org.osgi.util.function-*</exclude>
+                            <exclude>*:${project.artifactId}-org.osgi.util.promise-*</exclude>
                             <exclude>*:${project.artifactId}-reload4j-*</exclude>
+                            <exclude>*:${project.artifactId}-slf4j-*</exclude>
+                            <exclude>*:${project.artifactId}-xmlgraphics-*</exclude>
+                            <exclude>*:${project.artifactId}-xz-*</exclude>
                         </excludes>
                     </artifactSet>
                     <filters>
