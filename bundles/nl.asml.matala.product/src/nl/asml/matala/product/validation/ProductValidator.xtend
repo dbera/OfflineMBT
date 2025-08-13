@@ -219,15 +219,6 @@ class ProductValidator extends AbstractProductValidator {
     }
  
     /**
-     * Name of global model should not have underscores */
-    @Check
-    def checkBlockID(Block block) {
-        if (block.name.contains("_")) {
-            error("ID should not have underscores ", ProductPackage.Literals.BLOCK__NAME)
-        }
-    }
-
-    /**
      * Run step must always have step type.
      */
     @Check
