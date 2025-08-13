@@ -195,19 +195,6 @@ class ProductValidator extends AbstractProductValidator {
         expr.eContents.filter(Expression).forEach[preventIlligalVariableAccess(variables, direction)]
     }
 
-    /**
-     * Prevent type mismatch in guards
-     */
-     
-     @Check
-     def checkGaurdsTypeMisMatch(Function function){
-         for (update : function.updates) {
-            if (update.guard !== null) {
-                 update.guard.checkTypingExpression
-            }
-        }
-     }
-
 /* STRANGE BUG: Output Vars are Empty. Appears in Input Vars. 
  * Not appearing as problem during product generation!
  */
