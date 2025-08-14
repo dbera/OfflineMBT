@@ -27,12 +27,15 @@ import nl.esi.comma.expressions.expression.ExpressionConstantInt
 import nl.esi.comma.expressions.expression.ExpressionConstantReal
 import nl.esi.comma.expressions.expression.ExpressionConstantString
 import org.eclipse.xtext.generator.IFileSystemAccess2
+import nl.esi.comma.causalgraph.causalGraph.LanguageBody
+import nl.esi.comma.causalgraph.causalGraph.AliasTypeDecl
 
 class CausalGraphBDD {
     def generateBDD(CausalGraph prod, IFileSystemAccess2 fsa) {
         // Causal Graph Handling
         generateFeatures(prod, fsa)
         generateStepDefinitions(prod, fsa)
+        generateCppSteps(prod, fsa)
     }
 
     /**
@@ -49,6 +52,12 @@ class CausalGraphBDD {
     def generateFeatures(CausalGraph cg, IFileSystemAccess2 fsa) {
         if (cg.type == GraphType.BDDUCG)
             toFeatureFile(cg, fsa)
+    }
+
+    def generateCppSteps(CausalGraph cg, IFileSystemAccess2 fsa) {
+        if (cg.type == GraphType.BDDUCG)
+            toCPPStepDefinitionsHeaderFile(cg, fsa)
+            toCPPStepDefinitionsCPPFile(cg, fsa)
     }
 
     /**
@@ -282,7 +291,7 @@ class CausalGraphBDD {
                 sb.append("    [").append(keyword.toLowerCase.toFirstUpper).append("(@\"^").append(stepName).append(
                     "$\")]").append("\n")
 
-            // parameters list
+            // Parameters list
             val params = new ArrayList<String>
             for (param : node.stepParameters) {
                 val rawType = param.getType().getType().getName
@@ -347,5 +356,101 @@ class CausalGraphBDD {
         }
         // fallback for other expression types
         expr.toString
+    }
+
+    def toCPPStepDefinitionsHeaderFile(CausalGraph cg, IFileSystemAccess2 fsa) {
+        val sb = new StringBuilder
+        // Includes
+        if (!cg.header.empty) {
+            sb.append(cg.header.trim).append("\n")
+        }
+        sb.append("\n")
+        
+        sb.append("class " + cg.name + "{\n")
+
+        sb.append("public:\n")
+
+        // Global variables
+        for (variable : cg.getVariables()) {
+            val variableType = variable.getType().getType()
+            var variableTypeName = ""
+            if (variableType instanceof AliasTypeDecl) {
+                variableTypeName = variableType.getAlias()
+            } else {
+                variableTypeName = variableType.getName()
+            }
+
+            val cppType = if(variableTypeName.equalsIgnoreCase("real")) "float" else variableTypeName
+            sb.append(cppType).append(" ").append(variable.name)
+            val match = cg.getAssignments().findFirst[aa|argName(aa) == variable.name]
+            if (match !== null) {
+                sb.append(" = " + renderExpressionValue(match.exp))
+            }
+            sb.append(";\n")
+        }
+
+        // Collect unique nodes used in any scenario
+        val uniqueNodes = cg.nodes.filter [ n |
+            cg.scenarios.exists [ sc |
+                n.steps.exists[t|t.scenario.name == sc.name]
+            ]
+        ]
+
+        // Step definitions
+        for (node : uniqueNodes) {
+            val fnName = node.stepName.replaceAll("\\(.*?\\)", "").replaceAll("[^A-Za-z0-9]", "_")
+            val params = node.stepParameters.map [ p |
+                val rawType = p.getType().getType().getName
+                val cppType = if(rawType.equalsIgnoreCase("real")) "float" else rawType
+                cppType + " " + p.name
+            ].join(", ")
+            sb.append("void ").append(fnName).append("(").append(params).append(");")
+            sb.append("\n")
+
+        }
+
+        sb.append("};\n\n")
+
+        fsa.generateFile(cg.name + "Steps.h", sb.toString)
+    }
+
+    def toCPPStepDefinitionsCPPFile(CausalGraph cg, IFileSystemAccess2 fsa) {
+        val sb = new StringBuilder
+        // Includes
+        if (!cg.header.empty) {
+            sb.append(cg.header.trim).append("\n")
+        }
+        sb.append("#include " +"\""+ cg.name+"Steps.h"+"\""+"\n")
+        sb.append("\n")
+
+        // Collect unique nodes used in any scenario
+        val uniqueNodes = cg.nodes.filter [ n |
+            cg.scenarios.exists [ sc |
+                n.steps.exists[t|t.scenario.name == sc.name]
+            ]
+        ]
+
+        // Step definitions
+        for (node : uniqueNodes) {
+            val fnName = node.stepName.replaceAll("\\(.*?\\)", "").replaceAll("[^A-Za-z0-9]", "_")
+            val params = node.stepParameters.map [ p |
+                val rawType = p.getType().getType().getName
+                val cppType = if(rawType.equalsIgnoreCase("real")) "float" else rawType
+                cppType + " " + p.name
+            ].join(", ")
+            sb.append("void ").append(cg.name + "::" + fnName).append("(").append(params).append(") {")
+            sb.append("\n")
+            // step body
+            if (node.stepBody instanceof LanguageBody) {
+                val body = (node.stepBody as LanguageBody).body
+                // indent each line
+                body.split("\r?\n").forEach [ line |
+                    sb.append("    ").append(line).append("\n")
+                ]
+            }
+            sb.append("}\n\n")
+        }
+
+        fsa.generateFile(cg.name + "Steps.cpp", sb.toString)
     }
 }
