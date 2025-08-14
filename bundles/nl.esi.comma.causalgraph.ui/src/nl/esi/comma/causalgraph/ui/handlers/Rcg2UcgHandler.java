@@ -1,15 +1,18 @@
 
 package nl.esi.comma.causalgraph.ui.handlers;
 
+import static org.eclipse.lsat.common.queries.IterableQueries.product;
 import static org.eclipse.lsat.common.queries.QueryableIterable.from;
+import static org.eclipse.lsat.common.util.IteratorUtil.map;
+import static org.eclipse.lsat.common.util.IteratorUtil.min;
 
-import java.io.IOException;
 import java.util.List;
+import java.util.function.Function;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.e4.core.di.annotations.CanExecute;
 import org.eclipse.e4.core.di.annotations.Evaluate;
@@ -21,6 +24,7 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.lsat.common.emf.common.util.URIHelper;
 import org.eclipse.lsat.common.emf.ecore.resource.Persistor;
 import org.eclipse.lsat.common.emf.ecore.resource.PersistorFactory;
+import org.eclipse.lsat.common.util.IterableUtil;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.dialogs.SaveAsDialog;
 
@@ -42,33 +46,50 @@ public class Rcg2UcgHandler {
 	public void execute(@Named(IServiceConstants.ACTIVE_SELECTION) IStructuredSelection selection,
 			@Named(IServiceConstants.ACTIVE_SHELL) Shell shell) {
 		List<IFile> selectedFiles = from((Iterable<?>) selection).objectsOfKind(IFile.class).asList();
-
-		SaveAsDialog saveAsDialog = new SaveAsDialog(shell);
-		if (saveAsDialog.open() != SaveAsDialog.OK) {
-			return;
-		}
-		IPath saveIPath = saveAsDialog.getResult();
-		if (!"cg".equals(saveIPath.getFileExtension())) {
-			saveIPath = saveIPath.addFileExtension("cg");
-		}
-		IFile saveIFile = ResourcesPlugin.getWorkspace().getRoot().getFile(saveIPath);
-
 		try {
-			mergeRcs2Ucs(selectedFiles, saveIFile);
+			Persistor<CausalGraph> persistor = new PersistorFactory().getPersistor(CausalGraph.class);
+			StringBuilder mergedGraphName = new StringBuilder();
+			CausalGraph[] rcgs = new CausalGraph[selectedFiles.size()];
+			for (int i = 0; i < selectedFiles.size(); i++) {
+				rcgs[i] = persistor.loadOne(URIHelper.asURI(selectedFiles.get(i)));
+				if (i > 0) {
+					mergedGraphName.append("__");
+				}
+				mergedGraphName.append(rcgs[i].getName());
+			}
+			mergedGraphName.append(".cg");
+			
+			SaveAsDialog saveAsDialog = new SaveAsDialog(shell);
+			IPath commonPath = getCommonPath(selectedFiles);
+			if (commonPath != null) {
+				saveAsDialog.setOriginalFile(ResourcesPlugin.getWorkspace().getRoot()
+						.getFile(commonPath.append(mergedGraphName.toString())));
+			} else {
+				saveAsDialog.setOriginalName(mergedGraphName.toString());
+			}
+			if (saveAsDialog.open() != SaveAsDialog.OK) {
+				return;
+			}
+			IPath saveIPath = saveAsDialog.getResult();
+			if (!"cg".equals(saveIPath.getFileExtension())) {
+				saveIPath = saveIPath.addFileExtension("cg");
+			}
+			IFile saveIFile = ResourcesPlugin.getWorkspace().getRoot().getFile(saveIPath);
+
+			CausalGraph ucg = new Rcg2UcgTransformer().merge(rcgs);
+			persistor.save(URIHelper.asURI(saveIFile), ucg);
+			saveIFile.refreshLocal(IResource.DEPTH_ZERO, null);
 		} catch (Exception e) {
+			e.printStackTrace();
 			MessageDialog.openError(shell, "Merge failed", e.getLocalizedMessage());
 		}
 	}
-
-	public static void mergeRcs2Ucs(List<IFile> inputs, IFile output) throws IOException, CoreException {
-		Persistor<CausalGraph> persistor = new PersistorFactory().getPersistor(CausalGraph.class);
-		CausalGraph[] rcgs = new CausalGraph[inputs.size()];
-		for (int i = 0; i < inputs.size(); i++) {
-			rcgs[i] = persistor.loadOne(URIHelper.asURI(inputs.get(i)));
-		}
-
-		CausalGraph ucg = new Rcg2UcgTransformer().merge(rcgs);
-		persistor.save(URIHelper.asURI(output), ucg);
-		output.refreshLocal(IResource.DEPTH_ZERO, null);
+	
+	private static IPath getCommonPath(Iterable<IFile> files) {
+		Function<Pair<IFile, IFile>, Integer> matcher = 
+				pair -> pair.getKey().getFullPath().matchingFirstSegments(pair.getValue().getFullPath());
+		Integer matchingFirstSegments = min(map(product(files, files).iterator(), matcher), 0);
+		return matchingFirstSegments > 0 ?
+				IterableUtil.first(files).getFullPath().uptoSegment(matchingFirstSegments) : null;
 	}
 }

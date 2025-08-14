@@ -1,15 +1,17 @@
 package nl.esi.comma.causalgraph.transform
 
 import java.util.List
-import java.util.Map
+import java.util.Set
 import nl.esi.comma.causalgraph.causalGraph.CausalGraph
 import nl.esi.comma.causalgraph.causalGraph.CausalGraphFactory
 import nl.esi.comma.causalgraph.causalGraph.GraphType
 import nl.esi.comma.causalgraph.causalGraph.Node
 import nl.esi.comma.causalgraph.causalGraph.StepType
+import nl.esi.comma.expressions.expression.Variable
 import nl.esi.comma.types.types.NamedElement
 import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.util.EcoreUtil
+import org.eclipse.xtend.lib.annotations.Accessors
 import org.eclipse.xtend.lib.annotations.Data
 import org.eclipse.xtext.EcoreUtil2
 
@@ -42,41 +44,34 @@ class Rcg2UcgTransformer {
             variables += rcgs.flatMap[variables].resolveNameConflicts(true, false)
         ]
 
+        // Important: grouping nodes should be done after merging the variables!
         val nodeGroups = rcgs.groupNodes
 
-        // Create the merged nodes for all node groups
-        val mergedNodes = newHashMap
-        nodeGroups.keySet.forEach [ groupKey, index |
-            val mergedNode = createNode => [
-                name = 'n' + index
-                function = groupKey.function
-                stepName = groupKey.stepName
-                stepType = groupKey.stepType
-            ]
-            mergedNodes.put(groupKey, mergedNode)
-            mergedGraph.nodes += mergedNode
+        // All add output nodes to the merged graph
+        nodeGroups.forEach[group, index |
+            group.outputNode.name = 'n' + index
+            mergedGraph.nodes += group.outputNode
         ]
 
-        // Now create the content and edges of the merged nodes
-        for (ngEntry : nodeGroups.entrySet) {
-            val mergedNode = mergedNodes.get(ngEntry.key)
-            // Just move all the steps from the group to the merged target
-            mergedNode.steps += ngEntry.value.flatMap[steps].toList
+        // Now create the content and edges of the output nodes
+        for (group : nodeGroups) {
+            // Just move all the steps from the group to the output node
+            group.outputNode.steps += group.inputNodes.flatMap[steps].toList
 
-            // Get all the original control flows and group them based on their merged target node
-            val controlFlows = ngEntry.value.flatMap[outgoingControlFlows].groupBy[mergedNodes.get(target.groupKey)]
+            // Get all the original control flows and group them based on their output node, i.e. resolveOne()
+            val controlFlows = group.inputNodes.flatMap[outgoingControlFlows].groupBy[nodeGroups.resolveOne(target)]
             controlFlows.keySet.forEach[ targetNode |
                 mergedGraph.edges += createControlFlowEdge => [
-                    source = mergedNode
+                    source = group.outputNode
                     target = targetNode
                 ]
             ]
 
-            // Get all the original data flows and group them based on their merged target node
-            val dataFlows = ngEntry.value.flatMap[outgoingDataFlows].groupBy[mergedNodes.get(target.groupKey)]
+            // Get all the original data flows and group them based on their output node
+            val dataFlows = group.inputNodes.flatMap[outgoingDataFlows].groupBy[nodeGroups.resolveOne(target)]
             dataFlows.entrySet.forEach[ dfEntry |
                 mergedGraph.edges += createDataFlowEdge => [
-                    source = mergedNode
+                    source = group.outputNode
                     target = dfEntry.key
                     dataReferences += dfEntry.value.flatMap[dataReferences].toList
                 ]
@@ -86,9 +81,26 @@ class Rcg2UcgTransformer {
         return mergedGraph
     }
 
-    def protected Map<NodeGroupKey, List<Node>> groupNodes(CausalGraph... rcgs) {
-        // TODO: Refine grouping for 'Then' nodes
-        return rcgs.flatMap[nodes].groupBy[groupKey]
+    def protected List<NodeGroup> groupNodes(CausalGraph... rcgs) {
+        val nodeGroupsMap = rcgs.flatMap[nodes].groupBy[groupKey]
+        // The asserts that are not functions should not be matched by their step-name,
+        // we need to look at their incoming data dependencies to find possible matches.
+        val nonFunctionAsserts = nodeGroupsMap.filter[k, v |!k.function && k.stepType == StepType::THEN].values.flatten.toList
+        nonFunctionAsserts.forEach[assertNode | nodeGroupsMap.remove(assertNode.groupKey)]
+
+        val nodeGroups = nodeGroupsMap.entrySet.map[new NodeGroup(key, value)].toList
+
+        val assertGroups = nonFunctionAsserts.groupBy[assertGroupKey].values.sortedBy[size]
+        for (assertGroup : assertGroups) {
+            val stepName = assertGroup.map[stepName].toSet.join(', ')
+            var groupKey = new NodeGroupKey(false, stepName, StepType::THEN)
+            nodeGroups += new NodeGroup(groupKey, assertGroup)
+        }
+
+        nodeGroups.groupBy[key].filter[k, v|v.size > 1].forEach [k, v |
+            System.err.println('''Found «v.size» overlapping nodes for «k»''')
+        ]
+        return nodeGroups
     }
 
     private static def <T extends NamedElement> Iterable<T> resolveNameConflicts(Iterable<T> elements, boolean merge, boolean rename) {
@@ -139,7 +151,26 @@ class Rcg2UcgTransformer {
         }
     }
 
-    protected def getGroupKey(Node node) {
+    /**
+     * When asserts use the same variables form the same nodes, they can be (potentially) merged.
+     */
+    protected def getAssertGroupKey(Node node) {
+        return node.outgoingDataFlows.map[ edge |
+            new AssertGroupKey(edge.target.groupKey, edge.dataReferences.flatMap[variables].toSet)
+        ].toSet
+    }
+
+    @Data
+    protected static class AssertGroupKey {
+        val NodeGroupKey key
+        val Set<Variable> variables
+    }
+
+    protected def Node resolveOne(List<NodeGroup> nodeGroups, Node node) {
+        return nodeGroups.findFirst[inputNodes.contains(node)]?.outputNode
+    }
+
+    protected def NodeGroupKey getGroupKey(Node node) {
         return new NodeGroupKey(node.function, node.stepName, node.stepType)
     }
 
@@ -148,5 +179,22 @@ class Rcg2UcgTransformer {
         val boolean function
         val String stepName
         val StepType stepType
+    }
+
+    @Accessors
+    protected static class NodeGroup {
+        val NodeGroupKey key
+        val List<Node> inputNodes = newArrayList()
+        val Node outputNode
+
+        new(NodeGroupKey _key, Iterable<Node> _inputNodes) {
+            key = _key;
+            inputNodes += _inputNodes
+            outputNode = CausalGraphFactory::eINSTANCE.createNode => [ node |
+                node.function = _key.function
+                node.stepName = _key.stepName
+                node.stepType = _key.stepType
+            ]
+        }
     }
 }

@@ -54,7 +54,7 @@ graph TestGraphT1__TestGraphT2:
             »
 
     node n2:
-        step-name: "ASSERT_XY(h.a, x)"
+        step-name: function "ASSERT_XY(h.a, x)"
         step-type: Then
         scenario T1 step 3:
             step-body: «
