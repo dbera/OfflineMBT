@@ -58,6 +58,7 @@ import org.eclipse.emf.common.util.EList
 import org.eclipse.emf.ecore.util.EcoreUtil
 
 import static extension nl.esi.comma.types.utilities.EcoreUtil3.serialize
+import nl.esi.comma.expressions.expression.ExpressionNullLiteral
 
 class Utils 
 {
@@ -168,6 +169,7 @@ class Utils
                     ExpressionConstantInt: String.valueOf(expr.value)
                     ExpressionMinus: getStringSignedValue(expr)
                     ExpressionPlus: getStringSignedValue(expr)
+                    ExpressionNullLiteral: 'null'
                     default: throw new IllegalArgumentException('Unknown Expression type ' + expr)
                 }
             }

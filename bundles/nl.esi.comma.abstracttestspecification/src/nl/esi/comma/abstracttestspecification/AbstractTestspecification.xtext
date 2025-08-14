@@ -124,5 +124,6 @@ JsonExpression returns assertthat::JsonExpression:
 AbstractTestExpressionConstants returns expr::Expression:
     ExpressionConstantInt  | ExpressionConstantReal | ExpressionConstantBool | ExpressionConstantString // basic types
     | ExpressionMinus | ExpressionPlus // signed numbers
+    | ExpressionNullLiteral // null value
 ;
 
