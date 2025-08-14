@@ -49,6 +49,7 @@ class Rcg2UcgTransformer {
         nodeGroups.keySet.forEach [ groupKey, index |
             val mergedNode = createNode => [
                 name = 'n' + index
+                function = groupKey.function
                 stepName = groupKey.stepName
                 stepType = groupKey.stepType
             ]
@@ -139,11 +140,12 @@ class Rcg2UcgTransformer {
     }
 
     protected def getGroupKey(Node node) {
-        return new NodeGroupKey(node.stepName, node.stepType)
+        return new NodeGroupKey(node.function, node.stepName, node.stepType)
     }
 
     @Data
     protected static class NodeGroupKey {
+        val boolean function
         val String stepName
         val StepType stepType
     }

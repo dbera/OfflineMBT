@@ -18,7 +18,7 @@ graph TestGraphT1__TestGraphT2:
         hType h
 
     node n0:
-        step-name: "test-interface::f1(z, y)"
+        step-name: function "test-interface::f1(z, y)"
         step-type: When
         scenario T1 step 1:
             step-body: «
@@ -46,7 +46,7 @@ graph TestGraphT1__TestGraphT2:
             »
 
     node n1:
-        step-name: "test-interface::f0()"
+        step-name: function "test-interface::f0()"
         step-type: When
         scenario T1 step 2:
             step-body: «

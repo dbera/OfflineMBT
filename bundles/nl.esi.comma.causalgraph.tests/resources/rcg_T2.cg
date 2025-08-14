@@ -15,7 +15,7 @@ graph TestGraphT2:
     hType h
 
     node n0:
-        step-name: "test-interface::f1(z, y)"
+        step-name: function "test-interface::f1(z, y)"
         step-type: When
         scenario T2 step 1:
             step-body: «

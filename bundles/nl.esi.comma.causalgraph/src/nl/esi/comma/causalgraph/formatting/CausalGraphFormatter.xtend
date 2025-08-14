@@ -35,39 +35,64 @@ class CausalGraphFormatter extends AbstractDeclarativeFormatter {
             setNoSpace().after(pair.first);
             setNoSpace().before(pair.second);
         }
-        for (pair : findKeywordPairs("(", ")")) {
-            setNoSpace().before(pair.first);
-            setNoSpace().after(pair.first);
-            setNoSpace().before(pair.second);
-        }
         for (pair : findKeywordPairs("[", "]")) {
             setNoSpace().before(pair.first);
             setNoSpace().after(pair.first);
             setNoSpace().before(pair.second);
         }
-        for (keyword : findKeywords(",",":")) {
+        for (keyword : findKeywords(",", ":")) {
             setNoSpace().before(keyword);
         }
 
         // TODO: Grammar formatting
-        setLinewrap(1,1,2).after(requirementDeclRule)
-        setLinewrap(1,1,2).after(scenarioDeclRule)
+        setLinewrap(1,1,2).after(importRule)
 
-        setLinewrap(1,1,2).after(causalGraphAccess.nameAssignment_4)
-        setLinewrap(1,1,2).after(causalGraphAccess.typeAssignment_8)
-        setLinewrap(1,1,2).after(causalGraphAccess.languageAssignment_9_2)
-        setLinewrap(1,1,2).after(causalGraphAccess.headerAssignment_10_2)
+        setLinewrap(1,2,2).after(requirementDeclRule)
+        setLinewrap(1,1,1).before(requirementDeclAccess.descriptionKeyword_2_1_0)
 
-        setLinewrap(1,1,2).before(causalGraphAccess.typesAssignment_11_2)
-        setLinewrap(1,1,2).after(typeDeclRule)
-        setIndentation(causalGraphAccess.typesKeyword_11_0, causalGraphAccess.functionsKeyword_12_0)
-        setLinewrap(1,1,2).after(functionDeclRule)
-        setIndentation(causalGraphAccess.functionsKeyword_12_0, causalGraphAccess.variablesKeyword_13_0)
-        setLinewrap(1,1,2).after(variableRule)
-        setIndentation(causalGraphAccess.variablesKeyword_13_0, nodeAccess.nodeKeyword_0)
-        setLinewrap(1,1,2).after(nodeRule)
-        setLinewrap(1,1,2).after(nodeAccess.nameAssignment_1)
-        setIndentation(nodeAccess.nameAssignment_1, nodeAccess.nodeKeyword_0)
-        setLinewrap(1,1,2).after(nodeRule)
+        setLinewrap(1,2,2).before(scenarioDeclRule)
+        setLinewrap(1,2,2).after(scenarioDeclRule)
+        setLinewrap(1,1,1).before(scenarioDeclAccess.requirementsKeyword_3)
+        setLinewrap(1,1,1).before(scenarioDeclAccess.descriptionKeyword_6_0)
+
+        setLinewrap(1,2,2).before(causalGraphRule)
+        setLinewrap(1,2,2).after(causalGraphRule)
+        setLinewrap(1,1,2).before(causalGraphAccess.typeKeyword_6)
+        setLinewrap(1,1,2).before(causalGraphAccess.languageKeyword_9_0)
+        setLinewrap(1,2,2).before(causalGraphAccess.headerKeyword_10_0)
+        setLinewrap(1,2,2).before(causalGraphAccess.typesKeyword_11_0)
+        setLinewrap(1,1,1).before(typeDeclRule)
+        setLinewrap(1,2,2).before(causalGraphAccess.functionsKeyword_12_0)
+        setLinewrap(1,1,1).before(functionDeclRule)
+        setLinewrap(1,2,2).before(causalGraphAccess.variablesKeyword_13_0)
+        setLinewrap(1,1,1).before(variableRule)
+        setLinewrap(1,2,2).before(causalGraphAccess.initializationsKeyword_14_0)
+        setLinewrap(1,1,1).before(assignmentActionRule)
+        setLinewrap(1,2,2).before(causalGraphAccess.edgesKeyword_16_0)
+        setLinewrap(1,1,1).before(edgeRule)
+
+        setLinewrap(1,2,2).before(nodeRule)
+        setLinewrap(1,2,2).after(nodeRule)
+        setLinewrap(1,1,2).before(nodeAccess.stepNameKeyword_3)
+        setLinewrap(1,1,2).before(nodeAccess.stepTypeKeyword_7_0)
+        setLinewrap(1,1,2).before(nodeAccess.stepParametersKeyword_8_0)
+        setLinewrap(1,1,2).before(nodeAccess.stepBodyKeyword_9_0)
+
+        setLinewrap(1,2,2).before(scenarioStepRule)
+        setLinewrap(1,2,2).after(scenarioStepRule)
+        setLinewrap(1,1,2).before(scenarioStepAccess.stepArgumentsKeyword_4_1_0)
+        setLinewrap(1,1,2).before(scenarioStepAccess.stepBodyKeyword_4_2_0)
+
+        setIndentationIncrement.after(requirementDeclAccess.requirementKeyword_0)
+        setIndentationDecrement.after(requirementDeclRule)
+        setIndentationIncrement.after(scenarioDeclAccess.scenarioKeyword_0)
+        setIndentationDecrement.after(scenarioDeclRule)
+        setIndentationIncrement.after(causalGraphAccess.graphKeyword_3)
+//        setIndentationIncrement.after(nodeAccess.nodeKeyword_0)
+//        setIndentationDecrement.after(nodeRule)
+//        setIndentationIncrement.after(scenarioStepAccess.scenarioKeyword_0)
+//        setIndentationDecrement.after(scenarioStepRule)
+        setIndentationDecrement.before(causalGraphAccess.edgesKeyword_16_0)
+        setIndentationIncrement.after(causalGraphAccess.edgesKeyword_16_0)
    }
 }

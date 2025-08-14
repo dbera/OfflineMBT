@@ -35,17 +35,16 @@ TypeDecl returns types::TypeDecl:
 
 enum GraphType:
     cg = 'CausalGraph' |
-    ucg = 'UnifiedCausalGraph' |
     rcg = 'ReducedCausalGraph' |
-    bdducg = 'BDDUnifiedCausalGraph' |
-    bddcg = 'BDDCausalGraph'
+    ucg = 'UnifiedCausalGraph' |
+    bdducg = 'BDDUnifiedCausalGraph'
 ;
 
 enum StepType:
+    none = 'None' |
     given = 'Given' |
     when = 'When' |
-    then = 'Then' 
-    // | and = 'And'
+    then = 'Then'
 ;
 
 CausalGraph:
@@ -82,8 +81,8 @@ AliasTypeDecl:
 
 Node:
     'node' name=ID ':'
-    'step-name' ':' stepName = STRING
-    'step-type' ':' stepType = StepType
+    'step-name' ':' (function?='function')? stepName = STRING
+    ('step-type' ':' stepType = StepType)?
     ('step-parameters' ':' stepParameters += Variable+)?
     ('step-body' ':' stepBody = StepBody)?
     steps += ScenarioStep+
