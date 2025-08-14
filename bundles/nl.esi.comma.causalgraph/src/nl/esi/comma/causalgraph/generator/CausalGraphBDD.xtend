@@ -417,7 +417,7 @@ class CausalGraphBDD {
     def toCPPStepDefinitionsCPPFile(CausalGraph cg, IFileSystemAccess2 fsa) {
         val sb = new StringBuilder
         // Includes
-        if (!cg.header.empty) {
+        if (!cg.header.isNullOrEmpty) {
             sb.append(cg.header.trim).append("\n")
         }
         sb.append("#include " +"\""+ cg.name+"Steps.h"+"\""+"\n")

@@ -22,27 +22,35 @@ class Rcg2UcgTransformer {
     static extension val CausalGraphFactory m_cg = CausalGraphFactory::eINSTANCE
 
     def CausalGraph merge(CausalGraph... rcgs) {
-        if (rcgs.exists[type != GraphType.RCG]) {
+        if (!rcgs.forall[type == GraphType.RCG]) {
             throw new IllegalArgumentException('Expected ' + GraphType.RCG.literal)
         } else if (rcgs.map[name].toSet.size != rcgs.size) {
             throw new IllegalArgumentException('Graphs should have unique names')
+        } else if (rcgs.map[language].toSet.size > 1) {
+            throw new IllegalArgumentException('Cannot merge graphs for different languages: ' +
+                rcgs.map[language].toSet)
         }
         rcgs.forEach[EcoreUtil.resolveAll(it)]
 
         // Prepare the merged graph, just copy the imports, requirements and scenarios
-        val mergedGraph = createCausalGraph => [
-            name = rcgs.join('__')[name]
-            type = GraphType::UCG
-            // TODO: should imports be made unique? Or should the merged graph 
-            // just not have any imports, but just inline the used types?
-            imports += rcgs.flatMap[imports].toList
+        val outputGraph = createCausalGraph
+        outputGraph.name = rcgs.join('__')[name]
+        outputGraph.type = GraphType::UCG
+        outputGraph.language = rcgs.head.language
+        // Concatenate all headers, but avoid duplication if they are equal after trimming them
+        outputGraph.header = rcgs.map[header.nullIfEmpty].filterNull.unique[left, right | left.trim.equals(right.trim)].join('\n').nullIfEmpty
+        outputGraph.imports += rcgs.flatMap[imports].unique[left, right | EcoreUtil.equals(left, right)]
 
-            requirements += rcgs.flatMap[requirements].resolveNameConflicts(true, true)
-            scenarios += rcgs.flatMap[scenarios].resolveNameConflicts(false, true)
+        outputGraph.requirements += rcgs.flatMap[requirements].resolveNameConflicts(true, true)
+        outputGraph.scenarios += rcgs.flatMap[scenarios].resolveNameConflicts(false, true)
 
-            types += rcgs.flatMap[types].resolveNameConflicts(true, true)
-            variables += rcgs.flatMap[variables].resolveNameConflicts(true, false)
-        ]
+        outputGraph.types += rcgs.flatMap[types].resolveNameConflicts(true, true)
+        // FIXME: merging variables is not done correctly yet
+        // The assignments of a variable could conflict,
+        // implying that these variables cannot be merged.
+        // Currently this will result in a model validation error
+        outputGraph.variables += rcgs.flatMap[variables].resolveNameConflicts(true, false)
+        outputGraph.assignments += rcgs.flatMap[assignments].unique[left, right | EcoreUtil.equals(left, right)]
 
         // Important: grouping nodes should be done after merging the variables!
         val nodeGroups = rcgs.groupNodes
@@ -50,7 +58,7 @@ class Rcg2UcgTransformer {
         // All add output nodes to the merged graph
         nodeGroups.forEach[group, index |
             group.outputNode.name = 'n' + index
-            mergedGraph.nodes += group.outputNode
+            outputGraph.nodes += group.outputNode
         ]
 
         // Now create the content and edges of the output nodes
@@ -61,7 +69,7 @@ class Rcg2UcgTransformer {
             // Get all the original control flows and group them based on their output node, i.e. resolveOne()
             val controlFlows = group.inputNodes.flatMap[outgoingControlFlows].groupBy[nodeGroups.resolveOne(target)]
             controlFlows.keySet.forEach[ targetNode |
-                mergedGraph.edges += createControlFlowEdge => [
+                outputGraph.edges += createControlFlowEdge => [
                     source = group.outputNode
                     target = targetNode
                 ]
@@ -70,7 +78,7 @@ class Rcg2UcgTransformer {
             // Get all the original data flows and group them based on their output node
             val dataFlows = group.inputNodes.flatMap[outgoingDataFlows].groupBy[nodeGroups.resolveOne(target)]
             dataFlows.entrySet.forEach[ dfEntry |
-                mergedGraph.edges += createDataFlowEdge => [
+                outputGraph.edges += createDataFlowEdge => [
                     source = group.outputNode
                     target = dfEntry.key
                     dataReferences += dfEntry.value.flatMap[dataReferences].toList
@@ -78,7 +86,7 @@ class Rcg2UcgTransformer {
             ]
         }
 
-        return mergedGraph
+        return outputGraph
     }
 
     def protected List<NodeGroup> groupNodes(CausalGraph... rcgs) {
@@ -149,6 +157,20 @@ class Rcg2UcgTransformer {
                 }
             }
         }
+    }
+
+    private static def <T> Iterable<T> unique(Iterable<T> source, (T, T)=>boolean equalismFunctor) {
+        val result = newArrayList
+        for (item : source) {
+            if (!result.exists[equalismFunctor.apply(it, item)]) {
+                result += item
+            }
+        }
+        return result
+    }
+
+    private static def nullIfEmpty(String text) {
+        return text.nullOrEmpty ? null : text
     }
 
     /**

@@ -38,6 +38,8 @@ import org.eclipse.xtext.validation.Check
 
 import static extension nl.esi.comma.causalgraph.utilities.CausalGraphQueries.*
 import nl.esi.comma.causalgraph.causalGraph.StepType
+import nl.esi.comma.actions.actions.ActionsPackage
+import nl.esi.comma.causalgraph.causalGraph.LanguageBody
 
 /**
  * This class contains custom validation rules. 
@@ -84,8 +86,23 @@ class CausalGraphValidator extends AbstractCausalGraphValidator {
         ]
     }
 
+    @Check
+    def checkUniqueInitializations(CausalGraph _graph) {
+        _graph.assignments.getDuplicatesBy[assignment].forEach [
+            error('Variable can only be initialized once', it,
+                ActionsPackage.Literals.ASSIGNMENT_ACTION__ASSIGNMENT)
+        ]
+    }
+
     private static def <T> Iterable<T> getDuplicatesBy(Iterable<T> source, (T)=>Object functor) {
         return source.groupBy(functor).values.filter[size > 1].flatten
+    }
+
+    @Check
+    def checkLanguageName(CausalGraph _graph) {
+        if (_graph.language.isNullOrEmpty && !_graph.eAllContents.filter(LanguageBody).isEmpty) {
+            warning('Please specify the language for this graph', CausalGraphPackage.Literals.CAUSAL_GRAPH__LANGUAGE)
+        }
     }
 
     @Check
@@ -124,8 +141,9 @@ class CausalGraphValidator extends AbstractCausalGraphValidator {
     @Check
     def checkUnusedVariable(CausalGraph _graph) {
         for (Variable _variable : _graph.variables) {
+            val assignmentReferences = _graph.assignments.map[assignment]
             val edgeReferences = _graph.edges.filter(DataFlowEdge).flatMap[dataReferences].flatMap[variables]
-            if (!edgeReferences.contains(_variable)) {
+            if (!assignmentReferences.contains(_variable) && !edgeReferences.contains(_variable)) {
                 warning('Variable is not used', _variable, null, ELEMENT_UNUSED, 'variable')
             }
         }

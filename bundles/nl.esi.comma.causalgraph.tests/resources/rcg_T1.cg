@@ -6,6 +6,7 @@ scenario T1:
 
 graph TestGraphT1:
     type: ReducedCausalGraph
+    language: "C++"
 
     types:
         alias hType "test-interface::HRecord"

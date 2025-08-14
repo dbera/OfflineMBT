@@ -9,6 +9,7 @@ scenario T2:
 
 graph TestGraphT1__TestGraphT2:
     type: UnifiedCausalGraph
+    language: "C++"
 
     types:
         alias hType "test-interface::HRecord"
