@@ -29,6 +29,7 @@ import nl.esi.comma.expressions.expression.ExpressionConstantString
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import nl.esi.comma.causalgraph.causalGraph.LanguageBody
 import nl.esi.comma.causalgraph.causalGraph.AliasTypeDecl
+import nl.esi.comma.causalgraph.causalGraph.ScenarioStep
 
 class CausalGraphBDD {
     def generateBDD(CausalGraph prod, IFileSystemAccess2 fsa) {
@@ -55,9 +56,11 @@ class CausalGraphBDD {
     }
 
     def generateCppSteps(CausalGraph cg, IFileSystemAccess2 fsa) {
-        if (cg.type == GraphType.BDDUCG)
+        if (cg.type == GraphType.BDDUCG) {
             toCPPStepDefinitionsHeaderFile(cg, fsa)
             toCPPStepDefinitionsCPPFile(cg, fsa)
+            toCPPTestValidationCode(cg, fsa)
+        }
     }
 
     /**
@@ -212,20 +215,8 @@ class CausalGraphBDD {
             prevKw = keyword
             var stepName = stepNameProcessing(node.stepName)
             content.append("  ").append(keyword).append(" ").append(stepName)
-            // 1) Collect parameter names (in order)
-            val parameterNames = node.stepParameters.map[p|p.name].toList
 
-            // 2) Gather only AssignmentAction arguments (null-safe on stepArguments)
-            val assignmentArgs = (step?.stepArguments ?: #[]).filter[a|a instanceof AssignmentAction].map [ a |
-                a as AssignmentAction
-            ]
-
-            // 3) Build an ordered argMap aligned to parameterNames
-            val argMap = new LinkedHashMap<String, String>
-            for (pName : parameterNames) {
-                val match = assignmentArgs.findFirst[aa|argName(aa) == pName]
-                argMap.put(pName, if(match !== null) renderExpressionValue(match.exp) else "")
-            }
+            val argMap = getParaArgMap(node, step)
 
             if (!argMap.empty) {
                 content.append(" with ").append(argMap.values.join(" and ")).append("\n")
@@ -236,6 +227,23 @@ class CausalGraphBDD {
             num++
             node = findNextNode(cg, node, sc, num)
         }
+    }
+
+    def getParaArgMap(Node node, ScenarioStep step) {
+        // 1) Collect parameter names (in order)
+        val parameterNames = node.stepParameters.map[p|p.name].toList
+
+        // 2) Gather only AssignmentAction arguments (null-safe on stepArguments)
+        val assignmentArgs = (step?.stepArguments ?: #[]).filter[a|a instanceof AssignmentAction].map [ a |
+            a as AssignmentAction
+        ]
+        // 3) Build an ordered argMap aligned to parameterNames
+        val argMap = new LinkedHashMap<String, String>
+        for (pName : parameterNames) {
+            val match = assignmentArgs.findFirst[aa|argName(aa) == pName]
+            argMap.put(pName, if(match !== null) renderExpressionValue(match.exp) else "")
+        }
+        argMap
     }
 
     // Helper to get the argument's name regardless of model variant
@@ -273,14 +281,9 @@ class CausalGraphBDD {
             // Replace each (type name) with the appropriate capture group
             for (param : node.stepParameters) {
                 val typeName = param.type.type.name
-
+                
                 // Select capture group based on type (strings are quoted)
-                val group = if (typeName.equalsIgnoreCase("string")) {
-                        "\"(.*)\""
-                    } else {
-                        "(.*)"
-                    }
-
+                val group = if (typeName.equalsIgnoreCase("string")) "\"(.*)\"" else "(.*)"
                 paraGroup.add(group)
             }
 
@@ -308,6 +311,16 @@ class CausalGraphBDD {
         sb.append("  }\n")
         sb.append("}\n")
         fsa.generateFile(cg.name + "Steps.cs", sb.toString)
+    }
+
+    protected def getUniqueNodes(CausalGraph cg) {
+        // Collect unique nodes used in any scenario
+        val uniqueNodes = cg.nodes.filter [ n |
+            cg.scenarios.exists [ sc |
+                n.steps.exists[t|t.scenario.name == sc.name]
+            ]
+        ]
+        return uniqueNodes
     }
 
     protected def stepNameProcessing(String rawStepName) {
@@ -365,9 +378,7 @@ class CausalGraphBDD {
             sb.append(cg.header.trim).append("\n")
         }
         sb.append("\n")
-        
         sb.append("class " + cg.name + "{\n")
-
         sb.append("public:\n")
 
         // Global variables
@@ -390,11 +401,7 @@ class CausalGraphBDD {
         }
 
         // Collect unique nodes used in any scenario
-        val uniqueNodes = cg.nodes.filter [ n |
-            cg.scenarios.exists [ sc |
-                n.steps.exists[t|t.scenario.name == sc.name]
-            ]
-        ]
+        val uniqueNodes = getUniqueNodes(cg)
 
         // Step definitions
         for (node : uniqueNodes) {
@@ -420,15 +427,11 @@ class CausalGraphBDD {
         if (!cg.header.empty) {
             sb.append(cg.header.trim).append("\n")
         }
-        sb.append("#include " +"\""+ cg.name+"Steps.h"+"\""+"\n")
+        sb.append("#include " + "\"" + cg.name + "Steps.h" + "\"" + "\n")
         sb.append("\n")
 
         // Collect unique nodes used in any scenario
-        val uniqueNodes = cg.nodes.filter [ n |
-            cg.scenarios.exists [ sc |
-                n.steps.exists[t|t.scenario.name == sc.name]
-            ]
-        ]
+        val uniqueNodes = getUniqueNodes(cg)
 
         // Step definitions
         for (node : uniqueNodes) {
@@ -450,7 +453,64 @@ class CausalGraphBDD {
             }
             sb.append("}\n\n")
         }
-
         fsa.generateFile(cg.name + "Steps.cpp", sb.toString)
     }
+
+    def toCPPTestValidationCode(CausalGraph cg, IFileSystemAccess2 fsa) {
+        val sb = new StringBuilder
+        // Includes
+        sb.append("#include <gtest/gtest.h>")
+        sb.append("#include " + "\"" + cg.name + "Steps.h" + "\"" + "\n")
+        sb.append("\n")
+
+        // Generate class stub
+        var className = cg.name + "Test"
+        sb.append("class " + className + ": public ::testing::Test {\n")
+        sb.append("protected:\n")
+        var instanceName = cg.name.toFirstLower;
+        sb.append(cg.name + " " + instanceName + ";\n")
+        sb.append("};\n\n")
+
+        val scenarios = cg.scenarios.map[s|s]
+        for (sc : scenarios) {
+            sb.append("TEST_F(" + className + "," + sc.name + ")" + "{\n")
+            var methodCalls = buildCPPFuncCallChain(cg, sc)
+            for (mc : methodCalls) {
+                sb.append(instanceName + "." + mc + ";\n")
+            }
+            sb.append("}\n\n")
+        }
+        fsa.generateFile(cg.name + "Test.cpp", sb.toString)
+    }
+
+    /**
+     * Walks the control-flow chain for a scenario and builds a list of cpp function calls.
+     */
+    protected def List<String> buildCPPFuncCallChain(CausalGraph cg, ScenarioDecl sc) {
+        val steps = new ArrayList<String>
+        var stepNum = 1
+        var node = findNodeFor(cg, sc.name, stepNum)
+        while (node !== null) {
+            // capture current step number for closure
+            val currentStep = stepNum
+            val step = node.steps.findFirst [ s |
+                s.getScenario() == sc && s.stepNumber == currentStep
+            ]
+            if (step !== null) {
+                var stepName = stepNameProcessing(node.stepName)
+                val methodName = stepName.replaceAll(" ", "")
+
+                val argMap = getParaArgMap(node, step)
+                if (!argMap.empty)
+                    steps.add(methodName + "(" + argMap.values.join(" , ") + ")")
+                else
+                    steps.add(methodName + "()")
+
+                stepNum++
+                node = findNextNode(cg, node, sc.name, stepNum)
+            }
+        }
+        steps
+    }
+
 }
