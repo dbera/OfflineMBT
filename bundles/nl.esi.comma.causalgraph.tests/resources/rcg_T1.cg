@@ -6,6 +6,7 @@ scenario T1:
 
 graph TestGraphT1:
     type: ReducedCausalGraph
+    language: "C++"
 
     types:
         alias hType "test-interface::HRecord"
@@ -40,7 +41,7 @@ graph TestGraphT1:
             »
 
     node n2:
-        step-name: "ASSERT_XY(h.a, x)"
+        step-name: function "ASSERT_XY(h.a, x)"
         step-type: Then
         scenario T1 step 3:
             step-body: «
