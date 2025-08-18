@@ -272,7 +272,7 @@ public class MainCamunda {
 	private static void addShapeToPlane(BpmnModelInstance modelInstance, BpmnPlane plane, BaseElement element,
 			Bounds bounds) {
 		BpmnShape shape = modelInstance.newInstance(BpmnShape.class);
-		//shape.setId(element.getId() + "_shape");
+		shape.setId(element.getId() + "_shape");
 		shape.setBpmnElement(element);
 		shape.setBounds(bounds);
 		plane.addChildElement(shape);
@@ -280,7 +280,7 @@ public class MainCamunda {
 
 	private static Task createTaskWithIO(BpmnModelInstance modelInstance, Process process, String id, String name) {
 		Task task = modelInstance.newInstance(Task.class);
-//		task.setId(id);
+		task.setId(id);
 		task.setName(name);
 		process.addChildElement(task);
 
@@ -331,7 +331,7 @@ public class MainCamunda {
 	private static void createSequenceFlowWithEdge(BpmnModelInstance modelInstance, Process process, BpmnPlane plane,
 			FlowNode source, FlowNode target, String flowId, Bounds sourceBounds, Bounds targetBounds) {
 		SequenceFlow flow = modelInstance.newInstance(SequenceFlow.class);
-//		flow.setId(flowId);
+		flow.setId(flowId);
 		flow.setSource(source);
 		flow.setTarget(target);
 		process.addChildElement(flow);
@@ -345,25 +345,25 @@ public class MainCamunda {
 		Waypoint wp1 = modelInstance.newInstance(Waypoint.class);
 		wp1.setX(sourceBounds.getX() + sourceBounds.getWidth());
 		wp1.setY(sourceBounds.getY() + sourceBounds.getHeight() / 2);
+		
+
+		Waypoint wp2 = modelInstance.newInstance(Waypoint.class);
+		Waypoint wp3 = modelInstance.newInstance(Waypoint.class);
 
 		double midpoint = (sourceBounds.getX() + sourceBounds.getWidth() + targetBounds.getX())/2;
+		wp2.setX(midpoint);
+		wp2.setY(sourceBounds.getY() + sourceBounds.getHeight() / 2);
+		wp3.setX(midpoint);
+		wp3.setY(targetBounds.getY() + targetBounds.getHeight() / 2);
 
-		Waypoint wp1mid = modelInstance.newInstance(Waypoint.class);
-		wp1mid.setX(midpoint);
-		wp1mid.setY(sourceBounds.getY() + sourceBounds.getHeight() / 2);
-
-		Waypoint wp2mid = modelInstance.newInstance(Waypoint.class);
-		wp2mid.setX(midpoint);
-		wp2mid.setY(targetBounds.getY() + targetBounds.getHeight() / 2);
-		
-		Waypoint wp2 = modelInstance.newInstance(Waypoint.class);
-		wp2.setX(targetBounds.getX());
-		wp2.setY(targetBounds.getY() + targetBounds.getHeight() / 2);
+		Waypoint wp4 = modelInstance.newInstance(Waypoint.class);
+		wp4.setX(targetBounds.getX());
+		wp4.setY(targetBounds.getY() + targetBounds.getHeight() / 2);
 
 		edge.getWaypoints().add(wp1);
-//		edge.getWaypoints().add(wp1mid);
-//		edge.getWaypoints().add(wp2mid);
 		edge.getWaypoints().add(wp2);
+		edge.getWaypoints().add(wp3);
+		edge.getWaypoints().add(wp4);
 		plane.addChildElement(edge);
 	}
 
@@ -373,7 +373,7 @@ public class MainCamunda {
 		String dsId = "datastore_" + dsDescriptor.id.replaceAll("\\s+", "_");
 
 		DataStore dataStore = modelInstance.newInstance(DataStore.class);
-//		dataStore.setId(dsId);
+		dataStore.setId(dsId);
 		dataStore.setName(dsDescriptor.id);
 		definitions.addChildElement(dataStore);
 
