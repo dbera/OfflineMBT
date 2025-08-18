@@ -5,7 +5,6 @@ scenario T2:
     requirements: R1 R2
 
 graph TestGraphT2:
-    type: ReducedCausalGraph
     language: "C++"
 
     types:

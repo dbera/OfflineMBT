@@ -33,6 +33,9 @@ TypeDecl returns types::TypeDecl:
     super | AliasTypeDecl
 ;
 
+// The graph type is not used in the grammar, but defines the 
+// file-extensions for the different graph types, see also 
+// nl.esi.comma.causalgraph.utilities.CausalGraphQueries#getType(nl.esi.comma.causalgraph.causalGraph.CausalGraph)
 enum GraphType:
     cg = 'CausalGraph' |
     rcg = 'ReducedCausalGraph' |
@@ -52,7 +55,6 @@ CausalGraph:
     requirements += RequirementDecl+
     scenarios += ScenarioDecl+
     'graph' name=ID ':'
-        'type' ':' type = GraphType
         ('language' ':' language = STRING)?
         ('header' ':' header = BODY)?
         ('types' ':' types += TypeDecl+)?

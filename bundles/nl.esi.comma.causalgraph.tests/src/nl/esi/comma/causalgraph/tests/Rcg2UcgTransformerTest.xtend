@@ -23,16 +23,16 @@ class Rcg2UcgTransformerTest {
         SaveOptions.newBuilder.format.options.addTo(saveOptions)
 
         val rcgs = inputs.map [ input |
-            persistor.loadOne(toUri(Path.of('resources','''«input».cg''')))
+            persistor.loadOne(toUri(Path.of('resources','''«input».rcg''')))
         ]
 
-        val actualPath = Path.of('resources','''«expected».actual.cg''')
+        val actualPath = Path.of('resources','''«expected».actual.ucg''')
         val actualGraph = new Rcg2UcgTransformer().merge(rcgs)
         EcoreUtil3.unformat(actualGraph)
         persistor.save(toUri(actualPath), saveOptions, actualGraph)
 
-        val expectedPath = Path.of('resources','''«expected».expected.cg''')
-        val expectedGraph = persistor.loadOne(toUri(Path.of('resources','''«expected».cg''')))
+        val expectedPath = Path.of('resources','''«expected».expected.ucg''')
+        val expectedGraph = persistor.loadOne(toUri(Path.of('resources','''«expected».ucg''')))
         EcoreUtil3.unformat(expectedGraph)
         persistor.save(toUri(expectedPath), saveOptions, expectedGraph)
 

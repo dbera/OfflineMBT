@@ -18,16 +18,19 @@ package nl.esi.comma.causalgraph.validation
 import java.util.List
 import java.util.Map
 import java.util.TreeMap
+import nl.esi.comma.actions.actions.ActionsPackage
 import nl.esi.comma.causalgraph.causalGraph.CausalGraph
 import nl.esi.comma.causalgraph.causalGraph.CausalGraphPackage
 import nl.esi.comma.causalgraph.causalGraph.ControlFlowEdge
 import nl.esi.comma.causalgraph.causalGraph.DataFlowEdge
 import nl.esi.comma.causalgraph.causalGraph.DataReference
 import nl.esi.comma.causalgraph.causalGraph.GraphType
+import nl.esi.comma.causalgraph.causalGraph.LanguageBody
 import nl.esi.comma.causalgraph.causalGraph.Node
 import nl.esi.comma.causalgraph.causalGraph.RequirementDecl
 import nl.esi.comma.causalgraph.causalGraph.ScenarioDecl
 import nl.esi.comma.causalgraph.causalGraph.ScenarioStep
+import nl.esi.comma.causalgraph.causalGraph.StepType
 import nl.esi.comma.expressions.expression.MapTypeConstructor
 import nl.esi.comma.expressions.expression.Variable
 import nl.esi.comma.types.types.Type
@@ -37,9 +40,6 @@ import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.validation.Check
 
 import static extension nl.esi.comma.causalgraph.utilities.CausalGraphQueries.*
-import nl.esi.comma.causalgraph.causalGraph.StepType
-import nl.esi.comma.actions.actions.ActionsPackage
-import nl.esi.comma.causalgraph.causalGraph.LanguageBody
 
 /**
  * This class contains custom validation rules. 

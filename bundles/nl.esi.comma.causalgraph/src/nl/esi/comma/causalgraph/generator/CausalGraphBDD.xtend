@@ -16,20 +16,22 @@ import java.util.ArrayList
 import java.util.LinkedHashMap
 import java.util.List
 import nl.esi.comma.actions.actions.AssignmentAction
+import nl.esi.comma.causalgraph.causalGraph.AliasTypeDecl
 import nl.esi.comma.causalgraph.causalGraph.CausalGraph
 import nl.esi.comma.causalgraph.causalGraph.ControlFlowEdge
 import nl.esi.comma.causalgraph.causalGraph.GraphType
+import nl.esi.comma.causalgraph.causalGraph.LanguageBody
 import nl.esi.comma.causalgraph.causalGraph.Node
 import nl.esi.comma.causalgraph.causalGraph.ScenarioDecl
+import nl.esi.comma.causalgraph.causalGraph.ScenarioStep
 import nl.esi.comma.expressions.expression.Expression
 import nl.esi.comma.expressions.expression.ExpressionConstantBool
 import nl.esi.comma.expressions.expression.ExpressionConstantInt
 import nl.esi.comma.expressions.expression.ExpressionConstantReal
 import nl.esi.comma.expressions.expression.ExpressionConstantString
 import org.eclipse.xtext.generator.IFileSystemAccess2
-import nl.esi.comma.causalgraph.causalGraph.LanguageBody
-import nl.esi.comma.causalgraph.causalGraph.AliasTypeDecl
-import nl.esi.comma.causalgraph.causalGraph.ScenarioStep
+
+import static extension nl.esi.comma.causalgraph.utilities.CausalGraphQueries.*
 
 class CausalGraphBDD {
     def generateBDD(CausalGraph prod, IFileSystemAccess2 fsa) {

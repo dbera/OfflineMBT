@@ -42,7 +42,7 @@ Workflow {
 		}
 		language = StandardLanguage {
 			name = "nl.esi.comma.causalgraph.CausalGraph"
-			fileExtensions = "cg"
+			fileExtensions = "cg,rcg,ucg,bdducg"
 			
 			referencedResource = "platform:/resource/nl.esi.comma.actions/model/generated/Actions.genmodel"
 

@@ -3,14 +3,35 @@ package nl.esi.comma.causalgraph.utilities
 import nl.esi.comma.causalgraph.causalGraph.CausalGraph
 import nl.esi.comma.causalgraph.causalGraph.ControlFlowEdge
 import nl.esi.comma.causalgraph.causalGraph.DataFlowEdge
-import nl.esi.comma.causalgraph.causalGraph.Node
-import nl.esi.comma.causalgraph.causalGraph.ScenarioStep
 import nl.esi.comma.causalgraph.causalGraph.DataReference
 import nl.esi.comma.causalgraph.causalGraph.Edge
+import nl.esi.comma.causalgraph.causalGraph.GraphType
+import nl.esi.comma.causalgraph.causalGraph.Node
+import nl.esi.comma.causalgraph.causalGraph.ScenarioStep
+import org.eclipse.emf.common.util.URI
+import org.eclipse.emf.ecore.resource.Resource
 
 class CausalGraphQueries {
     private new() {
         // Private constructor for utility classes
+    }
+
+    static def getGraphType(String fileExtension) {
+        return GraphType.getByName(fileExtension)
+    }
+
+    static def GraphType getType(CausalGraph graph) {
+        return getGraphType(graph.eResource?.URI?.fileExtension)
+    }
+
+    static def void setType(CausalGraph graph, GraphType type) {
+        if (type === null) {
+            throw new IllegalArgumentException('Graph type cannot be null')
+        } else if (graph.type != type) {
+            val uri = URI.createURI(graph.name ?: 'unknown').appendFileExtension(type.getName)
+            val resource = Resource.Factory.Registry.INSTANCE.getFactory(uri).createResource(uri)
+            resource.contents += graph
+        }
     }
 
     static def getGraph(Node node) {
