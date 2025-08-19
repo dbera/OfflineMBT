@@ -321,7 +321,7 @@ specification printer
             }
         
         action			AssertVisualInspection
-        case			default step-type "Assert Visual Inspection" action-type ASSERT
+        case			default step-type "Assert_Visual_Inspection" action-type ASSERT
         with-inputs		between_WaitforVisualInspection_and_AssertVisualInspection, inspectionReport
         assertions default {
             assert_kpi: assert-that (inspectionReport.kpi) {
