@@ -26,6 +26,8 @@ import nl.esi.comma.expressions.expression.ExpressionConstantBool
 import nl.esi.comma.expressions.expression.ExpressionConstantReal
 import nl.esi.comma.expressions.expression.ExpressionConstantInt
 import nl.esi.comma.expressions.expression.ExpressionMinus
+import nl.esi.comma.expressions.expression.ExpressionPlus
+import nl.esi.comma.expressions.expression.Expression
 
 /**
  * Parser for json elements, objects, and arrays
@@ -142,23 +144,28 @@ class JsonHelper {
                 val expr = elem.expr
                 switch (expr) {
                     ExpressionConstantString: expr.value
-                    ExpressionConstantBool: expr.value.toString
-                    ExpressionConstantReal: expr.value.toString
-                    ExpressionConstantInt: expr.value.toString
-                    ExpressionMinus: {
-                        val sub = expr.sub
-                        switch (sub){
-                            ExpressionConstantReal: '-'+sub.value.toString
-                            ExpressionConstantInt: '-'+sub.value.toString
-                            default: throw new RuntimeException("Not supported")
-                        }
-                    }
+                    ExpressionConstantBool: Boolean.toString(expr.value)
+                    ExpressionConstantReal: Double.toString(expr.value)
+                    ExpressionConstantInt: Long.toString(expr.value)
+                    ExpressionMinus: getStringSignedValue(expr)
+                    ExpressionPlus: getStringSignedValue(expr)
                     default: throw new RuntimeException("Not supported")
                 }
             }
             default: throw new RuntimeException("Not supported")
         }
     }
+
+    def static String getStringSignedValue(Expression expr) {
+        return switch (expr) {
+            ExpressionPlus: '+' + getStringSignedValue(expr.sub)
+            ExpressionMinus: '-' + getStringSignedValue(expr.sub)
+            ExpressionConstantReal: Double.toString(expr.value)
+            ExpressionConstantInt: Long.toString(expr.value)
+            default: throw new IllegalArgumentException('Unknown Expression type ' + expr)
+        }
+    }
+
     def static boolean isBasicType(JsonValue elem) {
         switch (elem) {
             JsonExpression: {

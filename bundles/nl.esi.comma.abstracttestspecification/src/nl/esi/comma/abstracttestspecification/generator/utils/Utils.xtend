@@ -176,9 +176,9 @@ class Utils
             default: throw new IllegalArgumentException('Unknown JSON type ' + json)
         }
     }
-    
+
     def static String getStringSignedValue(Expression expr) {
-        switch (expr) {
+        return switch (expr) {
             ExpressionPlus: '+'+getStringSignedValue(expr.sub)
             ExpressionMinus: '-'+getStringSignedValue(expr.sub)
             ExpressionConstantReal: String.valueOf(expr.value)
