@@ -318,7 +318,7 @@
       <bpmn2:dataStoreReference id="DataStoreReference_0auqxs9" name="printRequests" bpmn4s:originDataReference="DataStoreReference_0wnjztj" bpmn4s:dataTypeRef="DataType_3mm73l2" />
       <bpmn2:sequenceFlow id="Flow_0fe8hce" sourceRef="Activity_02lfj6a" targetRef="Activity_1c074wo" />
       <bpmn2:dataStoreReference id="DataStoreReference_0mm7eck" name="inspectionReport" bpmn4s:originDataReference="DataStoreReference_1r5xmmd" bpmn4s:dataTypeRef="DataType_37032q4" />
-      <bpmn2:task id="Activity_02lfj6a" name="Assert Visual Inspection" bpmn4s:subType="AssertTask" bpmn4s:stepType="Assert Visual Inspection" bpmn4s:assertions="assert_kpi: assert-that (inspectionReport.kpi) {&#10;  equal-to 9.0 within-margin relative (1.0)&#10;}">
+      <bpmn2:task id="Activity_02lfj6a" name="Assert Visual Inspection" bpmn4s:subType="AssertTask" bpmn4s:stepType="Assert_Visual_Inspection" bpmn4s:assertions="assert_kpi: assert-that (inspectionReport.kpi) {&#10;  equal-to 9.0 within-margin relative (1.0)&#10;}">
         <bpmn2:incoming>Flow_0kbycuh</bpmn2:incoming>
         <bpmn2:outgoing>Flow_0fe8hce</bpmn2:outgoing>
         <bpmn2:property id="Property_12ekwd0" name="__targetRef_placeholder" />
