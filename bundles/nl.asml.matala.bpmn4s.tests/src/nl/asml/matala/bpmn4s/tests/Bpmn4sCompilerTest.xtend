@@ -49,7 +49,9 @@ class Bpmn4sCompilerTest {
         for (expectedFile : expectedFiles) {
             val actualFile = actualFiles.findFirst[it.fileName == expectedFile.fileName]
             assertLinesMatch(expectedFile.lines, actualFile.lines, '''Different content for «expectedFile.fileName»''')
+            Files.delete(actualFile)
         }
+        Files.delete(actualDir)
     }
 
     @Test

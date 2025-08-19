@@ -280,7 +280,7 @@
       <bpmn2:task id="Activity_1q0krpv" name="Prepare Printer">
         <bpmn2:incoming>Flow_1f74bn4</bpmn2:incoming>
         <bpmn2:outgoing>Flow_1rkhqnd</bpmn2:outgoing>
-        <bpmn2:dataOutputAssociation id="DataOutputAssociation_1ozp8p3" bpmn4s:update="printJob := PrintRequest {&#10;	id = ctx.id,&#10;	resolution = ctx.resolution,&#10;	scale = ctx.scale,&#10;	color = ctx.color,&#10;	opType = OperationType::PREP&#10;}">
+        <bpmn2:dataOutputAssociation id="DataOutputAssociation_1ozp8p3" bpmn4s:update="printJob := PrintRequest {&#10;	id = ctx.id,&#10;	resolution = ctx.resolution,&#10;	scale = null,&#10;	color = ctx.color,&#10;	opType = OperationType::PREP&#10;}">
           <bpmn2:targetRef>DataObjectReference_021icu4</bpmn2:targetRef>
         </bpmn2:dataOutputAssociation>
       </bpmn2:task>
@@ -558,7 +558,7 @@
       <bpmndi:BPMNShape id="DataStoreReference_0wnjztj_di" bpmnElement="DataStoreReference_0wnjztj" bioc:stroke="#831311" bioc:fill="#ffcdd2" color:background-color="#ffcdd2" color:border-color="#831311">
         <dc:Bounds x="495" y="-135" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="486" y="-167" width="69" height="14" />
+          <dc:Bounds x="487" y="-167" width="68" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="DataInputAssociation_069fsrj_di" bpmnElement="DataInputAssociation_069fsrj">
@@ -878,7 +878,7 @@
       <bpmndi:BPMNShape id="DataStoreReference_0auqxs9_di" bpmnElement="DataStoreReference_0auqxs9">
         <dc:Bounds x="-55" y="25" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="-65" y="-7" width="69" height="14" />
+          <dc:Bounds x="-64" y="-7" width="68" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DataStoreReference_0mm7eck_di" bpmnElement="DataStoreReference_0mm7eck">
