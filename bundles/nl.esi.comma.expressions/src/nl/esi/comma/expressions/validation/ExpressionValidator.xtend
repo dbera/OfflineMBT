@@ -206,6 +206,7 @@ class ExpressionValidator extends AbstractExpressionValidator {
 		    ExpressionEqual:{
 		        val leftType = e.left.typeOf
 		        val rightType = e.right.typeOf
+		        if(leftType === null || rightType === null) {return}
                 if(!leftType.synonym(rightType)){
                     error("Type mismatch: actual type does not match the expected type", ExpressionPackage.Literals.EXPRESSION_BINARY__LEFT)
                 }
