@@ -394,8 +394,9 @@ public class Main {
 				}
 			}
 			ftype = ftype.equals("") ? tref : ftype;
+			Boolean fSymbolic = "true".equalsIgnoreCase(f.getAttributeValueNs("http://bpmn4s", "symbolic"));
 			Boolean fSuppress = "true".equalsIgnoreCase(f.getAttributeValueNs("http://bpmn4s", "suppressUpdate"));
-			rec.addField(fname, ftype, fSuppress);
+			rec.addField(fname, ftype, fSymbolic, fSuppress);
 		}
 		return rec;
 	}
