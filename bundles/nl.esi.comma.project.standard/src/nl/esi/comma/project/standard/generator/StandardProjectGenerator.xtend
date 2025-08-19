@@ -112,7 +112,7 @@ class StandardProjectGenerator extends AbstractGenerator {
 
             val renamingRules = task.renamingRules !== null? createPropertiesMap(task.renamingRules): new HashMap()
             val generatorParams = task.generatorParams !== null? createPropertiesMap(task.generatorParams): new HashMap()
-            val fromAbstractToConcreteGen = new FromAbstractToConcrete(renamingRules, generatorParams)
+            val fromAbstractToConcreteGen = new FromAbstractToConcrete()
             fromAbstractToConcreteGen.doGenerate(absTspecRes, conTspecFsa, ctx)
 
             val conTspecFileName = absTspecFileName.replaceAll('\\.atspec$','.tspec')
