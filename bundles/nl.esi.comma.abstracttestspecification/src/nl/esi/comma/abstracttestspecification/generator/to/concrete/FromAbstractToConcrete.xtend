@@ -139,7 +139,7 @@ class FromAbstractToConcrete extends AbstractGenerator {
             var abs_assert = step
             var cexpr_handler = new ConcreteExpressionHandler()
             return switch (grammarElement) {
-                case gaExpression.expressionLevel9Access.expressionVariableParserRuleCall_6: {
+                case gaExpression.expressionLevel9Access.expressionVariableParserRuleCall_7: {
                     val exprVar = semanticElement as ExpressionVariable
                     return cexpr_handler.prepareAssertionStepExpressions(abs_assert, exprVar)
                 }

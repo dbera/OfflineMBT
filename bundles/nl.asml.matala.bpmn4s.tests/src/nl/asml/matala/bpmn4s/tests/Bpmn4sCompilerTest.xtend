@@ -23,14 +23,14 @@ import static extension java.nio.file.Files.*
 import static org.junit.jupiter.api.Assertions.*
 
 class Bpmn4sCompilerTest {
-    def void testCompilation(String fileName, boolean simulation) {
+    def void testCompilation(String inputFileName, String expectedFileName, boolean simulation) {
         val resourcesDir = Path.of('resources')
         assertTrue(resourcesDir.isDirectory)
 
-        val inputFile = resourcesDir.resolve('''input/«fileName».bpmn''')
-        assertTrue(inputFile.isReadable, '''Input for «fileName» does not exist or cannot be read.''')
+        val inputFile = resourcesDir.resolve('''input/«inputFileName».bpmn''')
+        assertTrue(inputFile.isReadable, '''Input for «inputFileName» does not exist or cannot be read.''')
 
-        val actualDir = resourcesDir.resolve('''actual/«fileName»''')
+        val actualDir = resourcesDir.resolve('''actual/«expectedFileName»''')
         if (actualDir.exists) {
             FileUtils.deleteDirectory(new File(actualDir.toString()))
         }
@@ -38,7 +38,7 @@ class Bpmn4sCompilerTest {
 
         Main.compile(inputFile.toString, simulation, actualDir.toString)
 
-        val expectedDir = resourcesDir.resolve('''expected/«fileName»''')
+        val expectedDir = resourcesDir.resolve('''expected/«expectedFileName»''')
         assertTrue(expectedDir.isDirectory,
             '''Expected output does not exist, please inspect the actual output at «actualDir».''')
 
@@ -49,11 +49,23 @@ class Bpmn4sCompilerTest {
         for (expectedFile : expectedFiles) {
             val actualFile = actualFiles.findFirst[it.fileName == expectedFile.fileName]
             assertLinesMatch(expectedFile.lines, actualFile.lines, '''Different content for «expectedFile.fileName»''')
+            Files.delete(actualFile)
         }
+        Files.delete(actualDir)
     }
 
     @Test
     def void testFriesFlatSimulator() {
-        testCompilation('fries_flat', true);
+        testCompilation('fries_flat', 'fries_flat', true);
+    }
+
+    @Test
+    def void testPrinterSimulator() {
+        testCompilation('printer', 'printer_sim', true);
+    }
+
+    @Test
+    def void testPrinterTests() {
+        testCompilation('printer', 'printer_tests', false);
     }
 }
