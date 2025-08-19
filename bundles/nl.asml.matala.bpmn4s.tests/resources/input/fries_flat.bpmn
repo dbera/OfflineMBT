@@ -130,10 +130,6 @@
         <dc:Bounds x="620" y="390" width="100" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_1fzja8h_di" bpmnElement="Activity_1fzja8h">
-        <dc:Bounds x="450" y="550" width="100" height="80" />
-        <bpmndi:BPMNLabel />
-      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_19yirph_di" bpmnElement="Activity_19yirph">
         <dc:Bounds x="680" y="550" width="100" height="80" />
         <bpmndi:BPMNLabel />
@@ -171,6 +167,10 @@
         <bpmndi:BPMNLabel>
           <dc:Bounds x="971" y="453" width="17" height="14" />
         </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1fzja8h_di" bpmnElement="Activity_1fzja8h">
+        <dc:Bounds x="450" y="550" width="100" height="80" />
+        <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="Flow_0yycfxe_di" bpmnElement="Flow_0yycfxe">
         <di:waypoint x="168" y="460" />

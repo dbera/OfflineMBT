@@ -60,6 +60,16 @@ class Bpmn4sCompilerTest {
     }
 
     @Test
+    def void testFriesSubSimulator() {
+        testCompilation('fries_sub', 'fries_sub', true);
+    }
+
+    @Test
+    def void testFriesCompSimulator() {
+        testCompilation('fries_comp', 'fries_comp', true);
+    }
+
+    @Test
     def void testPrinterSimulator() {
         testCompilation('printer', 'printer_sim', true);
     }
