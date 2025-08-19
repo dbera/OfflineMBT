@@ -35,6 +35,7 @@ import nl.esi.comma.types.types.TypesPackage
 import org.eclipse.emf.common.util.URI
 import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.validation.Check
+import nl.asml.matala.product.product.UpdateOutVar
 
 /**
  * This class contains custom validation rules. 
@@ -194,7 +195,22 @@ class ProductValidator extends AbstractProductValidator {
     private dispatch def void preventIlligalVariableAccess(Expression expr, Set<Variable> variables, Direction direction) {
         expr.eContents.filter(Expression).forEach[preventIlligalVariableAccess(variables, direction)]
     }
-
+    
+    /**
+     * Assignment in update function: A field of a record may be assigned a value if and only if the record variable
+     * itself was initialized either with a default constructor or through variable copy. Enforce 2 types of assignments to record variables. 
+     * **/
+     
+     @Check
+     def checkUpdateAssignment(UpdateOutVar updateOutputVar){
+        val actions = updateOutputVar.act.actions
+        val hasRecordField = actions.exists[ a | a instanceof RecordFieldAssignmentAction ]
+        if(hasRecordField){
+            if (! (actions.get(0) instanceof  AssignmentAction)){
+                error("The record variable should be initialized: ", ProductPackage.Literals.UPDATE_OUT_VAR__ACT)
+            }
+          }
+     }
 /* STRANGE BUG: Output Vars are Empty. Appears in Input Vars. 
  * Not appearing as problem during product generation!
  */
