@@ -1,0 +1,55 @@
+record UNIT {
+	int	unit
+}
+
+record CorrectionItem {
+    string	data
+}
+
+enum PrintResolution { LOW MED HIGH }
+
+record Report {
+    int	id
+    string	payload
+    real	kpi
+}
+
+record OptimizeRequest {
+    int	id
+}
+
+record MeasureRequest {
+    int	id
+    Report	printJobReport
+}
+
+record FactoryCtx {
+    int	id
+    PrintResolution	resolution
+    real	scale
+    ColorType	color
+}
+
+record Result {
+    Outcome	verdict
+}
+
+record PrintRequest {
+    int	id
+    PrintResolution	resolution
+    real	scale
+    ColorType	color
+    OperationType	opType
+}
+
+record CorrectionsReport {
+    map<int,CorrectionItem[]>	correctionsMap
+    int	id
+}
+
+enum Outcome { OK NOK }
+
+enum ColorType { MONOCHROME COLOR }
+
+enum OperationType { PREP PRINT }
+

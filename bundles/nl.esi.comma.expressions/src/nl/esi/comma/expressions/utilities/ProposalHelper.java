@@ -44,6 +44,7 @@ import nl.esi.comma.expressions.expression.ExpressionModulo;
 import nl.esi.comma.expressions.expression.ExpressionMultiply;
 import nl.esi.comma.expressions.expression.ExpressionNEqual;
 import nl.esi.comma.expressions.expression.ExpressionNot;
+import nl.esi.comma.expressions.expression.ExpressionNullLiteral;
 import nl.esi.comma.expressions.expression.ExpressionOr;
 import nl.esi.comma.expressions.expression.ExpressionPlus;
 import nl.esi.comma.expressions.expression.ExpressionPower;
@@ -225,6 +226,8 @@ public class ProposalHelper {
 		} else if (expression instanceof ExpressionEnumLiteral) {
 			ExpressionEnumLiteral e = (ExpressionEnumLiteral) expression;
 			return String.format("\"%s:%s\"", e.getType().getName(), e.getLiteral().getName());
+		} else if (expression instanceof ExpressionNullLiteral) {
+			return "null";
 		} else if (expression instanceof ExpressionVector) {
 			ExpressionVector e = (ExpressionVector) expression;
 			return String.format("[%s]", e.getElements().stream().map(ee -> expression (ee, variablePrefix)).collect(Collectors.joining(", ")));
