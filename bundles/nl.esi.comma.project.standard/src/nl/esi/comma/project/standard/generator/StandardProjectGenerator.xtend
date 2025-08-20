@@ -90,11 +90,13 @@ class StandardProjectGenerator extends AbstractGenerator {
         }
 
         // Generate abstract tspec from petri-net
-        val petriNetURI = fsa.getURI('''CPNServer/«product.specification.name»/«product.specification.name».py''')
+        val specName = product.specification.name
+        val petriNetURI = fsa.getURI('''CPNServer/«specName»/«specName».py''')
         val absTspecFsa = fsa.createFolderAccess('tspec_abstract')
         (new PetriNetToAbstractTspecGenerator(task.pythonExe)).doGenerate(rst, petriNetURI, absTspecFsa, ctx)
 
         for (absTspecFileName : absTspecFsa.list(ROOT_PATH).filter[endsWith('.atspec')]) {
+            val tspecName = absTspecFileName.replaceAll('\\.atspec$','')
             val absTspecRes = absTspecFsa.loadResource(absTspecFileName, rst)
 
             // Fix the pspec import
@@ -108,22 +110,23 @@ class StandardProjectGenerator extends AbstractGenerator {
 
 
             // Generate concrete tspec
-            val conTspecFsa = fsa.createFolderAccess('tspec_concrete')
+            val conTspecFsa = fsa.createFolderAccess('tspec_concrete/'+tspecName)
 
             val renamingRules = task.renamingRules !== null? createPropertiesMap(task.renamingRules): new HashMap()
             val generatorParams = task.generatorParams !== null? createPropertiesMap(task.generatorParams): new HashMap()
-            val fromAbstractToConcreteGen = new FromAbstractToConcrete()
+            val generateFile = './vfab2_scenario/FAST/testcases/'+specName+'_'+tspecName+'/'
+            val fromAbstractToConcreteGen = new FromAbstractToConcrete(generateFile)
             fromAbstractToConcreteGen.doGenerate(absTspecRes, conTspecFsa, ctx)
 
-            val conTspecFileName = absTspecFileName.replaceAll('\\.atspec$','.tspec')
+            val conTspecFileName = tspecName+'.tspec'
             val conTspecRes = conTspecFsa.loadResource(conTspecFileName, rst)
             MergeConcreteDataAssigments.transform(conTspecRes)
             conTspecRes.save(null)
             conTspecRes.validate()
 
             if (task.target == OfflineGenerationTarget.FAST) {
-                // Generate FAST testcases
-                val fastFsa = fsa.createFolderAccess('FAST')
+                // Generate FAST testcase
+                val fastFsa = fsa.createFolderAccess('generated_FAST')
                 val fromConcreteToFastGen = new FromConcreteToFast(renamingRules, generatorParams)
                 fromConcreteToFastGen.doGenerate(conTspecRes, fastFsa, ctx)
             }

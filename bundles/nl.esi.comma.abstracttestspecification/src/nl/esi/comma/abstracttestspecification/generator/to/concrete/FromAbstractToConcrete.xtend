@@ -36,6 +36,12 @@ import static extension nl.esi.comma.types.utilities.EcoreUtil3.*
 
 class FromAbstractToConcrete extends AbstractGenerator {
 
+    String generateFile = './testcases/'
+    
+    new (String generateFilename){ 
+        this.generateFile = generateFilename
+    }
+
     override doGenerate(Resource res, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
         val atd = res.contents.filter(TSMain).map[model].filter(AbstractTestDefinition).head
         if (atd === null) {
@@ -73,7 +79,7 @@ class FromAbstractToConcrete extends AbstractGenerator {
         «ENDFOR»
         }
         
-        generate-file "./vfab2_scenario/FAST/generated_FAST/"
+        generate-file "«this.generateFile»"
         
         step-parameters
         «FOR test : atd.testSeq»
@@ -214,7 +220,7 @@ class FromAbstractToConcrete extends AbstractGenerator {
     // Print types for each step
     def private printTypes(Iterable<Binding> ios, String type, Iterable<String> typesImports) '''
         «FOR ti : typesImports»
-            import "../«ti»"
+            import "../../«ti»"
         «ENDFOR»
         
         record «type» {
@@ -257,7 +263,7 @@ class FromAbstractToConcrete extends AbstractGenerator {
         data-implementation
         // Empty
         
-        path-prefix "./vfab2_scenario/FAST/generated_FAST/dataset/"
+        path-prefix "«this.generateFile»/dataset/"
         var-ref «step.system»Input -> file-name "«step.system»Input.json"
         var-ref «step.system»Output -> file-name "«step.system»Output.json"
     '''

@@ -45,13 +45,13 @@ import nl.esi.comma.expressions.expression.ExpressionNullLiteral
 
 class FromConcreteToFast extends AbstractGenerator {
     
-    val Map<String, String> rename
-    val Map<String, String> args
+    val Map<String, String> rename = new HashMap<String, String>()
+    val Map<String, String> args = new HashMap<String, String>()
 
-    new() {
-        this(new HashMap<String, String>(), new HashMap<String, String>())
+    new (){ 
+        
     }
-
+    
     new(Map<String, String> rename, Map<String, String> params) {
         this.rename = rename
         this.args = params
@@ -60,11 +60,9 @@ class FromConcreteToFast extends AbstractGenerator {
     /* TODO this should come from project task? Investigate and Implement it. */
     var record_path_for_lot_def = "ReferenceFabModelTWINSCANtooladapterandSUTTWINSCANSUTExposeInput.twinscan_expose_input.lot_definition"
     var record_lot_def_file_name = "lot_definition"
-    var record_lot_def_file_path_prefix = "./vfab2_scenario/FAST/generated_FAST/dataset/"
 
     var record_path_for_job_def = "ReferenceFabModelYieldStartooladapterandSUTRUNYSMeasureInput.yieldstar_measure_input.job_definition"
     var record_job_def_file_name = "job_definition"
-    var record_job_def_file_path_prefix = "./vfab2_scenario/FAST/generated_FAST/dataset/"
 
     // In-Memory Data Structures corresponding *.tspec (captured in resource object)
     var mapLocalDataVarToDataInstance = new HashMap<String, List<String>>
@@ -73,6 +71,7 @@ class FromConcreteToFast extends AbstractGenerator {
     var mapDataInstanceToFile = new HashMap<String, List<String>>
     var mapSUTInstanceToFile = new HashMap<String, List<String>>
     var listStepInstances = new ArrayList<Step>
+    
 
     // On save of TSPEC file, this function is called by Eclipse Framework
     override void doGenerate(Resource res, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
@@ -116,6 +115,7 @@ class FromConcreteToFast extends AbstractGenerator {
         // Parse TSPEC Test Definition
         val model = modelInst.model
         if (model instanceof TestDefinition) {
+            var String path_prefix = model.filePath
             testDefFilePath = model.filePath
             // for(gpars : model.gparams) { addMapLocalDataVarToDataInstance(gpars.name, new String) }
             for (steppars : model.stepparams) {
@@ -164,7 +164,7 @@ class FromConcreteToFast extends AbstractGenerator {
                                     var rstepInst = new Step
                                     rstepInst.id = lhs.value
                                     rstepInst.type = s.type.name
-                                    rstepInst.inputFile = record_lot_def_file_path_prefix
+                                    rstepInst.inputFile = path_prefix
                                     rstepInst.variableName = record_lot_def_file_name
                                     rstepInst.recordExp = stepInst.id
                                     rstepInst.parameters.add(mapLHStoRHS) // Added DB 29.05.2025
@@ -182,7 +182,7 @@ class FromConcreteToFast extends AbstractGenerator {
                                     var rstepInst = new Step
                                     rstepInst.id = lhs.value
                                     rstepInst.type = s.type.name
-                                    rstepInst.inputFile = record_job_def_file_path_prefix
+                                    rstepInst.inputFile = path_prefix
                                     rstepInst.variableName = record_job_def_file_name
                                     rstepInst.recordExp = stepInst.id
                                     rstepInst.parameters.add(mapLHStoRHS) // Added DB 29.05.2025
@@ -198,8 +198,8 @@ class FromConcreteToFast extends AbstractGenerator {
                 listStepInstances.add(stepInst)
             }
             // generate vfd XML file
-            fsa.generateFile(testDefFilePath + "vfd.xml", (new VFDXMLGenerator(this.args, this.rename)).generateXMLFromSUTVars(model))
-            fsa.generateFile(testDefFilePath + "reference.kvp", (new RefKVPGenerator()).generateRefKVP(model))
+            fsa.generateFile(testDefFilePath + '/variants/single_variant/' + "vfd.xml", (new VFDXMLGenerator(this.args, this.rename)).generateXMLFromSUTVars(model))
+            fsa.generateFile(testDefFilePath + '/variants/single_variant/' + "reference.kvp", (new RefKVPGenerator()).generateRefKVP(model))
         }
 
         // update step file names based on checking if additional data was specified. 
@@ -213,9 +213,9 @@ class FromConcreteToFast extends AbstractGenerator {
         displayParseResults
 
         // generate data.kvp file
-        fsa.generateFile(testDefFilePath + "data.kvp", generateFASTScenarioFile)
+        fsa.generateFile(testDefFilePath + '/variants/single_variant/' + "data.kvp", generateFASTScenarioFile)
         /* Added DB: 12.05.2025. Support PlantUML Generation for Review */
-        fsa.generateFile(testDefFilePath + "viz.plantuml",
+        fsa.generateFile(testDefFilePath + '/variants/single_variant/' + "viz.plantuml",
             (new DocGen).generatePlantUMLFile(listStepInstances, new HashMap<String, List<String>>))
 
         // Generate JSON data files and vfd.xml
