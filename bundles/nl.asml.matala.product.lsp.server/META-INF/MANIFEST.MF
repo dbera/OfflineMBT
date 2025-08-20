@@ -5,7 +5,7 @@ Bundle-SymbolicName: nl.asml.matala.product.lsp.server
 Bundle-Vendor: TNO_ESI
 Bundle-Version: 4.2.0.qualifier
 Require-Bundle: nl.esi.xtext.lsp.server,
- nl.asml.matala.product,
+ nl.asml.matala.product.ide,
  slf4j.reload4j
 Automatic-Module-Name: nl.asml.matala.product.lsp.server
 Bundle-RequiredExecutionEnvironment: JavaSE-21
