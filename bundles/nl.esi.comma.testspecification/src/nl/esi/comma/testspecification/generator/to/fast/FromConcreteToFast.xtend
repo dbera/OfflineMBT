@@ -45,18 +45,18 @@ import nl.esi.comma.expressions.expression.ExpressionNullLiteral
 
 class FromConcreteToFast extends AbstractGenerator {
     
-    val Map<String, String> rename = new HashMap<String, String>()
-    val Map<String, String> args = new HashMap<String, String>()
+    var Map<String, String> rename = new HashMap<String, String>()
+    var Map<String, String> args = new HashMap<String, String>()
 
-    new (){ 
-        
+    new (){
+
     }
-    
+
     new(Map<String, String> rename, Map<String, String> params) {
         this.rename = rename
         this.args = params
     }
-    
+
     /* TODO this should come from project task? Investigate and Implement it. */
     var record_path_for_lot_def = "ReferenceFabModelTWINSCANtooladapterandSUTTWINSCANSUTExposeInput.twinscan_expose_input.lot_definition"
     var record_lot_def_file_name = "lot_definition"
