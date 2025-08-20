@@ -73,7 +73,7 @@ class TypesCommaGenerator {
 	}
 	
 	def dispatch CharSequence generateDefaultValue(RecordTypeDecl  t){
-		'''«typeToComMASyntax(t)»{«FOR f : TypeUtilities::getAllFields(t) SEPARATOR ', '»«f.name» = «generateDefaultValue(f.type)»«ENDFOR»}'''
+		'''«typeToComMASyntax(t)»{«FOR f : TypeUtilities::getAllFields(t).reject[symbolic] SEPARATOR ', '»«f.name» = «generateDefaultValue(f.type)»«ENDFOR»}'''
 	}
 		
 	def dispatch CharSequence generateDefaultValue(VectorTypeDecl t){

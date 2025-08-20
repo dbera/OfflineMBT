@@ -269,7 +269,7 @@ class TypesZ3Generator {
 	
 	def dispatch CharSequence generateDefaultValue(RecordTypeDecl  t){
 		// '''«typeToZ3Syntax(t)»{«FOR f : TypeUtilities::getAllFields(t) SEPARATOR ', '»«f.name» = «generateDefaultValue(f.type)»«ENDFOR»}'''
-		'''«t.name».init(«FOR f : TypeUtilities::getAllFields(t) SEPARATOR ', '»«generateDefaultValue(f.type.type)»«ENDFOR»)''' 
+		'''«t.name».init(«FOR f : TypeUtilities::getAllFields(t).reject[symbolic] SEPARATOR ', '»«generateDefaultValue(f.type.type)»«ENDFOR»)''' 
 	}
 
 

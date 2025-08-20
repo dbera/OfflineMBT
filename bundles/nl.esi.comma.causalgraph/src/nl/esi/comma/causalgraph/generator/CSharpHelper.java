@@ -89,6 +89,7 @@ class CSharpHelper {
 			return "{}";
 		} else if (type instanceof RecordTypeDecl) {
 			String value = ((RecordTypeDecl) type).getFields().stream()
+				.filter(f -> !f.isSymbolic())
 				.map(f -> String.format("\"%s\":%s", f.getName(), defaultValue(f.getType().getType())))
 				.collect(Collectors.joining(","));
 			return String.format("{%s}", value);
