@@ -1,13 +1,13 @@
 /**
  * Copyright (c) 2024, 2025 TNO-ESI
- *
+ * 
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
- *
+ * 
  * This program and the accompanying materials are made available
  * under the terms of the MIT License which is available at
  * https://opensource.org/licenses/MIT
- *
+ * 
  * SPDX-License-Identifier: MIT
  */
 /*
@@ -36,6 +36,7 @@ import static extension nl.esi.comma.types.utilities.EcoreUtil3.*
 import static extension nl.esi.comma.types.utilities.FileSystemAccessUtil.*
 import static extension org.eclipse.emf.ecore.util.EcoreUtil.*
 import static extension org.eclipse.xtext.EcoreUtil2.*
+import java.util.Map
 
 /**
  * Generates code from your model files on save.
@@ -57,19 +58,18 @@ class StandardProjectGenerator extends AbstractGenerator {
 
     def doGenerate(OfflineGenerationBlock task, ResourceSet rst, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
         val productURI = if (task.bpmn.nullOrEmpty) {
-            task.eResource.resolveUri(task.product)
-        } else {
-            val bpmnUri = task.eResource.resolveUri(task.bpmn)
-            val simulator = (task.target == OfflineGenerationTarget::SIMULATOR)
-            val numTests = task.numTests <= 0 ? 1 : task.numTests
-            val depthLimit = task.depthLimit <= 0 ? 300 : task.depthLimit
-            val pspecFsa = fsa.createFolderAccess('pspec')
+                task.eResource.resolveUri(task.product)
+            } else {
+                val bpmnUri = task.eResource.resolveUri(task.bpmn)
+                val simulator = (task.target == OfflineGenerationTarget::SIMULATOR)
+                val numTests = task.numTests <= 0 ? 1 : task.numTests
+                val depthLimit = task.depthLimit <= 0 ? 300 : task.depthLimit
+                val pspecFsa = fsa.createFolderAccess('pspec')
 
-            (new Bpmn4sToPspecGenerator(simulator, numTests, depthLimit))
-                .doGenerate(rst, bpmnUri, pspecFsa, ctx)
+                (new Bpmn4sToPspecGenerator(simulator, numTests, depthLimit)).doGenerate(rst, bpmnUri, pspecFsa, ctx)
 
-            pspecFsa.getURI(bpmnUri.trimFileExtension.appendFileExtension('ps').lastSegment)
-        }
+                pspecFsa.getURI(bpmnUri.trimFileExtension.appendFileExtension('ps').lastSegment)
+            }
 
         // Load and validate the (generated) product
         val productRes = rst.getResource(productURI, true)
@@ -90,11 +90,13 @@ class StandardProjectGenerator extends AbstractGenerator {
         }
 
         // Generate abstract tspec from petri-net
-        val petriNetURI = fsa.getURI('''CPNServer/«product.specification.name»/«product.specification.name».py''')
+        val specName = product.specification.name
+        val petriNetURI = fsa.getURI('''CPNServer/«specName»/«specName».py''')
         val absTspecFsa = fsa.createFolderAccess('tspec_abstract')
         (new PetriNetToAbstractTspecGenerator(task.pythonExe)).doGenerate(rst, petriNetURI, absTspecFsa, ctx)
 
         for (absTspecFileName : absTspecFsa.list(ROOT_PATH).filter[endsWith('.atspec')]) {
+            val tspecName = absTspecFileName.replaceAll('\\.atspec$', '')
             val absTspecRes = absTspecFsa.loadResource(absTspecFileName, rst)
 
             // Fix the pspec import
@@ -106,25 +108,27 @@ class StandardProjectGenerator extends AbstractGenerator {
             // Validate the generated abstract tspec
             absTspecRes.validate()
 
-
             // Generate concrete tspec
-            val conTspecFsa = fsa.createFolderAccess('tspec_concrete')
-
-            val renamingRules = task.renamingRules !== null? createPropertiesMap(task.renamingRules): new HashMap()
-            val generatorParams = task.generatorParams !== null? createPropertiesMap(task.generatorParams): new HashMap()
+            val conTspecFsa = fsa.createFolderAccess('tspec_concrete/' + tspecName)
             val fromAbstractToConcreteGen = new FromAbstractToConcrete()
             fromAbstractToConcreteGen.doGenerate(absTspecRes, conTspecFsa, ctx)
 
-            val conTspecFileName = absTspecFileName.replaceAll('\\.atspec$','.tspec')
+            val conTspecFileName = tspecName + '.tspec'
             val conTspecRes = conTspecFsa.loadResource(conTspecFileName, rst)
             MergeConcreteDataAssigments.transform(conTspecRes)
             conTspecRes.save(null)
             conTspecRes.validate()
 
             if (task.target == OfflineGenerationTarget.FAST) {
-                // Generate FAST testcases
-                val fastFsa = fsa.createFolderAccess('FAST')
-                val fromConcreteToFastGen = new FromConcreteToFast(renamingRules, generatorParams)
+                // Create test case folder
+                var infixPath = 'vfab2_scenario/FAST/testcases/' // TODO fetch this from somewhere else
+                var dirName = specName + '_' + tspecName
+                val fastFsa = fsa.createFolderAccess('generated_FAST/' + infixPath + '/' + dirName + '/')
+
+                // Generate FAST testcase
+                val renamingRules = task.renamingRules !== null ? createPropertiesMap(task.renamingRules) : Map.of()
+                val genParams = task.generatorParams !== null ? createPropertiesMap(task.generatorParams) : Map.of()
+                val fromConcreteToFastGen = new FromConcreteToFast(renamingRules, genParams)
                 fromConcreteToFastGen.doGenerate(conTspecRes, fastFsa, ctx)
             }
         }
@@ -133,7 +137,7 @@ class StandardProjectGenerator extends AbstractGenerator {
     def createPropertiesMap(TargetConfig tgtConfig) {
         var props = new HashMap<String, String>()
         for (elem : tgtConfig.item) {
-        	props.put(elem.key,elem.^val)
+            props.put(elem.key, elem.^val)
         }
         return props
     }

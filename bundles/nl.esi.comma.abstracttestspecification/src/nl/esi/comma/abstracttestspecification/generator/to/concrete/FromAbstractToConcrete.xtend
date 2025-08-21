@@ -73,7 +73,7 @@ class FromAbstractToConcrete extends AbstractGenerator {
         «ENDFOR»
         }
         
-        generate-file "./vfab2_scenario/FAST/generated_FAST/"
+        generate-file "«atd.filePath»"
         
         step-parameters
         «FOR test : atd.testSeq»
@@ -214,7 +214,7 @@ class FromAbstractToConcrete extends AbstractGenerator {
     // Print types for each step
     def private printTypes(Iterable<Binding> ios, String type, Iterable<String> typesImports) '''
         «FOR ti : typesImports»
-            import "../«ti»"
+            import "../../«ti»"
         «ENDFOR»
         
         record «type» {
@@ -241,13 +241,13 @@ class FromAbstractToConcrete extends AbstractGenerator {
         val processedTypes = new HashSet<String>()
         for (step : atd.getExecutableSteps(system)) {
             for (type : step.stepType.filter[processedTypes.add(it)]) {
-                paramTxt += printParams(step, type)
+                paramTxt += printParams(atd, step, type)
             }
         }
         return paramTxt
     }
 
-    def private printParams(ExecutableStep step, String type) '''
+    def private printParams(AbstractTestDefinition atd, ExecutableStep step, String type) '''
         import "../types/«step.system».types"
         
         data-instances
@@ -257,11 +257,11 @@ class FromAbstractToConcrete extends AbstractGenerator {
         data-implementation
         // Empty
         
-        path-prefix "./vfab2_scenario/FAST/generated_FAST/dataset/"
+        path-prefix "«atd.filePath»"
         var-ref «step.system»Input -> file-name "«step.system»Input.json"
         var-ref «step.system»Output -> file-name "«step.system»Output.json"
     '''
-
+    
     def private getSystems(AbstractTestDefinition atd) {
         return atd.steps.filter(ExecutableStep).map[system].toSet
     }
