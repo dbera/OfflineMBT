@@ -263,7 +263,7 @@ class FromAbstractToConcrete extends AbstractGenerator {
         data-implementation
         // Empty
         
-        path-prefix "«this.generateFile»/dataset/"
+        path-prefix "«this.generateFile»"
         var-ref «step.system»Input -> file-name "«step.system»Input.json"
         var-ref «step.system»Output -> file-name "«step.system»Output.json"
     '''
