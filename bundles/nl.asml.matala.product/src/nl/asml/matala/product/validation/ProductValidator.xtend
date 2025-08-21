@@ -36,6 +36,10 @@ import org.eclipse.emf.common.util.URI
 import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.validation.Check
 import nl.asml.matala.product.product.ActionType
+import nl.esi.comma.types.types.RecordTypeDecl
+import nl.esi.comma.expressions.expression.ExpressionRecordAccess
+import nl.esi.comma.expressions.expression.ExpressionRecord
+import nl.esi.comma.expressions.expression.Field
 
 /**
  * This class contains custom validation rules. 
@@ -230,6 +234,54 @@ class ProductValidator extends AbstractProductValidator {
             }
         }
     }
+    
+    /**
+     * Variables that are symbolic may not be used in guards
+     */
+     @Check
+     def checkSymbolicVariablesGuard(Update update){ 
+       if (update.guard !== null) {   
+             var allVariables = update.guard.eAllContents.filter(ExpressionRecordAccess).toSet
+             for(v : allVariables){
+                  if(v.field.symbolic){
+                      error(
+                        "Symbolic filed should not be used in guard:: " + v.field.name,
+                        update,
+                        ProductPackage.Literals.UPDATE__GUARD
+                    )
+                  }
+             }
+        }
+     }
+     
+     /**
+     * Variables that are symbolic may not be used in update expression
+     */
+     @Check
+     def checkSymbolicVariableUpdate(Update update){
+         for (updateOutVar : update.updateOutputVar.reject[act === null]) {
+                updateOutVar.act.actions.forEach[                    
+                    a| 
+                   if(a instanceof AssignmentAction){
+                        System.out.println("AssignmentAction:: " +a.assignment.name )
+                        //this works
+                        a.exp.eAllContents.filter(Field).forEach [ f |
+                            System.out.println(f.recordField.name)
+                            if (f.recordField.symbolic) {
+                                error("Symbolic field '" + f.recordField.name + "' may not be assigned", f, null)
+                            }
+                        ]
+                        a.exp.eAllContents.filter(ExpressionRecordAccess).forEach [ f |
+                            System.out.println("ExpressionRecordAccess" + f.field.name)
+                            if (f.field.symbolic) {
+                                error("Symbolic field '" + f.field.name + "' may not be assigned", f, null)
+                            }
+                        ]
+                    } 
+                ]
+         }
+     }
+
 
 /* STRANGE BUG: Output Vars are Empty. Appears in Input Vars. 
  * Not appearing as problem during product generation!
