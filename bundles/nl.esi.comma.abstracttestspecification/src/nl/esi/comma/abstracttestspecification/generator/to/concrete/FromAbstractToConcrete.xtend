@@ -36,12 +36,6 @@ import static extension nl.esi.comma.types.utilities.EcoreUtil3.*
 
 class FromAbstractToConcrete extends AbstractGenerator {
 
-    String generateFile = './testcases/'
-    
-    new (String generateFilename){ 
-        this.generateFile = generateFilename
-    }
-
     override doGenerate(Resource res, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
         val atd = res.contents.filter(TSMain).map[model].filter(AbstractTestDefinition).head
         if (atd === null) {
@@ -79,7 +73,7 @@ class FromAbstractToConcrete extends AbstractGenerator {
         «ENDFOR»
         }
         
-        generate-file "«this.generateFile»"
+        generate-file "«atd.filePath»"
         
         step-parameters
         «FOR test : atd.testSeq»
@@ -247,13 +241,13 @@ class FromAbstractToConcrete extends AbstractGenerator {
         val processedTypes = new HashSet<String>()
         for (step : atd.getExecutableSteps(system)) {
             for (type : step.stepType.filter[processedTypes.add(it)]) {
-                paramTxt += printParams(step, type)
+                paramTxt += printParams(atd, step, type)
             }
         }
         return paramTxt
     }
 
-    def private printParams(ExecutableStep step, String type) '''
+    def private printParams(AbstractTestDefinition atd, ExecutableStep step, String type) '''
         import "../types/«step.system».types"
         
         data-instances
@@ -263,11 +257,11 @@ class FromAbstractToConcrete extends AbstractGenerator {
         data-implementation
         // Empty
         
-        path-prefix "«this.generateFile»"
+        path-prefix "«atd.filePath»"
         var-ref «step.system»Input -> file-name "«step.system»Input.json"
         var-ref «step.system»Output -> file-name "«step.system»Output.json"
     '''
-
+    
     def private getSystems(AbstractTestDefinition atd) {
         return atd.steps.filter(ExecutableStep).map[system].toSet
     }

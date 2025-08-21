@@ -97,7 +97,7 @@ class FromConcreteToFast extends AbstractGenerator {
                     val apidef = input.model as APIDefinition
                     for (api : apidef.apiImpl) {
                         for (elm : api.di) {
-                            var filepath = api.path + '/dataset/' + elm.fname
+                            var filepath = api.path + elm.fname
                             addMapDataInstanceToFile(elm.^var.name, filepath)
                         }
                     }
@@ -109,7 +109,7 @@ class FromConcreteToFast extends AbstractGenerator {
 
         // Parse TSPEC Test Definition
         val model = modelInst.model as TestDefinition
-        var String path_prefix = model.filePath + '/dataset/'
+        var String path_infix = model.filePath
 
         // for(gpars : model.gparams) { addMapLocalDataVarToDataInstance(gpars.name, new String) }
         for (steppars : model.stepparams) {
@@ -158,7 +158,7 @@ class FromConcreteToFast extends AbstractGenerator {
                                 var rstepInst = new Step
                                 rstepInst.id = lhs.value
                                 rstepInst.type = s.type.name
-                                rstepInst.inputFile = path_prefix
+                                rstepInst.inputFile = path_infix
                                 rstepInst.variableName = match
                                 rstepInst.recordExp = stepInst.id
                                 rstepInst.parameters.add(mapLHStoRHS) // Added DB 29.05.2025
@@ -174,10 +174,10 @@ class FromConcreteToFast extends AbstractGenerator {
             listStepInstances.add(stepInst)
         }
         // generate vfd XML file
-        fsa.generateFile(model.filePath + '/variants/single_variant/' + "vfd.xml",
-            (new VFDXMLGenerator(this.args, this.rename)).generateXMLFromSUTVars(model))
-        fsa.generateFile(model.filePath + '/variants/single_variant/' + "reference.kvp",
-            (new RefKVPGenerator()).generateRefKVP(model))
+        var vfdgen = new VFDXMLGenerator(this.args, this.rename)
+        var refkvpgen = new RefKVPGenerator()
+        fsa.generateFile('variants/single_variant/vfd.xml', vfdgen.generateXMLFromSUTVars(model))
+        fsa.generateFile('variants/single_variant/reference.kvp', refkvpgen.generateRefKVP(model))
 
         // update step file names based on checking if additional data was specified. 
         for (step : listStepInstances) {
@@ -190,18 +190,18 @@ class FromConcreteToFast extends AbstractGenerator {
         displayParseResults
 
         // generate data.kvp file
-        fsa.generateFile(model.filePath + '/variants/single_variant/' + "data.kvp", generateFASTScenarioFile)
+        fsa.generateFile('variants/single_variant/data.kvp', generateFASTScenarioFile)
         /* Added DB: 12.05.2025. Support PlantUML Generation for Review */
-        fsa.generateFile(model.filePath + '/variants/single_variant/' + "viz.plantuml",
-            (new DocGen).generatePlantUMLFile(listStepInstances, new HashMap<String, List<String>>))
+        var docgen = new DocGen()
+        fsa.generateFile('variants/single_variant/viz.plantuml', docgen.generatePlantUMLFile(listStepInstances))
 
         // Generate JSON data files and vfd.xml
-        generateJSONDataAndVFDFiles(model.filePath, fsa, modelInst, record_def_file_names)
+        generateJSONDataAndVFDFiles(fsa, modelInst, record_def_file_names)
     }
 
     def String findMatchingRecordName(String name, List<String> suffixes) {
         for (suffix : suffixes) {
-            if(name.endsWith('.'+suffix)) {
+            if (name.endsWith('.' + suffix)) {
                 return suffix
             }
         }
@@ -386,8 +386,7 @@ class FromConcreteToFast extends AbstractGenerator {
         }
     }
 
-    def private generateJSONDataAndVFDFiles(String testDefFilePath, IFileSystemAccess2 fsa, TSMain modelInst,
-        List<String> record_names) {
+    def private generateJSONDataAndVFDFiles(IFileSystemAccess2 fsa, TSMain modelInst, List<String> record_names) {
         var txt = ''''''
         var listOfStepVars = new HashSet<String>
         // val modelInst = _resource.contents.head as TSMain
