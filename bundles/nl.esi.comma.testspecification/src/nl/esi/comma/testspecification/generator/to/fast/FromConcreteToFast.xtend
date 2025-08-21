@@ -57,8 +57,7 @@ class FromConcreteToFast extends AbstractGenerator {
     }
 
     /* TODO this should come from project task? Investigate and Implement it. */
-    val record_lot_def_file_name = "lot_definition"
-    var record_job_def_file_name = "job_definition"
+    var List<String> record_def_file_names = List.of("lot_definition", "job_definition")
 
     // In-Memory Data Structures corresponding *.tspec (captured in resource object)
     var mapLocalDataVarToDataInstance = new HashMap<String, List<String>>
@@ -147,7 +146,8 @@ class FromConcreteToFast extends AbstractGenerator {
                          * System.out.println("DEBUG MAP LHStoRHS: ")
                          mapLHStoRHS.display*/
                         // System.out.println("DEBUG: " + record_path_for_lot_def)
-                        if (lhs.value.endsWith(record_lot_def_file_name)) {
+                        var String match = findMatchingRecordName(lhs.value, record_def_file_names)
+                        if (match instanceof String) {
                             if (stepInst.isStepRefPresent(lhs.value)) {
                                 var refStep = stepInst.getStepRefs(lhs.value)
                                 refStep.parameters.add(mapLHStoRHS)
@@ -159,24 +159,7 @@ class FromConcreteToFast extends AbstractGenerator {
                                 rstepInst.id = lhs.value
                                 rstepInst.type = s.type.name
                                 rstepInst.inputFile = path_prefix
-                                rstepInst.variableName = record_lot_def_file_name
-                                rstepInst.recordExp = stepInst.id
-                                rstepInst.parameters.add(mapLHStoRHS) // Added DB 29.05.2025
-                                stepInst.stepRefs.add(rstepInst)
-                            }
-                        } else if (lhs.value.endsWith(record_job_def_file_name)) {
-                            if (stepInst.isStepRefPresent(lhs.value)) {
-                                var refStep = stepInst.getStepRefs(lhs.value)
-                                refStep.parameters.add(mapLHStoRHS)
-                            // stepInst.stepRefs.add(refStep)
-                            } else {
-                                // Create new step instance and fill all details there
-                                // Add to list of step reference of step
-                                var rstepInst = new Step
-                                rstepInst.id = lhs.value
-                                rstepInst.type = s.type.name
-                                rstepInst.inputFile = path_prefix
-                                rstepInst.variableName = record_job_def_file_name
+                                rstepInst.variableName = match
                                 rstepInst.recordExp = stepInst.id
                                 rstepInst.parameters.add(mapLHStoRHS) // Added DB 29.05.2025
                                 stepInst.stepRefs.add(rstepInst)
@@ -213,7 +196,16 @@ class FromConcreteToFast extends AbstractGenerator {
             (new DocGen).generatePlantUMLFile(listStepInstances, new HashMap<String, List<String>>))
 
         // Generate JSON data files and vfd.xml
-        generateJSONDataAndVFDFiles(model.filePath, fsa, modelInst)
+        generateJSONDataAndVFDFiles(model.filePath, fsa, modelInst, record_def_file_names)
+    }
+
+    def String findMatchingRecordName(String name, List<String> suffixes) {
+        for (suffix : suffixes) {
+            if(name.endsWith('.'+suffix)) {
+                return suffix
+            }
+        }
+        return null
     }
 
     def boolean isPrintableAssignment(Action act) {
@@ -394,7 +386,8 @@ class FromConcreteToFast extends AbstractGenerator {
         }
     }
 
-    def private generateJSONDataAndVFDFiles(String testDefFilePath, IFileSystemAccess2 fsa, TSMain modelInst) {
+    def private generateJSONDataAndVFDFiles(String testDefFilePath, IFileSystemAccess2 fsa, TSMain modelInst,
+        List<String> record_names) {
         var txt = ''''''
         var listOfStepVars = new HashSet<String>
         // val modelInst = _resource.contents.head as TSMain
@@ -449,7 +442,7 @@ class FromConcreteToFast extends AbstractGenerator {
                             fileName = getStepInstanceFileName(stepId)
                             var fileContents = mapLHStoRHS.value
                             System.out.println("Generating File: " + fileName + " For Step: " + stepId)
-                            var refinedMapLHStoRHS = refineListLHStoRHS(mapLHStoRHS_.get(stepId))
+                            var refinedMapLHStoRHS = refineListLHStoRHS(mapLHStoRHS_.get(stepId), record_names)
                             fileContents = printRefinedMap(refinedMapLHStoRHS)
                             fsa.generateFile(fileName, fileContents)
                         }
@@ -483,7 +476,7 @@ class FromConcreteToFast extends AbstractGenerator {
                 for (stepId : mapLHStoRHS_.keySet) {
                     fileName = getStepInstanceFileName(stepId)
                     System.out.println("Generating File: " + fileName + " For Step: " + stepId)
-                    var refinedMapLHStoRHS = refineListLHStoRHS(mapLHStoRHS_.get(stepId))
+                    var refinedMapLHStoRHS = refineListLHStoRHS(mapLHStoRHS_.get(stepId), record_names)
                     fileContents = printRefinedMap(refinedMapLHStoRHS)
                     fsa.generateFile(fileName, fileContents)
                     fileContents = ''''''
@@ -498,7 +491,7 @@ class FromConcreteToFast extends AbstractGenerator {
                 for (stepId : mapLHStoRHSExt.keySet) {
                     fileNameExt = stepId
                     System.out.println("Generating File: " + fileNameExt + " For Var: " + vname)
-                    var refinedMapLHStoRHS = refineListLHStoRHS(mapLHStoRHSExt.get(stepId))
+                    var refinedMapLHStoRHS = refineListLHStoRHS(mapLHStoRHSExt.get(stepId), record_names)
                     fileContentsExt = printRefinedMap(refinedMapLHStoRHS)
                     fsa.generateFile(fileNameExt, fileContentsExt)
                     fileContentsExt = ''''''
@@ -524,7 +517,7 @@ class FromConcreteToFast extends AbstractGenerator {
         }
     '''
 
-    def private Map<String, Object> refineListLHStoRHS(List<KeyValue> values) {
+    def private Map<String, Object> refineListLHStoRHS(List<KeyValue> values, List<String> record_names) {
         var mapOfMaps = new LinkedHashMap<String, Object>()
         for (elem : values) {
             var fquali = new ArrayList<String>(elem.key.split("\\."))
@@ -542,11 +535,7 @@ class FromConcreteToFast extends AbstractGenerator {
         }
 
         if (mapOfMaps.size == 1) { // if json map has only one element which is either a 
-            var field_list = Arrays.asList(
-                record_lot_def_file_name, // ...lot_definition 
-                record_job_def_file_name // ...job_definition
-            )
-            for (field : field_list) {
+            for (field : record_names) {
                 var item = mapOfMaps.getOrDefault(field, null) // check if this element is 
                 if (item instanceof LinkedHashMap) { // ...of record type and, if so,
                     return item // ...then pull it out of the value!
