@@ -90,7 +90,7 @@ class FromConcreteToFast extends AbstractGenerator {
     def private generateContents(Resource res, IFileSystemAccess2 fsa) {
         val modelInst = res.contents.head as TSMain
         val baseFsa = fsa.createFolderAccess('generated_FAST/')
-        val fastFsa = baseFsa.createFolderAccess(this.args.getOrDefault('prefixPath',''))
+        val fastFsa = baseFsa.createFolderAccess(this.args.getOrDefault('prefixPath','./'))
 
         // Process TSPEC Imports.
         for (imp : modelInst.imports) {
@@ -298,7 +298,7 @@ class FromConcreteToFast extends AbstractGenerator {
             var isBasedOnString = fieldType.base?.name?.equals('string')
             if(isBasedOnString){
                 var baseName = fieldType.name
-                var prefix = this.args.getOrDefault('prefixPath','')
+                var prefix = this.args.getOrDefault('prefixPath','./')
                 return switch baseName {
                     case 'Dataset': '"%s/dataset/"+'.formatted(prefix)
                     default: ''
