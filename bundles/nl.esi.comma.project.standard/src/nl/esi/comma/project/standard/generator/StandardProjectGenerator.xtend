@@ -36,7 +36,6 @@ import static extension nl.esi.comma.types.utilities.EcoreUtil3.*
 import static extension nl.esi.comma.types.utilities.FileSystemAccessUtil.*
 import static extension org.eclipse.emf.ecore.util.EcoreUtil.*
 import static extension org.eclipse.xtext.EcoreUtil2.*
-import java.util.Map
 
 /**
  * Generates code from your model files on save.
@@ -120,16 +119,13 @@ class StandardProjectGenerator extends AbstractGenerator {
             conTspecRes.validate()
 
             if (task.target == OfflineGenerationTarget.FAST) {
-                // Create test case folder
-                var infixPath = 'vfab2_scenario/FAST/testcases/' // TODO fetch this from somewhere else
-                var dirName = specName + '_' + tspecName
-                val fastFsa = fsa.createFolderAccess('generated_FAST/' + infixPath + '/' + dirName + '/')
-
+                // TODO fetch these FAST configuration parameters from somewhere else (e.g., .prj task)
+                val renamingRules = task.renamingRules !== null ? createPropertiesMap(task.renamingRules) : new HashMap
+                val genParams = task.generatorParams !== null ? createPropertiesMap(task.generatorParams) : new HashMap
+                genParams.put('prefixPath', './vfab2_scenario/FAST/testcases/' + specName + '_' + tspecName + '/') // TODO fetch this from somewhere else
                 // Generate FAST testcase
-                val renamingRules = task.renamingRules !== null ? createPropertiesMap(task.renamingRules) : Map.of()
-                val genParams = task.generatorParams !== null ? createPropertiesMap(task.generatorParams) : Map.of()
                 val fromConcreteToFastGen = new FromConcreteToFast(renamingRules, genParams)
-                fromConcreteToFastGen.doGenerate(conTspecRes, fastFsa, ctx)
+                fromConcreteToFastGen.doGenerate(conTspecRes, fsa, ctx)
             }
         }
     }
