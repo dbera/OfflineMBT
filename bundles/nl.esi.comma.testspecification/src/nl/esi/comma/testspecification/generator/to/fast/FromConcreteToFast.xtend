@@ -13,10 +13,11 @@
 package nl.esi.comma.testspecification.generator.to.fast
 
 import java.util.ArrayList
-import java.util.Arrays
 import java.util.HashMap
 import java.util.HashSet
 import java.util.LinkedHashMap
+import nl.esi.comma.types.types.TypeDecl
+import nl.esi.comma.types.types.SimpleTypeDecl
 import java.util.List
 import java.util.Map
 import java.util.regex.Pattern
@@ -40,6 +41,7 @@ import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
 
 import static extension nl.esi.comma.types.utilities.EcoreUtil3.*
+import static extension nl.esi.comma.types.utilities.FileSystemAccessUtil.*
 import nl.esi.comma.actions.actions.Action
 import nl.esi.comma.expressions.expression.ExpressionNullLiteral
 
@@ -87,6 +89,8 @@ class FromConcreteToFast extends AbstractGenerator {
     // Generate data.kvp and referenced JSON files
     def private generateContents(Resource res, IFileSystemAccess2 fsa) {
         val modelInst = res.contents.head as TSMain
+        val baseFsa = fsa.createFolderAccess('generated_FAST/')
+        val fastFsa = baseFsa.createFolderAccess(this.args.getOrDefault('prefixPath','./'))
 
         // Process TSPEC Imports.
         for (imp : modelInst.imports) {
@@ -176,8 +180,8 @@ class FromConcreteToFast extends AbstractGenerator {
         // generate vfd XML file
         var vfdgen = new VFDXMLGenerator(this.args, this.rename)
         var refkvpgen = new RefKVPGenerator()
-        fsa.generateFile('variants/single_variant/vfd.xml', vfdgen.generateXMLFromSUTVars(model))
-        fsa.generateFile('variants/single_variant/reference.kvp', refkvpgen.generateRefKVP(model))
+        fastFsa.generateFile('variants/single_variant/vfd.xml', vfdgen.generateXMLFromSUTVars(model))
+        fastFsa.generateFile('variants/single_variant/reference.kvp', refkvpgen.generateRefKVP(model))
 
         // update step file names based on checking if additional data was specified. 
         for (step : listStepInstances) {
@@ -190,13 +194,13 @@ class FromConcreteToFast extends AbstractGenerator {
         displayParseResults
 
         // generate data.kvp file
-        fsa.generateFile('variants/single_variant/data.kvp', generateFASTScenarioFile)
+        fastFsa.generateFile('variants/single_variant/data.kvp', generateFASTScenarioFile)
         /* Added DB: 12.05.2025. Support PlantUML Generation for Review */
         var docgen = new DocGen()
-        fsa.generateFile('variants/single_variant/viz.plantuml', docgen.generatePlantUMLFile(listStepInstances))
+        fastFsa.generateFile('variants/single_variant/viz.plantuml', docgen.generatePlantUMLFile(listStepInstances))
 
         // Generate JSON data files and vfd.xml
-        generateJSONDataAndVFDFiles(fsa, modelInst, record_def_file_names)
+        generateJSONDataAndVFDFiles(fastFsa, modelInst, record_def_file_names)
     }
 
     def String findMatchingRecordName(String name, List<String> suffixes) {
@@ -288,6 +292,22 @@ class FromConcreteToFast extends AbstractGenerator {
         return generateInitRecordAssignment(action.fieldAccess as ExpressionRecordAccess, action.exp, '''''')
     }
 
+    def String findPrefixBasedOnType(ExpressionRecordAccess access) {
+        var TypeDecl fieldType = access.field.type.type
+        if(fieldType instanceof SimpleTypeDecl){
+            var isBasedOnString = fieldType.base?.name?.equals('string')
+            if(isBasedOnString){
+                var baseName = fieldType.name
+                var prefix = this.args.getOrDefault('prefixPath','./')
+                return switch baseName {
+                    case 'Dataset': '"%s/dataset/"+'.formatted(prefix)
+                    default: ''
+                }
+            }
+        }
+        return ""
+    }
+
     def private generateInitRecordAssignment(ExpressionRecordAccess eRecAccess, Expression exp, CharSequence ref) {
         var mapLHStoRHS = new KeyValue
 
@@ -304,7 +324,8 @@ class FromConcreteToFast extends AbstractGenerator {
         }
         // tracking fully-qualified field name 
         mapLHStoRHS.key = '''«recExp».''' + field.name
-        mapLHStoRHS.value = ExpressionsParser::generateExpression(exp, ref).toString
+        var prefix = findPrefixBasedOnType(eRecAccess)
+        mapLHStoRHS.value = prefix+ExpressionsParser::generateExpression(exp, ref).toString
         mapLHStoRHS.refVal.add(mapLHStoRHS.value) // Added DB 14.10.2024
         // modify key value data structure to JSON
         /*mapLHStoRHS.value = mapLHStoRHS.value.replaceAll("\"key\" : ","")
