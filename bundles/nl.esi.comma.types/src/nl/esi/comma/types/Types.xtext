@@ -108,7 +108,7 @@ RecordTypeDecl:
 ;	
 
 RecordField: 
-	type = Type name = ID 
+	(symbolic ?= 'symbolic')? type = Type name = ID 
 ;
 
 VectorTypeDecl:
