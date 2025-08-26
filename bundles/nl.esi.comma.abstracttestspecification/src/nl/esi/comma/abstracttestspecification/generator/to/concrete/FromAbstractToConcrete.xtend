@@ -12,14 +12,20 @@
  */
 package nl.esi.comma.abstracttestspecification.generator.to.concrete
 
-import java.util.HashMap
 import java.util.HashSet
-import java.util.Map
 import nl.asml.matala.product.product.Product
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractTestDefinition
+import nl.esi.comma.abstracttestspecification.abstractTestspecification.AssertionStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.Binding
+import nl.esi.comma.abstracttestspecification.abstractTestspecification.ExecutableStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.RunStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.TSMain
+import nl.esi.comma.abstracttestspecification.generator.utils.JsonHelper
+import nl.esi.comma.assertthat.assertThat.DataAssertionItem
+import nl.esi.comma.expressions.expression.ExpressionVariable
+import nl.esi.comma.expressions.services.ExpressionGrammarAccess
+import nl.esi.comma.types.utilities.EcoreUtil3
+import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
@@ -29,17 +35,6 @@ import static extension nl.esi.comma.abstracttestspecification.generator.utils.U
 import static extension nl.esi.comma.types.utilities.EcoreUtil3.*
 
 class FromAbstractToConcrete extends AbstractGenerator {
-
-    Map<String, String> rename = new HashMap<String, String>()
-    Map<String, String> args = new HashMap<String, String>()
-
-    new() {
-    }
-
-    new(Map<String, String> rename, Map<String, String> params) {
-        this.rename = rename
-        this.args = params
-    }
 
     override doGenerate(Resource res, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
         val atd = res.contents.filter(TSMain).map[model].filter(AbstractTestDefinition).head
@@ -54,8 +49,6 @@ class FromAbstractToConcrete extends AbstractGenerator {
         }
         val conTspecFileName = res.URI.lastSegment.replaceAll('\\.atspec$','.tspec')
         fsa.generateFile(conTspecFileName, atd.generateConcreteTest())
-        fsa.generateFile("reference.kvp", (new RefKVPGenerator()).generateRefKVP(atd))
-        fsa.generateFile("vfd.xml", (new VFDXMLGenerator(this.args, this.rename)).generateXMLFromSUTVars(atd))
  
     }
 
@@ -73,28 +66,88 @@ class FromAbstractToConcrete extends AbstractGenerator {
         
         step-sequence test_single_sequence {
         «FOR test : atd.testSeq»
-            «FOR step : test.step.filter(RunStep)»
+            «FOR step : test.step.filter(ExecutableStep)»
                 
-                step-id    step_«step.name»
-                step-type  «step.stepType.get(0)»
-                step-input «step.system»Input
-                «IF !_printOutputs_(step).toString.nullOrEmpty»
-                    ref-to-step-output
-                        «_printOutputs_(step)»
-                «ENDIF»
+                «printStep(step)»
             «ENDFOR»
         «ENDFOR»
         }
         
-        generate-file "./vfab2_scenario/FAST/generated_FAST/"
+        generate-file "«atd.filePath»"
         
         step-parameters
         «FOR test : atd.testSeq»
-            «FOR step : test.step.filter(RunStep)»
+            «FOR step : test.step.filter(ExecutableStep)»
                 «step.stepType.get(0)» step_«step.name»
             «ENDFOR»
         «ENDFOR»
+        «var sutdefs = extractSUTVars(atd)»
+        «IF !sutdefs.empty»
+        sut-def-list : «JsonHelper.jsonElement(sutdefs)»
+        «ENDIF»
     '''
+    
+    def printStep(ExecutableStep step) {
+        return switch (step) {
+        	RunStep: printStep(step as RunStep)
+        	AssertionStep: printStep(step as AssertionStep)
+            default: throw new UnsupportedOperationException("Unsupported ExecutableStep sub-type")
+        }
+    }
+    def printStep(RunStep step) '''
+        step-id    step_«step.name»
+        step-type  «step.stepType.get(0)»
+        step-input «step.system»Input
+        «IF !_printOutputs_(step).toString.nullOrEmpty»
+            ref-to-step-output
+                «_printOutputs_(step)»
+        «ENDIF»
+    '''
+
+    def printStep(AssertionStep step) '''
+        assertion-id    step_«step.name»
+        assertion-type  «step.stepType.get(0)»
+        assertion-input «step.system»Input
+        «IF !step.asserts.nullOrEmpty»
+        «_printAssertions(step)»
+        «ENDIF»
+        «IF !_printOutputs_(step).toString.nullOrEmpty»
+            ref-to-step-output
+                «_printOutputs_(step)»
+        «ENDIF»
+    '''
+    
+    def _printAssertions(AssertionStep step) '''
+    assertion-items {
+    «FOR ce : step.asserts.flatMap[ce]»
+        assertions «ce.name» { 
+            «FOR dai: ce.constr»
+                «printDai(dai, step)»
+            «ENDFOR»
+         }
+    «ENDFOR»
+    }
+    '''
+    
+    def printDai(DataAssertionItem item, AssertionStep step) {
+        
+        val replacer = [ EObject semanticElement, EObject grammarElement |
+            val gaExpression = EcoreUtil3.getService(semanticElement, ExpressionGrammarAccess)
+            if (gaExpression === null) {
+                return null
+            }
+            var abs_assert = step
+            var cexpr_handler = new ConcreteExpressionHandler()
+            return switch (grammarElement) {
+                case gaExpression.expressionLevel9Access.expressionVariableParserRuleCall_7: {
+                    val exprVar = semanticElement as ExpressionVariable
+                    return cexpr_handler.prepareAssertionStepExpressions(abs_assert, exprVar)
+                }
+            }
+        ]
+        var dai_seri = EcoreUtil3.serialize(item, replacer)
+        return dai_seri
+    }
 
     def private _printOutputs_(RunStep rstep) {
         // At most one (TODO validate this)
@@ -116,6 +169,19 @@ class FromAbstractToConcrete extends AbstractGenerator {
         '''
     }
 
+    def private _printOutputs_(AssertionStep astep) {
+        // At most one (TODO validate this)
+        // Observation: when multiple steps have indistinguishable outputs, 
+        // multiple consumes from is possible. TODO Warn user.   
+        val runSteps = astep.runSteps
+        // Get text for concrete data expressions
+        var conDataExpr = (new ConcreteExpressionHandler()).prepareStepInputExpressions(astep, runSteps)
+
+        return '''
+            «conDataExpr»
+        '''
+    }
+
     // Generate Types File for Concrete TSpec
     def generateTypesFile(AbstractTestDefinition atd, String system, Iterable<String> typesImports) {
         var type = ''
@@ -131,13 +197,24 @@ class FromAbstractToConcrete extends AbstractGenerator {
                 cstep.output.forEach[o|ios.putIfAbsent(o.name, o)]
             }
         }
+        for (astep : atd.getAssertionSteps(system)) {
+            if (!astep.stepType.isEmpty) {
+                type = astep.stepType.last
+            }
+            astep.input.forEach[i|ios.putIfAbsent(i.name, i)]
+            astep.output.forEach[o|ios.putIfAbsent(o.name, o)]
+            for (cstep : astep.runSteps) {
+                cstep.input.forEach[i|ios.putIfAbsent(i.name, i)]
+                cstep.output.forEach[o|ios.putIfAbsent(o.name, o)]
+            }
+        }
         return printTypes(ios.values, type, typesImports)
     }
 
     // Print types for each step
     def private printTypes(Iterable<Binding> ios, String type, Iterable<String> typesImports) '''
         «FOR ti : typesImports»
-            import "../«ti»"
+            import "../../«ti»"
         «ENDFOR»
         
         record «type» {
@@ -162,15 +239,15 @@ class FromAbstractToConcrete extends AbstractGenerator {
     def private generateParamsFile(AbstractTestDefinition atd, String system) {
         var paramTxt = ''
         val processedTypes = new HashSet<String>()
-        for (step : atd.getRunSteps(system)) {
+        for (step : atd.getExecutableSteps(system)) {
             for (type : step.stepType.filter[processedTypes.add(it)]) {
-                paramTxt += printParams(step, type)
+                paramTxt += printParams(atd, step, type)
             }
         }
         return paramTxt
     }
 
-    def private printParams(RunStep step, String type) '''
+    def private printParams(AbstractTestDefinition atd, ExecutableStep step, String type) '''
         import "../types/«step.system».types"
         
         data-instances
@@ -180,17 +257,25 @@ class FromAbstractToConcrete extends AbstractGenerator {
         data-implementation
         // Empty
         
-        path-prefix "./vfab2_scenario/FAST/generated_FAST/dataset/"
+        path-prefix "«atd.filePath»"
         var-ref «step.system»Input -> file-name "«step.system»Input.json"
         var-ref «step.system»Output -> file-name "«step.system»Output.json"
     '''
-
+    
     def private getSystems(AbstractTestDefinition atd) {
-        return atd.steps.filter(RunStep).map[system].toSet
+        return atd.steps.filter(ExecutableStep).map[system].toSet
     }
 
     def private getRunSteps(AbstractTestDefinition atd, String sys) {
         return atd.steps.filter(RunStep).filter[system == sys]
+    }
+
+    def private getAssertionSteps(AbstractTestDefinition atd, String sys) {
+        return atd.steps.filter(AssertionStep).filter[system == sys]
+    }
+
+    def private getExecutableSteps(AbstractTestDefinition atd, String sys) {
+        return atd.steps.filter(ExecutableStep).filter[system == sys]
     }
 
     def private Iterable<String> getTypesImports(Resource res) {

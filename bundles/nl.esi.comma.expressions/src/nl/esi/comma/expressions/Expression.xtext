@@ -107,6 +107,7 @@ ExpressionLevel9 returns Expression:
 	ExpressionConstantReal |
 	ExpressionConstantString |
 	ExpressionEnumLiteral |
+    ExpressionNullLiteral |
 	ExpressionVariable |
 	ExpressionRecord |
 	ExpressionAny |
@@ -143,6 +144,11 @@ ExpressionConstantString:
 
 ExpressionEnumLiteral: 
 	(interface = [signature::Signature|ID] '::')? type = [types::EnumTypeDecl] "::" literal = [types::EnumElement] 
+;
+
+ExpressionNullLiteral:
+    {ExpressionNullLiteral}
+    'null'
 ;
 
 ExpressionVariable: 

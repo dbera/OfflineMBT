@@ -17,7 +17,6 @@ package nl.esi.comma.project.standard
 
 import nl.esi.comma.types.scoping.TypesImportUriGlobalScopeProvider
 import org.eclipse.xtext.scoping.IGlobalScopeProvider
-import org.eclipse.xtext.resource.IResourceDescription
 
 /**
  * Use this class to register components to be used at runtime / without the Equinox extension registry.

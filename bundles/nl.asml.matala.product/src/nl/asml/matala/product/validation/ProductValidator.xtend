@@ -36,6 +36,7 @@ import org.eclipse.emf.common.util.URI
 import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.validation.Check
 import nl.asml.matala.product.product.UpdateOutVar
+import nl.asml.matala.product.product.ActionType
 
 /**
  * This class contains custom validation rules. 
@@ -194,6 +195,41 @@ class ProductValidator extends AbstractProductValidator {
 
     private dispatch def void preventIlligalVariableAccess(Expression expr, Set<Variable> variables, Direction direction) {
         expr.eContents.filter(Expression).forEach[preventIlligalVariableAccess(variables, direction)]
+    }
+
+    /**
+     * A system block may have many RUN steps but they all must be of the same step-type
+     */
+     @Check
+    def checkMultiRunSteps(Block block) {
+        val runUpdates = block.functions.flatMap[updates].filter[actionType == ActionType::RUN]
+
+        val groupedByStepType = runUpdates.groupBy[stepType]
+
+        if (groupedByStepType.keySet.size > 1) {
+            val mostCommon = groupedByStepType.entrySet.maxBy[value.size].key
+            runUpdates.filter[stepType != mostCommon].forEach [ update |
+                error(
+                    "All step-types must be the same for action-type RUN (expected: " + mostCommon + ")",
+                    update,
+                    ProductPackage.Literals.UPDATE__STEP_TYPE
+                )
+            ]
+        }
+
+    }
+ 
+    /**
+     * Run step must always have step type.
+     */
+    @Check
+    def checkRunStep(Update update) {
+        if (update.actionType == ActionType::RUN || update.actionType == ActionType::ASSERT) {
+            if (update.stepType.isNullOrEmpty) {
+                error('''Actions with type «update.actionType.literal» must have a step-type defined''' +
+                    update.stepType, ProductPackage.Literals.UPDATE__STEP_TYPE)
+            }
+        }
     }
     
     /**
