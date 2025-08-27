@@ -462,4 +462,15 @@ class ExpressionValidator extends AbstractExpressionValidator {
 				error('Several types with this name exist. Use an explicit interface name.', ref)
 		}
 	}	
+	
+	/*
+	 * Enforce that all fields of a record constructor initializes all its fields except symbolic
+	 */
+	@Check
+    def checkSymbolicRecordField(ExpressionRecord er){
+        er.fields.filter(r| r.recordField.symbolic).forEach[a
+            |
+            error('Symbolic field can not be initialize', er, ExpressionPackage.Literals.EXPRESSION_RECORD__FIELDS, er.fields.indexOf(a))
+        ]          
+    }
 }
