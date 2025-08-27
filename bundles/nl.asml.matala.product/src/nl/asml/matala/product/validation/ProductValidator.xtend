@@ -301,7 +301,7 @@ class ProductValidator extends AbstractProductValidator {
     private def void checkRecordAccess(ExpressionRecordAccess era, String message) {
         if (era.field.symbolic) {
             error(
-                message + " '" + era.field.name + "'",
+               message + " '" + era.field.name + "'",
                 era,
                 ExpressionPackage.Literals.EXPRESSION_RECORD_ACCESS__FIELD
             )
