@@ -40,6 +40,8 @@ import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
 
 import static extension nl.esi.comma.types.utilities.EcoreUtil3.*
+import nl.esi.comma.actions.actions.Action
+import nl.esi.comma.expressions.expression.ExpressionNullLiteral
 
 class FromConcreteToFast extends AbstractGenerator {
     
@@ -140,7 +142,7 @@ class FromConcreteToFast extends AbstractGenerator {
                 for (ref : s.refStep) {
                     // if(s.input!==null) {
                     for (act : ref.input.actions) {
-                        if (act instanceof AssignmentAction || act instanceof RecordFieldAssignmentAction) {
+                        if (isPrintableAssignment(act)) {
                             var mapLHStoRHS = generateInitAssignmentAction(act)
                             var lhs = getLHS(act) // note key = record variable, and value = recExp
                             stepInst.variableName = lhs.key // Note DB: This is the same for all actions
@@ -218,6 +220,14 @@ class FromConcreteToFast extends AbstractGenerator {
 
         // Generate JSON data files and vfd.xml
         generateJSONDataAndVFDFiles(testDefFilePath, fsa, modelInst)
+    }
+    
+    def boolean isPrintableAssignment(Action act) {
+        return switch (act) {
+        	AssignmentAction: !(act.exp instanceof ExpressionNullLiteral) 
+        	RecordFieldAssignmentAction: !(act.exp instanceof ExpressionNullLiteral)
+        	default: false
+        }
     }
 
     def private getStepSequence(TestDefinition td) {

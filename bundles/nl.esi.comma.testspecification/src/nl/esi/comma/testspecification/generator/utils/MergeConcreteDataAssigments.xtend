@@ -27,6 +27,7 @@ import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.emf.ecore.util.EcoreUtil
 
 import static extension nl.esi.comma.types.utilities.EcoreUtil3.*
+import nl.esi.comma.expressions.expression.ExpressionNullLiteral
 
 class MergeConcreteDataAssigments {
     def static void transform(Resource resource) {
@@ -58,7 +59,7 @@ class MergeConcreteDataAssigments {
             right.exp = mergeData(left.exp, right.exp, defaultValue)
             EcoreUtil.delete(left)
         } catch (RuntimeException e) {
-            e.printStackTrace
+            System.err.println('Failed to merge values for ' + right.assignment.serialize.unformat)
         }
     }
 
@@ -73,17 +74,17 @@ class MergeConcreteDataAssigments {
             right.exp = mergeData(left.exp, right.exp, defaultValue)
             EcoreUtil.delete(left)
         } catch (RuntimeException e) {
-            e.printStackTrace
+            System.err.println('Failed to merge values for ' + recordAccess.serialize.unformat)
         }
     }
 
     def dispatch private static Expression mergeData(Expression left, Expression right, String defaultValue) {
-        return if (left.serialize.unformat == defaultValue.unformat) {
+        return if (left.serialize.unformat == defaultValue.unformat || left instanceof ExpressionNullLiteral) {
             right
-        } else if (right.serialize.unformat == defaultValue.unformat) {
+        } else if (right.serialize.unformat == defaultValue.unformat || right instanceof ExpressionNullLiteral) {
             left
         } else {
-            throw new RuntimeException('Cannot merge')
+            throw new RuntimeException()
         }
     }
 

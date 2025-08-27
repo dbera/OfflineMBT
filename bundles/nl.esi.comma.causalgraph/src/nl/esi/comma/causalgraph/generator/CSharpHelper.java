@@ -50,6 +50,7 @@ import nl.esi.comma.expressions.expression.ExpressionModulo;
 import nl.esi.comma.expressions.expression.ExpressionMultiply;
 import nl.esi.comma.expressions.expression.ExpressionNEqual;
 import nl.esi.comma.expressions.expression.ExpressionNot;
+import nl.esi.comma.expressions.expression.ExpressionNullLiteral;
 import nl.esi.comma.expressions.expression.ExpressionOr;
 import nl.esi.comma.expressions.expression.ExpressionPlus;
 import nl.esi.comma.expressions.expression.ExpressionPower;
@@ -88,6 +89,7 @@ class CSharpHelper {
 			return "{}";
 		} else if (type instanceof RecordTypeDecl) {
 			String value = ((RecordTypeDecl) type).getFields().stream()
+				.filter(f -> !f.isSymbolic())
 				.map(f -> String.format("\"%s\":%s", f.getName(), defaultValue(f.getType().getType())))
 				.collect(Collectors.joining(","));
 			return String.format("{%s}", value);
@@ -164,6 +166,8 @@ class CSharpHelper {
 		} else if (expression instanceof ExpressionEnumLiteral) {
 			ExpressionEnumLiteral e = (ExpressionEnumLiteral) expression;
 			return String.format("\"%s:%s\"", e.getType().getName(), e.getLiteral().getName());
+		} else if (expression instanceof ExpressionNullLiteral) {
+			return "null";
 		} else if (expression instanceof ExpressionVector) {
 			ExpressionVector e = (ExpressionVector) expression;
 			return String.format("[%s]", e.getElements().stream().map(ee -> expression (ee, variablePrefix)).collect(Collectors.joining(", ")));

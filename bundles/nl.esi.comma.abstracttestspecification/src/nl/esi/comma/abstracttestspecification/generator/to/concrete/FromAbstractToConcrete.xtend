@@ -12,17 +12,15 @@
  */
 package nl.esi.comma.abstracttestspecification.generator.to.concrete
 
-import java.util.HashMap
 import java.util.HashSet
-import java.util.Map
 import nl.asml.matala.product.product.Product
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractTestDefinition
-import nl.esi.comma.abstracttestspecification.abstractTestspecification.AssertStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AssertionStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.Binding
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.ExecutableStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.RunStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.TSMain
+import nl.esi.comma.abstracttestspecification.generator.utils.JsonHelper
 import nl.esi.comma.assertthat.assertThat.DataAssertionItem
 import nl.esi.comma.expressions.expression.ExpressionVariable
 import nl.esi.comma.expressions.services.ExpressionGrammarAccess
@@ -38,18 +36,6 @@ import static extension nl.esi.comma.types.utilities.EcoreUtil3.*
 
 class FromAbstractToConcrete extends AbstractGenerator {
 
-    val Map<String, String> rename
-    val Map<String, String> args
-
-    new() {
-        this(new HashMap<String, String>(), new HashMap<String, String>())
-    }
-
-    new(Map<String, String> rename, Map<String, String> params) {
-        this.rename = rename
-        this.args = params
-    }
-
     override doGenerate(Resource res, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
         val atd = res.contents.filter(TSMain).map[model].filter(AbstractTestDefinition).head
         if (atd === null) {
@@ -63,8 +49,6 @@ class FromAbstractToConcrete extends AbstractGenerator {
         }
         val conTspecFileName = res.URI.lastSegment.replaceAll('\\.atspec$','.tspec')
         fsa.generateFile(conTspecFileName, atd.generateConcreteTest())
-        fsa.generateFile("reference.kvp", (new RefKVPGenerator()).generateRefKVP(atd))
-        fsa.generateFile("vfd.xml", (new VFDXMLGenerator(this.args, this.rename)).generateXMLFromSUTVars(atd))
  
     }
 
@@ -102,14 +86,6 @@ class FromAbstractToConcrete extends AbstractGenerator {
         sut-def-list : «JsonHelper.jsonElement(sutdefs)»
         «ENDIF»
     '''
-    
-    def String printSutDefList(AbstractTestDefinition atd) {
-        var sutdefs = extractSUTVars(atd)
-        if (sutdefs.empty) return ''
-        return '''
-            sut-def-list : «JsonHelper.jsonElement(sutdefs)»
-        '''
-    }
     
     def printStep(ExecutableStep step) {
         return switch (step) {
@@ -163,7 +139,7 @@ class FromAbstractToConcrete extends AbstractGenerator {
             var abs_assert = step
             var cexpr_handler = new ConcreteExpressionHandler()
             return switch (grammarElement) {
-                case gaExpression.expressionLevel9Access.expressionVariableParserRuleCall_6: {
+                case gaExpression.expressionLevel9Access.expressionVariableParserRuleCall_7: {
                     val exprVar = semanticElement as ExpressionVariable
                     return cexpr_handler.prepareAssertionStepExpressions(abs_assert, exprVar)
                 }
