@@ -32,6 +32,7 @@ import nl.esi.comma.expressions.expression.ExpressionConstantString
 import org.eclipse.xtext.generator.IFileSystemAccess2
 
 import static extension nl.esi.comma.causalgraph.utilities.CausalGraphQueries.*
+import nl.esi.comma.causalgraph.causalGraph.StepBody
 
 class CausalGraphBDD {
     def generateBDD(CausalGraph prod, IFileSystemAccess2 fsa) {
@@ -248,7 +249,7 @@ class CausalGraphBDD {
         argMap
     }
 
-    // Helper to get the argument's name regardless of model variant
+// Helper to get the argument's name regardless of model variant
     def String argName(AssignmentAction aa) {
         if(aa.assignment !== null) aa.assignment.name else ""
     }
@@ -283,9 +284,9 @@ class CausalGraphBDD {
             // Replace each (type name) with the appropriate capture group
             for (param : node.stepParameters) {
                 val typeName = param.type.type.name
-                
+
                 // Select capture group based on type (strings are quoted)
-                val group = if (typeName.equalsIgnoreCase("string")) "\"(.*)\"" else "(.*)"
+                val group = if(typeName.equalsIgnoreCase("string")) "\"(.*)\"" else "(.*)"
                 paraGroup.add(group)
             }
 
@@ -445,20 +446,33 @@ class CausalGraphBDD {
             ].join(", ")
             sb.append("void ").append(cg.name + "::" + fnName).append("(").append(params).append(") {")
             sb.append("\n")
-            // step body
+            
+            var body = ""
             if (node.stepBody instanceof LanguageBody) {
-                val body = (node.stepBody as LanguageBody).body
-                // indent each line
-                body.split("\r?\n").forEach [ line |
-                    sb.append("    ").append(line).append("\n")
-                ]
+                body = (node.stepBody as LanguageBody).body
+            } else {
+                val stepBody = if (node.steps !== null && !node.steps.isEmpty)
+                        node.steps.get(0).stepBody
+                    else
+                        null
+                if (stepBody instanceof LanguageBody) {
+                    body = stepBody.body
+                }
             }
+
+            body.split("\r?\n").forEach [ line |
+                sb.append("    ").append(line).append("\n")
+            ]
+
             sb.append("}\n\n")
         }
         fsa.generateFile(cg.name + "Steps.cpp", sb.toString)
     }
 
-    def toCPPTestValidationCode(CausalGraph cg, IFileSystemAccess2 fsa) {
+    def toCPPTestValidationCode(
+        CausalGraph cg,
+        IFileSystemAccess2 fsa
+    ) {
         val sb = new StringBuilder
         // Includes
         sb.append("#include <gtest/gtest.h>")
