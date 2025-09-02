@@ -17,6 +17,8 @@ import java.time.format.DateTimeFormatter
 import java.util.HashMap
 import java.util.Map
 import nl.esi.comma.testspecification.testspecification.TestDefinition
+import java.util.Set
+import java.util.LinkedHashSet
 
 class VFDXMLGenerator {
 
@@ -62,9 +64,14 @@ class VFDXMLGenerator {
         this.rename.putAll(renameRules)
     }
 
-    def generateXMLFromSUTVars(TestDefinition atd) 
+    def generateXML(TestDefinition atd) 
     {
         var now = LocalDateTime.now();
+        var Set<String> SUTList_items = new LinkedHashSet()
+        for(action : atd.sutInitActions){
+            var item = ExpressionsParser.generateXMLElement(action, this.rename)
+            SUTList_items.add(item.toString)
+        }
 
         return '''
         <?xml version="1.0" encoding="UTF-8"?>
@@ -77,13 +84,11 @@ class VFDXMLGenerator {
             <Name>atd</Name>
             <Description>sutsdesc</Description>
             <SUTList>
-            «IF atd.sutList !== null »
-            «FOR attr : atd.sutList.values»
+            «FOR sut_str : SUTList_items»
                 <SUT>
-                    «JsonHelper.toXMLElement(attr, this.rename)»
+                    «sut_str»
                 </SUT>
             «ENDFOR»
-            «ENDIF»
             </SUTList>
           </Definition>
         </VirtualFabDefinition:VirtualFabDefinition>

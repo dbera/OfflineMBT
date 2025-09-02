@@ -160,11 +160,11 @@ class FromConcreteToDocumentation extends AbstractGenerator
                     }
                     //for(sutpars : model.sutparams) { addMapLocalSUTVarToDataInstance(sutpars.name, new String) }
                     for(act : model.gparamsInitActions) {
-                        var mapLHStoRHS = (new ExpressionHandler).generateInitAssignmentAction(act, tsInst.mapLocalDataVarToDataInstance, tsInst.mapLocalStepInstance)
+                        var mapLHStoRHS = (new ExpressionHandler).generateInitAssignmentAction(act, tsInst.dataVarToDataInstance, tsInst.stepVarNameToType)
                         tsInst.addMapLocalDataVarToDataInstance(mapLHStoRHS.key, mapLHStoRHS.value)
                     }
                     for(act : model.sutInitActions) {
-                        var mapLHStoRHS = (new ExpressionHandler).generateInitAssignmentAction(act, tsInst.mapLocalDataVarToDataInstance, tsInst.mapLocalStepInstance)
+                        var mapLHStoRHS = (new ExpressionHandler).generateInitAssignmentAction(act, tsInst.dataVarToDataInstance, tsInst.stepVarNameToType)
                         tsInst.addMapLocalSUTVarToDataInstance(mapLHStoRHS.key, mapLHStoRHS.value)
                     }
                     
@@ -177,7 +177,7 @@ class FromConcreteToDocumentation extends AbstractGenerator
                             var stepInst = new Step
                             stepInst.id = s.inputVar.name //stepVar.name // was identifier
                             stepInst.type = s.type.name
-                            stepInst.inputFile = tsInst.mapDataInstanceToFile.get(s.stepVar.name).head
+                            stepInst.inputFile = tsInst.dataImplToFilename.get(s.stepVar.name).head
                             // check if additional data was specified in a step
                             for(ref : s.refStep) {
                             //if(s.input!==null) {
@@ -188,7 +188,7 @@ class FromConcreteToDocumentation extends AbstractGenerator
                                         if( act instanceof AssignmentAction || act instanceof RecordFieldAssignmentAction) 
                                         {
                                             var mapLHStoRHS = (new ExpressionHandler).generateInitAssignmentAction(act, 
-                                                tsInst.mapLocalDataVarToDataInstance, tsInst.mapLocalStepInstance
+                                                tsInst.dataVarToDataInstance, tsInst.stepVarNameToType
                                             )
                                             stepInst.parameters.add(mapLHStoRHS)
                                             // note key = record variable, and value = recExp
@@ -204,13 +204,13 @@ class FromConcreteToDocumentation extends AbstractGenerator
                             if(s.refStep.isNullOrEmpty) {
                                 stepInst.variableName = s.stepVar.name
                             }
-                            tsInst.listStepInstances.add(stepInst)
+                            tsInst.steps.add(stepInst)
                         } // end-if config enabled
                     } // End for step-sequence
                 } // Finished Parsing TSPEC File
                 
                 // update step file names based on checking if additional data was specified. 
-                for(step : tsInst.listStepInstances) {
+                for(step : tsInst.steps) {
                     if(!step.parameters.isEmpty) {
                         step.inputFile = step.inputFile.replaceAll(".json", "_" + step.id + ".json")
                     }
@@ -220,7 +220,7 @@ class FromConcreteToDocumentation extends AbstractGenerator
                 var mapStepToInputData = inputDataInst.computeInputDataInstances(resource, modelInst, tsInst)
                 
                 // Generate PlantUML txt
-                var plantUMLTxt = (new DocGen).generatePlantUMLFile(tsInst.listStepInstances, mapStepSeqToSteps)
+                var plantUMLTxt = (new DocGen).generatePlantUMLFile(tsInst.steps, mapStepSeqToSteps)
                 fsa.generateFile(configName + ".plantuml", plantUMLTxt)
                 
                 // Generate MD File
@@ -275,33 +275,33 @@ class FromConcreteToDocumentation extends AbstractGenerator
 
     def displayParseResults(TestSpecificationInstance tsInst) 
     {
-        System.out.println(" ---- Map Data Instance To File ---- ")
-        for (key : tsInst.mapDataInstanceToFile.keySet) {
-            System.out.println("    Key: " + key + " Value: " + tsInst.mapDataInstanceToFile.get(key))
+        System.out.println(" ---- Map Data Instance To Filename ---- ")
+        for (key : tsInst.dataImplToFilename.keySet) {
+            System.out.println("    Key: " + key + " Value: " + tsInst.dataImplToFilename.get(key))
         }
 
         System.out.println(" ---- Map SUT Instance To File ---- ")
-        for (key : tsInst.mapSUTInstanceToFile.keySet) {
-            System.out.println("    Key: " + key + " Value: " + tsInst.mapSUTInstanceToFile.get(key))
+        for (key : tsInst.sutInstanceToFile.keySet) {
+            System.out.println("    Key: " + key + " Value: " + tsInst.sutInstanceToFile.get(key))
         }
 
         System.out.println(" ---- Map Local Data Var To Data Instance ---- ")
-        for (key : tsInst.mapLocalDataVarToDataInstance.keySet) {
-            System.out.println("    Key: " + key + " Value: " + tsInst.mapLocalDataVarToDataInstance.get(key))
+        for (key : tsInst.dataVarToDataInstance.keySet) {
+            System.out.println("    Key: " + key + " Value: " + tsInst.dataVarToDataInstance.get(key))
         }
 
         System.out.println(" ---- Map SUT Var To Data Instance ---- ")
-        for (key : tsInst.mapLocalSUTVarToDataInstance.keySet) {
-            System.out.println("    Key: " + key + " Value: " + tsInst.mapLocalSUTVarToDataInstance.get(key))
+        for (key : tsInst.sutVarToDataInstance.keySet) {
+            System.out.println("    Key: " + key + " Value: " + tsInst.sutVarToDataInstance.get(key))
         }
 
         System.out.println(" ---- Map Step Instance ---- ")
-        for (key : tsInst.mapLocalStepInstance.keySet) {
-            System.out.println("    Key: " + key + " Value: " + tsInst.mapLocalStepInstance.get(key))
+        for (key : tsInst.stepVarNameToType.keySet) {
+            System.out.println("    Key: " + key + " Value: " + tsInst.stepVarNameToType.get(key))
         }
 
         System.out.println(" ------------------ STEPS ------------------")
-        for (st : tsInst.listStepInstances) {
+        for (st : tsInst.steps) {
             System.out.println("")
             System.out.println("    step-id: " + st.id + " type: " + st.type)
             System.out.println("    input: " + st.inputFile)
@@ -315,23 +315,23 @@ class FromConcreteToDocumentation extends AbstractGenerator
     }
 
     def addMapDataInstanceToFile(TestSpecificationInstance tsi, String key, String value) {
-        tsi.mapDataInstanceToFile.putIfAbsent(key, new ArrayList)
-        tsi.mapDataInstanceToFile.get(key).add(value)
+        tsi.dataImplToFilename.putIfAbsent(key, new ArrayList)
+        tsi.dataImplToFilename.get(key).add(value)
     }
 
     def addMapLocalSUTVarToDataInstance(TestSpecificationInstance tsi, String key, String value) {
-        tsi.mapLocalSUTVarToDataInstance.putIfAbsent(key, new ArrayList)
-        tsi.mapLocalSUTVarToDataInstance.get(key).add(value)
+        tsi.sutVarToDataInstance.putIfAbsent(key, new ArrayList)
+        tsi.sutVarToDataInstance.get(key).add(value)
     }
 
     def addMapLocalStepInstance(TestSpecificationInstance tsi, String key, String value) {
-        tsi.mapLocalStepInstance.putIfAbsent(key, new ArrayList)
-        tsi.mapLocalStepInstance.get(key).add(value)
+        tsi.stepVarNameToType.putIfAbsent(key, new ArrayList)
+        tsi.stepVarNameToType.get(key).add(value)
     }
 
     def addMapLocalDataVarToDataInstance(TestSpecificationInstance tsi, String key, String value) {
-        tsi.mapLocalDataVarToDataInstance.putIfAbsent(key, new ArrayList)
-        tsi.mapLocalDataVarToDataInstance.get(key).add(value)
+        tsi.dataVarToDataInstance.putIfAbsent(key, new ArrayList)
+        tsi.dataVarToDataInstance.get(key).add(value)
     }
 
 }

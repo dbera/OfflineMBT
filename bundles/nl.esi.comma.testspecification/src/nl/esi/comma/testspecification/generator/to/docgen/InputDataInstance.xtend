@@ -46,7 +46,7 @@ class InputDataInstance
                     for (act : apiDef.initActions) {
 						if(	act instanceof AssignmentAction || 
 							act instanceof RecordFieldAssignmentAction) {
-							var mapLHStoRHS = (new ExpressionHandler).generateInitAssignmentAction(act, tsInst.mapLocalDataVarToDataInstance, tsInst.mapLocalStepInstance)
+							var mapLHStoRHS = (new ExpressionHandler).generateInitAssignmentAction(act, tsInst.dataVarToDataInstance, tsInst.stepVarNameToType)
                             dataInst.getKvList.add(mapLHStoRHS)
                         }
                     }
@@ -92,7 +92,7 @@ class InputDataInstance
 
     def getExtensions(TestSpecificationInstance tsi, String varName) {
         var mapListOfKeyValue = new HashMap<String, List<KeyValue>>
-        for (step : tsi.listStepInstances) {
+        for (step : tsi.steps) {
             if (step.variableName.equals(varName)) {
                 mapListOfKeyValue.put(step.id, step.parameters)
             }

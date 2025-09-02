@@ -16,18 +16,19 @@ import java.util.ArrayList
 import java.util.HashMap
 import java.util.HashSet
 import java.util.LinkedHashMap
-import nl.esi.comma.types.types.TypeDecl
-import nl.esi.comma.types.types.SimpleTypeDecl
 import java.util.List
 import java.util.Map
 import java.util.regex.Pattern
+import nl.esi.comma.actions.actions.Action
 import nl.esi.comma.actions.actions.AssignmentAction
 import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
 import nl.esi.comma.expressions.expression.Expression
+import nl.esi.comma.expressions.expression.ExpressionNullLiteral
 import nl.esi.comma.expressions.expression.ExpressionRecordAccess
 import nl.esi.comma.expressions.expression.ExpressionVariable
 import nl.esi.comma.inputspecification.inputSpecification.APIDefinition
 import nl.esi.comma.inputspecification.inputSpecification.Main
+import nl.esi.comma.testspecification.generator.TestSpecificationInstance
 import nl.esi.comma.testspecification.generator.to.docgen.DocGen
 import nl.esi.comma.testspecification.generator.utils.JSONData
 import nl.esi.comma.testspecification.generator.utils.KeyValue
@@ -35,6 +36,8 @@ import nl.esi.comma.testspecification.generator.utils.Step
 import nl.esi.comma.testspecification.testspecification.RunStep
 import nl.esi.comma.testspecification.testspecification.TSMain
 import nl.esi.comma.testspecification.testspecification.TestDefinition
+import nl.esi.comma.types.types.SimpleTypeDecl
+import nl.esi.comma.types.types.TypeDecl
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
@@ -42,9 +45,6 @@ import org.eclipse.xtext.generator.IGeneratorContext
 
 import static extension nl.esi.comma.types.utilities.EcoreUtil3.*
 import static extension nl.esi.comma.types.utilities.FileSystemAccessUtil.*
-import nl.esi.comma.actions.actions.Action
-import nl.esi.comma.expressions.expression.ExpressionNullLiteral
-import nl.esi.comma.testspecification.generator.TestSpecificationInstance
 
 class FromConcreteToFast extends AbstractGenerator {
 
@@ -74,90 +74,53 @@ class FromConcreteToFast extends AbstractGenerator {
 
     // Generate data.kvp and referenced JSON files
     def private generateContents(Resource res, IFileSystemAccess2 fsa) {
-        val modelInst = res.contents.head as TSMain
+        // 0) setup FAST directory structure
         val baseFsa = fsa.createFolderAccess('generated_FAST/')
         val fastFsa = baseFsa.createFolderAccess(this.args.getOrDefault('prefixPath', './'))
 
-        var tsi = new TestSpecificationInstance
-        tsi.processTspecImports(modelInst)
-        tsi.mapModelToInstance(modelInst)
-
-        // Parse TSPEC Test Definition
+        // 1) using the .tspec file
+        val modelInst = res.contents.head as TSMain
         val model = modelInst.model as TestDefinition
-        var String path_infix = model.filePath
 
-        // Parse Step Sequence
-        val stepSequence = getStepSequence(model)
+        // 2) create mapping data-implementation to filenames (in .params files)
+        var tsi = new TestSpecificationInstance
+        tsi._process_Import_Data_Implementation(modelInst)
+
+        // 3) create mappings for:
+        // 3.1) Step variable name to step-type (step-parameters field in .tspec file)
+        tsi._process_Step_Parameters(modelInst)
+        // 3.2) Global parameters key and value (LHS and RHS, resp.)
+        tsi._process_Global_Param_Init(modelInst)
+        // 3.3) SUT initialization key and value (LHS and RHS, resp.)
+        tsi._process_Sut_Param_Init(modelInst)
+
+        // 4) Parse step-sequence (precondition: steps 2-3, where import and step-parameters are processed)
+        val stepSequence = getRunStepSequence(model)
         for (s : stepSequence) {
-            var stepInst = new Step
-            stepInst.id = s.inputVar.name // stepVar.name // was identifier
-            stepInst.type = s.type.name
-            stepInst.inputFile = tsi.mapDataInstanceToFile.get(s.stepVar.name).head
-            // check if additional data was specified in a step
-            for (ref : s.refStep) {
-                // if(s.input!==null) {
-                for (act : ref.input.actions) {
-                    if (isPrintableAssignment(act)) {
-                        var mapLHStoRHS = tsi.generateInitAssignmentAction(act)
-                        var lhs = getLHS(act) // note key = record variable, and value = recExp
-                        stepInst.variableName = lhs.key // Note DB: This is the same for all actions
-                        stepInst.recordExp = lhs.value // Note DB: This keeps overwriting (record prefix)
-                        /*System.out.println("DEBUG LHS.KEY: " + lhs.key)
-                         * System.out.println("DEBUG LHS.VALUE: " + lhs.value)
-                         * System.out.println("DEBUG MAP LHStoRHS: ")
-                         mapLHStoRHS.display*/
-                        // System.out.println("DEBUG: " + record_path_for_lot_def)
-                        var String match = findMatchingRecordName(lhs.value, record_def_file_names)
-                        if (match instanceof String) {
-                            if (stepInst.isStepRefPresent(lhs.value)) {
-                                var refStep = stepInst.getStepRefs(lhs.value)
-                                refStep.parameters.add(mapLHStoRHS)
-                            // stepInst.stepRefs.add(refStep)
-                            } else {
-                                // Create new step instance and fill all details there
-                                // Add to list of step reference of step
-                                var rstepInst = new Step
-                                rstepInst.id = lhs.value
-                                rstepInst.type = s.type.name
-                                rstepInst.inputFile = path_infix
-                                rstepInst.variableName = match
-                                rstepInst.recordExp = stepInst.id
-                                rstepInst.parameters.add(mapLHStoRHS) // Added DB 29.05.2025
-                                stepInst.stepRefs.add(rstepInst)
-                            }
-                        } else {
-                            stepInst.parameters.add(mapLHStoRHS)
-                        }
-                    }
-                }
-            }
-            // stepInst.display
-            tsi.listStepInstances.add(stepInst)
+            var stepInst = tsi.createStep(model, s)
+            tsi.steps.add(stepInst)
         }
-        // generate vfd XML file
-        var vfdgen = new VFDXMLGenerator(this.args, this.rename)
-        var refkvpgen = new RefKVPGenerator()
-        fastFsa.generateFile('variants/single_variant/vfd.xml', vfdgen.generateXMLFromSUTVars(model))
-        fastFsa.generateFile('variants/single_variant/reference.kvp', refkvpgen.generateRefKVP(model))
-
-        // update step file names based on checking if additional data was specified. 
-        for (step : tsi.listStepInstances) {
-            if (!step.parameters.isEmpty) {
-                step.inputFile = step.inputFile.replaceFirst("[^/]+\\.json$", step.id + ".json")
-            }
-        }
-
         // Turn off during production!
         tsi.displayParseResults
 
-        // generate data.kvp file
+        // 5) Generate data.kvp file
         fastFsa.generateFile('variants/single_variant/data.kvp', tsi.generateFASTScenarioFile)
-        /* Added DB: 12.05.2025. Support PlantUML Generation for Review */
-        var docgen = new DocGen()
-        fastFsa.generateFile('variants/single_variant/viz.plantuml', docgen.generatePlantUMLFile(tsi.listStepInstances))
 
-        // Generate JSON data files and vfd.xml
-        tsi.generateJSONDataAndVFDFiles(fastFsa, modelInst, record_def_file_names)
+        // 6) Generate JSON data files
+        tsi.generateJSONDataFiles(fastFsa, modelInst, record_def_file_names)
+
+        // 7) generate reference.kvp
+        var refkvpgen = new RefKVPGenerator()
+        fastFsa.generateFile('variants/single_variant/reference.kvp', refkvpgen.generateRefKVP(model))
+
+        // 8) parse sut-param-init actions into a XML elements of a vfd XML file
+        var vfdgen = new VFDXMLGenerator(this.args, this.rename)
+        fastFsa.generateFile('variants/single_variant/vfd.xml', vfdgen.generateXML(model))
+
+        // 9) generate PlantUML files Generation for Review /* Added DB: 12.05.2025*/
+        var docgen = new DocGen()
+        fastFsa.generateFile('variants/single_variant/viz.plantuml', docgen.generatePlantUMLFile(tsi.steps))
+
     }
 
     def String findMatchingRecordName(String name, List<String> suffixes) {
@@ -177,20 +140,13 @@ class FromConcreteToFast extends AbstractGenerator {
         }
     }
 
-    def private getStepSequence(TestDefinition td) {
+    def private getRunStepSequence(TestDefinition td) {
         var listStepSequence = new ArrayList<RunStep>
-        if (td.testSeq.empty) {
-            for (ss : td.stepSeq) {
-                for (step : ss.step.filter(RunStep))
-                    listStepSequence.add(step)
-            }
-        } else {
-            for (ts : td.testSeq) {
-                for (ss : ts.stepSeqRef) {
-                    for (step : ss.step.filter(RunStep))
-                        listStepSequence.add(step)
-                }
-            }
+        // 4.1) Fetches test_single_sequence from .atspec file (check FromAbstractToConcrete)
+        var test_single_sequence = td.testSeq.head
+        for (ss : test_single_sequence.stepSeqRef) {
+            for (step : ss.step.filter(RunStep))
+                listStepSequence.add(step)
         }
         return listStepSequence
     }
@@ -208,6 +164,7 @@ class FromConcreteToFast extends AbstractGenerator {
 
     def private KeyValue getLHSRecAssignment(ExpressionRecordAccess eRecAccess, Expression exp) {
         var record = eRecAccess.record
+        // get fully-qualified field name
         var recExp = ''''''
 
         while (! (record instanceof ExpressionVariable)) {
@@ -227,21 +184,15 @@ class FromConcreteToFast extends AbstractGenerator {
 
     // Expression Handler //
     def private dispatch KeyValue generateInitAssignmentAction(TestSpecificationInstance tsi, AssignmentAction action) {
-        var mapLHStoRHS = new KeyValue // HashMap<String,String>
+        var mapLHStoRHS = new KeyValue
         mapLHStoRHS.key = action.assignment.name
         mapLHStoRHS.value = ExpressionsParser::generateExpression(action.exp, '''''').toString
-        /*if(mapLHStoRHS.value.contains('''platform:''') || mapLHStoRHS.value.contains('''setup.suts''')) 
-         *     {
-         *         System.out.println(" DETECTED PLATFORM: " + mapLHStoRHS.value)
-         *         mapLHStoRHS.value = mapLHStoRHS.value.replaceAll("^\"|\"$", "")
-         *         
-         }*/
-        // replace references to global variables with FAST syntax
-        for (elm : tsi.mapLocalDataVarToDataInstance.keySet) {
-            if (mapLHStoRHS.value.contains(elm)) {
-                mapLHStoRHS.value = mapLHStoRHS.value.replaceAll(elm, "global.params['" + elm + "']")
-            }
-        }
+//        // replace references to global variables with FAST syntax
+//        for (elm : tsi.mapLocalDataVarToDataInstance.keySet) {
+//            if (mapLHStoRHS.value.contains(elm)) {
+//                mapLHStoRHS.value = mapLHStoRHS.value.replaceAll(elm, "global.params['" + elm + "']")
+//            }
+//        }
         return mapLHStoRHS
     }
 
@@ -272,6 +223,7 @@ class FromConcreteToFast extends AbstractGenerator {
 
         var record = eRecAccess.record
         var field = eRecAccess.field
+        // get fully-qualified field name 
         var recExp = ''''''
 
         while (! (record instanceof ExpressionVariable)) {
@@ -283,26 +235,18 @@ class FromConcreteToFast extends AbstractGenerator {
         }
         // tracking fully-qualified field name 
         mapLHStoRHS.key = '''«recExp».''' + field.name
+        // check if there is any applicable auto-prefixing rule (for custom types *based on string*)
         var prefix = findPrefixBasedOnType(eRecAccess)
         mapLHStoRHS.value = prefix + ExpressionsParser::generateExpression(exp, ref).toString
         mapLHStoRHS.refVal.add(mapLHStoRHS.value) // Added DB 14.10.2024
-        // modify key value data structure to JSON
-        /*mapLHStoRHS.value = mapLHStoRHS.value.replaceAll("\"key\" : ","")
-         * mapLHStoRHS.value = mapLHStoRHS.value.replaceAll(", \"value\"","")      
-         * // check references to SUT and replace with FAST syntax
-         * for(elm : mapLocalSUTVarToDataInstance.keySet) {
-         *     if(mapLHStoRHS.value.contains(elm+"."))
-         *         mapLHStoRHS.value = mapLHStoRHS.value.replaceFirst(elm, "setup.suts['" + elm + "']")
-         }*/
         // check references to Step outputs and replace with FAST syntax
-        for (elm : tsi.mapLocalStepInstance.keySet) {
+        for (elm : tsi.stepVarNameToType.keySet) {
             if (mapLHStoRHS.value.contains(elm + ".output")) {
-                // mapLHStoRHS.value = mapLHStoRHS.value.replaceAll(elm+".output", "steps.out['" + "_" + elm + "']") // commented 26.11.2024
-                // Added REGEX 26.11.2024: remove (x) after steps.out[step.params[....]].x.y.... (assumption, always a y is present)
-                // In BPMN4S model, x represents the container of output data. So we need to filter it out for FAST. 
+                // Added REGEX 26.11.2024: In .ps files, '.output'field is the container of output data. 
                 mapLHStoRHS.value = mapLHStoRHS.value.replaceAll(elm + "\\.output" + "\\.(.*?)\\.",
+                // We need to remove '.output' field from steps.out[step.params[....]].output.x.y.z...
+                // for proper FAST generation. 
                     "steps.out[step.params['" + "_" + elm + "']].")
-                // System.out.println("DEBUG XY: " + mapLHStoRHS.value)
                 mapLHStoRHS.refKey.add(elm) // reference to step
                 // Custom String Updates for FAST Syntax Peculiarities! TODO investigate solution?
                 // map-var['key'] + "[0]" -> map-var['key'][0] 
@@ -310,25 +254,23 @@ class FromConcreteToFast extends AbstractGenerator {
                 mapLHStoRHS.value = mapLHStoRHS.value.replaceAll("\\]\"", "]")
             }
         }
-        // replace references to global variables with FAST syntax
-        for (elm : tsi.mapLocalDataVarToDataInstance.keySet) {
-            if (mapLHStoRHS.value.contains(elm)) {
-                mapLHStoRHS.value = mapLHStoRHS.value.replaceAll(elm, "global.params['" + elm + "']")
-            }
-        }
-        // name of variable instance: varExp.variable.name
+//        // replace references to global variables with FAST syntax
+//        for (elm : tsi.mapLocalDataVarToDataInstance.keySet) {
+//            if (mapLHStoRHS.value.contains(elm)) {
+//                mapLHStoRHS.value = mapLHStoRHS.value.replaceAll(elm, "global.params['" + elm + "']")
+//            }
+//        }
         return mapLHStoRHS
     }
 
     // End Expression Handler //
-
-    def private generateJSONDataAndVFDFiles(TestSpecificationInstance tsi, IFileSystemAccess2 fsa, TSMain modelInst, List<String> record_names) {
-        var txt = ''''''
-        var listOfStepVars = new HashSet<String>
+    def private generateJSONDataFiles(TestSpecificationInstance tsi, IFileSystemAccess2 fsa, TSMain modelInst,
+        List<String> record_names) {
+        var List<Step> listOfSteps = new ArrayList<Step>
         // val modelInst = _resource.contents.head as TSMain
         // NOTE. Assumption is that steps are populated.
-        for (step : tsi.listStepInstances) {
-            listOfStepVars.add(step.variableName)
+        for (step : tsi.steps) {
+            listOfSteps.add(step)
         }
         // Process TSPEC Imports and parse them
         for (imp : modelInst.imports) {
@@ -341,8 +283,9 @@ class FromConcreteToFast extends AbstractGenerator {
                     var dataInst = new JSONData
                     for (act : apiDef.initActions) {
                         if (act instanceof AssignmentAction || act instanceof RecordFieldAssignmentAction) {
-                            var mapLHStoRHS = tsi.generateInitAssignmentAction(act)
-                            listOfStepVars.remove(mapLHStoRHS.key) // variable is initialized in param file
+                            val mapLHStoRHS = tsi.generateInitAssignmentAction(act)
+                            // variable is initialized in param file
+                            listOfSteps = listOfSteps.stream().filter(t|t.variableName == mapLHStoRHS.key).toList
                             dataInst.getKvList.add(mapLHStoRHS)
                         }
                     }
@@ -358,21 +301,11 @@ class FromConcreteToFast extends AbstractGenerator {
                 for (mapLHStoRHS : dataInst.kvList) {
                     // System.out.println("Checking " + mapLHStoRHS.key)
                     var mapLHStoRHS_ = tsi.getExtensions(mapLHStoRHS.key)
-                    // System.out.println(" Got Extension for Key: " + mapLHStoRHS.key)
-                    /*for(elm: mapLHStoRHS_.keySet) { 
-                     *     System.out.println("    K: " + elm)
-                     *     for(kv : mapLHStoRHS_.get(elm))
-                     *         System.out.println("    k: " + kv.key + "   v : " + kv.value)
-                     }*/
-                    // elm.display
-                    // check that mapLHStoRHS_ is not empty => get file name from step instance list
-                    // else call function to get file name
-                    // Reason: 
-                    // the map data structure SUT to File name, 
-                    // does not consider new data files due to data extension in steps 
                     var String fileName = new String
-
                     if (!mapLHStoRHS_.isEmpty) {
+                        // check that mapLHStoRHS_ is not empty => get file name from step instance list
+                        // Reason: the map data structure SUT to File name, 
+                        // does not consider new data files due to data extension in steps 
                         for (stepId : mapLHStoRHS_.keySet) {
                             fileName = tsi.getStepInstanceFileName(stepId)
                             var fileContents = mapLHStoRHS.value
@@ -382,6 +315,7 @@ class FromConcreteToFast extends AbstractGenerator {
                             fsa.generateFile(fileName, fileContents)
                         }
                     } else {
+                        // else call function to get file name. 
                         System.out.println("Warning: Variable " + mapLHStoRHS.key +
                             " defined in param but not used in TSpec!")
                         fileName = tsi.getFileName(mapLHStoRHS.key)
@@ -395,7 +329,8 @@ class FromConcreteToFast extends AbstractGenerator {
         // but occurs in tspec ==> create data files per step input def.
         // TODO. Make this the only way to generate JSON, i.e. remove previous file generation 
         // Prevent variable init in params file. 
-        for (vname : listOfStepVars) {
+        for (step : listOfSteps) {
+            var vname = step.variableName
             // System.out.println(" variable not declared in params: " + vname)
             // for(step : listStepInstances) {
             // if(step.variableName.equals(vname)) {
@@ -417,8 +352,11 @@ class FromConcreteToFast extends AbstractGenerator {
                     fileContents = ''''''
                 }
             }
+        }
 
-            // Added 09.11.2024 DB: generate explicit JSON files referenced before 
+        // Added 09.11.2024 DB: generate explicit JSON files referenced before 
+        for (step : listOfSteps) {
+            var vname = step.variableName
             var mapLHStoRHSExt = tsi.getRefExtensions(vname)
             var String fileNameExt = new String
             var fileContentsExt = ''''''
@@ -433,7 +371,6 @@ class FromConcreteToFast extends AbstractGenerator {
                 }
             }
         }
-        return txt // TODO Remove unused variable
     }
 
     def String printRefinedMap(Object item) {
@@ -481,7 +418,7 @@ class FromConcreteToFast extends AbstractGenerator {
     }
 
     def private String getStepInstanceFileName(TestSpecificationInstance tsi, String step_id) {
-        for (elm : tsi.listStepInstances) {
+        for (elm : tsi.steps) {
             if (elm.id.equals(step_id)) {
                 return elm.inputFile
             }
@@ -490,18 +427,18 @@ class FromConcreteToFast extends AbstractGenerator {
     }
 
     def private String getFileName(TestSpecificationInstance tsi, String varName) {
-        for (step : tsi.listStepInstances) {
+        for (step : tsi.steps) {
             if (step.variableName.equals(varName)) {
                 return step.inputFile.replaceAll(".json", "_" + step.id + ".json")
             }
         }
-        for (key : tsi.mapDataInstanceToFile.keySet) {
+        for (key : tsi.dataImplToFilename.keySet) {
             if (key.equals(varName)) {
-                return tsi.mapDataInstanceToFile.get(key).head
+                return tsi.dataImplToFilename.get(key).head
             }
         }
-        for (key : tsi.mapSUTInstanceToFile.keySet) {
-            var fname = tsi.mapSUTInstanceToFile.get(key).head
+        for (key : tsi.sutInstanceToFile.keySet) {
+            var fname = tsi.sutInstanceToFile.get(key).head
             // System.out.println("Checking: " + fname + " map key entry: " + key)
             if (key.equals(varName)) {
                 return fname
@@ -513,7 +450,7 @@ class FromConcreteToFast extends AbstractGenerator {
     // Added DB: get contents for explicit JSON file generation
     def private getRefExtensions(TestSpecificationInstance tsi, String varName) {
         var mapListOfKeyValue = new HashMap<String, List<KeyValue>>
-        for (step : tsi.listStepInstances) {
+        for (step : tsi.steps) {
             if (step.variableName.equals(varName)) {
                 if (!step.stepRefs.empty) {
                     for (sr : step.stepRefs) {
@@ -558,7 +495,7 @@ class FromConcreteToFast extends AbstractGenerator {
     def private getExtensions(TestSpecificationInstance tsi, String varName) {
         var mapListOfKeyValue = new HashMap<String, List<KeyValue>>
         // System.out.println(" Getting Extension for Variable: " + varName)
-        for (step : tsi.listStepInstances) {
+        for (step : tsi.steps) {
             if (step.variableName.equals(varName)) {
                 // System.out.println("STEP ID: " + step.id)
                 // Note DB: Incomplete implementation. Decision to avoid duplicate keys in front end. 
@@ -593,19 +530,23 @@ class FromConcreteToFast extends AbstractGenerator {
     def private generateFASTScenarioFile(TestSpecificationInstance tsi) {
         var txt = '''
             in.data.global_parameters = {
-                «FOR key : tsi.mapLocalDataVarToDataInstance.keySet SEPARATOR ','»
-                    "«key»" : «tsi.mapLocalDataVarToDataInstance.get(key).head»
+                «FOR key : tsi.dataVarToDataInstance.keySet SEPARATOR ','»
+                    "«key»" : «tsi.dataVarToDataInstance.get(key).head»
                 «ENDFOR»
             }
             
             in.data.suts = [
-                «FOR elm : tsi.mapLocalSUTVarToDataInstance.keySet SEPARATOR ','»
-                    «tsi.mapLocalSUTVarToDataInstance.get(elm).head»
-                «ENDFOR»
+«««                «FOR elm : tsi.mapLocalSUTVarToDataInstance.keySet SEPARATOR ','»
+                {
+«««                    «FOR refTxt : generateFASTRefStepTxt(elm) SEPARATOR ','»
+«««                        «refTxt»
+«««                    «ENDFOR»
+                }
+«««                «ENDFOR»
             ]
             
             in.data.steps = [
-                «FOR elm : tsi.listStepInstances SEPARATOR ','»
+                «FOR elm : tsi.steps SEPARATOR ','»
                     «IF generateFASTRefStepTxt(elm).empty»
                         { "id" : "«elm.id»", "type" : "«elm.type.replaceAll("_dot_",".")»", "input_file" : "«elm.inputFile»" }
                     «ELSE»
@@ -661,32 +602,32 @@ class FromConcreteToFast extends AbstractGenerator {
 
     def private displayParseResults(TestSpecificationInstance tsi) {
         System.out.println(" ---- Map Data Instance To File ---- ")
-        for (key : tsi.mapDataInstanceToFile.keySet) {
-            System.out.println("    Key: " + key + " Value: " + tsi.mapDataInstanceToFile.get(key))
+        for (key : tsi.dataImplToFilename.keySet) {
+            System.out.println("    Key: " + key + " Value: " + tsi.dataImplToFilename.get(key))
         }
 
         System.out.println(" ---- Map SUT Instance To File ---- ")
-        for (key : tsi.mapSUTInstanceToFile.keySet) {
-            System.out.println("    Key: " + key + " Value: " + tsi.mapSUTInstanceToFile.get(key))
+        for (key : tsi.sutInstanceToFile.keySet) {
+            System.out.println("    Key: " + key + " Value: " + tsi.sutInstanceToFile.get(key))
         }
 
         System.out.println(" ---- Map Local Data Var To Data Instance ---- ")
-        for (key : tsi.mapLocalDataVarToDataInstance.keySet) {
-            System.out.println("    Key: " + key + " Value: " + tsi.mapLocalDataVarToDataInstance.get(key))
+        for (key : tsi.dataVarToDataInstance.keySet) {
+            System.out.println("    Key: " + key + " Value: " + tsi.dataVarToDataInstance.get(key))
         }
 
         System.out.println(" ---- Map SUT Var To Data Instance ---- ")
-        for (key : tsi.mapLocalSUTVarToDataInstance.keySet) {
-            System.out.println("    Key: " + key + " Value: " + tsi.mapLocalSUTVarToDataInstance.get(key))
+        for (key : tsi.sutVarToDataInstance.keySet) {
+            System.out.println("    Key: " + key + " Value: " + tsi.sutVarToDataInstance.get(key))
         }
 
-        System.out.println(" ---- Map Step Instance ---- ")
-        for (key : tsi.mapLocalStepInstance.keySet) {
-            System.out.println("    Key: " + key + " Value: " + tsi.mapLocalStepInstance.get(key))
+        System.out.println(" ---- Map Step Parameters Variable To Type ---- ")
+        for (key : tsi.stepVarNameToType.keySet) {
+            System.out.println("    Key: " + key + " Value: " + tsi.stepVarNameToType.get(key))
         }
 
         System.out.println(" ------------------ STEPS ------------------")
-        for (st : tsi.listStepInstances) {
+        for (st : tsi.steps) {
             st.display
 //          System.out.println("    step-id: " + st.id + " type: " + st.type)
 //          System.out.println("    input: " + st.inputFile)
@@ -697,7 +638,7 @@ class FromConcreteToFast extends AbstractGenerator {
         }
     }
 
-    def processTspecImports(TestSpecificationInstance tsi, TSMain model) {
+    protected def void _process_Import_Data_Implementation(TestSpecificationInstance tsi, TSMain model) {
         for (imp : model.imports) {
             val inputResource = imp.resource
             var input = inputResource.contents.head
@@ -708,8 +649,8 @@ class FromConcreteToFast extends AbstractGenerator {
                         for (elm : api.di) {
                             var filepath = api.path + elm.fname
                             var key = elm.^var.name
-                            tsi.mapDataInstanceToFile.putIfAbsent(key, new ArrayList)
-                            tsi.mapDataInstanceToFile.get(key).add(filepath)
+                            tsi.dataImplToFilename.putIfAbsent(key, new ArrayList)
+                            tsi.dataImplToFilename.get(key).add(filepath)
                         }
                     }
                 } else {
@@ -719,25 +660,87 @@ class FromConcreteToFast extends AbstractGenerator {
         }
     }
 
-    protected def void mapModelToInstance(TestSpecificationInstance tsi, TSMain modelInst) {
+    protected def void _process_Step_Parameters(TestSpecificationInstance tsi, TSMain modelInst) {
         val model = modelInst.model as TestDefinition
         for (steppars : model.stepparams) {
             var key = steppars.name
             var value = steppars.type.type.name
-            tsi.mapLocalStepInstance.putIfAbsent(key, new ArrayList)
-            tsi.mapLocalStepInstance.get(key).add(value)
-        }
-        for (act : model.gparamsInitActions) {
-            var mapLHStoRHS = tsi.generateInitAssignmentAction(act)
-            tsi.mapLocalDataVarToDataInstance.putIfAbsent(mapLHStoRHS.key, new ArrayList)
-            tsi.mapLocalDataVarToDataInstance.get(mapLHStoRHS.key).add(mapLHStoRHS.value)
-        }
-        for (act : model.sutInitActions) {
-            var mapLHStoRHS = tsi.generateInitAssignmentAction(act)
-            tsi.mapLocalSUTVarToDataInstance.putIfAbsent(mapLHStoRHS.key, new ArrayList)
-            tsi.mapLocalSUTVarToDataInstance.get(mapLHStoRHS.key).add(mapLHStoRHS.value)
+            tsi.stepVarNameToType.putIfAbsent(key, new ArrayList)
+            tsi.stepVarNameToType.get(key).add(value)
         }
     }
 
+    protected def void _process_Global_Param_Init(TestSpecificationInstance tsi, TSMain modelInst) {
+        val model = modelInst.model as TestDefinition
+        for (act : model.gparamsInitActions) {
+            var mapLHStoRHS = tsi.generateInitAssignmentAction(act)
+            tsi.dataVarToDataInstance.putIfAbsent(mapLHStoRHS.key, new ArrayList)
+            tsi.dataVarToDataInstance.get(mapLHStoRHS.key).add(mapLHStoRHS.value)
+        }
+    }
+
+    protected def void _process_Sut_Param_Init(TestSpecificationInstance tsi, TSMain modelInst) {
+        val model = modelInst.model as TestDefinition
+        for (act : model.sutInitActions) {
+            var mapLHStoRHS = tsi.generateInitAssignmentAction(act)
+            tsi.sutVarToDataInstance.putIfAbsent(mapLHStoRHS.key, new ArrayList)
+            tsi.sutVarToDataInstance.get(mapLHStoRHS.key).add(mapLHStoRHS.value)
+        }
+    }
+
+    def Step createStep(TestSpecificationInstance tsi, TestDefinition model, RunStep s) {
+        var stepInst = new Step
+        // 4.2) Step ID
+        stepInst.id = s.inputVar.name
+        // 4.3) Step type (defined via UI text box, e.g., SUT.OperationName)
+        stepInst.type = s.type.name
+        // 4.4) Step input file path+name
+        stepInst.inputFile = tsi.dataImplToFilename.get(s.stepVar.name).head
+
+        // 4.5) Path to folder containing .json input_file(s) (default: ./dataset/)
+        var String PATH_INFIX = model.filePath
+        for (ref : s.refStep) {
+            for (act : ref.input.actions) {
+                // 4.6) Check if this is a printable assignment (aka not-a-null assignment)
+                if (isPrintableAssignment(act)) {
+                    // 4.7) make strings for LHS and RHS ( flattened / fully-qualified)
+                    var mapLHStoRHS = tsi.generateInitAssignmentAction(act)
+                    // 4.8) fetch step-input variable and record field
+                    var lhs = getLHS(act) // note key = record variable, and value = recExp
+                    stepInst.variableName = lhs.key // Note DB: This is the same for all actions
+                    stepInst.recordExp = lhs.value // Note DB: This keeps overwriting (record prefix)
+                    // 4.9) check if record field assignment should be in its own json file
+                    var String match = findMatchingRecordName(lhs.value, record_def_file_names)
+                    if (match instanceof String) {
+                        // 4.9.1) record field is part of step input_file
+                        if (stepInst.isStepRefPresent(lhs.value)) {
+                            var rStep = stepInst.getStepRefs(lhs.value)
+                            rStep.parameters.add(mapLHStoRHS)
+                        } else {
+                            // Create new step instance and fill all details there
+                            var new_rstep = new Step
+                            new_rstep.id = lhs.value
+                            new_rstep.type = s.type.name
+                            new_rstep.inputFile = PATH_INFIX
+                            new_rstep.variableName = match
+                            new_rstep.recordExp = stepInst.id
+                            new_rstep.parameters.add(mapLHStoRHS) // Added DB 29.05.2025
+                            // Add to list of step reference of step
+                            stepInst.stepRefs.add(new_rstep)
+                        }
+                    } else {
+                        // 4.9.2) record field assignment has it own json
+                        stepInst.parameters.add(mapLHStoRHS)
+                    }
+                }
+            }
+        }
+        // 4.10) update step input_file names, if additional data is specified (parameters). 
+        if (!stepInst.parameters.isEmpty) {
+            stepInst.inputFile = stepInst.inputFile.replaceFirst("[^/]+\\.json$", stepInst.id + ".json")
+        }
+
+        return stepInst
+    }
 
 }

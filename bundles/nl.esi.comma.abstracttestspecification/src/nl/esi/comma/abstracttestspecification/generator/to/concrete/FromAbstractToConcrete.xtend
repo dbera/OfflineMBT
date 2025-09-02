@@ -20,7 +20,6 @@ import nl.esi.comma.abstracttestspecification.abstractTestspecification.Binding
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.ExecutableStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.RunStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.TSMain
-import nl.esi.comma.abstracttestspecification.generator.utils.JsonHelper
 import nl.esi.comma.assertthat.assertThat.DataAssertionItem
 import nl.esi.comma.expressions.expression.ExpressionVariable
 import nl.esi.comma.expressions.services.ExpressionGrammarAccess
@@ -81,9 +80,14 @@ class FromAbstractToConcrete extends AbstractGenerator {
                 «step.stepType.get(0)» step_«step.name»
             «ENDFOR»
         «ENDFOR»
-        «var sutdefs = extractSUTVars(atd)»
-        «IF !sutdefs.empty»
-        sut-def-list : «JsonHelper.jsonElement(sutdefs)»
+        «var sutexpr = extractSUTVarExpressions(atd)»
+        «IF !sutexpr.empty»
+        sut-param-init 
+        «FOR lhs: sutexpr.keySet»
+            «FOR rhs: sutexpr.get(lhs)»
+                «lhs» := «rhs»
+            «ENDFOR»
+        «ENDFOR»
         «ENDIF»
     '''
     

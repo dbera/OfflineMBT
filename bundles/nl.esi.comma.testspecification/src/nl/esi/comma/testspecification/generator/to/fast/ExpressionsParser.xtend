@@ -48,6 +48,10 @@ import nl.esi.comma.expressions.expression.ExpressionVariable
 import nl.esi.comma.expressions.expression.ExpressionVector
 import nl.esi.comma.expressions.expression.Field
 import nl.esi.comma.expressions.expression.VectorTypeConstructor
+import nl.esi.comma.actions.actions.AssignmentAction
+import nl.esi.comma.expressions.expression.Expression
+import java.util.Map
+import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
 
 class ExpressionsParser {
 	
@@ -241,4 +245,77 @@ class ExpressionsParser {
 		}
 		dimTxt
 	}
+	
+    // VFD.XML handlers
+    def static dispatch CharSequence generateXMLElement(RecordFieldAssignmentAction action, Map<String,String> rename) {
+        return generateXMLElement(action.exp, rename)
+    }
+
+    def static dispatch CharSequence generateXMLElement(AssignmentAction action, Map<String,String> rename) {
+        return generateXMLElement(action.exp, rename)
+    }
+    
+    def static dispatch CharSequence generateXMLElement(ExpressionRecord expr, Map<String,String> rename)
+    '''
+    «FOR f : expr.fields»
+    «generateXMLElement(f, rename)»
+    «ENDFOR»
+    '''
+
+    def static dispatch CharSequence generateXMLElement(Field expr, Map<String,String> rename){
+        var isBasicType = isBasicType(expr.exp)
+        val elemKey = rename.getOrDefault(expr.recordField.name,expr.recordField.name)
+        val elemValue = generateXMLElement(expr.exp, rename)
+        if(isBasicType) {
+            return '''<«elemKey»>«elemValue»</«elemKey»>'''
+        }
+        return '''
+        <«elemKey»>
+            «elemValue»
+        </«elemKey»>'''
+    }
+
+    def static dispatch CharSequence generateXMLElement(ExpressionVector expr, Map<String,String> rename)
+    '''
+   «FOR elm : expr.elements»
+   «IF elm instanceof ExpressionVector»«generateXMLElement(elm as ExpressionVector, rename)»
+   «ELSE»«generateXMLElement(elm, rename)»«ENDIF»
+   «ENDFOR»
+   '''
+
+    def static dispatch CharSequence generateXMLElement(ExpressionConstantString expr, Map<String,String> rename)      
+    '''«expr.value»''' 
+ 
+    def static dispatch CharSequence generateXMLElement(ExpressionConstantBool expr, Map<String,String> rename)      
+    '''«expr.value»''' 
+ 
+    def static dispatch CharSequence generateXMLElement(ExpressionConstantReal expr, Map<String,String> rename)      
+    '''«expr.value»''' 
+ 
+    def static dispatch CharSequence generateXMLElement(ExpressionConstantInt expr, Map<String,String> rename)      
+    '''«expr.value»''' 
+ 
+    def static dispatch CharSequence generateXMLElement(ExpressionMinus expr, Map<String,String> rename)      
+    '''-«generateXMLElement(expr.sub, rename)»''' 
+ 
+    def static dispatch CharSequence generateXMLElement(ExpressionPlus expr, Map<String,String> rename)      
+    '''+«generateXMLElement(expr.sub, rename)»'''
+
+    def static boolean isBasicType(Expression expr) {
+        switch (expr) {
+            ExpressionConstantString: true
+            ExpressionConstantBool: true
+            ExpressionConstantReal: true
+            ExpressionConstantInt: true
+            ExpressionMinus: {
+                val sub = expr.sub
+                switch (sub){
+                    ExpressionConstantReal: isBasicType(expr.sub)
+                    ExpressionConstantInt: isBasicType(expr.sub)
+                    default: false
+                }
+            }
+            default: false
+        }
+    }
 }

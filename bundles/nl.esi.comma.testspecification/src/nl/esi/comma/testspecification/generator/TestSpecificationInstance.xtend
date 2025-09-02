@@ -19,17 +19,16 @@ import nl.esi.comma.testspecification.generator.utils.Step
 
 class TestSpecificationInstance 
 {
-	public var mapLocalDataVarToDataInstance = new HashMap<String, List<String>>
-	public var mapLocalStepInstance = new HashMap<String, List<String>>
-	public var mapLocalSUTVarToDataInstance = new HashMap<String, List<String>>
-	public var mapDataInstanceToFile = new HashMap<String, List<String>>
-	public var mapSUTInstanceToFile = new HashMap<String, List<String>>
-	public var listStepInstances = new ArrayList<Step>
-	public var listSutSetup = new ArrayList<Step>
+	public var dataImplToFilename = new HashMap<String, List<String>>
+	public var stepVarNameToType = new HashMap<String, List<String>>
+	public var dataVarToDataInstance = new HashMap<String, List<String>>
+	public var sutVarToDataInstance = new HashMap<String, List<String>>
+	public var sutInstanceToFile = new HashMap<String, List<String>>
 	
 	public var title = new String
 	public var testpurpose = new String
 	public var background = new String
 	public var stakeholders = new ArrayList<String>
+	public var steps = new ArrayList<Step>
 	
 }
