@@ -79,7 +79,8 @@ class FromConcreteToFast extends AbstractGenerator {
     def private generateContents(Resource res, IFileSystemAccess2 fsa) {
         // 0) setup FAST directory structure
         val baseFsa = fsa.createFolderAccess('generated_FAST/')
-        val fastFsa = baseFsa.createFolderAccess(this.args.getOrDefault('prefixPath', './'))
+        val datasetPath = this.args.getOrDefault('prefixPath', './dataset')
+        val testFsa = baseFsa.createFolderAccess(datasetPath)
 
         // 1) using the .tspec file
         val modelInst = res.contents.head as TSMain
@@ -87,16 +88,16 @@ class FromConcreteToFast extends AbstractGenerator {
 
         // 2) create mapping data-implementation to filenames (in .params files)
         var tsi = new TestSpecificationInstance
+        // 2.1) Path to folder containing .json input_file(s) (default: ./dataset/)
+        tsi.filePath = datasetPath
         tsi._process_Import_Data_Implementation(modelInst)
 
         // 3) create mappings for:
-        // 3.1) Path to folder containing .json input_file(s) (default: ./dataset/)
-        tsi.filePath = model.filePath
-        // 3.2) Step variable name to step-type (step-parameters field in .tspec file)
+        // 3.1) Step variable name to step-type (step-parameters field in .tspec file)
         tsi._process_Step_Parameters(modelInst)
-        // 3.3) Global parameters key and value (LHS and RHS, resp.)
+        // 3.2) Global parameters key and value (LHS and RHS, resp.)
         tsi._process_Global_Param_Init(modelInst)
-        // 3.4) SUT initialization key and value (LHS and RHS, resp.)
+        // 3.3) SUT initialization key and value (LHS and RHS, resp.)
         tsi._process_Sut_Param_Init(modelInst)
 
         // 4) Parse step-sequence (precondition: steps 2-3, where import and step-parameters are processed)
@@ -109,22 +110,22 @@ class FromConcreteToFast extends AbstractGenerator {
         tsi.displayParseResults
 
         // 5) Generate data.kvp file
-        fastFsa.generateFile('variants/single_variant/data.kvp', tsi.generateFASTScenarioFile)
+        testFsa.generateFile('variants/single_variant/data.kvp', tsi.generateFASTScenarioFile)
 
         // 6) Generate JSON data files
-        tsi.generateJSONDataFiles(fastFsa, modelInst, record_def_file_names)
+        tsi.generateJSONDataFiles(baseFsa, modelInst, record_def_file_names)
 
         // 7) generate reference.kvp
         var refkvpgen = new RefKVPGenerator()
-        fastFsa.generateFile('variants/single_variant/reference.kvp', refkvpgen.generateRefKVP(model))
+        testFsa.generateFile('variants/single_variant/reference.kvp', refkvpgen.generateRefKVP(model))
 
         // 8) parse sut-param-init actions into a XML elements of a vfd XML file
         var vfdgen = new VFDXMLGenerator(this.args, this.rename)
-        fastFsa.generateFile('variants/single_variant/vfd.xml', vfdgen.generateXML(tsi))
+        testFsa.generateFile('variants/single_variant/vfd.xml', vfdgen.generateXML(tsi))
 
         // 9) generate PlantUML files Generation for Review /* Added DB: 12.05.2025*/
         var docgen = new DocGen()
-        fastFsa.generateFile('variants/single_variant/viz.plantuml', docgen.generatePlantUMLFile(tsi.steps))
+        testFsa.generateFile('variants/single_variant/viz.plantuml', docgen.generatePlantUMLFile(tsi.steps))
 
     }
 
@@ -540,8 +541,12 @@ class FromConcreteToFast extends AbstractGenerator {
             }
             
             in.data.suts = [
-                «FOR key : tsi.sutVarToDataInstance.keySet SEPARATOR ','»
-                    «tsi.sutVarToDataInstance.get(key).head»
+                «FOR sut_setup : tsi.indatasuts SEPARATOR ','»
+                    {
+                        «FOR param: sut_setup.parameters SEPARATOR ','»
+                            "«param.key»": «param.value»
+                        «ENDFOR»
+                    }
                 «ENDFOR»
             ]
             
@@ -647,7 +652,7 @@ class FromConcreteToFast extends AbstractGenerator {
                     val apidef = input.model as APIDefinition
                     for (api : apidef.apiImpl) {
                         for (elm : api.di) {
-                            var filepath = api.path + elm.fname
+                            var filepath = tsi.filePath + '/dataset/' + elm.fname
                             var key = elm.^var.name
                             tsi.dataImplToFilename.putIfAbsent(key, new ArrayList)
                             tsi.dataImplToFilename.get(key).add(filepath)
@@ -732,14 +737,15 @@ class FromConcreteToFast extends AbstractGenerator {
                         new_rstep.variableName = lhs.key
                         new_rstep.type = field.recordField.type.type.name
                         new_rstep.recordExp = lhs.value
-                        // save json file in "filePath / field name + step ID"
-                        new_rstep.inputFile = tsi.filePath + '/datasuts_' + new_rstep.id + '_' + stepId + '.json'
-                        new_rstep.parameters.add(lhs) // Added DB 29.05.2025
+                        // path for json input_file in "filePath / field name + step ID"
+                        new_rstep.inputFile = '"' + tsi.filePath + '/dataset/' + new_rstep.inputFile + new_rstep.id +
+                            '_' + stepId + '.json' + '"'
+                        // point lhs value to input_file
+                        lhs.value = new_rstep.inputFile
                         // Add to list of step reference of step
                         stepInst.stepRefs.add(new_rstep)
-                    } else {
-                        stepInst.parameters.add(lhs)
                     }
+                    stepInst.parameters.add(lhs)
                 }
             }
             tsi.indatasuts.add(stepInst)
@@ -797,7 +803,7 @@ class FromConcreteToFast extends AbstractGenerator {
                             new_rstep.id = lhs.value
                             new_rstep.runStep = stepInst.runStep
                             new_rstep.type = stepInst.runStep?.type.name
-                            new_rstep.inputFile = tsi.filePath
+                            new_rstep.inputFile = tsi.filePath + '/dataset/'
                             new_rstep.variableName = match
                             new_rstep.recordExp = stepInst.id
                             new_rstep.parameters.add(mapLHStoRHS) // Added DB 29.05.2025
