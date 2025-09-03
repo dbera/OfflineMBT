@@ -64,8 +64,9 @@ class FromConcreteToFast extends AbstractGenerator {
 
     /* TODO this should come from project task? Investigate and Implement it. */
     var List<String> record_def_file_names = List.of("lot_definition", "job_definition")
+    var List<String> setup_file_names = List.of("setup_file")
 
-    // On save of TSPEC file, this function is called by Eclipse Framework
+// On save of TSPEC file, this function is called by Eclipse Framework
     override void doGenerate(Resource res, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
         val ctd = res.contents.filter(TSMain).map[model].filter(TestDefinition).head
         if (ctd === null) {
@@ -75,11 +76,11 @@ class FromConcreteToFast extends AbstractGenerator {
         generateContents(res, fsa) // Parsing and File Generation
     }
 
-    // Generate data.kvp and referenced JSON files
+// Generate data.kvp and referenced JSON files
     def private generateContents(Resource res, IFileSystemAccess2 fsa) {
         // 0) setup FAST directory structure
         val baseFsa = fsa.createFolderAccess('generated_FAST/')
-        val datasetPath = this.args.getOrDefault('prefixPath', './dataset')
+        val datasetPath = this.args.getOrDefault('prefixPath', './')
         val testFsa = baseFsa.createFolderAccess(datasetPath)
 
         // 1) using the .tspec file
@@ -114,6 +115,7 @@ class FromConcreteToFast extends AbstractGenerator {
 
         // 6) Generate JSON data files
         tsi.generateJSONDataFiles(baseFsa, modelInst, record_def_file_names)
+        tsi.generateJSONSutSetupFiles(baseFsa)
 
         // 7) generate reference.kvp
         var refkvpgen = new RefKVPGenerator()
@@ -188,7 +190,7 @@ class FromConcreteToFast extends AbstractGenerator {
         return kv
     }
 
-    // Expression Handler //
+// Expression Handler //
     def private dispatch KeyValue generateInitAssignmentAction(TestSpecificationInstance tsi, AssignmentAction action) {
         var mapLHStoRHS = new KeyValue
         mapLHStoRHS.key = action.assignment.name
@@ -207,16 +209,18 @@ class FromConcreteToFast extends AbstractGenerator {
         return tsi.generateInitRecordAssignment(action.fieldAccess as ExpressionRecordAccess, action.exp, '''''')
     }
 
-    def String findPrefixBasedOnType(ExpressionRecordAccess access) {
-        var TypeDecl fieldType = access.field.type.type
-        if (fieldType instanceof SimpleTypeDecl) {
-            var isBasedOnString = fieldType.base?.name?.equals('string')
-            if (isBasedOnString) {
-                var baseName = fieldType.name
-                var prefix = this.args.getOrDefault('prefixPath', './')
-                return switch baseName {
-                    case 'Dataset': '"%s/dataset/"+'.formatted(prefix)
-                    default: ''
+    def String findPrefixBasedOnType(Expression access) {
+        if (access instanceof ExpressionRecordAccess) {
+            var TypeDecl fieldType = access.field.type.type
+            if (fieldType instanceof SimpleTypeDecl) {
+                var isBasedOnString = fieldType.base?.name?.equals('string')
+                if (isBasedOnString) {
+                    var baseName = fieldType.name
+                    var prefix = this.args.getOrDefault('prefixPath', './')
+                    return switch baseName {
+                        case 'Dataset': '"%s/dataset/"+'.formatted(prefix)
+                        default: ''
+                    }
                 }
             }
         }
@@ -268,7 +272,7 @@ class FromConcreteToFast extends AbstractGenerator {
         return mapLHStoRHS
     }
 
-    // End Expression Handler //
+// End Expression Handler //
     def private generateJSONDataFiles(TestSpecificationInstance tsi, IFileSystemAccess2 fsa, TSMain modelInst,
         List<String> record_names) {
         var List<Step> listOfSteps = new ArrayList<Step>
@@ -378,6 +382,16 @@ class FromConcreteToFast extends AbstractGenerator {
         }
     }
 
+    def private generateJSONSutSetupFiles(TestSpecificationInstance tsi, IFileSystemAccess2 fsa) {
+        for (datasuts_item : tsi.indatasuts) {
+            for (step : datasuts_item.stepRefs) {
+                var fname = step.inputFile
+                var fileContents = step.recordExp
+                fsa.generateFile(fname, fileContents)
+            }
+        }
+    }
+
     def String printRefinedMap(Object item) {
         switch item {
             Map<String,Object>: return printRefinedMap(item)
@@ -452,7 +466,7 @@ class FromConcreteToFast extends AbstractGenerator {
         return "undefined.json"
     }
 
-    // Added DB: get contents for explicit JSON file generation
+// Added DB: get contents for explicit JSON file generation
     def private getRefExtensions(TestSpecificationInstance tsi, String varName) {
         var mapListOfKeyValue = new HashMap<String, List<KeyValue>>
         for (step : tsi.steps) {
@@ -468,10 +482,10 @@ class FromConcreteToFast extends AbstractGenerator {
         return mapListOfKeyValue
     }
 
-    // function to combine keys (parameters of step may have duplicate keys) //
-    // Note DB: Incomplete implementation. Decision to avoid duplicate keys in front end. 
-    // Decision: If an attribute of record needs references and concrete data, then do
-    // everything in the reference part. 
+// function to combine keys (parameters of step may have duplicate keys) //
+// Note DB: Incomplete implementation. Decision to avoid duplicate keys in front end. 
+// Decision: If an attribute of record needs references and concrete data, then do
+// everything in the reference part. 
     def private combineKeys(List<KeyValue> parameters) {
         var _parameters = new ArrayList<KeyValue>
         var listOfExclusionKeys = new ArrayList<String>
@@ -700,10 +714,24 @@ class FromConcreteToFast extends AbstractGenerator {
         }
     }
 
+    private def boolean isInputDataSut(Action act) {
+        if (act instanceof RecordFieldAssignmentAction) {
+            var vari = act.fieldAccess
+            if (vari instanceof ExpressionRecordAccess) {
+                var io = vari.record
+                if (io instanceof ExpressionRecordAccess) {
+                    return io.field.name.equals('input')
+                }
+            }
+        }
+        return false
+    }
+
     protected def void _process_Sut_Param_Init(TestSpecificationInstance tsi, TSMain modelInst) {
         val model = modelInst.model as TestDefinition
 
-        var indatasuts = model.sutInitActions.filter[isInDataSuts(it)].filter(RecordFieldAssignmentAction)
+        var sutInitInput = model.sutInitActions.filter[isInputDataSut(it)]
+        var indatasuts = sutInitInput.filter[isInDataSuts(it)].filter(RecordFieldAssignmentAction)
         // 3.3.1) Fetching content for in.data.suts
         for (act : indatasuts) {
             var mapLHStoRHS = tsi.generateInitAssignmentAction(act)
@@ -728,7 +756,7 @@ class FromConcreteToFast extends AbstractGenerator {
                     lhs.value = ExpressionsParser::generateExpression(field.exp, '''''').toString
 
                     // should it become a file on its own?
-                    var String match = findMatchingRecordName('.' + lhs.key, record_def_file_names)
+                    var String match = findMatchingRecordName('.' + lhs.key, setup_file_names)
                     if (match instanceof String) {
                         // Create new step instance
                         var new_rstep = new Step
@@ -738,8 +766,8 @@ class FromConcreteToFast extends AbstractGenerator {
                         new_rstep.type = field.recordField.type.type.name
                         new_rstep.recordExp = lhs.value
                         // path for json input_file in "filePath / field name + step ID"
-                        new_rstep.inputFile = '"' + tsi.filePath + '/dataset/' + new_rstep.inputFile + new_rstep.id +
-                            '_' + stepId + '.json' + '"'
+                        new_rstep.inputFile = tsi.filePath + '/dataset/' + new_rstep.inputFile + new_rstep.id + '_' +
+                            stepId + '.json'
                         // point lhs value to input_file
                         lhs.value = new_rstep.inputFile
                         // Add to list of step reference of step
@@ -751,7 +779,7 @@ class FromConcreteToFast extends AbstractGenerator {
             tsi.indatasuts.add(stepInst)
         }
 
-        var vfdXmlItems = model.sutInitActions.reject[isInDataSuts(it)]
+        var vfdXmlItems = sutInitInput.reject[isInDataSuts(it)]
         // 3.3.2) Fetching XML elements (as strings) for vfd.xml file
         var Set<String> SUTList_items = new LinkedHashSet()
         for (act : vfdXmlItems) {
@@ -761,12 +789,14 @@ class FromConcreteToFast extends AbstractGenerator {
                 tsi.sutDefinitionsVFDXML.get(act.ID).add(item.toString)
             }
         }
-        println('xxx')
     }
 
     private def String getStepId(ExpressionRecordAccess expr) {
+        var varLabel = expr.field.name
+        var ioLabel = (expr.record as ExpressionRecordAccess).field.name
         var stepLabel = ((expr.record as ExpressionRecordAccess).record as ExpressionVariable).variable.name
         return stepLabel
+//        return ioLabel + '_' + stepLabel
     }
 
     def Step createStep(TestSpecificationInstance tsi, TestDefinition model, RunStep s) {
