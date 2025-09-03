@@ -356,7 +356,7 @@
         <repository
             url="https://www.pydev.org/updates/"/>
         <repository
-            url="https://download.eclipse.org/lsat/v0.4-RC2/update-site/"/>
+            url="https://download.eclipse.org/lsat/v0.4/update-site/"/>
       </repositoryList>
     </targlet>
     <composedTarget>OfflineMBT - Maven Dependencies</composedTarget>

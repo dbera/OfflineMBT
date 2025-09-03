@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <?pde?>
 <!-- generated with https://github.com/eclipse-cbi/targetplatform-dsl -->
-<target name="OfflineMBT - Maven Dependencies" sequenceNumber="1741858386">
+<target name="OfflineMBT - Maven Dependencies" sequenceNumber="1756885606">
   <locations>
     <location includeDependencyDepth="none" includeDependencyScopes="compile" includeSource="true" missingManifest="generate" type="Maven" label="MavenCentral">
       <dependencies>
@@ -21,6 +21,18 @@
           <groupId>org.java-websocket</groupId>
           <artifactId>Java-WebSocket</artifactId>
           <version>1.6.0</version>
+          <type>jar</type>
+        </dependency>
+        <dependency>
+          <groupId>dev.langchain4j</groupId>
+          <artifactId>langchain4j</artifactId>
+          <version>1.4.0</version>
+          <type>jar</type>
+        </dependency>
+        <dependency>
+          <groupId>dev.langchain4j</groupId>
+          <artifactId>langchain4j-azure-open-ai</artifactId>
+          <version>1.4.0</version>
           <type>jar</type>
         </dependency>
       </dependencies>

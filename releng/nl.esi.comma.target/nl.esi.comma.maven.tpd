@@ -30,4 +30,16 @@ maven MavenCentral scope=compile dependencyDepth=none missingManifest=generate i
         artifactId="Java-WebSocket"
         version="1.6.0"
     }
+    // LangChain4j Core
+    dependency {
+        groupId="dev.langchain4j"
+        artifactId="langchain4j"
+        version="1.4.0"
+    }
+    // LangChain4j Azure OpenAI
+    dependency {
+        groupId="dev.langchain4j"
+        artifactId="langchain4j-azure-open-ai"
+        version="1.4.0"
+    }
 }
