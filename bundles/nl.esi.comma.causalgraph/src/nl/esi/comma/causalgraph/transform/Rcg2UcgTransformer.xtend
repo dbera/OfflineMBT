@@ -65,6 +65,13 @@ class Rcg2UcgTransformer {
         for (group : nodeGroups) {
             // Just move all the steps from the group to the output node
             group.outputNode.steps += group.inputNodes.flatMap[steps].toList
+            if (group.outputNode.steps.size > 1 &&
+                group.outputNode.steps.map[stepBody].unique[left, right | EcoreUtil.equals(left, right)].size == 1
+            ) {
+                // All step bodies are equivalent, so promote the body to the node
+                group.outputNode.stepBody = group.outputNode.steps.head.stepBody
+                group.outputNode.steps.tail.forEach[stepBody = null]
+            }
 
             // Get all the original control flows and group them based on their output node, i.e. resolveOne()
             val controlFlows = group.inputNodes.flatMap[outgoingControlFlows].groupBy[nodeGroups.resolveOne(target)]

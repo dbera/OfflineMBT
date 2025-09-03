@@ -32,9 +32,11 @@ import org.eclipse.ui.dialogs.SaveAsDialog;
 import jakarta.inject.Named;
 import nl.esi.comma.causalgraph.causalGraph.CausalGraph;
 import nl.esi.comma.causalgraph.causalGraph.GraphType;
-import nl.esi.comma.causalgraph.transform.Rcg2UcgTransformer;
+import nl.esi.comma.causalgraph.transform.Rcg2BddUcgTransformer;
 
 public class Rcg2UcgHandler {
+	private static final GraphType OUTPUT_GRAPH_TYPE = GraphType.BDDUCG;
+	
 	@Evaluate
 	@CanExecute
 	public boolean canExecute(@Optional @Named(IServiceConstants.ACTIVE_SELECTION) IStructuredSelection selection) {
@@ -65,7 +67,7 @@ public class Rcg2UcgHandler {
 			IPath commonPath = getCommonPath(selectedFiles);
 			if (commonPath != null) {
 				saveAsDialog.setOriginalFile(ResourcesPlugin.getWorkspace().getRoot()
-						.getFile(commonPath.append(mergedGraphName).addFileExtension(GraphType.UCG.getName())));
+						.getFile(commonPath.append(mergedGraphName).addFileExtension(OUTPUT_GRAPH_TYPE.getName())));
 			} else {
 				saveAsDialog.setOriginalName(mergedGraphName);
 			}
@@ -73,13 +75,13 @@ public class Rcg2UcgHandler {
 				return;
 			}
 			IPath saveIPath = saveAsDialog.getResult();
-			if (!GraphType.UCG.equals(getGraphType(saveIPath.getFileExtension()))) {
-				saveIPath = saveIPath.addFileExtension(GraphType.UCG.getName());
+			if (!OUTPUT_GRAPH_TYPE.equals(getGraphType(saveIPath.getFileExtension()))) {
+				saveIPath = saveIPath.addFileExtension(OUTPUT_GRAPH_TYPE.getName());
 			}
 			IFile saveIFile = ResourcesPlugin.getWorkspace().getRoot().getFile(saveIPath);
 
-			CausalGraph ucg = new Rcg2UcgTransformer().merge(rcgs);
-			persistor.save(URIHelper.asURI(saveIFile), ucg);
+			CausalGraph saveGraph = new Rcg2BddUcgTransformer().merge(rcgs);
+			persistor.save(URIHelper.asURI(saveIFile), saveGraph);
 			saveIFile.refreshLocal(IResource.DEPTH_ZERO, null);
 		} catch (Exception e) {
 			e.printStackTrace();
