@@ -33,12 +33,7 @@ NamedElement returns types::NamedElement:
 ;
 
 ModelType:
-	APIDefinition | TestDefinition
-;
-
-APIDefinition:
-	('data-instances' vars+=Variable+)
-	('data-init' initActions+=(AssignmentAction | RecordFieldAssignmentAction)+)?
+	TestDefinition
 ;
 
 TestDefinition:
