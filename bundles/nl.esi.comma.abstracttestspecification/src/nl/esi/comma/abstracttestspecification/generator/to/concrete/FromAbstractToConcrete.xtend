@@ -80,6 +80,7 @@ class FromAbstractToConcrete extends AbstractGenerator {
                 «step.stepType.get(0)» step_«step.name»
             «ENDFOR»
         «ENDFOR»
+        
         «var sutexpr = extractSUTVarExpressions(atd)»
         «IF !sutexpr.empty»
         sut-param-init 

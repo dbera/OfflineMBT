@@ -19,6 +19,7 @@ import java.util.Map
 import nl.esi.comma.testspecification.testspecification.TestDefinition
 import java.util.Set
 import java.util.LinkedHashSet
+import nl.esi.comma.testspecification.generator.TestSpecificationInstance
 
 class VFDXMLGenerator {
 
@@ -64,14 +65,9 @@ class VFDXMLGenerator {
         this.rename.putAll(renameRules)
     }
 
-    def generateXML(TestDefinition atd) 
+    def generateXML(TestSpecificationInstance tsi) 
     {
         var now = LocalDateTime.now();
-        var Set<String> SUTList_items = new LinkedHashSet()
-        for(action : atd.sutInitActions){
-            var item = ExpressionsParser.generateXMLElement(action, this.rename)
-            SUTList_items.add(item.toString)
-        }
 
         return '''
         <?xml version="1.0" encoding="UTF-8"?>
@@ -84,10 +80,12 @@ class VFDXMLGenerator {
             <Name>atd</Name>
             <Description>sutsdesc</Description>
             <SUTList>
-            «FOR sut_str : SUTList_items»
+            «FOR sd_key : tsi.sutDefinitionsVFDXML.keySet»
+            «FOR item : tsi.sutDefinitionsVFDXML.get(sd_key)»
                 <SUT>
-                    «sut_str»
+                    «item»
                 </SUT>
+            «ENDFOR»
             «ENDFOR»
             </SUTList>
           </Definition>

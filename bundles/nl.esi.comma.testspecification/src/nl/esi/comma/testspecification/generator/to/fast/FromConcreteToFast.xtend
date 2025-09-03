@@ -45,6 +45,9 @@ import org.eclipse.xtext.generator.IGeneratorContext
 
 import static extension nl.esi.comma.types.utilities.EcoreUtil3.*
 import static extension nl.esi.comma.types.utilities.FileSystemAccessUtil.*
+import java.util.Set
+import java.util.LinkedHashSet
+import nl.esi.comma.expressions.expression.ExpressionRecord
 
 class FromConcreteToFast extends AbstractGenerator {
 
@@ -93,6 +96,8 @@ class FromConcreteToFast extends AbstractGenerator {
         tsi._process_Global_Param_Init(modelInst)
         // 3.3) SUT initialization key and value (LHS and RHS, resp.)
         tsi._process_Sut_Param_Init(modelInst)
+        // 3.4) Path to folder containing .json input_file(s) (default: ./dataset/)
+        tsi.filePath = model.filePath
 
         // 4) Parse step-sequence (precondition: steps 2-3, where import and step-parameters are processed)
         val stepSequence = getRunStepSequence(model)
@@ -115,7 +120,7 @@ class FromConcreteToFast extends AbstractGenerator {
 
         // 8) parse sut-param-init actions into a XML elements of a vfd XML file
         var vfdgen = new VFDXMLGenerator(this.args, this.rename)
-        fastFsa.generateFile('variants/single_variant/vfd.xml', vfdgen.generateXML(model))
+        fastFsa.generateFile('variants/single_variant/vfd.xml', vfdgen.generateXML(tsi))
 
         // 9) generate PlantUML files Generation for Review /* Added DB: 12.05.2025*/
         var docgen = new DocGen()
@@ -243,10 +248,9 @@ class FromConcreteToFast extends AbstractGenerator {
         for (elm : tsi.stepVarNameToType.keySet) {
             if (mapLHStoRHS.value.contains(elm + ".output")) {
                 // Added REGEX 26.11.2024: In .ps files, '.output'field is the container of output data. 
-                mapLHStoRHS.value = mapLHStoRHS.value.replaceAll(elm + "\\.output" + "\\.(.*?)\\.",
-                // We need to remove '.output' field from steps.out[step.params[....]].output.x.y.z...
+                mapLHStoRHS.value = mapLHStoRHS.value.replaceAll(elm + "\\.output" + "\\.(.*?)\\.", // We need to remove '.output' field from steps.out[step.params[....]].output.x.y.z...
                 // for proper FAST generation. 
-                    "steps.out[step.params['" + "_" + elm + "']].")
+                "steps.out[step.params['" + "_" + elm + "']].")
                 mapLHStoRHS.refKey.add(elm) // reference to step
                 // Custom String Updates for FAST Syntax Peculiarities! TODO investigate solution?
                 // map-var['key'] + "[0]" -> map-var['key'][0] 
@@ -536,13 +540,9 @@ class FromConcreteToFast extends AbstractGenerator {
             }
             
             in.data.suts = [
-«««                «FOR elm : tsi.mapLocalSUTVarToDataInstance.keySet SEPARATOR ','»
-                {
-«««                    «FOR refTxt : generateFASTRefStepTxt(elm) SEPARATOR ','»
-«««                        «refTxt»
-«««                    «ENDFOR»
-                }
-«««                «ENDFOR»
+                «FOR key : tsi.sutVarToDataInstance.keySet SEPARATOR ','»
+                    «tsi.sutVarToDataInstance.get(key).head»
+                «ENDFOR»
             ]
             
             in.data.steps = [
@@ -679,17 +679,93 @@ class FromConcreteToFast extends AbstractGenerator {
         }
     }
 
+    private def boolean isInDataSuts(Action act) {
+//        val IDS_NAME = 'in_data_suts'
+        val IDS_NAME = 'lis_sut'
+        return switch (act) {
+            RecordFieldAssignmentAction: {
+                var exp = act.fieldAccess
+                switch (exp) {
+                    ExpressionRecordAccess: exp.field.name.equals(IDS_NAME)
+                    default: false
+                }
+            }
+            default:
+                false
+        }
+    }
+
     protected def void _process_Sut_Param_Init(TestSpecificationInstance tsi, TSMain modelInst) {
         val model = modelInst.model as TestDefinition
-        for (act : model.sutInitActions) {
+
+        var indatasuts = model.sutInitActions.filter[isInDataSuts(it)].filter(RecordFieldAssignmentAction)
+        // 3.3.1) Fetching content for in.data.suts
+        for (act : indatasuts) {
             var mapLHStoRHS = tsi.generateInitAssignmentAction(act)
             tsi.sutVarToDataInstance.putIfAbsent(mapLHStoRHS.key, new ArrayList)
             tsi.sutVarToDataInstance.get(mapLHStoRHS.key).add(mapLHStoRHS.value)
+
+            var era = (act.fieldAccess as ExpressionRecordAccess)
+            var stepId = getStepId(era)
+
+            // get sut-var name and type
+            var stepInst = new Step
+            stepInst.id = era.field.name
+            stepInst.variableName = era.field.name
+            stepInst.type = era.field.type.type.name
+
+            // 4.6) Check if this action is a printable assignment (aka not-a-null assignment)
+            if (isPrintableAssignment(act)) {
+                for (field : (act.exp as ExpressionRecord).fields) {
+                    var lhs = new KeyValue
+                    // get sut-var field name and assigned value
+                    lhs.key = field.recordField.name
+                    lhs.value = ExpressionsParser::generateExpression(field.exp, '''''').toString
+
+                    // should it become a file on its own?
+                    var String match = findMatchingRecordName('.' + lhs.key, record_def_file_names)
+                    if (match instanceof String) {
+                        // Create new step instance
+                        var new_rstep = new Step
+                        // field name (key), type, and value
+                        new_rstep.id = lhs.key
+                        new_rstep.variableName = lhs.key
+                        new_rstep.type = field.recordField.type.type.name
+                        new_rstep.recordExp = lhs.value
+                        // save json file in "filePath / field name + step ID"
+                        new_rstep.inputFile = tsi.filePath + '/datasuts_' + new_rstep.id + '_' + stepId + '.json'
+                        new_rstep.parameters.add(lhs) // Added DB 29.05.2025
+                        // Add to list of step reference of step
+                        stepInst.stepRefs.add(new_rstep)
+                    } else {
+                        stepInst.parameters.add(lhs)
+                    }
+                }
+            }
+            tsi.indatasuts.add(stepInst)
         }
+
+        var vfdXmlItems = model.sutInitActions.reject[isInDataSuts(it)]
+        // 3.3.2) Fetching XML elements (as strings) for vfd.xml file
+        var Set<String> SUTList_items = new LinkedHashSet()
+        for (act : vfdXmlItems) {
+            var item = ExpressionsParser.generateXMLElement(act, this.rename)
+            if (SUTList_items.add(item.toString)) {
+                tsi.sutDefinitionsVFDXML.putIfAbsent(act.ID, new ArrayList)
+                tsi.sutDefinitionsVFDXML.get(act.ID).add(item.toString)
+            }
+        }
+        println('xxx')
+    }
+
+    private def String getStepId(ExpressionRecordAccess expr) {
+        var stepLabel = ((expr.record as ExpressionRecordAccess).record as ExpressionVariable).variable.name
+        return stepLabel
     }
 
     def Step createStep(TestSpecificationInstance tsi, TestDefinition model, RunStep s) {
         var stepInst = new Step
+        stepInst.runStep = s
         // 4.2) Step ID
         stepInst.id = s.inputVar.name
         // 4.3) Step type (defined via UI text box, e.g., SUT.OperationName)
@@ -697,22 +773,21 @@ class FromConcreteToFast extends AbstractGenerator {
         // 4.4) Step input file path+name
         stepInst.inputFile = tsi.dataImplToFilename.get(s.stepVar.name).head
 
-        // 4.5) Path to folder containing .json input_file(s) (default: ./dataset/)
-        var String PATH_INFIX = model.filePath
+        // 4.5) For each action in ref-to-step-output section ...
         for (ref : s.refStep) {
             for (act : ref.input.actions) {
-                // 4.6) Check if this is a printable assignment (aka not-a-null assignment)
+                // 4.6) Check if this action is a printable assignment (aka not-a-null assignment)
                 if (isPrintableAssignment(act)) {
-                    // 4.7) make strings for LHS and RHS ( flattened / fully-qualified)
+                    // 4.6.1) make strings for LHS and RHS ( flattened / fully-qualified)
                     var mapLHStoRHS = tsi.generateInitAssignmentAction(act)
-                    // 4.8) fetch step-input variable and record field
+                    // 4.6.2) fetch step-input variable and record field
                     var lhs = getLHS(act) // note key = record variable, and value = recExp
                     stepInst.variableName = lhs.key // Note DB: This is the same for all actions
                     stepInst.recordExp = lhs.value // Note DB: This keeps overwriting (record prefix)
-                    // 4.9) check if record field assignment should be in its own json file
+                    // 4.6.3) check if record field assignment should be in its own json file
                     var String match = findMatchingRecordName(lhs.value, record_def_file_names)
                     if (match instanceof String) {
-                        // 4.9.1) record field is part of step input_file
+                        // 4.6.3.1) record field is part of step input_file
                         if (stepInst.isStepRefPresent(lhs.value)) {
                             var rStep = stepInst.getStepRefs(lhs.value)
                             rStep.parameters.add(mapLHStoRHS)
@@ -720,8 +795,9 @@ class FromConcreteToFast extends AbstractGenerator {
                             // Create new step instance and fill all details there
                             var new_rstep = new Step
                             new_rstep.id = lhs.value
-                            new_rstep.type = s.type.name
-                            new_rstep.inputFile = PATH_INFIX
+                            new_rstep.runStep = stepInst.runStep
+                            new_rstep.type = stepInst.runStep?.type.name
+                            new_rstep.inputFile = tsi.filePath
                             new_rstep.variableName = match
                             new_rstep.recordExp = stepInst.id
                             new_rstep.parameters.add(mapLHStoRHS) // Added DB 29.05.2025
@@ -729,15 +805,53 @@ class FromConcreteToFast extends AbstractGenerator {
                             stepInst.stepRefs.add(new_rstep)
                         }
                     } else {
-                        // 4.9.2) record field assignment has it own json
+                        // 4.6.3.2) record field assignment has it own json
                         stepInst.parameters.add(mapLHStoRHS)
                     }
                 }
             }
         }
-        // 4.10) update step input_file names, if additional data is specified (parameters). 
+        // 4.7) update step input_file names, if additional data is specified (parameters). 
         if (!stepInst.parameters.isEmpty) {
             stepInst.inputFile = stepInst.inputFile.replaceFirst("[^/]+\\.json$", stepInst.id + ".json")
+        }
+
+        return stepInst
+    }
+
+    def Step createDataSuts(TestSpecificationInstance tsi, RecordFieldAssignmentAction act) {
+        var stepInst = new Step
+        var era = (act.fieldAccess as ExpressionRecordAccess)
+        // 4.2) Step ID
+        stepInst.id = era.field.name
+        stepInst.variableName = era.field.name
+        // 4.3) Step type (defined via UI text box, e.g., SUT.OperationName)
+        stepInst.type = era.field.type.type.name
+
+        // 4.6) Check if this action is a printable assignment (aka not-a-null assignment)
+        if (isPrintableAssignment(act)) {
+            for (field : (act.exp as ExpressionRecord).fields) {
+                var lhs = new KeyValue
+                lhs.key = field.recordField.name
+                lhs.value = ExpressionsParser::generateExpression(field.exp, '''''').toString
+                // 4.9) check if record field assignment should be in its own json file
+                var String match = findMatchingRecordName('.' + lhs.key, record_def_file_names)
+                if (match instanceof String) {
+                    // Create new step instance and fill all details there
+                    var new_rstep = new Step
+                    new_rstep.id = lhs.key
+                    new_rstep.variableName = lhs.key
+                    new_rstep.recordExp = lhs.value
+                    new_rstep.type = field.recordField.type.type.name
+                    new_rstep.inputFile = tsi.filePath
+                    new_rstep.parameters.add(lhs) // Added DB 29.05.2025
+                    // Add to list of step reference of step
+                    stepInst.stepRefs.add(new_rstep)
+                } else {
+                    // 4.9.2) record field assignment has it own json
+                    stepInst.parameters.add(lhs)
+                }
+            }
         }
 
         return stepInst
