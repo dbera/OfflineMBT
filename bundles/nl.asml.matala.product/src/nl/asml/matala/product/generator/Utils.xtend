@@ -533,7 +533,7 @@ class Utils
                             txt += "output-assertion: %s\n" % new_name
                             txt += "%s\n" % self.tr_assert_ref_dict[name.rsplit("_",1)[0]]
                         txt += "\n"
-                txt += '\ngenerate-file "./vfab2_scenario/"\n\n'
+                txt += '\ngenerate-file "./dataset/"\n\n'
                 fname = output_dir / f"_scenario{str(idx)}.atspec"
                 print(str(fname))
                 os.makedirs(os.path.dirname(fname), exist_ok=True)
