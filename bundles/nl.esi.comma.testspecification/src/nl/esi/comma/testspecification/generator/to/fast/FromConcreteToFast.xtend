@@ -699,8 +699,7 @@ class FromConcreteToFast extends AbstractGenerator {
     }
 
     private def boolean isInDataSuts(Action act) {
-//        val IDS_NAME = 'in_data_suts'
-        val IDS_NAME = 'lis_sut'
+        val IDS_NAME = 'in_data_suts'
         return switch (act) {
             RecordFieldAssignmentAction: {
                 var exp = act.fieldAccess
@@ -729,8 +728,8 @@ class FromConcreteToFast extends AbstractGenerator {
 
     protected def void _process_Sut_Param_Init(TestSpecificationInstance tsi, TSMain modelInst) {
         val model = modelInst.model as TestDefinition
-
         var sutInitInput = model.sutInitActions.filter[isInputDataSut(it)]
+
         var indatasuts = sutInitInput.filter[isInDataSuts(it)].filter(RecordFieldAssignmentAction)
         // 3.3.1) Fetching content for in.data.suts
         for (act : indatasuts) {
@@ -799,7 +798,7 @@ class FromConcreteToFast extends AbstractGenerator {
 //        return ioLabel + '_' + stepLabel
     }
 
-    def Step createStep(TestSpecificationInstance tsi, TestDefinition model, RunStep s) {
+    private def Step createStep(TestSpecificationInstance tsi, TestDefinition model, RunStep s) {
         var stepInst = new Step
         stepInst.runStep = s
         // 4.2) Step ID
@@ -855,7 +854,7 @@ class FromConcreteToFast extends AbstractGenerator {
         return stepInst
     }
 
-    def Step createDataSuts(TestSpecificationInstance tsi, RecordFieldAssignmentAction act) {
+    private def Step createDataSuts(TestSpecificationInstance tsi, RecordFieldAssignmentAction act) {
         var stepInst = new Step
         var era = (act.fieldAccess as ExpressionRecordAccess)
         // 4.2) Step ID
