@@ -90,14 +90,14 @@ class FromConcreteToFast extends AbstractGenerator {
         tsi._process_Import_Data_Implementation(modelInst)
 
         // 3) create mappings for:
-        // 3.1) Step variable name to step-type (step-parameters field in .tspec file)
-        tsi._process_Step_Parameters(modelInst)
-        // 3.2) Global parameters key and value (LHS and RHS, resp.)
-        tsi._process_Global_Param_Init(modelInst)
-        // 3.3) SUT initialization key and value (LHS and RHS, resp.)
-        tsi._process_Sut_Param_Init(modelInst)
-        // 3.4) Path to folder containing .json input_file(s) (default: ./dataset/)
+        // 3.1) Path to folder containing .json input_file(s) (default: ./dataset/)
         tsi.filePath = model.filePath
+        // 3.2) Step variable name to step-type (step-parameters field in .tspec file)
+        tsi._process_Step_Parameters(modelInst)
+        // 3.3) Global parameters key and value (LHS and RHS, resp.)
+        tsi._process_Global_Param_Init(modelInst)
+        // 3.4) SUT initialization key and value (LHS and RHS, resp.)
+        tsi._process_Sut_Param_Init(modelInst)
 
         // 4) Parse step-sequence (precondition: steps 2-3, where import and step-parameters are processed)
         val stepSequence = getRunStepSequence(model)
