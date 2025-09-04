@@ -41,12 +41,12 @@ class MergeConcreteDataAssigments {
     def private static void mergeDataAssignments(RefStep refStep) {
         val assignments = newHashMap
         refStep.input.actions.filter(AssignmentAction).toList.forEach[ action |
-            action.mergeData(assignments.put(action.assignment.serialize(true), action))
+            action.mergeData(assignments.putIfAbsent(action.assignment.serialize(true), action))
         ]
 
         val recordFieldAssignments = newHashMap
         refStep.input.actions.filter(RecordFieldAssignmentAction).toList.forEach[ action |
-            action.mergeData(recordFieldAssignments.put(action.fieldAccess.serialize(true), action))
+            action.mergeData(recordFieldAssignments.putIfAbsent(action.fieldAccess.serialize(true), action))
         ]
     }
 
