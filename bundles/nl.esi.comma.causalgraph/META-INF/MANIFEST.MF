@@ -19,6 +19,7 @@ Require-Bundle: org.eclipse.xtext,
  org.eclipse.lsat.common.xtend,
  org.eclipse.core.resources,
  wrapped.dev.langchain4j.langchain4j,
+ wrapped.dev.langchain4j.langchain4j-core,
  wrapped.dev.langchain4j.langchain4j-azure-open-ai
 Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: nl.esi.comma.causalgraph,
