@@ -33,12 +33,7 @@ NamedElement returns types::NamedElement:
 ;
 
 ModelType:
-	APIDefinition | TestDefinition
-;
-
-APIDefinition:
-	('data-instances' vars+=Variable+)
-	('data-init' initActions+=(AssignmentAction | RecordFieldAssignmentAction)+)?
+	TestDefinition
 ;
 
 TestDefinition:
@@ -55,7 +50,6 @@ TestDefinition:
 	('sut-parameters' sutparams+=Variable+)?
 	('global-param-init' gparamsInitActions+=(AssignmentAction | RecordFieldAssignmentAction)+)?
 	('sut-param-init' sutInitActions+=(AssignmentAction | RecordFieldAssignmentAction)+ )?
-	('sut-def-list' ':' sutList = JsonArray)?
 ;
 
 StakeHolder:

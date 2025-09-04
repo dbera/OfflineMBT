@@ -17,6 +17,9 @@ import java.time.format.DateTimeFormatter
 import java.util.HashMap
 import java.util.Map
 import nl.esi.comma.testspecification.testspecification.TestDefinition
+import java.util.Set
+import java.util.LinkedHashSet
+import nl.esi.comma.testspecification.generator.TestSpecificationInstance
 
 class VFDXMLGenerator {
 
@@ -62,7 +65,7 @@ class VFDXMLGenerator {
         this.rename.putAll(renameRules)
     }
 
-    def generateXMLFromSUTVars(TestDefinition atd) 
+    def generateXML(TestSpecificationInstance tsi) 
     {
         var now = LocalDateTime.now();
 
@@ -77,13 +80,13 @@ class VFDXMLGenerator {
             <Name>atd</Name>
             <Description>sutsdesc</Description>
             <SUTList>
-            «IF atd.sutList !== null »
-            «FOR attr : atd.sutList.values»
+            «FOR sd_key : tsi.sutDefinitionsVFDXML.keySet»
+            «FOR item : tsi.sutDefinitionsVFDXML.get(sd_key)»
                 <SUT>
-                    «JsonHelper.toXMLElement(attr, this.rename)»
+                    «item»
                 </SUT>
             «ENDFOR»
-            «ENDIF»
+            «ENDFOR»
             </SUTList>
           </Definition>
         </VirtualFabDefinition:VirtualFabDefinition>

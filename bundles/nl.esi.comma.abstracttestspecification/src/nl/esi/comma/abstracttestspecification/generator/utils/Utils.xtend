@@ -59,6 +59,10 @@ import org.eclipse.emf.ecore.util.EcoreUtil
 
 import static extension nl.esi.comma.types.utilities.EcoreUtil3.serialize
 import nl.esi.comma.expressions.expression.ExpressionNullLiteral
+import nl.esi.comma.abstracttestspecification.generator.to.concrete.ConcreteExpressionHandler
+import java.util.LinkedHashMap
+import java.util.Map
+import java.util.Set
 
 class Utils 
 {
@@ -208,7 +212,20 @@ class Utils
         var jsonValsList = stepSutData.map(obj | obj.jsonvals as JsonCollection).toList
         return jsonValsList
     }
-    
+
+    static def Map<String,Set<String>> extractSUTVarExpressions(AbstractTestDefinition atd){
+        var ceh = new ConcreteExpressionHandler
+        var Map<String,Set<String>> sutexpr = new LinkedHashMap
+
+        for (testseq : atd.testSeq) {
+            for (step : testseq.step) {
+                ceh.prepareSutVariableExpressions(step, sutexpr, true)
+                ceh.prepareSutVariableExpressions(step, sutexpr, false)
+            }
+        }
+        return sutexpr
+    }
+
     static def List<Binding> getSUTData(AbstractStep astep) { getSUTData(astep, true) }
     static def List<Binding> getSUTData(AbstractStep astep, boolean fromInput) {
         var EList<Binding> bindings = fromInput? astep.input : astep.output
