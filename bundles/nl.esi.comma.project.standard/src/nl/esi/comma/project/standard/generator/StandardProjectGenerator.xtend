@@ -114,8 +114,7 @@ class StandardProjectGenerator extends AbstractGenerator {
 
             val conTspecFileName = tspecName + '.tspec'
             val conTspecRes = conTspecFsa.loadResource(conTspecFileName, rst)
-            //TODO Uncomment this once Yuri fixes merging
-            //MergeConcreteDataAssigments.transform(conTspecRes)
+            MergeConcreteDataAssigments.transform(conTspecRes)
             conTspecRes.save(null)
             conTspecRes.validate()
 
