@@ -63,7 +63,7 @@ class ExpressionsUtilities {
 
             RecordTypeDecl: createExpressionRecord => [
                 type = typeObj
-                for(field: typeObj.fields) {
+                for(field: typeObj.allFields.reject[symbolic]) {
                     fields += createField => [
                         recordField = field
                         exp = field.type.typeObject.createDefaultValue
@@ -77,17 +77,12 @@ class ExpressionsUtilities {
                 typeAnnotation = createTypeAnnotation => [
                     type = elementType.asType
                 ]
-                elements += elementType.createDefaultValue
             ]
 
             MapTypeDecl: typeObj.constructor.createDefaultValue
             MapTypeConstructor: createExpressionMap => [
                 typeAnnotation = createTypeAnnotation => [
                     //type = 
-                ]
-                pairs += createPair => [
-                    key = typeObj.type.createDefaultValue
-                    value = typeObj.valueType.typeObject.createDefaultValue
                 ]
             ]
         }

@@ -57,7 +57,7 @@ abstract class TypesPooslGenerator extends CommaGenerator {
 	'''«generateDefaultValue(t.type)»'''
 	
 	def dispatch CharSequence generateDefaultValue(RecordTypeDecl t) 
-	'''new(«determineRecordTypePrefix(t)»«t.name») «FOR f : t.getAllFields»set_«f.name»(«generateDefaultValue(f.type)») «ENDFOR»'''
+	'''new(«determineRecordTypePrefix(t)»«t.name») «FOR f : t.getAllFields.reject[symbolic]»set_«f.name»(«generateDefaultValue(f.type)») «ENDFOR»'''
 	
 	def dispatch CharSequence generateDefaultValue(VectorTypeDecl t) '''new(«COMMA_PREFIX»Vector) init'''
 	

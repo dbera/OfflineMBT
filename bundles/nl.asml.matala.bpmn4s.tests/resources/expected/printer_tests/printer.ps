@@ -162,10 +162,6 @@ specification printer
             Event_1oozdnw := between_ComposeOptimizationJob_and_RunOptimizationJob
         produces-outputs	corrections symbolic-link
         updates:    corrections := CorrectionsReport {
-             correctionsMap = 
-                                <map<int,CorrectionItem[]>>{
-                              0 -> <CorrectionItem[]>[ CorrectionItem { data = "" } ] 
-            },
              id = optimizeJob.id + 1
             }
         produces-outputs	optResult

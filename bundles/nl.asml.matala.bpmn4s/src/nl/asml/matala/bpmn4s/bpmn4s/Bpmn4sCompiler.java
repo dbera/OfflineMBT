@@ -784,7 +784,10 @@ public class Bpmn4sCompiler{
 				String type = "record " + recType.getName() + " {\n";
 				String parameters = "";
 				for (Entry<String, String> e: recType.fields.entrySet()) {
-					parameters += generateRecordField(e);
+					String fieldName = e.getKey();
+					String fieldTypeName = typeToString(e.getValue());
+					boolean isSymbolic = recType.isSymbolic(fieldName);
+					parameters += (isSymbolic ? "symbolic " : "") + fieldTypeName + "\t" + fieldName + "\n";
 				}
 				type += indent(parameters) + "}\n";
 				types += type + "\n";
@@ -809,12 +812,6 @@ public class Bpmn4sCompiler{
 		return types;
 	}
 
-	private String generateRecordField(Entry<String, String> e) {
-		String fieldName = e.getKey();
-		String fieldTypeName = e.getValue();	
-		return typeToString(fieldTypeName)  + "\t" + fieldName + "\n";
-	}
-		
 	private String typeToString(String dataTypeName) {
 		Bpmn4sDataType dataType = model.dataSchema.get(dataTypeName);
 		String result = "";

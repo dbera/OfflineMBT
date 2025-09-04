@@ -37,6 +37,11 @@ import nl.esi.comma.types.types.TypesPackage
 import org.eclipse.emf.common.util.URI
 import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.validation.Check
+import nl.esi.comma.types.types.RecordTypeDecl
+import nl.esi.comma.expressions.expression.ExpressionRecordAccess
+import nl.esi.comma.expressions.expression.ExpressionRecord
+import nl.esi.comma.expressions.expression.Field
+import nl.asml.matala.product.product.UpdateOutVar
 
 import static extension nl.esi.comma.actions.utilities.ActionsUtilities.*
 
@@ -231,6 +236,78 @@ class ProductValidator extends AbstractProductValidator {
                 error('''Actions with type «update.actionType.literal» must have a step-type defined''' +
                     update.stepType, ProductPackage.Literals.UPDATE__STEP_TYPE)
             }
+        }
+    }
+    
+    /**
+     * Variables that are symbolic may not be used in guards
+     */
+    @Check
+    def checkSymbolicVariablesGuard(Update update) {
+        if (update.guard !== null) {
+            checkExpressionForSymbolicAccess(update.guard, "Symbolic field should not be used in guard")
+        }
+    }
+
+    /**
+     * Variables that are symbolic may not be used in update expression
+     */
+    @Check
+    def checkSymbolicVariableUpdate(UpdateOutVar updateOutputVar) {
+        if (updateOutputVar.act !== null) {
+            updateOutputVar.act.actions.forEach [ a |
+                switch a {
+                    AssignmentAction: {
+                        checkExpressionForSymbolicAccess(a.exp, "Symbolic field may not be assigned in update")
+                    }
+                    RecordFieldAssignmentAction: {
+                        // LHS check
+                        val fa = a.fieldAccess as ExpressionRecordAccess
+                        if (fa.field.symbolic) {
+                            error(
+                                "Symbolic field '" + fa.field.name + "' may not be assigned",
+                                fa,
+                                ExpressionPackage.Literals.EXPRESSION_RECORD_ACCESS__FIELD
+                            )
+                        }
+                        // RHS check
+                        if (a.exp instanceof ExpressionRecordAccess) {
+                            checkExpressionForSymbolicAccess(a.exp, "Symbolic field may not be assigned in update")
+                        }
+                    }
+                }
+            ]
+        }
+    }
+
+    private def void checkExpressionForSymbolicAccess(Expression exp, String message) {
+        if (exp instanceof ExpressionRecordAccess) {
+            checkRecordAccess(exp, message)
+        }
+
+        exp.eAllContents.filter(ExpressionRecordAccess).forEach [ era |
+            checkRecordAccess(era, message)
+        ]
+
+        exp.eAllContents.filter(Field).forEach [ f |
+            if (f.recordField.symbolic) {
+                error(
+                    message + " '" + f.recordField.name + "'",
+                    f,
+                    ExpressionPackage.Literals.FIELD__RECORD_FIELD
+                )
+            }
+        ]
+    }
+
+    /** Single RecordAccess check */
+    private def void checkRecordAccess(ExpressionRecordAccess era, String message) {
+        if (era.field.symbolic) {
+            error(
+               message + " '" + era.field.name + "'",
+                era,
+                ExpressionPackage.Literals.EXPRESSION_RECORD_ACCESS__FIELD
+            )
         }
     }
 

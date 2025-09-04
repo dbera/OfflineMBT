@@ -27,7 +27,7 @@
         </bpmn4s:dataType>
         <bpmn4s:dataType id="DataType_1hqgl3e" name="MeasureRequest" type="Record">
           <bpmn4s:field name="id" typeRef="Int" />
-          <bpmn4s:field name="printJobReport" typeRef="DataType_37032q4" />
+          <bpmn4s:field name="printJobReport" typeRef="DataType_37032q4" symbolic="true" />
         </bpmn4s:dataType>
         <bpmn4s:dataType id="DataType_1udeikv" name="Result" type="Record">
           <bpmn4s:field name="verdict" typeRef="DataType_3659oc9" />
@@ -41,15 +41,15 @@
         </bpmn4s:dataType>
         <bpmn4s:dataType id="DataType_37032q4" name="Report" type="Record">
           <bpmn4s:field name="id" typeRef="Int" />
-          <bpmn4s:field name="payload" typeRef="String" />
-          <bpmn4s:field name="kpi" typeRef="Float" />
+          <bpmn4s:field name="payload" typeRef="String" symbolic="true" />
+          <bpmn4s:field name="kpi" typeRef="Float" symbolic="true" />
         </bpmn4s:dataType>
         <bpmn4s:dataType id="DataType_0hvka0d" name="OperationType" type="Enumeration">
           <bpmn4s:literal name="PREP" />
           <bpmn4s:literal name="PRINT" />
         </bpmn4s:dataType>
         <bpmn4s:dataType id="DataType_2qhm379" name="CorrectionsReport" type="Record">
-          <bpmn4s:field name="correctionsMap" typeRef="DataType_1eduiqa" />
+          <bpmn4s:field name="correctionsMap" typeRef="DataType_1eduiqa" symbolic="true" />
           <bpmn4s:field name="id" typeRef="Int" />
         </bpmn4s:dataType>
         <bpmn4s:dataType id="DataType_1eduiqa" name="CorrectionsMap" type="Map" keyTypeRef="Int" valueTypeRef="DataType_10oh63l" />
@@ -424,7 +424,7 @@
           <bpmn2:sourceRef>DataStoreReference_1h7cfk3</bpmn2:sourceRef>
           <bpmn2:targetRef>Property_0b00qjs</bpmn2:targetRef>
         </bpmn2:dataInputAssociation>
-        <bpmn2:dataOutputAssociation id="DataOutputAssociation_1c1idtk" bpmn4s:update="corrections := CorrectionsReport {&#10;	correctionsMap = &#10;                    &#60;map&#60;int,CorrectionItem[]&#62;&#62;{&#10;                  0 -&#62; &#60;CorrectionItem[]&#62;[ CorrectionItem { data = &#34;&#34; } ] &#10;},&#10;	id = optimizeJob.id + 1&#10;}">
+        <bpmn2:dataOutputAssociation id="DataOutputAssociation_1c1idtk" bpmn4s:update="corrections := CorrectionsReport {&#10;	id = optimizeJob.id + 1&#10;}">
           <bpmn2:targetRef>DataStoreReference_0zn554c</bpmn2:targetRef>
         </bpmn2:dataOutputAssociation>
         <bpmn2:dataOutputAssociation id="DataOutputAssociation_1rufgrc">
@@ -485,6 +485,22 @@
   </bpmn2:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1">
+      <bpmndi:BPMNShape id="Activity_1lazkw7_di" bpmnElement="Activity_1lazkw7" bioc:stroke="#0d4372" bioc:fill="#bbdefb" color:background-color="#bbdefb" color:border-color="#0d4372">
+        <dc:Bounds x="230" y="530" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1v3jwys_di" bpmnElement="Activity_1v3jwys" bioc:stroke="#6b3c00" bioc:fill="#ffe0b2" color:background-color="#ffe0b2" color:border-color="#6b3c00">
+        <dc:Bounds x="470" y="200" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_14x2mh4_di" bpmnElement="Activity_14x2mh4" bioc:stroke="#0d4372" bioc:fill="#bbdefb" color:background-color="#bbdefb" color:border-color="#0d4372">
+        <dc:Bounds x="510" y="530" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1kfty5c_di" bpmnElement="Activity_1kfty5c" bioc:stroke="#0d4372" bioc:fill="#bbdefb" color:background-color="#bbdefb" color:border-color="#0d4372">
+        <dc:Bounds x="840" y="530" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DataObjectReference_0dobbvk_di" bpmnElement="DataObjectReference_0dobbvk">
         <dc:Bounds x="202" y="425" width="36" height="50" />
         <bpmndi:BPMNLabel>
@@ -542,24 +558,8 @@
       <bpmndi:BPMNShape id="DataStoreReference_0wnjztj_di" bpmnElement="DataStoreReference_0wnjztj" bioc:stroke="#831311" bioc:fill="#ffcdd2" color:background-color="#ffcdd2" color:border-color="#831311">
         <dc:Bounds x="495" y="85" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="487" y="53" width="69" height="14" />
+          <dc:Bounds x="488" y="53" width="68" height="14" />
         </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_1lazkw7_di" bpmnElement="Activity_1lazkw7" bioc:stroke="#0d4372" bioc:fill="#bbdefb" color:background-color="#bbdefb" color:border-color="#0d4372">
-        <dc:Bounds x="230" y="530" width="100" height="80" />
-        <bpmndi:BPMNLabel />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_1v3jwys_di" bpmnElement="Activity_1v3jwys" bioc:stroke="#6b3c00" bioc:fill="#ffe0b2" color:background-color="#ffe0b2" color:border-color="#6b3c00">
-        <dc:Bounds x="470" y="200" width="100" height="80" />
-        <bpmndi:BPMNLabel />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_14x2mh4_di" bpmnElement="Activity_14x2mh4" bioc:stroke="#0d4372" bioc:fill="#bbdefb" color:background-color="#bbdefb" color:border-color="#0d4372">
-        <dc:Bounds x="510" y="530" width="100" height="80" />
-        <bpmndi:BPMNLabel />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_1kfty5c_di" bpmnElement="Activity_1kfty5c" bioc:stroke="#0d4372" bioc:fill="#bbdefb" color:background-color="#bbdefb" color:border-color="#0d4372">
-        <dc:Bounds x="840" y="530" width="100" height="80" />
-        <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="DataInputAssociation_069fsrj_di" bpmnElement="DataInputAssociation_069fsrj">
         <di:waypoint x="235" y="475" />
@@ -878,7 +878,7 @@
       <bpmndi:BPMNShape id="DataStoreReference_0auqxs9_di" bpmnElement="DataStoreReference_0auqxs9">
         <dc:Bounds x="-55" y="25" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="-64" y="-7" width="69" height="14" />
+          <dc:Bounds x="-63" y="-7" width="68" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DataStoreReference_0mm7eck_di" bpmnElement="DataStoreReference_0mm7eck">

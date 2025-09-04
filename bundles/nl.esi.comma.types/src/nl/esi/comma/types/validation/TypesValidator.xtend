@@ -320,4 +320,16 @@ class TypesValidator extends AbstractTypesValidator {
         	}	
     	}
     }
+    
+     /**
+     * All fields of a record cannot be marked symbolic.
+     */
+     
+     @Check
+     def checkSymbolicField(RecordTypeDecl type){
+       val allField = type.allFields
+       if (allField.forall[f | f.symbolic]) {
+            error('''At least 1 field must not be symbolic for record «type.name»''', TypesPackage.Literals.RECORD_TYPE_DECL__FIELDS)
+        }
+     }
 }

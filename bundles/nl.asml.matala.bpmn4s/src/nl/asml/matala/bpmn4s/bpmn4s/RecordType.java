@@ -20,17 +20,25 @@ import java.util.Set;
 public class RecordType extends Bpmn4sDataType {
 
 	public Map<String, String> fields = new LinkedHashMap<String, String>();
+	private Set<String> symbolicFields = new HashSet<String>();
 	private Set<String> suppressedFields = new HashSet<String>();
 
 	public RecordType (String _name) {
 		super(_name, RECORD_TYPE);
 	}
 
-	public void addField(String _key, String _type, boolean _suppress) {
+	public void addField(String _key, String _type, boolean _symbolic, boolean _suppress) {
 		fields.put(_key, _type);
+		if (_symbolic) {
+			symbolicFields.add(_key);
+		}
 		if (_suppress) {
 			suppressedFields.add(_key);
 		}
+	}
+
+	public boolean isSymbolic(String _field) {
+		return symbolicFields.contains(_field);
 	}
 
 	public boolean isSuppressed(String _field) {

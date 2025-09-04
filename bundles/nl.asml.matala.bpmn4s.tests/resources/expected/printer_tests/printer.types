@@ -10,8 +10,8 @@ enum PrintResolution { LOW MED HIGH }
 
 record Report {
     int	id
-    string	payload
-    real	kpi
+    symbolic string	payload
+    symbolic real	kpi
 }
 
 record OptimizeRequest {
@@ -20,7 +20,7 @@ record OptimizeRequest {
 
 record MeasureRequest {
     int	id
-    Report	printJobReport
+    symbolic Report	printJobReport
 }
 
 record FactoryCtx {
@@ -43,7 +43,7 @@ record PrintRequest {
 }
 
 record CorrectionsReport {
-    map<int,CorrectionItem[]>	correctionsMap
+    symbolic map<int,CorrectionItem[]>	correctionsMap
     int	id
 }
 
