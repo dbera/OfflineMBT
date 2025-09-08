@@ -151,7 +151,7 @@ class CausalGraphValidator extends AbstractCausalGraphValidator {
 
     @Check
     def checkUniqueNodeSteps(CausalGraph _graph) {
-        if (_graph.type == GraphType::UCG || _graph.type == GraphType::BDDUCG) {
+        if (_graph.type == GraphType::CG || _graph.type == GraphType::RCG) {
             return;
         }
 
