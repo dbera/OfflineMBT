@@ -27,7 +27,7 @@
         </bpmn4s:dataType>
         <bpmn4s:dataType id="DataType_1hqgl3e" name="MeasureRequest" type="Record">
           <bpmn4s:field name="id" typeRef="Int" />
-          <bpmn4s:field name="printJobReport" typeRef="DataType_37032q4" symbolic="true" />
+          <bpmn4s:field name="printJobReport" typeRef="DataType_37032q4" kind="Symbolic" />
         </bpmn4s:dataType>
         <bpmn4s:dataType id="DataType_1udeikv" name="Result" type="Record">
           <bpmn4s:field name="verdict" typeRef="DataType_3659oc9" />
@@ -41,15 +41,15 @@
         </bpmn4s:dataType>
         <bpmn4s:dataType id="DataType_37032q4" name="Report" type="Record">
           <bpmn4s:field name="id" typeRef="Int" />
-          <bpmn4s:field name="payload" typeRef="String" symbolic="true" />
-          <bpmn4s:field name="kpi" typeRef="Float" symbolic="true" />
+          <bpmn4s:field name="payload" typeRef="String" kind="Symbolic" />
+          <bpmn4s:field name="kpi" typeRef="Float" kind="Symbolic" />
         </bpmn4s:dataType>
         <bpmn4s:dataType id="DataType_0hvka0d" name="OperationType" type="Enumeration">
           <bpmn4s:literal name="PREP" />
           <bpmn4s:literal name="PRINT" />
         </bpmn4s:dataType>
         <bpmn4s:dataType id="DataType_2qhm379" name="CorrectionsReport" type="Record">
-          <bpmn4s:field name="correctionsMap" typeRef="DataType_1eduiqa" symbolic="true" />
+          <bpmn4s:field name="correctionsMap" typeRef="DataType_1eduiqa" kind="Mixed" />
           <bpmn4s:field name="id" typeRef="Int" />
         </bpmn4s:dataType>
         <bpmn4s:dataType id="DataType_1eduiqa" name="CorrectionsMap" type="Map" keyTypeRef="Int" valueTypeRef="DataType_10oh63l" />

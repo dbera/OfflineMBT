@@ -25,7 +25,6 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -654,11 +653,11 @@ public class Bpmn4sCompiler{
 	private Set<String> collectSuppressedFields(String dataTypeName, String prefix, Set<String> fields) {
 		Bpmn4sDataType dataType = model.dataSchema.get(dataTypeName);
 		if (dataType instanceof RecordType recType) {
-			for(Map.Entry<String, String> field : recType.fields.entrySet()) {
-				if (recType.isSuppressed(field.getKey())) {
-					fields.add(prefix + field.getKey());
+			for(RecordField field : recType.fields) {
+				if (field.isSuppressed()) {
+					fields.add(prefix + field.getName());
 				} else {
-					collectSuppressedFields(field.getValue(), prefix + field.getKey() + '.', fields);
+					collectSuppressedFields(field.getType(), prefix + field.getName() + '.', fields);
 				}
 			}
 		}
@@ -783,11 +782,11 @@ public class Bpmn4sCompiler{
 			if(dataType instanceof RecordType recType) {
 				String type = "record " + recType.getName() + " {\n";
 				String parameters = "";
-				for (Entry<String, String> e: recType.fields.entrySet()) {
-					String fieldName = e.getKey();
-					String fieldTypeName = typeToString(e.getValue());
-					boolean isSymbolic = recType.isSymbolic(fieldName);
-					parameters += (isSymbolic ? "symbolic " : "") + fieldTypeName + "\t" + fieldName + "\n";
+				for (RecordField field: recType.fields) {
+					String fieldName = field.getName();
+					String fieldTypeName = typeToString(field.getType());
+					String fieldKind = field.getKind() == RecordFieldKind.Concrete ? "" : field.getKind().name().toLowerCase() + " ";
+					parameters += fieldKind + fieldTypeName + "\t" + fieldName + "\n";
 				}
 				type += indent(parameters) + "}\n";
 				types += type + "\n";

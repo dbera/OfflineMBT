@@ -58,6 +58,7 @@ import nl.esi.comma.expressions.expression.InterfaceAwareType
 import nl.esi.comma.expressions.expression.QUANTIFIER
 import nl.esi.comma.signature.interfaceSignature.Signature
 import nl.esi.comma.types.types.Dimension
+import nl.esi.comma.types.types.RecordFieldKind
 import nl.esi.comma.types.types.SimpleTypeDecl
 import nl.esi.comma.types.types.Type
 import nl.esi.comma.types.types.TypeDecl
@@ -476,10 +477,9 @@ class ExpressionValidator extends AbstractExpressionValidator {
 	 * Enforce that all fields of a record constructor initializes all its fields except symbolic
 	 */
 	@Check
-    def checkSymbolicRecordField(ExpressionRecord er){
-        er.fields.filter(r| r.recordField.symbolic).forEach[a
-            |
-            error('Symbolic field can not be initialize', er, ExpressionPackage.Literals.EXPRESSION_RECORD__FIELDS, er.fields.indexOf(a))
-        ]          
+    def checkSymbolicRecordField(ExpressionRecord er) {
+        er.fields.filter[recordField.kind == RecordFieldKind::SYMBOLIC].forEach[ field |
+            error('Symbolic field can not be initialized', field, ExpressionPackage.Literals.FIELD__RECORD_FIELD)
+        ]
     }
 }

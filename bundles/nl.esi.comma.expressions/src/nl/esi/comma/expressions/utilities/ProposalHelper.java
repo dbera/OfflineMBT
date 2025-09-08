@@ -63,6 +63,7 @@ import nl.esi.comma.types.types.EnumTypeDecl;
 import nl.esi.comma.types.types.MapTypeConstructor;
 import nl.esi.comma.types.types.MapTypeDecl;
 import nl.esi.comma.types.types.RecordField;
+import nl.esi.comma.types.types.RecordFieldKind;
 import nl.esi.comma.types.types.RecordTypeDecl;
 import nl.esi.comma.types.types.SimpleTypeDecl;
 import nl.esi.comma.types.types.Type;
@@ -145,7 +146,7 @@ public class ProposalHelper {
 		} else if (type instanceof MapTypeDecl) {
 			return "{}";
 		} else if (type instanceof RecordTypeDecl recType) {
-			List<RecordField> recFields = getAllFields(recType).stream().filter(f -> !f.isSymbolic()).toList();
+			List<RecordField> recFields = getAllFields(recType).stream().filter(f -> !RecordFieldKind.SYMBOLIC.equals(f.getKind())).toList();
 			if (recFields.size() > 1) {
 				String fieldIndent = indent + "\t";
 				String value = recFields.stream()

@@ -65,6 +65,7 @@ import nl.esi.comma.expressions.generator.ExpressionsCommaGenerator;
 import nl.esi.comma.types.types.EnumTypeDecl;
 import nl.esi.comma.types.types.MapTypeConstructor;
 import nl.esi.comma.types.types.MapTypeDecl;
+import nl.esi.comma.types.types.RecordFieldKind;
 import nl.esi.comma.types.types.RecordTypeDecl;
 import nl.esi.comma.types.types.SimpleTypeDecl;
 import nl.esi.comma.types.types.Type;
@@ -107,7 +108,7 @@ class SnakesHelper {
 					"}";
 		} else if (type instanceof RecordTypeDecl recType) {
 			String value = TypeUtilities.getAllFields(recType).stream()
-				.filter(f -> !f.isSymbolic())
+				.filter(f -> !RecordFieldKind.SYMBOLIC.equals(f.getKind()))
 				.map(f -> String.format("\"%s\":%s", f.getName(), defaultValue(f.getType(), f.getName())))
 				.collect(Collectors.joining(","));
 			return String.format("{%s}", value);

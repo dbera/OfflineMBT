@@ -108,7 +108,11 @@ RecordTypeDecl:
 ;	
 
 RecordField: 
-	(symbolic ?= 'symbolic')? type = Type name = ID 
+	(kind = RecordFieldKind)? type = Type name = ID
+;
+
+enum RecordFieldKind:
+    CONCRETE = 'concrete' | SYMBOLIC = 'symbolic' | MIXED = 'mixed'
 ;
 
 VectorTypeDecl:

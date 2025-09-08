@@ -43,7 +43,7 @@ record PrintRequest {
 }
 
 record CorrectionsReport {
-    symbolic map<int,CorrectionItem[]>	correctionsMap
+    mixed map<int,CorrectionItem[]>	correctionsMap
     int	id
 }
 

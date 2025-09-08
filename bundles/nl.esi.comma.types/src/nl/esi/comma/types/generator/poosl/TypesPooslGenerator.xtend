@@ -12,19 +12,20 @@
  */
 package nl.esi.comma.types.generator.poosl
 
-import nl.esi.comma.types.types.SimpleTypeDecl
+import nl.esi.comma.types.generator.CommaGenerator
 import nl.esi.comma.types.types.EnumTypeDecl
-import nl.esi.comma.types.types.TypeReference
+import nl.esi.comma.types.types.MapTypeConstructor
+import nl.esi.comma.types.types.MapTypeDecl
+import nl.esi.comma.types.types.RecordField
+import nl.esi.comma.types.types.RecordFieldKind
 import nl.esi.comma.types.types.RecordTypeDecl
+import nl.esi.comma.types.types.SimpleTypeDecl
+import nl.esi.comma.types.types.TypeReference
 import nl.esi.comma.types.types.VectorTypeConstructor
 import nl.esi.comma.types.types.VectorTypeDecl
-import nl.esi.comma.types.generator.CommaGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess
-import nl.esi.comma.types.types.RecordField
 
 import static extension nl.esi.comma.types.utilities.TypeUtilities.*
-import nl.esi.comma.types.types.MapTypeDecl
-import nl.esi.comma.types.types.MapTypeConstructor
 
 abstract class TypesPooslGenerator extends CommaGenerator {
 		
@@ -57,7 +58,7 @@ abstract class TypesPooslGenerator extends CommaGenerator {
 	'''«generateDefaultValue(t.type)»'''
 	
 	def dispatch CharSequence generateDefaultValue(RecordTypeDecl t) 
-	'''new(«determineRecordTypePrefix(t)»«t.name») «FOR f : t.getAllFields.reject[symbolic]»set_«f.name»(«generateDefaultValue(f.type)») «ENDFOR»'''
+	'''new(«determineRecordTypePrefix(t)»«t.name») «FOR f : t.getAllFields.reject[kind == RecordFieldKind::SYMBOLIC]»set_«f.name»(«generateDefaultValue(f.type)») «ENDFOR»'''
 	
 	def dispatch CharSequence generateDefaultValue(VectorTypeDecl t) '''new(«COMMA_PREFIX»Vector) init'''
 	

@@ -30,18 +30,16 @@ import nl.esi.comma.actions.actions.IfAction
 import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
 import nl.esi.comma.expressions.expression.Expression
 import nl.esi.comma.expressions.expression.ExpressionPackage
+import nl.esi.comma.expressions.expression.ExpressionRecordAccess
 import nl.esi.comma.expressions.expression.ExpressionVariable
+import nl.esi.comma.expressions.expression.Field
 import nl.esi.comma.expressions.expression.Variable
 import nl.esi.comma.types.types.Import
+import nl.esi.comma.types.types.RecordFieldKind
 import nl.esi.comma.types.types.TypesPackage
 import org.eclipse.emf.common.util.URI
 import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.validation.Check
-import nl.esi.comma.types.types.RecordTypeDecl
-import nl.esi.comma.expressions.expression.ExpressionRecordAccess
-import nl.esi.comma.expressions.expression.ExpressionRecord
-import nl.esi.comma.expressions.expression.Field
-import nl.asml.matala.product.product.UpdateOutVar
 
 import static extension nl.esi.comma.actions.utilities.ActionsUtilities.*
 
@@ -263,7 +261,7 @@ class ProductValidator extends AbstractProductValidator {
                     RecordFieldAssignmentAction: {
                         // LHS check
                         val fa = a.fieldAccess as ExpressionRecordAccess
-                        if (fa.field.symbolic) {
+                        if (fa.field.kind == RecordFieldKind::SYMBOLIC) {
                             error(
                                 "Symbolic field '" + fa.field.name + "' may not be assigned",
                                 fa,
@@ -290,7 +288,7 @@ class ProductValidator extends AbstractProductValidator {
         ]
 
         exp.eAllContents.filter(Field).forEach [ f |
-            if (f.recordField.symbolic) {
+            if (f.recordField.kind == RecordFieldKind::SYMBOLIC) {
                 error(
                     message + " '" + f.recordField.name + "'",
                     f,
@@ -302,7 +300,7 @@ class ProductValidator extends AbstractProductValidator {
 
     /** Single RecordAccess check */
     private def void checkRecordAccess(ExpressionRecordAccess era, String message) {
-        if (era.field.symbolic) {
+        if (era.field.kind == RecordFieldKind::SYMBOLIC) {
             error(
                message + " '" + era.field.name + "'",
                 era,

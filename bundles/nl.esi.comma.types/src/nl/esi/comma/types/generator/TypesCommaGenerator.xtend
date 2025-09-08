@@ -12,16 +12,17 @@
  */
 package nl.esi.comma.types.generator
 
-import nl.esi.comma.types.types.TypeReference
-import nl.esi.comma.types.types.TypeDecl
-import nl.esi.comma.types.types.VectorTypeConstructor
-import nl.esi.comma.types.types.SimpleTypeDecl
 import nl.esi.comma.types.types.EnumTypeDecl
-import nl.esi.comma.types.types.RecordTypeDecl
-import nl.esi.comma.types.utilities.TypeUtilities
-import nl.esi.comma.types.types.VectorTypeDecl
 import nl.esi.comma.types.types.MapTypeConstructor
 import nl.esi.comma.types.types.MapTypeDecl
+import nl.esi.comma.types.types.RecordFieldKind
+import nl.esi.comma.types.types.RecordTypeDecl
+import nl.esi.comma.types.types.SimpleTypeDecl
+import nl.esi.comma.types.types.TypeDecl
+import nl.esi.comma.types.types.TypeReference
+import nl.esi.comma.types.types.VectorTypeConstructor
+import nl.esi.comma.types.types.VectorTypeDecl
+import nl.esi.comma.types.utilities.TypeUtilities
 
 /*
  * This class provides methods that map ComMA types to their ComMA text representation
@@ -73,7 +74,7 @@ class TypesCommaGenerator {
 	}
 	
 	def dispatch CharSequence generateDefaultValue(RecordTypeDecl  t){
-		'''«typeToComMASyntax(t)»{«FOR f : TypeUtilities::getAllFields(t).reject[symbolic] SEPARATOR ', '»«f.name» = «generateDefaultValue(f.type)»«ENDFOR»}'''
+		'''«typeToComMASyntax(t)»{«FOR f : TypeUtilities::getAllFields(t).reject[kind == RecordFieldKind::SYMBOLIC] SEPARATOR ', '»«f.name» = «generateDefaultValue(f.type)»«ENDFOR»}'''
 	}
 		
 	def dispatch CharSequence generateDefaultValue(VectorTypeDecl t){

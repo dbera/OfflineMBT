@@ -64,6 +64,7 @@ import nl.esi.comma.expressions.expression.QUANTIFIER;
 import nl.esi.comma.expressions.generator.ExpressionsCommaGenerator;
 import nl.esi.comma.types.types.EnumTypeDecl;
 import nl.esi.comma.types.types.MapTypeDecl;
+import nl.esi.comma.types.types.RecordFieldKind;
 import nl.esi.comma.types.types.RecordTypeDecl;
 import nl.esi.comma.types.types.SimpleTypeDecl;
 import nl.esi.comma.types.types.TypeDecl;
@@ -89,7 +90,7 @@ class CSharpHelper {
 			return "{}";
 		} else if (type instanceof RecordTypeDecl) {
 			String value = ((RecordTypeDecl) type).getFields().stream()
-				.filter(f -> !f.isSymbolic())
+				.filter(f -> !RecordFieldKind.SYMBOLIC.equals(f.getKind()))
 				.map(f -> String.format("\"%s\":%s", f.getName(), defaultValue(f.getType().getType())))
 				.collect(Collectors.joining(","));
 			return String.format("{%s}", value);
