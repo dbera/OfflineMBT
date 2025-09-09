@@ -32,6 +32,7 @@ import nl.esi.comma.actions.actions.IfAction
 import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
 import nl.esi.comma.expressions.expression.Expression
 import nl.esi.comma.expressions.expression.ExpressionPackage
+import nl.esi.comma.expressions.expression.ExpressionRecord
 import nl.esi.comma.expressions.expression.ExpressionRecordAccess
 import nl.esi.comma.expressions.expression.ExpressionVariable
 import nl.esi.comma.expressions.expression.Field
@@ -44,6 +45,7 @@ import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.validation.Check
 
 import static extension nl.esi.comma.actions.utilities.ActionsUtilities.*
+import static extension nl.esi.comma.types.utilities.TypeUtilities.*
 
 /**
  * This class contains custom validation rules. 
@@ -272,6 +274,19 @@ class ProductValidator extends AbstractProductValidator {
         ]
     }
 
+    private def reportWarningOnAccess(Expression expression, RecordFieldKind accessKind, String message) {
+        Iterators.concat(#[expression].iterator, expression.eAllContents).forEach [ eObject |
+            switch (it: eObject) {
+                Field case recordField.kind == accessKind: {
+                    warning(message, eObject, ExpressionPackage.Literals.FIELD__RECORD_FIELD)
+                }
+                ExpressionRecordAccess case field.kind == accessKind: {
+                    warning(message, eObject, ExpressionPackage.Literals.EXPRESSION_RECORD_ACCESS__FIELD)
+                }
+            }
+        ]
+    }
+
     /**
      * Variables that are concrete may not be assigned in reference updates
      */
@@ -288,16 +303,21 @@ class ProductValidator extends AbstractProductValidator {
         ]
     }
 
-    private def reportWarningOnAccess(Expression expression, RecordFieldKind accessKind, String message) {
-        Iterators.concat(#[expression].iterator, expression.eAllContents).forEach [ eObject |
-            switch (it: eObject) {
-                Field case recordField.kind == accessKind: {
-                    warning(message, eObject, ExpressionPackage.Literals.FIELD__RECORD_FIELD)
+    /**
+     * Validate that all concrete record fields are assigned in a concrete update
+     */
+    @Check
+    def checkUpdateExpressionRecord(UpdateOutVar updateOutputVar) {
+        if (updateOutputVar.act === null) {
+            return;
+        }
+        updateOutputVar.act.eAllContents.filter(ExpressionRecord).forEach [ expRec |
+            expRec.type.allFields.filter[kind == RecordFieldKind.CONCRETE].forEach [ field |
+                if (!expRec.fields.exists[recordField == field]) {
+                    error('''Record field '«field.name»' should be assigned''', expRec,
+                        ExpressionPackage.Literals.EXPRESSION_RECORD__TYPE);
                 }
-                ExpressionRecordAccess case field.kind == accessKind: {
-                    warning(message, eObject, ExpressionPackage.Literals.EXPRESSION_RECORD_ACCESS__FIELD)
-                }
-            }
+            ]
         ]
     }
 
