@@ -391,6 +391,7 @@ public class MainCamunda {
 
 		DataStoreReference dsRef = modelInstance.newInstance(DataStoreReference.class);
 		dsRef.setId(dsId + "_ref");
+		dsRef.setDataStore(dataStore);
 		dsRef.setName(dsDescriptor.id);
 		process.addChildElement(dsRef);
 
