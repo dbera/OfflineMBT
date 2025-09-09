@@ -12,12 +12,9 @@
  */
 package nl.esi.comma.abstracttestspecification.generator.to.concrete
 
-import java.util.HashMap
 import java.util.HashSet
-import java.util.Map
 import nl.asml.matala.product.product.Product
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractTestDefinition
-import nl.esi.comma.abstracttestspecification.abstractTestspecification.AssertStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AssertionStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.Binding
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.ExecutableStep
@@ -39,18 +36,6 @@ import nl.esi.comma.abstracttestspecification.generator.to.bpmn.MainCamunda
 
 class FromAbstractToConcrete extends AbstractGenerator {
 
-    val Map<String, String> rename
-    val Map<String, String> args
-
-    new() {
-        this(new HashMap<String, String>(), new HashMap<String, String>())
-    }
-
-    new(Map<String, String> rename, Map<String, String> params) {
-        this.rename = rename
-        this.args = params
-    }
-
     override doGenerate(Resource res, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
         val atd = res.contents.filter(TSMain).map[model].filter(AbstractTestDefinition).head
         if (atd === null) {
@@ -67,8 +52,6 @@ class FromAbstractToConcrete extends AbstractGenerator {
         }
         val conTspecFileName = res.URI.lastSegment.replaceAll('\\.atspec$','.tspec')
         fsa.generateFile(conTspecFileName, atd.generateConcreteTest())
-        fsa.generateFile("reference.kvp", (new RefKVPGenerator()).generateRefKVP(atd))
-        fsa.generateFile("vfd.xml", (new VFDXMLGenerator(this.args, this.rename)).generateXMLFromSUTVars(atd))
  
     }
 
@@ -93,7 +76,7 @@ class FromAbstractToConcrete extends AbstractGenerator {
         «ENDFOR»
         }
         
-        generate-file "./vfab2_scenario/FAST/generated_FAST/"
+        generate-file "«atd.filePath»"
         
         step-parameters
         «FOR test : atd.testSeq»
@@ -101,19 +84,17 @@ class FromAbstractToConcrete extends AbstractGenerator {
                 «step.stepType.get(0)» step_«step.name»
             «ENDFOR»
         «ENDFOR»
-        «var sutdefs = extractSUTVars(atd)»
-        «IF !sutdefs.empty»
-        sut-def-list : «JsonHelper.jsonElement(sutdefs)»
+        
+        «var sutexpr = extractSUTVarExpressions(atd)»
+        «IF !sutexpr.empty»
+        sut-param-init 
+        «FOR lhs: sutexpr.keySet»
+            «FOR rhs: sutexpr.get(lhs)»
+                «lhs» := «rhs»
+            «ENDFOR»
+        «ENDFOR»
         «ENDIF»
     '''
-    
-    def String printSutDefList(AbstractTestDefinition atd) {
-        var sutdefs = extractSUTVars(atd)
-        if (sutdefs.empty) return ''
-        return '''
-            sut-def-list : «JsonHelper.jsonElement(sutdefs)»
-        '''
-    }
     
     def printStep(ExecutableStep step) {
         return switch (step) {
@@ -167,7 +148,7 @@ class FromAbstractToConcrete extends AbstractGenerator {
             var abs_assert = step
             var cexpr_handler = new ConcreteExpressionHandler()
             return switch (grammarElement) {
-                case gaExpression.expressionLevel9Access.expressionVariableParserRuleCall_6: {
+                case gaExpression.expressionLevel9Access.expressionVariableParserRuleCall_7: {
                     val exprVar = semanticElement as ExpressionVariable
                     return cexpr_handler.prepareAssertionStepExpressions(abs_assert, exprVar)
                 }
@@ -242,7 +223,7 @@ class FromAbstractToConcrete extends AbstractGenerator {
     // Print types for each step
     def private printTypes(Iterable<Binding> ios, String type, Iterable<String> typesImports) '''
         «FOR ti : typesImports»
-            import "../«ti»"
+            import "../../«ti»"
         «ENDFOR»
         
         record «type» {
@@ -269,13 +250,13 @@ class FromAbstractToConcrete extends AbstractGenerator {
         val processedTypes = new HashSet<String>()
         for (step : atd.getExecutableSteps(system)) {
             for (type : step.stepType.filter[processedTypes.add(it)]) {
-                paramTxt += printParams(step, type)
+                paramTxt += printParams(atd, step, type)
             }
         }
         return paramTxt
     }
 
-    def private printParams(ExecutableStep step, String type) '''
+    def private printParams(AbstractTestDefinition atd, ExecutableStep step, String type) '''
         import "../types/«step.system».types"
         
         data-instances
@@ -285,11 +266,11 @@ class FromAbstractToConcrete extends AbstractGenerator {
         data-implementation
         // Empty
         
-        path-prefix "./vfab2_scenario/FAST/generated_FAST/dataset/"
+        path-prefix "«atd.filePath»"
         var-ref «step.system»Input -> file-name "«step.system»Input.json"
         var-ref «step.system»Output -> file-name "«step.system»Output.json"
     '''
-
+    
     def private getSystems(AbstractTestDefinition atd) {
         return atd.steps.filter(ExecutableStep).map[system].toSet
     }
