@@ -699,12 +699,12 @@ class FromConcreteToFast extends AbstractGenerator {
     }
 
     private def boolean isInDataSuts(Action act) {
-        val IDS_NAME = 'sut_setup'
+        val IDS_NAME = 'sut_setup_'
         return switch (act) {
             RecordFieldAssignmentAction: {
                 var exp = act.fieldAccess
                 switch (exp) {
-                    ExpressionRecordAccess: exp.field.name.equals(IDS_NAME)
+                    ExpressionRecordAccess: exp.field.name.startsWith(IDS_NAME)
                     default: false
                 }
             }
