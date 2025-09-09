@@ -38,6 +38,8 @@ import org.camunda.bpm.model.bpmn.instance.bpmndi.BpmnShape;
 import org.camunda.bpm.model.bpmn.instance.dc.Bounds;
 import org.camunda.bpm.model.bpmn.instance.di.Waypoint;
 
+import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractTestDefinition;
+
 public class MainCamunda {
 
 	final static String XMLNS_XSI = "http://www.w3.org/2001/XMLSchema-instance";
@@ -117,6 +119,23 @@ public class MainCamunda {
 			}
 		}
 
+		return elements;
+	}
+
+	
+	
+	public static String generateBPMNModel(AbstractTestDefinition atd) {
+		List<ElementDescriptor> descriptors = createDescriptors(atd);
+		BpmnModelInstance modelInstance = generateBPMNModel(descriptors);
+		return Bpmn.convertToString(modelInstance);
+	}
+	
+	private static List<ElementDescriptor> createDescriptors(AbstractTestDefinition atd) {
+		List<ElementDescriptor> elements = new ArrayList<>();
+		// TODO 1) fetch step identifiers and split them into lane & task id
+		// TODO 2) create the taskDescriptor objects
+		// TODO 3) figuring out how to derive datastores out of the output-data elements in each run/compose-step
+		// TODO 4) create the datastoreDescriptor objects
 		return elements;
 	}
 
