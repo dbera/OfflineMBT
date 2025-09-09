@@ -244,6 +244,7 @@ public class MainCamunda {
 
 	private static Process createProcess(BpmnModelInstance modelInstance, Definitions definitions) {
 		Process process = modelInstance.newInstance(Process.class);
+		process.setExecutable(true);
 		process.setId("laneProcess");
 		definitions.addChildElement(process);
 		return process;
