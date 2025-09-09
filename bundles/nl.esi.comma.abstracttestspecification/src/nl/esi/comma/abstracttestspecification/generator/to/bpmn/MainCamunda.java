@@ -25,21 +25,17 @@ import java.util.Map;
 import org.camunda.bpm.model.bpmn.Bpmn;
 import org.camunda.bpm.model.bpmn.BpmnModelInstance;
 import org.camunda.bpm.model.bpmn.instance.BaseElement;
-import org.camunda.bpm.model.bpmn.instance.DataInput;
 import org.camunda.bpm.model.bpmn.instance.DataInputAssociation;
-import org.camunda.bpm.model.bpmn.instance.DataOutput;
 import org.camunda.bpm.model.bpmn.instance.DataOutputAssociation;
 import org.camunda.bpm.model.bpmn.instance.DataStore;
 import org.camunda.bpm.model.bpmn.instance.DataStoreReference;
 import org.camunda.bpm.model.bpmn.instance.Definitions;
 import org.camunda.bpm.model.bpmn.instance.EndEvent;
 import org.camunda.bpm.model.bpmn.instance.FlowNode;
-import org.camunda.bpm.model.bpmn.instance.InputSet;
-import org.camunda.bpm.model.bpmn.instance.IoSpecification;
 import org.camunda.bpm.model.bpmn.instance.Lane;
 import org.camunda.bpm.model.bpmn.instance.LaneSet;
-import org.camunda.bpm.model.bpmn.instance.OutputSet;
 import org.camunda.bpm.model.bpmn.instance.Process;
+import org.camunda.bpm.model.bpmn.instance.Property;
 import org.camunda.bpm.model.bpmn.instance.SequenceFlow;
 import org.camunda.bpm.model.bpmn.instance.StartEvent;
 import org.camunda.bpm.model.bpmn.instance.Task;
@@ -134,14 +130,12 @@ public class MainCamunda {
 		return elements;
 	}
 
-	
-	
 	public static String generateBPMNModel(AbstractTestDefinition atd) {
 		List<ElementDescriptor> descriptors = createDescriptors(atd);
 		BpmnModelInstance modelInstance = generateBPMNModel(descriptors);
 		return Bpmn.convertToString(modelInstance);
 	}
-	
+
 	private static List<ElementDescriptor> createDescriptors(AbstractTestDefinition atd) {
 		List<ElementDescriptor> elements = new ArrayList<>();
 		// TODO 1) fetch step identifiers and split them into lane & task id
@@ -229,15 +223,15 @@ public class MainCamunda {
 
 	private static Definitions createDefinitions(BpmnModelInstance modelInstance) {
 		Definitions definitions = modelInstance.newInstance(Definitions.class);
-        definitions.setTargetNamespace("http://bpmn.io/schema/bpmn");
-        definitions.getDomElement().registerNamespace("xsi", XMLNS_XSI);
-        definitions.getDomElement().registerNamespace("di", XMLNS_DI);
-        definitions.getDomElement().registerNamespace("dc", XMLNS_DC);
-        definitions.getDomElement().registerNamespace("color", XMLNS_COLOR);
-        definitions.getDomElement().registerNamespace("bpmndi", XMLNS_BPMNDI);
-        definitions.getDomElement().registerNamespace("bpmn4s", XMLNS_BPMN4S);
-        definitions.getDomElement().registerNamespace("bpmn2", XMLNS_BPMN2);
-        definitions.getDomElement().registerNamespace("bioc", XMLNS_BIOC);
+		definitions.setTargetNamespace("http://bpmn.io/schema/bpmn");
+		definitions.getDomElement().registerNamespace("xsi", XMLNS_XSI);
+		definitions.getDomElement().registerNamespace("di", XMLNS_DI);
+		definitions.getDomElement().registerNamespace("dc", XMLNS_DC);
+		definitions.getDomElement().registerNamespace("color", XMLNS_COLOR);
+		definitions.getDomElement().registerNamespace("bpmndi", XMLNS_BPMNDI);
+		definitions.getDomElement().registerNamespace("bpmn4s", XMLNS_BPMN4S);
+		definitions.getDomElement().registerNamespace("bpmn2", XMLNS_BPMN2);
+		definitions.getDomElement().registerNamespace("bioc", XMLNS_BIOC);
 		modelInstance.setDefinitions(definitions);
 		return definitions;
 	}
@@ -245,23 +239,27 @@ public class MainCamunda {
 	private static Process createProcess(BpmnModelInstance modelInstance, Definitions definitions) {
 		Process process = modelInstance.newInstance(Process.class);
 		process.setExecutable(true);
-		process.setId("laneProcess");
+		process.setId("BPMNProcess_id");
+		process.setName("BPMNProcess");
 		definitions.addChildElement(process);
 		return process;
 	}
 
 	private static LaneSet createLaneSet(BpmnModelInstance modelInstance, Process process) {
 		LaneSet laneSet = modelInstance.newInstance(LaneSet.class);
-		laneSet.setId("laneSet");
+		laneSet.setId("LaneSet_id");
+		laneSet.setName("LaneSet");
 		process.addChildElement(laneSet);
 		return laneSet;
 	}
 
 	private static BpmnPlane createDiagram(BpmnModelInstance modelInstance, Definitions definitions, Process process) {
 		BpmnDiagram diagram = modelInstance.newInstance(BpmnDiagram.class);
-		diagram.setId("BPMNDiagram_1");
+		diagram.setId("BPMNDiagram_id");
+		diagram.setName("BPMNDiagram");
 		definitions.addChildElement(diagram);
 		BpmnPlane plane = modelInstance.newInstance(BpmnPlane.class);
+		plane.setId("BpmnPlane_id");
 		plane.setBpmnElement(process);
 		diagram.addChildElement(plane);
 		return plane;
@@ -316,26 +314,10 @@ public class MainCamunda {
 		task.setName(name);
 		process.addChildElement(task);
 
-		IoSpecification ioSpec = modelInstance.newInstance(IoSpecification.class);
-		task.setIoSpecification(ioSpec);
-
-		DataOutput dataOutput = modelInstance.newInstance(DataOutput.class);
-		dataOutput.setId(id + "_output");
-		dataOutput.setName("output_" + id);
-		ioSpec.getDataOutputs().add(dataOutput);
-
-		OutputSet outputSet = modelInstance.newInstance(OutputSet.class);
-		ioSpec.getOutputSets().add(outputSet);
-		outputSet.getDataOutputRefs().add(dataOutput);
-
-		DataInput dataInput = modelInstance.newInstance(DataInput.class);
-		dataInput.setId(id + "_input");
-		dataInput.setName("input_" + id);
-		ioSpec.getDataInputs().add(dataInput);
-
-		InputSet inputSet = modelInstance.newInstance(InputSet.class);
-		ioSpec.getInputSets().add(inputSet);
-		inputSet.getDataInputs().add(dataInput);
+		Property prop = modelInstance.newInstance(Property.class);
+		prop.setId(name+"_placeholder_id");
+		prop.setName(name+"_placeholder");
+		task.addChildElement(prop);
 
 		return task;
 	}
@@ -377,25 +359,24 @@ public class MainCamunda {
 		Waypoint wp1 = modelInstance.newInstance(Waypoint.class);
 		wp1.setX(sourceBounds.getX() + sourceBounds.getWidth());
 		wp1.setY(sourceBounds.getY() + sourceBounds.getHeight() / 2);
-		
+		edge.getWaypoints().add(wp1);
 
+		double midpoint = (sourceBounds.getX() + sourceBounds.getWidth() + targetBounds.getX()) / 2;
 		Waypoint wp2 = modelInstance.newInstance(Waypoint.class);
-		Waypoint wp3 = modelInstance.newInstance(Waypoint.class);
-
-		double midpoint = (sourceBounds.getX() + sourceBounds.getWidth() + targetBounds.getX())/2;
 		wp2.setX(midpoint);
 		wp2.setY(sourceBounds.getY() + sourceBounds.getHeight() / 2);
+		edge.getWaypoints().add(wp2);
+
+		Waypoint wp3 = modelInstance.newInstance(Waypoint.class);
 		wp3.setX(midpoint);
 		wp3.setY(targetBounds.getY() + targetBounds.getHeight() / 2);
+		edge.getWaypoints().add(wp3);
 
 		Waypoint wp4 = modelInstance.newInstance(Waypoint.class);
 		wp4.setX(targetBounds.getX());
 		wp4.setY(targetBounds.getY() + targetBounds.getHeight() / 2);
-
-		edge.getWaypoints().add(wp1);
-		edge.getWaypoints().add(wp2);
-		edge.getWaypoints().add(wp3);
 		edge.getWaypoints().add(wp4);
+
 		plane.addChildElement(edge);
 	}
 
@@ -407,11 +388,9 @@ public class MainCamunda {
 		DataStore dataStore = modelInstance.newInstance(DataStore.class);
 		dataStore.setId(dsId);
 		dataStore.setName(dsDescriptor.id);
-		definitions.addChildElement(dataStore);
 
 		DataStoreReference dsRef = modelInstance.newInstance(DataStoreReference.class);
 		dsRef.setId(dsId + "_ref");
-		dsRef.setDataStore(dataStore);
 		dsRef.setName(dsDescriptor.id);
 		process.addChildElement(dsRef);
 
@@ -425,10 +404,9 @@ public class MainCamunda {
 		// Link producer to datastore
 		Task producer = taskMap.get(dsDescriptor.producer);
 
-		if (producer != null && producer.getIoSpecification() != null) {
+		if (producer != null) {
 			DataOutputAssociation doa = modelInstance.newInstance(DataOutputAssociation.class);
 			doa.setId(producer.getId() + "_doa");
-			doa.getSources().add(producer.getIoSpecification().getDataOutputs().iterator().next());
 			doa.setTarget(dsRef);
 			producer.addChildElement(doa);
 
@@ -440,10 +418,10 @@ public class MainCamunda {
 		// Link datastore to consumers
 		for (String consumerId : dsDescriptor.consumers) {
 			Task consumer = taskMap.get(consumerId);
-			if (consumer != null && consumer.getIoSpecification() != null) {
+			if (consumer != null) {
 				DataInputAssociation dia = modelInstance.newInstance(DataInputAssociation.class);
 				dia.setId(consumer.getId() + "_dia");
-				dia.setTarget(consumer.getIoSpecification().getDataInputs().iterator().next());
+				dia.setTarget(consumer.getProperties().iterator().next());
 				dia.getSources().add(dsRef);
 				consumer.addChildElement(dia);
 
@@ -458,30 +436,31 @@ public class MainCamunda {
 	private static void createDataAssociationEdge(BpmnModelInstance modelInstance, BpmnPlane plane,
 			BaseElement association, Bounds sourceBounds, Bounds targetBounds) {
 		BpmnEdge edge = modelInstance.newInstance(BpmnEdge.class);
+		edge.setId(association.getId() + "_edge");
 		edge.setBpmnElement(association);
 
 		Waypoint wp1 = modelInstance.newInstance(Waypoint.class);
 		wp1.setX(sourceBounds.getX() + sourceBounds.getWidth());
 		wp1.setY(sourceBounds.getY() + sourceBounds.getHeight() / 2);
+		edge.getWaypoints().add(wp1);
 		
 		double midpoint = (sourceBounds.getX() + sourceBounds.getWidth() + targetBounds.getX())/2;
-
+		
 		Waypoint wp2 = modelInstance.newInstance(Waypoint.class);
 		wp2.setX(midpoint);
 		wp2.setY(sourceBounds.getY() + sourceBounds.getHeight() / 2);
-
+		edge.getWaypoints().add(wp2);
+		
 		Waypoint wp3 = modelInstance.newInstance(Waypoint.class);
 		wp3.setX(midpoint);
 		wp3.setY(targetBounds.getY() + targetBounds.getHeight() / 2);
+		edge.getWaypoints().add(wp3);
 
 		Waypoint wp4 = modelInstance.newInstance(Waypoint.class);
 		wp4.setX(targetBounds.getX());
 		wp4.setY(targetBounds.getY() + targetBounds.getHeight() / 2);
-
-		edge.getWaypoints().add(wp1);
-		edge.getWaypoints().add(wp2);
-		edge.getWaypoints().add(wp3);
 		edge.getWaypoints().add(wp4);
+		
 		plane.addChildElement(edge);
 	}
 
