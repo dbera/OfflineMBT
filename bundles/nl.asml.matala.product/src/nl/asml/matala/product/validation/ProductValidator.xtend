@@ -15,12 +15,14 @@
  */
 package nl.asml.matala.product.validation
 
+import com.google.common.collect.Iterators
 import java.util.HashSet
 import java.util.Set
 import nl.asml.matala.product.product.ActionType
 import nl.asml.matala.product.product.Block
 import nl.asml.matala.product.product.Function
 import nl.asml.matala.product.product.ProductPackage
+import nl.asml.matala.product.product.RefConstraint
 import nl.asml.matala.product.product.Update
 import nl.asml.matala.product.product.UpdateOutVar
 import nl.esi.comma.actions.actions.ActionsPackage
@@ -236,77 +238,67 @@ class ProductValidator extends AbstractProductValidator {
             }
         }
     }
-    
+
     /**
      * Variables that are symbolic may not be used in guards
      */
     @Check
-    def checkSymbolicVariablesGuard(Update update) {
+    def checkConcreteVariablesGuard(Update update) {
         if (update.guard !== null) {
-            checkExpressionForSymbolicAccess(update.guard, "Symbolic field should not be used in guard")
+            update.guard.reportWarningOnAccess(RecordFieldKind::SYMBOLIC, "Symbolic field should not be used in guard")
         }
     }
 
     /**
-     * Variables that are symbolic may not be used in update expression
+     * Variables that are symbolic may not be used in concrete updates
      */
     @Check
-    def checkSymbolicVariableUpdate(UpdateOutVar updateOutputVar) {
-        if (updateOutputVar.act !== null) {
-            updateOutputVar.act.actions.forEach [ a |
-                switch a {
-                    AssignmentAction: {
-                        checkExpressionForSymbolicAccess(a.exp, "Symbolic field may not be assigned in update")
-                    }
-                    RecordFieldAssignmentAction: {
-                        // LHS check
-                        val fa = a.fieldAccess as ExpressionRecordAccess
-                        if (fa.field.kind == RecordFieldKind::SYMBOLIC) {
-                            error(
-                                "Symbolic field '" + fa.field.name + "' may not be assigned",
-                                fa,
-                                ExpressionPackage.Literals.EXPRESSION_RECORD_ACCESS__FIELD
-                            )
-                        }
-                        // RHS check
-                        if (a.exp instanceof ExpressionRecordAccess) {
-                            checkExpressionForSymbolicAccess(a.exp, "Symbolic field may not be assigned in update")
-                        }
-                    }
+    def checkConcreteVariableUpdate(UpdateOutVar updateOutputVar) {
+        if (updateOutputVar.act === null) {
+            return
+        }
+        updateOutputVar.act.actions.forEach [ action |
+            switch (it: action) {
+                AssignmentAction: {
+                    exp.reportWarningOnAccess(RecordFieldKind::SYMBOLIC, "Symbolic field should not be used in concrete update")
                 }
-            ]
-        }
-    }
-
-    private def void checkExpressionForSymbolicAccess(Expression exp, String message) {
-        if (exp instanceof ExpressionRecordAccess) {
-            checkRecordAccess(exp, message)
-        }
-
-        exp.eAllContents.filter(ExpressionRecordAccess).forEach [ era |
-            checkRecordAccess(era, message)
-        ]
-
-        exp.eAllContents.filter(Field).forEach [ f |
-            if (f.recordField.kind == RecordFieldKind::SYMBOLIC) {
-                error(
-                    message + " '" + f.recordField.name + "'",
-                    f,
-                    ExpressionPackage.Literals.FIELD__RECORD_FIELD
-                )
+                RecordFieldAssignmentAction: {
+                    // LHS check
+                    fieldAccess.reportWarningOnAccess(RecordFieldKind::SYMBOLIC, "Symbolic field should not be assigned in concrete update")
+                    // RHS check
+                    exp.reportWarningOnAccess(RecordFieldKind::SYMBOLIC, "Symbolic field should not be used in concrete update")
+                }
             }
         ]
     }
 
-    /** Single RecordAccess check */
-    private def void checkRecordAccess(ExpressionRecordAccess era, String message) {
-        if (era.field.kind == RecordFieldKind::SYMBOLIC) {
-            error(
-               message + " '" + era.field.name + "'",
-                era,
-                ExpressionPackage.Literals.EXPRESSION_RECORD_ACCESS__FIELD
-            )
+    /**
+     * Variables that are concrete may not be assigned in reference updates
+     */
+    @Check
+    def checkSymbolicVariableUpdate(RefConstraint refConstraint) {
+        if (refConstraint.act === null) {
+            return
         }
+        refConstraint.act.actions.filter(RecordFieldAssignmentAction).forEach [
+            if (fields.forall[kind == RecordFieldKind.CONCRETE]) {
+                warning("Concrete field should not be assigned in reference update", it,
+                    ActionsPackage.Literals.RECORD_FIELD_ASSIGNMENT_ACTION__FIELD_ACCESS)
+            }
+        ]
+    }
+
+    private def reportWarningOnAccess(Expression expression, RecordFieldKind accessKind, String message) {
+        Iterators.concat(#[expression].iterator, expression.eAllContents).forEach [ eObject |
+            switch (it: eObject) {
+                Field case recordField.kind == accessKind: {
+                    warning(message, eObject, ExpressionPackage.Literals.FIELD__RECORD_FIELD)
+                }
+                ExpressionRecordAccess case field.kind == accessKind: {
+                    warning(message, eObject, ExpressionPackage.Literals.EXPRESSION_RECORD_ACCESS__FIELD)
+                }
+            }
+        ]
     }
 
     /**
