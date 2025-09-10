@@ -30,6 +30,7 @@ import org.eclipse.xtext.EcoreUtil2
 import static extension nl.esi.comma.types.utilities.TypeUtilities.*
 import nl.esi.comma.types.types.EnumTypeDecl
 import nl.esi.comma.types.types.RecordTypeDecl
+import nl.esi.comma.types.types.RecordFieldKind
 
 class ExpressionsUtilities {
     static extension val ExpressionFactory EXPRESSION_FACTORY = ExpressionFactory.eINSTANCE
@@ -63,7 +64,7 @@ class ExpressionsUtilities {
 
             RecordTypeDecl: createExpressionRecord => [
                 type = typeObj
-                for(field: typeObj.fields) {
+                for(field: typeObj.allFields.reject[kind == RecordFieldKind::SYMBOLIC]) {
                     fields += createField => [
                         recordField = field
                         exp = field.type.typeObject.createDefaultValue
@@ -77,17 +78,12 @@ class ExpressionsUtilities {
                 typeAnnotation = createTypeAnnotation => [
                     type = elementType.asType
                 ]
-                elements += elementType.createDefaultValue
             ]
 
             MapTypeDecl: typeObj.constructor.createDefaultValue
             MapTypeConstructor: createExpressionMap => [
                 typeAnnotation = createTypeAnnotation => [
                     //type = 
-                ]
-                pairs += createPair => [
-                    key = typeObj.type.createDefaultValue
-                    value = typeObj.valueType.typeObject.createDefaultValue
                 ]
             ]
         }
