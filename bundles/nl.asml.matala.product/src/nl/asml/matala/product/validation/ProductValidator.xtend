@@ -38,6 +38,7 @@ import nl.esi.comma.expressions.expression.ExpressionVariable
 import nl.esi.comma.expressions.expression.Field
 import nl.esi.comma.expressions.expression.Variable
 import nl.esi.comma.types.types.Import
+import nl.esi.comma.types.types.RecordField
 import nl.esi.comma.types.types.RecordFieldKind
 import nl.esi.comma.types.types.TypesPackage
 import org.eclipse.emf.common.util.URI
@@ -247,7 +248,7 @@ class ProductValidator extends AbstractProductValidator {
     @Check
     def checkConcreteVariablesGuard(Update update) {
         if (update.guard !== null) {
-            update.guard.reportWarningOnAccess(RecordFieldKind::SYMBOLIC, "Symbolic field should not be used in guard")
+            update.guard.reportWarningOnAccess(RecordFieldKind::SYMBOLIC)[ field | '''Symbolic record field '«field.FQN»' should not be used in guard''']
         }
     }
 
@@ -262,26 +263,26 @@ class ProductValidator extends AbstractProductValidator {
         updateOutputVar.act.actions.forEach [ action |
             switch (it: action) {
                 AssignmentAction: {
-                    exp.reportWarningOnAccess(RecordFieldKind::SYMBOLIC, "Symbolic field should not be used in concrete update")
+                    exp.reportWarningOnAccess(RecordFieldKind::SYMBOLIC)[ field | '''Symbolic record field '«field.FQN»' should not be used in concrete update''']
                 }
                 RecordFieldAssignmentAction: {
                     // LHS check
-                    fieldAccess.reportWarningOnAccess(RecordFieldKind::SYMBOLIC, "Symbolic field should not be assigned in concrete update")
+                    fieldAccess.reportWarningOnAccess(RecordFieldKind::SYMBOLIC)[ field | '''Symbolic record field '«field.FQN»' should not be assigned in concrete update''']
                     // RHS check
-                    exp.reportWarningOnAccess(RecordFieldKind::SYMBOLIC, "Symbolic field should not be used in concrete update")
+                    exp.reportWarningOnAccess(RecordFieldKind::SYMBOLIC)[ field | '''Symbolic record field '«field.FQN»' should not be used in concrete update''']
                 }
             }
         ]
     }
 
-    private def reportWarningOnAccess(Expression expression, RecordFieldKind accessKind, String message) {
+    private def reportWarningOnAccess(Expression expression, RecordFieldKind accessKind, (RecordField)=>String messageProducer) {
         Iterators.concat(#[expression].iterator, expression.eAllContents).forEach [ eObject |
             switch (it: eObject) {
                 Field case recordField.kind == accessKind: {
-                    warning(message, eObject, ExpressionPackage.Literals.FIELD__RECORD_FIELD)
+                    warning(messageProducer.apply(recordField), eObject, ExpressionPackage.Literals.FIELD__RECORD_FIELD)
                 }
                 ExpressionRecordAccess case field.kind == accessKind: {
-                    warning(message, eObject, ExpressionPackage.Literals.EXPRESSION_RECORD_ACCESS__FIELD)
+                    warning(messageProducer.apply(field), eObject, ExpressionPackage.Literals.EXPRESSION_RECORD_ACCESS__FIELD)
                 }
             }
         ]
@@ -297,7 +298,8 @@ class ProductValidator extends AbstractProductValidator {
         }
         refConstraint.act.actions.filter(RecordFieldAssignmentAction).forEach [
             if (fields.forall[kind == RecordFieldKind.CONCRETE]) {
-                warning("Concrete field should not be assigned in reference update", it,
+                val field = fields.last
+                warning('''Concrete record field '«field.FQN»' should not be assigned in reference update''', it,
                     ActionsPackage.Literals.RECORD_FIELD_ASSIGNMENT_ACTION__FIELD_ACCESS)
             }
         ]
@@ -314,12 +316,14 @@ class ProductValidator extends AbstractProductValidator {
         updateOutputVar.act.eAllContents.filter(ExpressionRecord).forEach [ expRec |
             expRec.type.allFields.filter[kind == RecordFieldKind.CONCRETE].forEach [ field |
                 if (!expRec.fields.exists[recordField == field]) {
-                    error('''Record field '«field.name»' should be assigned''', expRec,
+                    error('''Concrete record field '«field.FQN»' should be assigned''', expRec,
                         ExpressionPackage.Literals.EXPRESSION_RECORD__TYPE);
                 }
             ]
         ]
     }
+    
+    private static def getFQN(RecordField rf) '''«rf.recordType.name».«rf.name»'''
 
     /**
      * Assignment in update function: A field of a record may be assigned a value if and only if the record variable
