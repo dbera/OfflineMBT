@@ -73,6 +73,7 @@ Block:
             ('suts' sutvars += [expr::Variable|ID] (',' sutvars+=[expr::Variable|ID])*)? &
 			('init' initActions+=AssignmentAction*)? &
 			'desc' type = STRING
+			('element-labels' '[' elabels += STRING (',' elabels+=STRING+)* ']')?
 		)
 		functions += Function*
 	'}'
@@ -80,6 +81,7 @@ Block:
 
 Function:
 	'action' name = ID
+	('element-label'  elabels = STRING )?
 	updates += Update*
 ;
 
