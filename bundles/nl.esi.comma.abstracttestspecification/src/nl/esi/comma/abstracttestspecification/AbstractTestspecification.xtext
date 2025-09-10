@@ -72,6 +72,7 @@ ExecutableStep:
 
 ComposeStep:
     'compose-step-name' ':' name = ID
+    ('action-case' ':' caseRef = [prod::Update|QualifiedName] ) ?
     stepRef += StepReference*
     'input-binding' ':' input += Binding+
     'output-data' ':' output += Binding+ (suppress=Suppress)? // do not generate these in concrete TSpec
@@ -82,6 +83,7 @@ ComposeStep:
 RunStep:
     'run-step-name' ':' name = ID
     ('step-type' ':' stepType += STRING)?
+    ('action-case' ':' caseRef = [prod::Update|QualifiedName] ) ?
     stepRef += StepReference*
     'input-binding' ':' input += Binding+
     'output-data' ':' output += Binding+ (suppress=Suppress)? // do not generate these in concrete TSpec
@@ -91,6 +93,7 @@ RunStep:
 AssertionStep:
     'assert-step-name' ':' name = ID
     ('assert-type' ':' stepType += STRING)?
+    ('action-case' ':' caseRef = [prod::Update|QualifiedName] ) ?
     stepRef += StepReference*
     'input-binding' ':' input += Binding+
     'output-data' ':' output += Binding+ (suppress=Suppress)? // do not generate these in concrete TSpec

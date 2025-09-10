@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) 2024, 2025 TNO-ESI
  *
  * See the NOTICE file(s) distributed with this work for additional
@@ -10,16 +10,19 @@
  *
  * SPDX-License-Identifier: MIT
  */
-package nl.asml.matala.product.generator
+package nl.esi.comma.abstracttestspecification.generator.to.bpmn;
 
+import java.util.List;
 
-class Transition {
-	public var bname = new String
-	public var name = new String
-	public var qname = new String
-	new (String b, String n, String q) {
-		bname = b
-		name = n
-		qname = q
+public class ElementDescriptor {
+
+	public String id;
+	public String lane;
+
+	public ElementDescriptor(String id, String lane) {
+		super();
+		this.id = id;
+		this.lane = lane;
 	}
+
 }
