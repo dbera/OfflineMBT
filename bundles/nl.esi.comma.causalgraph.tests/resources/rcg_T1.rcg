@@ -18,15 +18,16 @@ graph TestGraphT1:
         step-name: function "test-interface::f1(z, y)"
         step-type: When
         scenario T1 step 1: // start from step 1
+            step-variables:
+                write h
             step-body: «
                 bool y = true;
                 float z = 0.85;
                 y = function42(z);
                 if(y) {
-                    x = x + 4;
-                    z = function2(x);
+                    z = function2(4);
                 } else {
-                    z = function2(x);
+                    z = function2(0);
                 }
                 h = test-interface::f1(z, y);
             »
@@ -35,6 +36,8 @@ graph TestGraphT1:
         step-name: function "test-interface::f0()"
         step-type: When
         scenario T1 step 2:
+            step-variables: 
+                write x
             step-body: «
                 x = test-interface::f0()
             »
@@ -43,6 +46,9 @@ graph TestGraphT1:
         step-name: function "ASSERT_XY(h.a, x)"
         step-type: Then
         scenario T1 step 3:
+            step-variables: 
+                read-write h
+                read x
             step-body: «
                 h.a = ceil(h.a) * 2.0;
                 ASSERT_XY(h.a, x);

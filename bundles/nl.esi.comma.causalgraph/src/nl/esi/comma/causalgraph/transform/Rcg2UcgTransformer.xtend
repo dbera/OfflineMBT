@@ -7,6 +7,7 @@ import nl.esi.comma.causalgraph.causalGraph.CausalGraphFactory
 import nl.esi.comma.causalgraph.causalGraph.GraphType
 import nl.esi.comma.causalgraph.causalGraph.Node
 import nl.esi.comma.causalgraph.causalGraph.StepType
+import nl.esi.comma.causalgraph.utilities.NodeAttributes
 import nl.esi.comma.expressions.expression.Variable
 import nl.esi.comma.types.types.NamedElement
 import org.eclipse.emf.ecore.EObject
@@ -97,18 +98,18 @@ class Rcg2UcgTransformer {
     }
 
     def protected List<NodeGroup> groupNodes(CausalGraph... rcgs) {
-        val nodeGroupsMap = rcgs.flatMap[nodes].groupBy[groupKey]
+        val nodeGroupsMap = rcgs.flatMap[nodes].groupBy[NodeAttributes.valueOf(it)]
         // The asserts that are not functions should not be matched by their step-name,
         // we need to look at their incoming data dependencies to find possible matches.
         val nonFunctionAsserts = nodeGroupsMap.filter[k, v |!k.function && k.stepType == StepType::THEN].values.flatten.toList
-        nonFunctionAsserts.forEach[assertNode | nodeGroupsMap.remove(assertNode.groupKey)]
+        nonFunctionAsserts.forEach[assertNode | nodeGroupsMap.remove(NodeAttributes.valueOf(assertNode))]
 
         val nodeGroups = nodeGroupsMap.entrySet.map[new NodeGroup(key, value)].toList
 
         val assertGroups = nonFunctionAsserts.groupBy[assertGroupKey].values.sortedBy[size]
         for (assertGroup : assertGroups) {
             val stepName = assertGroup.map[stepName].toSet.join(', ')
-            var groupKey = new NodeGroupKey(false, stepName, StepType::THEN)
+            var groupKey = new NodeAttributes(false, stepName, StepType::THEN)
             nodeGroups += new NodeGroup(groupKey, assertGroup)
         }
 
@@ -185,13 +186,13 @@ class Rcg2UcgTransformer {
      */
     protected def getAssertGroupKey(Node node) {
         return node.outgoingDataFlows.map[ edge |
-            new AssertGroupKey(edge.target.groupKey, edge.dataReferences.flatMap[variables].toSet)
+            new AssertGroupKey(NodeAttributes.valueOf(edge.target), edge.dataReferences.flatMap[variables].toSet)
         ].toSet
     }
 
     @Data
     protected static class AssertGroupKey {
-        val NodeGroupKey key
+        val NodeAttributes key
         val Set<Variable> variables
     }
 
@@ -199,24 +200,13 @@ class Rcg2UcgTransformer {
         return nodeGroups.findFirst[inputNodes.contains(node)]?.outputNode
     }
 
-    protected def NodeGroupKey getGroupKey(Node node) {
-        return new NodeGroupKey(node.function, node.stepName, node.stepType)
-    }
-
-    @Data
-    protected static class NodeGroupKey {
-        val boolean function
-        val String stepName
-        val StepType stepType
-    }
-
     @Accessors
     protected static class NodeGroup {
-        val NodeGroupKey key
+        val NodeAttributes key
         val List<Node> inputNodes = newArrayList()
         val Node outputNode
 
-        new(NodeGroupKey _key, Iterable<Node> _inputNodes) {
+        new(NodeAttributes _key, Iterable<Node> _inputNodes) {
             key = _key;
             inputNodes += _inputNodes
             outputNode = CausalGraphFactory::eINSTANCE.createNode => [ node |

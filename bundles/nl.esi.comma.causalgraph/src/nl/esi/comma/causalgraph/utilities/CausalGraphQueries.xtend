@@ -7,9 +7,12 @@ import nl.esi.comma.causalgraph.causalGraph.DataReference
 import nl.esi.comma.causalgraph.causalGraph.Edge
 import nl.esi.comma.causalgraph.causalGraph.GraphType
 import nl.esi.comma.causalgraph.causalGraph.Node
+import nl.esi.comma.causalgraph.causalGraph.ScenarioDecl
 import nl.esi.comma.causalgraph.causalGraph.ScenarioStep
+import nl.esi.comma.causalgraph.causalGraph.StepVariable
 import org.eclipse.emf.common.util.URI
 import org.eclipse.emf.ecore.resource.Resource
+import nl.esi.comma.causalgraph.causalGraph.RequirementDecl
 
 class CausalGraphQueries {
     private new() {
@@ -32,6 +35,18 @@ class CausalGraphQueries {
             val resource = Resource.Factory.Registry.INSTANCE.getFactory(uri).createResource(uri)
             resource.contents += graph
         }
+    }
+
+    static def getSteps(CausalGraph graph, ScenarioDecl _scenario) {
+        return graph.nodes.flatMap[steps].filter[scenario == _scenario].sortBy[stepNumber]
+    }
+
+    static def getGraph(RequirementDecl requirement) {
+        return requirement === null ? null : requirement.eContainer as CausalGraph
+    }
+
+    static def getGraph(ScenarioDecl scenario) {
+        return scenario === null ? null : scenario.eContainer as CausalGraph
     }
 
     static def getGraph(Node node) {
@@ -75,5 +90,21 @@ class CausalGraphQueries {
 
     static def getOutgoingDataFlows(Node node) {
         node.outgoingEdges.filter(DataFlowEdge)
+    }
+
+    static def isRead(StepVariable stepVariable) {
+        return switch (stepVariable.access) {
+            case READ,
+            case READ_WRITE: true
+            default: false
+        }
+    }
+
+    static def isWrite(StepVariable stepVariable) {
+        return switch (stepVariable.access) {
+            case WRITE,
+            case READ_WRITE: true
+            default: false
+        }
     }
 }

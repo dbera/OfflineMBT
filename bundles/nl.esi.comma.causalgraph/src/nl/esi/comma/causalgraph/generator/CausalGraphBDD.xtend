@@ -32,7 +32,6 @@ import nl.esi.comma.expressions.expression.ExpressionConstantString
 import org.eclipse.xtext.generator.IFileSystemAccess2
 
 import static extension nl.esi.comma.causalgraph.utilities.CausalGraphQueries.*
-import nl.esi.comma.causalgraph.causalGraph.StepBody
 
 class CausalGraphBDD {
     def generateBDD(CausalGraph prod, IFileSystemAccess2 fsa) {
@@ -377,7 +376,7 @@ class CausalGraphBDD {
     def toCPPStepDefinitionsHeaderFile(CausalGraph cg, IFileSystemAccess2 fsa) {
         val sb = new StringBuilder
         // Includes
-        if (!cg.header.empty) {
+        if (!cg.header.nullOrEmpty) {
             sb.append(cg.header.trim).append("\n")
         }
         sb.append("\n")

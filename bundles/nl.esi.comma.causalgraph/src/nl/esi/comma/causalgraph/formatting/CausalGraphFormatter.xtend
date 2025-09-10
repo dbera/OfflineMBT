@@ -80,7 +80,8 @@ class CausalGraphFormatter extends AbstractDeclarativeFormatter {
         setLinewrap(1,2,2).before(scenarioStepRule)
         setLinewrap(1,2,2).after(scenarioStepRule)
         setLinewrap(1,1,2).before(scenarioStepAccess.stepArgumentsKeyword_4_1_0)
-        setLinewrap(1,1,2).before(scenarioStepAccess.stepBodyKeyword_4_2_0)
+        setLinewrap(1,1,2).before(scenarioStepAccess.stepVariablesKeyword_4_2_0)
+        setLinewrap(1,1,2).before(scenarioStepAccess.stepBodyKeyword_4_3_0)
 
         setIndentationIncrement.after(requirementDeclAccess.requirementKeyword_0)
         setIndentationDecrement.after(requirementDeclRule)

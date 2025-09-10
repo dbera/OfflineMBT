@@ -94,6 +94,14 @@ class CausalGraphValidator extends AbstractCausalGraphValidator {
         ]
     }
 
+    @Check
+    def checkUniqueInitializations(ScenarioStep _step) {
+        _step.stepVariables.getDuplicatesBy[variable].forEach [
+            error('Variable can only be referenced once', it,
+                CausalGraphPackage.Literals.STEP_VARIABLE__VARIABLE)
+        ]
+    }
+
     private static def <T> Iterable<T> getDuplicatesBy(Iterable<T> source, (T)=>Object functor) {
         return source.groupBy(functor).values.filter[size > 1].flatten
     }
@@ -168,7 +176,7 @@ class CausalGraphValidator extends AbstractCausalGraphValidator {
         if (graph === null) {
             warning('Scenario should be contained by graph', null)
         }
-        val stepNr2Steps = new TreeMap(graph.nodes.flatMap[steps].filter[scenario == _scenario].groupBy[stepNumber])
+        val stepNr2Steps = new TreeMap(graph.getSteps(_scenario).groupBy[stepNumber])
         if (stepNr2Steps.isEmpty) {
             warning('There are no steps defined for this scenario', null)
         } else if (stepNr2Steps.firstKey != 1) {

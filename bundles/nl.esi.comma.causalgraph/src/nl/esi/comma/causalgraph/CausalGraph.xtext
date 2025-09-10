@@ -93,8 +93,17 @@ Node:
 ScenarioStep:
     'scenario' scenario=[ScenarioDecl|ID] 'step' stepNumber = INT ( ':'
         ('step-arguments' ':' stepArguments += (AssignmentAction | RecordFieldAssignmentAction)+)?
+        ('step-variables' ':' stepVariables += StepVariable+)?
         ('step-body' ':' stepBody = StepBody)?
     )?
+;
+
+StepVariable:
+    access = VariableAccess variable = [expr::Variable | ID]
+;
+
+enum VariableAccess:
+    READ = 'read' | WRITE = 'write' | READ_WRITE = 'read-write'
 ;
 
 StepBody:
