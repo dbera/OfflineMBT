@@ -22,6 +22,7 @@ Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: nl.esi.comma.abstracttestspecification.validation,
  nl.esi.comma.abstracttestspecification.parser.antlr.internal,
  nl.esi.comma.abstracttestspecification,
+ nl.esi.comma.abstracttestspecification.generator.to.bpmn,
  nl.esi.comma.abstracttestspecification.generator.to.concrete,
  nl.esi.comma.abstracttestspecification.generator.utils,
  nl.esi.comma.abstracttestspecification.services,

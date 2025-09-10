@@ -17,6 +17,7 @@ package nl.asml.matala.product.generator
 
 import java.util.ArrayList
 import java.util.HashMap
+import java.util.LinkedHashMap
 import java.util.List
 import java.util.Map
 import java.util.Set
@@ -107,6 +108,7 @@ class ProductGenerator extends AbstractGenerator {
 			for(b : prod.specification.envBlock) listOfEnvBlocks.add(b.name)
 			
 			var listOfAssertTransitions = new ArrayList<String>
+			var mapOfTransitionQnames = new LinkedHashMap<String,String>
 			for(b : prod.specification.blocks) {
 				if (b.block !== null) {
 					val block = b.block
@@ -119,6 +121,7 @@ class ProductGenerator extends AbstractGenerator {
 						        || u.actionType.equals(ActionType.ASSERT)
 						    ) {
 						        listOfAssertTransitions.add(transitionName)
+						        mapOfTransitionQnames.put(transitionName, new Utils().printConstraint(u))
 						    }
 						    
 						    // Added DB. 15.04.2025. Create map of sut-var to transitions
@@ -174,8 +177,8 @@ class ProductGenerator extends AbstractGenerator {
 			}
 			
 			fsa.generateFile('CPNServer//' + specName + '//' + specName + '.py', pnet.toSnakes(
-			    specName, specName, listOfEnvBlocks, listOfAssertTransitions, 
-			    mapOfSuppressTransitionVars, inout_places, 
+			    specName, specName, listOfEnvBlocks, listOfAssertTransitions,
+			     mapOfTransitionQnames, mapOfSuppressTransitionVars, inout_places, 
 			    init_places, depth_limit, num_tests, sutTransitionMap
 			))
 			//fsa.generateFile('CPNServer//' + specName + '//' + 'server.py', (new FlaskSimulationGenerator).generateServer(name))
@@ -240,7 +243,8 @@ class ProductGenerator extends AbstractGenerator {
 			{
 				System.out.println("  > case: " + update.name)
 				var tname = f.name + "_" + update.name + "@" + update.stepType + "@" + update.actionType + "@"
-				var tr = new Transition(block.name, block.name+"_"+tname)
+				var qname = new Utils().printConstraint(update)
+				var tr = new Transition(block.name, block.name+"_"+tname, qname)
 				pnet.transitions.add(tr)
 				var input_var_list = new HashMap<String,TypeDecl> // ArrayList<String>
 				for(v : update.fnInp) 

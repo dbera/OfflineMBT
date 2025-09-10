@@ -48,7 +48,7 @@ import org.camunda.bpm.model.bpmn.instance.di.Waypoint;
 
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractTestDefinition;
 
-public class MainCamunda {
+public class CamundaParser {
 
 	final static String XMLNS_XSI = "http://www.w3.org/2001/XMLSchema-instance";
 	final static String XMLNS_DI = "http://www.omg.org/spec/DD/20100524/DI";
@@ -86,10 +86,7 @@ public class MainCamunda {
 			fw.write(Bpmn.convertToString(modelInstance));
 			fw.close();
 
-		} catch (
-
-		IOException e) {
-			// TODO Auto-generated catch block
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
@@ -140,7 +137,8 @@ public class MainCamunda {
 		List<ElementDescriptor> elements = new ArrayList<>();
 		// TODO 1) fetch step identifiers and split them into lane & task id
 		// TODO 2) create the taskDescriptor objects
-		// TODO 3) figuring out how to derive datastores out of the output-data elements in each run/compose-step
+		// TODO 3) figuring out how to derive datastores out of the output-data elements
+		// in each run/compose-step
 		// TODO 4) create the datastoreDescriptor objects
 		return elements;
 	}
@@ -315,8 +313,8 @@ public class MainCamunda {
 		process.addChildElement(task);
 
 		Property prop = modelInstance.newInstance(Property.class);
-		prop.setId(name+"_placeholder_id");
-		prop.setName(name+"_placeholder");
+		prop.setId(name + "_placeholder_id");
+		prop.setName(name + "_placeholder");
 		task.addChildElement(prop);
 
 		return task;
@@ -443,14 +441,14 @@ public class MainCamunda {
 		wp1.setX(sourceBounds.getX() + sourceBounds.getWidth());
 		wp1.setY(sourceBounds.getY() + sourceBounds.getHeight() / 2);
 		edge.getWaypoints().add(wp1);
-		
-		double midpoint = (sourceBounds.getX() + sourceBounds.getWidth() + targetBounds.getX())/2;
-		
+
+		double midpoint = (sourceBounds.getX() + sourceBounds.getWidth() + targetBounds.getX()) / 2;
+
 		Waypoint wp2 = modelInstance.newInstance(Waypoint.class);
 		wp2.setX(midpoint);
 		wp2.setY(sourceBounds.getY() + sourceBounds.getHeight() / 2);
 		edge.getWaypoints().add(wp2);
-		
+
 		Waypoint wp3 = modelInstance.newInstance(Waypoint.class);
 		wp3.setX(midpoint);
 		wp3.setY(targetBounds.getY() + targetBounds.getHeight() / 2);
@@ -460,7 +458,7 @@ public class MainCamunda {
 		wp4.setX(targetBounds.getX());
 		wp4.setY(targetBounds.getY() + targetBounds.getHeight() / 2);
 		edge.getWaypoints().add(wp4);
-		
+
 		plane.addChildElement(edge);
 	}
 

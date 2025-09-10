@@ -32,7 +32,6 @@ import org.eclipse.xtext.generator.IGeneratorContext
 
 import static extension nl.esi.comma.abstracttestspecification.generator.utils.Utils.*
 import static extension nl.esi.comma.types.utilities.EcoreUtil3.*
-import nl.esi.comma.abstracttestspecification.generator.to.bpmn.MainCamunda
 
 class FromAbstractToConcrete extends AbstractGenerator {
 
@@ -42,9 +41,6 @@ class FromAbstractToConcrete extends AbstractGenerator {
             throw new Exception('No abstract tspec found in resource: ' + res.URI)
         }
         
-        val bpmnFileName = res.URI.lastSegment.replaceAll('\\.atspec$','.bpmn')
-        fsa.generateFile(bpmnFileName, MainCamunda.generateBPMNModel(atd))
-
         val typesImports = getTypesImports(res)
         for (sys : atd.systems) {
             fsa.generateFile('''types/«sys».types''', atd.generateTypesFile(sys, typesImports))
