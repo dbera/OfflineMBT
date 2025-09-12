@@ -4,20 +4,20 @@ specification printer
     system PrintFactoryA3DPrinter
     {
         inputs
-        PrintRequest    printJob
-        CorrectionsReport   corrections
+        PrintRequest	printJob
+        CorrectionsReport	corrections
         
         outputs
-        Result      printResult
-        Report      printReport
+        Result		printResult
+        Report		printReport
     
         local
-        PrintRequest    request
+        PrintRequest	request
         
-        UNIT    Event_0mxx05p
-        UNIT    Event_0jcg6zx
-        UNIT    between_ComposePrintJob_and_RunPrintJob
-        UNIT    between_ComposePrepareJob_and_RunPrepareJob
+        UNIT	Event_0mxx05p
+        UNIT	Event_0jcg6zx
+        UNIT	between_ComposePrintJob_and_RunPrintJob
+        UNIT	between_ComposePrepareJob_and_RunPrepareJob
     
         init
         corrections := CorrectionsReport { 
@@ -37,46 +37,46 @@ specification printer
     
         desc "PrintFactoryA 3D Printer_Model"
         
-        action          RunPrintJob
-        element-label   "Run Print Job"
-        case            default step-type "ExecutePrinter" action-type RUN
-        with-inputs     between_ComposePrintJob_and_RunPrintJob, request
-        produces-outputs    Event_0jcg6zx suppress
+        action			RunPrintJob
+        element-label	"Run Print Job"
+        case			default step-type "ExecutePrinter" action-type RUN
+        with-inputs		between_ComposePrintJob_and_RunPrintJob, request
+        produces-outputs	Event_0jcg6zx suppress
         updates:
             Event_0jcg6zx := between_ComposePrintJob_and_RunPrintJob
-        produces-outputs    printResult
+        produces-outputs	printResult
         updates:    printResult := Result { verdict = Outcome::OK }
-        produces-outputs    printReport symbolic-link
+        produces-outputs	printReport symbolic-link
         updates:    printReport := Report {
              id = request.id
             }
         
-        action          ComposePrintJob
-        element-label   "Compose Print Job"
-        case            default step-type "null" action-type COMPOSE
-        with-inputs     printJob, corrections
-        with-guard      corrections.id == printJob.id and printJob.opType == OperationType::PRINT
-        produces-outputs    between_ComposePrintJob_and_RunPrintJob suppress
-        produces-outputs    request symbolic-link
+        action			ComposePrintJob
+        element-label	"Compose Print Job"
+        case			default step-type "null" action-type COMPOSE
+        with-inputs		printJob, corrections
+        with-guard		corrections.id == printJob.id and printJob.opType == OperationType::PRINT
+        produces-outputs	between_ComposePrintJob_and_RunPrintJob suppress
+        produces-outputs	request symbolic-link
         updates:    request := printJob
         
-        action          ComposePrepareJob
-        element-label   "Compose Prepare Job"
-        case            default step-type "null" action-type COMPOSE
-        with-inputs     printJob
-        with-guard      printJob.opType == OperationType::PREP
-        produces-outputs    between_ComposePrepareJob_and_RunPrepareJob suppress
-        produces-outputs    request symbolic-link
+        action			ComposePrepareJob
+        element-label	"Compose Prepare Job"
+        case			default step-type "null" action-type COMPOSE
+        with-inputs		printJob
+        with-guard		printJob.opType == OperationType::PREP
+        produces-outputs	between_ComposePrepareJob_and_RunPrepareJob suppress
+        produces-outputs	request symbolic-link
         updates:    request := printJob
         
-        action          RunPrepareJob
-        element-label   "Run Prepare Job"
-        case            default step-type "ExecutePrinter" action-type RUN
-        with-inputs     between_ComposePrepareJob_and_RunPrepareJob, request
-        produces-outputs    Event_0mxx05p suppress
+        action			RunPrepareJob
+        element-label	"Run Prepare Job"
+        case			default step-type "ExecutePrinter" action-type RUN
+        with-inputs		between_ComposePrepareJob_and_RunPrepareJob, request
+        produces-outputs	Event_0mxx05p suppress
         updates:
             Event_0mxx05p := between_ComposePrepareJob_and_RunPrepareJob
-        produces-outputs    printResult
+        produces-outputs	printResult
         updates:    printResult := Result { verdict = Outcome::OK }
     
         element-labels ["PrintFactory", "A 3D Printer"]
@@ -85,48 +85,48 @@ specification printer
     system PrintFactoryInspection
     {
         inputs
-        Report  printReport
-        MeasureRequest  inspectionJob
+        Report	printReport
+        MeasureRequest	inspectionJob
         
         outputs
-        Report      inspectionReport
-        Result      inspectionResult
-        Report      printReport
+        Report		inspectionReport
+        Result		inspectionResult
+        Report		printReport
     
         local
-        MeasureRequest  measureRequest
+        MeasureRequest	measureRequest
         
         
-        UNIT    between_ComposeVisualInspectionJob_and_RunVisualinspection
+        UNIT	between_ComposeVisualInspectionJob_and_RunVisualinspection
     
         // init
     
     
         desc "PrintFactoryInspection_Model"
         
-        action          RunVisualinspection
-        element-label   "Run Visual inspection"
-        case            default step-type "ExecuteInspection" action-type RUN
-        with-inputs     between_ComposeVisualInspectionJob_and_RunVisualinspection, measureRequest
-        produces-outputs    inspectionReport symbolic-link
+        action			RunVisualinspection
+        element-label	"Run Visual inspection"
+        case			default step-type "ExecuteInspection" action-type RUN
+        with-inputs		between_ComposeVisualInspectionJob_and_RunVisualinspection, measureRequest
+        produces-outputs	inspectionReport symbolic-link
         updates:    inspectionReport := Report {
              id = measureRequest.id
             }
-        produces-outputs    inspectionResult
+        produces-outputs	inspectionResult
         updates:    inspectionResult := Result { verdict = Outcome::OK }
         
-        action          ComposeVisualInspectionJob
-        element-label   "Compose Visual Inspection Job"
-        case            default step-type "null" action-type COMPOSE
-        with-inputs     inspectionJob, printReport
-        with-guard      printReport.id == inspectionJob.id
-        produces-outputs    between_ComposeVisualInspectionJob_and_RunVisualinspection suppress
-        produces-outputs    measureRequest
+        action			ComposeVisualInspectionJob
+        element-label	"Compose Visual Inspection Job"
+        case			default step-type "null" action-type COMPOSE
+        with-inputs		inspectionJob, printReport
+        with-guard		printReport.id == inspectionJob.id
+        produces-outputs	between_ComposeVisualInspectionJob_and_RunVisualinspection suppress
+        produces-outputs	measureRequest
         references {
             reportLinking: measureRequest.printJobReport := printReport
         } symbolic-link
         updates:    measureRequest := inspectionJob
-        produces-outputs    printReport symbolic-link suppress
+        produces-outputs	printReport symbolic-link suppress
         updates: printReport := printReport
     
         element-labels ["PrintFactory", "Inspection"]
@@ -135,44 +135,44 @@ specification printer
     system PrintFactoryOptimization
     {
         inputs
-        OptimizeRequest optJob
-        Report  inspectionReport
+        OptimizeRequest	optJob
+        Report	inspectionReport
         
         outputs
-        Result      optResult
-        CorrectionsReport       corrections
-        Report      inspectionReport
+        Result		optResult
+        CorrectionsReport		corrections
+        Report		inspectionReport
     
         local
-        OptimizeRequest optimizeJob
+        OptimizeRequest	optimizeJob
         
-        UNIT    Event_1oozdnw
-        UNIT    between_ComposeOptimizationJob_and_RunOptimizationJob
+        UNIT	Event_1oozdnw
+        UNIT	between_ComposeOptimizationJob_and_RunOptimizationJob
     
         // init
     
     
         desc "PrintFactoryOptimization_Model"
         
-        action          ComposeOptimizationJob
-        element-label   "Compose Optimization Job"
-        case            default step-type "null" action-type COMPOSE
-        with-inputs     optJob, inspectionReport
-        with-guard      inspectionReport.id == optJob.id
-        produces-outputs    between_ComposeOptimizationJob_and_RunOptimizationJob suppress
-        produces-outputs    optimizeJob symbolic-link
+        action			ComposeOptimizationJob
+        element-label	"Compose Optimization Job"
+        case			default step-type "null" action-type COMPOSE
+        with-inputs		optJob, inspectionReport
+        with-guard		inspectionReport.id == optJob.id
+        produces-outputs	between_ComposeOptimizationJob_and_RunOptimizationJob suppress
+        produces-outputs	optimizeJob symbolic-link
         updates:    optimizeJob := optJob
-        produces-outputs    inspectionReport symbolic-link suppress
+        produces-outputs	inspectionReport symbolic-link suppress
         updates: inspectionReport := inspectionReport
         
-        action          RunOptimizationJob
-        element-label   "Run Optimization Job"
-        case            default step-type "ExecuteOptimizer" action-type RUN
-        with-inputs     between_ComposeOptimizationJob_and_RunOptimizationJob, optimizeJob
-        produces-outputs    Event_1oozdnw suppress
+        action			RunOptimizationJob
+        element-label	"Run Optimization Job"
+        case			default step-type "ExecuteOptimizer" action-type RUN
+        with-inputs		between_ComposeOptimizationJob_and_RunOptimizationJob, optimizeJob
+        produces-outputs	Event_1oozdnw suppress
         updates:
             Event_1oozdnw := between_ComposeOptimizationJob_and_RunOptimizationJob
-        produces-outputs    corrections symbolic-link
+        produces-outputs	corrections symbolic-link
         updates:    corrections := CorrectionsReport {
              correctionsMap = 
                                 <map<int,CorrectionItem[]>>{
@@ -180,7 +180,7 @@ specification printer
             },
              id = optimizeJob.id + 1
             }
-        produces-outputs    optResult
+        produces-outputs	optResult
     
         element-labels ["PrintFactory", "Optimization"]
     }
@@ -188,34 +188,34 @@ specification printer
     system PrintFactoryFactoryAutomation
     {
         inputs
-        Result  printResult
-        Result  inspectionResult
-        Result  optResult
-        PrintRequest    printRequests
-        Report  inspectionReport
+        Result	printResult
+        Result	inspectionResult
+        Result	optResult
+        PrintRequest	printRequests
+        Report	inspectionReport
         
         outputs
-        PrintRequest        printJob
-        MeasureRequest      inspectionJob
-        OptimizeRequest     optJob
-        Report      inspectionReport
+        PrintRequest		printJob
+        MeasureRequest		inspectionJob
+        OptimizeRequest		optJob
+        Report		inspectionReport
     
         local
-        FactoryCtx  Gateway_0p2uo9v
-        FactoryCtx  Gateway_1wpvmtk
+        FactoryCtx	Gateway_0p2uo9v
+        FactoryCtx	Gateway_1wpvmtk
         
         
-        FactoryCtx  between_SendPrintJob_and_WaitforPrintJob
-        FactoryCtx  between_WaitforPrintJob_and_Gateway_1j3rupx
-        FactoryCtx  between_SendVisualInspectionJob_and_WaitforVisualInspection
-        FactoryCtx  between_WaitforVisualInspection_and_AssertVisualInspection
-        FactoryCtx  between_SendOptimizationJob_and_WaitforOptimizationJob
-        FactoryCtx  between_WaitforOptimizationJob_and_Gateway_1f8wap6
-        FactoryCtx  between_PreparePrinter_and_WaitforPrepare
-        FactoryCtx  between_WaitforPrepare_and_Gateway_1f8wap6
-        FactoryCtx  between_AssertVisualInspection_and_SendOptimizationJob
-        FactoryCtx  between_Gateway_1j3rupx_and_SendVisualInspectionJob
-        FactoryCtx  between_Gateway_1j3rupx_and_PreparePrinter
+        FactoryCtx	between_SendPrintJob_and_WaitforPrintJob
+        FactoryCtx	between_WaitforPrintJob_and_Gateway_1j3rupx
+        FactoryCtx	between_SendVisualInspectionJob_and_WaitforVisualInspection
+        FactoryCtx	between_WaitforVisualInspection_and_AssertVisualInspection
+        FactoryCtx	between_SendOptimizationJob_and_WaitforOptimizationJob
+        FactoryCtx	between_WaitforOptimizationJob_and_Gateway_1f8wap6
+        FactoryCtx	between_PreparePrinter_and_WaitforPrepare
+        FactoryCtx	between_WaitforPrepare_and_Gateway_1f8wap6
+        FactoryCtx	between_AssertVisualInspection_and_SendOptimizationJob
+        FactoryCtx	between_Gateway_1j3rupx_and_SendVisualInspectionJob
+        FactoryCtx	between_Gateway_1j3rupx_and_PreparePrinter
     
         init
         Gateway_1wpvmtk := FactoryCtx {
@@ -251,18 +251,18 @@ specification printer
     
         desc "PrintFactoryFactory Automation_Model"
         
-        action          SendPrintJob
-        element-label   "Send Print Job"
-        case            default
-        with-inputs     Gateway_1wpvmtk, printRequests
-        with-guard      printRequests.id == Gateway_1wpvmtk.id
-        produces-outputs    between_SendPrintJob_and_WaitforPrintJob
+        action			SendPrintJob
+        element-label	"Send Print Job"
+        case			default
+        with-inputs		Gateway_1wpvmtk, printRequests
+        with-guard		printRequests.id == Gateway_1wpvmtk.id
+        produces-outputs	between_SendPrintJob_and_WaitforPrintJob
         updates:
             between_SendPrintJob_and_WaitforPrintJob := Gateway_1wpvmtk
             between_SendPrintJob_and_WaitforPrintJob.color := printRequests.color
             between_SendPrintJob_and_WaitforPrintJob.resolution := printRequests.resolution
             between_SendPrintJob_and_WaitforPrintJob.scale := printRequests.scale
-        produces-outputs    printJob
+        produces-outputs	printJob
         updates:    printJob := PrintRequest {
              id = printRequests.id,
              resolution = printRequests.resolution,
@@ -271,69 +271,69 @@ specification printer
              opType = printRequests.opType
             }
         
-        action          NextJob
-        element-label   "Next Job"
-        case            default
-        with-inputs     Gateway_0p2uo9v
-        produces-outputs    Gateway_1wpvmtk
+        action			NextJob
+        element-label	"Next Job"
+        case			default
+        with-inputs		Gateway_0p2uo9v
+        produces-outputs	Gateway_1wpvmtk
         updates:
             Gateway_1wpvmtk := Gateway_0p2uo9v
             Gateway_1wpvmtk.id := Gateway_1wpvmtk.id + 1
         
-        action          WaitforOptimizationJob
-        element-label   "Wait for Optimization Job"
-        case            default
-        with-inputs     between_SendOptimizationJob_and_WaitforOptimizationJob, optResult
-        produces-outputs    between_WaitforOptimizationJob_and_Gateway_1f8wap6
+        action			WaitforOptimizationJob
+        element-label	"Wait for Optimization Job"
+        case			default
+        with-inputs		between_SendOptimizationJob_and_WaitforOptimizationJob, optResult
+        produces-outputs	between_WaitforOptimizationJob_and_Gateway_1f8wap6
         updates:
             between_WaitforOptimizationJob_and_Gateway_1f8wap6 := between_SendOptimizationJob_and_WaitforOptimizationJob
         
-        action          Gateway_1f8wap6
-        element-label   "Gateway_1f8wap6"
-        case            default
-        with-inputs     between_WaitforOptimizationJob_and_Gateway_1f8wap6, between_WaitforPrepare_and_Gateway_1f8wap6
-        with-guard      between_WaitforPrepare_and_Gateway_1f8wap6 == between_WaitforOptimizationJob_and_Gateway_1f8wap6
-        produces-outputs    Gateway_0p2uo9v
+        action			Gateway_1f8wap6
+        element-label	"Gateway_1f8wap6"
+        case			default
+        with-inputs		between_WaitforOptimizationJob_and_Gateway_1f8wap6, between_WaitforPrepare_and_Gateway_1f8wap6
+        with-guard		between_WaitforPrepare_and_Gateway_1f8wap6 == between_WaitforOptimizationJob_and_Gateway_1f8wap6
+        produces-outputs	Gateway_0p2uo9v
         updates:
             Gateway_0p2uo9v := between_WaitforOptimizationJob_and_Gateway_1f8wap6
         
-        action          Gateway_1j3rupx
-        element-label   "Gateway_1j3rupx"
-        case            default
-        with-inputs     between_WaitforPrintJob_and_Gateway_1j3rupx
-        produces-outputs    between_Gateway_1j3rupx_and_SendVisualInspectionJob
+        action			Gateway_1j3rupx
+        element-label	"Gateway_1j3rupx"
+        case			default
+        with-inputs		between_WaitforPrintJob_and_Gateway_1j3rupx
+        produces-outputs	between_Gateway_1j3rupx_and_SendVisualInspectionJob
         updates:
             between_Gateway_1j3rupx_and_SendVisualInspectionJob := between_WaitforPrintJob_and_Gateway_1j3rupx
-        produces-outputs    between_Gateway_1j3rupx_and_PreparePrinter
+        produces-outputs	between_Gateway_1j3rupx_and_PreparePrinter
         updates:
             between_Gateway_1j3rupx_and_PreparePrinter := between_WaitforPrintJob_and_Gateway_1j3rupx
         
-        action          WaitforVisualInspection
-        element-label   "Wait for Visual Inspection"
-        case            default
-        with-inputs     between_SendVisualInspectionJob_and_WaitforVisualInspection, inspectionResult
-        produces-outputs    between_WaitforVisualInspection_and_AssertVisualInspection
+        action			WaitforVisualInspection
+        element-label	"Wait for Visual Inspection"
+        case			default
+        with-inputs		between_SendVisualInspectionJob_and_WaitforVisualInspection, inspectionResult
+        produces-outputs	between_WaitforVisualInspection_and_AssertVisualInspection
         updates:
             between_WaitforVisualInspection_and_AssertVisualInspection := between_SendVisualInspectionJob_and_WaitforVisualInspection
         
-        action          SendOptimizationJob
-        element-label   "Send Optimization Job"
-        case            default
-        with-inputs     between_AssertVisualInspection_and_SendOptimizationJob
-        produces-outputs    between_SendOptimizationJob_and_WaitforOptimizationJob
+        action			SendOptimizationJob
+        element-label	"Send Optimization Job"
+        case			default
+        with-inputs		between_AssertVisualInspection_and_SendOptimizationJob
+        produces-outputs	between_SendOptimizationJob_and_WaitforOptimizationJob
         updates:
             between_SendOptimizationJob_and_WaitforOptimizationJob := between_AssertVisualInspection_and_SendOptimizationJob
-        produces-outputs    optJob
+        produces-outputs	optJob
         updates:    optJob := OptimizeRequest { id = between_AssertVisualInspection_and_SendOptimizationJob.id }
         
-        action          PreparePrinter
-        element-label   "Prepare Printer"
-        case            default
-        with-inputs     between_Gateway_1j3rupx_and_PreparePrinter
-        produces-outputs    between_PreparePrinter_and_WaitforPrepare
+        action			PreparePrinter
+        element-label	"Prepare Printer"
+        case			default
+        with-inputs		between_Gateway_1j3rupx_and_PreparePrinter
+        produces-outputs	between_PreparePrinter_and_WaitforPrepare
         updates:
             between_PreparePrinter_and_WaitforPrepare := between_Gateway_1j3rupx_and_PreparePrinter
-        produces-outputs    printJob
+        produces-outputs	printJob
         updates:    printJob := PrintRequest {
              id = between_Gateway_1j3rupx_and_PreparePrinter.id,
              resolution = between_Gateway_1j3rupx_and_PreparePrinter.resolution,
@@ -342,53 +342,53 @@ specification printer
              opType = OperationType::PREP
             }
         
-        action          AssertVisualInspection
-        element-label   "Assert Visual Inspection"
-        case            default step-type "Assert_Visual_Inspection" action-type ASSERT
-        with-inputs     between_WaitforVisualInspection_and_AssertVisualInspection, inspectionReport
+        action			AssertVisualInspection
+        element-label	"Assert Visual Inspection"
+        case			default step-type "Assert_Visual_Inspection" action-type ASSERT
+        with-inputs		between_WaitforVisualInspection_and_AssertVisualInspection, inspectionReport
         assertions default {
             assert_kpi: assert-that (inspectionReport.kpi) {
               equal-to 9.0 within-margin relative (1.0)
             }
         }
-        produces-outputs    between_AssertVisualInspection_and_SendOptimizationJob
+        produces-outputs	between_AssertVisualInspection_and_SendOptimizationJob
         updates:
             between_AssertVisualInspection_and_SendOptimizationJob := between_WaitforVisualInspection_and_AssertVisualInspection
-        produces-outputs    inspectionReport symbolic-link
+        produces-outputs	inspectionReport symbolic-link
         updates: inspectionReport := inspectionReport
         
-        action          SendVisualInspectionJob
-        element-label   "Send Visual Inspection Job"
-        case            default
-        with-inputs     between_Gateway_1j3rupx_and_SendVisualInspectionJob
-        produces-outputs    between_SendVisualInspectionJob_and_WaitforVisualInspection
+        action			SendVisualInspectionJob
+        element-label	"Send Visual Inspection Job"
+        case			default
+        with-inputs		between_Gateway_1j3rupx_and_SendVisualInspectionJob
+        produces-outputs	between_SendVisualInspectionJob_and_WaitforVisualInspection
         updates:
             between_SendVisualInspectionJob_and_WaitforVisualInspection := between_Gateway_1j3rupx_and_SendVisualInspectionJob
-        produces-outputs    inspectionJob
+        produces-outputs	inspectionJob
         updates:    inspectionJob := MeasureRequest {
              id = between_Gateway_1j3rupx_and_SendVisualInspectionJob.id
             }
         
-        action          WaitforPrepare
-        element-label   "Wait for Prepare"
-        case            default
-        with-inputs     between_PreparePrinter_and_WaitforPrepare, printResult
-        produces-outputs    between_WaitforPrepare_and_Gateway_1f8wap6
+        action			WaitforPrepare
+        element-label	"Wait for Prepare"
+        case			default
+        with-inputs		between_PreparePrinter_and_WaitforPrepare, printResult
+        produces-outputs	between_WaitforPrepare_and_Gateway_1f8wap6
         updates:
             between_WaitforPrepare_and_Gateway_1f8wap6 := between_PreparePrinter_and_WaitforPrepare
         
-        action          WaitforPrintJob
-        element-label   "Wait for Print Job"
-        case            default
-        with-inputs     between_SendPrintJob_and_WaitforPrintJob, printResult
-        produces-outputs    between_WaitforPrintJob_and_Gateway_1j3rupx
+        action			WaitforPrintJob
+        element-label	"Wait for Print Job"
+        case			default
+        with-inputs		between_SendPrintJob_and_WaitforPrintJob, printResult
+        produces-outputs	between_WaitforPrintJob_and_Gateway_1j3rupx
         updates:
             between_WaitforPrintJob_and_Gateway_1j3rupx := between_SendPrintJob_and_WaitforPrintJob
     
         element-labels ["PrintFactory", "Factory Automation"]
     }
     
-    SUT-blocks PrintFactoryA3DPrinter PrintFactoryInspection PrintFactoryA3DPrinter PrintFactoryOptimization
-    depth-limits 300
-    num-tests 1
+	SUT-blocks PrintFactoryA3DPrinter PrintFactoryInspection PrintFactoryA3DPrinter PrintFactoryOptimization
+	depth-limits 300
+	num-tests 1
 }

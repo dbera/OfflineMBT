@@ -8,16 +8,16 @@ specification fries_flat
         //outputs
     
         local
-        Fries   DataStoreReference_03v9xko
-        Topping DataStoreReference_18a07df
-        FriesContext    Gateway_19p4wo1
-        FriesContext    Gateway_0k04hvx
-        FriesContext    Event_0a5g9gv
-        FriesContext    Event_1vt9n85
-        FriesContext    Flow_1fk5b3r
-        FriesContext    Flow_003weme
-        FriesContext    Flow_0z70hyg
-        FriesContext    Flow_0bwi85w
+        Fries	DataStoreReference_03v9xko
+        Topping	DataStoreReference_18a07df
+        FriesContext	Gateway_19p4wo1
+        FriesContext	Gateway_0k04hvx
+        FriesContext	Event_0a5g9gv
+        FriesContext	Event_1vt9n85
+        FriesContext	Flow_1fk5b3r
+        FriesContext	Flow_003weme
+        FriesContext	Flow_0z70hyg
+        FriesContext	Flow_0bwi85w
     
         init
         Event_0a5g9gv := FriesContext { client_id = "Tom" }
@@ -26,87 +26,87 @@ specification fries_flat
     
         desc "Process_1_Model"
         
-        action          Activity_01x82y5
-        element-label   "Activity_01x82y5"
-        case            default
-        with-inputs     Gateway_19p4wo1
-        with-guard      Gateway_19p4wo1.client_id == "Tom"
-        produces-outputs    Gateway_0k04hvx
+        action			Activity_01x82y5
+        element-label	"Activity_01x82y5"
+        case			default
+        with-inputs		Gateway_19p4wo1
+        with-guard		Gateway_19p4wo1.client_id == "Tom"
+        produces-outputs	Gateway_0k04hvx
         updates:
             Gateway_0k04hvx := Gateway_19p4wo1
-        produces-outputs    DataStoreReference_18a07df
+        produces-outputs	DataStoreReference_18a07df
         updates:    DataStoreReference_18a07df := Topping {
              ctx = Gateway_19p4wo1,
              sauce = Sauce::Ketchup
             }
         
-        action          Activity_0par2jr
-        element-label   "Activity_0par2jr"
-        case            default
-        with-inputs     Gateway_19p4wo1
-        produces-outputs    Gateway_0k04hvx
+        action			Activity_0par2jr
+        element-label	"Activity_0par2jr"
+        case			default
+        with-inputs		Gateway_19p4wo1
+        produces-outputs	Gateway_0k04hvx
         updates:
             Gateway_0k04hvx := Gateway_19p4wo1
-        produces-outputs    DataStoreReference_18a07df
+        produces-outputs	DataStoreReference_18a07df
         updates:    DataStoreReference_18a07df := Topping {
              ctx = Gateway_19p4wo1,
              sauce = Sauce::Mayo
             }
         
-        action          Activity_19yirph
-        element-label   "Activity_19yirph"
-        case            default
-        with-inputs     Flow_1fk5b3r, DataStoreReference_18a07df
-        with-guard      DataStoreReference_18a07df.ctx == Flow_1fk5b3r
-        produces-outputs    Flow_003weme
+        action			Activity_19yirph
+        element-label	"Activity_19yirph"
+        case			default
+        with-inputs		Flow_1fk5b3r, DataStoreReference_18a07df
+        with-guard		DataStoreReference_18a07df.ctx == Flow_1fk5b3r
+        produces-outputs	Flow_003weme
         updates:
             Flow_003weme := Flow_1fk5b3r
-        produces-outputs    DataStoreReference_03v9xko
+        produces-outputs	DataStoreReference_03v9xko
         updates:    DataStoreReference_03v9xko := Fries {
              dressing = DataStoreReference_18a07df,
              client_id = Flow_1fk5b3r.client_id
             }
         
-        action          Gateway_0dqgx0i
-        element-label   "Gateway_0dqgx0i"
-        case            default
-        with-inputs     Event_0a5g9gv
-        produces-outputs    Gateway_19p4wo1
+        action			Gateway_0dqgx0i
+        element-label	"Gateway_0dqgx0i"
+        case			default
+        with-inputs		Event_0a5g9gv
+        produces-outputs	Gateway_19p4wo1
         updates:
             Gateway_19p4wo1 := Event_0a5g9gv
-        produces-outputs    Flow_0z70hyg
+        produces-outputs	Flow_0z70hyg
         updates:
             Flow_0z70hyg := Event_0a5g9gv
         
-        action          Activity_0uiz2cy
-        element-label   "Activity_0uiz2cy"
-        case            default
-        with-inputs     Flow_0bwi85w, DataStoreReference_03v9xko
-        produces-outputs    Event_1vt9n85
+        action			Activity_0uiz2cy
+        element-label	"Activity_0uiz2cy"
+        case			default
+        with-inputs		Flow_0bwi85w, DataStoreReference_03v9xko
+        produces-outputs	Event_1vt9n85
         updates:
             Event_1vt9n85 := Flow_0bwi85w
         
-        action          Activity_1fzja8h
-        element-label   "Activity_1fzja8h"
-        case            default
-        with-inputs     Flow_0z70hyg
-        produces-outputs    Flow_1fk5b3r
+        action			Activity_1fzja8h
+        element-label	"Activity_1fzja8h"
+        case			default
+        with-inputs		Flow_0z70hyg
+        produces-outputs	Flow_1fk5b3r
         updates:
             Flow_1fk5b3r := Flow_0z70hyg
         
-        action          Gateway_1w5n2dh
-        element-label   "Gateway_1w5n2dh"
-        case            default
-        with-inputs     Flow_003weme, Gateway_0k04hvx
-        with-guard      Gateway_0k04hvx == Flow_003weme
-        produces-outputs    Flow_0bwi85w
+        action			Gateway_1w5n2dh
+        element-label	"Gateway_1w5n2dh"
+        case			default
+        with-inputs		Flow_003weme, Gateway_0k04hvx
+        with-guard		Gateway_0k04hvx == Flow_003weme
+        produces-outputs	Flow_0bwi85w
         updates:
             Flow_0bwi85w := Flow_003weme
     
         element-labels ["Process_1"]
     }
     
-    SUT-blocks 
-    depth-limits 300
-    num-tests 1
+	SUT-blocks 
+	depth-limits 300
+	num-tests 1
 }
