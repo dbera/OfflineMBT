@@ -436,7 +436,7 @@ class Utils
                     #     txt += self.recurseJson(j[jk], "%s.%s" % (k,jk))
                 return txt
                 
-            def generateTSpec(self, idx, sutTypesList, sutVarTransitionMap, output_dir):
+            def generateTSpec(self, idx, sutTypesList, sutVarTransitionMap, transitionQnameMap, output_dir):
                 txt = ""
                 txt += "import \"«pSpecFile»\"\n\n"
                 «(new Utils()).usageList(prod)»
@@ -463,6 +463,9 @@ class Utils
                             if not "null" in parts[1]:
                                 type_name = " assert-type: \"%s\"" % parts[1] 
                             txt += "\nassert-step-name: %s%s\n" % (new_name, type_name)
+                        if parts[0] in transitionQnameMap:
+                            qname = transitionQnameMap[parts[0]]
+                            txt += "action-case: %s\n" % (qname)
                         for elm in self.step_dependencies:
                             if elm.step_name == name:
                                 parts = elm.depends_on.split("@")

@@ -4,20 +4,20 @@ specification printer
     system Activity_1lazkw7
     {
         inputs
-        PrintRequest	DataObjectReference_0dobbvk
-        CorrectionsReport	DataStoreReference_18mx7a8
+        PrintRequest    DataObjectReference_0dobbvk
+        CorrectionsReport   DataStoreReference_18mx7a8
         
         outputs
-        Result		DataObjectReference_15zyq6c
-        Report		DataStoreReference_0zb46u3
+        Result      DataObjectReference_15zyq6c
+        Report      DataStoreReference_0zb46u3
     
         local
-        PrintRequest	DataStoreReference_1221tl9
+        PrintRequest    DataStoreReference_1221tl9
         
-        UNIT	Event_0mxx05p
-        UNIT	Event_0jcg6zx
-        UNIT	Flow_1u2qmtt
-        UNIT	Flow_0iaelzn
+        UNIT    Event_0mxx05p
+        UNIT    Event_0jcg6zx
+        UNIT    Flow_1u2qmtt
+        UNIT    Flow_0iaelzn
     
         init
         DataStoreReference_18mx7a8 := CorrectionsReport { 
@@ -37,130 +37,142 @@ specification printer
     
         desc "Activity_1lazkw7_Model"
         
-        action			Activity_13k0eiw
-        case			default step-type "ExecutePrinter" action-type RUN
-        with-inputs		Flow_1u2qmtt, DataStoreReference_1221tl9
-        produces-outputs	Event_0jcg6zx suppress
+        action          Activity_13k0eiw
+        element-label   "Activity_13k0eiw"
+        case            default step-type "ExecutePrinter" action-type RUN
+        with-inputs     Flow_1u2qmtt, DataStoreReference_1221tl9
+        produces-outputs    Event_0jcg6zx suppress
         updates:
             Event_0jcg6zx := Flow_1u2qmtt
-        produces-outputs	DataObjectReference_15zyq6c
+        produces-outputs    DataObjectReference_15zyq6c
         updates:    DataObjectReference_15zyq6c := Result { verdict = Outcome::OK }
-        produces-outputs	DataStoreReference_0zb46u3 symbolic-link
+        produces-outputs    DataStoreReference_0zb46u3 symbolic-link
         updates:    DataStoreReference_0zb46u3 := Report {
              id = DataStoreReference_1221tl9.id
             }
         
-        action			Activity_0kjg94e
-        case			default step-type "null" action-type COMPOSE
-        with-inputs		DataObjectReference_0dobbvk, DataStoreReference_18mx7a8
-        with-guard		DataStoreReference_18mx7a8.id == DataObjectReference_0dobbvk.id and DataObjectReference_0dobbvk.opType == OperationType::PRINT
-        produces-outputs	Flow_1u2qmtt suppress
-        produces-outputs	DataStoreReference_1221tl9 symbolic-link
+        action          Activity_0kjg94e
+        element-label   "Activity_0kjg94e"
+        case            default step-type "null" action-type COMPOSE
+        with-inputs     DataObjectReference_0dobbvk, DataStoreReference_18mx7a8
+        with-guard      DataStoreReference_18mx7a8.id == DataObjectReference_0dobbvk.id and DataObjectReference_0dobbvk.opType == OperationType::PRINT
+        produces-outputs    Flow_1u2qmtt suppress
+        produces-outputs    DataStoreReference_1221tl9 symbolic-link
         updates:    DataStoreReference_1221tl9 := DataObjectReference_0dobbvk
         
-        action			Activity_10lpfzr
-        case			default step-type "null" action-type COMPOSE
-        with-inputs		DataObjectReference_0dobbvk
-        with-guard		DataObjectReference_0dobbvk.opType == OperationType::PREP
-        produces-outputs	Flow_0iaelzn suppress
-        produces-outputs	DataStoreReference_1221tl9 symbolic-link
+        action          Activity_10lpfzr
+        element-label   "Activity_10lpfzr"
+        case            default step-type "null" action-type COMPOSE
+        with-inputs     DataObjectReference_0dobbvk
+        with-guard      DataObjectReference_0dobbvk.opType == OperationType::PREP
+        produces-outputs    Flow_0iaelzn suppress
+        produces-outputs    DataStoreReference_1221tl9 symbolic-link
         updates:    DataStoreReference_1221tl9 := DataObjectReference_0dobbvk
         
-        action			Activity_0kyb9u9
-        case			default step-type "ExecutePrinter" action-type RUN
-        with-inputs		Flow_0iaelzn, DataStoreReference_1221tl9
-        produces-outputs	Event_0mxx05p suppress
+        action          Activity_0kyb9u9
+        element-label   "Activity_0kyb9u9"
+        case            default step-type "ExecutePrinter" action-type RUN
+        with-inputs     Flow_0iaelzn, DataStoreReference_1221tl9
+        produces-outputs    Event_0mxx05p suppress
         updates:
             Event_0mxx05p := Flow_0iaelzn
-        produces-outputs	DataObjectReference_15zyq6c
+        produces-outputs    DataObjectReference_15zyq6c
         updates:    DataObjectReference_15zyq6c := Result { verdict = Outcome::OK }
+    
+        element-labels ["Process_1", "Activity_1lazkw7"]
     }
     
     system Activity_14x2mh4
     {
         inputs
-        Report	DataStoreReference_0zb46u3
-        MeasureRequest	DataObjectReference_0hvxqpd
+        Report  DataStoreReference_0zb46u3
+        MeasureRequest  DataObjectReference_0hvxqpd
         
         outputs
-        Report		DataStoreReference_1r5xmmd
-        Result		DataObjectReference_01m0czw
-        Report		DataStoreReference_0zb46u3
+        Report      DataStoreReference_1r5xmmd
+        Result      DataObjectReference_01m0czw
+        Report      DataStoreReference_0zb46u3
     
         local
-        MeasureRequest	DataStoreReference_17wghfz
+        MeasureRequest  DataStoreReference_17wghfz
         
         
-        UNIT	Flow_07l0yyj
+        UNIT    Flow_07l0yyj
     
         // init
     
     
         desc "Activity_14x2mh4_Model"
         
-        action			Activity_1vhqu8s
-        case			default step-type "ExecuteInspection" action-type RUN
-        with-inputs		Flow_07l0yyj, DataStoreReference_17wghfz
-        produces-outputs	DataStoreReference_1r5xmmd symbolic-link
+        action          Activity_1vhqu8s
+        element-label   "Activity_1vhqu8s"
+        case            default step-type "ExecuteInspection" action-type RUN
+        with-inputs     Flow_07l0yyj, DataStoreReference_17wghfz
+        produces-outputs    DataStoreReference_1r5xmmd symbolic-link
         updates:    DataStoreReference_1r5xmmd := Report {
              id = DataStoreReference_17wghfz.id
             }
-        produces-outputs	DataObjectReference_01m0czw
+        produces-outputs    DataObjectReference_01m0czw
         updates:    DataObjectReference_01m0czw := Result { verdict = Outcome::OK }
         
-        action			Activity_08rviuu
-        case			default step-type "null" action-type COMPOSE
-        with-inputs		DataObjectReference_0hvxqpd, DataStoreReference_0zb46u3
-        with-guard		DataStoreReference_0zb46u3.id == DataObjectReference_0hvxqpd.id
-        produces-outputs	Flow_07l0yyj suppress
-        produces-outputs	DataStoreReference_17wghfz
+        action          Activity_08rviuu
+        element-label   "Activity_08rviuu"
+        case            default step-type "null" action-type COMPOSE
+        with-inputs     DataObjectReference_0hvxqpd, DataStoreReference_0zb46u3
+        with-guard      DataStoreReference_0zb46u3.id == DataObjectReference_0hvxqpd.id
+        produces-outputs    Flow_07l0yyj suppress
+        produces-outputs    DataStoreReference_17wghfz
         references {
             reportLinking: DataStoreReference_17wghfz.printJobReport := DataStoreReference_0zb46u3
         } symbolic-link
         updates:    DataStoreReference_17wghfz := DataObjectReference_0hvxqpd
-        produces-outputs	DataStoreReference_0zb46u3 symbolic-link suppress
+        produces-outputs    DataStoreReference_0zb46u3 symbolic-link suppress
         updates: DataStoreReference_0zb46u3 := DataStoreReference_0zb46u3
+    
+        element-labels ["Process_1", "Activity_14x2mh4"]
     }
     
     system Activity_1kfty5c
     {
         inputs
-        OptimizeRequest	DataObjectReference_0gm0nb7
-        Report	DataStoreReference_1r5xmmd
+        OptimizeRequest DataObjectReference_0gm0nb7
+        Report  DataStoreReference_1r5xmmd
         
         outputs
-        Result		DataObjectReference_0c253d3
-        CorrectionsReport		DataStoreReference_18mx7a8
-        Report		DataStoreReference_1r5xmmd
+        Result      DataObjectReference_0c253d3
+        CorrectionsReport       DataStoreReference_18mx7a8
+        Report      DataStoreReference_1r5xmmd
     
         local
-        OptimizeRequest	DataStoreReference_1h7cfk3
+        OptimizeRequest DataStoreReference_1h7cfk3
         
-        UNIT	Event_1oozdnw
-        UNIT	Flow_0y8u5pd
+        UNIT    Event_1oozdnw
+        UNIT    Flow_0y8u5pd
     
         // init
     
     
         desc "Activity_1kfty5c_Model"
         
-        action			Activity_1opg0oh
-        case			default step-type "null" action-type COMPOSE
-        with-inputs		DataObjectReference_0gm0nb7, DataStoreReference_1r5xmmd
-        with-guard		DataStoreReference_1r5xmmd.id == DataObjectReference_0gm0nb7.id
-        produces-outputs	Flow_0y8u5pd suppress
-        produces-outputs	DataStoreReference_1h7cfk3 symbolic-link
+        action          Activity_1opg0oh
+        element-label   "Activity_1opg0oh"
+        case            default step-type "null" action-type COMPOSE
+        with-inputs     DataObjectReference_0gm0nb7, DataStoreReference_1r5xmmd
+        with-guard      DataStoreReference_1r5xmmd.id == DataObjectReference_0gm0nb7.id
+        produces-outputs    Flow_0y8u5pd suppress
+        produces-outputs    DataStoreReference_1h7cfk3 symbolic-link
         updates:    DataStoreReference_1h7cfk3 := DataObjectReference_0gm0nb7
-        produces-outputs	DataStoreReference_1r5xmmd symbolic-link suppress
+        produces-outputs    DataStoreReference_1r5xmmd symbolic-link suppress
         updates: DataStoreReference_1r5xmmd := DataStoreReference_1r5xmmd
         
-        action			Activity_019bl5q
-        case			default step-type "ExecuteOptimizer" action-type RUN
-        with-inputs		Flow_0y8u5pd, DataStoreReference_1h7cfk3
-        produces-outputs	Event_1oozdnw suppress
+        action          Activity_019bl5q
+        element-label   "Activity_019bl5q"
+        case            default step-type "ExecuteOptimizer" action-type RUN
+        with-inputs     Flow_0y8u5pd, DataStoreReference_1h7cfk3
+        produces-outputs    Event_1oozdnw suppress
         updates:
             Event_1oozdnw := Flow_0y8u5pd
-        produces-outputs	DataStoreReference_18mx7a8 symbolic-link
+        produces-outputs    DataStoreReference_18mx7a8 symbolic-link
         updates:    DataStoreReference_18mx7a8 := CorrectionsReport {
              correctionsMap = 
                                 <map<int,CorrectionItem[]>>{
@@ -168,40 +180,42 @@ specification printer
             },
              id = DataStoreReference_1h7cfk3.id + 1
             }
-        produces-outputs	DataObjectReference_0c253d3
+        produces-outputs    DataObjectReference_0c253d3
+    
+        element-labels ["Process_1", "Activity_1kfty5c"]
     }
     
     system Activity_1v3jwys
     {
         inputs
-        Result	DataObjectReference_15zyq6c
-        Result	DataObjectReference_01m0czw
-        Result	DataObjectReference_0c253d3
-        PrintRequest	DataStoreReference_0wnjztj
-        Report	DataStoreReference_1r5xmmd
+        Result  DataObjectReference_15zyq6c
+        Result  DataObjectReference_01m0czw
+        Result  DataObjectReference_0c253d3
+        PrintRequest    DataStoreReference_0wnjztj
+        Report  DataStoreReference_1r5xmmd
         
         outputs
-        PrintRequest		DataObjectReference_0dobbvk
-        MeasureRequest		DataObjectReference_0hvxqpd
-        OptimizeRequest		DataObjectReference_0gm0nb7
-        Report		DataStoreReference_1r5xmmd
+        PrintRequest        DataObjectReference_0dobbvk
+        MeasureRequest      DataObjectReference_0hvxqpd
+        OptimizeRequest     DataObjectReference_0gm0nb7
+        Report      DataStoreReference_1r5xmmd
     
         local
-        FactoryCtx	Gateway_0p2uo9v
-        FactoryCtx	Gateway_1wpvmtk
+        FactoryCtx  Gateway_0p2uo9v
+        FactoryCtx  Gateway_1wpvmtk
         
         
-        FactoryCtx	Flow_16s4ey1
-        FactoryCtx	Flow_1dcdx0e
-        FactoryCtx	Flow_1dt29vl
-        FactoryCtx	Flow_0kbycuh
-        FactoryCtx	Flow_01m2s0h
-        FactoryCtx	Flow_09b0flo
-        FactoryCtx	Flow_1rkhqnd
-        FactoryCtx	Flow_1vq9t2p
-        FactoryCtx	Flow_0fe8hce
-        FactoryCtx	Flow_1y4bjf4
-        FactoryCtx	Flow_1f74bn4
+        FactoryCtx  Flow_16s4ey1
+        FactoryCtx  Flow_1dcdx0e
+        FactoryCtx  Flow_1dt29vl
+        FactoryCtx  Flow_0kbycuh
+        FactoryCtx  Flow_01m2s0h
+        FactoryCtx  Flow_09b0flo
+        FactoryCtx  Flow_1rkhqnd
+        FactoryCtx  Flow_1vq9t2p
+        FactoryCtx  Flow_0fe8hce
+        FactoryCtx  Flow_1y4bjf4
+        FactoryCtx  Flow_1f74bn4
     
         init
         Gateway_1wpvmtk := FactoryCtx {
@@ -237,17 +251,18 @@ specification printer
     
         desc "Activity_1v3jwys_Model"
         
-        action			Activity_04pcf0c
-        case			default
-        with-inputs		Gateway_1wpvmtk, DataStoreReference_0wnjztj
-        with-guard		DataStoreReference_0wnjztj.id == Gateway_1wpvmtk.id
-        produces-outputs	Flow_16s4ey1
+        action          Activity_04pcf0c
+        element-label   "Activity_04pcf0c"
+        case            default
+        with-inputs     Gateway_1wpvmtk, DataStoreReference_0wnjztj
+        with-guard      DataStoreReference_0wnjztj.id == Gateway_1wpvmtk.id
+        produces-outputs    Flow_16s4ey1
         updates:
             Flow_16s4ey1 := Gateway_1wpvmtk
             Flow_16s4ey1.color := DataStoreReference_0wnjztj.color
             Flow_16s4ey1.resolution := DataStoreReference_0wnjztj.resolution
             Flow_16s4ey1.scale := DataStoreReference_0wnjztj.scale
-        produces-outputs	DataObjectReference_0dobbvk
+        produces-outputs    DataObjectReference_0dobbvk
         updates:    DataObjectReference_0dobbvk := PrintRequest {
              id = DataStoreReference_0wnjztj.id,
              resolution = DataStoreReference_0wnjztj.resolution,
@@ -256,62 +271,69 @@ specification printer
              opType = DataStoreReference_0wnjztj.opType
             }
         
-        action			Activity_0ez4yi3
-        case			default
-        with-inputs		Gateway_0p2uo9v
-        produces-outputs	Gateway_1wpvmtk
+        action          Activity_0ez4yi3
+        element-label   "Activity_0ez4yi3"
+        case            default
+        with-inputs     Gateway_0p2uo9v
+        produces-outputs    Gateway_1wpvmtk
         updates:
             Gateway_1wpvmtk := Gateway_0p2uo9v
             Gateway_1wpvmtk.id := Gateway_1wpvmtk.id + 1
         
-        action			Activity_0ad3chm
-        case			default
-        with-inputs		Flow_01m2s0h, DataObjectReference_0c253d3
-        produces-outputs	Flow_09b0flo
+        action          Activity_0ad3chm
+        element-label   "Activity_0ad3chm"
+        case            default
+        with-inputs     Flow_01m2s0h, DataObjectReference_0c253d3
+        produces-outputs    Flow_09b0flo
         updates:
             Flow_09b0flo := Flow_01m2s0h
         
-        action			Gateway_1f8wap6
-        case			default
-        with-inputs		Flow_09b0flo, Flow_1vq9t2p
-        with-guard		Flow_1vq9t2p == Flow_09b0flo
-        produces-outputs	Gateway_0p2uo9v
+        action          Gateway_1f8wap6
+        element-label   "Gateway_1f8wap6"
+        case            default
+        with-inputs     Flow_09b0flo, Flow_1vq9t2p
+        with-guard      Flow_1vq9t2p == Flow_09b0flo
+        produces-outputs    Gateway_0p2uo9v
         updates:
             Gateway_0p2uo9v := Flow_09b0flo
         
-        action			Gateway_1j3rupx
-        case			default
-        with-inputs		Flow_1dcdx0e
-        produces-outputs	Flow_1y4bjf4
+        action          Gateway_1j3rupx
+        element-label   "Gateway_1j3rupx"
+        case            default
+        with-inputs     Flow_1dcdx0e
+        produces-outputs    Flow_1y4bjf4
         updates:
             Flow_1y4bjf4 := Flow_1dcdx0e
-        produces-outputs	Flow_1f74bn4
+        produces-outputs    Flow_1f74bn4
         updates:
             Flow_1f74bn4 := Flow_1dcdx0e
         
-        action			Activity_1uwysel
-        case			default
-        with-inputs		Flow_1dt29vl, DataObjectReference_01m0czw
-        produces-outputs	Flow_0kbycuh
+        action          Activity_1uwysel
+        element-label   "Activity_1uwysel"
+        case            default
+        with-inputs     Flow_1dt29vl, DataObjectReference_01m0czw
+        produces-outputs    Flow_0kbycuh
         updates:
             Flow_0kbycuh := Flow_1dt29vl
         
-        action			Activity_1c074wo
-        case			default
-        with-inputs		Flow_0fe8hce
-        produces-outputs	Flow_01m2s0h
+        action          Activity_1c074wo
+        element-label   "Activity_1c074wo"
+        case            default
+        with-inputs     Flow_0fe8hce
+        produces-outputs    Flow_01m2s0h
         updates:
             Flow_01m2s0h := Flow_0fe8hce
-        produces-outputs	DataObjectReference_0gm0nb7
+        produces-outputs    DataObjectReference_0gm0nb7
         updates:    DataObjectReference_0gm0nb7 := OptimizeRequest { id = Flow_0fe8hce.id }
         
-        action			Activity_1q0krpv
-        case			default
-        with-inputs		Flow_1f74bn4
-        produces-outputs	Flow_1rkhqnd
+        action          Activity_1q0krpv
+        element-label   "Activity_1q0krpv"
+        case            default
+        with-inputs     Flow_1f74bn4
+        produces-outputs    Flow_1rkhqnd
         updates:
             Flow_1rkhqnd := Flow_1f74bn4
-        produces-outputs	DataObjectReference_0dobbvk
+        produces-outputs    DataObjectReference_0dobbvk
         updates:    DataObjectReference_0dobbvk := PrintRequest {
              id = Flow_1f74bn4.id,
              resolution = Flow_1f74bn4.resolution,
@@ -320,47 +342,53 @@ specification printer
              opType = OperationType::PREP
             }
         
-        action			Activity_02lfj6a
-        case			default step-type "Assert_Visual_Inspection" action-type ASSERT
-        with-inputs		Flow_0kbycuh, DataStoreReference_1r5xmmd
+        action          Activity_02lfj6a
+        element-label   "Activity_02lfj6a"
+        case            default step-type "Assert_Visual_Inspection" action-type ASSERT
+        with-inputs     Flow_0kbycuh, DataStoreReference_1r5xmmd
         assertions default {
             assert_kpi: assert-that (DataStoreReference_1r5xmmd.kpi) {
               equal-to 9.0 within-margin relative (1.0)
             }
         }
-        produces-outputs	Flow_0fe8hce
+        produces-outputs    Flow_0fe8hce
         updates:
             Flow_0fe8hce := Flow_0kbycuh
-        produces-outputs	DataStoreReference_1r5xmmd symbolic-link
+        produces-outputs    DataStoreReference_1r5xmmd symbolic-link
         updates: DataStoreReference_1r5xmmd := DataStoreReference_1r5xmmd
         
-        action			Activity_18xgvcj
-        case			default
-        with-inputs		Flow_1y4bjf4
-        produces-outputs	Flow_1dt29vl
+        action          Activity_18xgvcj
+        element-label   "Activity_18xgvcj"
+        case            default
+        with-inputs     Flow_1y4bjf4
+        produces-outputs    Flow_1dt29vl
         updates:
             Flow_1dt29vl := Flow_1y4bjf4
-        produces-outputs	DataObjectReference_0hvxqpd
+        produces-outputs    DataObjectReference_0hvxqpd
         updates:    DataObjectReference_0hvxqpd := MeasureRequest {
              id = Flow_1y4bjf4.id
             }
         
-        action			Activity_05coj0b
-        case			default
-        with-inputs		Flow_1rkhqnd, DataObjectReference_15zyq6c
-        produces-outputs	Flow_1vq9t2p
+        action          Activity_05coj0b
+        element-label   "Activity_05coj0b"
+        case            default
+        with-inputs     Flow_1rkhqnd, DataObjectReference_15zyq6c
+        produces-outputs    Flow_1vq9t2p
         updates:
             Flow_1vq9t2p := Flow_1rkhqnd
         
-        action			Activity_1fczbkv
-        case			default
-        with-inputs		Flow_16s4ey1, DataObjectReference_15zyq6c
-        produces-outputs	Flow_1dcdx0e
+        action          Activity_1fczbkv
+        element-label   "Activity_1fczbkv"
+        case            default
+        with-inputs     Flow_16s4ey1, DataObjectReference_15zyq6c
+        produces-outputs    Flow_1dcdx0e
         updates:
             Flow_1dcdx0e := Flow_16s4ey1
+    
+        element-labels ["Process_1", "Activity_1v3jwys"]
     }
     
-	SUT-blocks Activity_1lazkw7 Activity_14x2mh4 Activity_1lazkw7 Activity_1kfty5c
-	depth-limits 300
-	num-tests 1
+    SUT-blocks Activity_1lazkw7 Activity_14x2mh4 Activity_1lazkw7 Activity_1kfty5c
+    depth-limits 300
+    num-tests 1
 }
