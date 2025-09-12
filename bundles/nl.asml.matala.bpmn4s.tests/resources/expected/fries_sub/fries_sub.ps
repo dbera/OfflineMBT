@@ -29,6 +29,7 @@ specification fries_sub
         desc "Process_1_Model"
         
         action			Gateway_0dqgx0i
+        element-label	"Gateway_0dqgx0i"
         case			default
         with-inputs		Event_0a5g9gv
         produces-outputs	Gateway_005ldi2
@@ -39,6 +40,7 @@ specification fries_sub
             Flow_0z70hyg := Event_0a5g9gv
         
         action			Activity_07i3rou
+        element-label	"Activity_07i3rou"
         case			default
         with-inputs		Flow_0z70hyg
         produces-outputs	Flow_0cyzh2k
@@ -46,6 +48,7 @@ specification fries_sub
             Flow_0cyzh2k := Flow_0z70hyg
         
         action			Gateway_1w5n2dh
+        element-label	"Gateway_1w5n2dh"
         case			default
         with-inputs		Gateway_05dn8q0, Flow_003weme
         with-guard		Flow_003weme == Gateway_05dn8q0
@@ -54,6 +57,7 @@ specification fries_sub
             Flow_0bwi85w := Gateway_05dn8q0
         
         action			Activity_19u0wpe
+        element-label	"Activity_19u0wpe"
         case			default
         with-inputs		Flow_0sre3lm, DataStoreReference_18a07df
         with-guard		DataStoreReference_18a07df.ctx == Flow_0sre3lm
@@ -67,6 +71,7 @@ specification fries_sub
             }
         
         action			Activity_0zj3anq
+        element-label	"Activity_0zj3anq"
         case			default
         with-inputs		Flow_0rmtq35
         produces-outputs	Flow_0sre3lm
@@ -74,6 +79,7 @@ specification fries_sub
             Flow_0sre3lm := Flow_0rmtq35
         
         action			Activity_0uiz2cy
+        element-label	"Activity_0uiz2cy"
         case			default
         with-inputs		Flow_0bwi85w, DataStoreReference_03v9xko
         produces-outputs	Event_1vt9n85
@@ -81,6 +87,7 @@ specification fries_sub
             Event_1vt9n85 := Flow_0bwi85w
         
         action			Activity_10x5vyi
+        element-label	"Activity_10x5vyi"
         case			default
         with-inputs		Gateway_005ldi2
         produces-outputs	Gateway_05dn8q0
@@ -93,6 +100,7 @@ specification fries_sub
             }
         
         action			Activity_0memqtl
+        element-label	"Activity_0memqtl"
         case			default
         with-inputs		Flow_0cyzh2k
         produces-outputs	Flow_0rmtq35
@@ -100,6 +108,7 @@ specification fries_sub
             Flow_0rmtq35 := Flow_0cyzh2k
         
         action			Activity_1g9tzja
+        element-label	"Activity_1g9tzja"
         case			default
         with-inputs		Gateway_005ldi2
         with-guard		Gateway_005ldi2.client_id == "Tom"
@@ -111,6 +120,8 @@ specification fries_sub
              ctx = Gateway_005ldi2,
              sauce = Sauce::Ketchup
             }
+    
+        element-labels ["Process_1"]
     }
     
 	SUT-blocks 

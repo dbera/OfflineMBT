@@ -41,6 +41,7 @@ specification fries_comp
         desc "Activity_1nx4k9r_Model"
         
         action			Activity_1z0bwek
+        element-label	"Activity_1z0bwek"
         case			default
         with-inputs		Gateway_01j7v59
         produces-outputs	Gateway_0bsgusg
@@ -49,6 +50,7 @@ specification fries_comp
             Gateway_0bsgusg.fries.size := Size::Small
         
         action			Activity_1nbx27m
+        element-label	"Activity_1nbx27m"
         case			default
         with-inputs		Gateway_0bsgusg
         with-guard		size(Gateway_0bsgusg.fries.style) < 3
@@ -58,6 +60,7 @@ specification fries_comp
             Gateway_0bsgusg.fries.style := add(Gateway_0bsgusg.fries.style, Topping::Mayo)
         
         action			Activity_0b1ce28
+        element-label	"Activity_0b1ce28"
         case			default
         with-inputs		Flow_09zlhyo, DataObjectReference_08usvro
         with-guard		DataObjectReference_08usvro.clientOrder.client_id == Flow_09zlhyo.client_id
@@ -68,6 +71,7 @@ specification fries_comp
         updates:    DataStoreReference_0kulgbq := DataObjectReference_08usvro
         
         action			Activity_194q85o
+        element-label	"Activity_194q85o"
         case			default
         with-inputs		Flow_1m4nc7r, DataStoreReference_0kulgbq
         produces-outputs	Event_022qurv
@@ -75,6 +79,7 @@ specification fries_comp
             Event_022qurv := Flow_1m4nc7r
         
         action			Activity_1e34xy9
+        element-label	"Activity_1e34xy9"
         case			default
         with-inputs		Gateway_0bsgusg
         with-guard		Gateway_0bsgusg.fries.size != Size::Undefined
@@ -88,6 +93,7 @@ specification fries_comp
             }
         
         action			Activity_10xjyk8
+        element-label	"Activity_10xjyk8"
         case			default
         with-inputs		Gateway_01j7v59
         with-guard		Gateway_01j7v59.premium
@@ -97,6 +103,7 @@ specification fries_comp
             Gateway_0bsgusg.fries.size := Size::Large
         
         action			Activity_0sti0aj
+        element-label	"Activity_0sti0aj"
         case			default
         with-inputs		Gateway_0bsgusg
         with-guard		size(Gateway_0bsgusg.fries.style) < 3 AND Gateway_0bsgusg.premium
@@ -106,6 +113,7 @@ specification fries_comp
             Gateway_0bsgusg.fries.style := add(Gateway_0bsgusg.fries.style, Topping::Onions)
         
         action			Activity_033uadp
+        element-label	"Activity_033uadp"
         case			default
         with-inputs		Gateway_01j7v59
         produces-outputs	Gateway_0bsgusg
@@ -114,6 +122,7 @@ specification fries_comp
             Gateway_0bsgusg.fries.size := Size::Medium
         
         action			Activity_0migtdi
+        element-label	"Activity_0migtdi"
         case			default
         with-inputs		Gateway_0bsgusg
         with-guard		size(Gateway_0bsgusg.fries.style) < 3
@@ -123,6 +132,7 @@ specification fries_comp
             Gateway_0bsgusg.fries.style := add(Gateway_0bsgusg.fries.style, Topping::Ketchup)
         
         action			Activity_018jco6
+        element-label	"Activity_018jco6"
         case			default step-type "Check_Receipt" action-type ASSERT
         with-inputs		Flow_0ipnerm, DataStoreReference_0kulgbq
         with-guard		// TODO: Convert to assert task to avoid deadlocks!
@@ -137,6 +147,8 @@ specification fries_comp
             Flow_1m4nc7r := Flow_0ipnerm
         produces-outputs	DataStoreReference_0kulgbq symbolic-link
         updates: DataStoreReference_0kulgbq := DataStoreReference_0kulgbq
+    
+        element-labels ["Process_1", "Activity_1nx4k9r"]
     }
     
     system Activity_18pdfak
@@ -159,6 +171,7 @@ specification fries_comp
         desc "Activity_18pdfak_Model"
         
         action			Activity_19g7d8q
+        element-label	"Activity_19g7d8q"
         case			default
         with-inputs		Flow_0happwq
         produces-outputs	Event_00idax9
@@ -168,6 +181,7 @@ specification fries_comp
         updates:    DataObjectReference_08usvro := Flow_0happwq.delivery
         
         action			Activity_0nh18fo
+        element-label	"Activity_0nh18fo"
         case			default
         with-inputs		DataObjectReference_1pzevyf
         produces-outputs	Flow_1b6215f
@@ -177,11 +191,14 @@ specification fries_comp
             }
         
         action			Activity_00tgl1w
+        element-label	"Activity_00tgl1w"
         case			default
         with-inputs		Flow_1b6215f
         produces-outputs	Flow_0happwq
         updates:
             Flow_0happwq := Flow_1b6215f
+    
+        element-labels ["Process_1", "Activity_18pdfak"]
     }
     
     system Activity_0n48uxi
@@ -208,6 +225,7 @@ specification fries_comp
         desc "Activity_0n48uxi_Model"
         
         action			Activity_1180u0i
+        element-label	"Activity_1180u0i"
         case			default
         with-inputs		Flow_16vj7d4
         produces-outputs	Gateway_098asuz
@@ -215,6 +233,7 @@ specification fries_comp
             Gateway_098asuz := Flow_16vj7d4
         
         action			Activity_0llc4s9
+        element-label	"Activity_0llc4s9"
         case			default
         with-inputs		Gateway_098asuz, DataObjectReference_1kx41i3
         with-guard		Gateway_098asuz.orders < 2
@@ -229,6 +248,7 @@ specification fries_comp
             }
         
         action			Activity_15uaf19
+        element-label	"Activity_15uaf19"
         case			default
         with-inputs		Event_0uxsyhg
         produces-outputs	Flow_16vj7d4
@@ -236,12 +256,15 @@ specification fries_comp
             Flow_16vj7d4 := Event_0uxsyhg
         
         action			Activity_0957lig
+        element-label	"Activity_0957lig"
         case			default
         with-inputs		Gateway_098asuz
         with-guard		Gateway_098asuz.orders >= 2
         produces-outputs	Event_04cb9z0
         updates:
             Event_04cb9z0 := Gateway_098asuz
+    
+        element-labels ["Process_1", "Activity_0n48uxi"]
     }
     
 	SUT-blocks 
