@@ -337,6 +337,7 @@ class PetriNet {
 				 String topology_name, 
 				 List<String> listOfEnvBlocks,
 				 List<String> listOfAssertTransitions,
+				 Map<String, String> mapOfTransitionQnames,
 				 Map<String, ? extends Set<String>> mapOfSuppressTransitionVars,
 				 List<String> inout_places, 
 				 List<String> init_places, 
@@ -385,6 +386,7 @@ class PetriNet {
 		    listOfEnvBlocks = []
 		    listOfSUTActions = []
 		    mapOfSuppressTransitionVars = {}
+		    mapOfTransitionQnames = {}
 		    map_of_transition_modes = {}
 		    map_transition_modes_to_name = {}
 		    constraint_dict = {}
@@ -397,6 +399,7 @@ class PetriNet {
 		        self.listOfEnvBlocks = [«FOR elm : listOfEnvBlocks SEPARATOR ','»"«elm»"«ENDFOR»]
 		        self.listOfSUTActions = [«FOR elm : listOfAssertTransitions SEPARATOR ','»"«elm»"«ENDFOR»]
 		        self.mapOfSuppressTransitionVars = {«FOR k : mapOfSuppressTransitionVars.keySet SEPARATOR ','»'«k»': [«FOR v : mapOfSuppressTransitionVars.get(k) SEPARATOR ','»'«v»'«ENDFOR»]«ENDFOR»}
+		        self.mapOfTransitionQnames = {«FOR k : mapOfTransitionQnames.keySet SEPARATOR ','»'«k»': '«mapOfTransitionQnames.get(k)»'«ENDFOR»}
 		        self.n = PetriNet('«topology_name»')
 		        self.n.globals["Data"] = Data
 		        self.n.globals.declare("import json")
@@ -494,7 +497,7 @@ class PetriNet {
 		                    j = j + 1
 		                _test_scn.compute_dependencies()
 		                _test_scn.generate_viz(i, output_dir=p.plantuml_dir)
-		                _test_scn.generateTSpec(i, pn.sutTypesList, pn.sutVarTransitionMap, output_dir=p.tspec_dir)
+		                _test_scn.generateTSpec(i, pn.sutTypesList, pn.sutVarTransitionMap, pn.mapOfTransitionQnames, output_dir=p.tspec_dir)
 		                _tests.list_of_test_scn.append(_test_scn)
 		            i = i + 1
 		            

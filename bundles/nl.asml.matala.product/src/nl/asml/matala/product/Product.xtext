@@ -75,11 +75,13 @@ Block:
 			'desc' type = STRING
 		)
 		functions += Function*
+		('element-labels' '[' elabels += STRING (',' elabels+=STRING+)* ']')?
 	'}'
 ;
 
 Function:
 	'action' name = ID
+	('element-label'  elabels = STRING )?
 	updates += Update*
 ;
 
