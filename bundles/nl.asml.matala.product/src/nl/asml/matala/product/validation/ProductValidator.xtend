@@ -58,7 +58,7 @@ class ProductValidator extends AbstractProductValidator {
     @Check
     override checkImportForValidity(Import imp) {
         if (!EcoreUtil2.isValidUri(imp, URI.createURI(imp.getImportURI()))) {
-            error("Invalid resource", imp, TypesPackage.eINSTANCE.getImport_ImportURI());
+            warning("Invalid resource", imp, TypesPackage.eINSTANCE.getImport_ImportURI());
         } else {
             /*val Resource r = EcoreUtil2.getResource(imp.eResource, imp.importURI)
              * if(! (r.allContents.head instanceof InterfaceDefinition ||
@@ -77,7 +77,7 @@ class ProductValidator extends AbstractProductValidator {
         for (update : function.updates) {
             val groupedByName = update.updateOutputVar.flatMap[it.fnOut].groupBy[it.ref.name]
             groupedByName.values.filter[size > 1].flatten.forEach [ output |                
-                error(
+                warning(
                     "Duplicate output variable name: " + output.ref.name,
                     output, ProductPackage.Literals.VAR_REF__REF
                 )
@@ -92,7 +92,7 @@ class ProductValidator extends AbstractProductValidator {
     def checkInputDuplication(Block block) {
         val existingInputs = block.invars.groupBy[input|input.name]
         existingInputs.values.filter[size > 1].flatten.forEach [ input |
-            error("Duplicate variable name in inputs: " + input.name, ProductPackage.Literals.BLOCK__INVARS,
+            warning("Duplicate variable name in inputs: " + input.name, ProductPackage.Literals.BLOCK__INVARS,
                 block.invars.indexOf(input))
         ]
     }
@@ -104,7 +104,7 @@ class ProductValidator extends AbstractProductValidator {
     def checkOutputDuplication(Block block) {
         val existingOutputs = block.outvars.groupBy[output|output.name]
         existingOutputs.values.filter[size > 1].flatten.forEach [ output |
-            error("Duplicate variable name in outputs: " + output.name, ProductPackage.Literals.BLOCK__OUTVARS,
+            warning("Duplicate variable name in outputs: " + output.name, ProductPackage.Literals.BLOCK__OUTVARS,
                 block.outvars.indexOf(output))
         ]
     }
@@ -116,7 +116,7 @@ class ProductValidator extends AbstractProductValidator {
     def checkLocalDuplication(Block block) {
         val existingLocalvars = block.localvars.groupBy[localvars|localvars.name]
         existingLocalvars.values.filter[size > 1].flatten.forEach [ localvars |
-            error("Duplicate variable name in local variables: " + localvars.name,
+            warning("Duplicate variable name in local variables: " + localvars.name,
                 ProductPackage.Literals.BLOCK__LOCALVARS, block.localvars.indexOf(localvars))
         ]
     }
@@ -137,7 +137,7 @@ class ProductValidator extends AbstractProductValidator {
                 val missingInputs = allVariables.filter[e|!inputs.contains(e)]
 
                 if (!missingInputs.empty) {
-                    error(
+                    warning(
                         "The following variables used in the guard are not defined in the input variables: " +
                             missingInputs.join(", "), update,
                         ProductPackage.Literals.UPDATE__GUARD
@@ -164,7 +164,7 @@ class ProductValidator extends AbstractProductValidator {
 
     private dispatch def void preventIlligalVariableAccess(AssignmentAction action, Set<Variable> inputs, Set<Variable> outputs) {
         if (!outputs.contains(action.assignment)) {
-            error('''Variable '«action.assignment.name»' is not defined as an output''', action, ActionsPackage.Literals.ASSIGNMENT_ACTION__ASSIGNMENT)
+            warning('''Variable '«action.assignment.name»' is not defined as an output''', action, ActionsPackage.Literals.ASSIGNMENT_ACTION__ASSIGNMENT)
         }
         action.exp?.preventIlligalVariableAccess(inputs, Direction::input)
         // As the variable is now assigned, we can also use it as input (imperative programming)
@@ -199,7 +199,7 @@ class ProductValidator extends AbstractProductValidator {
 
     private dispatch def void preventIlligalVariableAccess(ExpressionVariable exprVar, Set<Variable> variables, Direction direction) {
         if (!variables.contains(exprVar.variable)) {
-            error('''Variable '«exprVar.variable.name»' is not defined as an «direction»''', exprVar, ExpressionPackage.Literals.EXPRESSION_VARIABLE__VARIABLE)
+            warning('''Variable '«exprVar.variable.name»' is not defined as an «direction»''', exprVar, ExpressionPackage.Literals.EXPRESSION_VARIABLE__VARIABLE)
         }
     }
 
@@ -219,7 +219,7 @@ class ProductValidator extends AbstractProductValidator {
         if (groupedByStepType.keySet.size > 1) {
             val mostCommon = groupedByStepType.entrySet.maxBy[value.size].key
             runUpdates.filter[stepType != mostCommon].forEach [ update |
-                error(
+                warning(
                     "All step-types must be the same for action-type RUN (expected: " + mostCommon + ")",
                     update,
                     ProductPackage.Literals.UPDATE__STEP_TYPE
@@ -236,7 +236,7 @@ class ProductValidator extends AbstractProductValidator {
     def checkRunStep(Update update) {
         if (update.actionType == ActionType::RUN || update.actionType == ActionType::ASSERT) {
             if (update.stepType.isNullOrEmpty) {
-                error('''Actions with type «update.actionType.literal» must have a step-type defined''' +
+                warning('''Actions with type «update.actionType.literal» must have a step-type defined''' +
                     update.stepType, ProductPackage.Literals.UPDATE__STEP_TYPE)
             }
         }
@@ -316,7 +316,7 @@ class ProductValidator extends AbstractProductValidator {
         updateOutputVar.act.eAllContents.filter(ExpressionRecord).forEach [ expRec |
             expRec.type.allFields.filter[kind == RecordFieldKind.CONCRETE].forEach [ field |
                 if (!expRec.fields.exists[recordField == field]) {
-                    error('''Concrete record field '«field.FQN»' should be assigned''', expRec,
+                    warning('''Concrete record field '«field.FQN»' should be assigned''', expRec,
                         ExpressionPackage.Literals.EXPRESSION_RECORD__TYPE);
                 }
             ]
@@ -344,7 +344,7 @@ class ProductValidator extends AbstractProductValidator {
                 }
             } else if (action instanceof RecordFieldAssignmentAction) {
                 if (!assignedVariables.contains(action.assignment)) {
-                    error('''Record variable '«action.assignment?.name»' should be assigned first''', action,
+                    warning('''Record variable '«action.assignment?.name»' should be assigned first''', action,
                         ActionsPackage.Literals.RECORD_FIELD_ASSIGNMENT_ACTION__FIELD_ACCESS)
                 }
             }
