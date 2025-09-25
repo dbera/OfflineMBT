@@ -701,18 +701,19 @@ public class Bpmn4sCompiler{
 	 * Flows from a fork xor gate to a merge xor gate introduce transitions in the CPN. Notice
 	 * that other flows between xor gates are optimized away when merging xor gates connected components. 
 	 */
-	private List<String> getFlowActions(String component) {
+	private List<String> getFlowActions(String cId) {
 		List<String> result = new ArrayList<String>();
 		for (Edge e: model.edges) {
 			String src = e.getSrc();
 			String tar = e.getTar();
-			if(model.isXor(src) && model.isForkGate(src) &&
+			if(isParentComponent(cId, model.getElementById(src)) 
+					&& model.isXor(src) && model.isForkGate(src) &&
 					model.isXor(tar) && model.isMergeGate(tar)) {
 				String task = "action\t\t\t" + repr(e) + "\n";
 				task += "case\t\tdefault\n";
 				task += "with-inputs\t\t" + compile(src) + "\n";
 				task += "produces-outputs\t" + compile(tar) + "\n";
-				task += "updates\t\t" + compile(tar) + " := " + compile(src) + "\n";
+				task += "updates: \t\t" + compile(tar) + " := " + compile(src) + "\n";
 				result.add(task);
 			}
 		}
