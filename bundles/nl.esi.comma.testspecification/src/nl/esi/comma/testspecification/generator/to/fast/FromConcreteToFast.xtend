@@ -48,6 +48,7 @@ import static extension nl.esi.comma.types.utilities.FileSystemAccessUtil.*
 import java.util.Set
 import java.util.LinkedHashSet
 import nl.esi.comma.expressions.expression.ExpressionRecord
+import nl.esi.comma.testspecification.testspecification.AssertionStep
 
 class FromConcreteToFast extends AbstractGenerator {
 
@@ -87,6 +88,7 @@ class FromConcreteToFast extends AbstractGenerator {
         // 1) using the .tspec file
         val modelInst = res.contents.head as TSMain
         val model = modelInst.model as TestDefinition
+        shortenStepNames(model)
 
         // 2) create mapping data-implementation to filenames (in .params files)
         var tsi = new TestSpecificationInstance
@@ -156,6 +158,24 @@ class FromConcreteToFast extends AbstractGenerator {
         for (ss : test_single_sequence.stepSeqRef) {
             for (step : ss.step.filter(RunStep))
                 listStepSequence.add(step)
+        }
+        return listStepSequence
+    }
+
+    def private shortenStepNames(TestDefinition td) {
+        var pat = Pattern.compile("_[^_]+_+default_[0-9]+$")
+        var listStepSequence = new ArrayList<RunStep>
+        var test_single_sequence = td.testSeq.head
+        for (ss : test_single_sequence.stepSeqRef) {
+            for (step : ss.step){
+                var mat = pat.matcher(step.inputVar.name); mat.find
+                var prefix =  switch(step) {
+                    RunStep: 'step'
+                    AssertionStep: 'assertion'
+                    default: throw new UnsupportedOperationException("Unsupported type")
+                }
+                step.inputVar.name = prefix + mat.group
+            }
         }
         return listStepSequence
     }
