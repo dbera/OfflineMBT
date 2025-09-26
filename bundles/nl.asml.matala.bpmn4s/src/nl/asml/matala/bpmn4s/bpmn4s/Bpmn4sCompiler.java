@@ -406,7 +406,7 @@ public class Bpmn4sCompiler{
 					s = model.getElementById(node.getOriginDataNodeId()).getInit();
 				}
 				if (s != null && s != "") {
-					init += s.replace(node.getName(), compile(node.getId())) + "\n";
+					init += replaceWord(s, node.getName(), compile(node.getId())) + "\n";
 				}
 			}
 		}
@@ -417,7 +417,7 @@ public class Bpmn4sCompiler{
 				&& !ds.isReferenceData()
 				&& isImmediateParentComponent(cId, ds)) {
 				if (ds.getInit() != null && ds.getInit() != "") {
-					init += ds.getInit().replace(ds.getName(), compile(ds.getId())) + "\n";
+					init += replaceWord(ds.getInit(), ds.getName(), compile(ds.getId())) + "\n";
 				}
 			}
 		}
