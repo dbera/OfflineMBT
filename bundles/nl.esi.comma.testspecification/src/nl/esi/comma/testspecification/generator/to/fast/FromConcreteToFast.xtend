@@ -162,7 +162,7 @@ class FromConcreteToFast extends AbstractGenerator {
     }
 
     def private shortenStepNames(TestDefinition td) {
-        var pat = Pattern.compile("_[^_]+_+default_[0-9]+")
+        var pat = Pattern.compile("_[^_]+_+default_[0-9]+$")
         var listStepSequence = new ArrayList<RunStep>
         var test_single_sequence = td.testSeq.head
         for (ss : test_single_sequence.stepSeqRef) {
