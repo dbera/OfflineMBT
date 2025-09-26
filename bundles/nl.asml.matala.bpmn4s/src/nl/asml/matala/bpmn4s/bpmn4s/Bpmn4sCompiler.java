@@ -420,7 +420,7 @@ public class Bpmn4sCompiler{
 					s = model.getElementById(node.getOriginDataNodeId()).getInit();
 				}
 				if (s != null && s != "") {
-					init += s.replace(node.getName(), compile(node.getId())) + "\n";
+					init += replaceWord(s, node.getName(), compile(node.getId())) + "\n";
 				}
 			}
 		}
@@ -431,7 +431,7 @@ public class Bpmn4sCompiler{
 				&& !ds.isReferenceData()
 				&& isImmediateParentComponent(cId, ds)) {
 				if (ds.getInit() != null && ds.getInit() != "") {
-					init += ds.getInit().replace(ds.getName(), compile(ds.getId())) + "\n";
+					init += replaceWord(ds.getInit(), ds.getName(), compile(ds.getId())) + "\n";
 				}
 			}
 		}
@@ -716,24 +716,24 @@ public class Bpmn4sCompiler{
 	 * Flows from a fork xor gate to a merge xor gate introduce transitions in the CPN. Notice
 	 * that other flows between xor gates are optimized away when merging xor gates connected components. 
 	 */
-	private List<String> getFlowActions(String component) {
+	private List<String> getFlowActions(String cId) {
 		List<String> result = new ArrayList<String>();
 		for (Edge e: model.edges) {
 			String src = e.getSrc();
 			String tar = e.getTar();
-			if(model.isXor(src) && model.isForkGate(src) &&
+			if(isParentComponent(cId, model.getElementById(src)) 
+					&& model.isXor(src) && model.isForkGate(src) &&
 					model.isXor(tar) && model.isMergeGate(tar)) {
 				String task = "action\t\t\t" + repr(e) + "\n";
 				task += "case\t\tdefault\n";
 				task += "with-inputs\t\t" + compile(src) + "\n";
 				task += "produces-outputs\t" + compile(tar) + "\n";
-				task += "updates\t\t" + compile(tar) + " := " + compile(src) + "\n";
+				task += "updates: \t\t" + compile(tar) + " := " + compile(src) + "\n";
 				result.add(task);
 			}
 		}
 		return result;
-	}
-	
+	}	
 	
 	/**
 	 * Fetch the names of components that poses a RUN task.
