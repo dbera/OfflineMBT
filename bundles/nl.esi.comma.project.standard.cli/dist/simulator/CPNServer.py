@@ -126,13 +126,13 @@ def handle_bpmn():
     fname = _bpmn.filename
     filename = fname
     bpmn_path = os.path.join(TEMP_PATH,f"{filename}.bpmn")
-    
+    _bpmn.save(bpmn_path)
+
     status_code = 200
     response = {'response': {'uuid': filename}}
     try:
         if utils.is_loaded_module(filename): 
             raise Exception(F"BPMN model '{filename}' is already loaded!")
-        _bpmn.save(bpmn_path)
         module, result = build_and_load_model(bpmn_path)
         bpmn_dir = os.path.join(module.__path__[0],'bpmn')
         os.makedirs(bpmn_dir, exist_ok=True)
