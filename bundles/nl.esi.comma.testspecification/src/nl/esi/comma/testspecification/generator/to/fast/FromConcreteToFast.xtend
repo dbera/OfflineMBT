@@ -48,6 +48,7 @@ import static extension nl.esi.comma.types.utilities.FileSystemAccessUtil.*
 import java.util.Set
 import java.util.LinkedHashSet
 import nl.esi.comma.expressions.expression.ExpressionRecord
+import nl.esi.comma.testspecification.testspecification.AssertionStep
 
 class FromConcreteToFast extends AbstractGenerator {
 
@@ -64,6 +65,7 @@ class FromConcreteToFast extends AbstractGenerator {
 
     /* TODO this should come from project task? Investigate and Implement it. */
     var List<String> record_def_file_names = List.of("lot_definition", "job_definition")
+    var List<String> supressed_fields = List.of("step_id")
     var List<String> setup_file_names = List.of("setup_file")
 
 // On save of TSPEC file, this function is called by Eclipse Framework
@@ -86,6 +88,7 @@ class FromConcreteToFast extends AbstractGenerator {
         // 1) using the .tspec file
         val modelInst = res.contents.head as TSMain
         val model = modelInst.model as TestDefinition
+        shortenStepNames(model)
 
         // 2) create mapping data-implementation to filenames (in .params files)
         var tsi = new TestSpecificationInstance
@@ -155,6 +158,24 @@ class FromConcreteToFast extends AbstractGenerator {
         for (ss : test_single_sequence.stepSeqRef) {
             for (step : ss.step.filter(RunStep))
                 listStepSequence.add(step)
+        }
+        return listStepSequence
+    }
+
+    def private shortenStepNames(TestDefinition td) {
+        var pat = Pattern.compile("_[^_]+_+default_[0-9]+$")
+        var listStepSequence = new ArrayList<RunStep>
+        var test_single_sequence = td.testSeq.head
+        for (ss : test_single_sequence.stepSeqRef) {
+            for (step : ss.step){
+                var mat = pat.matcher(step.inputVar.name); mat.find
+                var prefix =  switch(step) {
+                    RunStep: 'step'
+                    AssertionStep: 'assertion'
+                    default: throw new UnsupportedOperationException("Unsupported type")
+                }
+                step.inputVar.name = prefix + mat.group
+            }
         }
         return listStepSequence
     }
@@ -566,6 +587,7 @@ class FromConcreteToFast extends AbstractGenerator {
             
             in.data.steps = [
                 «FOR elm : tsi.steps SEPARATOR ','»
+                    «IF !elm.comment.nullOrEmpty» «elm.comment»«ENDIF»
                     «IF generateFASTRefStepTxt(elm).empty»
                         { "id" : "«elm.id»", "type" : "«elm.type.replaceAll("_dot_",".")»", "input_file" : "«elm.inputFile»" }
                     «ELSE»
@@ -824,7 +846,11 @@ class FromConcreteToFast extends AbstractGenerator {
                     stepInst.recordExp = lhs.value // Note DB: This keeps overwriting (record prefix)
                     // 4.6.3) check if record field assignment should be in its own json file
                     var String match = findMatchingRecordName(lhs.value, record_def_file_names)
-                    if (match instanceof String) {
+                    // Note DD: for retrieving custom step ID/comment from variable field. Field should also be suppressed 
+                    var String _step_id = findMatchingRecordName(mapLHStoRHS.key, supressed_fields)
+                    if(_step_id instanceof String){
+                        stepInst.comment = mapLHStoRHS.value.replaceAll("(?m)^", "//")
+                    } else if (match instanceof String) {
                         // 4.6.3.1) record field is part of step input_file
                         if (stepInst.isStepRefPresent(lhs.value)) {
                             var rStep = stepInst.getStepRefs(lhs.value)
