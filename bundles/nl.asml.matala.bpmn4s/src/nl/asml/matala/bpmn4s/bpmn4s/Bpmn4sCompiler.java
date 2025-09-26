@@ -20,6 +20,7 @@ import java.nio.file.Paths;
 import java.util.AbstractMap;
 import java.util.AbstractSet;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -207,6 +208,7 @@ public class Bpmn4sCompiler{
 				if (hasChildComponents(c)){ continue; } // skip top level components
 				String component = "";
 				String cname = compile(c.getId());
+				String qname = fabSpecQualifiedLabels(c);
 				component += "system " + sanitize(cname) + "\r\n{\r\n";
 				String inOut = fabSpecInputOutput(c);
 				String local = fabSpecLocal(c);
@@ -223,6 +225,7 @@ public class Bpmn4sCompiler{
 				component += indent(sutConfs);
 				component += "\n";
 				component += indent(desc);
+				component += "\n"+indent(qname)+"\n";
 				component += "}\n\n";
 				result.append(indent(component));	
 			}
@@ -269,6 +272,17 @@ public class Bpmn4sCompiler{
 		if (c.getDataInputs().isEmpty()) { inStr = "//" + inStr; }
 		if (c.getDataOutputs().isEmpty()) { outStr = "//" + outStr; }
 		return inStr + "\n" + outStr;
+	}
+	
+	/**
+	 * For a system in the pspec, fetch the list of labels for nested elements for its element-labels section.
+	 * @param c is the component that corresponds one to one with a pspec system.
+	 * @return a List of String with the nested elements labels.
+	 */
+	private String fabSpecQualifiedLabels(Element c) {
+		List<String> qnames = compileNestedComponentLabels(c.getId());
+		String items = qnames.stream().map(s -> '"' + s + '"' ).collect(Collectors.joining(", "));
+		return "element-labels " + "[" + items +"]";
 	}
 
 	/**
@@ -506,6 +520,7 @@ public class Bpmn4sCompiler{
 					// Name of context as defined by user at front end:
 					String compCtxName = model.getElementById(cId).getContextName();
 					task += "action\t\t\t" + sanitize(repr(node)) + "\n";
+					task += "element-label\t"  + '"' + repr(node) + '"' + "\n";
 					// STEP TYPE
 					String stepConf = "";
 					if (model.isComposeTask(node.getId())) {
@@ -718,8 +733,7 @@ public class Bpmn4sCompiler{
 			}
 		}
 		return result;
-	}
-	
+	}	
 	
 	/**
 	 * Fetch the names of components that poses a RUN task.
@@ -963,6 +977,26 @@ public class Bpmn4sCompiler{
 			return getCompiledComponentName(elId);
 		}
 		return repr(model.getElementById(elId));
+	}
+
+	/**
+	 * Compile list with names of nested Elements <el>.
+	 */
+	protected List<String> compileNestedComponentLabels(String elId) {
+		if (model.isComponent(elId)) {
+			return getNestedComponentLabels(elId);
+		}
+		return Arrays.asList(repr(model.getElementById(elId)));
+	}
+	
+	protected List<String> getNestedComponentLabels(String componentId) {
+		Element component = model.getElementById(componentId);
+		/* Nested components are compiled with their fully qualified name. */
+		List<String> qname_list = component.getParentComponents().stream()
+				.map(e -> repr(model.getElementById(e)))
+				.collect(Collectors.toList());
+		qname_list.add(repr(component));
+		return qname_list;
 	}
 	
 	/**
