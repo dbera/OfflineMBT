@@ -62,7 +62,7 @@ class ExpressionsParser {
     def static dispatch CharSequence generateExpression(ExpressionMap expr, CharSequence ref)
 	'''
 	{
-    «FOR e : expr.pairs SEPARATOR ', '»
+    «FOR e : expr.pairs.filter[!(it.value instanceof ExpressionNullLiteral)] SEPARATOR ', '»
 	       «generateExpression(e.key, ref)» : «generateExpression(e.value, ref)»
    «ENDFOR»
 	}'''
