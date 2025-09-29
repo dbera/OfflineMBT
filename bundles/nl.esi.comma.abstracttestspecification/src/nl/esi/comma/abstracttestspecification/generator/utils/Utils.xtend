@@ -183,6 +183,20 @@ class Utils
         }
     }
 
+    static def boolean isNullLiteral(JsonValue json) {
+        return switch (json) {
+            case null: false
+            JsonExpression: {
+                var expr = json.expr
+                switch (expr) {
+                    ExpressionNullLiteral: true
+                    default: false
+                }
+            }
+            default: false
+        }
+    }
+
     def static String getStringSignedValue(Expression expr) {
         return switch (expr) {
             ExpressionPlus: '+'+getStringSignedValue(expr.sub)
