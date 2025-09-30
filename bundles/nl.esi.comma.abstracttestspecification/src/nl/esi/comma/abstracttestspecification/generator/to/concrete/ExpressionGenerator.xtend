@@ -30,17 +30,26 @@ class ExpressionGenerator extends ExpressionsCommaGenerator {
 
     override dispatch CharSequence exprToComMASyntax(ExpressionVariable e) {
         var vname = e.getVariable().getName()
-        if (vname.equals(varRefName)) {
-            vname = this.BlockInputName.split("_").get(0) + "Input" + "." + vname
-        } else {
-            for (sf : this.stepRef) {
-                for (rd : sf.refData) {
-                    if (vname.equals(rd.name)) {
-                        vname = "step_" + sf.refStep.name + ".output." + vname
-                    }
+        for (sf : this.stepRef) {
+            for (rd : sf.refData) {
+                if (vname.equals(rd.name)) {
+                    vname = "step_" + sf.refStep.name + ".output." + vname
                 }
             }
         }
+        // Experiment DB. RHS cannot have input to run step expression! 03.09.2025
+        /*
+         * if (vname.equals(varRefName)) {
+         *     vname = this.BlockInputName.split("_").get(0) + "Input" + "." + vname
+         * } else {
+         *     for (sf : this.stepRef) {
+         *         for (rd : sf.refData) {
+         *             if (vname.equals(rd.name)) {
+         *                 vname = "step_" + sf.refStep.name + ".output." + vname
+         *             }
+         *         }
+         *     }
+         }*/
         return '''«vname»'''
     }
 

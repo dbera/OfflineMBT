@@ -12,6 +12,9 @@
  */
 package nl.esi.comma.expressions.utilities;
 
+import static nl.esi.comma.types.utilities.TypeUtilities.getAllFields;
+
+import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -59,6 +62,8 @@ import nl.esi.comma.expressions.expression.TypeAnnotation;
 import nl.esi.comma.types.types.EnumTypeDecl;
 import nl.esi.comma.types.types.MapTypeConstructor;
 import nl.esi.comma.types.types.MapTypeDecl;
+import nl.esi.comma.types.types.RecordField;
+import nl.esi.comma.types.types.RecordFieldKind;
 import nl.esi.comma.types.types.RecordTypeDecl;
 import nl.esi.comma.types.types.SimpleTypeDecl;
 import nl.esi.comma.types.types.Type;
@@ -97,9 +102,9 @@ public class ProposalHelper {
 		if (type instanceof TypeReference) {
 			return createDefaultValueEntry(type, targetName, indent);
 		} else if (type instanceof VectorTypeConstructor) {
-			return "<" + getTypeName(type) + ">[ " + createDefaultValueEntry(type, null, indent) + " ]";
+			return "<" + getTypeName(type) + ">[]";
 		} else if (type instanceof MapTypeConstructor) {
-			return "<" + getTypeName(type) + ">{ " + createDefaultValueEntry(type, null, indent) + " }";
+			return "<" + getTypeName(type) + ">{}";
 		}
 		throw new UnsupportedTypeException(type);
 	}
@@ -141,14 +146,15 @@ public class ProposalHelper {
 		} else if (type instanceof MapTypeDecl) {
 			return "{}";
 		} else if (type instanceof RecordTypeDecl recType) {
-			if ( recType.getFields().size() > 1) {
+			List<RecordField> recFields = getAllFields(recType).stream().filter(f -> !RecordFieldKind.SYMBOLIC.equals(f.getKind())).toList();
+			if (recFields.size() > 1) {
 				String fieldIndent = indent + "\t";
-				String value = recType.getFields().stream()
+				String value = recFields.stream()
 					.map(f -> String.format("%s%s = %s", fieldIndent, f.getName(), createDefaultValue(f.getType(), f.getName(), fieldIndent)))
 					.collect(Collectors.joining(",\n"));
 				return String.format("%s {\n%s\n%s}", type.getName(), value, indent);
 			} else {
-				String value = recType.getFields().stream()
+				String value = recFields.stream()
 					.map(f -> String.format("%s = %s", f.getName(), createDefaultValue(f.getType(), f.getName(), indent)))
 					.collect(Collectors.joining(",\n"));
 				return String.format("%s { %s }", type.getName(), value);

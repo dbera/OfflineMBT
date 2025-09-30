@@ -27,6 +27,7 @@ specification fries_flat
         desc "Process_1_Model"
         
         action			Activity_01x82y5
+        element-label	"Activity_01x82y5"
         case			default
         with-inputs		Gateway_19p4wo1
         with-guard		Gateway_19p4wo1.client_id == "Tom"
@@ -40,6 +41,7 @@ specification fries_flat
             }
         
         action			Activity_0par2jr
+        element-label	"Activity_0par2jr"
         case			default
         with-inputs		Gateway_19p4wo1
         produces-outputs	Gateway_0k04hvx
@@ -52,6 +54,7 @@ specification fries_flat
             }
         
         action			Activity_19yirph
+        element-label	"Activity_19yirph"
         case			default
         with-inputs		Flow_1fk5b3r, DataStoreReference_18a07df
         with-guard		DataStoreReference_18a07df.ctx == Flow_1fk5b3r
@@ -65,6 +68,7 @@ specification fries_flat
             }
         
         action			Gateway_0dqgx0i
+        element-label	"Gateway_0dqgx0i"
         case			default
         with-inputs		Event_0a5g9gv
         produces-outputs	Gateway_19p4wo1
@@ -75,6 +79,7 @@ specification fries_flat
             Flow_0z70hyg := Event_0a5g9gv
         
         action			Activity_0uiz2cy
+        element-label	"Activity_0uiz2cy"
         case			default
         with-inputs		Flow_0bwi85w, DataStoreReference_03v9xko
         produces-outputs	Event_1vt9n85
@@ -82,6 +87,7 @@ specification fries_flat
             Event_1vt9n85 := Flow_0bwi85w
         
         action			Activity_1fzja8h
+        element-label	"Activity_1fzja8h"
         case			default
         with-inputs		Flow_0z70hyg
         produces-outputs	Flow_1fk5b3r
@@ -89,12 +95,15 @@ specification fries_flat
             Flow_1fk5b3r := Flow_0z70hyg
         
         action			Gateway_1w5n2dh
+        element-label	"Gateway_1w5n2dh"
         case			default
         with-inputs		Flow_003weme, Gateway_0k04hvx
         with-guard		Gateway_0k04hvx == Flow_003weme
         produces-outputs	Flow_0bwi85w
         updates:
             Flow_0bwi85w := Flow_003weme
+    
+        element-labels ["Process_1"]
     }
     
 	SUT-blocks 

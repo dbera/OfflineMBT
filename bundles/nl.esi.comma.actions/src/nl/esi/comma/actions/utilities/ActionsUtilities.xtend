@@ -104,4 +104,14 @@ class ActionsUtilities {
 	        return record.variable
 	    }
 	}
+
+    def static getFields(RecordFieldAssignmentAction action) {
+        val fields = newLinkedList()
+        var record = action.fieldAccess
+        while (record instanceof ExpressionRecordAccess) {
+            fields.addFirst(record.field)
+            record = record.record
+        }
+        return fields
+    }
 }

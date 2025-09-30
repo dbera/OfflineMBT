@@ -50,6 +50,7 @@ import nl.asml.matala.bpmn4s.bpmn4s.ElementType;
 import nl.asml.matala.bpmn4s.bpmn4s.EnumerationType;
 import nl.asml.matala.bpmn4s.bpmn4s.ListType;
 import nl.asml.matala.bpmn4s.bpmn4s.MapType;
+import nl.asml.matala.bpmn4s.bpmn4s.RecordFieldKind;
 import nl.asml.matala.bpmn4s.bpmn4s.RecordType;
 import nl.asml.matala.bpmn4s.bpmn4s.SetType;
 import nl.asml.matala.bpmn4s.extensions.DataType;
@@ -394,8 +395,9 @@ public class Main {
 				}
 			}
 			ftype = ftype.equals("") ? tref : ftype;
+			RecordFieldKind fKind = RecordFieldKind.parse(f.getAttributeValueNs("http://bpmn4s", "kind"));
 			Boolean fSuppress = "true".equalsIgnoreCase(f.getAttributeValueNs("http://bpmn4s", "suppressUpdate"));
-			rec.addField(fname, ftype, fSuppress);
+			rec.addField(fname, ftype, fKind, fSuppress);
 		}
 		return rec;
 	}

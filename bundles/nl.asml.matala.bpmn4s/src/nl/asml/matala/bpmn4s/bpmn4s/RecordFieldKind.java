@@ -12,18 +12,10 @@
  */
 package nl.asml.matala.bpmn4s.bpmn4s;
 
-import java.util.ArrayList;
-import java.util.List;
-
-public class RecordType extends Bpmn4sDataType {
-
-	public List<RecordField> fields = new ArrayList<RecordField>();
-
-	public RecordType(String _name) {
-		super(_name, RECORD_TYPE);
-	}
-
-	public void addField(String _key, String _type, RecordFieldKind _kind, boolean _suppress) {
-		fields.add(new RecordField(_key, _type, _kind, _suppress));
+public enum RecordFieldKind {
+	Concrete, Mixed, Symbolic;
+	
+	public static RecordFieldKind parse(String attribute) {
+		return attribute == null ? RecordFieldKind.Concrete : RecordFieldKind.valueOf(attribute);
 	}
 }
