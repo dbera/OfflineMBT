@@ -7,7 +7,7 @@ import dev.langchain4j.model.azure.AzureOpenAiChatModel;
  
 /**
 * MergeAgent class for processing code snippets and generating step definitions.
-* Mock implementation that doesn't require external dependencies.
+* Uses LangChain4j for LLM integration with Azure OpenAI.
 */
 public class MergeAgent {    
 	private ChatModel llm;
@@ -37,7 +37,7 @@ public class MergeAgent {
             System.out.println("API Version: " + apiVersion);
             System.out.println("Temperature: " + temperature);
  
-            // Mock initialization - just validate that configuration is present
+            // Initialize LLM if configuration is present
             if (azureEndpoint != null && azureApiKey != null) {
                 System.out.println("Configuration validated successfully");
                 this.llm = initializeLLM(llmModel, apiVersion, temperature, azureEndpoint, azureApiKey);
@@ -84,181 +84,64 @@ public class MergeAgent {
 	    System.out.println("  Endpoint format: " + (azureEndpoint.startsWith("https://") ? "Valid" : "Invalid - should start with https://"));
 	    System.out.println("  Deployment name: " + llmModel);
 	    
-	    // Use a separate thread with hard timeout to prevent hanging
-	    final ChatModel[] result = new ChatModel[1];
-	    final Exception[] exception = new Exception[1];
-	    
-	    Thread initThread = new Thread(() -> {
-	        try {
-	            System.out.println("Starting AzureOpenAiChatModel creation in separate thread...");
-	            ChatModel model = AzureOpenAiChatModel.builder()
-	                .endpoint(cleanEndpoint)
-	                .serviceVersion(apiVersion)
-	                .apiKey(azureApiKey)
-	                .deploymentName(llmModel != null ? llmModel : "gpt-4")
-	                .temperature(temperature != null ? temperature : 1.0)
-	                .timeout(java.time.Duration.ofSeconds(10))
-	                .maxRetries(3)
-	                .build();
-	            result[0] = model;
-	            System.out.println("AzureOpenAiChatModel created successfully in thread");
-	        } catch (Exception e) {
-	            exception[0] = e;
-	            System.err.println("Error in thread creating AzureOpenAiChatModel: " + e.getMessage());
-	        }
-	    });
-	    
-	    initThread.setDaemon(true);
-	    initThread.start();
-	    
 	    try {
-	        // Wait maximum 15 seconds for initialization
-	        initThread.join(15000);
+	        System.out.println("Starting AzureOpenAiChatModel creation...");
+	        ChatModel model = AzureOpenAiChatModel.builder()
+	            .endpoint(cleanEndpoint)
+	            .serviceVersion(apiVersion)
+	            .apiKey(azureApiKey)
+	            .deploymentName(llmModel != null ? llmModel : "gpt-4")
+	            .temperature(temperature != null ? temperature : 1.0)
+	            .timeout(java.time.Duration.ofSeconds(30))
+	            .maxRetries(3)
+	            .build();
+	            
+	        System.out.println("AzureOpenAiChatModel created successfully");
+	        return model;
 	        
-	        if (initThread.isAlive()) {
-	            System.err.println("AzureOpenAiChatModel initialization timed out after 15 seconds");
-	            System.err.println("This is likely due to network connectivity issues or Azure service problems");
-	            initThread.interrupt();
-	            return null;
-	        }
-	        
-	        if (exception[0] != null) {
-	            System.err.println("Error creating AzureOpenAiChatModel: " + exception[0].getMessage());
-	            System.err.println("This might be due to:");
-	            System.err.println("  1. Incorrect deployment name (currently: " + llmModel + ")");
-	            System.err.println("  2. Network connectivity issues");
-	            System.err.println("  3. Invalid API key or endpoint");
-	            System.err.println("  4. Azure OpenAI service not available");
-	            exception[0].printStackTrace();
-	            return null;
-	        }
-	        
-	        if (result[0] != null) {
-	            System.out.println("AzureOpenAiChatModel initialized successfully");
-	            return result[0];
-	        } else {
-	            System.err.println("AzureOpenAiChatModel initialization returned null");
-	            return null;
-	        }
-	        
-	    } catch (InterruptedException e) {
-	        System.err.println("Initialization was interrupted");
-	        Thread.currentThread().interrupt();
+	    } catch (Exception e) {
+	        System.err.println("Error creating AzureOpenAiChatModel: " + e.getMessage());
+	        System.err.println("This might be due to:");
+	        System.err.println("  1. Incorrect deployment name (currently: " + llmModel + ")");
+	        System.err.println("  2. Network connectivity issues");
+	        System.err.println("  3. Invalid API key or endpoint");
+	        System.err.println("  4. Azure OpenAI service not available");
+	        e.printStackTrace();
 	        return null;
 	    }
 	}
  
-    public String invoke(String[] input) {
- 
+    /**
+     * Invoke the MergeAgent to determine if code snippets should be merged.
+     * 
+     * @param codeSnippets Array of code snippets to compare (expects exactly 2 snippets)
+     * @return String response from the LLM indicating whether to merge ("True" or "False")
+     */
+    public String invoke(String[] codeSnippets) {
+        if (codeSnippets == null || codeSnippets.length != 2) {
+            throw new IllegalArgumentException("Expected exactly 2 code snippets");
+        }
+
         if (this.llm == null) {
             System.err.println("LLM not initialized");
             return null;
         }
- 
-        String prompt = """
-            You should check if two pieces are similar enough to merge and paramaterize in a step
-            definition. If so you should just return True and if not then you should return False. Do not
-            return more than the Boolean.
- 
-            Rules:
-            1. Only return True or False, nothing else.
-            2. The code snippets should be similar enough to be merged into a single step definition with parameterization.
-            3. The code snippets can be different in logic or structure, but there should be overlaping pieces of code that can be paramaterized
-            4. With large pieces of code, it is even more important that pieces of the code are similar in logic, not the entire code has to be similar.
-            5. Be very lenient code should almost always be merged only pieces of code that are very far apart shouldnt be merged!
- 
-            First I will present 2 examples with two code snippets that should be merged and parameterized in a step definition:
-            Code snippet 1:
-            bool y = true;
-            float z = 0.85;
-            y = function42(z);
-            if(y) {
-                x = x + 4;
-                z = function2(x);
-            }
-            else { z = function2(x); }
-            z = z + 3.7;
-            h = test-interface::f1(z, y);
- 
-            Code snippet 2:
-            bool y = true;
-            float z = 0.5;
-            y = function1(z);
-            if(y) {
-                x = x + 6;
-                z = function2(x);
-            }
-            z = z + 3.7;
-            h = test-interface::f1(z, y);
- 
-            Output:
-            True
- 
-            code snippet 1:
-            int expectedBalance = espressoCost + espressoCost;
-            EXPECT_EQ(machine.GetBalance(), expectedBalance);
- 
-            code snippet 2:
-            EXPECT_EQ(machine.GetBalance(), 0);
- 
-            Output:
-            True
- 
-            Second I will present an example that should not be merged and paramaterized in a step
-            definition:
-            Code snippet 1:
-            bool y = true;
-            float z = 0.85;
-            y = function42(z);
-            if(y) {
-                x = x + 4;
-                z = function2(x);
-            }
-            else { z = function2(x); }
-            z = z + 3.7;
-            h = test-interface::f1(z, y);
- 
-            Code snippet 2:
-            float y = 10;
-            float z = 0.85;
- 
-            for y in range(y):
-                z += 1;
- 
-            Output:
-            False
- 
-            Now analyze these code snippets:
-            """;
- 
-        prompt += String.format("""
-            Now I will present two code snippets where you should decide if they should be merged and parameterized in a step
-            definition:
-            Code snippet 1:
-            %s
- 
-            Code snippet 2:
-            %s
- 
-            Output:
-            """, input[0], input[1]);
- 
-        return this.llm.chat(prompt);
+
+        try {
+            String prompt = SystemMessages.shouldCodeMergePrompt(Arrays.asList(codeSnippets));
+            
+            String response = this.llm.chat(prompt);
+            
+            System.out.println("LLM Response: " + response);
+            return response;
+            
+        } catch (Exception e) {
+            System.err.println("Error calling LLM: " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
     }
- 
-    /**
-     * Check if two code snippets should be merged based on mock analysis.
-     *
-     * @param snippet1 First code snippet
-     * @param snippet2 Second code snippet
-     * @return true if snippets should be merged, false otherwise
-     */
-    public boolean shouldMerge(String snippet1, String snippet2) {
-        String[] input = {snippet1, snippet2};
-        String result = invoke(input);
-        System.out.println("MergeAgent result: " + result);
-        return result != null && result.trim().equalsIgnoreCase("True");
-    }
+
     /**
      * Main method for testing the MergeAgent.
      *
@@ -267,25 +150,23 @@ public class MergeAgent {
     public static void main(String[] args) {
         try {
             Map<String, Object> config = ConfigManager.getConfig();
-            MergeAgent mergeAgent = new MergeAgent(config);
+            MergeAgent MergeAgent = new MergeAgent(config);
  
             String[] codeSnippets = {
                 """
-                scenario dsaLateral step 3:
-                step-body: «            bool isExplicitlyEnabled = Environment::getInstance()->isExplicitlyEnabled();
+            	bool isExplicitlyEnabled = Environment::getInstance()->isExplicitlyEnabled();
                 if (!isExplicitlyEnabled && (!testConfig.isBiplane || testConfig.isSinglePC || testConfig.isDebugBuild)) GTEST_SKIP() << "Test is marked explicit";
                 m_testMode.channel = XrayFrontendEmulator::XrayChannel::Lateral;
-                m_testMode.rtoActive = false;»
+                m_testMode.rtoActive = false;
                 """,
                 """
-                scenario rcmImageFreezeFrontal step 3:
-                step-body: «            bool isExplicitlyEnabled = Environment::getInstance()->isExplicitlyEnabled();
+                bool isExplicitlyEnabled = Environment::getInstance()->isExplicitlyEnabled();
                 if (!isExplicitlyEnabled && (!testConfig.isBiplane || testConfig.isSinglePC || testConfig.isDebugBuild)) GTEST_SKIP() << "Test is marked explicit";
-                m_testMode.channel = XrayFrontendEmulator::XrayChannel::Frontal;»
+                m_testMode.channel = XrayFrontendEmulator::XrayChannel::Frontal;
                 """
             };
  
-            String output = mergeAgent.invoke(codeSnippets);
+            String output = MergeAgent.invoke(codeSnippets);
             System.out.println(output);
            
         } catch (Exception e) {

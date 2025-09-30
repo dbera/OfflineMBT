@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <?pde version="3.8"?>
-<target name="Generated from OfflineMBT" sequenceNumber="6">
+<target name="Generated from OfflineMBT" sequenceNumber="7">
   <locations>
     <location type="Target" uri="file:${project_loc:/nl.esi.comma.target}/nl.esi.comma.maven.target"/>
     <location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
@@ -46,6 +46,7 @@
       <unit id="org.eclipse.lsp4j" version="0.0.0"/>
       <unit id="org.eclipse.lsp4j.jsonrpc" version="0.0.0"/>
       <unit id="org.eclipse.orbit.xml-apis-ext" version="0.0.0"/>
+      <unit id="org.eclipse.osgi.services" version="0.0.0"/>
       <unit id="org.eclipse.sdk.feature.group" version="0.0.0"/>
       <unit id="org.eclipse.xtext.sdk.feature.group" version="0.0.0"/>
       <unit id="org.kohsuke.args4j" version="0.0.0"/>

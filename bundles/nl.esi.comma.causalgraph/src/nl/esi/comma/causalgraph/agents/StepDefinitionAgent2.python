@@ -1,0 +1,241 @@
+import json
+import re
+
+from llm4requirements.agents.chains.system_messages import generate_step_definition_prompt, generate_step_name_prompt
+
+
+def step_definition_generator(state: dict) -> dict:
+    """Generate step definitions based on similar code snippets and their arguments.
+    Args:
+        state (dict): The state containing the LLM, similar code groups, code snippets, step arguments, variable types, source code, previous step definitions, and previous overlay steps.
+    Returns:
+        dict: A dictionary containing the generated step definitions.
+    """
+    result = []
+    overlay_variables = state.get("overlay_variables", {})
+    variable_initial_values = state.get("variable_initial_values", {})
+    source_code = state.get("source_code", {})
+    previous_overlay_steps = state.get("previous_overlay_steps", {})
+
+    for group in state["similar_code_groups"]:
+        similar_scenario_steps = [state["scenario_steps"][i] for i in group]
+
+        step_name_prompt = generate_step_name_prompt(similar_scenario_steps)
+        step_name_response = state["llm"].invoke(step_name_prompt).content
+        step_name = step_name_response.strip()
+
+        if len(similar_scenario_steps) == 1:
+            scenario = similar_scenario_steps[0]
+            scenario_key = f"scenario {scenario['scenario_id']}, step {scenario['step_number']}"
+            parsed_response = {
+                "step-name": step_name,
+                "step-arguments": {scenario_key: {}},
+                "step-parameters": {},
+                "step-body": scenario["step_body"],
+            }
+        else:
+            first_step_body = similar_scenario_steps[0]["step_body"]
+            all_same_body = all(scenario["step_body"] == first_step_body for scenario in similar_scenario_steps)
+
+            if all_same_body:
+                step_arguments = {}
+                for scenario in similar_scenario_steps:
+                    scenario_key = f"scenario {scenario['scenario_id']}, step {scenario['step_number']}"
+                    step_arguments[scenario_key] = {}
+
+                parsed_response = {
+                    "step-name": step_name,
+                    "step-arguments": step_arguments,
+                    "step-parameters": {},
+                    "step-body": first_step_body,
+                }
+            else:
+                step_definition_prompt = generate_step_definition_prompt(
+                    similar_scenario_steps,
+                    overlay_variables,
+                    variable_initial_values,
+                    source_code,
+                    previous_overlay_steps,
+                )
+
+                response = state["llm"].invoke(step_definition_prompt).content
+
+                print(response)
+                cleaned_response = _extract_json_from_response(response)
+                print(f"Extracted JSON: {cleaned_response}")
+
+                try:
+                    parsed_response = json.loads(cleaned_response)
+                    # Add the step name to the parsed response
+                    parsed_response["step-name"] = step_name
+
+                except json.JSONDecodeError as e:
+                    print(f"JSON parsing failed: {e}")
+                    print(f"Failed to parse cleaned response: {cleaned_response}")
+                    print(f"Original response: {response}")
+
+                    # Try to provide a more helpful error message
+                    if "{" not in cleaned_response:
+                        print("ERROR: No JSON object found in response")
+                    elif not cleaned_response.startswith("{"):
+                        print(f"ERROR: Extracted text doesn't start with '{{': '{cleaned_response[:50]}...'")
+
+                    # Try one more time with additional cleanup
+                    try:
+                        final_attempt = _final_json_cleanup(cleaned_response)
+                        print(f"Attempting final cleanup: {final_attempt}")
+                        parsed_response = json.loads(final_attempt)
+                        # Add the step name to the parsed response
+                        parsed_response["step-name"] = step_name
+                        print("SUCCESS: Final cleanup worked!")
+                    except:
+                        print("FAILED: Final cleanup also failed")
+                        raise
+                except Exception as e:
+                    print(f"Unexpected error during JSON parsing: {e}")
+                    print(f"Cleaned response: {cleaned_response}")
+                    print(f"Original response: {response}")
+                    raise
+
+        result.append(parsed_response)
+    return {"result": result}
+
+
+def _extract_json_from_response(response: str) -> str:
+    """Extract JSON from a response that may contain explanations before the JSON.
+
+    This function looks for JSON objects that start with '{' and end with '}'
+    and handles responses that include explanations before the JSON.
+
+    Args:
+        response (str): The raw response from the LLM
+
+    Returns:
+        str: The extracted JSON string
+    """
+
+    # Multiple strategies to extract JSON from the response
+
+    # Strategy 1: Look for JSON after common markers
+    markers = ["Output:", "Result:", "JSON:", "```json", "```"]
+    for marker in markers:
+        if marker in response:
+            after_marker = response.split(marker)[-1].strip()
+            # Remove closing ``` if present
+            if after_marker.endswith("```"):
+                after_marker = after_marker[:-3].strip()
+            # Try to extract JSON from this part
+            json_candidate = _extract_balanced_braces(after_marker)
+            if json_candidate and _is_valid_json_structure(json_candidate):
+                return json_candidate
+
+    # Strategy 2: Find the largest valid JSON object in the response
+    json_candidates = []
+
+    # Find all potential JSON starting positions
+    for i, char in enumerate(response):
+        if char == "{":
+            json_candidate = _extract_balanced_braces(response[i:])
+            if json_candidate and _is_valid_json_structure(json_candidate):
+                json_candidates.append(json_candidate)
+
+    # Return the longest valid JSON candidate (most likely to be complete)
+    if json_candidates:
+        return max(json_candidates, key=len)
+
+    # Strategy 3: Fallback - return the original response stripped
+    return response.strip()
+
+
+def _extract_balanced_braces(text: str) -> str:
+    """Extract text with balanced braces starting from the first '{'.
+
+    Args:
+        text (str): Text to extract from
+
+    Returns:
+        str: Extracted text with balanced braces, or empty string if not found
+    """
+    start_idx = text.find("{")
+    if start_idx == -1:
+        return ""
+
+    brace_count = 0
+    end_idx = start_idx
+
+    for i in range(start_idx, len(text)):
+        if text[i] == "{":
+            brace_count += 1
+        elif text[i] == "}":
+            brace_count -= 1
+            if brace_count == 0:
+                end_idx = i
+                break
+    else:
+        # No matching closing brace found
+        return ""
+
+    return text[start_idx : end_idx + 1].strip()
+
+
+def _is_valid_json_structure(json_str: str) -> bool:
+    """Check if a string has a valid JSON structure without full parsing.
+
+    Args:
+        json_str (str): String to check
+
+    Returns:
+        bool: True if the structure looks like valid JSON
+    """
+    if not json_str or not json_str.startswith("{") or not json_str.endswith("}"):
+        return False
+
+    if not re.search(r'"\s*[^"]+\s*"\s*:', json_str):
+        return False
+
+    # Should not contain invalid patterns like {100, 100, 100, 100}
+    if re.search(r"{\s*\d+\s*,\s*\d+", json_str):
+        return False
+
+    return True
+
+
+def _final_json_cleanup(json_str: str) -> str:
+    """Final attempt to clean up malformed JSON.
+
+    Args:
+        json_str (str): Potentially malformed JSON string
+
+    Returns:
+        str: Cleaned JSON string
+    """
+    # Remove common prefixes that might be causing issues
+    prefixes_to_remove = ["Output:", "Result:", "JSON:", "```json", "```"]
+
+    cleaned = json_str
+    for prefix in prefixes_to_remove:
+        if cleaned.strip().startswith(prefix):
+            cleaned = cleaned.split(prefix, 1)[1].strip()
+
+    # Remove trailing ```
+    if cleaned.endswith("```"):
+        cleaned = cleaned[:-3].strip()
+
+    # Fix common JSON issues
+    # Remove leading/trailing whitespace
+    cleaned = cleaned.strip()
+
+    # Ensure it starts and ends with braces
+    if not cleaned.startswith("{"):
+        # Try to find the first {
+        start_idx = cleaned.find("{")
+        if start_idx > 0:
+            cleaned = cleaned[start_idx:]
+
+    if not cleaned.endswith("}"):
+        # Try to find the last }
+        end_idx = cleaned.rfind("}")
+        if end_idx > 0:
+            cleaned = cleaned[: end_idx + 1]
+
+    return cleaned
