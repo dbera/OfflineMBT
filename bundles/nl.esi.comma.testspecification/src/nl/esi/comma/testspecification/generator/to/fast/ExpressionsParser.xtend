@@ -52,6 +52,7 @@ import nl.esi.comma.actions.actions.AssignmentAction
 import nl.esi.comma.expressions.expression.Expression
 import java.util.Map
 import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
+import nl.esi.comma.expressions.expression.ExpressionNullLiteral
 
 class ExpressionsParser {
 	
@@ -61,7 +62,7 @@ class ExpressionsParser {
     def static dispatch CharSequence generateExpression(ExpressionMap expr, CharSequence ref)
 	'''
 	{
-    «FOR e : expr.pairs SEPARATOR ', '»
+    «FOR e : expr.pairs.filter[!(it.value instanceof ExpressionNullLiteral)] SEPARATOR ', '»
 	       «generateExpression(e.key, ref)» : «generateExpression(e.value, ref)»
    «ENDFOR»
 	}'''
@@ -84,7 +85,7 @@ class ExpressionsParser {
 	def static CharSequence generateRecExpression(ExpressionRecord expr, CharSequence ref)
 	//'''«FOR f : expr.fields SEPARATOR ", "»«IF generateExpression(f, ref).toString.contains('''ANY''')»«JavaGeneratorUtilities::generateJavaTypeInitializer(f.recordField.type.type)»«ELSE»«generateExpression(f, ref)»«ENDIF»«ENDFOR»'''
 	'''
-	«FOR f : expr.fields SEPARATOR ", "»
+	«FOR f : expr.fields.filter[!(it.exp instanceof ExpressionNullLiteral)] SEPARATOR ", "»
 	   «generateExpression(f, ref)»
 	«ENDFOR»
 	'''
