@@ -191,11 +191,7 @@ class RefKVPGenerator {
     }
 
     def getDatacheckId(String label, AssertionStep assertStep) {
-        return String.format(
-            "%s__@__%s",
-            label,
-            assertStep.inputVar.name
-        )
+        return assertStep.inputVar.name
     }
 
     def List<String> expression(Expression expr, List<String> prefix) {
