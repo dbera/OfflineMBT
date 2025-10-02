@@ -12,6 +12,10 @@
  */
 package nl.esi.comma.testspecification.generator.to.fast
 
+import java.util.Map
+import nl.esi.comma.actions.actions.AssignmentAction
+import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
+import nl.esi.comma.expressions.expression.Expression
 import nl.esi.comma.expressions.expression.ExpressionAddition
 import nl.esi.comma.expressions.expression.ExpressionAnd
 import nl.esi.comma.expressions.expression.ExpressionAny
@@ -37,6 +41,7 @@ import nl.esi.comma.expressions.expression.ExpressionModulo
 import nl.esi.comma.expressions.expression.ExpressionMultiply
 import nl.esi.comma.expressions.expression.ExpressionNEqual
 import nl.esi.comma.expressions.expression.ExpressionNot
+import nl.esi.comma.expressions.expression.ExpressionNullLiteral
 import nl.esi.comma.expressions.expression.ExpressionOr
 import nl.esi.comma.expressions.expression.ExpressionPlus
 import nl.esi.comma.expressions.expression.ExpressionPower
@@ -48,14 +53,11 @@ import nl.esi.comma.expressions.expression.ExpressionVariable
 import nl.esi.comma.expressions.expression.ExpressionVector
 import nl.esi.comma.expressions.expression.Field
 import nl.esi.comma.expressions.expression.VectorTypeConstructor
-import nl.esi.comma.actions.actions.AssignmentAction
-import nl.esi.comma.expressions.expression.Expression
-import java.util.Map
-import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
-import nl.esi.comma.expressions.expression.ExpressionNullLiteral
+import nl.esi.comma.types.types.SimpleTypeDecl
+import nl.esi.comma.types.types.TypeDecl
 
 class ExpressionsParser {
-	
+
 	def static dispatch CharSequence generateExpression(ExpressionAny expr, CharSequence ref)
 	'''ANY'''
 
@@ -118,9 +120,29 @@ class ExpressionsParser {
 	// modify string to remove quotes for prefix: "platform:" && "setup.suts" [FAST Specific]
 	def static dispatch CharSequence generateExpression(ExpressionConstantString expr, CharSequence ref)      
 	{
-		if(expr.value.contains('''Platform:''') || expr.value.contains('''setup.suts''')) return '''«expr.value»'''	
-		else return '''"«expr.value»"'''
-	} 
+		var prefix = findStringPrefixBasedOnType(expr)
+		if(prefix instanceof String) return prefix+''''«expr.value»' '''
+		if(expr.value.contains('''Platform:''') || expr.value.contains('''setup.suts''')) return '''«expr.value»''' 
+        else return '''"«expr.value»"'''
+	}
+	
+    def static String findStringPrefixBasedOnType(ExpressionConstantString string) {
+        var cont = string.eContainer
+        if (cont instanceof Field) {
+            var TypeDecl fieldType = cont.recordField.type.type
+            if (fieldType instanceof SimpleTypeDecl) {
+                var isBasedOnString = fieldType.base?.name?.equals('string')
+                if (isBasedOnString) {
+                    var baseName = fieldType.name
+                    return switch baseName {
+                        case 'Dataset': 'global.params[\'testcase_data\'] + '
+                        default: null
+                    }
+                }
+            }
+        }
+        return null
+    }
 
 	def static dispatch CharSequence generateExpression(ExpressionConstantReal expr, CharSequence ref)      
 	'''«expr.value»''' 
