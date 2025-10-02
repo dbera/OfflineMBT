@@ -19,6 +19,7 @@ import nl.esi.comma.testspecification.testspecification.RunStep
 
 class Step {
 	public var String id = new String
+	public var String comment = new String
 	public var RunStep runStep = null
 	public var String type = new String
 	public var String inputFile = new String

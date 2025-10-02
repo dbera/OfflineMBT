@@ -562,6 +562,7 @@ class PetriNet {
 		    # print(" Finished Generation, writing to file.. ")
 		    print("[INFO] Starting Reachability Graph Generation")
 		    # pn.generateScenarios(s,0,[],[],[],0,«depth_limit»)
+		    sys.setrecursionlimit(3000)
 		    pn.generateSCN(0,[],[])
 		    print('Num Tests: ', pn.numTestCases)
 		    print("[INFO] Finished.")
