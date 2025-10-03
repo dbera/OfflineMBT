@@ -238,6 +238,10 @@ class TypeUtilities {
 		
 		result
 	}
+
+    def static RecordTypeDecl getRecordType(RecordField rf) {
+        return rf.eContainer as RecordTypeDecl
+    }
 	
 	def static EnumElement getEnumElementByValue(EnumTypeDecl enumType, int value){
 		var currentValue = -1

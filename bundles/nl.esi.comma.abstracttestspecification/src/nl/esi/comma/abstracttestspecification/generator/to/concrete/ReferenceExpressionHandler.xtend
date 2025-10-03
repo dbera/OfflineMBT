@@ -148,15 +148,15 @@ class ReferenceExpressionHandler
     // Updated DB 31.07.2025. Support chaining of compose steps with functions in expressions.
     def resolveStepReferenceExpressions(RunStep rstep, Iterable<ComposeStep> composeSteps)
     {
-        // System.out.println("Run Step: " + rstep.name)
+        System.out.println(" [INFO] Resolving references for Run Step: " + rstep.name)
         var mapLHStoRHS = new HashMap<String,List<String>>
         // Find preceding Compose Step
         for(cstep : composeSteps) // at most one of a type
         {
-            // System.out.println("    -> compose-name: " + cstep.name)
+            System.out.println(" [INFO] > Referenced Compose Step: " + cstep.name)
             var refTxt = new String
             for(cons : cstep.refs) {
-                // System.out.println("    -> constraint-var: " + cons.name)
+                // System.out.println("    -|> constraint-var: " + cons.name)
                 for(refcons : cons.ce) {
                     var varRefName = (refcons.eContainer.eContainer as VarRef).ref.name
                     for (a : refcons.act.actions) {
@@ -180,7 +180,7 @@ class ReferenceExpressionHandler
             // if(!refTxt.isEmpty) System.out.println("\nLocal Constraints:\n" + refTxt)
             var cstepList = getNestedComposeSteps(cstep, new ArrayList<ComposeStep>)
             for(cs : cstepList) {
-                // System.out.println("        -> compose-name: " + cs.name)
+                System.out.println(" [INFO] --> Nested Compose Step: " + cs.name)
                 refTxt = new String
                 for(cons : cs.refs) {
                     // System.out.println("        -> constraint-var: " + cons.name)
@@ -190,6 +190,7 @@ class ReferenceExpressionHandler
                             var constraint = _printRecord_(varRefName, cs.name, rstep.name, cs.stepRef, 
                                                 a as RecordFieldAssignmentAction, false)
                             refTxt += constraint.getText + "\n"
+                            // if(!refTxt.isEmpty) System.out.println("\nRef Constraints:\n" + refTxt)
                             // mapLHStoRHS.put(constraint.lhs, constraint.rhs)
                             if(mapLHStoRHS.containsKey(constraint.lhs)) {
                                 var constraintList = mapLHStoRHS.get(constraint.lhs)
@@ -206,16 +207,16 @@ class ReferenceExpressionHandler
             }
             // if(!refTxt.isEmpty) System.out.println("\nRef Constraints:\n" + refTxt)
         }
-        /*System.out.println(" Before Rewrite ")
+        System.out.println(" [INFO] Expressions Before Rewrite: ")
         for(k : mapLHStoRHS.keySet) {
             for(v : mapLHStoRHS.get(k))
             System.out.println("    > K: " + k + " > V: " + v)
-        }*/
+        }
         // Rewrite expressions in mapLHStoRHS
         // TODO Validate that LHS and RHS are unique. 
         // No collisions are allowed.
-        var refAppliedKeyList = new ArrayList<String>
-        var refUpdatedKeyList = new ArrayList<String>
+        // var refAppliedKeyList = new ArrayList<String>
+        // var refUpdatedKeyList = new ArrayList<String>
         // Commented to rewrite with list values in mapLHStoRHS
         /*for(k : mapLHStoRHS.keySet) {
             for(_k : mapLHStoRHS.keySet) { 
@@ -227,19 +228,20 @@ class ReferenceExpressionHandler
         }*/
         // Rewrite Implementation to Support list of values in mapLHStoRHS
         // Same LHS many RHS assignments (typical in lists/maps)
-        var _mapLHStoRHS = new HashMap<String, List<String>>
+        /*var _mapLHStoRHS = new HashMap<String, List<String>>
         for(k : mapLHStoRHS.keySet) { _mapLHStoRHS.put(k,new ArrayList<String>(mapLHStoRHS.get(k))) }
         for(k : mapLHStoRHS.keySet) {
             for(_k : mapLHStoRHS.keySet) { 
                 var idx = 0
+                // System.out.println("    Value Size: " + mapLHStoRHS.get(k).size)
                 for(v : mapLHStoRHS.get(k)) { 
-                    // System.out.println("    <> _k: " + _k)
-                    // System.out.println("    <>  v: " + v)
+                    System.out.println("    <> _k: " + _k)
+                    System.out.println("    <>  v: " + v)
                     if(_k.equals(v)) 
                     { // if LHS equals RHS
-                        // System.out.println(" [INFO] LHS and RHS Match! ")
-                        // System.out.println("    => _k: " + _k)
-                        // System.out.println("    =>  v: " + v)
+                        System.out.println(" [INFO] LHS and RHS Match! ")
+                        System.out.println("    => _k: " + _k)
+                        System.out.println("    =>  v: " + v)
                         // replace the value at a specific index of value list
                          // i.e., insert list of values at idx
                         _mapLHStoRHS.get(k).addAll(idx, new ArrayList<String>(_mapLHStoRHS.get(_k)))
@@ -258,9 +260,9 @@ class ReferenceExpressionHandler
                     else if(v.contains(_k)) 
                     {
                         // Prefix matching. Added DB 30.07.2025
-                        // System.out.println(" [INFO] LHS and RHS Subsequence Match! ")
-                        // System.out.println("    => _k: " + _k)
-                        // System.out.println("    =>  v: " + v)
+                        System.out.println(" [INFO] LHS and RHS Subsequence Match! ")
+                        System.out.println("    => _k: " + _k)
+                        System.out.println("    =>  v: " + v)
                         // for each i in 1.. n add an entry with 
                         //_mapLHStoRHS.get(k).get(idx).replace(_k, _mapLHStoRHS.get(_k).get(i))
                         var rewrite_var = _mapLHStoRHS.get(k).get(idx)
@@ -284,14 +286,29 @@ class ReferenceExpressionHandler
                     idx++
                 }
             }
-        }
-        /*System.out.println(" [INFO] After Rewrite ")
-        for(k : _mapLHStoRHS.keySet) {
-            for(v : _mapLHStoRHS.get(k))
-            System.out.println("    > K: " + k + " > V: " + v)
         }*/
+
+        var rewriteOutput = rewriteExpressions(mapLHStoRHS)
+        var refAppliedKeyList = rewriteOutput.refAppliedKeyList
+        var rewriteFlag = rewriteOutput.atleastOneExpRewritten
+
+        while(rewriteFlag) {
+            rewriteOutput = rewriteExpressions(rewriteOutput.mapLHStoRHS)
+            rewriteFlag = rewriteOutput.atleastOneExpRewritten
+            for(elm : rewriteOutput.refAppliedKeyList) {
+                if(!refAppliedKeyList.contains(elm))
+                    refAppliedKeyList.add(elm)
+            }
+        }
+
+        System.out.println(" [INFO] Expressions After Rewrite: ")
+        for(k : rewriteOutput.mapLHStoRHS.keySet) {
+            for(v : rewriteOutput.mapLHStoRHS.get(k))
+                System.out.println("    > K: " + k + " > V: " + v)
+        }
+
         // remove expressions that were used to overwrite other expressions
-        for(k : refAppliedKeyList) { _mapLHStoRHS.remove(k) }
+        for(k : refAppliedKeyList) { rewriteOutput.mapLHStoRHS.remove(k) }
 
         // Not Resolved DB 31.07.2025
         // Compute expressions that were not used in rewrites.
@@ -315,7 +332,78 @@ class ReferenceExpressionHandler
             _mapLHStoRHS.remove(k)
         }*/
 
-        return _mapLHStoRHS
+        return rewriteOutput.mapLHStoRHS
+    }
+
+    def rewriteExpressions(HashMap<String, List<String>> mapLHStoRHS) 
+    {
+        // Rewrite Implementation to Support list of values in mapLHStoRHS
+        // Same LHS many RHS assignments (typical in lists/maps)
+        var refAppliedKeyList = new ArrayList<String>
+        var rewriteFlag = false
+        var _mapLHStoRHS = new HashMap<String, List<String>>
+        for(k : mapLHStoRHS.keySet) { _mapLHStoRHS.put(k,new ArrayList<String>(mapLHStoRHS.get(k))) }
+        for(k : mapLHStoRHS.keySet) {
+            for(_k : mapLHStoRHS.keySet) { 
+                var idx = 0
+                // System.out.println("    Value Size: " + mapLHStoRHS.get(k).size)
+                for(v : mapLHStoRHS.get(k)) { 
+                    // System.out.println("    <> _k: " + _k)
+                    // System.out.println("    <>  v: " + v)
+                    if(_k.equals(v)) 
+                    { // if LHS equals RHS
+                        rewriteFlag = true
+                        // System.out.println(" [INFO] LHS and RHS Match! ")
+                        // System.out.println("    => _k: " + _k)
+                        // System.out.println("    =>  v: " + v)
+                        // replace the value at a specific index of value list
+                         // i.e., insert list of values at idx
+                        _mapLHStoRHS.get(k).addAll(idx, new ArrayList<String>(_mapLHStoRHS.get(_k)))
+
+                        // remove the original value at idx
+                        if(idx + _mapLHStoRHS.get(_k).size <= _mapLHStoRHS.get(k).size) 
+                            _mapLHStoRHS.get(k).remove(idx + _mapLHStoRHS.get(_k).size)
+
+                        // Updated Key List is experimental. Not Used. See notes later 
+                        refAppliedKeyList.add(_k)
+                        // refUpdatedKeyList.add(k)
+                    }
+                    // Resolves earlier TODO How to rewrite with functions? Resolved DB 31.07.2025
+                    // TODO check if this condition is reached if a function was not involved in expression!
+                    // Untested for this case. 
+                    else if(v.contains(_k)) 
+                    {
+                        // Prefix matching. Added DB 30.07.2025
+                        rewriteFlag = true
+                        // System.out.println(" [INFO] LHS and RHS Subsequence Match! ")
+                        // System.out.println("    => _k: " + _k)
+                        // System.out.println("    =>  v: " + v)
+                        // for each i in 1.. n add an entry with 
+                        //_mapLHStoRHS.get(k).get(idx).replace(_k, _mapLHStoRHS.get(_k).get(i))
+                        var rewrite_var = _mapLHStoRHS.get(k).get(idx)
+                        // Create list of expressions with rhs being replaces with matched lhs
+                        // lhs may in turn have a list of values
+                        var list_of_rewrite_var = new ArrayList<String>
+                        for(_v : _mapLHStoRHS.get(_k)) {
+                            var temp_rewrite_var = rewrite_var
+                            temp_rewrite_var = temp_rewrite_var.replace(_k, _v)
+                            list_of_rewrite_var.add(temp_rewrite_var)
+                        }
+                        // add a list of rewritten expressions and remove original at idx
+                        _mapLHStoRHS.get(k).addAll(idx, list_of_rewrite_var)
+                        if(idx + list_of_rewrite_var.size <= _mapLHStoRHS.get(k).size) 
+                            _mapLHStoRHS.get(k).remove(idx + list_of_rewrite_var.size)
+
+                        // Updated Key List is experimental. Not Used. See notes later
+                        refAppliedKeyList.add(_k)
+                        // refUpdatedKeyList.add(k)
+                    }
+                    idx++
+                }
+            }
+        }
+
+        return new RewriteOutput(rewriteFlag, _mapLHStoRHS, refAppliedKeyList)
     }
 
     // Updated DB 31.07.2025. Support chaining of compose steps with functions in expressions.
@@ -389,4 +477,29 @@ class ReferenceExpressionHandler
  * End of Feature Update: Support Interleaving of Compose and Run Steps
  * Q1 2025. 
  */
+}
+
+class RewriteOutput 
+{
+    boolean atleastOneExpRewritten
+    HashMap<String, List<String>> mapLHStoRHS
+    ArrayList<String> refAppliedKeyList
+    
+    new(boolean flag, HashMap<String, List<String>> exp, ArrayList<String> aklist) {
+        atleastOneExpRewritten = flag
+        mapLHStoRHS = exp
+        refAppliedKeyList = aklist
+    }
+    
+    def getRefAppliedKeyList() {
+        return refAppliedKeyList
+    }
+    
+    def getAtleastOneExpRewritten() {
+        return atleastOneExpRewritten
+    }
+    
+    def getMapLHStoRHS() {
+        return mapLHStoRHS
+    }
 }

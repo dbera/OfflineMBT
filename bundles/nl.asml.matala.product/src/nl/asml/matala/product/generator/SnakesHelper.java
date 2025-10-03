@@ -65,25 +65,27 @@ import nl.esi.comma.expressions.generator.ExpressionsCommaGenerator;
 import nl.esi.comma.types.types.EnumTypeDecl;
 import nl.esi.comma.types.types.MapTypeConstructor;
 import nl.esi.comma.types.types.MapTypeDecl;
+import nl.esi.comma.types.types.RecordFieldKind;
 import nl.esi.comma.types.types.RecordTypeDecl;
 import nl.esi.comma.types.types.SimpleTypeDecl;
 import nl.esi.comma.types.types.Type;
 import nl.esi.comma.types.types.TypeDecl;
 import nl.esi.comma.types.types.VectorTypeConstructor;
 import nl.esi.comma.types.types.VectorTypeDecl;
+import nl.esi.comma.types.utilities.TypeUtilities;
 
 class SnakesHelper {
 	static String defaultValue(Type type, String targetName) {
 		// TypeReference | VectorTypeConstructor | MapTypeConstructor
-		if(type instanceof VectorTypeConstructor) {
+		if (type instanceof VectorTypeConstructor) {
 			return "[]";
-		} else if(type instanceof MapTypeConstructor) {
-			return "{" + 
-					defaultValue(type.getType(),targetName) + ":" +
-					defaultValue(((MapTypeConstructor) type).getValueType(),targetName) + 
-					"}";
-		} else { return defaultValue(type.getType(), targetName); }
+		} else if (type instanceof MapTypeConstructor) {
+			return "{}";
+		} else {
+			return defaultValue(type.getType(), targetName);
+		}
 	}
+
 	static String defaultValue(TypeDecl type, String targetName) {
 		if (type instanceof SimpleTypeDecl) {
 			SimpleTypeDecl t = (SimpleTypeDecl) type;
@@ -105,7 +107,8 @@ class SnakesHelper {
 					defaultValue(((MapTypeDecl) type).getConstructor().getValueType().getType(), targetName) +
 					"}";
 		} else if (type instanceof RecordTypeDecl recType) {
-			String value = recType.getFields().stream()
+			String value = TypeUtilities.getAllFields(recType).stream()
+				.filter(f -> !RecordFieldKind.SYMBOLIC.equals(f.getKind()))
 				.map(f -> String.format("\"%s\":%s", f.getName(), defaultValue(f.getType(), f.getName())))
 				.collect(Collectors.joining(","));
 			return String.format("{%s}", value);

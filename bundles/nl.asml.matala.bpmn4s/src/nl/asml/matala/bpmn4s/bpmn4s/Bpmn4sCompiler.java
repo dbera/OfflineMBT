@@ -20,12 +20,12 @@ import java.nio.file.Paths;
 import java.util.AbstractMap;
 import java.util.AbstractSet;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -208,6 +208,7 @@ public class Bpmn4sCompiler{
 				if (hasChildComponents(c)){ continue; } // skip top level components
 				String component = "";
 				String cname = compile(c.getId());
+				String qname = fabSpecQualifiedLabels(c);
 				component += "system " + sanitize(cname) + "\r\n{\r\n";
 				String inOut = fabSpecInputOutput(c);
 				String local = fabSpecLocal(c);
@@ -224,6 +225,7 @@ public class Bpmn4sCompiler{
 				component += indent(sutConfs);
 				component += "\n";
 				component += indent(desc);
+				component += "\n"+indent(qname)+"\n";
 				component += "}\n\n";
 				result.append(indent(component));	
 			}
@@ -270,6 +272,17 @@ public class Bpmn4sCompiler{
 		if (c.getDataInputs().isEmpty()) { inStr = "//" + inStr; }
 		if (c.getDataOutputs().isEmpty()) { outStr = "//" + outStr; }
 		return inStr + "\n" + outStr;
+	}
+	
+	/**
+	 * For a system in the pspec, fetch the list of labels for nested elements for its element-labels section.
+	 * @param c is the component that corresponds one to one with a pspec system.
+	 * @return a List of String with the nested elements labels.
+	 */
+	private String fabSpecQualifiedLabels(Element c) {
+		List<String> qnames = compileNestedComponentLabels(c.getId());
+		String items = qnames.stream().map(s -> '"' + s + '"' ).collect(Collectors.joining(", "));
+		return "element-labels " + "[" + items +"]";
 	}
 
 	/**
@@ -407,7 +420,7 @@ public class Bpmn4sCompiler{
 					s = model.getElementById(node.getOriginDataNodeId()).getInit();
 				}
 				if (s != null && s != "") {
-					init += s.replace(node.getName(), compile(node.getId())) + "\n";
+					init += replaceWord(s, node.getName(), compile(node.getId())) + "\n";
 				}
 			}
 		}
@@ -418,7 +431,7 @@ public class Bpmn4sCompiler{
 				&& !ds.isReferenceData()
 				&& isImmediateParentComponent(cId, ds)) {
 				if (ds.getInit() != null && ds.getInit() != "") {
-					init += ds.getInit().replace(ds.getName(), compile(ds.getId())) + "\n";
+					init += replaceWord(ds.getInit(), ds.getName(), compile(ds.getId())) + "\n";
 				}
 			}
 		}
@@ -507,6 +520,7 @@ public class Bpmn4sCompiler{
 					// Name of context as defined by user at front end:
 					String compCtxName = model.getElementById(cId).getContextName();
 					task += "action\t\t\t" + sanitize(repr(node)) + "\n";
+					task += "element-label\t"  + '"' + repr(node) + '"' + "\n";
 					// STEP TYPE
 					String stepConf = "";
 					if (model.isComposeTask(node.getId())) {
@@ -654,11 +668,11 @@ public class Bpmn4sCompiler{
 	private Set<String> collectSuppressedFields(String dataTypeName, String prefix, Set<String> fields) {
 		Bpmn4sDataType dataType = model.dataSchema.get(dataTypeName);
 		if (dataType instanceof RecordType recType) {
-			for(Map.Entry<String, String> field : recType.fields.entrySet()) {
-				if (recType.isSuppressed(field.getKey())) {
-					fields.add(prefix + field.getKey());
+			for(RecordField field : recType.fields) {
+				if (field.isSuppressed()) {
+					fields.add(prefix + field.getName());
 				} else {
-					collectSuppressedFields(field.getValue(), prefix + field.getKey() + '.', fields);
+					collectSuppressedFields(field.getType(), prefix + field.getName() + '.', fields);
 				}
 			}
 		}
@@ -702,24 +716,24 @@ public class Bpmn4sCompiler{
 	 * Flows from a fork xor gate to a merge xor gate introduce transitions in the CPN. Notice
 	 * that other flows between xor gates are optimized away when merging xor gates connected components. 
 	 */
-	private List<String> getFlowActions(String component) {
+	private List<String> getFlowActions(String cId) {
 		List<String> result = new ArrayList<String>();
 		for (Edge e: model.edges) {
 			String src = e.getSrc();
 			String tar = e.getTar();
-			if(model.isXor(src) && model.isForkGate(src) &&
+			if(isParentComponent(cId, model.getElementById(src)) 
+					&& model.isXor(src) && model.isForkGate(src) &&
 					model.isXor(tar) && model.isMergeGate(tar)) {
 				String task = "action\t\t\t" + repr(e) + "\n";
 				task += "case\t\tdefault\n";
 				task += "with-inputs\t\t" + compile(src) + "\n";
 				task += "produces-outputs\t" + compile(tar) + "\n";
-				task += "updates\t\t" + compile(tar) + " := " + compile(src) + "\n";
+				task += "updates: \t\t" + compile(tar) + " := " + compile(src) + "\n";
 				result.add(task);
 			}
 		}
 		return result;
-	}
-	
+	}	
 	
 	/**
 	 * Fetch the names of components that poses a RUN task.
@@ -783,8 +797,11 @@ public class Bpmn4sCompiler{
 			if(dataType instanceof RecordType recType) {
 				String type = "record " + recType.getName() + " {\n";
 				String parameters = "";
-				for (Entry<String, String> e: recType.fields.entrySet()) {
-					parameters += generateRecordField(e);
+				for (RecordField field: recType.fields) {
+					String fieldName = field.getName();
+					String fieldTypeName = typeToString(field.getType());
+					String fieldKind = field.getKind() == RecordFieldKind.Concrete ? "" : field.getKind().name().toLowerCase() + " ";
+					parameters += fieldKind + fieldTypeName + "\t" + fieldName + "\n";
 				}
 				type += indent(parameters) + "}\n";
 				types += type + "\n";
@@ -809,12 +826,6 @@ public class Bpmn4sCompiler{
 		return types;
 	}
 
-	private String generateRecordField(Entry<String, String> e) {
-		String fieldName = e.getKey();
-		String fieldTypeName = e.getValue();	
-		return typeToString(fieldTypeName)  + "\t" + fieldName + "\n";
-	}
-		
 	private String typeToString(String dataTypeName) {
 		Bpmn4sDataType dataType = model.dataSchema.get(dataTypeName);
 		String result = "";
@@ -966,6 +977,26 @@ public class Bpmn4sCompiler{
 			return getCompiledComponentName(elId);
 		}
 		return repr(model.getElementById(elId));
+	}
+
+	/**
+	 * Compile list with names of nested Elements <el>.
+	 */
+	protected List<String> compileNestedComponentLabels(String elId) {
+		if (model.isComponent(elId)) {
+			return getNestedComponentLabels(elId);
+		}
+		return Arrays.asList(repr(model.getElementById(elId)));
+	}
+	
+	protected List<String> getNestedComponentLabels(String componentId) {
+		Element component = model.getElementById(componentId);
+		/* Nested components are compiled with their fully qualified name. */
+		List<String> qname_list = component.getParentComponents().stream()
+				.map(e -> repr(model.getElementById(e)))
+				.collect(Collectors.toList());
+		qname_list.add(repr(component));
+		return qname_list;
 	}
 	
 	/**
