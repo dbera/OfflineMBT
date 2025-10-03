@@ -36,6 +36,7 @@ import static extension nl.esi.comma.types.utilities.EcoreUtil3.*
 import static extension nl.esi.comma.types.utilities.FileSystemAccessUtil.*
 import static extension org.eclipse.emf.ecore.util.EcoreUtil.*
 import static extension org.eclipse.xtext.EcoreUtil2.*
+import nl.esi.comma.abstracttestspecification.generator.to.bpmn.FromAbstractToBpmn
 
 /**
  * Generates code from your model files on save.
@@ -106,6 +107,10 @@ class StandardProjectGenerator extends AbstractGenerator {
             absTspecRes.save(null)
             // Validate the generated abstract tspec
             absTspecRes.validate()
+
+            // Generate bpmn for atspec
+            val fromAbstractToBpmn = new FromAbstractToBpmn()
+            fromAbstractToBpmn.doGenerate(absTspecRes, absTspecFsa, ctx)
 
             // Generate concrete tspec
             val conTspecFsa = fsa.createFolderAccess('tspec_concrete/' + tspecName)
