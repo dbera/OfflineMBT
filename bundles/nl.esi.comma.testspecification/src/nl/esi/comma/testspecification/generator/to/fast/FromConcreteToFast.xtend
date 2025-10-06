@@ -81,8 +81,9 @@ class FromConcreteToFast extends AbstractGenerator {
     def private generateContents(Resource res, IFileSystemAccess2 fsa) {
         // 0) setup FAST directory structure
         val baseFsa = fsa.createFolderAccess('generated_FAST/')
-        val datasetPath = this.args.getOrDefault('prefixPath', './')
-        val testFsa = baseFsa.createFolderAccess(datasetPath)
+        val testPath = this.args.getOrDefault('prefixPath', './')
+        val testFsa = baseFsa.createFolderAccess(testPath)
+        val datasetFsa = testFsa.createFolderAccess('dataset/')
 
         // 1) using the .tspec file
         val modelInst = res.contents.head as TSMain
@@ -92,7 +93,7 @@ class FromConcreteToFast extends AbstractGenerator {
         // 2) create mapping data-implementation to filenames (in .params files)
         var tsi = new TestSpecificationInstance
         // 2.1) Path to folder containing .json input_file(s) (default: ./dataset/)
-        tsi.filePath = datasetPath
+        tsi.filePath = testPath
         tsi._process_Import_Data_Implementation(modelInst)
 
         // 3) create mappings for:
@@ -116,8 +117,8 @@ class FromConcreteToFast extends AbstractGenerator {
         testFsa.generateFile('variants/single_variant/data.kvp', tsi.generateFASTScenarioFile)
 
         // 6) Generate JSON data files
-        tsi.generateJSONDataFiles(baseFsa, modelInst, record_def_file_names)
-        tsi.generateJSONSutSetupFiles(baseFsa)
+        tsi.generateJSONDataFiles(datasetFsa, modelInst, record_def_file_names)
+        tsi.generateJSONSutSetupFiles(datasetFsa)
 
         // 7) generate reference.kvp
         var refkvpgen = new RefKVPGenerator()
@@ -229,24 +230,6 @@ class FromConcreteToFast extends AbstractGenerator {
         return tsi.generateInitRecordAssignment(action.fieldAccess as ExpressionRecordAccess, action.exp, '''''')
     }
 
-    def String findPrefixBasedOnType(Expression access) {
-        if (access instanceof ExpressionRecordAccess) {
-            var TypeDecl fieldType = access.field.type.type
-            if (fieldType instanceof SimpleTypeDecl) {
-                var isBasedOnString = fieldType.base?.name?.equals('string')
-                if (isBasedOnString) {
-                    var baseName = fieldType.name
-                    var prefix = this.args.getOrDefault('prefixPath', './')
-                    return switch baseName {
-                        case 'Dataset': '"%s/dataset/"+'.formatted(prefix)
-                        default: ''
-                    }
-                }
-            }
-        }
-        return ""
-    }
-
     def private generateInitRecordAssignment(TestSpecificationInstance tsi, ExpressionRecordAccess eRecAccess,
         Expression exp, CharSequence ref) {
         var mapLHStoRHS = new KeyValue
@@ -266,8 +249,7 @@ class FromConcreteToFast extends AbstractGenerator {
         // tracking fully-qualified field name 
         mapLHStoRHS.key = '''«recExp».''' + field.name
         // check if there is any applicable auto-prefixing rule (for custom types *based on string*)
-        var prefix = findPrefixBasedOnType(eRecAccess)
-        mapLHStoRHS.value = prefix + ExpressionsParser::generateExpression(exp, ref).toString
+        mapLHStoRHS.value = ExpressionsParser::generateExpression(exp, ref).toString
         mapLHStoRHS.refVal.add(mapLHStoRHS.value) // Added DB 14.10.2024
         // check references to Step outputs and replace with FAST syntax
         for (elm : tsi.stepVarNameToType.keySet) {
@@ -547,7 +529,9 @@ class FromConcreteToFast extends AbstractGenerator {
                     for (sr : step.stepRefs) {
                         var kv = new KeyValue
                         kv.key = sr.variableName
-                        kv.value = '"' + sr.inputFile + sr.variableName + "_" + sr.recordExp + ".json" + '"'
+                        var format = '''global.params['testcase_data'] + '%s' '''
+                        kv.value = sr.variableName + "_" + sr.recordExp + ".json"
+                        kv.value = String.format(format, kv.value)
                         kv.refVal = new HashSet<String>
                         kv.refVal.add('"' + sr.inputFile + '"')
                         mapListOfKeyValue.get(step.id).add(kv)
@@ -587,9 +571,9 @@ class FromConcreteToFast extends AbstractGenerator {
             in.data.steps = [
                 «FOR elm : tsi.steps SEPARATOR ','»
                     «IF generateFASTRefStepTxt(elm).empty»
-                        { "id" : "«elm.id»", "type" : "«elm.type.replaceAll("_dot_",".")»", "input_file" : "«elm.inputFile»" }
+                        { "id" : "«elm.id»", "type" : "«elm.type.replaceAll("_dot_",".")»", "input_file" : "#valueof(global.params['testcase_data'] + '«elm.inputFile»')" }
                     «ELSE»
-                        { "id" : "«elm.id»", "type" : "«elm.type.replaceAll("_dot_",".")»", "input_file" : "«elm.inputFile»",
+                        { "id" : "«elm.id»", "type" : "«elm.type.replaceAll("_dot_",".")»", "input_file" : "#valueof(global.params['testcase_data'] + '«elm.inputFile»')",
                             "parameters" : {
                                 «FOR refTxt : generateFASTRefStepTxt(elm) SEPARATOR ','»
                                     «refTxt»
@@ -686,7 +670,7 @@ class FromConcreteToFast extends AbstractGenerator {
                     val apidef = input.model as APIDefinition
                     for (api : apidef.apiImpl) {
                         for (elm : api.di) {
-                            var filepath = tsi.filePath + '/dataset/' + elm.fname
+                            var filepath = elm.fname
                             var key = elm.^var.name
                             tsi.dataImplToFilename.putIfAbsent(key, new ArrayList)
                             tsi.dataImplToFilename.get(key).add(filepath)
@@ -710,11 +694,13 @@ class FromConcreteToFast extends AbstractGenerator {
     }
 
     protected def void _process_Global_Param_Init(TestSpecificationInstance tsi, TSMain modelInst) {
-        val model = modelInst.model as TestDefinition
-        for (act : model.gparamsInitActions) {
-            var mapLHStoRHS = tsi.generateInitAssignmentAction(act)
-            tsi.dataVarToDataInstance.putIfAbsent(mapLHStoRHS.key, new ArrayList)
-            tsi.dataVarToDataInstance.get(mapLHStoRHS.key).add(mapLHStoRHS.value)
+        val Map<String,String> gparams = Map.of(
+            "testcase_data", '"%s/dataset/"'.formatted(this.args.getOrDefault('prefixPath', './'))
+        )
+        for (key : gparams.keySet) {
+            var value = gparams.get(key)
+            tsi.dataVarToDataInstance.putIfAbsent(key, new ArrayList)
+            tsi.dataVarToDataInstance.get(key).add(value)
         }
     }
 
@@ -787,10 +773,11 @@ class FromConcreteToFast extends AbstractGenerator {
                             new_rstep.type = field.recordField.type.type.name
                             new_rstep.recordExp = lhs.value
                             // path for json input_file in "filePath / field name + step ID"
-                            new_rstep.inputFile = tsi.filePath + '/dataset/' + new_rstep.inputFile + new_rstep.id + '_' +
+                            new_rstep.inputFile = new_rstep.inputFile + new_rstep.id + '_' +
                                 stepId + '.json'
                             // point lhs value to input_file
-                            lhs.value = new_rstep.inputFile
+                            var format = '''"#valueof(global.params['testcase_data'] + '%s')"'''
+                            lhs.value = String.format(format, new_rstep.inputFile)
                             // Add to list of step reference of step
                             stepInst.stepRefs.add(new_rstep)
                         }
@@ -855,7 +842,7 @@ class FromConcreteToFast extends AbstractGenerator {
                             new_rstep.id = lhs.value
                             new_rstep.runStep = stepInst.runStep
                             new_rstep.type = stepInst.runStep?.type.name
-                            new_rstep.inputFile = tsi.filePath + '/dataset/'
+                            new_rstep.inputFile = ''
                             new_rstep.variableName = match
                             new_rstep.recordExp = stepInst.id
                             new_rstep.parameters.add(mapLHStoRHS) // Added DB 29.05.2025
