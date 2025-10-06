@@ -55,6 +55,7 @@ import nl.esi.comma.expressions.expression.Field
 import nl.esi.comma.expressions.expression.VectorTypeConstructor
 import nl.esi.comma.types.types.SimpleTypeDecl
 import nl.esi.comma.types.types.TypeDecl
+import nl.esi.comma.types.types.RecordField
 
 class ExpressionsParser {
 	
@@ -128,16 +129,19 @@ class ExpressionsParser {
 
     def static String findStringPrefixBasedOnType(ExpressionConstantString string) {
         var cont = string.eContainer
-        if (cont instanceof Field) {
-            var TypeDecl fieldType = cont.recordField.type.type
-            if (fieldType instanceof SimpleTypeDecl) {
-                var isBasedOnString = fieldType.base?.name?.equals('string')
-                if (isBasedOnString) {
-                    var baseName = fieldType.name
-                    return switch baseName {
-                        case 'Dataset': 'global.params[\'testcase_data\'] + '
-                        default: null
-                    }
+        var TypeDecl fieldType = switch (cont) {
+            Field: (cont as Field).recordField.type.type
+            RecordFieldAssignmentAction: ((cont as RecordFieldAssignmentAction).
+                fieldAccess as ExpressionRecordAccess).field.type.type
+            default: null
+        }
+        if (fieldType instanceof SimpleTypeDecl) {
+            var isBasedOnString = fieldType.base?.name?.equals('string')
+            if (isBasedOnString) {
+                var baseName = fieldType.name
+                return switch baseName {
+                    case 'Dataset': 'global.params[\'testcase_data\'] + '
+                    default: null
                 }
             }
         }
