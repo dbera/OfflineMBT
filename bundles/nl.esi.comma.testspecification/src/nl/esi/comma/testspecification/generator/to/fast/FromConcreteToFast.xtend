@@ -260,10 +260,6 @@ class FromConcreteToFast extends AbstractGenerator {
                 // for proper FAST generation. 
                 "steps.out[step.params['" + "_" + elm + "']].")
                 mapLHStoRHS.refKey.add(elm) // reference to step
-                // Custom String Updates for FAST Syntax Peculiarities! TODO investigate solution?
-                // map-var['key'] + "[0]" -> map-var['key'][0] 
-                mapLHStoRHS.value = mapLHStoRHS.value.replaceAll(Pattern.quote("] + \"["), "][") // ("\\] + \"\\[","\\]\\[")
-                mapLHStoRHS.value = mapLHStoRHS.value.replaceAll("\\]\"", "]")
             }
         }
 //        // replace references to global variables with FAST syntax
