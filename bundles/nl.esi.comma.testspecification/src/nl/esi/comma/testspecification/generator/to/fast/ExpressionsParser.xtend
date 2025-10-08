@@ -123,10 +123,11 @@ class ExpressionsParser {
 	{
 		var prefix = findStringPrefixBasedOnType(expr)
 		if(prefix instanceof String) return prefix+''''«expr.value»' '''
-		if(expr.value.contains('''Platform:''') || expr.value.contains('''setup.suts''')) return '''«expr.value»''' 
-        else return '''"«expr.value»"'''
-	}
-	
+
+		if(expr.value.contains('''Platform:''') || expr.value.contains('''setup.suts''')) return '''«expr.value»'''	
+		else return '''"«expr.value»"'''
+	} 
+
     def static String findStringPrefixBasedOnType(ExpressionConstantString string) {
         var cont = string.eContainer
         var TypeDecl fieldType = switch (cont) {
