@@ -118,6 +118,9 @@ class ConcreteExpressionHandler {
         if (type.base !== null) {
             return type.base.createDeclValue(value)
         }
+        if (value.isNullLiteral){
+            return value.stringValue
+        }
         return switch (type.name) {
             case 'int',
             case 'real',
