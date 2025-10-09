@@ -39,6 +39,7 @@ import static extension nl.esi.comma.types.utilities.TypeUtilities.*
 import org.eclipse.xtext.validation.EValidatorRegistrar
 import org.eclipse.core.runtime.Platform
 import org.eclipse.emf.ecore.EValidator
+import nl.esi.comma.types.BasicTypes
 
 /**
  * This class contains custom validation rules. 
@@ -74,15 +75,8 @@ class TypesValidator extends AbstractTypesValidator {
   	}				
   	
   	//Used because the resource with the predefined types is somehow not loaded by the resource description provider
-  	protected def placePredefinedTypes(HashMultimap<String, Object> multiMap){
-  		multiMap.put("int", null)
-  		multiMap.put("bool", null)
-  		multiMap.put("real", null)
-  		multiMap.put("string", null)
-  		multiMap.put("void", null)
-  		multiMap.put("any", null)
-  		multiMap.put("bulkdata", null)
-  		multiMap.put("id", null)
+  	protected def placePredefinedTypes(HashMultimap<String, Object> multiMap) {
+  	    BasicTypes.allBasicTypes.forEach[multiMap.put(name, null)]
   	}
   	
   	/*

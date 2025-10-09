@@ -28,6 +28,7 @@ import nl.esi.comma.expressions.expression.ExpressionConstantString
 import nl.esi.comma.expressions.expression.ExpressionDivision
 import nl.esi.comma.expressions.expression.ExpressionEnumLiteral
 import nl.esi.comma.expressions.expression.ExpressionEqual
+import nl.esi.comma.expressions.expression.ExpressionFnCall
 import nl.esi.comma.expressions.expression.ExpressionFunctionCall
 import nl.esi.comma.expressions.expression.ExpressionGeq
 import nl.esi.comma.expressions.expression.ExpressionGreater
@@ -55,8 +56,8 @@ import nl.esi.comma.expressions.expression.ExpressionVector
 import nl.esi.comma.expressions.expression.InterfaceAwareType
 import nl.esi.comma.expressions.expression.QUANTIFIER
 import nl.esi.comma.signature.interfaceSignature.Signature
+import nl.esi.comma.types.BasicTypes
 import nl.esi.comma.types.types.Dimension
-import nl.esi.comma.types.types.SimpleTypeDecl
 import nl.esi.comma.types.types.Type
 import nl.esi.comma.types.types.TypeDecl
 import nl.esi.comma.types.types.TypeObject
@@ -64,15 +65,12 @@ import nl.esi.comma.types.types.TypesFactory
 import nl.esi.comma.types.types.TypesPackage
 import nl.esi.comma.types.types.VectorTypeConstructor
 import nl.esi.comma.types.types.VectorTypeDecl
-import nl.esi.comma.types.utilities.TypeUtilities
 import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.EReference
 import org.eclipse.xtext.scoping.IScopeProvider
 import org.eclipse.xtext.validation.Check
 
 import static extension nl.esi.comma.types.utilities.TypeUtilities.*
-import nl.esi.comma.expressions.expression.ExpressionFnCall
-import static nl.esi.comma.types.utilities.TypeUtilities.subTypeOf
 
 /*
  * This class mainly captures the ComMA type system for expressions. Constraints are not formulated
@@ -81,32 +79,8 @@ import static nl.esi.comma.types.utilities.TypeUtilities.subTypeOf
 class ExpressionValidator extends AbstractExpressionValidator {
 	@Inject protected IScopeProvider scopeProvider
 	
-    protected static val SimpleTypeDecl anyType = TypeUtilities.ANY_TYPE;
-
-	protected static val SimpleTypeDecl boolType = TypesFactory.eINSTANCE.createSimpleTypeDecl() => [
-	    name = 'bool'
-	]
-	protected static val SimpleTypeDecl intType = TypesFactory.eINSTANCE.createSimpleTypeDecl() => [
-        name = 'int'
-    ]
-	protected static val SimpleTypeDecl realType = TypesFactory.eINSTANCE.createSimpleTypeDecl() => [
-        name = 'real'
-    ]
-	protected static val SimpleTypeDecl stringType = TypesFactory.eINSTANCE.createSimpleTypeDecl() => [
-        name = 'string'
-    ]
-	protected static val SimpleTypeDecl voidType = TypesFactory.eINSTANCE.createSimpleTypeDecl() => [
-        name = 'void'
-    ]
-	protected static val SimpleTypeDecl idType = TypesFactory.eINSTANCE.createSimpleTypeDecl() => [
-        name = 'id'
-    ]
-	protected static val SimpleTypeDecl bulkdataType = TypesFactory.eINSTANCE.createSimpleTypeDecl() => [
-        name = 'bulkdata'
-    ]
-
     static def boolean numeric(TypeObject t) {
-        return t.subTypeOf(intType) || t.subTypeOf(realType)
+        return t.subTypeOf(BasicTypes.getIntType(t)) || t.subTypeOf(BasicTypes.getRealType(t))
     }
 	
 	//Type computation. No checking is performed. If the type cannot be determined, null is returned
@@ -122,10 +96,10 @@ class ExpressionValidator extends AbstractExpressionValidator {
 			ExpressionLess |
 			ExpressionGreater |
 			ExpressionLeq |
-			ExpressionGeq : boolType
+			ExpressionGeq : BasicTypes.getBoolType(e)
 			ExpressionConstantInt |
-			ExpressionModulo : intType
-			ExpressionConstantReal : realType
+			ExpressionModulo : BasicTypes.getIntType(e)
+			ExpressionConstantReal : BasicTypes.getRealType(e)
 			ExpressionAddition |
 			ExpressionSubtraction |
 			ExpressionDivision | 
@@ -136,19 +110,19 @@ class ExpressionValidator extends AbstractExpressionValidator {
 			ExpressionMinus |
 			ExpressionPlus : {
 				val t = e.sub.typeOf
-				if(t.subTypeOf(intType) || t.subTypeOf(realType))
+				if(t.subTypeOf(BasicTypes.getIntType(e)) || t.subTypeOf(BasicTypes.getRealType(e)))
 					t
 				else
 					null
 			}
 			ExpressionVariable : e.variable?.type.typeObject
-			ExpressionConstantString : stringType
+			ExpressionConstantString : BasicTypes.getStringType(e)
 			ExpressionBracket : e.sub?.typeOf
 			ExpressionEnumLiteral : e.type
 			ExpressionRecord : e.type
 			ExpressionRecordAccess : e.field?.type?.typeObject
-			ExpressionBulkData : bulkdataType
-			ExpressionAny : anyType
+			ExpressionBulkData : BasicTypes.getBulkDataType(e)
+			ExpressionAny : BasicTypes.getAnyType(e)
 			ExpressionFnCall : e.function.returnType.type
 			ExpressionFunctionCall : ExpressionFunction.valueOf(e)?.inferType(e.args, ExpressionFunction.RETURN_ARG)
 			ExpressionVector : e.typeAnnotation?.type?.typeObject
@@ -156,7 +130,7 @@ class ExpressionValidator extends AbstractExpressionValidator {
 				if(e.quantifier == QUANTIFIER::DELETE)
 					e.collection.typeOf
 				else
-					boolType
+					BasicTypes.getBoolType(e)
 			}
 			ExpressionMap : e.typeAnnotation?.type?.typeObject
 			ExpressionMapRW : {
@@ -179,9 +153,9 @@ class ExpressionValidator extends AbstractExpressionValidator {
 		val rightType = e.right.typeOf
 		switch(e){
 			ExpressionAddition : {
-				if(leftType.subTypeOf(intType) && rightType.subTypeOf(intType)) return intType
-				if(leftType.subTypeOf(realType) && rightType.subTypeOf(realType)) return realType
-				if(leftType.subTypeOf(stringType) && rightType.subTypeOf(stringType)) return stringType
+				if(leftType.subTypeOf(BasicTypes.getIntType(e)) && rightType.subTypeOf(BasicTypes.getIntType(e))) return BasicTypes.getIntType(e)
+				if(leftType.subTypeOf(BasicTypes.getRealType(e)) && rightType.subTypeOf(BasicTypes.getRealType(e))) return BasicTypes.getRealType(e)
+				if(leftType.subTypeOf(BasicTypes.getStringType(e)) && rightType.subTypeOf(BasicTypes.getStringType(e))) return BasicTypes.getStringType(e)
 				return null
 			}
 			ExpressionSubtraction |
@@ -190,8 +164,8 @@ class ExpressionValidator extends AbstractExpressionValidator {
 			ExpressionMultiply |
 			ExpressionMinimum |
 			ExpressionMaximum : {
-				if(leftType.subTypeOf(intType) && rightType.subTypeOf(intType)) return intType
-				if(leftType.subTypeOf(realType) && rightType.subTypeOf(realType)) return realType
+				if(leftType.subTypeOf(BasicTypes.getIntType(e)) && rightType.subTypeOf(BasicTypes.getIntType(e))) return BasicTypes.getIntType(e)
+				if(leftType.subTypeOf(BasicTypes.getRealType(e)) && rightType.subTypeOf(BasicTypes.getRealType(e))) return BasicTypes.getRealType(e)
 				return null
 			}
 			default : null
@@ -208,16 +182,16 @@ class ExpressionValidator extends AbstractExpressionValidator {
 				val leftType = e.left.typeOf
 				val rightType = e.right.typeOf
 		
-				if((leftType !== null) && !leftType.identical(boolType)){ //use subtype instead!
+				if((leftType !== null) && !leftType.identical(BasicTypes.getBoolType(e))){ //use subtype instead!
 					error("Type mismatch: expected type bool", ExpressionPackage.Literals.EXPRESSION_BINARY__LEFT)
 				}
-				if((rightType !== null) && !rightType.identical(boolType)){
+				if((rightType !== null) && !rightType.identical(BasicTypes.getBoolType(e))){
 					error("Type mismatch: expected type bool", ExpressionPackage.Literals.EXPRESSION_BINARY__RIGHT)
 				}
 			}
 			ExpressionNot: {
 				val t = e.sub.typeOf
-				if((t !== null) && !t.identical(boolType)){
+				if((t !== null) && !t.identical(BasicTypes.getBoolType(e))){
 					error("Type mismatch: expected type bool", ExpressionPackage.Literals.EXPRESSION_UNARY__SUB)
 				}
 			}
@@ -233,7 +207,7 @@ class ExpressionValidator extends AbstractExpressionValidator {
 					error("Arguments must be of compatible types", e.eContainer, e.eContainingFeature)
 					return
 				}
-				if(!leftType.synonym(intType) && !leftType.synonym(realType)){
+				if(!leftType.synonym(BasicTypes.getIntType(e)) && !leftType.synonym(BasicTypes.getRealType(e))){
 					error("Type mismatch: expected type int or real", ExpressionPackage.Literals.EXPRESSION_BINARY__LEFT)
 				}
 			}
@@ -253,18 +227,18 @@ class ExpressionValidator extends AbstractExpressionValidator {
 					return
 				}
 				if(e instanceof ExpressionModulo){
-					if(!leftType.synonym(intType)){
+					if(!leftType.synonym(BasicTypes.getIntType(e))){
 						error("Type mismatch: expected type int", ExpressionPackage.Literals.EXPRESSION_BINARY__LEFT)
 					}
 					return
 				}
 				if(e instanceof ExpressionAddition){
-					if(!leftType.synonym(intType) && !leftType.synonym(realType) && !leftType.synonym(stringType)){
+					if(!leftType.synonym(BasicTypes.getIntType(e)) && !leftType.synonym(BasicTypes.getRealType(e)) && !leftType.synonym(BasicTypes.getStringType(e))){
 						error("Type mismatch: expected type int, real or string", ExpressionPackage.Literals.EXPRESSION_BINARY__LEFT)
 				}
 					return
 				}
-				if(!leftType.synonym(intType) && !leftType.synonym(realType)){
+				if(!leftType.synonym(BasicTypes.getIntType(e)) && !leftType.synonym(BasicTypes.getRealType(e))){
 					error("Type mismatch: expected type int or real", ExpressionPackage.Literals.EXPRESSION_BINARY__LEFT)
 				}
 				
@@ -272,7 +246,7 @@ class ExpressionValidator extends AbstractExpressionValidator {
 			ExpressionMinus |
 			ExpressionPlus : {
 				val t = e.sub.typeOf
-				if((t !== null) && !t.subTypeOf(intType) && !t.subTypeOf(realType)){
+				if((t !== null) && !t.subTypeOf(BasicTypes.getIntType(e)) && !t.subTypeOf(BasicTypes.getRealType(e))){
 					error("Type mismatch: expected type int or real", ExpressionPackage.Literals.EXPRESSION_UNARY__SUB)
 				}
 			}
@@ -390,7 +364,7 @@ class ExpressionValidator extends AbstractExpressionValidator {
 				if(collectionType !== null && !isVectorType(collectionType))
 					error("Expression must be of type vector", ExpressionPackage.Literals.EXPRESSION_QUANTIFIER__COLLECTION)
 				val condType = e.condition.typeOf
-				if(condType !== null && !condType.subTypeOf(boolType))
+				if(condType !== null && !condType.subTypeOf(BasicTypes.getBoolType(e)))
 					error("Condition expression must be of type boolean", ExpressionPackage.Literals.EXPRESSION_QUANTIFIER__CONDITION)
 	
 			}

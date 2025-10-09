@@ -92,7 +92,7 @@ Node:
 
 ScenarioStep:
     'scenario' scenario=[ScenarioDecl|ID] 'step' stepNumber = INT ( ':'
-        ('step-arguments' ':' stepArguments += (AssignmentAction | RecordFieldAssignmentAction)+)?
+        ('step-arguments' ':' stepArguments += AssignmentAction+)?
         ('step-variables' ':' stepVariables += StepVariable+)?
         ('step-body' ':' stepBody = StepBody)?
     )?

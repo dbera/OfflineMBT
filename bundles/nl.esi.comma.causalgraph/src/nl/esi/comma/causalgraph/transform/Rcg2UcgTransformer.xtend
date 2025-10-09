@@ -135,7 +135,7 @@ class Rcg2UcgTransformer {
                     element.name = element.graph.name + '_' + element.name
                     mergedElements.put(element.name, element)
                 } else {
-                    // We cannot do anything alse then add the conflict, 
+                    // We cannot do anything else then add the conflict, 
                     // this will result in a non-validating model
                     conflicts += element
                 }
@@ -155,7 +155,7 @@ class Rcg2UcgTransformer {
                 .filter[changeable && EReferenceType.isInstance(from) && EReferenceType.isInstance(to)]
             for (eReference : eReferences) {
                 if (eReference.isMany) {
-                    val value = eObject.eGet(eReference) as List
+                    val value = eObject.eGet(eReference) as List<EObject>
                     var i = -1
                     while ((i = value.indexOf(from)) >= 0) {
                         value.set(i, to)
@@ -182,7 +182,7 @@ class Rcg2UcgTransformer {
     }
 
     /**
-     * When asserts use the same variables form the same nodes, they can be (potentially) merged.
+     * When asserts use the same variables from the same nodes, they can be (potentially) merged.
      */
     protected def getAssertGroupKey(Node node) {
         return node.outgoingDataFlows.map[ edge |
