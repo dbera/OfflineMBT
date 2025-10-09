@@ -322,7 +322,22 @@ class ProductValidator extends AbstractProductValidator {
             ]
         ]
     }
-    
+
+    /**
+     * Validate that all concrete record fields are assigned in an init
+     */
+    @Check
+    def checkInitExpressionRecord(Block block) {
+        block.initActions.flatMap[eAllContents.toIterable].filter(ExpressionRecord).forEach [ expRec |
+            expRec.type.allFields.filter[kind == RecordFieldKind.CONCRETE].forEach [ field |
+                if (!expRec.fields.exists[recordField == field]) {
+                    error('''Concrete record field '«field.FQN»' should be assigned''', expRec,
+                        ExpressionPackage.Literals.EXPRESSION_RECORD__TYPE);
+                }
+            ]
+        ]
+    }
+
     private static def getFQN(RecordField rf) '''«rf.recordType.name».«rf.name»'''
 
     /**
