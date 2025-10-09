@@ -83,7 +83,7 @@ class ReducedCausalGraphGenerator {
             ],
             createScenarioStep => [
                 stepType = StepType.WHEN
-                stepName = 'parameterizedStep()'
+                stepName = 'parameterizedStep(arg1)'
                 function = true
                 scenario = scenario1
                 stepArguments += createAssignmentAction => [
@@ -98,9 +98,7 @@ class ReducedCausalGraphGenerator {
                     ]
                 ]
                 stepBody = createLanguageBody => [
-                    body = '''
-                        assert on «variableX.name»
-                    '''
+                    body = 'call parameterizedStep(_param1)'
                 ]
             ]
         )
