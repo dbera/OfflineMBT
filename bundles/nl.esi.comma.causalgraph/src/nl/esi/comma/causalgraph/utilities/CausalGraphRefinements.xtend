@@ -28,7 +28,9 @@ class CausalGraphRefinements {
         graph.requirements += scenarios.flatMap[requirements]
         graph.scenarios += scenarios
         graph.variables += steps.flatMap[stepVariables].map[variable]
-        graph.types += graph.variables.map[type.type]
+        graph.types += graph.variables.map[type.type].filter[eResource === null]
+        // Optionally add types if step parameters are used
+        graph.types += steps.flatMap[stepArguments].map[assignment.type.type].filter[eResource === null]
 
         steps.forEach [ step, counter |
             step.stepNumber = counter + 1
@@ -38,6 +40,11 @@ class CausalGraphRefinements {
             node.name = 'n' + step.stepNumber
             node.steps += step
             nodeAttr.applyTo(node)
+
+            if (!step.stepArguments.isEmpty) {
+                node.stepParameters += step.stepArguments.map[assignment]
+                node.stepBody = step.stepBody
+            }
 
             graph.nodes += node
         ]

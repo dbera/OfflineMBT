@@ -18,12 +18,9 @@ import org.eclipse.xtext.scoping.impl.ImportUriGlobalScopeProvider
 import java.util.LinkedHashSet
 import org.eclipse.xtext.EcoreUtil2
 import nl.esi.comma.types.types.ModelContainer
+import nl.esi.comma.types.BasicTypes
 
 class TypesImportUriGlobalScopeProvider extends ImportUriGlobalScopeProvider {
-	static final String BASIC_TYPES_JAR_PATH = "nl/esi/comma/types/types.types";
-	static final URI BASIC_TYPES_PATH = URI.createURI(
-		Thread.currentThread().contextClassLoader.getResource(BASIC_TYPES_JAR_PATH).toString)
-	
 	override getImportedUris(Resource resource) {
 		var LinkedHashSet<URI> importedURIs = new LinkedHashSet<URI>(5);
 				
@@ -35,7 +32,7 @@ class TypesImportUriGlobalScopeProvider extends ImportUriGlobalScopeProvider {
 			importedURIs = super.getImportedUris(resource)
 		}
 		//implicit import of the built-in types in types.types
-		importedURIs.add(BASIC_TYPES_PATH);
+		importedURIs.add(BasicTypes.TYPES_URI);
 		
 		return importedURIs
 	}

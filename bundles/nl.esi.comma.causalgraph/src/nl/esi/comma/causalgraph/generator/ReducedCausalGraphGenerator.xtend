@@ -1,5 +1,6 @@
 package nl.esi.comma.causalgraph.generator
 
+import nl.esi.comma.actions.actions.ActionsFactory
 import nl.esi.comma.causalgraph.CausalGraphStandaloneSetup
 import nl.esi.comma.causalgraph.causalGraph.CausalGraphFactory
 import nl.esi.comma.causalgraph.causalGraph.ScenarioStep
@@ -8,6 +9,7 @@ import nl.esi.comma.causalgraph.causalGraph.VariableAccess
 import nl.esi.comma.causalgraph.utilities.CausalGraphRefinements
 import nl.esi.comma.causalgraph.utilities.NodeAttributes
 import nl.esi.comma.expressions.expression.ExpressionFactory
+import nl.esi.comma.types.BasicTypes
 import org.eclipse.emf.common.util.URI
 import org.eclipse.lsat.common.xtend.annotations.IntermediateProperty
 import org.eclipse.xtext.resource.XtextResourceSet
@@ -15,6 +17,7 @@ import org.eclipse.xtext.resource.XtextResourceSet
 class ReducedCausalGraphGenerator {
     static extension val CausalGraphFactory m_cg = CausalGraphFactory::eINSTANCE
     static extension val ExpressionFactory m_exp = ExpressionFactory::eINSTANCE
+    static extension val ActionsFactory m_act = ActionsFactory::eINSTANCE
 
     @IntermediateProperty(ScenarioStep)
     static Boolean function = false
@@ -76,6 +79,26 @@ class ReducedCausalGraphGenerator {
                     body = '''
                         assert on «variableX.name»
                     '''
+                ]
+            ],
+            createScenarioStep => [
+                stepType = StepType.WHEN
+                stepName = 'parameterizedStep(arg1)'
+                function = true
+                scenario = scenario1
+                stepArguments += createAssignmentAction => [
+                    assignment = createVariable => [
+                        name = '_param1'
+                        type = createTypeReference => [
+                            type = BasicTypes.stringType
+                        ]
+                    ]
+                    exp = createExpressionConstantString => [
+                        value = 'Argument Value'
+                    ]
+                ]
+                stepBody = createLanguageBody => [
+                    body = 'call parameterizedStep(_param1)'
                 ]
             ]
         )
