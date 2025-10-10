@@ -40,7 +40,7 @@ class FromAbstractToConcrete extends AbstractGenerator {
         if (atd === null) {
             throw new Exception('No abstract tspec found in resource: ' + res.URI)
         }
-
+        
         val typesImports = getTypesImports(res)
         for (sys : atd.systems) {
             fsa.generateFile('''types/«sys».types''', atd.generateTypesFile(sys, typesImports))
