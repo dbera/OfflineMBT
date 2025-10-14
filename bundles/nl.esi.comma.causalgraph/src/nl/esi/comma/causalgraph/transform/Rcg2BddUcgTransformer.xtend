@@ -34,44 +34,16 @@ class Rcg2BddUcgTransformer extends Rcg2UcgTransformer {
         }
     }
     
-    override CausalGraph merge(CausalGraph... rcgs) {
-        val outputGraph = super.merge(rcgs)
-        outputGraph.type = GraphType::BDDUCG
-        System.out.println('''outputGraph «outputGraph»''')
-        
-        // Process the merged graph with both agents
-        if (stepDefinitionAgent !== null) {
-            try {
-                System.out.println("Processing merged graph with StepDefinitionAgent...")
-                
-                // Process each node with the agents
-                for (node : outputGraph.nodes) {
-                    // Use StepDefinitionAgent to process the node and generate step definitions
-                    stepDefinitionAgent.processNode(node, outputGraph)
-                }
-                
-                System.out.println("Successfully processed graph with both agents")
-                
-            } catch (Exception e) {
-                System.err.println("Error processing graph with agents: " + e.getMessage())
-                e.printStackTrace()
-            }
-        } else {
-            System.err.println("Agents not available, skipping step definition generation")
-        }
-
-        return outputGraph
-    }
-
     override protected List<NodeGroup> groupNodes(CausalGraph... rcgs) {
         val nodeGroups = super.groupNodes(rcgs)
 
-        // Re-group nodes based on LLM matching if mergeAgent is available
         if (mergeAgent !== null) {
-            return regroupWithLLM(nodeGroups)
+            val regroupedNodes = regroupWithLLM(nodeGroups)
+            // Sort the regrouped nodes by their minimum step number to preserve execution order
+            return sortNodeGroupsByStepOrder(regroupedNodes)
         } else {
             System.err.println("MergeAgent not available, using default grouping")
-            return nodeGroups
+            return sortNodeGroupsByStepOrder(nodeGroups)
         }
     }
     
@@ -200,5 +172,69 @@ class Rcg2BddUcgTransformer extends Rcg2UcgTransformer {
         val nodeList = new ArrayList<Node>()
         nodeList += step
         return new NodeGroup(originalKey, nodeList)
+    }
+    
+    /**
+     * Sort node groups by their minimum step number to preserve execution order
+     */
+    private def List<NodeGroup> sortNodeGroupsByStepOrder(List<NodeGroup> nodeGroups) {
+        return nodeGroups.sortBy[group |
+            // Find the minimum step number across all scenarios in this group
+            group.inputNodes.flatMap[steps].map[stepNumber].min ?: Integer.MAX_VALUE
+        ]
+    }
+    
+    override CausalGraph merge(CausalGraph... rcgs) {
+        val outputGraph = super.merge(rcgs)
+        outputGraph.type = GraphType::BDDUCG
+        System.out.println('''outputGraph «outputGraph»''')
+        
+        // Process the merged graph with both agents
+        if (stepDefinitionAgent !== null) {
+            try {
+                System.out.println("Processing merged graph with StepDefinitionAgent...")
+                
+                // Process each node with the agents
+                for (node : outputGraph.nodes) {
+                    // Use StepDefinitionAgent to process the node and generate step definitions
+                    stepDefinitionAgent.processNode(node, outputGraph)
+                }
+                
+                System.out.println("Successfully processed graph with both agents")
+                
+                // Clean up step bodies at scenario step level after agent processing
+                cleanupScenarioStepBodies(outputGraph)
+                
+            } catch (Exception e) {
+                System.err.println("Error processing graph with agents: " + e.getMessage())
+                e.printStackTrace()
+            }
+        } else {
+            System.err.println("Agents not available, skipping step definition generation")
+        }
+
+        return outputGraph
+    }
+
+    
+    /**
+     * Clean up step bodies at scenario step level in the graph
+     */
+    private def void cleanupScenarioStepBodies(CausalGraph graph) {
+        try {
+            for (node : graph.nodes) {
+                // Clear step bodies from all scenario steps (the nested steps within each node)
+                if (!node.steps.empty) {
+                    for (scenarioStep : node.steps) {
+                        scenarioStep.stepBody = null
+                    }
+                }
+            }
+            
+            System.out.println("Step bodies cleaned up at scenario step level")
+        } catch (Exception e) {
+            System.err.println("Error during step body cleanup: " + e.getMessage())
+            e.printStackTrace()
+        }
     }
 }

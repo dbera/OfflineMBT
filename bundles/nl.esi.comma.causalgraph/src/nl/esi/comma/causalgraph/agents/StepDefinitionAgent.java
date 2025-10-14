@@ -14,6 +14,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import nl.esi.comma.causalgraph.causalGraph.*;
+import nl.esi.comma.causalgraph.utilities.CausalGraphQueries;
+import nl.esi.comma.causalgraph.utilities.VariableHelper;
 import nl.esi.comma.expressions.expression.Variable;
 import nl.esi.comma.expressions.expression.Expression;
 import nl.esi.comma.expressions.expression.ExpressionFactory;
@@ -21,6 +23,7 @@ import nl.esi.comma.types.types.Type;
 import nl.esi.comma.types.types.TypeDecl;
 import nl.esi.comma.types.types.TypeReference;
 import nl.esi.comma.types.types.TypesFactory;
+import nl.esi.comma.types.BasicTypes;
 import org.eclipse.emf.common.util.EList;
 
 /**
@@ -156,9 +159,12 @@ public class StepDefinitionAgent {
             // Extract variables and dependencies from the graph
             Map<String, String> variables = extractVariables(graph);
             Map<String, Object> variableInitialValues = extractVariableInitialValues(graph);
+            
+            System.out.println("Extracted " + variables.size() + " variables from graph");
+            System.out.println("Extracted " + variableInitialValues.size() + " variable initial values from graph");
 
             // Get previous step definitions based on data dependencies
-            Map<String, List<ScenarioStepInfo>> previousOverlaySteps = new HashMap<>();
+            Map<String, List<ScenarioStepInfo>> previousOverlaySteps = extractPreviousStepsWithDataDependencies(node, graph);
 
             // Generate step definition using LLM
             StepDefinition stepDefinition = generateStepDefinitions(
@@ -177,6 +183,151 @@ public class StepDefinitionAgent {
     }
 
     /**
+     * Extract previous steps from the same scenarios that have data dependencies with the current node.
+     * Simplified version that only considers data flow dependencies.
+     *
+     * @param currentNode The current node being processed
+     * @param graph The complete causal graph
+     * @return Map of scenario names to lists of previous step information that have data dependencies
+     */
+    private Map<String, List<ScenarioStepInfo>> extractPreviousStepsWithDataDependencies(Node currentNode, CausalGraph graph) {
+        Map<String, List<ScenarioStepInfo>> previousSteps = new HashMap<>();
+        
+        try {
+            // Get all scenarios that are represented in the current node
+            Set<String> currentScenarios = currentNode.getSteps().stream()
+                .map(step -> step.getScenario().getName())
+                .collect(Collectors.toSet());
+            
+            System.out.println("Current node " + currentNode.getName() + " has scenarios: " + currentScenarios);
+            
+            // Get variables that this node needs from other nodes via outgoing data flows
+            // Note: outgoing data flows indicate dependencies - the current node needs data from the target
+            Set<String> requiredVariables = new HashSet<>();
+            Set<Node> dependencySourceNodes = new HashSet<>();
+            
+            List<DataFlowEdge> outgoingDataFlows = new ArrayList<>();
+            CausalGraphQueries.getOutgoingDataFlows(currentNode).forEach(outgoingDataFlows::add);
+            
+            for (DataFlowEdge dataFlow : outgoingDataFlows) {
+                if (dataFlow.getDataReferences() != null) {
+                    for (DataReference dataRef : dataFlow.getDataReferences()) {
+                        if (dataRef.getVariables() != null) {
+                            for (Variable variable : dataRef.getVariables()) {
+                                requiredVariables.add(variable.getName());
+                                dependencySourceNodes.add(dataFlow.getTarget());
+                            }
+                        }
+                    }
+                }
+            }
+            
+            System.out.println("Node " + currentNode.getName() + " requires variables from other nodes: " + requiredVariables);
+            System.out.println("Dependency source nodes: " + dependencySourceNodes.stream().map(Node::getName).collect(Collectors.toList()));
+            
+            // If no data dependencies, return empty map
+            if (requiredVariables.isEmpty()) {
+                System.out.println("No data flow dependencies found for node " + currentNode.getName());
+                return previousSteps;
+            }
+            
+            // For each scenario in the current node, find previous steps that provide required variables
+            for (String scenarioName : currentScenarios) {
+                List<ScenarioStepInfo> relevantPreviousSteps = new ArrayList<>();
+                
+                // Get the current node's step number for this scenario
+                int currentStepNumber = currentNode.getSteps().stream()
+                    .filter(step -> step.getScenario().getName().equals(scenarioName))
+                    .mapToInt(ScenarioStep::getStepNumber)
+                    .min().orElse(Integer.MAX_VALUE);
+                
+                System.out.println("Looking for previous steps before step " + currentStepNumber + " in scenario " + scenarioName);
+                
+                // Check dependency source nodes to see if they are previous steps in this scenario
+                for (Node sourceNode : dependencySourceNodes) {
+                    // Check if this source node participates in the same scenario
+                    boolean participatesInScenario = sourceNode.getSteps().stream()
+                        .anyMatch(step -> step.getScenario().getName().equals(scenarioName));
+                    
+                    if (!participatesInScenario) {
+                        continue;
+                    }
+                    
+                    // Get the source node's step number for this scenario
+                    int sourceStepNumber = sourceNode.getSteps().stream()
+                        .filter(step -> step.getScenario().getName().equals(scenarioName))
+                        .mapToInt(ScenarioStep::getStepNumber)
+                        .min().orElse(Integer.MAX_VALUE);
+                    
+                    // Only include if it's a previous step (lower step number)
+                    if (sourceStepNumber >= currentStepNumber) {
+                        continue;
+                    }
+                    
+                    // Verify there's an actual data flow from this source to current node
+                    boolean hasDataFlow = false;
+                    List<DataFlowEdge> currentNodeOutgoingFlows = new ArrayList<>();
+                    CausalGraphQueries.getOutgoingDataFlows(currentNode).forEach(currentNodeOutgoingFlows::add);
+                    
+                    for (DataFlowEdge dataFlow : currentNodeOutgoingFlows) {
+                        if (dataFlow.getTarget() == sourceNode && dataFlow.getDataReferences() != null) {
+                            for (DataReference dataRef : dataFlow.getDataReferences()) {
+                                if (dataRef.getVariables() != null) {
+                                    for (Variable variable : dataRef.getVariables()) {
+                                        if (requiredVariables.contains(variable.getName())) {
+                                            hasDataFlow = true;
+                                            System.out.println("Found data dependency: current node " + currentNode.getName() + 
+                                                " needs " + variable.getName() + " from " + sourceNode.getName());
+                                            break;
+                                        }
+                                    }
+                                }
+                                if (hasDataFlow) break;
+                            }
+                            if (hasDataFlow) break;
+                        }
+                    }
+                    
+                    // If there's a data dependency, extract the step information
+                    if (hasDataFlow) {
+                        ScenarioStep sourceScenarioStep = sourceNode.getSteps().stream()
+                            .filter(step -> step.getScenario().getName().equals(scenarioName))
+                            .findFirst().orElse(null);
+                        
+                        if (sourceScenarioStep != null) {
+                            ScenarioStepInfo stepInfo = new ScenarioStepInfo();
+                            stepInfo.scenarioId = scenarioName;
+                            stepInfo.stepNumber = String.valueOf(sourceScenarioStep.getStepNumber());
+                            stepInfo.stepType = sourceNode.getStepType() != null ? sourceNode.getStepType().toString() : "unknown";
+                            stepInfo.stepBody = sourceScenarioStep.getStepBody() != null ? 
+                                extractStepBodyContent(sourceScenarioStep.getStepBody()) : 
+                                (sourceNode.getStepBody() != null ? extractStepBodyContent(sourceNode.getStepBody()) : "");
+                            
+                            relevantPreviousSteps.add(stepInfo);
+                            System.out.println("Added previous step: scenario " + scenarioName + " step " + stepInfo.stepNumber);
+                        }
+                    }
+                }
+                
+                // Only add to the map if we found relevant previous steps
+                if (!relevantPreviousSteps.isEmpty()) {
+                    previousSteps.put(scenarioName, relevantPreviousSteps);
+                    System.out.println("Found " + relevantPreviousSteps.size() + " previous steps with data dependencies for scenario " + scenarioName);
+                }
+            }
+            
+            System.out.println("Total previous overlay steps with data dependencies: " + 
+                previousSteps.values().stream().mapToInt(List::size).sum());
+            
+        } catch (Exception e) {
+            System.err.println("Error extracting previous steps with data dependencies: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return previousSteps;
+    }
+
+    /**
      * Apply all step definition properties to the EMF node model.
      * This replaces the original node information with the generated step definition.
      *
@@ -184,13 +335,11 @@ public class StepDefinitionAgent {
      * @param stepDef The step definition containing all properties
      */
     private void applyStepDefinitionToNode(Node node, StepDefinition stepDef) {
-        // Apply step name - this replaces any existing step name
         if (stepDef.stepName != null) {
             node.setStepName(stepDef.stepName);
             System.out.println("Set step name for node " + node.getName() + ": " + stepDef.stepName);
         }
 
-        // Apply step body - create and set the StepBody with the actual content
         if (stepDef.stepBody != null && !stepDef.stepBody.trim().isEmpty()) {
             try {
                 StepBody stepBodyObj = createStepBodyFromString(stepDef.stepBody);
@@ -203,48 +352,24 @@ public class StepDefinitionAgent {
                 e.printStackTrace();
             }
         }
-
-        // Apply step parameters using proper EMF containment for basic types
+        
         if (stepDef.stepParameters != null && !stepDef.stepParameters.isEmpty()) {
             try {
                 System.out.println("Creating " + stepDef.stepParameters.size() + " step parameters for node " + node.getName());
                 
-                // Get the EList of step parameters from the node
                 EList<Variable> stepParametersList = node.getStepParameters();
                 
-                // Clear existing parameters if any
                 stepParametersList.clear();
                 
-                // Create and add new Variable objects for each parameter
                 for (Map.Entry<String, String> paramEntry : stepDef.stepParameters.entrySet()) {
                     String paramName = paramEntry.getKey();
                     String paramType = paramEntry.getValue();
+                               
+                    System.out.println("      Creating step parameter: " + paramName + " of type " + paramType);
+                  
+                    Variable variable = VariableHelper.createStepParameter(paramName, paramType);
                     
-                    // Create a new Variable using the ExpressionFactory
-                    Variable variable = ExpressionFactory.eINSTANCE.createVariable();
-                    variable.setName(paramName);
-                    
-                    // Create a proper type for the variable
-                    try {
-                        Type type = createBasicType(paramType);
-                        if (type != null) {
-                            variable.setType(type);
-                            System.out.println("      Created parameter: " + paramName + " with type: " + paramType);
-                        } else {
-                            // If we can't create a specific type, create a generic Type object
-                            Type genericType = TypesFactory.eINSTANCE.createType();
-                            variable.setType(genericType);
-                            System.out.println("      Created parameter: " + paramName + " with generic type (requested: " + paramType + ")");
-                        }
-                    } catch (Exception typeEx) {
-                        System.err.println("      Warning: Could not set type for parameter " + paramName + ": " + typeEx.getMessage());
-                        // Create a minimal Type object to satisfy EMF requirements
-                        Type fallbackType = TypesFactory.eINSTANCE.createType();
-                        variable.setType(fallbackType);
-                        System.out.println("      Created parameter: " + paramName + " with fallback type");
-                    }
-                    
-                    // Add the variable to the EList
+                    System.out.println("      Created variable: " + variable.getName() + " of type " + variable.getType().getType().getName());
                     stepParametersList.add(variable);
                     System.out.println("      Added step parameter: " + paramName);
                 }
@@ -257,61 +382,144 @@ public class StepDefinitionAgent {
             }
         }
 
-        // Apply step arguments to specific scenarios
         if (stepDef.stepArguments != null && !stepDef.stepArguments.isEmpty()) {
-            System.out.println("Applying " + stepDef.stepArguments.size() + " step arguments to node " + node.getName());
+            try {
+                System.out.println("Applying " + stepDef.stepArguments.size() + " step arguments to node " + node.getName());
+                
+                for (Map.Entry<String, Object> argEntry : stepDef.stepArguments.entrySet()) {
+                    String scenarioId = argEntry.getKey();
+                    Object argsData = argEntry.getValue();
+                    
+                    System.out.println("      Processing step arguments for scenario: " + scenarioId);
+                    System.out.println("      Arguments data: " + argsData);
+
+                    // Find the corresponding scenario step for this scenario ID
+                    // The scenarioId format might be "scenario T1, step 3" or "scenario T1 step 3"
+                    ScenarioStep targetScenarioStep = null;
+                    for (ScenarioStep step : node.getSteps()) {
+                        // Create the expected scenario ID format: "scenario <scenarioName> step <stepNumber>"
+                        String expectedScenarioId = "scenario " + step.getScenario().getName() + " step " + step.getStepNumber();
+                        
+                        System.out.println("      Comparing '" + scenarioId + "' with '" + expectedScenarioId + "'");
+                        
+                        // Normalize both strings by removing commas for comparison
+                        String normalizedScenarioId = scenarioId.replace(",", "");
+                        String normalizedExpectedId = expectedScenarioId.replace(",", "");
+                        
+                        if (normalizedExpectedId.equals(normalizedScenarioId)) {
+                            targetScenarioStep = step;
+                            System.out.println("      Found matching scenario step: " + expectedScenarioId);
+                            break;
+                        }
+                    }
+                    
+                    if (targetScenarioStep == null) {
+                        System.err.println("      Could not find scenario step for scenario ID: " + scenarioId);
+                        // Also log available scenario steps for debugging
+                        System.err.println("      Available scenario steps:");
+                        for (ScenarioStep step : node.getSteps()) {
+                            String availableId = "scenario " + step.getScenario().getName() + " step " + step.getStepNumber();
+                            System.err.println("        - " + availableId);
+                        }
+                        continue;
+                    }
+                    
+                    // Get the EList of step arguments from the scenario step
+                    EList<nl.esi.comma.actions.actions.AssignmentAction> stepArgumentsList = targetScenarioStep.getStepArguments();
+                    
+                    // Clear existing arguments if any
+                    stepArgumentsList.clear();
+                    
+                    // Process the arguments data
+                    if (argsData instanceof Map) {
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> argumentsMap = (Map<String, Object>) argsData;
+                        
+                        System.out.println("      Creating " + argumentsMap.size() + " step arguments for scenario " + scenarioId);
+                        
+                        // Create and add new AssignmentAction objects for each argument
+                        for (Map.Entry<String, Object> argDataEntry : argumentsMap.entrySet()) {
+                            String paramName = argDataEntry.getKey();
+                            Object paramValueData = argDataEntry.getValue();
+                            
+                            // Extract parameter type and value from the parameter data
+                            String paramType = "string"; // Default type
+                            Object paramValue = paramValueData;
+                            
+                            // If paramValueData is a map with type and value, extract them
+                            if (paramValueData instanceof Map) {
+                                @SuppressWarnings("unchecked")
+                                Map<String, Object> paramMap = (Map<String, Object>) paramValueData;
+                                paramType = (String) paramMap.getOrDefault("type", "string");
+                                paramValue = paramMap.getOrDefault("value", paramValueData.toString());
+                            }
+                            
+                            // Determine the parameter type based on the value if it's a direct value
+                            if (!(paramValueData instanceof Map)) {
+                                if (paramValueData instanceof Integer) {
+                                    paramType = "int";
+                                } else if (paramValueData instanceof Double || paramValueData instanceof Float) {
+                                    paramType = "real";
+                                } else if (paramValueData instanceof Boolean) {
+                                    paramType = "bool";
+                                } else {
+                                    paramType = "string";
+                                }
+                                paramValue = paramValueData;
+                            }
+                            
+                            System.out.println("      Creating step argument: " + paramName + " of type " + paramType + " with value " + paramValue);
+                            
+                            Variable parameterVariable = null;
+                            for (Variable stepParam : node.getStepParameters()) {
+                                if (stepParam.getName().equals(paramName)) {
+                                    parameterVariable = stepParam;
+                                    System.out.println("      Found matching step parameter variable: " + paramName);
+                                    break;
+                                }
+                            }
+                            
+                            if (parameterVariable == null) {
+                                System.err.println("      Could not find step parameter for argument: " + paramName);
+                                System.err.println("      Available step parameters:");
+                                for (Variable stepParam : node.getStepParameters()) {
+                                    System.err.println("        - " + stepParam.getName());
+                                }
+                                continue;
+                            }
+                            
+                            nl.esi.comma.actions.actions.AssignmentAction assignmentAction = VariableHelper.createStepArgumentWithVariable(
+                                parameterVariable, paramValue, paramType);
+                            
+                            System.out.println("      Created assignment action for existing parameter variable: " + assignmentAction.getAssignment().getName());
+                            
+                            stepArgumentsList.add(assignmentAction);
+                            System.out.println("      Added step argument: " + paramName + " to scenario " + scenarioId);
+                        }
+                        
+                        System.out.println("      Successfully added " + stepArgumentsList.size() + " step arguments to scenario " + scenarioId);
+                        
+                    } else {
+                        System.err.println("      Arguments data for scenario " + scenarioId + " is not a Map, skipping");
+                    }
+                }
+                
+                System.out.println("Successfully applied step arguments to node " + node.getName());
+                
+            } catch (Exception e) {
+                System.err.println("Error setting step arguments for node " + node.getName() + ": " + e.getMessage());
+                e.printStackTrace();
+            }
         }
-        
+
         System.out.println("Successfully applied complete step definition to node " + node.getName());
     }
     
-    /**
-     * Create a proper Type object for basic types (int, float, bool, str).
-     * Following the EXACT pattern from ReducedCausalGraphGenerator.xtend with proper EMF containment
-     */
-    private Type createBasicType(String paramType) {
-        try {
-            // Following the EXACT pattern from ReducedCausalGraphGenerator:
-            // createTypeReference => [
-            //     type = createAliasTypeDecl => [
-            //         name = 'x_type'
-            //         alias = 'some_type'
-            //     ]
-            // ]
-            
-            // Create TypeReference
-            TypeReference typeRef = TypesFactory.eINSTANCE.createTypeReference();
-            
-            // Create AliasTypeDecl for basic types (int, float, bool, str)
-            AliasTypeDecl aliasTypeDecl = CausalGraphFactory.eINSTANCE.createAliasTypeDecl();
-            aliasTypeDecl.setName(paramType + "_type");  // Following the pattern: 'x_type'
-            aliasTypeDecl.setAlias(paramType);           // The actual type: 'some_type' -> paramType
-            
-            // Set the TypeDecl in the TypeReference (this creates proper EMF containment)
-            // This is the key - the AliasTypeDecl becomes contained within the TypeReference
-            typeRef.setType(aliasTypeDecl);
-            
-            // DO NOT add the AliasTypeDecl to the graph's types list!
-            // The containment is: Variable -> TypeReference -> AliasTypeDecl
-            // The AliasTypeDecl is contained within the TypeReference, not at the graph level
-            
-            System.out.println("        Created TypeReference with contained AliasTypeDecl for: " + paramType);
-            return typeRef;
-            
-        } catch (Exception e) {
-            System.err.println("        Error creating type for " + paramType + ": " + e.getMessage());
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-
     /**
      * Create a StepBody object using the proper EMF factory.
      */
     private StepBody createStepBodyFromString(String bodyString) {
         try {
-            // Use the CausalGraphFactory to create a LanguageBody which can store text content
             LanguageBody languageBody = CausalGraphFactory.eINSTANCE.createLanguageBody();
             languageBody.setBody(bodyString);
             System.out.println("      Created LanguageBody with content: " + bodyString);
@@ -323,8 +531,6 @@ public class StepDefinitionAgent {
         }
     }
     
-
-
     /**
      * Extract the actual body content from a StepBody object.
      * Handles different StepBody implementations properly.
@@ -334,14 +540,11 @@ public class StepDefinitionAgent {
             return "";
         }
         
-        // If it's a LanguageBody, get the actual body content
         if (stepBody instanceof LanguageBody) {
             LanguageBody languageBody = (LanguageBody) stepBody;
             return languageBody.getBody() != null ? languageBody.getBody() : "";
         }
         
-        // For other StepBody types, fall back to toString() for now
-        // This could be expanded to handle ActionsBody and other types
         return stepBody.toString();
     }
 
@@ -361,7 +564,6 @@ public class StepDefinitionAgent {
             stepInfo.stepNumber = String.valueOf(step.getStepNumber());
             stepInfo.stepType = node.getStepType().toString();
             
-            // Use the helper method to properly extract step body content
             stepInfo.stepBody = step.getStepBody() != null ? extractStepBodyContent(step.getStepBody()) : 
                                (node.getStepBody() != null ? extractStepBodyContent(node.getStepBody()) : "");
             scenarioSteps.add(stepInfo);
@@ -379,9 +581,11 @@ public class StepDefinitionAgent {
     private Map<String, String> extractVariables(CausalGraph graph) {
         Map<String, String> variables = new HashMap<>();
         
+        
         if (graph.getVariables() != null) {
             for (Variable variable : graph.getVariables()) {
                 variables.put(variable.getName(), variable.getType().toString());
+                System.out.println("Extracted variable: " + variable.getName() + " of type " + variable.getType().toString());
             }
         }
         
@@ -397,17 +601,94 @@ public class StepDefinitionAgent {
     private Map<String, Object> extractVariableInitialValues(CausalGraph graph) {
         Map<String, Object> variableInitialValues = new HashMap<>();
         
-        // Extract from assignments in the graph - simplified implementation
-        // In a real implementation, you would properly extract values from the EMF model
+        // Extract initial values from assignments in the graph
         if (graph.getAssignments() != null) {
-            for (Object assignment : graph.getAssignments()) {
-                // For now, we'll skip the detailed assignment extraction
-                // This would need to be implemented based on the actual EMF model structure
-                System.out.println("Assignment found: " + assignment.toString());
+            for (nl.esi.comma.actions.actions.AssignmentAction assignment : graph.getAssignments()) {
+                try {
+                    // Get the variable being assigned to
+                    Variable assignedVariable = assignment.getAssignment();
+                    if (assignedVariable != null) {
+                        String varName = assignedVariable.getName();
+                        
+                        Expression assignmentExpression = assignment.getExp();
+                        if (assignmentExpression != null) {
+                            Object assignmentValue = extractExpressionValue(assignmentExpression);
+                            if (assignmentValue != null) {
+                                // Only add if we haven't already found an initial value for this variable
+                                if (!variableInitialValues.containsKey(varName)) {
+                                    variableInitialValues.put(varName, assignmentValue);
+                                    System.out.println("Extracted initial value from assignment: " + varName + " = " + assignmentValue);
+                                }
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    System.err.println("Error processing assignment: " + e.getMessage());
+                }
             }
         }
         
+
+        
+        System.out.println("Total variable initial values extracted: " + variableInitialValues.size());
         return variableInitialValues;
+    }
+    
+    /**
+     * Extract a concrete value from an Expression object.
+     * This method handles different types of constant expressions.
+     *
+     * @param expression The expression to extract value from
+     * @return The extracted value, or null if not a constant expression
+     */
+    private Object extractExpressionValue(Expression expression) {
+        if (expression == null) {
+            return null;
+        }
+        
+        try {
+            // Handle different types of constant expressions
+            if (expression instanceof nl.esi.comma.expressions.expression.ExpressionConstantInt) {
+                nl.esi.comma.expressions.expression.ExpressionConstantInt intExpr = 
+                    (nl.esi.comma.expressions.expression.ExpressionConstantInt) expression;
+                return intExpr.getValue();
+            }
+            
+            if (expression instanceof nl.esi.comma.expressions.expression.ExpressionConstantReal) {
+                nl.esi.comma.expressions.expression.ExpressionConstantReal realExpr = 
+                    (nl.esi.comma.expressions.expression.ExpressionConstantReal) expression;
+                return realExpr.getValue();
+            }
+            
+            if (expression instanceof nl.esi.comma.expressions.expression.ExpressionConstantString) {
+                nl.esi.comma.expressions.expression.ExpressionConstantString stringExpr = 
+                    (nl.esi.comma.expressions.expression.ExpressionConstantString) expression;
+                return stringExpr.getValue();
+            }
+            
+            if (expression instanceof nl.esi.comma.expressions.expression.ExpressionConstantBool) {
+                nl.esi.comma.expressions.expression.ExpressionConstantBool boolExpr = 
+                    (nl.esi.comma.expressions.expression.ExpressionConstantBool) expression;
+                return boolExpr.isValue();
+            }
+            
+            // Handle variable references - return the variable name as a reference
+            if (expression instanceof nl.esi.comma.expressions.expression.ExpressionVariable) {
+                nl.esi.comma.expressions.expression.ExpressionVariable varExpr = 
+                    (nl.esi.comma.expressions.expression.ExpressionVariable) expression;
+                if (varExpr.getVariable() != null) {
+                    return varExpr.getVariable().getName();
+                }
+            }
+            
+            // For other expression types, return a string representation for now
+            System.out.println("Unsupported expression type for value extraction: " + expression.getClass().getSimpleName());
+            return expression.toString();
+            
+        } catch (Exception e) {
+            System.err.println("Error extracting value from expression: " + e.getMessage());
+            return null;
+        }
     }
 
     /**

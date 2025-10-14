@@ -30,7 +30,6 @@ public class SystemMessages {
     2. The code snippets should be similar enough to be merged into a single step definition with parameterization.
     3. The code snippets can be different in logic or structure, but there should be overlaping pieces of code that can be paramaterized
     4. With large pieces of code, it is even more important that pieces of the code are similar in logic, not the entire code has to be similar.
-    5. Be very lenient code should almost always be merged only pieces of code that are very far apart shouldnt be merged!
 
     First I will present 2 examples with two code snippets that should be merged and parameterized in a step definition:
     Code snippet 1:
@@ -488,22 +487,25 @@ RULES:
    - Format the step argumentents, step-parameters and step body as following this example:
    {
     "step-arguments": {
-        "scenario causal_graph_T1, step 1": {"_x": 1, "_y": "string2"},
-        "scenario causal_graph_T2, step 1": {"_x": 2, "_y": "string"},
+        "scenario causal_graph_T1, step 1": {"_x": 1.5, "_y": "string2"},
+        "scenario causal_graph_T2, step 1": {"_x": 2.3, "_y": "string"},
     },
     "step-parameters": {
-        "_x": "int"
+        "_x": "real"
         "_y: "string"
     },
     "step-body": "code body"
     }
 
 4. COMPLEX TYPES:
-   - Use primitive types only (int, float, string, bool) in step-arguments
+   - Use primitive types only (int, real, string, bool) in step-arguments
    - For complex types, use string modes with conditionals for example when you have Level::HIGH it becomes: if(_mode == "HIGH") { level = Level::HIGH; } or you should be able to infer the value of the enum from the source code or previous steps
 """);
 
+        prompt.append(RULES_ARITHMETIC_MULTIPLE_STEPS);
         prompt.append(EXAMPLE_MULTIPLE_SCENARIOS_COMPLEX_DATA_TYPE_IF_ELSE);
+        prompt.append(EXAMPLE_MULTIPLE_SCENARIOS_VARIABLE_DEPENDENCIES);
+        prompt.append(EXAMPLE_MULTIPLE_SCENARIOS_SUM_VARIABLES);
 
         // Add variable types and initial values if available
         if (overlayVariables != null && !overlayVariables.isEmpty()) {
