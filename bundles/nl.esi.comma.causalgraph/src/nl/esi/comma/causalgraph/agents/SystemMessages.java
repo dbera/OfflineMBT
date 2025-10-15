@@ -506,6 +506,19 @@ RULES:
         prompt.append(EXAMPLE_MULTIPLE_SCENARIOS_VARIABLE_DEPENDENCIES);
         prompt.append(EXAMPLE_MULTIPLE_SCENARIOS_SUM_VARIABLES);
 
+        // Add source code files for context
+        if (sourceCode != null && !sourceCode.isEmpty()) {
+            prompt.append("\nSOURCE CODE FILES FOR CONTEXT:\n");
+            prompt.append("Use this source code to understand the system structure, data types, class definitions, method signatures, and test patterns.\n");
+            for (Map.Entry<String, String> entry : sourceCode.entrySet()) {
+                String filename = entry.getKey();
+                String content = entry.getValue();
+                prompt.append(String.format("\n--- File: %s ---\n", filename));
+                prompt.append(content);
+                prompt.append("\n");
+            }
+        }
+
         // Add variable types and initial values if available
         if (variables != null && !variables.isEmpty()) {
             prompt.append("\nInitialized variables from causal graph:\n");

@@ -516,9 +516,13 @@ public class StepDefinitionAgent {
                     prevStepsConverted.put(entry.getKey(), convertedSteps);
                 }
 
+                // Include source code in the prompt for better step definition generation
                 String stepDefinitionPrompt = SystemMessages.generateStepDefinitionPrompt(
                     scenarios, variables, variableInitialValues, sourceCode, prevStepsConverted);
 
+                System.out.println("Generating step definition with source code context:");
+                System.out.println("Available source files: " + sourceCode.keySet());
+                
                 String response = this.llm.chat(stepDefinitionPrompt);
                 System.out.println("LLM Response: " + response);
 

@@ -2,6 +2,7 @@ package nl.esi.comma.causalgraph.transform
 
 import java.util.List
 import java.util.ArrayList
+import java.util.Map
 import nl.esi.comma.causalgraph.causalGraph.CausalGraph
 import nl.esi.comma.causalgraph.causalGraph.GraphType
 import nl.esi.comma.causalgraph.causalGraph.Node
@@ -11,6 +12,9 @@ import nl.esi.comma.causalgraph.utilities.NodeAttributes
 import static extension nl.esi.comma.causalgraph.utilities.CausalGraphQueries.*
 import nl.esi.comma.causalgraph.agents.MergeAgent
 import nl.esi.comma.causalgraph.agents.StepDefinitionAgent
+import java.io.File
+import java.nio.file.Paths
+import java.nio.file.Files
 
 class Rcg2BddUcgTransformer extends Rcg2UcgTransformer {
     
@@ -18,20 +22,97 @@ class Rcg2BddUcgTransformer extends Rcg2UcgTransformer {
     StepDefinitionAgent stepDefinitionAgent
     
     /**
-     * Constructor initializes both MergeAgent and StepDefinitionAgent
+     * Constructor initializes both MergeAgent and StepDefinitionAgent with VendingMachine source files
      */
     new() {
         try {
             val config = ConfigManager.getConfig()
-            // Initialize both agents with empty source code files for now (source code should be added)
-            val sourceCodeFiles = new ArrayList<String>()
+            
+            // Automatically discover and load source code files Sources directory
+            val sourceCodeFiles = getSourceFiles()
+            
             mergeAgent = new MergeAgent(config)
             stepDefinitionAgent = new StepDefinitionAgent(config, sourceCodeFiles)
             System.out.println("MergeAgent and StepDefinitionAgent initialized successfully in Rcg2BddUcgTransformer")
+            System.out.println("Loaded " + sourceCodeFiles.size + " source code files from VendingMachine Sources directory")
         } catch (Exception e) {
             System.err.println("Failed to initialize agents: " + e.getMessage())
             e.printStackTrace()
         }
+    }
+    
+    /**
+     * Discover and return paths to all source code files in the VendingMachine Sources directory
+     * @return List of absolute paths to source code files
+     */
+    private def List<String> getSourceFiles() {
+        val sourceCodeFiles = new ArrayList<String>()
+        
+        try {
+            val config = ConfigManager.getConfig()
+            System.out.println("Config loaded: " + (config !== null ? "yes" : "no"))
+            
+            val sourcesConfig = config.get("sources") as Map<String, Object>
+            System.out.println("Sources config section: " + (sourcesConfig !== null ? "found" : "not found"))
+            
+            var String primaryPath = null
+            
+            if (sourcesConfig !== null) {
+                primaryPath = sourcesConfig.get("source_file_path") as String
+                System.out.println("Raw source_file_path from config: '" + primaryPath + "'")
+            } else {
+                System.err.println("No [sources] section found in config")
+            }
+            
+            
+            System.out.println("Using source path: " + primaryPath)
+
+            val sourcesPath = Paths.get(primaryPath)
+            val absoluteSourcesPath = sourcesPath.toAbsolutePath()
+            System.out.println("Absolute path: " + absoluteSourcesPath.toString)
+            System.out.println("Path exists: " + Files.exists(sourcesPath))
+            System.out.println("Is directory: " + Files.isDirectory(sourcesPath))
+            
+            if (Files.exists(sourcesPath) && Files.isDirectory(sourcesPath)) {
+                val sourceFiles = Files.list(sourcesPath)
+                    .filter[path | Files.isRegularFile(path)]
+                    .filter[path | {
+                        val fileName = path.fileName.toString.toLowerCase
+                        val isSourceFile = fileName.endsWith(".cpp") || fileName.endsWith(".h")
+                        System.out.println("Checking file: " + fileName + " - is source file: " + isSourceFile)
+                        return isSourceFile
+                    }]
+                    .toArray
+                    
+                System.out.println("Found " + sourceFiles.length + " source files")
+                    
+                for (sourceFile : sourceFiles) {
+                    val absolutePath = (sourceFile as java.nio.file.Path).toAbsolutePath.toString
+                    sourceCodeFiles.add(absolutePath)
+                    System.out.println("Added source file: " + absolutePath)
+                }                
+                System.out.println("Successfully discovered " + sourceCodeFiles.size + " source files from primary path")
+            } else {
+                System.err.println("Sources directory not found or not a directory at: " + absoluteSourcesPath.toString)
+                
+                // Try to list parent directory contents for debugging
+                try {
+                    val parentPath = sourcesPath.parent
+                    if (parentPath !== null && Files.exists(parentPath)) {
+                        System.err.println("Parent directory contents:")
+                        Files.list(parentPath).forEach[path | 
+                            System.err.println("  - " + path.fileName + (Files.isDirectory(path) ? " (dir)" : " (file)"))
+                        ]
+                    }
+                } catch (Exception e) {
+                    System.err.println("Could not list parent directory: " + e.getMessage())
+                }
+            }            
+        } catch (Exception e) {
+            System.err.println("Error discovering source files: " + e.getMessage())
+            e.printStackTrace()
+        }       
+        return sourceCodeFiles
     }
     
     /**
