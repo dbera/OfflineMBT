@@ -15,8 +15,7 @@ class VariableHelper {
     static extension val ActionsFactory m_act = ActionsFactory::eINSTANCE
 
     /**
-     * Creates a step parameter Variable with the specified name and type.
-     * Uses the same pattern as step arguments creation in ReducedCausalGraphGenerator.
+     * Creates a step parameter Variable with the specified name and type by the stepDefinitionAgent.
      */
     static def Variable createStepParameter(String paramName, String paramType) {
         val variableX = createVariable => [
@@ -30,8 +29,7 @@ class VariableHelper {
     
 
     /**
-     * Maps string type names to BasicTypes for serialization compatibility.
-     * Transforms LLM-suggested parameter types to accepted basic types.
+     * Maps LLM-suggested parameter types (in string format) to accepted BasicTypes for serialization compatibility.
      */
     static def TypeDecl getBasicTypeFromString(String paramType) {
         val lowerType = paramType.toLowerCase()
@@ -52,7 +50,8 @@ class VariableHelper {
     
     
     /**
-     * Creates a step argument AssignmentAction that reuses an existing Variable (step parameter).
+     * Creates a step argument AssignmentAction with the suggested parameter value and parameter type by the 
+     * stepDefinitionAgent and it reuses the corresponding existing step parameter Variable.
      * This ensures proper cross-reference resolution during serialization.
      */
     static def AssignmentAction createStepArgumentWithVariable(Variable existingVariable, Object paramValue, String paramType) {

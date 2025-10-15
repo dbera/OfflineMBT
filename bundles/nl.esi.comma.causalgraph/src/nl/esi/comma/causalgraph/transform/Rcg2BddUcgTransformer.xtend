@@ -23,7 +23,7 @@ class Rcg2BddUcgTransformer extends Rcg2UcgTransformer {
     new() {
         try {
             val config = ConfigManager.getConfig()
-            // Initialize both agents with empty source code files for now
+            // Initialize both agents with empty source code files for now (source code should be added)
             val sourceCodeFiles = new ArrayList<String>()
             mergeAgent = new MergeAgent(config)
             stepDefinitionAgent = new StepDefinitionAgent(config, sourceCodeFiles)
@@ -34,12 +34,18 @@ class Rcg2BddUcgTransformer extends Rcg2UcgTransformer {
         }
     }
     
+    /**
+     * Executes the regrouping based upon the MergAgent and afterward sorts the regrouped nodes by their minimum step 
+     * number to preserve execution order
+     * @param rcgs Variable number of CausalGraph objects to be grouped
+     * @return List of NodeGroup objects sorted by step order
+     */    
     override protected List<NodeGroup> groupNodes(CausalGraph... rcgs) {
         val nodeGroups = super.groupNodes(rcgs)
 
         if (mergeAgent !== null) {
             val regroupedNodes = regroupWithLLM(nodeGroups)
-            // Sort the regrouped nodes by their minimum step number to preserve execution order
+            //    
             return sortNodeGroupsByStepOrder(regroupedNodes)
         } else {
             System.err.println("MergeAgent not available, using default grouping")
@@ -49,6 +55,8 @@ class Rcg2BddUcgTransformer extends Rcg2UcgTransformer {
     
     /**
      * Regroup nodes based on LLM comparison of step bodies using MergeAgent
+     * @param originalGroups List of original NodeGroup objects to be regrouped
+     * @return List of regrouped NodeGroup objects
      */
     private def List<NodeGroup> regroupWithLLM(List<NodeGroup> originalGroups) {
         val newGroups = new ArrayList<NodeGroup>()
@@ -68,6 +76,8 @@ class Rcg2BddUcgTransformer extends Rcg2UcgTransformer {
     
     /**
      * Process a group with multiple steps using MergeAgent to determine if they should stay together
+     * @param originalGroup The NodeGroup to be processed and potentially split
+     * @return List of NodeGroup objects after processing with LLM
      */
     private def List<NodeGroup> processGroupWithLLM(NodeGroup originalGroup) {
         val result = new ArrayList<NodeGroup>()
@@ -103,6 +113,12 @@ class Rcg2BddUcgTransformer extends Rcg2UcgTransformer {
     
     /**
      * Find the best group for a step by comparing step bodies with MergeAgent
+     * Compare with representative step from the group for now we have chosen the first step as a
+     * representative of the group (this can be changed in the future)
+     * The first group that the LLM determines to be similar enough is returned directly
+     * @param stepToCompare The Node step to find a suitable group for
+     * @param existingGroups List of existing NodeGroup objects to compare against
+     * @return Index of the best matching group, or -1 if no suitable group found
      */
     private def int findBestGroupForStep(Node stepToCompare, List<NodeGroup> existingGroups) {
         val stepStepBody = extractStepBody(stepToCompare)
@@ -114,7 +130,6 @@ class Rcg2BddUcgTransformer extends Rcg2UcgTransformer {
         for (var i = 0; i < existingGroups.size; i++) {
             val group = existingGroups.get(i)
             
-            // Compare with representative step from the group (first step)
             if (!group.inputNodes.empty) {
                 val representativeNode = group.inputNodes.get(0)
                 val representativeStepBody = extractStepBody(representativeNode)
@@ -132,6 +147,8 @@ class Rcg2BddUcgTransformer extends Rcg2UcgTransformer {
     
     /**
      * Extract step body from a step
+     * @param step The Node from which to extract the step body
+     * @return String representation of the step body, or null if not found
      */
     private def String extractStepBody(Node step) {
         if (step.stepBody !== null) {
@@ -144,6 +161,9 @@ class Rcg2BddUcgTransformer extends Rcg2UcgTransformer {
     
     /**
      * Use MergeAgent to determine if two step bodies should be merged
+     * @param stepBody1 First step body to compare
+     * @param stepBody2 Second step body to compare
+     * @return true if the step bodies should be merged, false otherwise
      */
     private def boolean shouldMergeStepBodies(String stepBody1, String stepBody2) {
         try {
@@ -167,6 +187,9 @@ class Rcg2BddUcgTransformer extends Rcg2UcgTransformer {
     
     /**
      * Create a new NodeGroup from a single step
+     * @param step The Node to create a group from
+     * @param originalKey The NodeAttributes key to use for the new group
+     * @return A new NodeGroup containing the single step
      */
     private def NodeGroup createNewGroupFromStep(Node step, NodeAttributes originalKey) {
         val nodeList = new ArrayList<Node>()
@@ -176,33 +199,35 @@ class Rcg2BddUcgTransformer extends Rcg2UcgTransformer {
     
     /**
      * Sort node groups by their minimum step number to preserve execution order
+     * @param nodeGroups List of NodeGroup objects to be sorted
+     * @return List of NodeGroup objects sorted by minimum step number
      */
     private def List<NodeGroup> sortNodeGroupsByStepOrder(List<NodeGroup> nodeGroups) {
         return nodeGroups.sortBy[group |
-            // Find the minimum step number across all scenarios in this group
             group.inputNodes.flatMap[steps].map[stepNumber].min ?: Integer.MAX_VALUE
         ]
     }
     
+    /**
+     * Merges the scenario steps of a node with the stepDefinitionAgent by generating step definitions and
+     * afterward removes the step bodies at the scenario step level since now there is a step body at the node level
+     * @param rcgs Variable number of CausalGraph objects to be merged
+     * @return The merged CausalGraph with type set to BDDUCG
+     */
     override CausalGraph merge(CausalGraph... rcgs) {
         val outputGraph = super.merge(rcgs)
         outputGraph.type = GraphType::BDDUCG
-        System.out.println('''outputGraph «outputGraph»''')
         
-        // Process the merged graph with both agents
         if (stepDefinitionAgent !== null) {
             try {
                 System.out.println("Processing merged graph with StepDefinitionAgent...")
-                
-                // Process each node with the agents
+
                 for (node : outputGraph.nodes) {
-                    // Use StepDefinitionAgent to process the node and generate step definitions
                     stepDefinitionAgent.processNode(node, outputGraph)
                 }
                 
                 System.out.println("Successfully processed graph with both agents")
                 
-                // Clean up step bodies at scenario step level after agent processing
                 cleanupScenarioStepBodies(outputGraph)
                 
             } catch (Exception e) {
@@ -219,11 +244,11 @@ class Rcg2BddUcgTransformer extends Rcg2UcgTransformer {
     
     /**
      * Clean up step bodies at scenario step level in the graph
+     * @param graph The CausalGraph to clean up step bodies from
      */
     private def void cleanupScenarioStepBodies(CausalGraph graph) {
         try {
             for (node : graph.nodes) {
-                // Clear step bodies from all scenario steps (the nested steps within each node)
                 if (!node.steps.empty) {
                     for (scenarioStep : node.steps) {
                         scenarioStep.stepBody = null

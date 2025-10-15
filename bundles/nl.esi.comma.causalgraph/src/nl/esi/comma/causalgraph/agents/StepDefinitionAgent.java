@@ -60,7 +60,6 @@ public class StepDefinitionAgent {
             String temperatureStr = gptConfig != null ? (String) gptConfig.get("temperature") : null;
             Float temperature = temperatureStr != null ? Float.parseFloat(temperatureStr) : 1.0f;
 
-            // Initialize LLM if configuration is present
             if (azureEndpoint != null && azureApiKey != null) {
                 System.out.println("Configuration validated successfully");
                 this.llm = initializeLLM(llmModel, apiVersion, temperature, azureEndpoint, azureApiKey);
@@ -98,6 +97,13 @@ public class StepDefinitionAgent {
 
     /**
      * Initialize the LLM with the specified model and API version using LangChain4j.
+     * 
+     * @param llmModel The LLM model name
+     * @param apiVersion The API version
+     * @param temperature The temperature setting for the model
+     * @param azureEndpoint The Azure OpenAI endpoint
+     * @param azureApiKey The Azure OpenAI API key
+     * @return The initialized ChatModel instance
      */
     private ChatModel initializeLLM(String llmModel, String apiVersion, Float temperature, String azureEndpoint, String azureApiKey) {
         System.out.println("initializeLLM called with parameters:");
@@ -133,11 +139,11 @@ public class StepDefinitionAgent {
     }
 
     /**
-     * Process a node in the causal graph to generate step definitions.
-     * This is the main method called by the transformer.
-     *
+     * Process a node in the causal graph to generate step definitions by using the initialized variables,
+     * source code, and scenario steps based upon data dependencies. TO DO source code should be added to the prompt.
+     * 
      * @param node The node to process
-     * @param graph The complete causal graph for context
+     * @param graph The complete causal graph
      */
     public void processNode(Node node, CausalGraph graph) {
         if (this.llm == null) {
@@ -148,7 +154,6 @@ public class StepDefinitionAgent {
         try {
             System.out.println("Processing node: " + node.getName());
             
-            // Extract scenario steps from the node
             List<ScenarioStepInfo> scenarioSteps = extractNodeScenarios(node);
             
             if (scenarioSteps.isEmpty()) {
@@ -156,21 +161,17 @@ public class StepDefinitionAgent {
                 return;
             }
 
-            // Extract variables and dependencies from the graph
             Map<String, String> variables = extractVariables(graph);
             Map<String, Object> variableInitialValues = extractVariableInitialValues(graph);
             
             System.out.println("Extracted " + variables.size() + " variables from graph");
             System.out.println("Extracted " + variableInitialValues.size() + " variable initial values from graph");
 
-            // Get previous step definitions based on data dependencies
-            Map<String, List<ScenarioStepInfo>> previousOverlaySteps = extractPreviousStepsWithDataDependencies(node, graph);
+            Map<String, List<ScenarioStepInfo>> previousCGSteps = extractPreviousStepsWithDataDependencies(node, graph);
 
-            // Generate step definition using LLM
             StepDefinition stepDefinition = generateStepDefinitions(
-                scenarioSteps, variables, variableInitialValues, previousOverlaySteps);
+                scenarioSteps, variables, variableInitialValues, previousCGSteps);
 
-            // Apply the generated step definition to the node
             if (stepDefinition != null) {
                 applyStepDefinitionToNode(node, stepDefinition);
                 System.out.println("Applied complete step definition '" + stepDefinition.stepName + "' to node " + node.getName());
@@ -181,10 +182,146 @@ public class StepDefinitionAgent {
             e.printStackTrace();
         }
     }
+ 
+    /**
+     * Extract scenario information from a single node.
+     *
+     * @param node The causal graph
+     * @return Map of node name to list of scenario step information
+     */
+    private List<ScenarioStepInfo> extractNodeScenarios(Node node) {
+        List<ScenarioStepInfo> scenarioSteps = new ArrayList<>();
+        
+        for (ScenarioStep step : node.getSteps()) {
+            ScenarioStepInfo stepInfo = new ScenarioStepInfo();
+            stepInfo.scenarioId = step.getScenario().getName();
+            stepInfo.stepNumber = String.valueOf(step.getStepNumber());
+            stepInfo.stepType = node.getStepType().toString();
+            
+            stepInfo.stepBody = step.getStepBody() != null ? extractStepBodyContent(step.getStepBody()) : 
+                               (node.getStepBody() != null ? extractStepBodyContent(node.getStepBody()) : "");
+            scenarioSteps.add(stepInfo);
+        }
+        
+        return scenarioSteps;
+    }
+
+    
+    /**
+     * Extract variables from the causal graph.
+     *
+     * @param graph The causal graph
+     * @return Map of variable names to their types
+     */
+    private Map<String, String> extractVariables(CausalGraph graph) {
+        Map<String, String> variables = new HashMap<>();
+        
+        
+        if (graph.getVariables() != null) {
+            for (Variable variable : graph.getVariables()) {
+                variables.put(variable.getName(), variable.getType().toString());
+                System.out.println("Extracted variable: " + variable.getName() + " of type " + variable.getType().toString());
+            }
+        }
+        
+        return variables;
+    }
+
+    /**
+     * Extract variable initial values from the causal graph.
+     *
+     * @param graph The causal graph
+     * @return Map of variable names to their initial values
+     */
+    private Map<String, Object> extractVariableInitialValues(CausalGraph graph) {
+        Map<String, Object> variableInitialValues = new HashMap<>();
+        
+        if (graph.getAssignments() != null) {
+            for (nl.esi.comma.actions.actions.AssignmentAction assignment : graph.getAssignments()) {
+                try {
+                    Variable assignedVariable = assignment.getAssignment();
+                    if (assignedVariable != null) {
+                        String varName = assignedVariable.getName();
+                        
+                        Expression assignmentExpression = assignment.getExp();
+                        if (assignmentExpression != null) {
+                            Object assignmentValue = extractExpressionValue(assignmentExpression);
+                            if (assignmentValue != null) {
+                                if (!variableInitialValues.containsKey(varName)) {
+                                    variableInitialValues.put(varName, assignmentValue);
+                                    System.out.println("Extracted initial value from assignment: " + varName + " = " + assignmentValue);
+                                }
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    System.err.println("Error processing assignment: " + e.getMessage());
+                }
+            }
+        }
+            
+        System.out.println("Total variable initial values extracted: " + variableInitialValues.size());
+        return variableInitialValues;
+    }
+    
+    /**
+     * Extract a concrete value from an Expression object.
+     * This method handles different types of constant expressions.
+     *
+     * @param expression The expression to extract value from
+     * @return The extracted value, or null if not a constant expression
+     */
+    private Object extractExpressionValue(Expression expression) {
+        if (expression == null) {
+            return null;
+        }
+        
+        try {
+            if (expression instanceof nl.esi.comma.expressions.expression.ExpressionConstantInt) {
+                nl.esi.comma.expressions.expression.ExpressionConstantInt intExpr = 
+                    (nl.esi.comma.expressions.expression.ExpressionConstantInt) expression;
+                return intExpr.getValue();
+            }
+            
+            if (expression instanceof nl.esi.comma.expressions.expression.ExpressionConstantReal) {
+                nl.esi.comma.expressions.expression.ExpressionConstantReal realExpr = 
+                    (nl.esi.comma.expressions.expression.ExpressionConstantReal) expression;
+                return realExpr.getValue();
+            }
+            
+            if (expression instanceof nl.esi.comma.expressions.expression.ExpressionConstantString) {
+                nl.esi.comma.expressions.expression.ExpressionConstantString stringExpr = 
+                    (nl.esi.comma.expressions.expression.ExpressionConstantString) expression;
+                return stringExpr.getValue();
+            }
+            
+            if (expression instanceof nl.esi.comma.expressions.expression.ExpressionConstantBool) {
+                nl.esi.comma.expressions.expression.ExpressionConstantBool boolExpr = 
+                    (nl.esi.comma.expressions.expression.ExpressionConstantBool) expression;
+                return boolExpr.isValue();
+            }
+            
+            if (expression instanceof nl.esi.comma.expressions.expression.ExpressionVariable) {
+                nl.esi.comma.expressions.expression.ExpressionVariable varExpr = 
+                    (nl.esi.comma.expressions.expression.ExpressionVariable) expression;
+                if (varExpr.getVariable() != null) {
+                    return varExpr.getVariable().getName();
+                }
+            }
+            
+            // For other expression types, return a string representation for now
+            System.out.println("Unsupported expression type for value extraction: " + expression.getClass().getSimpleName());
+            return expression.toString();
+            
+        } catch (Exception e) {
+            System.err.println("Error extracting value from expression: " + e.getMessage());
+            return null;
+        }
+    }
+
 
     /**
      * Extract previous steps from the same scenarios that have data dependencies with the current node.
-     * Simplified version that only considers data flow dependencies.
      *
      * @param currentNode The current node being processed
      * @param graph The complete causal graph
@@ -194,7 +331,6 @@ public class StepDefinitionAgent {
         Map<String, List<ScenarioStepInfo>> previousSteps = new HashMap<>();
         
         try {
-            // Get all scenarios that are represented in the current node
             Set<String> currentScenarios = currentNode.getSteps().stream()
                 .map(step -> step.getScenario().getName())
                 .collect(Collectors.toSet());
@@ -203,6 +339,7 @@ public class StepDefinitionAgent {
             
             // Get variables that this node needs from other nodes via outgoing data flows
             // Note: outgoing data flows indicate dependencies - the current node needs data from the target
+            // In causal graph file for the data flow, n4 -> n3 means that n4 needs data from n3
             Set<String> requiredVariables = new HashSet<>();
             Set<Node> dependencySourceNodes = new HashSet<>();
             
@@ -225,7 +362,6 @@ public class StepDefinitionAgent {
             System.out.println("Node " + currentNode.getName() + " requires variables from other nodes: " + requiredVariables);
             System.out.println("Dependency source nodes: " + dependencySourceNodes.stream().map(Node::getName).collect(Collectors.toList()));
             
-            // If no data dependencies, return empty map
             if (requiredVariables.isEmpty()) {
                 System.out.println("No data flow dependencies found for node " + currentNode.getName());
                 return previousSteps;
@@ -259,7 +395,6 @@ public class StepDefinitionAgent {
                         .mapToInt(ScenarioStep::getStepNumber)
                         .min().orElse(Integer.MAX_VALUE);
                     
-                    // Only include if it's a previous step (lower step number)
                     if (sourceStepNumber >= currentStepNumber) {
                         continue;
                     }
@@ -288,7 +423,6 @@ public class StepDefinitionAgent {
                         }
                     }
                     
-                    // If there's a data dependency, extract the step information
                     if (hasDataFlow) {
                         ScenarioStep sourceScenarioStep = sourceNode.getSteps().stream()
                             .filter(step -> step.getScenario().getName().equals(scenarioName))
@@ -309,7 +443,6 @@ public class StepDefinitionAgent {
                     }
                 }
                 
-                // Only add to the map if we found relevant previous steps
                 if (!relevantPreviousSteps.isEmpty()) {
                     previousSteps.put(scenarioName, relevantPreviousSteps);
                     System.out.println("Found " + relevantPreviousSteps.size() + " previous steps with data dependencies for scenario " + scenarioName);
@@ -326,10 +459,137 @@ public class StepDefinitionAgent {
         
         return previousSteps;
     }
+    
 
+    /**
+     * Generate step definitions using LLM for similar scenario steps.
+     * 
+     * @param scenarioSteps List of scenario steps from the current node
+     * @param variables Map of variable names to types
+     * @param variableInitialValues Map of variable names to their initial values
+     * @param previousScenarioSteps Map of scenario names to lists of previous step information with data dependencies
+     * @return The generated step definition object with the step name, arguments, parameters, and body
+     */
+    private StepDefinition generateStepDefinitions(
+            List<ScenarioStepInfo> scenarioSteps,
+            Map<String, String> variables,
+            Map<String, Object> variableInitialValues,
+            Map<String, List<ScenarioStepInfo>> previousScenarioSteps) {
+        
+        StepDefinition stepDef = new StepDefinition();
+        
+        List<SystemMessages.Scenario> scenarios = scenarioSteps.stream()
+            .map(step -> new SystemMessages.Scenario(step.scenarioId, step.stepNumber, step.stepBody))
+            .collect(Collectors.toList());
+
+        String stepNamePrompt = SystemMessages.generateStepNamePrompt(scenarios);
+        String stepNameResponse = this.llm.chat(stepNamePrompt);
+        String stepName = stepNameResponse.trim();
+
+        if (scenarios.size() == 1) {
+            // Single scenario - simple case no parameterization needed
+            stepDef.stepName = stepName;
+            stepDef.stepArguments = new HashMap<>();
+            stepDef.stepParameters = new HashMap<>();
+            stepDef.stepBody = scenarios.get(0).getStepBody();
+            stepDef.stepType = scenarioSteps.get(0).stepType;
+        } else {
+            // Multiple scenarios
+            String firstStepBody = scenarios.get(0).getStepBody();
+            boolean allSameBody = scenarios.stream()
+                .allMatch(scenario -> scenario.getStepBody().equals(firstStepBody));
+
+            if (allSameBody) {
+                // All have same body - no parameterization needed
+                stepDef.stepName = stepName;
+                stepDef.stepArguments = new HashMap<>();
+                stepDef.stepParameters = new HashMap<>();
+                stepDef.stepBody = firstStepBody;
+                stepDef.stepType = scenarioSteps.get(0).stepType;
+            } else {
+                // Different bodies - need LLM to parameterize
+                Map<String, List<SystemMessages.Scenario>> prevStepsConverted = new HashMap<>();
+                for (Map.Entry<String, List<ScenarioStepInfo>> entry : previousScenarioSteps.entrySet()) {
+                    List<SystemMessages.Scenario> convertedSteps = entry.getValue().stream()
+                        .map(step -> new SystemMessages.Scenario(step.scenarioId, step.stepNumber, step.stepBody))
+                        .collect(Collectors.toList());
+                    prevStepsConverted.put(entry.getKey(), convertedSteps);
+                }
+
+                String stepDefinitionPrompt = SystemMessages.generateStepDefinitionPrompt(
+                    scenarios, variables, variableInitialValues, sourceCode, prevStepsConverted);
+
+                String response = this.llm.chat(stepDefinitionPrompt);
+                System.out.println("LLM Response: " + response);
+
+                try {
+                    String cleanedResponse = extractJsonFromResponse(response);
+                    JsonNode jsonNode = objectMapper.readTree(cleanedResponse);
+                    
+                    stepDef.stepName = stepName;
+                    stepDef.stepType = scenarioSteps.get(0).stepType;
+                    
+                    JsonNode stepArgsNode = jsonNode.get("step-arguments");
+                    System.out.println("Step arguments node: " + stepArgsNode);
+                    if (stepArgsNode != null) {
+                        stepDef.stepArguments = objectMapper.convertValue(stepArgsNode, Map.class);
+                    } else {
+                        stepDef.stepArguments = new HashMap<>();
+                    }
+                    
+                    JsonNode stepParamsNode = jsonNode.get("step-parameters");
+                    System.out.println("Step parameters node: " + stepParamsNode);
+                    if (stepParamsNode != null) {
+                        stepDef.stepParameters = objectMapper.convertValue(stepParamsNode, Map.class);
+                    } else {
+                        stepDef.stepParameters = new HashMap<>();
+                    }
+                    
+                    JsonNode stepBodyNode = jsonNode.get("step-body");
+                    if (stepBodyNode != null) {
+                        stepDef.stepBody = stepBodyNode.asText();
+                    }
+                    
+                } catch (Exception e) {
+                    System.err.println("Error parsing LLM response: " + e.getMessage());
+                    e.printStackTrace();
+                    
+                    // Fallback - create simple step definition
+                    stepDef.stepName = stepName;
+                    stepDef.stepArguments = new HashMap<>();
+                    stepDef.stepParameters = new HashMap<>();
+                    stepDef.stepBody = firstStepBody;
+                    stepDef.stepType = scenarioSteps.get(0).stepType;
+                }
+            }
+        }
+        
+        return stepDef;
+    }
+
+    /**
+     * Extract JSON from LLM response that may contain explanations.
+     * 
+     * @param response The raw LLM response
+     * @return The extracted JSON string
+     */
+    private String extractJsonFromResponse(String response) {
+        // Try to find JSON content between braces
+        int startIndex = response.indexOf('{');
+        int endIndex = response.lastIndexOf('}');
+        
+        if (startIndex >= 0 && endIndex > startIndex) {
+            return response.substring(startIndex, endIndex + 1).trim();
+        }
+        
+        return response.trim();
+    }    
+    
+      
     /**
      * Apply all step definition properties to the EMF node model.
      * This replaces the original node information with the generated step definition.
+     * So, the node's step name, body, parameters, and arguments are all updated.
      *
      * @param node The EMF node to update
      * @param stepDef The step definition containing all properties
@@ -397,12 +657,10 @@ public class StepDefinitionAgent {
                     // The scenarioId format might be "scenario T1, step 3" or "scenario T1 step 3"
                     ScenarioStep targetScenarioStep = null;
                     for (ScenarioStep step : node.getSteps()) {
-                        // Create the expected scenario ID format: "scenario <scenarioName> step <stepNumber>"
                         String expectedScenarioId = "scenario " + step.getScenario().getName() + " step " + step.getStepNumber();
-                        
                         System.out.println("      Comparing '" + scenarioId + "' with '" + expectedScenarioId + "'");
                         
-                        // Normalize both strings by removing commas for comparison
+						// Normalize by removing commas and extra spaces
                         String normalizedScenarioId = scenarioId.replace(",", "");
                         String normalizedExpectedId = expectedScenarioId.replace(",", "");
                         
@@ -415,7 +673,6 @@ public class StepDefinitionAgent {
                     
                     if (targetScenarioStep == null) {
                         System.err.println("      Could not find scenario step for scenario ID: " + scenarioId);
-                        // Also log available scenario steps for debugging
                         System.err.println("      Available scenario steps:");
                         for (ScenarioStep step : node.getSteps()) {
                             String availableId = "scenario " + step.getScenario().getName() + " step " + step.getStepNumber();
@@ -424,29 +681,22 @@ public class StepDefinitionAgent {
                         continue;
                     }
                     
-                    // Get the EList of step arguments from the scenario step
                     EList<nl.esi.comma.actions.actions.AssignmentAction> stepArgumentsList = targetScenarioStep.getStepArguments();
-                    
-                    // Clear existing arguments if any
                     stepArgumentsList.clear();
                     
-                    // Process the arguments data
                     if (argsData instanceof Map) {
                         @SuppressWarnings("unchecked")
                         Map<String, Object> argumentsMap = (Map<String, Object>) argsData;
                         
                         System.out.println("      Creating " + argumentsMap.size() + " step arguments for scenario " + scenarioId);
                         
-                        // Create and add new AssignmentAction objects for each argument
                         for (Map.Entry<String, Object> argDataEntry : argumentsMap.entrySet()) {
                             String paramName = argDataEntry.getKey();
                             Object paramValueData = argDataEntry.getValue();
                             
-                            // Extract parameter type and value from the parameter data
-                            String paramType = "string"; // Default type
+                            String paramType = "string";
                             Object paramValue = paramValueData;
                             
-                            // If paramValueData is a map with type and value, extract them
                             if (paramValueData instanceof Map) {
                                 @SuppressWarnings("unchecked")
                                 Map<String, Object> paramMap = (Map<String, Object>) paramValueData;
@@ -454,7 +704,6 @@ public class StepDefinitionAgent {
                                 paramValue = paramMap.getOrDefault("value", paramValueData.toString());
                             }
                             
-                            // Determine the parameter type based on the value if it's a direct value
                             if (!(paramValueData instanceof Map)) {
                                 if (paramValueData instanceof Integer) {
                                     paramType = "int";
@@ -517,6 +766,9 @@ public class StepDefinitionAgent {
     
     /**
      * Create a StepBody object using the proper EMF factory.
+     * 
+     * @param bodyString The string content for the step body
+     * @return The created StepBody object
      */
     private StepBody createStepBodyFromString(String bodyString) {
         try {
@@ -534,6 +786,9 @@ public class StepDefinitionAgent {
     /**
      * Extract the actual body content from a StepBody object.
      * Handles different StepBody implementations properly.
+     * 
+     * @param stepBody The StepBody object
+     * @return The extracted body content as a string
      */
     private String extractStepBodyContent(StepBody stepBody) {
         if (stepBody == null) {
@@ -548,270 +803,6 @@ public class StepDefinitionAgent {
         return stepBody.toString();
     }
 
-
-    /**
-     * Extract scenario information from a single node.
-     *
-     * @param node The causal graph
-     * @return Map of node name to list of scenario step information
-     */
-    private List<ScenarioStepInfo> extractNodeScenarios(Node node) {
-        List<ScenarioStepInfo> scenarioSteps = new ArrayList<>();
-        
-        for (ScenarioStep step : node.getSteps()) {
-            ScenarioStepInfo stepInfo = new ScenarioStepInfo();
-            stepInfo.scenarioId = step.getScenario().getName();
-            stepInfo.stepNumber = String.valueOf(step.getStepNumber());
-            stepInfo.stepType = node.getStepType().toString();
-            
-            stepInfo.stepBody = step.getStepBody() != null ? extractStepBodyContent(step.getStepBody()) : 
-                               (node.getStepBody() != null ? extractStepBodyContent(node.getStepBody()) : "");
-            scenarioSteps.add(stepInfo);
-        }
-        
-        return scenarioSteps;
-    }
-
-    /**
-     * Extract variables from the causal graph.
-     *
-     * @param graph The causal graph
-     * @return Map of variable names to their types
-     */
-    private Map<String, String> extractVariables(CausalGraph graph) {
-        Map<String, String> variables = new HashMap<>();
-        
-        
-        if (graph.getVariables() != null) {
-            for (Variable variable : graph.getVariables()) {
-                variables.put(variable.getName(), variable.getType().toString());
-                System.out.println("Extracted variable: " + variable.getName() + " of type " + variable.getType().toString());
-            }
-        }
-        
-        return variables;
-    }
-
-    /**
-     * Extract variable initial values from the causal graph.
-     *
-     * @param graph The causal graph
-     * @return Map of variable names to their initial values
-     */
-    private Map<String, Object> extractVariableInitialValues(CausalGraph graph) {
-        Map<String, Object> variableInitialValues = new HashMap<>();
-        
-        // Extract initial values from assignments in the graph
-        if (graph.getAssignments() != null) {
-            for (nl.esi.comma.actions.actions.AssignmentAction assignment : graph.getAssignments()) {
-                try {
-                    // Get the variable being assigned to
-                    Variable assignedVariable = assignment.getAssignment();
-                    if (assignedVariable != null) {
-                        String varName = assignedVariable.getName();
-                        
-                        Expression assignmentExpression = assignment.getExp();
-                        if (assignmentExpression != null) {
-                            Object assignmentValue = extractExpressionValue(assignmentExpression);
-                            if (assignmentValue != null) {
-                                // Only add if we haven't already found an initial value for this variable
-                                if (!variableInitialValues.containsKey(varName)) {
-                                    variableInitialValues.put(varName, assignmentValue);
-                                    System.out.println("Extracted initial value from assignment: " + varName + " = " + assignmentValue);
-                                }
-                            }
-                        }
-                    }
-                } catch (Exception e) {
-                    System.err.println("Error processing assignment: " + e.getMessage());
-                }
-            }
-        }
-        
-
-        
-        System.out.println("Total variable initial values extracted: " + variableInitialValues.size());
-        return variableInitialValues;
-    }
-    
-    /**
-     * Extract a concrete value from an Expression object.
-     * This method handles different types of constant expressions.
-     *
-     * @param expression The expression to extract value from
-     * @return The extracted value, or null if not a constant expression
-     */
-    private Object extractExpressionValue(Expression expression) {
-        if (expression == null) {
-            return null;
-        }
-        
-        try {
-            // Handle different types of constant expressions
-            if (expression instanceof nl.esi.comma.expressions.expression.ExpressionConstantInt) {
-                nl.esi.comma.expressions.expression.ExpressionConstantInt intExpr = 
-                    (nl.esi.comma.expressions.expression.ExpressionConstantInt) expression;
-                return intExpr.getValue();
-            }
-            
-            if (expression instanceof nl.esi.comma.expressions.expression.ExpressionConstantReal) {
-                nl.esi.comma.expressions.expression.ExpressionConstantReal realExpr = 
-                    (nl.esi.comma.expressions.expression.ExpressionConstantReal) expression;
-                return realExpr.getValue();
-            }
-            
-            if (expression instanceof nl.esi.comma.expressions.expression.ExpressionConstantString) {
-                nl.esi.comma.expressions.expression.ExpressionConstantString stringExpr = 
-                    (nl.esi.comma.expressions.expression.ExpressionConstantString) expression;
-                return stringExpr.getValue();
-            }
-            
-            if (expression instanceof nl.esi.comma.expressions.expression.ExpressionConstantBool) {
-                nl.esi.comma.expressions.expression.ExpressionConstantBool boolExpr = 
-                    (nl.esi.comma.expressions.expression.ExpressionConstantBool) expression;
-                return boolExpr.isValue();
-            }
-            
-            // Handle variable references - return the variable name as a reference
-            if (expression instanceof nl.esi.comma.expressions.expression.ExpressionVariable) {
-                nl.esi.comma.expressions.expression.ExpressionVariable varExpr = 
-                    (nl.esi.comma.expressions.expression.ExpressionVariable) expression;
-                if (varExpr.getVariable() != null) {
-                    return varExpr.getVariable().getName();
-                }
-            }
-            
-            // For other expression types, return a string representation for now
-            System.out.println("Unsupported expression type for value extraction: " + expression.getClass().getSimpleName());
-            return expression.toString();
-            
-        } catch (Exception e) {
-            System.err.println("Error extracting value from expression: " + e.getMessage());
-            return null;
-        }
-    }
-
-    /**
-     * Generate step definitions using LLM for similar scenario steps.
-     */
-    private StepDefinition generateStepDefinitions(
-            List<ScenarioStepInfo> scenarioSteps,
-            Map<String, String> overlayVariables,
-            Map<String, Object> variableInitialValues,
-            Map<String, List<ScenarioStepInfo>> previousOverlaySteps) {
-        
-        // Declare stepDef at method level so it's accessible for return
-        StepDefinition stepDef = new StepDefinition();
-        
-        // Convert to SystemMessages.Scenario format
-        List<SystemMessages.Scenario> scenarios = scenarioSteps.stream()
-            .map(step -> new SystemMessages.Scenario(step.scenarioId, step.stepNumber, step.stepBody))
-            .collect(Collectors.toList());
-
-        // Generate step name
-        String stepNamePrompt = SystemMessages.generateStepNamePrompt(scenarios);
-        String stepNameResponse = this.llm.chat(stepNamePrompt);
-        String stepName = stepNameResponse.trim();
-
-        if (scenarios.size() == 1) {
-            // Single scenario - simple case
-            stepDef.stepName = stepName;
-            stepDef.stepArguments = new HashMap<>();
-            stepDef.stepParameters = new HashMap<>();
-            stepDef.stepBody = scenarios.get(0).getStepBody();
-            stepDef.stepType = scenarioSteps.get(0).stepType;
-        } else {
-            // Multiple scenarios - need parameterization
-            String firstStepBody = scenarios.get(0).getStepBody();
-            boolean allSameBody = scenarios.stream()
-                .allMatch(scenario -> scenario.getStepBody().equals(firstStepBody));
-
-            if (allSameBody) {
-                // All have same body - no parameterization needed
-                stepDef.stepName = stepName;
-                stepDef.stepArguments = new HashMap<>();
-                stepDef.stepParameters = new HashMap<>();
-                stepDef.stepBody = firstStepBody;
-                stepDef.stepType = scenarioSteps.get(0).stepType;
-            } else {
-                // Different bodies - need LLM to parameterize
-                Map<String, List<SystemMessages.Scenario>> prevStepsConverted = new HashMap<>();
-                for (Map.Entry<String, List<ScenarioStepInfo>> entry : previousOverlaySteps.entrySet()) {
-                    List<SystemMessages.Scenario> convertedSteps = entry.getValue().stream()
-                        .map(step -> new SystemMessages.Scenario(step.scenarioId, step.stepNumber, step.stepBody))
-                        .collect(Collectors.toList());
-                    prevStepsConverted.put(entry.getKey(), convertedSteps);
-                }
-
-                String stepDefinitionPrompt = SystemMessages.generateStepDefinitionPrompt(
-                    scenarios, overlayVariables, variableInitialValues, sourceCode, prevStepsConverted);
-
-                String response = this.llm.chat(stepDefinitionPrompt);
-                System.out.println("LLM Response: " + response);
-
-                try {
-                    String cleanedResponse = extractJsonFromResponse(response);
-                    JsonNode jsonNode = objectMapper.readTree(cleanedResponse);
-                    
-                    stepDef.stepName = stepName;
-                    stepDef.stepType = scenarioSteps.get(0).stepType;
-                    
-                    // Parse step-arguments
-                    JsonNode stepArgsNode = jsonNode.get("step-arguments");
-                    System.out.println("Step arguments node: " + stepArgsNode);
-                    if (stepArgsNode != null) {
-                        stepDef.stepArguments = objectMapper.convertValue(stepArgsNode, Map.class);
-                    } else {
-                        stepDef.stepArguments = new HashMap<>();
-                    }
-                    
-                    // Parse step-parameters
-                    JsonNode stepParamsNode = jsonNode.get("step-parameters");
-                    System.out.println("Step parameters node: " + stepParamsNode);
-                    if (stepParamsNode != null) {
-                        stepDef.stepParameters = objectMapper.convertValue(stepParamsNode, Map.class);
-                    } else {
-                        stepDef.stepParameters = new HashMap<>();
-                    }
-                    
-                    // Parse step-body
-                    JsonNode stepBodyNode = jsonNode.get("step-body");
-                    if (stepBodyNode != null) {
-                        stepDef.stepBody = stepBodyNode.asText();
-                    }
-                    
-                } catch (Exception e) {
-                    System.err.println("Error parsing LLM response: " + e.getMessage());
-                    e.printStackTrace();
-                    
-                    // Fallback - create simple step definition
-                    stepDef.stepName = stepName;
-                    stepDef.stepArguments = new HashMap<>();
-                    stepDef.stepParameters = new HashMap<>();
-                    stepDef.stepBody = firstStepBody;
-                    stepDef.stepType = scenarioSteps.get(0).stepType;
-                }
-            }
-        }
-        
-        // Return the single step definition directly
-        return stepDef;
-    }
-
-    /**
-     * Extract JSON from LLM response that may contain explanations.
-     */
-    private String extractJsonFromResponse(String response) {
-        // Try to find JSON content between braces
-        int startIndex = response.indexOf('{');
-        int endIndex = response.lastIndexOf('}');
-        
-        if (startIndex >= 0 && endIndex > startIndex) {
-            return response.substring(startIndex, endIndex + 1).trim();
-        }
-        
-        return response.trim();
-    }
 
     /**
      * Helper class to represent scenario step information.

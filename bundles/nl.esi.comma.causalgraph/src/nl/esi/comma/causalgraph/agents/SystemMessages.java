@@ -4,15 +4,14 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Utility class for generating system prompts used in code analysis and merging scenarios.
- * This class provides methods to create structured prompts for LLM-based code analysis.
+ * Utility class for generating system prompts used in merging and step definition generation.
  */
 public class SystemMessages {
 
     /**
      * Checks if two pieces of code should merge into a parameterized step definition.
      *
-     * @param codeSnippets List of code snippets to be merged into a single step definition.
+     * @param codeSnippets List of two code snippets to be merged into a single step definition.
      * @return String prompt for determining if code should merge into a parameterized step definition.
      */
     public static String shouldCodeMergePrompt(List<String> codeSnippets) {
@@ -434,18 +433,18 @@ scenario %s step %s:
      * Prompt to generate step-arguments, step-parameters, and step-body for scenarios (step-name is generated separately).
      *
      * @param scenarios List of scenarios to be merged into a single step definition.
-     * @param overlayVariables Dictionary mapping variable names to their types from the causal graph.
+     * @param variables Dictionary mapping variable names to their types from the causal graph.
      * @param variableInitialValues Dictionary mapping variable names to their initial values from the causal graph.
      * @param sourceCode Dictionary containing source code files (filename -> content).
-     * @param previousOverlaySteps Dictionary of original overlay scenario steps from previous nodes.
+     * @param previousCGSteps Dictionary of original overlay scenario steps from previous nodes.
      * @return String formatted prompt for the LLM to generate step-arguments, step-parameters, and step-body.
      */
     public static String generateStepDefinitionPrompt(
             List<Scenario> scenarios,
-            Map<String, String> overlayVariables,
+            Map<String, String> variables,
             Map<String, Object> variableInitialValues,
             Map<String, String> sourceCode,
-            Map<String, List<Scenario>> previousOverlaySteps) {
+            Map<String, List<Scenario>> previousCGSteps) {
         
         if (scenarios == null || scenarios.isEmpty()) {
             throw new IllegalArgumentException("Scenarios list cannot be null or empty");
@@ -508,9 +507,9 @@ RULES:
         prompt.append(EXAMPLE_MULTIPLE_SCENARIOS_SUM_VARIABLES);
 
         // Add variable types and initial values if available
-        if (overlayVariables != null && !overlayVariables.isEmpty()) {
+        if (variables != null && !variables.isEmpty()) {
             prompt.append("\nInitialized variables from causal graph:\n");
-            for (Map.Entry<String, String> entry : overlayVariables.entrySet()) {
+            for (Map.Entry<String, String> entry : variables.entrySet()) {
                 String varName = entry.getKey();
                 String varType = entry.getValue();
                 Object initialValue = variableInitialValues != null ? variableInitialValues.get(varName) : "N/A";
@@ -519,10 +518,10 @@ RULES:
         }
 
         // Add previous overlay steps if available
-        if (previousOverlaySteps != null && !previousOverlaySteps.isEmpty()) {
+        if (previousCGSteps != null && !previousCGSteps.isEmpty()) {
             prompt.append("\nPREVIOUS OVERLAY SCENARIO STEPS (from nodes that provide data dependencies):\n");
             prompt.append("Use this information to understand what concrete values previous steps have calculated for the same test cases.\n");
-            for (Map.Entry<String, List<Scenario>> entry : previousOverlaySteps.entrySet()) {
+            for (Map.Entry<String, List<Scenario>> entry : previousCGSteps.entrySet()) {
                 String nodeId = entry.getKey();
                 List<Scenario> overlaySteps = entry.getValue();
                 prompt.append(String.format("\n--- Node %s Original Scenarios ---\n", nodeId));

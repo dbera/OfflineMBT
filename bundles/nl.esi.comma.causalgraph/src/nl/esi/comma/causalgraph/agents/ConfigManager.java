@@ -28,7 +28,7 @@ public class ConfigManager {
     }
     /**
      * Load configuration from config.ini file with proper INI format parsing.
-     * 
+     *
      * @return Configuration map
      */
     private static Map<String, Object> loadConfigFromFile() {
@@ -64,7 +64,6 @@ public class ConfigManager {
                         currentSectionMap = new HashMap<>();
                         continue;
                     }
-                    // Parse key-value pairs
                     int equalIndex = line.indexOf('=');
                     if (equalIndex > 0) {
                         String key = line.substring(0, equalIndex).trim();
@@ -104,9 +103,9 @@ public class ConfigManager {
         Map<String, Object> gptConfig = new HashMap<>();
         gptConfig.put("endpoint", "");
         gptConfig.put("api_key", "");
-        gptConfig.put("llm", "gpt-3.5-turbo");
-        gptConfig.put("version", "2023-05-15");
-        gptConfig.put("temperature", "0.7");
+        gptConfig.put("llm", "gpt-4.1");
+        gptConfig.put("version", "2024-12-01-preview");
+        gptConfig.put("temperature", "0.1");
         defaultConfig.put("gpt", gptConfig);
         return defaultConfig;
     }

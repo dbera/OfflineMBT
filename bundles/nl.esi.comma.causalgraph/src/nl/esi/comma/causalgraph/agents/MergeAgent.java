@@ -6,8 +6,7 @@ import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.azure.AzureOpenAiChatModel;
  
 /**
-* MergeAgent class for processing code snippets and generating step definitions.
-* Uses LangChain4j for LLM integration with Azure OpenAI.
+* MergeAgent class to let an LLM decide if two pieces of code should belong to the same group.
 */
 public class MergeAgent {    
 	private ChatModel llm;
@@ -112,7 +111,7 @@ public class MergeAgent {
 	}
  
     /**
-     * Invoke the MergeAgent to determine if code snippets should be merged.
+     * Invoke the MergeAgent to determine if two code snippets should be merged.
      * 
      * @param codeSnippets Array of code snippets to compare (expects exactly 2 snippets)
      * @return String response from the LLM indicating whether to merge ("True" or "False")
