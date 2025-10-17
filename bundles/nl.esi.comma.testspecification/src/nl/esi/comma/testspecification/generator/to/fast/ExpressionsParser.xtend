@@ -130,9 +130,9 @@ class ExpressionsParser {
     def static String findStringPrefixBasedOnType(ExpressionConstantString string) {
         var cont = string.eContainer
         var TypeDecl fieldType = switch (cont) {
-            Field: (cont as Field).recordField.type.type
-            RecordFieldAssignmentAction: ((cont as RecordFieldAssignmentAction).
-                fieldAccess as ExpressionRecordAccess).field.type.type
+            Field: cont.recordField.type.type
+            RecordFieldAssignmentAction: (cont.fieldAccess as ExpressionRecordAccess).field.type.type
+            ExpressionVector: cont.typeAnnotation.type.type
             default: null
         }
         if (fieldType instanceof SimpleTypeDecl) {
