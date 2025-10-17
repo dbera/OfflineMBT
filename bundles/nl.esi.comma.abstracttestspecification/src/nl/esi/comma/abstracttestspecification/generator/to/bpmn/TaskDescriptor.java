@@ -12,7 +12,11 @@
  */
 package nl.esi.comma.abstracttestspecification.generator.to.bpmn;
 
+import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractStep;
+
 public class TaskDescriptor extends ElementDescriptor {
+	public AbstractStep step;
+
 	public TaskDescriptor(String id, String lane) {
 		super(id, lane);
 	}

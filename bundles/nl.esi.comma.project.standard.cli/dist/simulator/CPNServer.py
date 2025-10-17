@@ -290,6 +290,7 @@ def handle_markings_reload(uuid: str):
 
 # Running the API
 if __name__ == "__main__":
+    print(f'# Using temporary directory:  "{TEMP_PATH}"')
     # Setting host = "0.0.0.0" runs it on localhost
     app.run(host="0.0.0.0", debug=False)
 
