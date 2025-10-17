@@ -12,6 +12,10 @@
  */
 package nl.esi.comma.testspecification.generator.to.fast
 
+import java.util.Map
+import nl.esi.comma.actions.actions.AssignmentAction
+import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
+import nl.esi.comma.expressions.expression.Expression
 import nl.esi.comma.expressions.expression.ExpressionAddition
 import nl.esi.comma.expressions.expression.ExpressionAnd
 import nl.esi.comma.expressions.expression.ExpressionAny
@@ -37,6 +41,7 @@ import nl.esi.comma.expressions.expression.ExpressionModulo
 import nl.esi.comma.expressions.expression.ExpressionMultiply
 import nl.esi.comma.expressions.expression.ExpressionNEqual
 import nl.esi.comma.expressions.expression.ExpressionNot
+import nl.esi.comma.expressions.expression.ExpressionNullLiteral
 import nl.esi.comma.expressions.expression.ExpressionOr
 import nl.esi.comma.expressions.expression.ExpressionPlus
 import nl.esi.comma.expressions.expression.ExpressionPower
@@ -48,10 +53,9 @@ import nl.esi.comma.expressions.expression.ExpressionVariable
 import nl.esi.comma.expressions.expression.ExpressionVector
 import nl.esi.comma.expressions.expression.Field
 import nl.esi.comma.expressions.expression.VectorTypeConstructor
-import nl.esi.comma.actions.actions.AssignmentAction
-import nl.esi.comma.expressions.expression.Expression
-import java.util.Map
-import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
+import nl.esi.comma.types.types.SimpleTypeDecl
+import nl.esi.comma.types.types.TypeDecl
+import nl.esi.comma.types.types.RecordField
 
 class ExpressionsParser {
 	
@@ -61,7 +65,7 @@ class ExpressionsParser {
     def static dispatch CharSequence generateExpression(ExpressionMap expr, CharSequence ref)
 	'''
 	{
-    «FOR e : expr.pairs SEPARATOR ', '»
+    «FOR e : expr.pairs.filter[!(it.value instanceof ExpressionNullLiteral)] SEPARATOR ', '»
 	       «generateExpression(e.key, ref)» : «generateExpression(e.value, ref)»
    «ENDFOR»
 	}'''
@@ -84,7 +88,7 @@ class ExpressionsParser {
 	def static CharSequence generateRecExpression(ExpressionRecord expr, CharSequence ref)
 	//'''«FOR f : expr.fields SEPARATOR ", "»«IF generateExpression(f, ref).toString.contains('''ANY''')»«JavaGeneratorUtilities::generateJavaTypeInitializer(f.recordField.type.type)»«ELSE»«generateExpression(f, ref)»«ENDIF»«ENDFOR»'''
 	'''
-	«FOR f : expr.fields SEPARATOR ", "»
+	«FOR f : expr.fields.filter[!(it.exp instanceof ExpressionNullLiteral)] SEPARATOR ", "»
 	   «generateExpression(f, ref)»
 	«ENDFOR»
 	'''
@@ -117,9 +121,32 @@ class ExpressionsParser {
 	// modify string to remove quotes for prefix: "platform:" && "setup.suts" [FAST Specific]
 	def static dispatch CharSequence generateExpression(ExpressionConstantString expr, CharSequence ref)      
 	{
+		var prefix = findStringPrefixBasedOnType(expr)
+		if(prefix instanceof String) return prefix+''''«expr.value»' '''
 		if(expr.value.contains('''Platform:''') || expr.value.contains('''setup.suts''')) return '''«expr.value»'''	
 		else return '''"«expr.value»"'''
 	} 
+
+    def static String findStringPrefixBasedOnType(ExpressionConstantString string) {
+        var cont = string.eContainer
+        var TypeDecl fieldType = switch (cont) {
+            Field: (cont as Field).recordField.type.type
+            RecordFieldAssignmentAction: ((cont as RecordFieldAssignmentAction).
+                fieldAccess as ExpressionRecordAccess).field.type.type
+            default: null
+        }
+        if (fieldType instanceof SimpleTypeDecl) {
+            var isBasedOnString = fieldType.base?.name?.equals('string')
+            if (isBasedOnString) {
+                var baseName = fieldType.name
+                return switch baseName {
+                    case 'Dataset': 'global.params[\'testcase_data\'] + '
+                    default: null
+                }
+            }
+        }
+        return null
+    }
 
 	def static dispatch CharSequence generateExpression(ExpressionConstantReal expr, CharSequence ref)      
 	'''«expr.value»''' 
