@@ -30,6 +30,7 @@ import nl.esi.comma.types.types.MapTypeConstructor
 import nl.esi.comma.types.types.RecordTypeDecl
 import nl.esi.comma.types.types.SimpleTypeDecl
 import nl.esi.comma.types.types.Type
+import nl.esi.comma.types.types.TypeDecl
 import nl.esi.comma.types.types.TypeReference
 import nl.esi.comma.types.types.VectorTypeConstructor
 import org.eclipse.emf.common.util.EList
@@ -142,6 +143,10 @@ class ConcreteExpressionHandler {
             «ENDFOR»
         }
     '''
+
+    def String createTypeDeclValue(TypeDecl type, JsonValue value) {
+        return type.createDeclValue(value)
+    }
 
     // Prepend the Run Step name to the ExpressionVariable name 
     def prepareAssertionStepExpressions(AssertionStep astep, ExpressionVariable variable) {
