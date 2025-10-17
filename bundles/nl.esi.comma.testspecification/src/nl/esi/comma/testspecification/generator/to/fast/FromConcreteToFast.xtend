@@ -567,7 +567,10 @@ class FromConcreteToFast extends AbstractGenerator {
             
             in.data.steps = [
                 «FOR elm : tsi.steps SEPARATOR ','»
-                    «IF !elm.comment.nullOrEmpty» «elm.comment»«ENDIF»
+                    «IF !elm.comment.nullOrEmpty»
+                    
+                    «elm.comment»
+                    «ENDIF»
                     «IF generateFASTRefStepTxt(elm).empty»
                         { "id" : "«elm.id»", "type" : "«elm.type.replaceAll("_dot_",".")»", "input_file" : "#valueof(global.params['testcase_data'] + '«elm.inputFile»')" }
                     «ELSE»
