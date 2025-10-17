@@ -30,6 +30,7 @@ import java.util.stream.Collectors;
 import org.camunda.bpm.model.bpmn.Bpmn;
 import org.camunda.bpm.model.bpmn.BpmnModelInstance;
 import org.camunda.bpm.model.bpmn.instance.BaseElement;
+import org.camunda.bpm.model.bpmn.instance.DataAssociation;
 import org.camunda.bpm.model.bpmn.instance.DataInputAssociation;
 import org.camunda.bpm.model.bpmn.instance.DataOutputAssociation;
 import org.camunda.bpm.model.bpmn.instance.DataStore;
@@ -56,7 +57,14 @@ import nl.asml.matala.product.product.Function;
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractStep;
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractTestDefinition;
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractTestSequence;
+import nl.esi.comma.abstracttestspecification.abstractTestspecification.AssertionStep;
+import nl.esi.comma.abstracttestspecification.abstractTestspecification.Binding;
+import nl.esi.comma.abstracttestspecification.abstractTestspecification.ComposeStep;
+import nl.esi.comma.abstracttestspecification.abstractTestspecification.RunStep;
+import nl.esi.comma.abstracttestspecification.generator.to.concrete.ConcreteExpressionHandler;
+import nl.esi.comma.assertthat.assertThat.JsonValue;
 import nl.esi.comma.expressions.expression.ExpressionVariable;
+import nl.esi.comma.types.types.TypeDecl;
 
 public class CamundaParser {
 
@@ -68,6 +76,12 @@ public class CamundaParser {
 	final static String XMLNS_BPMN4S = "http://bpmn4s";
 	final static String XMLNS_BPMN2 = "http://www.omg.org/spec/BPMN/20100524/MODEL";
 	final static String XMLNS_BIOC = "http://bpmn.io/schema/bpmn/biocolor/1.0";
+
+	private static final String BPMN4S_RUN_TASK = "RunTask";
+	private static final String BPMN4S_ASSERT_TASK = "AssertTask";
+	private static final String BPMN4S_COMPOSE_TASK = "ComposeTask";
+	private static final String BPMN4S_SUB_TYPE = "subType";
+	private static final String BPMN4S_UPDATE = "update";
 
 	final static double OFFSET_X = 150.0;
 	final static double OFFSET_Y = 50.0;
@@ -161,7 +175,6 @@ public class CamundaParser {
 		List<ElementDescriptor> elements = new ArrayList<>();
 		// 1) fetch step identifiers and split them into lane & task id
 		Map<String, String> actionLane = new HashMap<>();
-		Set<String> outputs = new HashSet();
 		Map<String, List<String>> dataSetConsumer = new HashMap<>();
 		Map<String, DataInstanceDescriptor> datastoreMap = new HashMap<>();
 		List<TaskDescriptor> tasks = new ArrayList<>();
@@ -198,9 +211,14 @@ public class CamundaParser {
 				// System.out.println("getName step" + step.getName());
 				String caseName = step.getName().replaceAll(".*_(.*_.*)$", "$1");
 
-				// make the dataset
-				outputs = step.getOutput().stream().map(out -> out.getName().getName()).collect(Collectors.toSet());
-
+				// make mapping output var name -> IO object 
+				Map<String, Binding> outputMap = new HashMap<>();
+					outputMap = step.getOutput().stream()
+					    .collect(Collectors.toMap(
+					        out -> out.getName().getName(), // key mapper
+					        out -> out                     // value mapper
+			    ));
+				
 				Set<String> suppressed = new HashSet<>();
 
 				if (step.getSuppress() != null) {
@@ -211,7 +229,7 @@ public class CamundaParser {
 				}
 
 				// Remove suppressed ones
-				outputs.removeAll(suppressed);
+				outputMap.keySet().removeAll(suppressed);
 
 				// name of action/ task id
 				Function function = (Function) step.getCaseRef().eContainer();
@@ -222,16 +240,20 @@ public class CamundaParser {
 
 				// 2) create the taskDescriptor objects
 				actionLane.put(taskName, block.getName());
-				tasks.add(new TaskDescriptor(taskName, block.getName()));
+				TaskDescriptor task = new TaskDescriptor(taskName, block.getName());
+				task.step = step;
+				tasks.add(task);
 
 				// 3) derive datastores out of the output-data elements in each run/compose-step
-				outputs.forEach(name -> {
+				outputMap.forEach((name, output) -> {
 					List<String> consumers = dataSetConsumer.getOrDefault(name, new ArrayList<>());
 					if (!datastoreMap.containsKey(name)) {
-						// 4) create the datastoreDescriptor objects
+						// 4) create the DataInstanceDescriptor objects
 						DataInstanceDescriptor ds = new DataInstanceDescriptor(name, block.getName(), taskName, 
-								consumers//fetch from the map with the same dataname
+								// fetch from the map with the same dataname
+								consumers
 						);
+						ds.bind_producer = output;
 						datastoreMap.put(name, ds);
 					}
 				});
@@ -262,6 +284,7 @@ public class CamundaParser {
 	public static BpmnModelInstance generateBPMNModel(List<ElementDescriptor> elements) {
 		BpmnModelInstance modelInstance = Bpmn.createEmptyModel();
 		Definitions definitions = createDefinitions(modelInstance);
+		createDataTypes(modelInstance, definitions);
 		Process process = createProcess(modelInstance, definitions);
 		LaneSet laneSet = createLaneSet(modelInstance, process);
 		BpmnPlane plane = createDiagram(modelInstance, definitions, process);
@@ -286,6 +309,7 @@ public class CamundaParser {
 				double y = laneYMap.get(td.lane) + 20.0;
 
 				Task task = createTaskWithIO(modelInstance, process, taskId, td.id);
+				addBpmnExtension(task, td.step);
 				laneMap.get(td.lane).getFlowNodeRefs().add(task);
 				taskMap.put(taskId, task);
 
@@ -334,12 +358,27 @@ public class CamundaParser {
 		}
 		System.out.println("------------createLanes----------------");
 
-		File file = new File("myModel.bpmn");
-		Bpmn.writeModelToFile(file, modelInstance);
-		System.out.println("Model saved to: " + file.getAbsolutePath());
 		return modelInstance;
 	}
 
+	private static void addBpmnExtension(Task task, AbstractStep step) {
+		if(step instanceof ComposeStep) {
+			task.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_SUB_TYPE, BPMN4S_COMPOSE_TASK);
+		} else if(step instanceof RunStep) {
+			task.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_SUB_TYPE, BPMN4S_RUN_TASK);
+		} else if(step instanceof AssertionStep) {
+			task.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_SUB_TYPE, BPMN4S_ASSERT_TASK);
+		} else throw new IllegalArgumentException("Unexpected value: " + step);
+	}
+
+	private static void addBpmnExtension(DataAssociation da, Binding bind) {
+		ConcreteExpressionHandler ceh = new ConcreteExpressionHandler();
+		TypeDecl b_type = bind.getName().getType().getType();
+		JsonValue b_val = bind.getJsonvals();
+		String b_str = ceh.createTypeDeclValue(b_type,b_val);
+		da.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_UPDATE, b_str);
+	}
+	
 	private static Definitions createDefinitions(BpmnModelInstance modelInstance) {
 		Definitions definitions = modelInstance.newInstance(Definitions.class);
 		definitions.setTargetNamespace("http://bpmn.io/schema/bpmn");
@@ -355,6 +394,10 @@ public class CamundaParser {
 		return definitions;
 	}
 
+	private static void createDataTypes(BpmnModelInstance modelInstance, Definitions definitions) {
+		// TODO
+	}
+	
 	private static Process createProcess(BpmnModelInstance modelInstance, Definitions definitions) {
 		Process process = modelInstance.newInstance(Process.class);
 		process.setExecutable(true);
@@ -531,6 +574,9 @@ public class CamundaParser {
 				DataOutputAssociation doa = modelInstance.newInstance(DataOutputAssociation.class);
 				doa.setId("doa_" + dsId + "_" + producer.getId());
 				doa.setTarget(dsRef);
+
+				Binding bind = dsDescriptor.bind_producer;
+				addBpmnExtension(doa, bind);
 				producer.addChildElement(doa);
 
 				Bounds producerBounds = elemBounds.get(producer);
@@ -557,6 +603,12 @@ public class CamundaParser {
 				dia.setId("dia_" + dstaskLabel + uid);
 				dia.getSources().add(dsRef);
 				dia.setTarget(inputProp);
+				
+				Binding bind = dsDescriptor.bind_consumers.getOrDefault(consumer.getName(), null);
+				if (bind != null) {
+					addBpmnExtension(dia, bind);
+				}
+				
 				consumer.addChildElement(dia);
 
 				// Create diagram edge
