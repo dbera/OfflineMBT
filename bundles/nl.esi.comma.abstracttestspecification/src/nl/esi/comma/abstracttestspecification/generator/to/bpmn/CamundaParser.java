@@ -85,8 +85,8 @@ public class CamundaParser {
 				System.out.print("Index " + i + ": ");
 				if (e instanceof TaskDescriptor) {
 					System.out.println("Task - ID: " + e.id + ", Lane: " + e.lane);
-				} else if (e instanceof DatastoreDescriptor) {
-					DatastoreDescriptor ds = (DatastoreDescriptor) e;
+				} else if (e instanceof DataInstanceDescriptor) {
+					DataInstanceDescriptor ds = (DataInstanceDescriptor) e;
 					System.out.println("Datastore - ID: " + ds.id + ", Lane: " + ds.lane + ", Producer: " + ds.producer
 							+ ", Consumers: " + ds.consumers);
 				}
@@ -111,16 +111,16 @@ public class CamundaParser {
 		}
 
 		// Create datastores and insert them after their producer
-		DatastoreDescriptor ds1 = new DatastoreDescriptor("datastore1", "lane2", tasks.get(0).id,
+		DataInstanceDescriptor ds1 = new DataInstanceDescriptor("datastore1", "lane2", tasks.get(0).id,
 				Arrays.asList(tasks.get(1).id, tasks.get(2).id));
 
-		DatastoreDescriptor ds2 = new DatastoreDescriptor("datastore2", "lane1", tasks.get(2).id,
+		DataInstanceDescriptor ds2 = new DataInstanceDescriptor("datastore2", "lane1", tasks.get(2).id,
 				Arrays.asList(tasks.get(4).id, tasks.get(5).id, tasks.get(6).id));
 
-		DatastoreDescriptor ds3 = new DatastoreDescriptor("datastore3", "lane3", tasks.get(7).id,
+		DataInstanceDescriptor ds3 = new DataInstanceDescriptor("datastore3", "lane3", tasks.get(7).id,
 				Arrays.asList(tasks.get(8).id, tasks.get(9).id));
 
-		DatastoreDescriptor ds4 = new DatastoreDescriptor("datastore4", "lane3", tasks.get(7).id,
+		DataInstanceDescriptor ds4 = new DataInstanceDescriptor("datastore4", "lane3", tasks.get(7).id,
 				Arrays.asList());
 		// 3️ Add tasks and datastores to the list in correct order
 		for (int i = 0; i < tasks.size(); i++) {
@@ -149,8 +149,8 @@ public class CamundaParser {
 		for (int i = 0; i < descriptors.size(); i++) {
 			ElementDescriptor e = descriptors.get(i);
 			if (e instanceof TaskDescriptor) {
-			} else if (e instanceof DatastoreDescriptor) {
-				DatastoreDescriptor ds = (DatastoreDescriptor) e;
+			} else if (e instanceof DataInstanceDescriptor) {
+				DataInstanceDescriptor ds = (DataInstanceDescriptor) e;
 			}
 		}
 		BpmnModelInstance modelInstance = generateBPMNModel(descriptors);
@@ -163,7 +163,7 @@ public class CamundaParser {
 		Map<String, String> actionLane = new HashMap<>();
 		Set<String> outputs = new HashSet();
 		Map<String, List<String>> dataSetConsumer = new HashMap<>();
-		Map<String, DatastoreDescriptor> datastoreMap = new HashMap<>();
+		Map<String, DataInstanceDescriptor> datastoreMap = new HashMap<>();
 		List<TaskDescriptor> tasks = new ArrayList<>();
 		//how to add the consumer in the database and then remove the data base that do not have consumer
 		//I can create a map :: datastores and the consumers before and then when I create a database
@@ -229,7 +229,7 @@ public class CamundaParser {
 					List<String> consumers = dataSetConsumer.getOrDefault(name, new ArrayList<>());
 					if (!datastoreMap.containsKey(name)) {
 						// 4) create the datastoreDescriptor objects
-						DatastoreDescriptor ds = new DatastoreDescriptor(name, block.getName(), taskName, 
+						DataInstanceDescriptor ds = new DataInstanceDescriptor(name, block.getName(), taskName, 
 								consumers//fetch from the map with the same dataname
 						);
 						datastoreMap.put(name, ds);
@@ -240,9 +240,9 @@ public class CamundaParser {
 		}
 		
 		// 4.1) checking datastoreDescriptor objects created inside the first loop
-		for (Entry<String, DatastoreDescriptor> entry : datastoreMap.entrySet()) {
+		for (Entry<String, DataInstanceDescriptor> entry : datastoreMap.entrySet()) {
 			String datasetName = entry.getKey();
-			DatastoreDescriptor consumers = entry.getValue();
+			DataInstanceDescriptor consumers = entry.getValue();
 		}
 
 		// 5) Add tasks and datastores to the list in correct order
@@ -250,7 +250,7 @@ public class CamundaParser {
 			elements.add(task); // Add the task first
 
 			// Check for datastores that have this task as their producer
-			for (DatastoreDescriptor ds : datastoreMap.values()) {
+			for (DataInstanceDescriptor ds : datastoreMap.values()) {
 				if (task.id.equals(ds.producer)) {
 					elements.add(ds);
 				}
@@ -325,7 +325,7 @@ public class CamundaParser {
 		System.out.println("------------here----------------");
 		nodeIdx = 0;
 		for (ElementDescriptor e : elements) {
-			if (e instanceof DatastoreDescriptor ds) {
+			if (e instanceof DataInstanceDescriptor ds) {
 				double x = offsetX + (nodeIdx + 1) * offsetX;
 				double y = laneYMap.get(ds.lane) + 36.0;
 				linkDataStoreToTasks(modelInstance, definitions, process, plane, ds, taskMap, elemBounds, x, y);
@@ -500,7 +500,7 @@ public class CamundaParser {
 	}
 
 	private static DataStore linkDataStoreToTasks(BpmnModelInstance modelInstance, Definitions definitions,
-			Process process, BpmnPlane plane, DatastoreDescriptor dsDescriptor, Map<String, Task> taskMap,
+			Process process, BpmnPlane plane, DataInstanceDescriptor dsDescriptor, Map<String, Task> taskMap,
 			Map<BaseElement, Bounds> elemBounds, double x, double y) {
 
 		String dsId = "datastore_" + dsDescriptor.id.replaceAll("\\s+", "_");
