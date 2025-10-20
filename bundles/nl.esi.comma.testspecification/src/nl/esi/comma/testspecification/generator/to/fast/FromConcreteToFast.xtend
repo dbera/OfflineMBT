@@ -783,6 +783,7 @@ class FromConcreteToFast extends AbstractGenerator {
                 tsi.indatasuts.add(stepInst)
             }
         }
+        tsi.indatasuts = tsi.indatasuts.sortBy[it.id] as ArrayList<Step>
 
         var vfdXmlItems = sutInitInput.reject[isInDataSuts(it)]
         // 3.3.2) Fetching XML elements (as strings) for vfd.xml file
