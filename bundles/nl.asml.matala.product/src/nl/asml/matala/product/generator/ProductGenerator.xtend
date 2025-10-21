@@ -67,17 +67,17 @@ class ProductGenerator extends AbstractGenerator {
 		val import_list = newArrayList
 		val var_decl_map = newLinkedHashMap
 		
-		/* Generate Z3 Data Types */
-		for(imp : prod.imports) {
-			// Assumption: At most one
-			val typeResource = EcoreUtil2.getResource(resource, imp.importURI)
-			var typeInst = typeResource.allContents.head
-			if(typeInst instanceof TypesModel) {
-				var txt = (new TypesZ3Generator).generateAllUserDefinedTypes(typeInst) 
-				fsa.generateFile('CPNServer//' + specName + '//Z3//' + specName + '_z3types.py', txt)
-			}
-			import_list.add(imp.importURI)
-		}
+//		/* Generate Z3 Data Types */
+//		for(imp : prod.imports) {
+//			// Assumption: At most one
+//			val typeResource = EcoreUtil2.getResource(resource, imp.importURI)
+//			var typeInst = typeResource.allContents.head
+//			if(typeInst instanceof TypesModel) {
+//				var txt = (new TypesZ3Generator).generateAllUserDefinedTypes(typeInst) 
+//				fsa.generateFile('CPNServer//' + specName + '//Z3//' + specName + '_z3types.py', txt)
+//			}
+//			import_list.add(imp.importURI)
+//		}
 		
 		for(b : prod.specification.blocks) {
 			val Block block = b.block ?: b.refBlock?.system
