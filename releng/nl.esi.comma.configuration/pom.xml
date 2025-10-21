@@ -251,6 +251,7 @@
                                 <exclude>checkstyle.xml</exclude>
                                 <exclude>plugin.xml_gen</exclude>
                                 <exclude>pom.tycho</exclude>
+                                <exclude>nl.asml.matala.bpmn4s.editor/dist/**</exclude>
                             </excludes>
                         </licenseSet>
                     </licenseSets>
