@@ -1,0 +1,118 @@
+<!--
+
+    Copyright (c) 2024, 2025 TNO-ESI
+
+    See the NOTICE file(s) distributed with this work for additional
+    information regarding copyright ownership.
+
+    This program and the accompanying materials are made available
+    under the terms of the MIT License which is available at
+    https://opensource.org/licenses/MIT
+
+    SPDX-License-Identifier: MIT
+
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>BPMN4S</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+</head>
+<body>
+  <div class="content" id="js-content">
+    <div class="message msgintro" id="js-drop-zone">
+      <div class="note">
+        <h1>Welcome to BPMN4S</h1>
+        Drop a BPMN diagram from your desktop or <a id="js-create-diagram-intro" href>create a new diagram</a> to get started.
+      </div>
+    </div>
+
+    <div class="message msgerror">
+      <div class="note">
+        <p>Ooops, we could not display the BPMN 2.0 diagram.</p>
+        <div class="details">
+          <span>Import Error Details</span>
+          <pre></pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="canvas" id="js-canvas"></div>
+    <div class="properties-panel open" id="js-properties-panel">
+      <div class="properties-panel-resizer" id="js-properties-panel-resizer" title="Toggle properties panel" draggable="true">
+        <div class="properties-panel-resize-handle"></div>
+     </div>
+    </div>
+  </div>
+
+  <div class="toolbar-bottom-left">
+    <ul>
+      <li class="toolbar-button">
+        <a id="js-open-diagram" href title="Open BPMN diagram from local file system">
+          <span class="bpmn4s-icon-folder"></span>
+        </a>
+      </li>
+      <li class="vr"></li>
+      <li class="toolbar-button">
+        <a id="js-create-diagram" href title="Create new BPMN diagram">
+          <span class="bpmn4s-icon-plus-circled"></span>
+        </a>
+      </li>
+    </ul>
+    <ul>
+      <li class="toolbar-button">
+        <a id="js-download-bpmn" href title="Download as BPMN 2.0 file">
+          <span class="bpmn4s-icon-download"></span>
+        </a>
+      </li>
+      <li class="vr"></li>
+      <li class="toolbar-button">
+        <a id="js-download-svg" href title="Download as SVG image">
+          <span class="bpmn4s-icon-picture"></span>
+        </a>
+      </li>
+    </ul>
+    <ul>
+      <li class="toolbar-button">
+        <a id="js-zoom-reset" href title="Reset zoom">
+          <span class="bpmn4s-icon-target"></span>
+        </a>
+      </li>
+      <li class="vr"></li>
+      <li class="toolbar-button">
+        <a id="js-zoom-in" href title="Zoom in">
+          <span class="bpmn4s-icon-plus"></span>
+        </a>
+      </li>
+      <li class="vr"></li>
+      <li class="toolbar-button">
+        <a id="js-zoom-out" href title="Zoom out">
+          <span class="bpmn4s-icon-minus"></span>
+        </a>
+      </li>
+    </ul>
+    <ul>
+      <li class="toolbar-button">
+        <a id="js-sort-data-types" href title="Sort data types">
+          <span class="bpmn4s-icon-sort-alt-up"></span>
+        </a>
+      </li>
+      <li class="vr"></li>
+      <li class="toolbar-button">
+        <a id="js-generate-tests" href title="Generate test cases">
+          <span class="bpmn4s-icon-script-download"></span>
+        </a>
+      </li>
+      <li class="vr"></li>
+      <li class="toolbar-button">
+        <a id="js-validate" href title="Validate">
+          <span class="bpmn4s-icon-validate"></span>
+        </a>
+      </li>
+    </ul>
+  </div>
+
+  <script src="app.js"></script>
+</html>
