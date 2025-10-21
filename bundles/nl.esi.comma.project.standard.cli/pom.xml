@@ -43,6 +43,9 @@
                                 <resource>
                                     <directory>${basedir}/dist</directory>
                                 </resource>
+                                <resource>
+                                    <directory>${maven.multiModuleProjectDirectory}/bundles/nl.asml.matala.bpmn4s.editor/dist</directory>
+                                </resource>
                             </resources>
                         </configuration>
                     </execution>

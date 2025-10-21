@@ -42,7 +42,7 @@ jobs:
     - name: Attach Toolchain
       uses: actions/upload-artifact@v4
       with:
-        name: bpmn4s-toolchain
+        name: bpmn4s-editor
         path: bundles/nl.esi.comma.project.standard.cli/target/dist
         retention-days: 10
     # Optional: Uploads the full dependency graph to GitHub to improve the quality of Dependabot alerts this repository can receive
