@@ -12,7 +12,6 @@ import nl.esi.comma.causalgraph.utilities.NodeAttributes
 import static extension nl.esi.comma.causalgraph.utilities.CausalGraphQueries.*
 import nl.esi.comma.causalgraph.agents.MergeAgent
 import nl.esi.comma.causalgraph.agents.StepDefinitionAgent
-import java.io.File
 import java.nio.file.Paths
 import java.nio.file.Files
 
