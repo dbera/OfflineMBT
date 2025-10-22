@@ -201,14 +201,8 @@ public class CamundaParser {
 				String caseName = step.getName().replaceAll(".*_(.*_.*)$", "$1");
 				Set<Binding> outputs = new HashSet<>();
 				
-				// make mapping output var name -> IO object 
-//				Map<String, Binding> outputMap = new HashMap<>();
-//					outputMap = step.getOutput().stream()
-//					    .collect(Collectors.toMap(
-//					        out -> out.getName().getName(), // key mapper
-//					        out -> out                     // value mapper
-//			    ));
-//				
+				// make output
+				
 				step.getOutput().forEach(a -> {
 					outputs.add(a);
 				});
@@ -232,25 +226,12 @@ public class CamundaParser {
 				// 2) create the taskDescriptor objects
 				actionLane.put(taskName, block.getName());
 				TaskDescriptor task = new TaskDescriptor(taskName, block.getName());
-				task.step = step; //what is this for?
+				task.step = step; 
 				tasks.add(task);
 
 				// 3) derive datastores out of the output-data elements in each run/compose-step
-//				outputMap.forEach((name, output) -> {
-//					List<String> consumers = dataSetConsumer.getOrDefault(name, new ArrayList<>());
-//					if (!datastoreMap.containsKey(name)) {
-//						// 4) create the DataInstanceDescriptor objects
-//						DataInstanceDescriptor ds = new DataInstanceDescriptor(name, block.getName(), taskName, 
-//								// fetch from the map with the same dataname
-//								consumers
-//						);
-//						ds.bind_producer = output;
-//						datastoreMap.put(name, ds);
-//					}
-//				});
 				outputs.forEach(output -> {
-					String dataStoreName = output.getName().getName();
-					List<String> consumers = dataSetConsumer.getOrDefault(dataStoreName, new ArrayList<>());
+					String dataStoreName = output.getName().getName();					
 					// create the outputMap:: which includes dataStores, the producer and the
 					// context
 					Map.Entry<String, Binding> entry = Map.entry(taskName, output);
@@ -267,7 +248,6 @@ public class CamundaParser {
 				String caseName = step.getName().replaceAll(".*_(.*_.*)$", "$1");
 				Function function = (Function) step.getCaseRef().eContainer();
 				String consumerName = function.getName() + "_" + caseName;
-				Block block = (Block) function.eContainer();
 				step.getStepRef().stream().forEach(a -> {
 					a.getRefData().forEach(s -> {
 						String dataProducer = a.getRefStep().getName().replaceFirst("^[^_]*_", "");
@@ -309,8 +289,7 @@ public class CamundaParser {
 			for (DataInstanceDescriptor ds : dataInstanceMap.values()) {
 				
 				if (task.id.equals(ds.producer)) {
-					elements.add(ds);
-					
+					elements.add(ds);					
 				}
 			}
 		}
@@ -386,11 +365,9 @@ public class CamundaParser {
 		
 		for (ElementDescriptor e : elements) {
 			if (e instanceof DataInstanceDescriptor ds) {
-				System.out.println("hree**************** nodeIdx");
 				double x = offsetX + (nodeIdx + 1) * offsetX;
 				double y = laneYMap.get(ds.lane) + 36.0;
-				linkDataStoreToTasks(modelInstance, definitions, process, plane, ds, taskMap, elemBounds, x, y);				
-				//linkDataInstanceToTasks(modelInstance, definitions, process, plane, ds, taskMap, elemBounds, x, y);
+				linkDataStoreToTasks(modelInstance, definitions, process, plane, ds, taskMap, elemBounds, x, y);								
 			}
 			nodeIdx++;
 		}
