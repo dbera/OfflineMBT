@@ -45,9 +45,11 @@ specification printer
         updates:
             Event_0jcg6zx := between_ComposePrintJob_and_RunPrintJob
         produces-outputs	printResult
-        updates:    printResult := Result { verdict = Outcome::OK }
+        updates:
+            printResult := Result { verdict = Outcome::OK }
         produces-outputs	printReport symbolic-link
-        updates:    printReport := Report {
+        updates:
+            printReport := Report {
              id = request.id
             }
         
@@ -58,7 +60,8 @@ specification printer
         with-guard		corrections.id == printJob.id and printJob.opType == OperationType::PRINT
         produces-outputs	between_ComposePrintJob_and_RunPrintJob suppress
         produces-outputs	request symbolic-link
-        updates:    request := printJob
+        updates:
+            request := printJob
         
         action			ComposePrepareJob
         element-label	"Compose Prepare Job"
@@ -67,7 +70,8 @@ specification printer
         with-guard		printJob.opType == OperationType::PREP
         produces-outputs	between_ComposePrepareJob_and_RunPrepareJob suppress
         produces-outputs	request symbolic-link
-        updates:    request := printJob
+        updates:
+            request := printJob
         
         action			RunPrepareJob
         element-label	"Run Prepare Job"
@@ -77,7 +81,8 @@ specification printer
         updates:
             Event_0mxx05p := between_ComposePrepareJob_and_RunPrepareJob
         produces-outputs	printResult
-        updates:    printResult := Result { verdict = Outcome::OK }
+        updates:
+            printResult := Result { verdict = Outcome::OK }
     
         element-labels ["PrintFactory", "A 3D Printer"]
     }
@@ -109,11 +114,13 @@ specification printer
         case			default step-type "ExecuteInspection" action-type RUN
         with-inputs		between_ComposeVisualInspectionJob_and_RunVisualinspection, measureRequest
         produces-outputs	inspectionReport symbolic-link
-        updates:    inspectionReport := Report {
+        updates:
+            inspectionReport := Report {
              id = measureRequest.id
             }
         produces-outputs	inspectionResult
-        updates:    inspectionResult := Result { verdict = Outcome::OK }
+        updates:
+            inspectionResult := Result { verdict = Outcome::OK }
         
         action			ComposeVisualInspectionJob
         element-label	"Compose Visual Inspection Job"
@@ -125,9 +132,11 @@ specification printer
         references {
             reportLinking: measureRequest.printJobReport := printReport
         } symbolic-link
-        updates:    measureRequest := inspectionJob
+        updates:
+            measureRequest := inspectionJob
         produces-outputs	printReport symbolic-link suppress
-        updates: printReport := printReport
+        updates:
+            printReport := printReport
     
         element-labels ["PrintFactory", "Inspection"]
     }
@@ -161,9 +170,11 @@ specification printer
         with-guard		inspectionReport.id == optJob.id
         produces-outputs	between_ComposeOptimizationJob_and_RunOptimizationJob suppress
         produces-outputs	optimizeJob symbolic-link
-        updates:    optimizeJob := optJob
+        updates:
+            optimizeJob := optJob
         produces-outputs	inspectionReport symbolic-link suppress
-        updates: inspectionReport := inspectionReport
+        updates:
+            inspectionReport := inspectionReport
         
         action			RunOptimizationJob
         element-label	"Run Optimization Job"
@@ -173,7 +184,8 @@ specification printer
         updates:
             Event_1oozdnw := between_ComposeOptimizationJob_and_RunOptimizationJob
         produces-outputs	corrections symbolic-link
-        updates:    corrections := CorrectionsReport {
+        updates:
+            corrections := CorrectionsReport {
              id = optimizeJob.id + 1
             }
         produces-outputs	optResult
@@ -259,7 +271,8 @@ specification printer
             between_SendPrintJob_and_WaitforPrintJob.resolution := printRequests.resolution
             between_SendPrintJob_and_WaitforPrintJob.scale := printRequests.scale
         produces-outputs	printJob
-        updates:    printJob := PrintRequest {
+        updates:
+            printJob := PrintRequest {
              id = printRequests.id,
              resolution = printRequests.resolution,
              scale = printRequests.scale,
@@ -320,7 +333,8 @@ specification printer
         updates:
             between_SendOptimizationJob_and_WaitforOptimizationJob := between_AssertVisualInspection_and_SendOptimizationJob
         produces-outputs	optJob
-        updates:    optJob := OptimizeRequest { id = between_AssertVisualInspection_and_SendOptimizationJob.id }
+        updates:
+            optJob := OptimizeRequest { id = between_AssertVisualInspection_and_SendOptimizationJob.id }
         
         action			PreparePrinter
         element-label	"Prepare Printer"
@@ -330,7 +344,8 @@ specification printer
         updates:
             between_PreparePrinter_and_WaitforPrepare := between_Gateway_1j3rupx_and_PreparePrinter
         produces-outputs	printJob
-        updates:    printJob := PrintRequest {
+        updates:
+            printJob := PrintRequest {
              id = between_Gateway_1j3rupx_and_PreparePrinter.id,
              resolution = between_Gateway_1j3rupx_and_PreparePrinter.resolution,
              scale = null,
@@ -351,7 +366,8 @@ specification printer
         updates:
             between_AssertVisualInspection_and_SendOptimizationJob := between_WaitforVisualInspection_and_AssertVisualInspection
         produces-outputs	inspectionReport symbolic-link
-        updates: inspectionReport := inspectionReport
+        updates:
+            inspectionReport := inspectionReport
         
         action			SendVisualInspectionJob
         element-label	"Send Visual Inspection Job"
@@ -361,7 +377,8 @@ specification printer
         updates:
             between_SendVisualInspectionJob_and_WaitforVisualInspection := between_Gateway_1j3rupx_and_SendVisualInspectionJob
         produces-outputs	inspectionJob
-        updates:    inspectionJob := MeasureRequest {
+        updates:
+            inspectionJob := MeasureRequest {
              id = between_Gateway_1j3rupx_and_SendVisualInspectionJob.id
             }
         

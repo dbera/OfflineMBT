@@ -8,6 +8,11 @@ Export-Package: nl.asml.matala.bpmn4s,
  nl.asml.matala.bpmn4s.bpmn4s;x-internal:=true,
  nl.asml.matala.bpmn4s.extensions;x-internal:=true
 Require-Bundle: org.camunda.bpm.model.bpmn;bundle-version="7.22.0",
- org.camunda.bpm.model.xml;bundle-version="7.22.0"
+ org.camunda.bpm.model.xml;bundle-version="7.22.0",
+ nl.asml.matala.product,
+ org.eclipse.xtext,
+ org.eclipse.xtext.xbase.lib,
+ org.eclipse.xtend.lib
 Automatic-Module-Name: nl.asml.matala.bpmn4s
 Bundle-RequiredExecutionEnvironment: JavaSE-21
+Import-Package: com.google.inject;version="[1.4.0,2.0.0)"
