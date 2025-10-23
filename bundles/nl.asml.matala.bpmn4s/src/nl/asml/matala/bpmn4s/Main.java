@@ -55,6 +55,7 @@ import nl.asml.matala.bpmn4s.bpmn4s.RecordType;
 import nl.asml.matala.bpmn4s.bpmn4s.SetType;
 import nl.asml.matala.bpmn4s.extensions.DataType;
 import nl.asml.matala.bpmn4s.extensions.DataTypeImpl;
+import nl.asml.matala.bpmn4s.extensions.DataTypesImpl;
 import nl.asml.matala.bpmn4s.extensions.Field;
 import nl.asml.matala.bpmn4s.extensions.FieldImpl;
 import nl.asml.matala.bpmn4s.extensions.Literal;
@@ -219,6 +220,7 @@ public class Main {
 
 	private static void registerModelExtensionTypes() {
 		DataTypeImpl.registerType(Bpmn.INSTANCE.getBpmnModelBuilder());
+		DataTypesImpl.registerType(Bpmn.INSTANCE.getBpmnModelBuilder());
 		FieldImpl.registerType(Bpmn.INSTANCE.getBpmnModelBuilder());
 		LiteralImpl.registerType(Bpmn.INSTANCE.getBpmnModelBuilder());
 		TargetDataRefImpl.registerType(Bpmn.INSTANCE.getBpmnModelBuilder());

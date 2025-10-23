@@ -40,6 +40,7 @@ import org.camunda.bpm.model.bpmn.instance.DataStore;
 import org.camunda.bpm.model.bpmn.instance.DataStoreReference;
 import org.camunda.bpm.model.bpmn.instance.Definitions;
 import org.camunda.bpm.model.bpmn.instance.EndEvent;
+import org.camunda.bpm.model.bpmn.instance.ExtensionElements;
 import org.camunda.bpm.model.bpmn.instance.FlowNode;
 import org.camunda.bpm.model.bpmn.instance.Lane;
 import org.camunda.bpm.model.bpmn.instance.LaneSet;
@@ -55,8 +56,9 @@ import org.camunda.bpm.model.bpmn.instance.bpmndi.BpmnShape;
 import org.camunda.bpm.model.bpmn.instance.dc.Bounds;
 import org.camunda.bpm.model.bpmn.instance.di.Waypoint;
 
-import com.google.common.base.Optional;
-
+import nl.asml.matala.bpmn4s.extensions.Bpmn4sModel;
+import nl.asml.matala.bpmn4s.extensions.DataType;
+import nl.asml.matala.bpmn4s.extensions.DataTypes;
 import nl.asml.matala.product.product.Block;
 import nl.asml.matala.product.product.Function;
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractStep;
@@ -297,10 +299,10 @@ public class CamundaParser {
 	}
 
 	public static BpmnModelInstance generateBPMNModel(List<ElementDescriptor> elements) {
-		BpmnModelInstance modelInstance = Bpmn.createEmptyModel();
+		BpmnModelInstance modelInstance = Bpmn4sModel.createEmptyModel();
 		Definitions definitions = createDefinitions(modelInstance);
-		createDataTypes(modelInstance, definitions);
 		Process process = createProcess(modelInstance, definitions);
+		createDataTypes(modelInstance, process);
 		LaneSet laneSet = createLaneSet(modelInstance, process);
 		BpmnPlane plane = createDiagram(modelInstance, definitions, process);
 
@@ -408,8 +410,16 @@ public class CamundaParser {
 		return definitions;
 	}
 
-	private static void createDataTypes(BpmnModelInstance modelInstance, Definitions definitions) {
-		// TODO
+	private static void createDataTypes(BpmnModelInstance modelInstance, Process process) {
+		ExtensionElements extElem = modelInstance.newInstance(ExtensionElements.class);
+		DataTypes dtype_list = modelInstance.newInstance(DataTypes.class);
+		DataType dtype = modelInstance.newInstance(DataType.class);
+		dtype.setAttributeValue("name", "testingName");
+		dtype.setAttributeValue("type", "testingType");
+		
+		dtype_list.addChildElement(dtype);
+		extElem.addChildElement(dtype_list);
+		process.addChildElement(extElem);
 	}
 	
 	private static Process createProcess(BpmnModelInstance modelInstance, Definitions definitions) {
