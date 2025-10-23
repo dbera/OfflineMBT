@@ -58,7 +58,7 @@ import nl.esi.comma.types.types.TypeDecl
 import nl.esi.comma.types.types.RecordField
 
 class ExpressionsParser {
-	
+
 	def static dispatch CharSequence generateExpression(ExpressionAny expr, CharSequence ref)
 	'''ANY'''
 
@@ -123,6 +123,7 @@ class ExpressionsParser {
 	{
 		var prefix = findStringPrefixBasedOnType(expr)
 		if(prefix instanceof String) return prefix+''''«expr.value»' '''
+
 		if(expr.value.contains('''Platform:''') || expr.value.contains('''setup.suts''')) return '''«expr.value»'''	
 		else return '''"«expr.value»"'''
 	} 
