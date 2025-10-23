@@ -176,7 +176,7 @@ public class EcoreUtil3 extends EcoreUtil2 {
 		});
 	}
 
-	private static String serializeXtext(EObject eObject, Function<? super INode, ? extends CharSequence> replacer) {
+	public static String serializeXtext(EObject eObject, Function<? super INode, ? extends CharSequence> replacer) {
 		Optional<INode> eObjectNode = eObject.eAdapters().stream().filter(INode.class::isInstance).map(INode.class::cast).findFirst();
 		if (eObjectNode.isEmpty()) {
 			throw new IllegalArgumentException("Not an Xtext eObject");
