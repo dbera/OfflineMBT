@@ -483,6 +483,8 @@ RULES:
    - Only parameterize when merging DIFFERENT code pieces
    - Parameter names start with underscore: "_paramName"
    - Every scenario should have all parameters
+   - Use correct identation in step-body
+   - Do not change change function, namespaces, classes etc for string types - use conditionals instead
    - Format the step argumentents, step-parameters and step body as following this example:
    {
     "step-arguments": {
@@ -501,10 +503,10 @@ RULES:
    - For complex types, use string modes with conditionals for example when you have Level::HIGH it becomes: if(_mode == "HIGH") { level = Level::HIGH; } or you should be able to infer the value of the enum from the source code or previous steps
 """);
 
-        prompt.append(RULES_ARITHMETIC_MULTIPLE_STEPS);
+        //prompt.append(RULES_ARITHMETIC_MULTIPLE_STEPS);
         prompt.append(EXAMPLE_MULTIPLE_SCENARIOS_COMPLEX_DATA_TYPE_IF_ELSE);
-        prompt.append(EXAMPLE_MULTIPLE_SCENARIOS_VARIABLE_DEPENDENCIES);
-        prompt.append(EXAMPLE_MULTIPLE_SCENARIOS_SUM_VARIABLES);
+        //prompt.append(EXAMPLE_MULTIPLE_SCENARIOS_VARIABLE_DEPENDENCIES);
+        //prompt.append(EXAMPLE_MULTIPLE_SCENARIOS_SUM_VARIABLES);
 
         // Add source code files for context
         if (sourceCode != null && !sourceCode.isEmpty()) {

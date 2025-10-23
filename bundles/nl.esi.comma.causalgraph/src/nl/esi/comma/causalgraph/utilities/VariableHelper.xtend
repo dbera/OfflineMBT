@@ -43,7 +43,7 @@ class VariableHelper {
             BasicTypes.realType
         } else {
             // Default to string for unknown types
-            System.out.println("Unknown type '" + paramType + "', defaulting to string")
+            System.out.println(String.format("Unknown type '%s', defaulting to string", paramType))
             BasicTypes.stringType
         }
     }
@@ -87,7 +87,7 @@ class VariableHelper {
             ]
         } else {
             // Default to string for unknown types
-            System.out.println("Unknown type '" + paramType + "' for value '" + value + "', defaulting to string")
+            System.out.println(String.format("Unknown type '%s' for value '%s', defaulting to string", paramType, value))
             createExpressionConstantString => [
                 setValue(value.toString())
             ]

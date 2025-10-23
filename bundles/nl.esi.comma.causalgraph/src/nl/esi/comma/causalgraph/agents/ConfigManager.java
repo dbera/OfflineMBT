@@ -81,14 +81,14 @@ public class ConfigManager {
                 }
                 reader.close();
                 inputStream.close();
-                System.out.println("Successfully loaded configuration from " + CONFIG_FILE);
-                System.out.println("Config sections: " + configMap.keySet());
+                System.out.println(String.format("Successfully loaded configuration from %s", CONFIG_FILE));
+                System.out.println(String.format("Config sections: %s", configMap.keySet()));
             } else {
-                System.err.println("Could not find " + CONFIG_FILE + ", using default configuration");
+                System.err.println(String.format("Could not find %s, using default configuration", CONFIG_FILE));
                 return getDefaultConfig();
             }
         } catch (IOException e) {
-            System.err.println("Error reading " + CONFIG_FILE + ": " + e.getMessage());
+            System.err.println(String.format("Error reading %s: %s", CONFIG_FILE, e.getMessage()));
             return getDefaultConfig();
         }
         return configMap;
