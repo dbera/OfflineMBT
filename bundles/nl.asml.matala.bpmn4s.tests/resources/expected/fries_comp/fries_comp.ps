@@ -68,7 +68,8 @@ specification fries_comp
         updates:
             Flow_0ipnerm := Flow_09zlhyo
         produces-outputs	DataStoreReference_0kulgbq
-        updates:    DataStoreReference_0kulgbq := DataObjectReference_08usvro
+        updates:
+            DataStoreReference_0kulgbq := DataObjectReference_08usvro
         
         action			Activity_194q85o
         element-label	"Activity_194q85o"
@@ -87,7 +88,8 @@ specification fries_comp
         updates:
             Flow_09zlhyo := Gateway_0bsgusg
         produces-outputs	DataObjectReference_1kx41i3
-        updates:    DataObjectReference_1kx41i3 := FriesOrder {
+        updates:
+            DataObjectReference_1kx41i3 := FriesOrder {
              client_id = Gateway_0bsgusg.client_id,
              fries = Gateway_0bsgusg.fries
             }
@@ -146,7 +148,8 @@ specification fries_comp
         updates:
             Flow_1m4nc7r := Flow_0ipnerm
         produces-outputs	DataStoreReference_0kulgbq symbolic-link
-        updates: DataStoreReference_0kulgbq := DataStoreReference_0kulgbq
+        updates:
+            DataStoreReference_0kulgbq := DataStoreReference_0kulgbq
     
         element-labels ["Process_1", "Activity_1nx4k9r"]
     }
@@ -178,7 +181,8 @@ specification fries_comp
         updates:
             Event_00idax9 := Flow_0happwq
         produces-outputs	DataObjectReference_08usvro
-        updates:    DataObjectReference_08usvro := Flow_0happwq.delivery
+        updates:
+            DataObjectReference_08usvro := Flow_0happwq.delivery
         
         action			Activity_0nh18fo
         element-label	"Activity_0nh18fo"
@@ -242,7 +246,8 @@ specification fries_comp
             Gateway_098asuz := Gateway_098asuz
             Gateway_098asuz.orders := Gateway_098asuz.orders + 1
         produces-outputs	DataObjectReference_1pzevyf
-        updates:    DataObjectReference_1pzevyf := FriesDelivery {
+        updates:
+            DataObjectReference_1pzevyf := FriesDelivery {
              clientOrder = DataObjectReference_1kx41i3,
              receipt = Receipt { amount = 5.0 }
             }

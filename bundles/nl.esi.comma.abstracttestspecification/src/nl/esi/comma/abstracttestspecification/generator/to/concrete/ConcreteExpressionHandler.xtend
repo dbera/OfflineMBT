@@ -16,7 +16,6 @@ import java.util.LinkedHashMap
 import java.util.LinkedHashSet
 import java.util.Map
 import java.util.Set
-import java.util.stream.Collectors
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AssertionStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.Binding
@@ -57,13 +56,11 @@ class ConcreteExpressionHandler {
         for(svar: sutvars){
             val sv_name = svar.name
             val sv_def = 'step_' +astep.name+ io_label+sv_name
-            var sv_binds = bindings.stream.filter(p | sv_name.equals(p.name.name)).collect(Collectors.toList())
-            for(bind: sv_binds){
+            for(bind: bindings.filter[name.name == sv_name]) {
                 var type = bind.name.type.type
                 var json = bind.jsonvals
                 var exp_str = type.createDeclValue(json)
-                varDefs.putIfAbsent(sv_def, new LinkedHashSet<String>)
-                varDefs.get(sv_def).add(exp_str)
+                varDefs.computeIfAbsent(sv_def, [new LinkedHashSet<String>]) += exp_str
             }
         }
         return varDefs
@@ -95,54 +92,50 @@ class ConcreteExpressionHandler {
         «ENDIF»
     '''
 
-    dispatch private def String createValue(TypeReference type, JsonValue value) {
-        return createDeclValue(type.type, value)
-    }
-
-    dispatch private def String createValue(VectorTypeConstructor type, JsonValue value) '''
-        <«type.typeName»>[
-            «FOR itemValue : value.itemValues SEPARATOR ','
-            »«createValue(type.outerDimension, itemValue)»«
-            ENDFOR»
-        ]
-    '''
-
-    dispatch private def String createValue(MapTypeConstructor type, JsonValue value) '''
-        <«type.typeName»>{
-            «FOR memberValue : value.memberValues SEPARATOR ','
-            »«createDeclValue(type.type, memberValue.key.toJsonString)» -> «createValue(type.valueType, memberValue.value)»«
-            ENDFOR»
-        }
-    '''
-
-    dispatch private def String createDeclValue(SimpleTypeDecl type, JsonValue value) {
-        if (type.base !== null) {
-            return type.base.createDeclValue(value)
-        }
-        if (value.isNullLiteral){
+    private def String createValue(Type type, JsonValue value) {
+        if (value.isNullLiteral) {
             return value.stringValue
         }
-        return switch (type.name) {
-            case 'int',
-            case 'real',
-            case 'bool': value.stringValue
-            default: '''"«value.stringValue»"'''
+        return switch (type) {
+            VectorTypeConstructor: '''
+                <«type.typeName»>[
+                    «FOR itemValue : value.itemValues SEPARATOR ','»«createValue(type.outerDimension, itemValue)»«ENDFOR»
+                ]
+            '''
+            MapTypeConstructor: '''
+                <«type.typeName»>{
+                    «FOR memberValue : value.memberValues SEPARATOR ','»«createDeclValue(type.type, memberValue.key.toJsonString)» -> «createValue(type.valueType, memberValue.value)»«ENDFOR»
+                }
+            '''
+            default:
+                createDeclValue(type.type, value)
         }
     }
 
-    dispatch private def String createDeclValue(EnumTypeDecl type, JsonValue value) {
-        val typePrefix = type.name + '::'
-        val valueString = value.stringValue
-        return valueString.startsWith(typePrefix) ? valueString : (typePrefix + valueString)
-    }
-
-    dispatch private def String createDeclValue(RecordTypeDecl type, JsonValue value) '''
-        «type.name» {
-            «FOR field : type.fields.filter[f|value.hasMemberValue(f.name)] SEPARATOR ','»
-                «field.name» = «field.type.createValue(value.getMemberValue(field.name))»
-            «ENDFOR»
+    private def String createDeclValue(TypeDecl type, JsonValue value) {
+        if (value.isNullLiteral) {
+            return value.stringValue
         }
-    '''
+        return switch (type) {
+            SimpleTypeDecl case type.base !== null: type.base.createDeclValue(value)
+            SimpleTypeDecl case type.name == 'int',
+            SimpleTypeDecl case type.name == 'real',
+            SimpleTypeDecl case type.name == 'bool': value.stringValue
+            SimpleTypeDecl: '''"«value.stringValue»"'''
+            EnumTypeDecl: {
+                val typePrefix = type.name + '::'
+                val valueString = value.stringValue
+                valueString.startsWith(typePrefix) ? valueString : (typePrefix + valueString)
+            }
+            RecordTypeDecl: '''
+                «type.name» {
+                    «FOR field : type.fields.filter[f|value.hasMemberValue(f.name)] SEPARATOR ','»
+                        «field.name» = «field.type.createValue(value.getMemberValue(field.name))»
+                    «ENDFOR»
+                }
+            '''
+        }
+    }
 
     def String createTypeDeclValue(TypeDecl type, JsonValue value) {
         return type.createDeclValue(value)

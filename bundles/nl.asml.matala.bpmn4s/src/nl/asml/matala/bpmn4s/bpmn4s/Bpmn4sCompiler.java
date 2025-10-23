@@ -42,6 +42,8 @@ public class Bpmn4sCompiler{
 	
 	protected final String UNIT_TYPE = "UNIT";
 	private final String UNIT_INIT = "UNIT { unit = 0 }";
+	
+	private final DataExpressionsHelper DATA_EXPR_HLPR = new DataExpressionsHelper();
 
 	// The model being compiled to pspec
 	protected Bpmn4s model = null;
@@ -60,7 +62,8 @@ public class Bpmn4sCompiler{
 	 * collapsed name in the target CPN.
 	 */
 	AbstractMap<String, String> compiledGateName = new HashMap<String, String>();
-
+	
+	
 	/**
 	 * Throw when a non valid bpmn4s model is detected.
 	 */
@@ -400,12 +403,15 @@ public class Bpmn4sCompiler{
 		String ctxInit = getContextInit(cId);
 		String initPlace = getInitialPlace(cId);
 
+		Map<String, String> replaceMap = new HashMap<String, String>();
+		
 		if (initPlace != null) {
 			if (ctxDataType == "") {
-				init += String.format("%s := %s \n", sanitize(initPlace), UNIT_INIT);
+				init += String.format("%s := %s\n", sanitize(initPlace), UNIT_INIT);
 			} else {
 				if (ctxInit != "") {
-					init += replaceWord(ctxInit, ctxName, sanitize(initPlace)) + "\n";
+					init += ctxInit + "\n";
+					replaceMap.put(ctxName, sanitize(initPlace));
 				}
 			}
 		}
@@ -415,12 +421,13 @@ public class Bpmn4sCompiler{
 			Element node = model.elements.get(e.getSrc());
 			if (node.getType() == ElementType.DATASTORE  && !initialized.contains(node.getOriginDataNodeId())) {
 				initialized.add(node.getOriginDataNodeId());
-				String s = node.getInit();
+				String nodeInit = node.getInit();
 				if (node.isReferenceData()) {
-					s = model.getElementById(node.getOriginDataNodeId()).getInit();
+					nodeInit = model.getElementById(node.getOriginDataNodeId()).getInit();
 				}
-				if (s != null && s != "") {
-					init += replaceWord(s, node.getName(), compile(node.getId())) + "\n";
+				if (nodeInit != null && nodeInit != "") {
+					init += nodeInit + "\n";
+					replaceMap.put(node.getName(), compile(node.getId()));
 				}
 			}
 		}
@@ -430,13 +437,15 @@ public class Bpmn4sCompiler{
 			if(ds.getType() == ElementType.DATASTORE  
 				&& !ds.isReferenceData()
 				&& isImmediateParentComponent(cId, ds)) {
-				if (ds.getInit() != null && ds.getInit() != "") {
-					init += replaceWord(ds.getInit(), ds.getName(), compile(ds.getId())) + "\n";
+				String dsInit = ds.getInit();
+				if (dsInit != null && dsInit != "") {
+					init += dsInit + "\n";
+					replaceMap.put(ds.getName(), compile(ds.getId()));
 				}
 			}
 		}
 		
-		return init == "" ? "// init\n" : "init\n" + init;
+		return init == "" ? "// init\n" : DATA_EXPR_HLPR.processInit(init, replaceMap);
 	}
 	
 	/**
@@ -480,17 +489,6 @@ public class Bpmn4sCompiler{
 			return c.getContextInit();
 		}
 		return ctxInit;
-	}
-	
-	/**
-	 * Replace whole word only (only match <from> if surrounded by delimiters)
-	 * @param text
-	 * @param from
-	 * @param to
-	 * @return
-	 */
-	private String replaceWord (String text, String from, String to) {
-		return text.replaceAll(String.format("\\b%s\\b", from), to);
 	}
 	
 	/**
@@ -564,7 +562,7 @@ public class Bpmn4sCompiler{
 					String parJoinGuard = makeParJoinGuard(node);
 					String compiledGuard = ""; 
 					if (guard != null) {
-						compiledGuard += replaceAll(guard, replaceMap) + "\n";
+						compiledGuard += DATA_EXPR_HLPR.processGuard(guard, replaceMap) + "\n";
 					}
 					if(parJoinGuard != null) {
 						compiledGuard += parJoinGuard + "\n";
@@ -575,12 +573,7 @@ public class Bpmn4sCompiler{
 					// ASSERTIONS
 					String assertions = node.getAssertions();
 					if(assertions != null) {
-						task += String.format(
-								"""
-								assertions default {
-								%s
-								}
-								""", indent(replaceAll(assertions, replaceMap)));
+						task += DATA_EXPR_HLPR.processAssertions(assertions, replaceMap);
 					}
 					for(Edge e: node.getAllOutputs()) {
 						// Name of place that holds target context value for this transition:
@@ -588,10 +581,10 @@ public class Bpmn4sCompiler{
 						if (model.isData(e.getTar())) {
 							task += "produces-outputs\t" + sanitize(compile(e.getTar()));
 							if (e.getSymUpdate() != null && e.getSymUpdate() != "") {
-								task += "\nconstraints {\n" + indent(replaceAll(e.getSymUpdate(), replaceMap)) + "\n}";
+								task += DATA_EXPR_HLPR.processSymUpdate(e.getSymUpdate(), replaceMap);
 							}
 							if (e.getRefUpdate() != null && e.getRefUpdate() != "") {
-								task += "\nreferences {\n" + indent(replaceAll(e.getRefUpdate(), replaceMap)) + "\n}";
+								task += DATA_EXPR_HLPR.processRefUpdate(e.getRefUpdate(), replaceMap);
 							}
 							if (model.isExecutionTask(node.getId())) {
 								boolean isSymbolicLink = getAllDataOutputs(e.getTar()).stream().anyMatch(
@@ -613,18 +606,18 @@ public class Bpmn4sCompiler{
 							}
 							task += "\n";
 							if (e.isPersistent()) {
-								task += String.format("updates: %s := %s\n",  compile(e.getTar()), compile(e.getTar()));
+								task += "updates:\n" + indent(compile(e.getTar()) + " := " + compile(e.getTar())) + "\n";
 							}
 							if (e.getUpdate() != null && e.getUpdate() != "" ) {
-								task += "updates:" + indent(replaceAll(e.getUpdate(), replaceMap)) + "\n";
+								task += DATA_EXPR_HLPR.processUpdate(e.getUpdate(), replaceMap);
 							}
 						} else { // then its context
 							task += "produces-outputs\t" + postCtxName;
 							if (e.getSymUpdate() != null && e.getSymUpdate() != "") {
-								task += "\nconstraints {\n" + indent(replaceAll(e.getSymUpdate(), replaceMap)) + "\n}\n";
+								task += DATA_EXPR_HLPR.processSymUpdate(e.getSymUpdate(), replaceMap);
 							}
 							if (e.getRefUpdate() != null && e.getRefUpdate() != "") {
-								task += "\nreferences {\n" + indent(replaceAll(e.getRefUpdate(), replaceMap)) + "\n}\n";
+								task += DATA_EXPR_HLPR.processRefUpdate(e.getRefUpdate(), replaceMap);
 							}
 							if (node.isContextSuppressed() || // Modeler suppresses this context
 								!model.componentDefinesContext(cId) // Auto constructed context is always suppressed
@@ -643,15 +636,16 @@ public class Bpmn4sCompiler{
 							String updates = "";
 							if (preCtxName != null) {
 								// if there is in-flow, move the context between places in the PN.(**1)
-								updates += indent(postCtxName + " := " + preCtxName) + "\n";
+								updates += postCtxName + " := " + preCtxName + "\n";
 							}
 							String update = node.getContextUpdate();
 							if(update != null && update != "") {
-								update = replaceWord(update, compCtxName, postCtxName); // (**1) postCtxName == preCtxName
-								updates += indent(replaceAll(update, replaceMap)) + "\n";
+								updates += update + "\n";
 							}
 							if (updates != "") {
-								task +=  "updates:\n" + updates;
+								Map<String, String> replaceMapCtx = new HashMap<String, String>(replaceMap);
+								replaceMapCtx.put(compCtxName, postCtxName);
+								task += DATA_EXPR_HLPR.processUpdate(updates, replaceMapCtx);
 							}
 						}
 					}
@@ -749,19 +743,19 @@ public class Bpmn4sCompiler{
 		return result;
 	}
 	
-	/**
-	 * 
-	 * @param text
-	 * @param replace
-	 * @return
-	 */
-	private String replaceAll(String text, Map<String,String> replace) {
-		for (String k: replace.keySet()) {
-			// replace whole word only
-			text = replaceWord(text, k, replace.get(k));
-		}		
-		return text;
-	}
+//	/**
+//	 * 
+//	 * @param text
+//	 * @param replace
+//	 * @return
+//	 */
+//	private String replaceAll(String text, Map<String,String> replace) {
+//		for (String k: replace.keySet()) {
+//			// replace whole word only
+//			text = replaceWord(text, k, replace.get(k));
+//		}		
+//		return text;
+//	}
 	
 	/**
 	 * Assuming the target of e is a Task or an AND gate (which are compiled 
