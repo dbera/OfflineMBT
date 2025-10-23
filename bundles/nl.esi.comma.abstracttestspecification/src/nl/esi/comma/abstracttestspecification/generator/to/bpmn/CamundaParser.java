@@ -58,6 +58,8 @@ import org.camunda.bpm.model.xml.instance.ModelElementInstance;
 
 import com.google.common.base.Optional;
 
+import com.google.common.base.Optional;
+
 import nl.asml.matala.product.product.Block;
 import nl.asml.matala.product.product.Function;
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractStep;

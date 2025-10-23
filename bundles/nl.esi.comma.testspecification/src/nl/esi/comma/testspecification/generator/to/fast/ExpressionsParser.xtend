@@ -88,7 +88,7 @@ class ExpressionsParser {
 	def static CharSequence generateRecExpression(ExpressionRecord expr, CharSequence ref)
 	//'''«FOR f : expr.fields SEPARATOR ", "»«IF generateExpression(f, ref).toString.contains('''ANY''')»«JavaGeneratorUtilities::generateJavaTypeInitializer(f.recordField.type.type)»«ELSE»«generateExpression(f, ref)»«ENDIF»«ENDFOR»'''
 	'''
-	«FOR f : expr.fields.filter[!(it.exp instanceof ExpressionNullLiteral)] SEPARATOR ", "»
+	«FOR f : expr.fields.reject[exp instanceof ExpressionNullLiteral] SEPARATOR ", "»
 	   «generateExpression(f, ref)»
 	«ENDFOR»
 	'''
@@ -284,7 +284,7 @@ class ExpressionsParser {
     
     def static dispatch CharSequence generateXMLElement(ExpressionRecord expr, Map<String,String> rename)
     '''
-    «FOR f : expr.fields»
+    «FOR f : expr.fields.reject[exp instanceof ExpressionNullLiteral]»
     «generateXMLElement(f, rename)»
     «ENDFOR»
     '''
