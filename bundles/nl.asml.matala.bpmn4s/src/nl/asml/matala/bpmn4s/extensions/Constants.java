@@ -13,6 +13,7 @@
 package nl.asml.matala.bpmn4s.extensions;
 
 public final class Constants {
+	public static final String DATATYPES_TYPE = "dataTypes";
 	public static final String DATATYPE_TYPE = "dataType";
 	public static final String FIELD_TYPE = "field";
 	public static final String LITERAL_TYPE = "literal";
