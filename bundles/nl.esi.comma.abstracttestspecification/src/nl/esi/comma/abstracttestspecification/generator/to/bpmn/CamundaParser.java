@@ -17,6 +17,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -32,6 +33,8 @@ import org.camunda.bpm.model.bpmn.BpmnModelInstance;
 import org.camunda.bpm.model.bpmn.instance.BaseElement;
 import org.camunda.bpm.model.bpmn.instance.DataAssociation;
 import org.camunda.bpm.model.bpmn.instance.DataInputAssociation;
+import org.camunda.bpm.model.bpmn.instance.DataObject;
+import org.camunda.bpm.model.bpmn.instance.DataObjectReference;
 import org.camunda.bpm.model.bpmn.instance.DataOutputAssociation;
 import org.camunda.bpm.model.bpmn.instance.DataStore;
 import org.camunda.bpm.model.bpmn.instance.DataStoreReference;
@@ -51,6 +54,8 @@ import org.camunda.bpm.model.bpmn.instance.bpmndi.BpmnPlane;
 import org.camunda.bpm.model.bpmn.instance.bpmndi.BpmnShape;
 import org.camunda.bpm.model.bpmn.instance.dc.Bounds;
 import org.camunda.bpm.model.bpmn.instance.di.Waypoint;
+
+import com.google.common.base.Optional;
 
 import nl.asml.matala.product.product.Block;
 import nl.asml.matala.product.product.Function;
@@ -96,13 +101,9 @@ public class CamundaParser {
 
 			for (int i = 0; i < descriptors.size(); i++) {
 				ElementDescriptor e = descriptors.get(i);
-				System.out.print("Index " + i + ": ");
-				if (e instanceof TaskDescriptor) {
-					System.out.println("Task - ID: " + e.id + ", Lane: " + e.lane);
+				if (e instanceof TaskDescriptor) {	
 				} else if (e instanceof DataInstanceDescriptor) {
-					DataInstanceDescriptor ds = (DataInstanceDescriptor) e;
-					System.out.println("Datastore - ID: " + ds.id + ", Lane: " + ds.lane + ", Producer: " + ds.producer
-							+ ", Consumers: " + ds.consumers);
+					DataInstanceDescriptor ds = (DataInstanceDescriptor) e;					
 				}
 			}
 
@@ -160,13 +161,6 @@ public class CamundaParser {
 
 	public static String generateBPMNModel(AbstractTestDefinition atd) {
 		List<ElementDescriptor> descriptors = createDescriptors(atd);
-		for (int i = 0; i < descriptors.size(); i++) {
-			ElementDescriptor e = descriptors.get(i);
-			if (e instanceof TaskDescriptor) {
-			} else if (e instanceof DataInstanceDescriptor) {
-				DataInstanceDescriptor ds = (DataInstanceDescriptor) e;
-			}
-		}
 		BpmnModelInstance modelInstance = generateBPMNModel(descriptors);
 		return Bpmn.convertToString(modelInstance);
 	}
@@ -178,9 +172,12 @@ public class CamundaParser {
 		Map<String, List<String>> dataSetConsumer = new HashMap<>();
 		Map<String, DataInstanceDescriptor> datastoreMap = new HashMap<>();
 		List<TaskDescriptor> tasks = new ArrayList<>();
-		//how to add the consumer in the database and then remove the data base that do not have consumer
-		//I can create a map :: datastores and the consumers before and then when I create a database
-		// with the same name I add the consumer
+		Map<String, List<Map.Entry<String, Binding>>> outputsMap = new HashMap<>();
+		Map<String, DataInstanceDescriptor> dataInstanceMap = new HashMap<>();
+		
+		
+		// For generating datastoresdataStore :: Add the consumer in the dataStores and
+		// then remove the dataStores that do not have consumer
 		for (AbstractTestSequence sys : atd.getTestSeq()) {
 			for (AbstractStep step : sys.getStep()) {
 				String caseName = step.getName().replaceAll(".*_(.*_.*)$", "$1");
@@ -198,38 +195,26 @@ public class CamundaParser {
 			}
 		}
 
-		for (Map.Entry<String, List<String>> entry : dataSetConsumer.entrySet()) {
-			String datasetName = entry.getKey();
-			List<String> consumers = entry.getValue();
-
-		}
 
 		for (AbstractTestSequence sys : atd.getTestSeq()) {
-			// for each step fetch the data
-
-			for (AbstractStep step : sys.getStep()) {
-				// System.out.println("getName step" + step.getName());
+			for (AbstractStep step : sys.getStep()) {				
 				String caseName = step.getName().replaceAll(".*_(.*_.*)$", "$1");
-
-				// make mapping output var name -> IO object 
-				Map<String, Binding> outputMap = new HashMap<>();
-					outputMap = step.getOutput().stream()
-					    .collect(Collectors.toMap(
-					        out -> out.getName().getName(), // key mapper
-					        out -> out                     // value mapper
-			    ));
+				Set<Binding> outputs = new HashSet<>();
 				
-				Set<String> suppressed = new HashSet<>();
+				// make output
+				
+				step.getOutput().forEach(a -> {
+					outputs.add(a);
+				});
+				
+				// Get suppressed
+				final Set<String> suppressed = (step.getSuppress() != null) ? step.getSuppress().getVarFields().stream()
+						.filter(exp -> exp instanceof ExpressionVariable).map(exp -> (ExpressionVariable) exp)
+						.map(vr -> vr.getVariable().getName()).collect(Collectors.toSet()) : Collections.emptySet();
 
-				if (step.getSuppress() != null) {
-					suppressed = step.getSuppress().getVarFields().stream().filter(exp -> exp instanceof ExpressionVariable)   // lambda returning boolean
-							.map(exp -> (ExpressionVariable) exp) // cast to ExpressionVariable
-							.map(vr -> vr.getVariable().getName()) // get the name
-							.collect(Collectors.toSet());
-				}
 
 				// Remove suppressed ones
-				outputMap.keySet().removeAll(suppressed);
+				outputs.removeIf(out -> suppressed.contains(out.getName().getName()));
 
 				// name of action/ task id
 				Function function = (Function) step.getCaseRef().eContainer();
@@ -241,40 +226,70 @@ public class CamundaParser {
 				// 2) create the taskDescriptor objects
 				actionLane.put(taskName, block.getName());
 				TaskDescriptor task = new TaskDescriptor(taskName, block.getName());
-				task.step = step;
+				task.step = step; 
 				tasks.add(task);
 
 				// 3) derive datastores out of the output-data elements in each run/compose-step
-				outputMap.forEach((name, output) -> {
-					List<String> consumers = dataSetConsumer.getOrDefault(name, new ArrayList<>());
-					if (!datastoreMap.containsKey(name)) {
-						// 4) create the DataInstanceDescriptor objects
-						DataInstanceDescriptor ds = new DataInstanceDescriptor(name, block.getName(), taskName, 
-								// fetch from the map with the same dataname
-								consumers
-						);
-						ds.bind_producer = output;
-						datastoreMap.put(name, ds);
-					}
+				outputs.forEach(output -> {
+					String dataStoreName = output.getName().getName();					
+					// create the outputMap:: which includes dataStores, the producer and the
+					// context
+					Map.Entry<String, Binding> entry = Map.entry(taskName, output);
+					// Add to map under datastore name
+					outputsMap.computeIfAbsent(dataStoreName, k -> new ArrayList<>()).add(entry);
 				});
 			}
 
 		}
 		
-		// 4.1) checking datastoreDescriptor objects created inside the first loop
-		for (Entry<String, DataInstanceDescriptor> entry : datastoreMap.entrySet()) {
-			String datasetName = entry.getKey();
-			DataInstanceDescriptor consumers = entry.getValue();
+		// create data instance and the consumers:
+		for (AbstractTestSequence sys : atd.getTestSeq()) {
+			for (AbstractStep step : sys.getStep()) {
+				String caseName = step.getName().replaceAll(".*_(.*_.*)$", "$1");
+				Function function = (Function) step.getCaseRef().eContainer();
+				String consumerName = function.getName() + "_" + caseName;
+				step.getStepRef().stream().forEach(a -> {
+					a.getRefData().forEach(s -> {
+						String dataProducer = a.getRefStep().getName().replaceFirst("^[^_]*_", "");
+						String consumedData = s.getName();
+						java.util.Optional<Entry<String, Binding>> matchedEntryOpt ;
+						if (outputsMap.containsKey(consumedData)) {
+							
+							matchedEntryOpt = outputsMap.getOrDefault(consumedData, Collections.emptyList()).stream()
+									.filter(entry -> entry.getKey().equals(dataProducer)).findFirst();
+
+							if (matchedEntryOpt != null) {
+								String producerName = matchedEntryOpt.get().getKey();								
+								String key = consumedData + "_" + producerName;
+								DataInstanceDescriptor existing = dataInstanceMap.get(key);
+
+								if (existing != null) {
+									existing.consumers.add(consumerName);
+								} else {
+									DataInstanceDescriptor dataInstance = new DataInstanceDescriptor(
+											key,
+										 consumedData, producerName, 
+											new ArrayList<>(List.of(consumerName)));
+									dataInstance.bind_producer = matchedEntryOpt.get().getValue();
+									dataInstanceMap.put(key, dataInstance);
+								}
+							}
+						}
+					});
+				});
+			}
 		}
+
 
 		// 5) Add tasks and datastores to the list in correct order
 		for (TaskDescriptor task : tasks) {
 			elements.add(task); // Add the task first
 
 			// Check for datastores that have this task as their producer
-			for (DataInstanceDescriptor ds : datastoreMap.values()) {
+			for (DataInstanceDescriptor ds : dataInstanceMap.values()) {
+				
 				if (task.id.equals(ds.producer)) {
-					elements.add(ds);
+					elements.add(ds);					
 				}
 			}
 		}
@@ -345,18 +360,17 @@ public class CamundaParser {
 				lastTaskIdx = nodeIdx;
 			}
 			nodeIdx++;
-		}
-		System.out.println("------------here----------------");
+		}		
 		nodeIdx = 0;
+		
 		for (ElementDescriptor e : elements) {
 			if (e instanceof DataInstanceDescriptor ds) {
 				double x = offsetX + (nodeIdx + 1) * offsetX;
 				double y = laneYMap.get(ds.lane) + 36.0;
-				linkDataStoreToTasks(modelInstance, definitions, process, plane, ds, taskMap, elemBounds, x, y);
+				linkDataStoreToTasks(modelInstance, definitions, process, plane, ds, taskMap, elemBounds, x, y);								
 			}
 			nodeIdx++;
 		}
-		System.out.println("------------createLanes----------------");
 
 		return modelInstance;
 	}
@@ -542,21 +556,23 @@ public class CamundaParser {
 		plane.addChildElement(edge);
 	}
 
-	private static DataStore linkDataStoreToTasks(BpmnModelInstance modelInstance, Definitions definitions,
+	private static DataObject linkDataStoreToTasks(BpmnModelInstance modelInstance, Definitions definitions,
 			Process process, BpmnPlane plane, DataInstanceDescriptor dsDescriptor, Map<String, Task> taskMap,
 			Map<BaseElement, Bounds> elemBounds, double x, double y) {
 
-		String dsId = "datastore_" + dsDescriptor.id.replaceAll("\\s+", "_");
+		String dsId = "dataobject_" + dsDescriptor.id.replaceAll("\\s+", "_");
 
 		// 1️ Create top-level DataStore in definitions
-		DataStore dataStore = modelInstance.newInstance(DataStore.class);
-		dataStore.setId(dsId);
-		dataStore.setName(dsDescriptor.id);
-
+		DataObject dataObject = modelInstance.newInstance(DataObject.class);
+		dataObject.setId(dsId);
+		dataObject.setName(dsDescriptor.id);
+		process.addChildElement(dataObject);
+		
 		// 2️ Create DataStoreReference in the process
-		DataStoreReference dsRef = modelInstance.newInstance(DataStoreReference.class);
+		DataObjectReference dsRef = modelInstance.newInstance(DataObjectReference.class);
 		dsRef.setId(dsId + "_ref");
 		dsRef.setName(dsDescriptor.id);
+		dsRef.setDataObject(dataObject);
 		process.addChildElement(dsRef);
 
 		// 3️ Add diagram shape for the DataStoreReference
@@ -617,7 +633,7 @@ public class CamundaParser {
 			}
 		}
 
-		return dataStore;
+		return dataObject;
 	}
 
 	private static void createDataAssociationEdge(BpmnModelInstance modelInstance, BpmnPlane plane,
