@@ -18,11 +18,11 @@ public class MergeAgent {
      */
     public MergeAgent(Map<String, Object> config) {
         try {
-            System.out.println("MergeAgent constructor started");
+            System.out.println(String.format("MergeAgent constructor started"));
             
             @SuppressWarnings("unchecked")
             Map<String, Object> gptConfig = (Map<String, Object>) config.get("gpt");
-            System.out.println("GPT Config: " + gptConfig);
+            System.out.println(String.format("GPT Config: %s", gptConfig));
             
             String azureEndpoint = gptConfig != null ? (String) gptConfig.get("endpoint") : null;
             String azureApiKey = gptConfig != null ? (String) gptConfig.get("api_key") : null;
@@ -31,22 +31,22 @@ public class MergeAgent {
             String temperatureStr = gptConfig != null ? (String) gptConfig.get("temperature") : null;
             Float temperature = temperatureStr != null ? Float.parseFloat(temperatureStr) : null;
  
-            System.out.println("Azure Endpoint: " + azureEndpoint);
-            System.out.println("LLM Model: " + llmModel);
-            System.out.println("API Version: " + apiVersion);
-            System.out.println("Temperature: " + temperature);
+            System.out.println(String.format("Azure Endpoint: %s", azureEndpoint));
+            System.out.println(String.format("LLM Model: %s", llmModel));
+            System.out.println(String.format("API Version: %s", apiVersion));
+            System.out.println(String.format("Temperature: %s", temperature));
  
             // Initialize LLM if configuration is present
             if (azureEndpoint != null && azureApiKey != null) {
-                System.out.println("Configuration validated successfully");
+                System.out.println(String.format("Configuration validated successfully"));
                 this.llm = initializeLLM(llmModel, apiVersion, temperature, azureEndpoint, azureApiKey);
-                System.out.println("MergeAgent constructor completed successfully");
+                System.out.println(String.format("MergeAgent constructor completed successfully"));
             } else {
-                System.err.println("Missing required configuration");
+                System.err.println(String.format("Missing required configuration"));
             }
             
         } catch (Exception e) {
-            System.err.println("Error in MergeAgent constructor: " + e.getMessage());
+            System.err.println(String.format("Error in MergeAgent constructor: %s", e.getMessage()));
             e.printStackTrace();
         }
     }
@@ -63,12 +63,12 @@ public class MergeAgent {
 	 * @return Initialized LLM object
 	 */
 	private ChatModel initializeLLM(String llmModel, String apiVersion, Float temperature, String azureEndpoint, String azureApiKey) {
-	    System.out.println("initializeLLM called with parameters:");
-	    System.out.println("  llmModel: " + llmModel);
-	    System.out.println("  apiVersion: " + apiVersion);
-	    System.out.println("  temperature: " + temperature);
-	    System.out.println("  azureEndpoint: " + azureEndpoint);
-	    System.out.println("  azureApiKey: " + (azureApiKey != null ? "***PRESENT***" : "null"));
+	    System.out.println(String.format("initializeLLM called with parameters:"));
+	    System.out.println(String.format("  llmModel: %s", llmModel));
+	    System.out.println(String.format("  apiVersion: %s", apiVersion));
+	    System.out.println(String.format("  temperature: %s", temperature));
+	    System.out.println(String.format("  azureEndpoint: %s", azureEndpoint));
+	    System.out.println(String.format("  azureApiKey: %s", (azureApiKey != null ? "***PRESENT***" : "null")));
 	    
 	    if (azureEndpoint == null || azureApiKey == null) {
 	        System.err.println("Azure OpenAI configuration missing");
@@ -78,13 +78,13 @@ public class MergeAgent {
 	    // Ensure endpoint doesn't have trailing slash for some Azure configurations
 	    String cleanEndpoint = azureEndpoint.endsWith("/") ? azureEndpoint.substring(0, azureEndpoint.length() - 1) : azureEndpoint;
 	    
-	    System.out.println("About to create AzureOpenAiChatModel...");
-	    System.out.println("Validating configuration:");
-	    System.out.println("  Endpoint format: " + (azureEndpoint.startsWith("https://") ? "Valid" : "Invalid - should start with https://"));
-	    System.out.println("  Deployment name: " + llmModel);
+	    System.out.println(String.format("About to create AzureOpenAiChatModel..."));
+	    System.out.println(String.format("Validating configuration:"));
+	    System.out.println(String.format("  Endpoint format: %s", (azureEndpoint.startsWith("https://") ? "Valid" : "Invalid - should start with https://")));
+	    System.out.println(String.format("  Deployment name: %s", llmModel));
 	    
 	    try {
-	        System.out.println("Starting AzureOpenAiChatModel creation...");
+	        System.out.println(String.format("Starting AzureOpenAiChatModel creation..."));
 	        ChatModel model = AzureOpenAiChatModel.builder()
 	            .endpoint(cleanEndpoint)
 	            .serviceVersion(apiVersion)
@@ -95,13 +95,13 @@ public class MergeAgent {
 	            .maxRetries(3)
 	            .build();
 	            
-	        System.out.println("AzureOpenAiChatModel created successfully");
+	        System.out.println(String.format("AzureOpenAiChatModel created successfully"));
 	        return model;
 	        
 	    } catch (Exception e) {
-	        System.err.println("Error creating AzureOpenAiChatModel: " + e.getMessage());
+	        System.err.println(String.format("Error creating AzureOpenAiChatModel: %s", e.getMessage()));
 	        System.err.println("This might be due to:");
-	        System.err.println("  1. Incorrect deployment name (currently: " + llmModel + ")");
+	        System.err.println(String.format("  1. Incorrect deployment name (currently: %s)", llmModel));
 	        System.err.println("  2. Network connectivity issues");
 	        System.err.println("  3. Invalid API key or endpoint");
 	        System.err.println("  4. Azure OpenAI service not available");
@@ -131,46 +131,13 @@ public class MergeAgent {
             
             String response = this.llm.chat(prompt);
             
-            System.out.println("LLM Response: " + response);
+            System.out.println(String.format("LLM Response: %s", response));
             return response;
             
         } catch (Exception e) {
-            System.err.println("Error calling LLM: " + e.getMessage());
+            System.err.println(String.format("Error calling LLM: %s", e.getMessage()));
             e.printStackTrace();
             return null;
-        }
-    }
-
-    /**
-     * Main method for testing the MergeAgent.
-     *
-     * @param args Command line arguments
-     */
-    public static void main(String[] args) {
-        try {
-            Map<String, Object> config = ConfigManager.getConfig();
-            MergeAgent MergeAgent = new MergeAgent(config);
- 
-            String[] codeSnippets = {
-                """
-            	bool isExplicitlyEnabled = Environment::getInstance()->isExplicitlyEnabled();
-                if (!isExplicitlyEnabled && (!testConfig.isBiplane || testConfig.isSinglePC || testConfig.isDebugBuild)) GTEST_SKIP() << "Test is marked explicit";
-                m_testMode.channel = XrayFrontendEmulator::XrayChannel::Lateral;
-                m_testMode.rtoActive = false;
-                """,
-                """
-                bool isExplicitlyEnabled = Environment::getInstance()->isExplicitlyEnabled();
-                if (!isExplicitlyEnabled && (!testConfig.isBiplane || testConfig.isSinglePC || testConfig.isDebugBuild)) GTEST_SKIP() << "Test is marked explicit";
-                m_testMode.channel = XrayFrontendEmulator::XrayChannel::Frontal;
-                """
-            };
- 
-            String output = MergeAgent.invoke(codeSnippets);
-            System.out.println(output);
-           
-        } catch (Exception e) {
-            System.err.println("Error in main: " + e.getMessage());
-            e.printStackTrace();
         }
     }
 }

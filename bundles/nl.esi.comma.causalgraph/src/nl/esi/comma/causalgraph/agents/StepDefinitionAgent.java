@@ -57,7 +57,7 @@ public class StepDefinitionAgent {
             
             @SuppressWarnings("unchecked")
             Map<String, Object> gptConfig = (Map<String, Object>) config.get("gpt");
-            System.out.println("GPT Config: " + gptConfig);
+            System.out.println(String.format("GPT Config: %s", gptConfig));
             
             String azureEndpoint = gptConfig != null ? (String) gptConfig.get("endpoint") : null;
             String azureApiKey = gptConfig != null ? (String) gptConfig.get("api_key") : null;
@@ -75,7 +75,7 @@ public class StepDefinitionAgent {
             }
             
         } catch (Exception e) {
-            System.err.println("Error in StepDefinitionAgent constructor: " + e.getMessage());
+            System.err.println(String.format("Error in StepDefinitionAgent constructor: %s", e.getMessage()));
             e.printStackTrace();
         }
     }
@@ -94,7 +94,7 @@ public class StepDefinitionAgent {
                     String content = Files.readString(Paths.get(path));
                     sourceCodeMap.put(path, content);
                 } catch (IOException e) {
-                    sourceCodeMap.put(path, "// " + path + " not found");
+                    sourceCodeMap.put(path, String.format("// %s not found", path));
                 }
             }
         }
@@ -113,9 +113,9 @@ public class StepDefinitionAgent {
      */
     private ChatModel initializeLLM(String llmModel, String apiVersion, Float temperature, String azureEndpoint, String azureApiKey) {
         System.out.println("initializeLLM called with parameters:");
-        System.out.println("  llmModel: " + llmModel);
-        System.out.println("  apiVersion: " + apiVersion);
-        System.out.println("  temperature: " + temperature);
+        System.out.println(String.format("  llmModel: %s", llmModel));
+        System.out.println(String.format("  apiVersion: %s", apiVersion));
+        System.out.println(String.format("  temperature: %s", temperature));
         
         if (azureEndpoint == null || azureApiKey == null) {
             System.err.println("Azure OpenAI configuration missing");
@@ -138,7 +138,7 @@ public class StepDefinitionAgent {
             return model;
             
         } catch (Exception e) {
-            System.err.println("Error creating AzureOpenAiChatModel: " + e.getMessage());
+            System.err.println(String.format("Error creating AzureOpenAiChatModel: %s", e.getMessage()));
             e.printStackTrace();
             return null;
         }
@@ -158,20 +158,20 @@ public class StepDefinitionAgent {
         }
 
         try {
-            System.out.println("Processing node: " + node.getName());
+            System.out.println(String.format("Processing node: %s", node.getName()));
             
             List<ScenarioStepInfo> scenarioSteps = extractNodeScenarios(node);
             
             if (scenarioSteps.isEmpty()) {
-                System.out.println("No scenario steps found for node: " + node.getName());
+                System.out.println(String.format("No scenario steps found for node: %s", node.getName()));
                 return;
             }
 
             Map<String, String> variables = extractVariables(graph);
             Map<String, Object> variableInitialValues = extractVariableInitialValues(graph);
             
-            System.out.println("Extracted " + variables.size() + " variables from graph");
-            System.out.println("Extracted " + variableInitialValues.size() + " variable initial values from graph");
+            System.out.println(String.format("Extracted %d variables from graph", variables.size()));
+            System.out.println(String.format("Extracted %d variable initial values from graph", variableInitialValues.size()));
 
             Map<String, List<ScenarioStepInfo>> previousCGSteps = extractPreviousStepsWithDataDependencies(node, graph);
 
@@ -180,11 +180,11 @@ public class StepDefinitionAgent {
 
             if (stepDefinition != null) {
                 applyStepDefinitionToNode(node, stepDefinition);
-                System.out.println("Applied complete step definition '" + stepDefinition.stepName + "' to node " + node.getName());
+                System.out.println(String.format("Applied complete step definition '%s' to node %s", stepDefinition.stepName, node.getName()));
             }
             
         } catch (Exception e) {
-            System.err.println("Error processing node " + node.getName() + ": " + e.getMessage());
+            System.err.println(String.format("Error processing node %s: %s", node.getName(), e.getMessage()));
             e.printStackTrace();
         }
     }
@@ -226,7 +226,7 @@ public class StepDefinitionAgent {
         if (graph.getVariables() != null) {
             for (Variable variable : graph.getVariables()) {
                 variables.put(variable.getName(), variable.getType().toString());
-                System.out.println("Extracted variable: " + variable.getName() + " of type " + variable.getType().toString());
+                System.out.println(String.format("Extracted variable: %s of type %s", variable.getName(), variable.getType().toString()));
             }
         }
         
@@ -255,18 +255,18 @@ public class StepDefinitionAgent {
                             if (assignmentValue != null) {
                                 if (!variableInitialValues.containsKey(varName)) {
                                     variableInitialValues.put(varName, assignmentValue);
-                                    System.out.println("Extracted initial value from assignment: " + varName + " = " + assignmentValue);
+                                    System.out.println(String.format("Extracted initial value from assignment: %s = %s", varName, assignmentValue));
                                 }
                             }
                         }
                     }
                 } catch (Exception e) {
-                    System.err.println("Error processing assignment: " + e.getMessage());
+                    System.err.println(String.format("Error processing assignment: %s", e.getMessage()));
                 }
             }
         }
             
-        System.out.println("Total variable initial values extracted: " + variableInitialValues.size());
+        System.out.println(String.format("Total variable initial values extracted: %d", variableInitialValues.size()));
         return variableInitialValues;
     }
     
@@ -316,11 +316,11 @@ public class StepDefinitionAgent {
             }
             
             // For other expression types, return a string representation for now
-            System.out.println("Unsupported expression type for value extraction: " + expression.getClass().getSimpleName());
+            System.out.println(String.format("Unsupported expression type for value extraction: %s", expression.getClass().getSimpleName()));
             return expression.toString();
             
         } catch (Exception e) {
-            System.err.println("Error extracting value from expression: " + e.getMessage());
+            System.err.println(String.format("Error extracting value from expression: %s", e.getMessage()));
             return null;
         }
     }
@@ -341,7 +341,7 @@ public class StepDefinitionAgent {
                 .map(step -> step.getScenario().getName())
                 .collect(Collectors.toSet());
             
-            System.out.println("Current node " + currentNode.getName() + " has scenarios: " + currentScenarios);
+            System.out.println(String.format("Current node %s has scenarios: %s", currentNode.getName(), currentScenarios));
             
             // Get variables that this node needs from other nodes via outgoing data flows
             // Note: outgoing data flows indicate dependencies - the current node needs data from the target
@@ -365,11 +365,11 @@ public class StepDefinitionAgent {
                 }
             }
             
-            System.out.println("Node " + currentNode.getName() + " requires variables from other nodes: " + requiredVariables);
-            System.out.println("Dependency source nodes: " + dependencySourceNodes.stream().map(Node::getName).collect(Collectors.toList()));
+            System.out.println(String.format("Node %s requires variables from other nodes: %s", currentNode.getName(), requiredVariables));
+            System.out.println(String.format("Dependency source nodes: %s", dependencySourceNodes.stream().map(Node::getName).collect(Collectors.toList())));
             
             if (requiredVariables.isEmpty()) {
-                System.out.println("No data flow dependencies found for node " + currentNode.getName());
+                System.out.println(String.format("No data flow dependencies found for node %s", currentNode.getName()));
                 return previousSteps;
             }
             
@@ -383,7 +383,7 @@ public class StepDefinitionAgent {
                     .mapToInt(ScenarioStep::getStepNumber)
                     .min().orElse(Integer.MAX_VALUE);
                 
-                System.out.println("Looking for previous steps before step " + currentStepNumber + " in scenario " + scenarioName);
+                System.out.println(String.format("Looking for previous steps before step %d in scenario %s", currentStepNumber, scenarioName));
                 
                 // Check dependency source nodes to see if they are previous steps in this scenario
                 for (Node sourceNode : dependencySourceNodes) {
@@ -417,8 +417,7 @@ public class StepDefinitionAgent {
                                     for (Variable variable : dataRef.getVariables()) {
                                         if (requiredVariables.contains(variable.getName())) {
                                             hasDataFlow = true;
-                                            System.out.println("Found data dependency: current node " + currentNode.getName() + 
-                                                " needs " + variable.getName() + " from " + sourceNode.getName());
+                                            System.out.println(String.format("Found data dependency: current node %s needs %s from %s", currentNode.getName(), variable.getName(), sourceNode.getName()));
                                             break;
                                         }
                                     }
@@ -444,22 +443,21 @@ public class StepDefinitionAgent {
                                 (sourceNode.getStepBody() != null ? extractStepBodyContent(sourceNode.getStepBody()) : "");
                             
                             relevantPreviousSteps.add(stepInfo);
-                            System.out.println("Added previous step: scenario " + scenarioName + " step " + stepInfo.stepNumber);
+                            System.out.println(String.format("Added previous step: scenario %s step %s", scenarioName, stepInfo.stepNumber));
                         }
                     }
                 }
                 
                 if (!relevantPreviousSteps.isEmpty()) {
                     previousSteps.put(scenarioName, relevantPreviousSteps);
-                    System.out.println("Found " + relevantPreviousSteps.size() + " previous steps with data dependencies for scenario " + scenarioName);
+                    System.out.println(String.format("Found %d previous steps with data dependencies for scenario %s", relevantPreviousSteps.size(), scenarioName));
                 }
             }
             
-            System.out.println("Total previous overlay steps with data dependencies: " + 
-                previousSteps.values().stream().mapToInt(List::size).sum());
+            System.out.println(String.format("Total previous overlay steps with data dependencies: %d", previousSteps.values().stream().mapToInt(List::size).sum()));
             
         } catch (Exception e) {
-            System.err.println("Error extracting previous steps with data dependencies: " + e.getMessage());
+            System.err.println(String.format("Error extracting previous steps with data dependencies: %s", e.getMessage()));
             e.printStackTrace();
         }
         
@@ -527,10 +525,10 @@ public class StepDefinitionAgent {
                     scenarios, variables, variableInitialValues, sourceCode, prevStepsConverted);
 
                 System.out.println("Generating step definition with source code context:");
-                System.out.println("Available source files: " + sourceCode.keySet());
+                System.out.println(String.format("Available source files: %s", sourceCode.keySet()));
                 
                 String response = this.llm.chat(stepDefinitionPrompt);
-                System.out.println("LLM Response: " + response);
+                System.out.println(String.format("LLM Response: %s", response));
 
                 try {
                     String cleanedResponse = extractJsonFromResponse(response);
@@ -540,7 +538,7 @@ public class StepDefinitionAgent {
                     stepDef.stepType = scenarioSteps.get(0).stepType;
                     
                     JsonNode stepArgsNode = jsonNode.get("step-arguments");
-                    System.out.println("Step arguments node: " + stepArgsNode);
+                    System.out.println(String.format("Step arguments node: %s", stepArgsNode));
                     if (stepArgsNode != null) {
                         stepDef.stepArguments = objectMapper.convertValue(
                             stepArgsNode, 
@@ -550,7 +548,7 @@ public class StepDefinitionAgent {
                         stepDef.stepArguments = new HashMap<>();
                     }
                     JsonNode stepParamsNode = jsonNode.get("step-parameters");
-                    System.out.println("Step parameters node: " + stepParamsNode);
+                    System.out.println(String.format("Step parameters node: %s", stepParamsNode));
                     if (stepParamsNode != null) {
                         stepDef.stepParameters = objectMapper.convertValue(
                             stepParamsNode, 
@@ -566,7 +564,7 @@ public class StepDefinitionAgent {
                     }
                     
                 } catch (Exception e) {
-                    System.err.println("Error parsing LLM response: " + e.getMessage());
+                    System.err.println(String.format("Error parsing LLM response: %s", e.getMessage()));
                     e.printStackTrace();
                     
                     // Fallback - create simple step definition
@@ -612,7 +610,7 @@ public class StepDefinitionAgent {
     private void applyStepDefinitionToNode(Node node, StepDefinition stepDef) {
         if (stepDef.stepName != null) {
             node.setStepName(stepDef.stepName);
-            System.out.println("Set step name for node " + node.getName() + ": " + stepDef.stepName);
+            System.out.println(String.format("Set step name for node %s: %s", node.getName(), stepDef.stepName));
         }
 
         if (stepDef.stepBody != null && !stepDef.stepBody.trim().isEmpty()) {
@@ -620,17 +618,17 @@ public class StepDefinitionAgent {
                 StepBody stepBodyObj = createStepBodyFromString(stepDef.stepBody);
                 if (stepBodyObj != null) {
                     node.setStepBody(stepBodyObj);
-                    System.out.println("Set step body for node " + node.getName() + ": " + stepDef.stepBody);
+                    System.out.println(String.format("Set step body for node %s: %s", node.getName(), stepDef.stepBody));
                 }
             } catch (Exception e) {
-                System.err.println("Error setting step body for node " + node.getName() + ": " + e.getMessage());
+                System.err.println(String.format("Error setting step body for node %s: %s", node.getName(), e.getMessage()));
                 e.printStackTrace();
             }
         }
         
         if (stepDef.stepParameters != null && !stepDef.stepParameters.isEmpty()) {
             try {
-                System.out.println("Creating " + stepDef.stepParameters.size() + " step parameters for node " + node.getName());
+                System.out.println(String.format("Creating %d step parameters for node %s", stepDef.stepParameters.size(), node.getName()));
                 
                 EList<Variable> stepParametersList = node.getStepParameters();
                 
@@ -640,40 +638,40 @@ public class StepDefinitionAgent {
                     String paramName = paramEntry.getKey();
                     String paramType = paramEntry.getValue();
                                
-                    System.out.println("      Creating step parameter: " + paramName + " of type " + paramType);
+                    System.out.println(String.format("      Creating step parameter: %s of type %s", paramName, paramType));
                   
                     Variable variable = VariableHelper.createStepParameter(paramName, paramType);
                     
-                    System.out.println("      Created variable: " + variable.getName() + " of type " + variable.getType().getType().getName());
+                    System.out.println(String.format("      Created variable: %s of type %s", variable.getName(), variable.getType().getType().getName()));
                     stepParametersList.add(variable);
-                    System.out.println("      Added step parameter: " + paramName);
+                    System.out.println(String.format("      Added step parameter: %s", paramName));
                 }
                 
-                System.out.println("Successfully added " + stepParametersList.size() + " step parameters to node " + node.getName());
+                System.out.println(String.format("Successfully added %d step parameters to node %s", stepParametersList.size(), node.getName()));
                 
             } catch (Exception e) {
-                System.err.println("Error setting step parameters for node " + node.getName() + ": " + e.getMessage());
+                System.err.println(String.format("Error setting step parameters for node %s: %s", node.getName(), e.getMessage()));
                 e.printStackTrace();
             }
         }
 
         if (stepDef.stepArguments != null && !stepDef.stepArguments.isEmpty()) {
             try {
-                System.out.println("Applying " + stepDef.stepArguments.size() + " step arguments to node " + node.getName());
+                System.out.println(String.format("Applying %d step arguments to node %s", stepDef.stepArguments.size(), node.getName()));
                 
                 for (Map.Entry<String, Object> argEntry : stepDef.stepArguments.entrySet()) {
                     String scenarioId = argEntry.getKey();
                     Object argsData = argEntry.getValue();
                     
-                    System.out.println("      Processing step arguments for scenario: " + scenarioId);
-                    System.out.println("      Arguments data: " + argsData);
+                    System.out.println(String.format("      Processing step arguments for scenario: %s", scenarioId));
+                    System.out.println(String.format("      Arguments data: %s", argsData));
 
                     // Find the corresponding scenario step for this scenario ID
                     // The scenarioId format might be "scenario T1, step 3" or "scenario T1 step 3"
                     ScenarioStep targetScenarioStep = null;
                     for (ScenarioStep step : node.getSteps()) {
                         String expectedScenarioId = "scenario " + step.getScenario().getName() + " step " + step.getStepNumber();
-                        System.out.println("      Comparing '" + scenarioId + "' with '" + expectedScenarioId + "'");
+                        System.out.println(String.format("      Comparing '%s' with '%s'", scenarioId, expectedScenarioId));
                         
 						// Normalize by removing commas and extra spaces
                         String normalizedScenarioId = scenarioId.replace(",", "");
@@ -681,17 +679,17 @@ public class StepDefinitionAgent {
                         
                         if (normalizedExpectedId.equals(normalizedScenarioId)) {
                             targetScenarioStep = step;
-                            System.out.println("      Found matching scenario step: " + expectedScenarioId);
+                            System.out.println(String.format("      Found matching scenario step: %s", expectedScenarioId));
                             break;
                         }
                     }
                     
                     if (targetScenarioStep == null) {
-                        System.err.println("      Could not find scenario step for scenario ID: " + scenarioId);
-                        System.err.println("      Available scenario steps:");
+                        System.err.println(String.format("      Could not find scenario step for scenario ID: %s", scenarioId));
+                        System.err.println(String.format("      Available scenario steps:"));
                         for (ScenarioStep step : node.getSteps()) {
                             String availableId = "scenario " + step.getScenario().getName() + " step " + step.getStepNumber();
-                            System.err.println("        - " + availableId);
+                            System.err.println(String.format("        - %s", availableId));
                         }
                         continue;
                     }
@@ -703,7 +701,7 @@ public class StepDefinitionAgent {
                         @SuppressWarnings("unchecked")
                         Map<String, Object> argumentsMap = (Map<String, Object>) argsData;
                         
-                        System.out.println("      Creating " + argumentsMap.size() + " step arguments for scenario " + scenarioId);
+                        System.out.println(String.format("      Creating %d step arguments for scenario %s", argumentsMap.size(), scenarioId));
                         
                         for (Map.Entry<String, Object> argDataEntry : argumentsMap.entrySet()) {
                             String paramName = argDataEntry.getKey();
@@ -732,22 +730,22 @@ public class StepDefinitionAgent {
                                 paramValue = paramValueData;
                             }
                             
-                            System.out.println("      Creating step argument: " + paramName + " of type " + paramType + " with value " + paramValue);
+                            System.out.println(String.format("      Creating step argument: %s of type %s with value %s", paramName, paramType, paramValue));
                             
                             Variable parameterVariable = null;
                             for (Variable stepParam : node.getStepParameters()) {
                                 if (stepParam.getName().equals(paramName)) {
                                     parameterVariable = stepParam;
-                                    System.out.println("      Found matching step parameter variable: " + paramName);
+                                    System.out.println(String.format("      Found matching step parameter variable: %s", paramName));
                                     break;
                                 }
                             }
                             
                             if (parameterVariable == null) {
-                                System.err.println("      Could not find step parameter for argument: " + paramName);
-                                System.err.println("      Available step parameters:");
+                                System.err.println(String.format("      Could not find step parameter for argument: %s", paramName));
+                                System.err.println(String.format("      Available step parameters:"));
                                 for (Variable stepParam : node.getStepParameters()) {
-                                    System.err.println("        - " + stepParam.getName());
+                                    System.err.println(String.format("        - %s", stepParam.getName()));
                                 }
                                 continue;
                             }
@@ -755,28 +753,28 @@ public class StepDefinitionAgent {
                             nl.esi.comma.actions.actions.AssignmentAction assignmentAction = VariableHelper.createStepArgumentWithVariable(
                                 parameterVariable, paramValue, paramType);
                             
-                            System.out.println("      Created assignment action for existing parameter variable: " + assignmentAction.getAssignment().getName());
+                            System.out.println(String.format("      Created assignment action for existing parameter variable: %s", assignmentAction.getAssignment().getName()));
                             
                             stepArgumentsList.add(assignmentAction);
-                            System.out.println("      Added step argument: " + paramName + " to scenario " + scenarioId);
+                            System.out.println(String.format("      Added step argument: %s to scenario %s", paramName, scenarioId));
                         }
                         
-                        System.out.println("      Successfully added " + stepArgumentsList.size() + " step arguments to scenario " + scenarioId);
+                        System.out.println(String.format("      Successfully added %d step arguments to scenario %s", stepArgumentsList.size(), scenarioId));
                         
                     } else {
-                        System.err.println("      Arguments data for scenario " + scenarioId + " is not a Map, skipping");
+                        System.err.println(String.format("      Arguments data for scenario %s is not a Map, skipping", scenarioId));
                     }
                 }
                 
-                System.out.println("Successfully applied step arguments to node " + node.getName());
+                System.out.println(String.format("Successfully applied step arguments to node %s", node.getName()));
                 
             } catch (Exception e) {
-                System.err.println("Error setting step arguments for node " + node.getName() + ": " + e.getMessage());
+                System.err.println(String.format("Error setting step arguments for node %s: %s", node.getName(), e.getMessage()));
                 e.printStackTrace();
             }
         }
 
-        System.out.println("Successfully applied complete step definition to node " + node.getName());
+        System.out.println(String.format("Successfully applied complete step definition to node %s", node.getName()));
     }
     
     /**
@@ -789,11 +787,11 @@ public class StepDefinitionAgent {
         try {
             LanguageBody languageBody = CausalGraphFactory.eINSTANCE.createLanguageBody();
             languageBody.setBody(bodyString);
-            System.out.println("      Created LanguageBody with content: " + bodyString);
+            System.out.println(String.format("      Created LanguageBody with content: %s", bodyString));
             return languageBody;
             
         } catch (Exception e) {
-            System.err.println("Error creating LanguageBody from string: " + e.getMessage());
+            System.err.println(String.format("Error creating LanguageBody from string: %s", e.getMessage()));
             return null;
         }
     }

@@ -32,10 +32,10 @@ class Rcg2BddUcgTransformer extends Rcg2UcgTransformer {
             
             mergeAgent = new MergeAgent(config)
             stepDefinitionAgent = new StepDefinitionAgent(config, sourceCodeFiles)
-            System.out.println("MergeAgent and StepDefinitionAgent initialized successfully in Rcg2BddUcgTransformer")
-            System.out.println("Loaded " + sourceCodeFiles.size + " source code files from VendingMachine Sources directory")
+            System.out.println(String.format("MergeAgent and StepDefinitionAgent initialized successfully in Rcg2BddUcgTransformer"));
+            System.out.println(String.format("Loaded %d source code files from VendingMachine Sources directory", sourceCodeFiles.size));
         } catch (Exception e) {
-            System.err.println("Failed to initialize agents: " + e.getMessage())
+            System.err.println(String.format("Failed to initialize agents: %s", e.getMessage()))
             e.printStackTrace()
         }
     }
@@ -49,28 +49,28 @@ class Rcg2BddUcgTransformer extends Rcg2UcgTransformer {
         
         try {
             val config = ConfigManager.getConfig()
-            System.out.println("Config loaded: " + (config !== null ? "yes" : "no"))
+            System.out.println(String.format("Config loaded: %s", (config !== null ? "yes" : "no")));
             
             val sourcesConfig = config.get("sources") as Map<String, Object>
-            System.out.println("Sources config section: " + (sourcesConfig !== null ? "found" : "not found"))
+            System.out.println(String.format("Sources config section: %s", (sourcesConfig !== null ? "found" : "not found")));
             
             var String primaryPath = null
             
             if (sourcesConfig !== null) {
                 primaryPath = sourcesConfig.get("source_file_path") as String
-                System.out.println("Raw source_file_path from config: '" + primaryPath + "'")
+                System.out.println(String.format("Raw source_file_path from config: '%s'", primaryPath));
             } else {
-                System.err.println("No [sources] section found in config")
+                System.err.println(String.format("No [sources] section found in config"))
             }
             
             
-            System.out.println("Using source path: " + primaryPath)
+            System.out.println(String.format("Using source path: %s", primaryPath));
 
             val sourcesPath = Paths.get(primaryPath)
             val absoluteSourcesPath = sourcesPath.toAbsolutePath()
-            System.out.println("Absolute path: " + absoluteSourcesPath.toString)
-            System.out.println("Path exists: " + Files.exists(sourcesPath))
-            System.out.println("Is directory: " + Files.isDirectory(sourcesPath))
+            System.out.println(String.format("Absolute path: %s", absoluteSourcesPath.toString));
+            System.out.println(String.format("Path exists: %s", Files.exists(sourcesPath)));
+            System.out.println(String.format("Is directory: %s", Files.isDirectory(sourcesPath)));
             
             if (Files.exists(sourcesPath) && Files.isDirectory(sourcesPath)) {
                 val sourceFiles = Files.list(sourcesPath)
@@ -78,37 +78,37 @@ class Rcg2BddUcgTransformer extends Rcg2UcgTransformer {
                     .filter[path | {
                         val fileName = path.fileName.toString.toLowerCase
                         val isSourceFile = fileName.endsWith(".cpp") || fileName.endsWith(".h")
-                        System.out.println("Checking file: " + fileName + " - is source file: " + isSourceFile)
+                        System.out.println(String.format("Checking file: %s - is source file: %s", fileName, isSourceFile));
                         return isSourceFile
                     }]
                     .toArray
                     
-                System.out.println("Found " + sourceFiles.length + " source files")
+                System.out.println(String.format("Found %d source files", sourceFiles.length));
                     
                 for (sourceFile : sourceFiles) {
                     val absolutePath = (sourceFile as java.nio.file.Path).toAbsolutePath.toString
                     sourceCodeFiles.add(absolutePath)
-                    System.out.println("Added source file: " + absolutePath)
+                    System.out.println(String.format("Added source file: %s", absolutePath));
                 }                
-                System.out.println("Successfully discovered " + sourceCodeFiles.size + " source files from primary path")
+                System.out.println(String.format("Successfully discovered %d source files from primary path", sourceCodeFiles.size));
             } else {
-                System.err.println("Sources directory not found or not a directory at: " + absoluteSourcesPath.toString)
+                System.err.println(String.format("Sources directory not found or not a directory at: %s", absoluteSourcesPath.toString));
                 
                 // Try to list parent directory contents for debugging
                 try {
                     val parentPath = sourcesPath.parent
                     if (parentPath !== null && Files.exists(parentPath)) {
-                        System.err.println("Parent directory contents:")
+                        System.err.println(String.format("Parent directory contents:"));
                         Files.list(parentPath).forEach[path | 
-                            System.err.println("  - " + path.fileName + (Files.isDirectory(path) ? " (dir)" : " (file)"))
+                            System.err.println(String.format("  - %s%s", path.fileName, (Files.isDirectory(path) ? " (dir)" : " (file)")))
                         ]
                     }
                 } catch (Exception e) {
-                    System.err.println("Could not list parent directory: " + e.getMessage())
+                    System.err.println(String.format("Could not list parent directory: %s", e.getMessage()))
                 }
             }            
         } catch (Exception e) {
-            System.err.println("Error discovering source files: " + e.getMessage())
+            System.err.println(String.format("Error discovering source files: %s", e.getMessage()))
             e.printStackTrace()
         }       
         return sourceCodeFiles
@@ -128,7 +128,7 @@ class Rcg2BddUcgTransformer extends Rcg2UcgTransformer {
             //    
             return sortNodeGroupsByStepOrder(regroupedNodes)
         } else {
-            System.err.println("MergeAgent not available, using default grouping")
+            System.err.println(String.format("MergeAgent not available, using default grouping"))
             return sortNodeGroupsByStepOrder(nodeGroups)
         }
     }
@@ -150,7 +150,7 @@ class Rcg2BddUcgTransformer extends Rcg2UcgTransformer {
             }
         }
         
-        System.out.println('''Regrouping completed: «originalGroups.size» original groups -> «newGroups.size» new groups''')
+        System.out.println(String.format("Regrouping completed: %d original groups -> %d new groups", originalGroups.size, newGroups.size));
         return newGroups
     }
     
@@ -163,7 +163,7 @@ class Rcg2BddUcgTransformer extends Rcg2UcgTransformer {
         val result = new ArrayList<NodeGroup>()
         val stepsToProcess = new ArrayList<Node>(originalGroup.inputNodes)
         
-        System.out.println('''Processing group with «stepsToProcess.size» steps using MergeAgent''')
+        System.out.println(String.format("Processing group with %d steps using MergeAgent", stepsToProcess.size));
         
         // Start with the first step as the first group
         if (!stepsToProcess.empty) {
@@ -178,12 +178,12 @@ class Rcg2BddUcgTransformer extends Rcg2UcgTransformer {
                 if (bestGroupIndex >= 0) {
                     // Add to existing group
                     result.get(bestGroupIndex).inputNodes += stepToCompare
-                    System.out.println('''Step added to existing group «bestGroupIndex»''')
+                    System.out.println(String.format("Step added to existing group %d", bestGroupIndex));
                 } else {
                     // Create new group
                     val newGroup = createNewGroupFromStep(stepToCompare, originalGroup.key)
                     result += newGroup
-                    System.out.println('''Step created new group «result.size - 1»''')
+                    System.out.println(String.format("Step created new group %d", result.size - 1));
                 }
             }
         }
@@ -253,14 +253,14 @@ class Rcg2BddUcgTransformer extends Rcg2UcgTransformer {
             if (result !== null) {
                 val trimmedResult = result.trim.toLowerCase
                 val shouldMerge = trimmedResult.equals("true")
-                System.out.println('''MergeAgent comparison result: «result» -> «shouldMerge»''')
+                System.out.println(String.format("MergeAgent comparison result: %s -> %s", result, shouldMerge));
                 return shouldMerge
             } else {
-                System.err.println("MergeAgent returned null result")
+                System.err.println(String.format("MergeAgent returned null result"))
                 return false
             }
         } catch (Exception e) {
-            System.err.println("Error calling MergeAgent for comparison: " + e.getMessage())
+            System.err.println(String.format("Error calling MergeAgent for comparison: %s", e.getMessage()))
             return false
         }
     }
@@ -315,7 +315,7 @@ class Rcg2BddUcgTransformer extends Rcg2UcgTransformer {
                 e.printStackTrace()
             }
         } else {
-            System.err.println("Agents not available, skipping step definition generation")
+            System.err.println(String.format("Agents not available, skipping step definition generation"))
         }
 
         return outputGraph
@@ -336,9 +336,9 @@ class Rcg2BddUcgTransformer extends Rcg2UcgTransformer {
                 }
             }
             
-            System.out.println("Step bodies cleaned up at scenario step level")
+            System.out.println(String.format("Step bodies cleaned up at scenario step level"));
         } catch (Exception e) {
-            System.err.println("Error during step body cleanup: " + e.getMessage())
+            System.err.println(String.format("Error during step body cleanup: %s", e.getMessage()))
             e.printStackTrace()
         }
     }
