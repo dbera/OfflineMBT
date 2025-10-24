@@ -1,0 +1,84 @@
+requirement R1
+
+requirement R2
+
+scenario T1:
+    requirements: R1 R2
+
+scenario T2:
+    requirements: R1 R2
+
+graph TestGraphT1__TestGraphT2:
+	language: "C++"
+
+	types:
+	alias hType "test-interface::HRecord"
+
+	variables:
+    int x
+    hType h
+
+	node n0:
+	step-name: function "test-interface::f1(z, y)"
+	step-type: When
+
+	scenario T1 step 1: // start from step 1
+            step-variables: write h
+            step-body: «
+                bool y = true;
+                float z = 0.85;
+                y = function42(z);
+                if(y) {
+                    z = function2(4);
+                } else {
+                    z = function2(0);
+                }
+                h = test-interface::f1(z, y);
+            »
+
+	node n1:
+	step-name: function "test-interface2::f1(z, y)"
+	step-type: When
+
+	scenario T2 step 1:
+            step-variables: write h
+            step-body: «
+                h.a = ceil(h.a) * 4.0;
+                ASSERT_XY(h.a, x);
+            »
+
+	node n2:
+	step-name: function "test-interface::f0()"
+	step-type: When
+
+	scenario T1 step 2:
+            step-variables: write x
+            step-body: «
+                x = test-interface::f0()
+            »
+
+	node n3:
+	step-name: function "ASSERT_XY(h.a, x)"
+	step-type: Then
+
+	scenario T1 step 3:
+            step-variables: read-write h read x
+            step-body: «
+                h.a = ceil(h.a) * 2.0;
+                ASSERT_XY(h.a, x);
+            »
+
+	scenario T2 step 2:
+            step-variables: read-write h read x
+            step-body: «
+                h.a = ceil(h.a) * 4.0;
+                ASSERT_XY(h.a, x);
+            »
+
+edges:
+	n0 -> n2
+	n1 -> n3
+	n2 -> n3
+	n3 -{T1:h} -> n0
+	n3 -{T1:x} -> n2
+	n3 -{T2:[x, h]} -> n1
