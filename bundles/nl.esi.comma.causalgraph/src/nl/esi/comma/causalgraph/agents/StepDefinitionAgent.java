@@ -1,30 +1,36 @@
 package nl.esi.comma.causalgraph.agents;
 
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
-import dev.langchain4j.model.chat.ChatModel;
-import dev.langchain4j.model.azure.AzureOpenAiChatModel;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.eclipse.emf.common.util.EList;
+
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
 
-import nl.esi.comma.causalgraph.causalGraph.*;
+import dev.langchain4j.model.azure.AzureOpenAiChatModel;
+import dev.langchain4j.model.chat.ChatModel;
+import nl.esi.comma.causalgraph.causalGraph.CausalGraph;
+import nl.esi.comma.causalgraph.causalGraph.CausalGraphFactory;
+import nl.esi.comma.causalgraph.causalGraph.DataFlowEdge;
+import nl.esi.comma.causalgraph.causalGraph.DataReference;
+import nl.esi.comma.causalgraph.causalGraph.LanguageBody;
+import nl.esi.comma.causalgraph.causalGraph.Node;
+import nl.esi.comma.causalgraph.causalGraph.ScenarioStep;
+import nl.esi.comma.causalgraph.causalGraph.StepBody;
 import nl.esi.comma.causalgraph.utilities.CausalGraphQueries;
 import nl.esi.comma.causalgraph.utilities.VariableHelper;
-import nl.esi.comma.expressions.expression.Variable;
 import nl.esi.comma.expressions.expression.Expression;
-import nl.esi.comma.expressions.expression.ExpressionFactory;
-import nl.esi.comma.types.types.Type;
-import nl.esi.comma.types.types.TypeDecl;
-import nl.esi.comma.types.types.TypeReference;
-import nl.esi.comma.types.types.TypesFactory;
-import nl.esi.comma.types.BasicTypes;
-import org.eclipse.emf.common.util.EList;
+import nl.esi.comma.expressions.expression.Variable;
 
 /**
  * StepDefinitionAgent class for processing causal graph nodes and generating step definitions.
@@ -534,15 +540,20 @@ public class StepDefinitionAgent {
                     JsonNode stepArgsNode = jsonNode.get("step-arguments");
                     System.out.println(String.format("Step arguments node: %s", stepArgsNode));
                     if (stepArgsNode != null) {
-                        stepDef.stepArguments = objectMapper.convertValue(stepArgsNode, Map.class);
+                        stepDef.stepArguments = objectMapper.convertValue(
+                            stepArgsNode, 
+                            new TypeReference<Map<String, Object>>() {}
+                        );
                     } else {
                         stepDef.stepArguments = new HashMap<>();
                     }
-                    
                     JsonNode stepParamsNode = jsonNode.get("step-parameters");
                     System.out.println(String.format("Step parameters node: %s", stepParamsNode));
                     if (stepParamsNode != null) {
-                        stepDef.stepParameters = objectMapper.convertValue(stepParamsNode, Map.class);
+                        stepDef.stepParameters = objectMapper.convertValue(
+                            stepParamsNode, 
+                            new TypeReference<Map<String, String>>() {}
+                        );
                     } else {
                         stepDef.stepParameters = new HashMap<>();
                     }
