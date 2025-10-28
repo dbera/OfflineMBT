@@ -148,11 +148,11 @@ public class CamundaParser {
 				String taskName = getConsumerName(step);
 				
 				// name of system block/lane
-				String component_name = getComponentName(step);
+				String lane_name = getComponentName(step);
 				
 				// 2) create the taskDescriptor objects
-				actionLane.put(taskName, component_name);
-				TaskDescriptor task = new TaskDescriptor(taskName, component_name);
+				actionLane.put(taskName, lane_name);
+				TaskDescriptor task = new TaskDescriptor(taskName, lane_name);
 				task.step = step;
 				tasks.add(task);
 
@@ -173,6 +173,7 @@ public class CamundaParser {
 		for (AbstractTestSequence sys : atd.getTestSeq()) {
 			for (AbstractStep step : sys.getStep()) {
 				String consumerName = getConsumerName(step);
+				String lane_name = getComponentName(step);
 				step.getStepRef().stream().forEach(a -> {
 					a.getRefData().forEach(s -> {
 						String dataProducer = getConsumerName(a.getRefStep());
@@ -193,7 +194,7 @@ public class CamundaParser {
 								} else {
 									DataInstanceDescriptor dataInstance = new DataInstanceDescriptor(
 											key,
-										 consumedData, producerName, 
+											lane_name, producerName, 
 											new ArrayList<>(List.of(consumerName)));
 									dataInstance.bind_producer = matchedEntryOpt.get().getValue();
 									dataInstanceMap.put(key, dataInstance);
