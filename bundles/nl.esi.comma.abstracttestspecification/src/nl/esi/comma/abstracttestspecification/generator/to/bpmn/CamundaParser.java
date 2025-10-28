@@ -36,10 +36,9 @@ import org.camunda.bpm.model.bpmn.instance.DataInputAssociation;
 import org.camunda.bpm.model.bpmn.instance.DataObject;
 import org.camunda.bpm.model.bpmn.instance.DataObjectReference;
 import org.camunda.bpm.model.bpmn.instance.DataOutputAssociation;
-import org.camunda.bpm.model.bpmn.instance.DataStore;
-import org.camunda.bpm.model.bpmn.instance.DataStoreReference;
 import org.camunda.bpm.model.bpmn.instance.Definitions;
 import org.camunda.bpm.model.bpmn.instance.EndEvent;
+import org.camunda.bpm.model.bpmn.instance.ExtensionElements;
 import org.camunda.bpm.model.bpmn.instance.FlowNode;
 import org.camunda.bpm.model.bpmn.instance.Lane;
 import org.camunda.bpm.model.bpmn.instance.LaneSet;
@@ -54,14 +53,14 @@ import org.camunda.bpm.model.bpmn.instance.bpmndi.BpmnPlane;
 import org.camunda.bpm.model.bpmn.instance.bpmndi.BpmnShape;
 import org.camunda.bpm.model.bpmn.instance.dc.Bounds;
 import org.camunda.bpm.model.bpmn.instance.di.Waypoint;
-import org.camunda.bpm.model.xml.instance.ModelElementInstance;
 
-import com.google.common.base.Optional;
-
-import com.google.common.base.Optional;
-
+import nl.asml.matala.bpmn4s.extensions.Bpmn4sModel;
+import nl.asml.matala.bpmn4s.extensions.DataType;
+import nl.asml.matala.bpmn4s.extensions.DataTypes;
+import nl.asml.matala.bpmn4s.extensions.Field;
 import nl.asml.matala.product.product.Block;
 import nl.asml.matala.product.product.Function;
+import nl.asml.matala.product.product.Update;
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractStep;
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractTestDefinition;
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractTestSequence;
@@ -89,78 +88,13 @@ public class CamundaParser {
 	private static final String BPMN4S_ASSERT_TASK = "AssertTask";
 	private static final String BPMN4S_COMPOSE_TASK = "ComposeTask";
 	private static final String BPMN4S_SUB_TYPE = "subType";
+	private static final String BPMN4S_DATATYPE_REF = "dataTypeRef";
 	private static final String BPMN4S_UPDATE = "update";
+	private static final String BPMN4S_QUEUE = "Queue";
 
 	final static double OFFSET_X = 150.0;
 	final static double OFFSET_Y = 50.0;
 	final static double baseY = 50.0;
-
-	public static void main(String[] args) {
-		try {
-			File f = new File("test.bpmn");
-			FileWriter fw = new FileWriter(f);
-
-			List<ElementDescriptor> descriptors = createDescriptors();
-
-			for (int i = 0; i < descriptors.size(); i++) {
-				ElementDescriptor e = descriptors.get(i);
-				if (e instanceof TaskDescriptor) {	
-				} else if (e instanceof DataInstanceDescriptor) {
-					DataInstanceDescriptor ds = (DataInstanceDescriptor) e;					
-				}
-			}
-
-			BpmnModelInstance modelInstance = generateBPMNModel(descriptors);
-			fw.write(Bpmn.convertToString(modelInstance));
-			fw.close();
-
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public static List<ElementDescriptor> createDescriptors() {
-		List<ElementDescriptor> elements = new ArrayList<>();
-
-		// Create 10 tasks
-		List<TaskDescriptor> tasks = new ArrayList<>();
-		for (int i = 1; i <= 15; i++) {
-			tasks.add(new TaskDescriptor("task" + i, "lane" + ((i % 3) + 1)));
-		}
-
-		// Create datastores and insert them after their producer
-		DataInstanceDescriptor ds1 = new DataInstanceDescriptor("datastore1", "lane2", tasks.get(0).id,
-				Arrays.asList(tasks.get(1).id, tasks.get(2).id));
-
-		DataInstanceDescriptor ds2 = new DataInstanceDescriptor("datastore2", "lane1", tasks.get(2).id,
-				Arrays.asList(tasks.get(4).id, tasks.get(5).id, tasks.get(6).id));
-
-		DataInstanceDescriptor ds3 = new DataInstanceDescriptor("datastore3", "lane3", tasks.get(7).id,
-				Arrays.asList(tasks.get(8).id, tasks.get(9).id));
-
-		DataInstanceDescriptor ds4 = new DataInstanceDescriptor("datastore4", "lane3", tasks.get(7).id,
-				Arrays.asList());
-		// 3️ Add tasks and datastores to the list in correct order
-		for (int i = 0; i < tasks.size(); i++) {
-			elements.add(tasks.get(i));
-
-			// Insert datastore after its producer
-			if (tasks.get(i).id.equals(ds1.producer)) {
-				elements.add(ds1);
-			}
-			if (tasks.get(i).id.equals(ds2.producer)) {
-				elements.add(ds2);
-			}
-			if (tasks.get(i).id.equals(ds3.producer)) {
-				elements.add(ds3);
-			}
-			if (tasks.get(i).id.equals(ds4.producer)) {
-				elements.add(ds4);
-			}
-		}
-
-		return elements;
-	}
 
 	public static String generateBPMNModel(AbstractTestDefinition atd) {
 		List<ElementDescriptor> descriptors = createDescriptors(atd);
@@ -173,20 +107,15 @@ public class CamundaParser {
 		// 1) fetch step identifiers and split them into lane & task id
 		Map<String, String> actionLane = new HashMap<>();
 		Map<String, List<String>> dataSetConsumer = new HashMap<>();
-		Map<String, DataInstanceDescriptor> datastoreMap = new HashMap<>();
 		List<TaskDescriptor> tasks = new ArrayList<>();
 		Map<String, List<Map.Entry<String, Binding>>> outputsMap = new HashMap<>();
 		Map<String, DataInstanceDescriptor> dataInstanceMap = new HashMap<>();
-		
-		
+
 		// For generating datastoresdataStore :: Add the consumer in the dataStores and
 		// then remove the dataStores that do not have consumer
 		for (AbstractTestSequence sys : atd.getTestSeq()) {
 			for (AbstractStep step : sys.getStep()) {
-				String caseName = step.getName().replaceAll(".*_(.*_.*)$", "$1");
-				Function function = (Function) step.getCaseRef().eContainer();
-				String consumerName = function.getName() + "_" + caseName;
-
+				String consumerName = getConsumerName(step);
 				step.getStepRef().stream().forEach(a ->{ 				
 					a.getRefData().forEach(s-> {s.getName();
 							//check if we have it already in the map, if yes, add the consumer, if not add both
@@ -198,72 +127,64 @@ public class CamundaParser {
 			}
 		}
 
-
 		for (AbstractTestSequence sys : atd.getTestSeq()) {
-			for (AbstractStep step : sys.getStep()) {				
-				String caseName = step.getName().replaceAll(".*_(.*_.*)$", "$1");
+			for (AbstractStep step : sys.getStep()) {
 				Set<Binding> outputs = new HashSet<>();
-				
 				// make output
 				
 				step.getOutput().forEach(a -> {
 					outputs.add(a);
 				});
-				
+
 				// Get suppressed
 				final Set<String> suppressed = (step.getSuppress() != null) ? step.getSuppress().getVarFields().stream()
 						.filter(exp -> exp instanceof ExpressionVariable).map(exp -> (ExpressionVariable) exp)
 						.map(vr -> vr.getVariable().getName()).collect(Collectors.toSet()) : Collections.emptySet();
 
-
 				// Remove suppressed ones
 				outputs.removeIf(out -> suppressed.contains(out.getName().getName()));
 
 				// name of action/ task id
-				Function function = (Function) step.getCaseRef().eContainer();
-
+				String taskName = getConsumerName(step);
+				
 				// name of system block/lane
-				Block block = (Block) function.eContainer();
-				String taskName = function.getName() + "_" + caseName;
-
+				String component_name = getComponentName(step);
+				
 				// 2) create the taskDescriptor objects
-				actionLane.put(taskName, block.getName());
-				TaskDescriptor task = new TaskDescriptor(taskName, block.getName());
-				task.step = step; 
+				actionLane.put(taskName, component_name);
+				TaskDescriptor task = new TaskDescriptor(taskName, component_name);
+				task.step = step;
 				tasks.add(task);
 
-				// 3) derive datastores out of the output-data elements in each run/compose-step
+				// 3) derive DataInstance out of the output-data elements in each run/compose-step
 				outputs.forEach(output -> {
-					String dataStoreName = output.getName().getName();					
+					String dataStoreName = output.getName().getName();
 					// create the outputMap:: which includes dataStores, the producer and the
 					// context
 					Map.Entry<String, Binding> entry = Map.entry(taskName, output);
-					// Add to map under datastore name
+					// Add to map under DataInstance name
 					outputsMap.computeIfAbsent(dataStoreName, k -> new ArrayList<>()).add(entry);
 				});
 			}
 
 		}
-		
+
 		// create data instance and the consumers:
 		for (AbstractTestSequence sys : atd.getTestSeq()) {
 			for (AbstractStep step : sys.getStep()) {
-				String caseName = step.getName().replaceAll(".*_(.*_.*)$", "$1");
-				Function function = (Function) step.getCaseRef().eContainer();
-				String consumerName = function.getName() + "_" + caseName;
-				Block block = (Block) function.eContainer();
+				String consumerName = getConsumerName(step);
 				step.getStepRef().stream().forEach(a -> {
 					a.getRefData().forEach(s -> {
-						String dataProducer = a.getRefStep().getName().replaceFirst("^[^_]*_", "");
+						String dataProducer = getConsumerName(a.getRefStep());
 						String consumedData = s.getName();
-						java.util.Optional<Entry<String, Binding>> matchedEntryOpt ;
+						java.util.Optional<Entry<String, Binding>> matchedEntryOpt;
 						if (outputsMap.containsKey(consumedData)) {
-							
+
 							matchedEntryOpt = outputsMap.getOrDefault(consumedData, Collections.emptyList()).stream()
 									.filter(entry -> entry.getKey().equals(dataProducer)).findFirst();
 
-							if (matchedEntryOpt != null) {
-								String producerName = matchedEntryOpt.get().getKey();								
+							if (matchedEntryOpt.isPresent()) {
+								String producerName = matchedEntryOpt.get().getKey();
 								String key = consumedData + "_" + producerName;
 								DataInstanceDescriptor existing = dataInstanceMap.get(key);
 
@@ -271,7 +192,8 @@ public class CamundaParser {
 									existing.consumers.add(consumerName);
 								} else {
 									DataInstanceDescriptor dataInstance = new DataInstanceDescriptor(
-											key, block.getName(),producerName,
+											key,
+										 consumedData, producerName, 
 											new ArrayList<>(List.of(consumerName)));
 									dataInstance.bind_producer = matchedEntryOpt.get().getValue();
 									dataInstanceMap.put(key, dataInstance);
@@ -283,27 +205,42 @@ public class CamundaParser {
 			}
 		}
 
-
 		// 5) Add tasks and datastores to the list in correct order
 		for (TaskDescriptor task : tasks) {
 			elements.add(task); // Add the task first
 
 			// Check for datastores that have this task as their producer
 			for (DataInstanceDescriptor ds : dataInstanceMap.values()) {
-				
+
 				if (task.id.equals(ds.producer)) {
-					elements.add(ds);					
+					elements.add(ds);
 				}
 			}
 		}
 		return elements;
 	}
 
+	private static String getComponentName(AbstractStep step) {
+		Function function = (Function) step.getCaseRef().eContainer();
+		Block block = (Block) function.eContainer();
+		int component_idx = block.getElabels().size()>1? 1:0;
+
+		return block.getElabels().get(component_idx);
+	}
+
+	private static String getConsumerName(AbstractStep step) {
+		String caseName = step.getName().replaceAll(".*_(.*_.*)$", "$1").replace('_', ' ');
+		Function function = (Function) step.getCaseRef().eContainer();
+		String function_name = function.getElabels();
+
+		return function_name + " " + caseName;
+	}
+
 	public static BpmnModelInstance generateBPMNModel(List<ElementDescriptor> elements) {
-		BpmnModelInstance modelInstance = Bpmn.createEmptyModel();
+		BpmnModelInstance modelInstance = Bpmn4sModel.createEmptyModel();
 		Definitions definitions = createDefinitions(modelInstance);
-		createDataTypes(modelInstance, definitions);
 		Process process = createProcess(modelInstance, definitions);
+		createDataTypes(modelInstance, process);
 		LaneSet laneSet = createLaneSet(modelInstance, process);
 		BpmnPlane plane = createDiagram(modelInstance, definitions, process);
 
@@ -326,7 +263,7 @@ public class CamundaParser {
 				double x = offsetX + (nodeIdx + 1) * offsetX;
 				double y = laneYMap.get(td.lane) + 20.0;
 
-				Task task = createTaskWithIO(modelInstance, process, taskId, td.id);
+				Task task = createTaskWithIO(modelInstance, process, td);
 				addBpmnExtension(task, td.step);
 				laneMap.get(td.lane).getFlowNodeRefs().add(task);
 				taskMap.put(taskId, task);
@@ -344,10 +281,8 @@ public class CamundaParser {
 				}
 
 				if (previousNode != null) {
-					Bounds prevBounds = elemBounds.get(previousNode);
-					if (prevBounds == null) {
-						prevBounds = createBounds(modelInstance, offsetX, laneYMap.get(td.lane) + 60, 100.0, 80.0);
-					}
+					Bounds prevBounds = createBounds(modelInstance, offsetX + (lastTaskIdx + 1) * offsetX + 100,
+							laneYMap.get((elements.get(nodeIdx - 1)).lane) + 60, 0, 0);
 					createSequenceFlowWithEdge(modelInstance, process, plane, previousNode, task,
 							"flow_" + (nodeIdx - 1) + "_" + nodeIdx, prevBounds, taskBounds);
 				}
@@ -365,121 +300,40 @@ public class CamundaParser {
 				lastTaskIdx = nodeIdx;
 			}
 			nodeIdx++;
-		}		
+		}
 		nodeIdx = 0;
-		
-		Map<String, Integer> producerDataCount = new HashMap<>();
-
-		Map<DataInstanceDescriptor, Bounds> dataBoundsMap = new LinkedHashMap<>();
 
 		for (ElementDescriptor e : elements) {
 			if (e instanceof DataInstanceDescriptor ds) {
-				double x, y;
-
-				if (ds.producer != null && taskMap.containsKey(ds.producer)) {
-					Task producer = taskMap.get(ds.producer);
-					Bounds taskBounds = elemBounds.get(producer);
-					int count = producerDataCount.getOrDefault(ds.producer, 0);
-
-					x = taskBounds.getX() + (taskBounds.getWidth() / 2) - 25;
-					y = taskBounds.getY() + taskBounds.getHeight() + 40 + (count * 60.0);
-
-					producerDataCount.put(ds.producer, count + 1);
-				} else {
-					x = offsetX + nodeIdx * offsetX;
-					y = laneYMap.get(ds.lane) + 36.0;
-				}
-
-				// Create shape without connection
-				Bounds objBounds = createBounds(modelInstance, x, y, 50.0, 50.0);
-				dataBoundsMap.put(ds, objBounds);
+				double x = offsetX + (nodeIdx + 1) * offsetX;
+				double y = laneYMap.get(ds.lane) + 36.0;
+				linkDataStoreToTasks(modelInstance, definitions, process, plane, ds, taskMap, elemBounds, x, y);
 			}
 			nodeIdx++;
-		}
-		for (var entry : dataBoundsMap.entrySet()) {
-			DataInstanceDescriptor ds = entry.getKey();
-			Bounds objBounds = entry.getValue();
-			linkDataInstanceToTasks(modelInstance, definitions, process, plane, ds, taskMap, elemBounds,
-					objBounds.getX(), objBounds.getY());
 		}
 
 		return modelInstance;
 	}
-	private void addEdgeWithWaypoints(BpmnModelInstance modelInstance, BpmnPlane plane, String edgeId, BaseElement flow,
-			Bounds sourceBounds, Bounds targetBounds, boolean isDataAssociation) {
 
-		BpmnEdge edge = modelInstance.newInstance(BpmnEdge.class);
-		edge.setBpmnElement(flow);
-		edge.setId(edgeId);
-
-		double sourceX = sourceBounds.getX();
-		double sourceY = sourceBounds.getY();
-		double sourceWidth = sourceBounds.getWidth();
-		double sourceHeight = sourceBounds.getHeight();
-
-		double targetX = targetBounds.getX();
-		double targetY = targetBounds.getY();
-		double targetWidth = targetBounds.getWidth();
-		double targetHeight = targetBounds.getHeight();
-
-		// Compute center Y
-		double y = (sourceY + sourceHeight / 2 + targetY + targetHeight / 2) / 2;
-
-		// Default direction
-		double startX = sourceX + sourceWidth;
-		double endX = targetX;
-
-		// Reverse if target is to the left of source
-		if (endX < startX) {
-			double tmp = startX;
-			startX = sourceX; 
-			endX = targetX + targetWidth; 
-		}
-
-		// For data association, often draw vertically (below task)
-		if (isDataAssociation) {
-			startX = sourceX + sourceWidth / 2;
-			endX = targetX + targetWidth / 2;
-
-			if (targetY > sourceY) { 
-				y = sourceY + sourceHeight + 20;
-			} else {
-				y = sourceY - 20;
-			}
-		}
-
-		// Define waypoints
-		Waypoint wp1 = modelInstance.newInstance(Waypoint.class);
-		wp1.setX(startX);
-		wp1.setY(y);
-
-		Waypoint wp2 = modelInstance.newInstance(Waypoint.class);
-		wp2.setX(endX);
-		wp2.setY(y);
-
-		edge.getWaypoints().add(wp1);
-		edge.getWaypoints().add(wp2);
-
-		plane.getDiagramElements().add(edge);
-	}
 	private static void addBpmnExtension(Task task, AbstractStep step) {
-		if(step instanceof ComposeStep) {
+		if (step instanceof ComposeStep) {
 			task.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_SUB_TYPE, BPMN4S_COMPOSE_TASK);
-		} else if(step instanceof RunStep) {
+		} else if (step instanceof RunStep) {
 			task.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_SUB_TYPE, BPMN4S_RUN_TASK);
-		} else if(step instanceof AssertionStep) {
+		} else if (step instanceof AssertionStep) {
 			task.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_SUB_TYPE, BPMN4S_ASSERT_TASK);
-		} else throw new IllegalArgumentException("Unexpected value: " + step);
+		} else
+			throw new IllegalArgumentException("Unexpected value: " + step);
 	}
 
 	private static void addBpmnExtension(DataAssociation da, Binding bind) {
 		ConcreteExpressionHandler ceh = new ConcreteExpressionHandler();
 		TypeDecl b_type = bind.getName().getType().getType();
 		JsonValue b_val = bind.getJsonvals();
-		String b_str = ceh.createTypeDeclValue(b_type,b_val);
+		String b_str = ceh.createTypeDeclValue(b_type, b_val);
 		da.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_UPDATE, b_str);
 	}
-	
+
 	private static Definitions createDefinitions(BpmnModelInstance modelInstance) {
 		Definitions definitions = modelInstance.newInstance(Definitions.class);
 		definitions.setTargetNamespace("http://bpmn.io/schema/bpmn");
@@ -495,10 +349,39 @@ public class CamundaParser {
 		return definitions;
 	}
 
-	private static void createDataTypes(BpmnModelInstance modelInstance, Definitions definitions) {
-		// TODO
+	private static void createDataTypes(BpmnModelInstance modelInstance, Process process) {
+		ExtensionElements extElem = modelInstance.newInstance(ExtensionElements.class);
+		DataTypes dtype_list = modelInstance.newInstance(DataTypes.class);
+
+		DataType dt_dataset = modelInstance.newInstance(DataType.class);
+		dt_dataset.setAttributeValue("id", "dataset_id");
+		dt_dataset.setAttributeValue("name", "Dataset");
+		dt_dataset.setAttributeValue("type", "String");
+
+		DataType dt_list = modelInstance.newInstance(DataType.class);
+		dt_list.setAttributeValue("id", "list_id");
+		dt_list.setAttributeValue("name", "ListOfDatasets");
+		dt_list.setAttributeValue("type", "List");
+		dt_list.setAttributeValue("valueTypeRef", "dataset_id");
+
+		DataType dt_record = modelInstance.newInstance(DataType.class);
+		dt_record.setAttributeValue("id", "record_id");
+		dt_record.setAttributeValue("name", "MyDataType");
+		dt_record.setAttributeValue("type", "Record");
+
+		Field field = modelInstance.newInstance(Field.class);
+		field.setAttributeValue("name", "my_list_of_datasets");
+		field.setAttributeValue("typeRef", "dataset_id");
+		dt_record.addChildElement(field);
+
+		dtype_list.addChildElement(dt_dataset);
+		dtype_list.addChildElement(dt_list);
+		dtype_list.addChildElement(dt_record);
+
+		extElem.addChildElement(dtype_list);
+		process.addChildElement(extElem);
 	}
-	
+
 	private static Process createProcess(BpmnModelInstance modelInstance, Definitions definitions) {
 		Process process = modelInstance.newInstance(Process.class);
 		process.setExecutable(true);
@@ -571,18 +454,27 @@ public class CamundaParser {
 		plane.addChildElement(shape);
 	}
 
-	private static Task createTaskWithIO(BpmnModelInstance modelInstance, Process process, String id, String name) {
+	private static Task createTaskWithIO(BpmnModelInstance modelInstance, Process process, TaskDescriptor td) {
 		Task task = modelInstance.newInstance(Task.class);
-		task.setId(id);
-		task.setName(name);
+		String task_id = normalizeTaskId(td);
+		task.setId(task_id);
+		task.setName(td.id);
 		process.addChildElement(task);
 
 		Property prop = modelInstance.newInstance(Property.class);
-		prop.setId(name + "_placeholder_id");
-		prop.setName(name + "_placeholder");
+		prop.setId(task_id + "_placeholder_id");
+		prop.setName(td.id+ "_placeholder");
 		task.addChildElement(prop);
 
 		return task;
+	}
+
+	private static String normalizeTaskId(TaskDescriptor td) {
+		return normalizeTaskId(td.id);
+	}
+
+	private static String normalizeTaskId(String td_id) {
+		return td_id.replaceAll("\\s+", "_");
 	}
 
 	private static StartEvent createStartEvent(BpmnModelInstance modelInstance, Process process, String laneName,
@@ -643,7 +535,7 @@ public class CamundaParser {
 		plane.addChildElement(edge);
 	}
 
-	private static DataObject linkDataInstanceToTasks(BpmnModelInstance modelInstance, Definitions definitions,
+	private static DataObject linkDataStoreToTasks(BpmnModelInstance modelInstance, Definitions definitions,
 			Process process, BpmnPlane plane, DataInstanceDescriptor dsDescriptor, Map<String, Task> taskMap,
 			Map<BaseElement, Bounds> elemBounds, double x, double y) {
 
@@ -654,12 +546,15 @@ public class CamundaParser {
 		dataObject.setId(dsId);
 		dataObject.setName(dsDescriptor.id);
 		process.addChildElement(dataObject);
-		
-		// 2️ Create DataStoreReference in the process
+
+		// 2️ Create DataObjectReference in the process
 		DataObjectReference dsRef = modelInstance.newInstance(DataObjectReference.class);
 		dsRef.setId(dsId + "_ref");
-		dsRef.setName(dsDescriptor.id); 
+		dsRef.setName(normalizeTaskId(dsDescriptor.id));
 		dsRef.setDataObject(dataObject);
+		dsRef.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_SUB_TYPE, BPMN4S_QUEUE);
+		dsRef.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_DATATYPE_REF, "record_id");
+
 		process.addChildElement(dsRef);
 
 		// 3️ Add diagram shape for the DataStoreReference
@@ -683,20 +578,15 @@ public class CamundaParser {
 				producer.addChildElement(doa);
 
 				Bounds producerBounds = elemBounds.get(producer);
-				// Count total outputs from this producer
-				int outputIndex = getOutputIndex(producer, doa);
-				int totalOutputs = countTotalOutputs(producer);
-				int totalInputs = countTotalInputs(producer);				
-				createDataAssociationEdge(modelInstance, plane, doa, producerBounds, dsBounds, outputIndex,
-						totalOutputs, 0, 1, totalOutputs, totalInputs);
+				createDataAssociationEdge(modelInstance, plane, doa, producerBounds, dsBounds);
 			}
 		}
 
-		// Link DataObjectReference to each consumer task (input)		
-		for (int consumerIdx = 0; consumerIdx < dsDescriptor.consumers.size(); consumerIdx++) {
-			String consumerId = dsDescriptor.consumers.get(consumerIdx);
+		// 5️ Link datastore to each consumer task
+		Map<String, Set<String>> linked = new HashMap<>();
+		for (String consumerId : dsDescriptor.consumers) {
 			Task consumer = taskMap.get(consumerId);
-			String dstaskLabel = dsId + "_" + consumerId;
+			String dstaskLabel = dsId + "_" + consumer.getId();
 			String uid =  "_" + UUID.randomUUID().toString();
 			if (consumer != null) {
 
@@ -711,23 +601,17 @@ public class CamundaParser {
 				dia.setId("dia_" + dstaskLabel + uid);
 				dia.getSources().add(dsRef);
 				dia.setTarget(inputProp);
-				
+
 				Binding bind = dsDescriptor.bind_consumers.getOrDefault(consumer.getName(), null);
 				if (bind != null) {
 					addBpmnExtension(dia, bind);
 				}
-				
+
 				consumer.addChildElement(dia);
 
 				// Create diagram edge
 				Bounds consumerBounds = elemBounds.get(consumer);
-				int inputIndex = getInputIndex(consumer, dia);
-				int totalInputs = countTotalInputs(consumer);
-				int totalOutputs = countTotalOutputs(consumer);				
-				int dataObjOutputIndex = consumerIdx; 
-				int totalDataObjOutputs = dsDescriptor.consumers.size(); 
-				createDataAssociationEdge(modelInstance, plane, dia, dsBounds, consumerBounds, inputIndex, totalInputs,
-						dataObjOutputIndex, totalDataObjOutputs, totalOutputs, totalInputs);
+				createDataAssociationEdge(modelInstance, plane, dia, dsBounds, consumerBounds);
 			}
 		}
 
@@ -735,185 +619,34 @@ public class CamundaParser {
 	}
 
 	private static void createDataAssociationEdge(BpmnModelInstance modelInstance, BpmnPlane plane,
-			BaseElement association, Bounds sourceBounds, Bounds targetBounds, int targetConnectionIndex,
-			int totalTargetConnections, int sourceConnectionIndex, int totalSourceConnections, int totalSourceOutputs,
-			int totalTargetInputs) {
+			BaseElement association, Bounds sourceBounds, Bounds targetBounds) {
 		BpmnEdge edge = modelInstance.newInstance(BpmnEdge.class);
 		edge.setId(association.getId() + "_edge");
 		edge.setBpmnElement(association);
 
-		
-		double sourceRightX = sourceBounds.getX() + sourceBounds.getWidth();
-		double sourceBottomY = sourceBounds.getY() + sourceBounds.getHeight();
-		double sourceWidth = sourceBounds.getWidth();
-
-		double targetTopY = targetBounds.getY();
-		double targetBottomY = targetBounds.getY() + targetBounds.getHeight();
-		double targetWidth = targetBounds.getWidth();
-		
 		Waypoint wp1 = modelInstance.newInstance(Waypoint.class);
+		wp1.setX(sourceBounds.getX() + sourceBounds.getWidth());
+		wp1.setY(sourceBounds.getY() + sourceBounds.getHeight() / 2);
+		edge.getWaypoints().add(wp1);
+
+		double midpoint = (sourceBounds.getX() + sourceBounds.getWidth() + targetBounds.getX()) / 2;
+
 		Waypoint wp2 = modelInstance.newInstance(Waypoint.class);
+		wp2.setX(midpoint);
+		wp2.setY(sourceBounds.getY() + sourceBounds.getHeight() / 2);
+		edge.getWaypoints().add(wp2);
+
 		Waypoint wp3 = modelInstance.newInstance(Waypoint.class);
+		wp3.setX(midpoint);
+		wp3.setY(targetBounds.getY() + targetBounds.getHeight() / 2);
+		edge.getWaypoints().add(wp3);
+
 		Waypoint wp4 = modelInstance.newInstance(Waypoint.class);
-
-		boolean isTaskOutput = sourceBounds.getHeight() > 50;
-
-		if (isTaskOutput) {
-
-			// Decide if we need to split the edge: split if task has BOTH inputs and
-			// outputs
-			int totalTaskInputs = totalTargetInputs;
-			boolean taskHasBothInputsAndOutputs = (totalSourceOutputs > 0 && totalTaskInputs > 0);
-
-			double offsetX;
-			if (taskHasBothInputsAndOutputs) {
-				// Split: outputs use LEFT half
-				offsetX = calculateHorizontalOffsetInRegion(sourceConnectionIndex, totalSourceConnections, sourceWidth,
-						0.0, 0.45);
-			} else {
-				// No split: use full width
-				offsetX = calculateHorizontalOffset(sourceConnectionIndex, totalSourceConnections, sourceWidth);
-			}
-			double outputX = sourceBounds.getX() + offsetX;
-
-			// Distribute arrival points on top edge of DataObject
-			double targetOffsetX = calculateHorizontalOffset(targetConnectionIndex, totalTargetConnections,
-					targetWidth);
-			double arrivalX = targetBounds.getX() + targetOffsetX;
-
-			wp1.setX(outputX);
-			wp1.setY(sourceBottomY);
-
-			wp2.setX(outputX);
-			wp2.setY(sourceBottomY + 20 + (sourceConnectionIndex * 10));
-
-			wp3.setX(arrivalX);
-			wp3.setY(wp2.getY());
-
-			wp4.setX(arrivalX);
-			wp4.setY(targetTopY - 1);
-		} else {
-
-			double sourceOffsetY = calculateVerticalOffset(sourceConnectionIndex, totalSourceConnections,
-					sourceBounds.getHeight());
-			double exitY = sourceBounds.getY() + sourceOffsetY;
-
-			// Decide if we need to split the edge: split if task has BOTH inputs and
-			// outputs
-			int totalTaskOutputs = totalSourceOutputs;
-			boolean taskHasBothInputsAndOutputs = (totalTargetInputs > 0 && totalTaskOutputs > 0);
-
-			double offsetX;
-			if (taskHasBothInputsAndOutputs) {
-				// Split: inputs use RIGHT half
-				offsetX = calculateHorizontalOffsetInRegion(targetConnectionIndex, totalTargetConnections, targetWidth,
-						0.55, 1.0);
-			} else {
-				// No split: use full width
-				offsetX = calculateHorizontalOffset(targetConnectionIndex, totalTargetConnections, targetWidth);
-			}
-			double inputX = targetBounds.getX() + offsetX;
-
-			double horizontalOffset = 20 + (sourceConnectionIndex * 15);
-
-			wp1.setX(sourceRightX);
-			wp1.setY(exitY);
-
-			wp2.setX(sourceRightX + horizontalOffset);
-			wp2.setY(exitY);
-
-			wp3.setX(sourceRightX + horizontalOffset);
-			wp3.setY(targetBottomY + 30 + (targetConnectionIndex * 10));
-
-			wp4.setX(inputX);
-			wp4.setY(targetBottomY + 30 + (targetConnectionIndex * 10));
-
-			Waypoint wp5 = modelInstance.newInstance(Waypoint.class);
-			wp5.setX(inputX);
-			wp5.setY(targetBottomY - 1);
-
-			edge.getWaypoints().addAll(Arrays.asList(wp1, wp2, wp3, wp4, wp5));
-			plane.addChildElement(edge);
-			return;
-		}
-
-		edge.getWaypoints().addAll(Arrays.asList(wp1, wp2, wp3, wp4));
+		wp4.setX(targetBounds.getX());
+		wp4.setY(targetBounds.getY() + targetBounds.getHeight() / 2);
+		edge.getWaypoints().add(wp4);
 
 		plane.addChildElement(edge);
 	}
 
-	//Count total outputs from a task
-	private static int countTotalOutputs(Task task) {
-		int count = task.getChildElementsByType(DataOutputAssociation.class).size();
-		return Math.max(1, count); 
-	}
-	
-	//Count total inputs to a task
-	private static int countTotalInputs(Task task) {
-		int count = task.getChildElementsByType(DataInputAssociation.class).size();
-		return Math.max(1, count);
-	}
-	//Get the index of a specific output association
-	private static int getOutputIndex(Task task, DataOutputAssociation targetAssociation) {
-		int index = 0;
-		for (ModelElementInstance element : task.getChildElementsByType(DataOutputAssociation.class)) {
-			if (element.equals(targetAssociation)) {
-				return index;
-			}
-			index++;
-		}
-		return 0;
-	}
-	//Get the index of a specific input association
-	private static int getInputIndex(Task task, DataInputAssociation targetAssociation) {
-		int index = 0;
-		for (ModelElementInstance element : task.getChildElementsByType(DataInputAssociation.class)) {
-			if (element.equals(targetAssociation)) {
-				return index;
-			}
-			index++;
-		}
-		return 0;
-	}
-	// Distribute connections evenly along a horizontal edge
-	private static double calculateHorizontalOffset(int index, int total, double width) {
-		if (total == 1) {
-			return width / 2.0;
-		}
-
-		double usableWidth = width * 0.6;
-		double margin = width * 0.2;
-		double spacing = usableWidth / (total - 1);
-
-		return margin + (index * spacing);
-	}
-	
-	private static double calculateHorizontalOffsetInRegion(int index, int total, double width, double regionStart,
-			double regionEnd) {
-		double regionWidth = width * (regionEnd - regionStart);
-		double regionOffset = width * regionStart;
-
-		if (total == 1) {
-			return regionOffset + regionWidth / 2.0;
-		}
-
-		double usableWidth = regionWidth * 0.8;
-		double margin = regionWidth * 0.1;
-		double spacing = usableWidth / (total - 1);
-
-		return regionOffset + margin + (index * spacing);
-	}
-	//Distribute connections evenly along a vertical edge
-	private static double calculateVerticalOffset(int index, int total, double height) {
-		if (total == 1) {
-			return height / 2.0;
-		}
-
-		// Leave 20% margin on top and bottom, distribute in the middle 60%
-		double usableHeight = height * 0.6;
-		double margin = height * 0.2;
-		double spacing = usableHeight / (total - 1);
-
-		return margin + (index * spacing);
-	}
 }
