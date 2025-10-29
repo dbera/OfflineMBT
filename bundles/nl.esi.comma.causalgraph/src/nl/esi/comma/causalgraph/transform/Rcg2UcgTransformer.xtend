@@ -86,10 +86,23 @@ class Rcg2UcgTransformer {
             // Get all the original data flows and group them based on their output node
             val dataFlows = group.inputNodes.flatMap[outgoingDataFlows].groupBy[nodeGroups.resolveOne(target)]
             dataFlows.entrySet.forEach[ dfEntry |
+                val dataRefsByScenario = dfEntry.value
+                    .flatMap[dataReferences]
+                    .groupBy[scenario] 
+                
                 outputGraph.edges += createDataFlowEdge => [
                     source = group.outputNode
                     target = dfEntry.key
-                    dataReferences += dfEntry.value.flatMap[dataReferences].toList
+                    // Create one data reference per scenario with merged variables
+                    dataRefsByScenario.entrySet.forEach[ scenarioEntry |
+                        dataReferences += createDataReference => [
+                            scenario = scenarioEntry.key
+                            variables += scenarioEntry.value
+                                .flatMap[variables]
+                                .toList
+                                .unique[left, right | EcoreUtil.equals(left, right)]
+                        ]
+                    ]
                 ]
             ]
         }
