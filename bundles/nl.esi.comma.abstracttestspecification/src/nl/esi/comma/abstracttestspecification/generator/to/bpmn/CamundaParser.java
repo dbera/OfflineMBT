@@ -12,11 +12,7 @@
  */
 package nl.esi.comma.abstracttestspecification.generator.to.bpmn;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -60,7 +56,6 @@ import nl.asml.matala.bpmn4s.extensions.DataTypes;
 import nl.asml.matala.bpmn4s.extensions.Field;
 import nl.asml.matala.product.product.Block;
 import nl.asml.matala.product.product.Function;
-import nl.asml.matala.product.product.Update;
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractStep;
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractTestDefinition;
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractTestSequence;
