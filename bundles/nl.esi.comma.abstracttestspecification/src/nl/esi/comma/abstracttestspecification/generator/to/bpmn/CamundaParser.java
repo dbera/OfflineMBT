@@ -53,6 +53,9 @@ import org.camunda.bpm.model.bpmn.instance.bpmndi.BpmnPlane;
 import org.camunda.bpm.model.bpmn.instance.bpmndi.BpmnShape;
 import org.camunda.bpm.model.bpmn.instance.dc.Bounds;
 import org.camunda.bpm.model.bpmn.instance.di.Waypoint;
+import org.camunda.bpm.model.xml.instance.ModelElementInstance;
+
+import com.google.common.base.Optional;
 
 import nl.asml.matala.bpmn4s.extensions.Bpmn4sModel;
 import nl.asml.matala.bpmn4s.extensions.DataType;
@@ -282,8 +285,10 @@ public class CamundaParser {
 				}
 
 				if (previousNode != null) {
-					Bounds prevBounds = createBounds(modelInstance, offsetX + (lastTaskIdx + 1) * offsetX + 100,
-							laneYMap.get((elements.get(nodeIdx - 1)).lane) + 60, 0, 0);
+					Bounds prevBounds = elemBounds.get(previousNode);
+					if (prevBounds == null) {
+						prevBounds = createBounds(modelInstance, offsetX, laneYMap.get(td.lane) + 60, 100.0, 80.0);
+					}
 					createSequenceFlowWithEdge(modelInstance, process, plane, previousNode, task,
 							"flow_" + (nodeIdx - 1) + "_" + nodeIdx, prevBounds, taskBounds);
 				}
@@ -312,10 +317,72 @@ public class CamundaParser {
 			}
 			nodeIdx++;
 		}
+		for (var entry : dataBoundsMap.entrySet()) {
+			DataInstanceDescriptor ds = entry.getKey();
+			Bounds objBounds = entry.getValue();
+			linkDataInstanceToTasks(modelInstance, definitions, process, plane, ds, taskMap, elemBounds,
+					objBounds.getX(), objBounds.getY());
+		}
 
 		return modelInstance;
 	}
+	private void addEdgeWithWaypoints(BpmnModelInstance modelInstance, BpmnPlane plane, String edgeId, BaseElement flow,
+			Bounds sourceBounds, Bounds targetBounds, boolean isDataAssociation) {
 
+		BpmnEdge edge = modelInstance.newInstance(BpmnEdge.class);
+		edge.setBpmnElement(flow);
+		edge.setId(edgeId);
+
+		double sourceX = sourceBounds.getX();
+		double sourceY = sourceBounds.getY();
+		double sourceWidth = sourceBounds.getWidth();
+		double sourceHeight = sourceBounds.getHeight();
+
+		double targetX = targetBounds.getX();
+		double targetY = targetBounds.getY();
+		double targetWidth = targetBounds.getWidth();
+		double targetHeight = targetBounds.getHeight();
+
+		// Compute center Y
+		double y = (sourceY + sourceHeight / 2 + targetY + targetHeight / 2) / 2;
+
+		// Default direction
+		double startX = sourceX + sourceWidth;
+		double endX = targetX;
+
+		// Reverse if target is to the left of source
+		if (endX < startX) {
+			double tmp = startX;
+			startX = sourceX; 
+			endX = targetX + targetWidth; 
+		}
+
+		// For data association, often draw vertically (below task)
+		if (isDataAssociation) {
+			startX = sourceX + sourceWidth / 2;
+			endX = targetX + targetWidth / 2;
+
+			if (targetY > sourceY) { 
+				y = sourceY + sourceHeight + 20;
+			} else {
+				y = sourceY - 20;
+			}
+		}
+
+		// Define waypoints
+		Waypoint wp1 = modelInstance.newInstance(Waypoint.class);
+		wp1.setX(startX);
+		wp1.setY(y);
+
+		Waypoint wp2 = modelInstance.newInstance(Waypoint.class);
+		wp2.setX(endX);
+		wp2.setY(y);
+
+		edge.getWaypoints().add(wp1);
+		edge.getWaypoints().add(wp2);
+
+		plane.getDiagramElements().add(edge);
+	}
 	private static void addBpmnExtension(Task task, AbstractStep step) {
 		if (step instanceof ComposeStep) {
 			task.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_SUB_TYPE, BPMN4S_COMPOSE_TASK);
@@ -536,7 +603,7 @@ public class CamundaParser {
 		plane.addChildElement(edge);
 	}
 
-	private static DataObject linkDataStoreToTasks(BpmnModelInstance modelInstance, Definitions definitions,
+	private static DataObject linkDataInstanceToTasks(BpmnModelInstance modelInstance, Definitions definitions,
 			Process process, BpmnPlane plane, DataInstanceDescriptor dsDescriptor, Map<String, Task> taskMap,
 			Map<BaseElement, Bounds> elemBounds, double x, double y) {
 
@@ -579,15 +646,20 @@ public class CamundaParser {
 				producer.addChildElement(doa);
 
 				Bounds producerBounds = elemBounds.get(producer);
-				createDataAssociationEdge(modelInstance, plane, doa, producerBounds, dsBounds);
+				// Count total outputs from this producer
+				int outputIndex = getOutputIndex(producer, doa);
+				int totalOutputs = countTotalOutputs(producer);
+				int totalInputs = countTotalInputs(producer);				
+				createDataAssociationEdge(modelInstance, plane, doa, producerBounds, dsBounds, outputIndex,
+						totalOutputs, 0, 1, totalOutputs, totalInputs);
 			}
 		}
 
-		// 5️ Link datastore to each consumer task
-		Map<String, Set<String>> linked = new HashMap<>();
-		for (String consumerId : dsDescriptor.consumers) {
+		// Link DataObjectReference to each consumer task (input)		
+		for (int consumerIdx = 0; consumerIdx < dsDescriptor.consumers.size(); consumerIdx++) {
+			String consumerId = dsDescriptor.consumers.get(consumerIdx);
 			Task consumer = taskMap.get(consumerId);
-			String dstaskLabel = dsId + "_" + consumer.getId();
+			String dstaskLabel = dsId + "_" + consumerId;
 			String uid =  "_" + UUID.randomUUID().toString();
 			if (consumer != null) {
 
@@ -612,7 +684,13 @@ public class CamundaParser {
 
 				// Create diagram edge
 				Bounds consumerBounds = elemBounds.get(consumer);
-				createDataAssociationEdge(modelInstance, plane, dia, dsBounds, consumerBounds);
+				int inputIndex = getInputIndex(consumer, dia);
+				int totalInputs = countTotalInputs(consumer);
+				int totalOutputs = countTotalOutputs(consumer);				
+				int dataObjOutputIndex = consumerIdx; 
+				int totalDataObjOutputs = dsDescriptor.consumers.size(); 
+				createDataAssociationEdge(modelInstance, plane, dia, dsBounds, consumerBounds, inputIndex, totalInputs,
+						dataObjOutputIndex, totalDataObjOutputs, totalOutputs, totalInputs);
 			}
 		}
 
@@ -620,34 +698,185 @@ public class CamundaParser {
 	}
 
 	private static void createDataAssociationEdge(BpmnModelInstance modelInstance, BpmnPlane plane,
-			BaseElement association, Bounds sourceBounds, Bounds targetBounds) {
+			BaseElement association, Bounds sourceBounds, Bounds targetBounds, int targetConnectionIndex,
+			int totalTargetConnections, int sourceConnectionIndex, int totalSourceConnections, int totalSourceOutputs,
+			int totalTargetInputs) {
 		BpmnEdge edge = modelInstance.newInstance(BpmnEdge.class);
 		edge.setId(association.getId() + "_edge");
 		edge.setBpmnElement(association);
 
+		
+		double sourceRightX = sourceBounds.getX() + sourceBounds.getWidth();
+		double sourceBottomY = sourceBounds.getY() + sourceBounds.getHeight();
+		double sourceWidth = sourceBounds.getWidth();
+
+		double targetTopY = targetBounds.getY();
+		double targetBottomY = targetBounds.getY() + targetBounds.getHeight();
+		double targetWidth = targetBounds.getWidth();
+		
 		Waypoint wp1 = modelInstance.newInstance(Waypoint.class);
-		wp1.setX(sourceBounds.getX() + sourceBounds.getWidth());
-		wp1.setY(sourceBounds.getY() + sourceBounds.getHeight() / 2);
-		edge.getWaypoints().add(wp1);
-
-		double midpoint = (sourceBounds.getX() + sourceBounds.getWidth() + targetBounds.getX()) / 2;
-
 		Waypoint wp2 = modelInstance.newInstance(Waypoint.class);
-		wp2.setX(midpoint);
-		wp2.setY(sourceBounds.getY() + sourceBounds.getHeight() / 2);
-		edge.getWaypoints().add(wp2);
-
 		Waypoint wp3 = modelInstance.newInstance(Waypoint.class);
-		wp3.setX(midpoint);
-		wp3.setY(targetBounds.getY() + targetBounds.getHeight() / 2);
-		edge.getWaypoints().add(wp3);
-
 		Waypoint wp4 = modelInstance.newInstance(Waypoint.class);
-		wp4.setX(targetBounds.getX());
-		wp4.setY(targetBounds.getY() + targetBounds.getHeight() / 2);
-		edge.getWaypoints().add(wp4);
+
+		boolean isTaskOutput = sourceBounds.getHeight() > 50;
+
+		if (isTaskOutput) {
+
+			// Decide if we need to split the edge: split if task has BOTH inputs and
+			// outputs
+			int totalTaskInputs = totalTargetInputs;
+			boolean taskHasBothInputsAndOutputs = (totalSourceOutputs > 0 && totalTaskInputs > 0);
+
+			double offsetX;
+			if (taskHasBothInputsAndOutputs) {
+				// Split: outputs use LEFT half
+				offsetX = calculateHorizontalOffsetInRegion(sourceConnectionIndex, totalSourceConnections, sourceWidth,
+						0.0, 0.45);
+			} else {
+				// No split: use full width
+				offsetX = calculateHorizontalOffset(sourceConnectionIndex, totalSourceConnections, sourceWidth);
+			}
+			double outputX = sourceBounds.getX() + offsetX;
+
+			// Distribute arrival points on top edge of DataObject
+			double targetOffsetX = calculateHorizontalOffset(targetConnectionIndex, totalTargetConnections,
+					targetWidth);
+			double arrivalX = targetBounds.getX() + targetOffsetX;
+
+			wp1.setX(outputX);
+			wp1.setY(sourceBottomY);
+
+			wp2.setX(outputX);
+			wp2.setY(sourceBottomY + 20 + (sourceConnectionIndex * 10));
+
+			wp3.setX(arrivalX);
+			wp3.setY(wp2.getY());
+
+			wp4.setX(arrivalX);
+			wp4.setY(targetTopY - 1);
+		} else {
+
+			double sourceOffsetY = calculateVerticalOffset(sourceConnectionIndex, totalSourceConnections,
+					sourceBounds.getHeight());
+			double exitY = sourceBounds.getY() + sourceOffsetY;
+
+			// Decide if we need to split the edge: split if task has BOTH inputs and
+			// outputs
+			int totalTaskOutputs = totalSourceOutputs;
+			boolean taskHasBothInputsAndOutputs = (totalTargetInputs > 0 && totalTaskOutputs > 0);
+
+			double offsetX;
+			if (taskHasBothInputsAndOutputs) {
+				// Split: inputs use RIGHT half
+				offsetX = calculateHorizontalOffsetInRegion(targetConnectionIndex, totalTargetConnections, targetWidth,
+						0.55, 1.0);
+			} else {
+				// No split: use full width
+				offsetX = calculateHorizontalOffset(targetConnectionIndex, totalTargetConnections, targetWidth);
+			}
+			double inputX = targetBounds.getX() + offsetX;
+
+			double horizontalOffset = 20 + (sourceConnectionIndex * 15);
+
+			wp1.setX(sourceRightX);
+			wp1.setY(exitY);
+
+			wp2.setX(sourceRightX + horizontalOffset);
+			wp2.setY(exitY);
+
+			wp3.setX(sourceRightX + horizontalOffset);
+			wp3.setY(targetBottomY + 30 + (targetConnectionIndex * 10));
+
+			wp4.setX(inputX);
+			wp4.setY(targetBottomY + 30 + (targetConnectionIndex * 10));
+
+			Waypoint wp5 = modelInstance.newInstance(Waypoint.class);
+			wp5.setX(inputX);
+			wp5.setY(targetBottomY - 1);
+
+			edge.getWaypoints().addAll(Arrays.asList(wp1, wp2, wp3, wp4, wp5));
+			plane.addChildElement(edge);
+			return;
+		}
+
+		edge.getWaypoints().addAll(Arrays.asList(wp1, wp2, wp3, wp4));
 
 		plane.addChildElement(edge);
 	}
 
+	//Count total outputs from a task
+	private static int countTotalOutputs(Task task) {
+		int count = task.getChildElementsByType(DataOutputAssociation.class).size();
+		return Math.max(1, count); 
+	}
+	
+	//Count total inputs to a task
+	private static int countTotalInputs(Task task) {
+		int count = task.getChildElementsByType(DataInputAssociation.class).size();
+		return Math.max(1, count);
+	}
+	//Get the index of a specific output association
+	private static int getOutputIndex(Task task, DataOutputAssociation targetAssociation) {
+		int index = 0;
+		for (ModelElementInstance element : task.getChildElementsByType(DataOutputAssociation.class)) {
+			if (element.equals(targetAssociation)) {
+				return index;
+			}
+			index++;
+		}
+		return 0;
+	}
+	//Get the index of a specific input association
+	private static int getInputIndex(Task task, DataInputAssociation targetAssociation) {
+		int index = 0;
+		for (ModelElementInstance element : task.getChildElementsByType(DataInputAssociation.class)) {
+			if (element.equals(targetAssociation)) {
+				return index;
+			}
+			index++;
+		}
+		return 0;
+	}
+	// Distribute connections evenly along a horizontal edge
+	private static double calculateHorizontalOffset(int index, int total, double width) {
+		if (total == 1) {
+			return width / 2.0;
+		}
+
+		double usableWidth = width * 0.6;
+		double margin = width * 0.2;
+		double spacing = usableWidth / (total - 1);
+
+		return margin + (index * spacing);
+	}
+	
+	private static double calculateHorizontalOffsetInRegion(int index, int total, double width, double regionStart,
+			double regionEnd) {
+		double regionWidth = width * (regionEnd - regionStart);
+		double regionOffset = width * regionStart;
+
+		if (total == 1) {
+			return regionOffset + regionWidth / 2.0;
+		}
+
+		double usableWidth = regionWidth * 0.8;
+		double margin = regionWidth * 0.1;
+		double spacing = usableWidth / (total - 1);
+
+		return regionOffset + margin + (index * spacing);
+	}
+	//Distribute connections evenly along a vertical edge
+	private static double calculateVerticalOffset(int index, int total, double height) {
+		if (total == 1) {
+			return height / 2.0;
+		}
+
+		// Leave 20% margin on top and bottom, distribute in the middle 60%
+		double usableHeight = height * 0.6;
+		double margin = height * 0.2;
+		double spacing = usableHeight / (total - 1);
+
+		return margin + (index * spacing);
+	}
 }
