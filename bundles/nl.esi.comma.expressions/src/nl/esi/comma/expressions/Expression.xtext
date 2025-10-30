@@ -264,7 +264,7 @@ BOOL_LITERAL returns ecore::EBoolean:
 ;	
 
 FLOAT returns ecore::EDouble:
-	INT '.' INT (('E' | 'e') ('-')? INT)?
+	INT (('.' INT) | (('E' | 'e') ('-')? INT) | ('.' INT ('E' | 'e') ('-')? INT))
 ;
 
 Long returns ecore::ELong: INT;
