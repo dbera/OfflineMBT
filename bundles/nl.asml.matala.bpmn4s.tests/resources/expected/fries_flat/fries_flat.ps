@@ -14,8 +14,8 @@ specification fries_flat
         FriesContext	Gateway_0k04hvx
         FriesContext	Event_0a5g9gv
         FriesContext	Event_1vt9n85
-        FriesContext	Flow_1fk5b3r
         FriesContext	Flow_003weme
+        FriesContext	Flow_1fk5b3r
         FriesContext	Flow_0z70hyg
         FriesContext	Flow_0bwi85w
     
@@ -28,13 +28,13 @@ specification fries_flat
         
         action			Activity_01x82y5
         element-label	"Activity_01x82y5"
-        case			default
+        case			default step-type "null" action-type COMPOSE
         with-inputs		Gateway_19p4wo1
         with-guard		Gateway_19p4wo1.client_id == "Tom"
         produces-outputs	Gateway_0k04hvx
         updates:
             Gateway_0k04hvx := Gateway_19p4wo1
-        produces-outputs	DataStoreReference_18a07df
+        produces-outputs	DataStoreReference_18a07df symbolic-link
         updates:
             DataStoreReference_18a07df := Topping {
              ctx = Gateway_19p4wo1,
@@ -43,12 +43,12 @@ specification fries_flat
         
         action			Activity_0par2jr
         element-label	"Activity_0par2jr"
-        case			default
+        case			default step-type "null" action-type COMPOSE
         with-inputs		Gateway_19p4wo1
         produces-outputs	Gateway_0k04hvx
         updates:
             Gateway_0k04hvx := Gateway_19p4wo1
-        produces-outputs	DataStoreReference_18a07df
+        produces-outputs	DataStoreReference_18a07df symbolic-link
         updates:
             DataStoreReference_18a07df := Topping {
              ctx = Gateway_19p4wo1,
@@ -57,13 +57,13 @@ specification fries_flat
         
         action			Activity_19yirph
         element-label	"Activity_19yirph"
-        case			default
+        case			default step-type "fries_flat" action-type RUN
         with-inputs		Flow_1fk5b3r, DataStoreReference_18a07df
         with-guard		DataStoreReference_18a07df.ctx == Flow_1fk5b3r
         produces-outputs	Flow_003weme
         updates:
             Flow_003weme := Flow_1fk5b3r
-        produces-outputs	DataStoreReference_03v9xko
+        produces-outputs	DataStoreReference_03v9xko symbolic-link
         updates:
             DataStoreReference_03v9xko := Fries {
              dressing = DataStoreReference_18a07df,
@@ -83,8 +83,13 @@ specification fries_flat
         
         action			Activity_0uiz2cy
         element-label	"Activity_0uiz2cy"
-        case			default
+        case			default step-type "fries_flat" action-type ASSERT
         with-inputs		Flow_0bwi85w, DataStoreReference_03v9xko
+        assertions default {
+            my_fries : assert-that(DataStoreReference_03v9xko.dressing.sauce) {
+                close-to 0 within-margin absolute (2.0)
+            }
+        }
         produces-outputs	Event_1vt9n85
         updates:
             Event_1vt9n85 := Flow_0bwi85w
@@ -109,7 +114,7 @@ specification fries_flat
         element-labels ["Process_1"]
     }
     
-	SUT-blocks 
+	SUT-blocks Process_1
 	depth-limits 300
 	num-tests 1
 }

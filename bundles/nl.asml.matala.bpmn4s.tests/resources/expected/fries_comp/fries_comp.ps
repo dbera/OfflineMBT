@@ -61,19 +61,19 @@ specification fries_comp
         
         action			Activity_0b1ce28
         element-label	"Activity_0b1ce28"
-        case			default
+        case			default step-type "null" action-type COMPOSE
         with-inputs		Flow_09zlhyo, DataObjectReference_08usvro
         with-guard		DataObjectReference_08usvro.clientOrder.client_id == Flow_09zlhyo.client_id
         produces-outputs	Flow_0ipnerm
         updates:
             Flow_0ipnerm := Flow_09zlhyo
-        produces-outputs	DataStoreReference_0kulgbq
+        produces-outputs	DataStoreReference_0kulgbq symbolic-link
         updates:
             DataStoreReference_0kulgbq := DataObjectReference_08usvro
         
         action			Activity_194q85o
         element-label	"Activity_194q85o"
-        case			default
+        case			default step-type "EatFries" action-type RUN
         with-inputs		Flow_1m4nc7r, DataStoreReference_0kulgbq
         produces-outputs	Event_022qurv
         updates:
@@ -135,19 +135,14 @@ specification fries_comp
         
         action			Activity_018jco6
         element-label	"Activity_018jco6"
-        case			default step-type "Check_Receipt" action-type ASSERT
+        case			default
         with-inputs		Flow_0ipnerm, DataStoreReference_0kulgbq
         with-guard		// TODO: Convert to assert task to avoid deadlocks!
         DataStoreReference_0kulgbq.clientOrder.fries == Flow_0ipnerm.fries
-        assertions default {
-            correct_amount: assert-that (DataStoreReference_0kulgbq.receipt.amount) {
-              equal-to 5.0 within-margin absolute (0.50)
-            }
-        }
         produces-outputs	Flow_1m4nc7r
         updates:
             Flow_1m4nc7r := Flow_0ipnerm
-        produces-outputs	DataStoreReference_0kulgbq symbolic-link
+        produces-outputs	DataStoreReference_0kulgbq
         updates:
             DataStoreReference_0kulgbq := DataStoreReference_0kulgbq
     
@@ -163,10 +158,11 @@ specification fries_comp
         FriesDelivery		DataObjectReference_08usvro
     
         local
+        FriesDelivery	DataStoreReference_0f8nra8
         
         DeliveryServiceContext	Event_00idax9
-        DeliveryServiceContext	Flow_0happwq
         DeliveryServiceContext	Flow_1b6215f
+        DeliveryServiceContext	Flow_0happwq
     
         // init
     
@@ -175,14 +171,14 @@ specification fries_comp
         
         action			Activity_19g7d8q
         element-label	"Activity_19g7d8q"
-        case			default
-        with-inputs		Flow_0happwq
+        case			default step-type "DeliverFries" action-type RUN
+        with-inputs		Flow_0happwq, DataStoreReference_0f8nra8
         produces-outputs	Event_00idax9
         updates:
             Event_00idax9 := Flow_0happwq
-        produces-outputs	DataObjectReference_08usvro
+        produces-outputs	DataObjectReference_08usvro symbolic-link
         updates:
-            DataObjectReference_08usvro := Flow_0happwq.delivery
+            DataObjectReference_08usvro := DataStoreReference_0f8nra8
         
         action			Activity_0nh18fo
         element-label	"Activity_0nh18fo"
@@ -196,11 +192,14 @@ specification fries_comp
         
         action			Activity_00tgl1w
         element-label	"Activity_00tgl1w"
-        case			default
+        case			default step-type "null" action-type COMPOSE
         with-inputs		Flow_1b6215f
         produces-outputs	Flow_0happwq
         updates:
             Flow_0happwq := Flow_1b6215f
+        produces-outputs	DataStoreReference_0f8nra8 symbolic-link
+        updates:
+            DataStoreReference_0f8nra8 := Flow_1b6215f.delivery
     
         element-labels ["Process_1", "Activity_18pdfak"]
     }
@@ -272,7 +271,7 @@ specification fries_comp
         element-labels ["Process_1", "Activity_0n48uxi"]
     }
     
-	SUT-blocks 
+	SUT-blocks Activity_1nx4k9r Activity_18pdfak
 	depth-limits 300
 	num-tests 1
 }
