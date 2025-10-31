@@ -17,6 +17,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -32,11 +33,12 @@ import org.camunda.bpm.model.bpmn.BpmnModelInstance;
 import org.camunda.bpm.model.bpmn.instance.BaseElement;
 import org.camunda.bpm.model.bpmn.instance.DataAssociation;
 import org.camunda.bpm.model.bpmn.instance.DataInputAssociation;
+import org.camunda.bpm.model.bpmn.instance.DataObject;
+import org.camunda.bpm.model.bpmn.instance.DataObjectReference;
 import org.camunda.bpm.model.bpmn.instance.DataOutputAssociation;
-import org.camunda.bpm.model.bpmn.instance.DataStore;
-import org.camunda.bpm.model.bpmn.instance.DataStoreReference;
 import org.camunda.bpm.model.bpmn.instance.Definitions;
 import org.camunda.bpm.model.bpmn.instance.EndEvent;
+import org.camunda.bpm.model.bpmn.instance.ExtensionElements;
 import org.camunda.bpm.model.bpmn.instance.FlowNode;
 import org.camunda.bpm.model.bpmn.instance.Lane;
 import org.camunda.bpm.model.bpmn.instance.LaneSet;
@@ -52,8 +54,13 @@ import org.camunda.bpm.model.bpmn.instance.bpmndi.BpmnShape;
 import org.camunda.bpm.model.bpmn.instance.dc.Bounds;
 import org.camunda.bpm.model.bpmn.instance.di.Waypoint;
 
+import nl.asml.matala.bpmn4s.extensions.Bpmn4sModel;
+import nl.asml.matala.bpmn4s.extensions.DataType;
+import nl.asml.matala.bpmn4s.extensions.DataTypes;
+import nl.asml.matala.bpmn4s.extensions.Field;
 import nl.asml.matala.product.product.Block;
 import nl.asml.matala.product.product.Function;
+import nl.asml.matala.product.product.Update;
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractStep;
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractTestDefinition;
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractTestSequence;
@@ -81,92 +88,16 @@ public class CamundaParser {
 	private static final String BPMN4S_ASSERT_TASK = "AssertTask";
 	private static final String BPMN4S_COMPOSE_TASK = "ComposeTask";
 	private static final String BPMN4S_SUB_TYPE = "subType";
+	private static final String BPMN4S_DATATYPE_REF = "dataTypeRef";
 	private static final String BPMN4S_UPDATE = "update";
+	private static final String BPMN4S_QUEUE = "Queue";
 
 	final static double OFFSET_X = 150.0;
 	final static double OFFSET_Y = 50.0;
 	final static double baseY = 50.0;
 
-	public static void main(String[] args) {
-		try {
-			File f = new File("test.bpmn");
-			FileWriter fw = new FileWriter(f);
-
-			List<ElementDescriptor> descriptors = createDescriptors();
-
-			for (int i = 0; i < descriptors.size(); i++) {
-				ElementDescriptor e = descriptors.get(i);
-				System.out.print("Index " + i + ": ");
-				if (e instanceof TaskDescriptor) {
-					System.out.println("Task - ID: " + e.id + ", Lane: " + e.lane);
-				} else if (e instanceof DataInstanceDescriptor) {
-					DataInstanceDescriptor ds = (DataInstanceDescriptor) e;
-					System.out.println("Datastore - ID: " + ds.id + ", Lane: " + ds.lane + ", Producer: " + ds.producer
-							+ ", Consumers: " + ds.consumers);
-				}
-			}
-
-			BpmnModelInstance modelInstance = generateBPMNModel(descriptors);
-			fw.write(Bpmn.convertToString(modelInstance));
-			fw.close();
-
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public static List<ElementDescriptor> createDescriptors() {
-		List<ElementDescriptor> elements = new ArrayList<>();
-
-		// Create 10 tasks
-		List<TaskDescriptor> tasks = new ArrayList<>();
-		for (int i = 1; i <= 15; i++) {
-			tasks.add(new TaskDescriptor("task" + i, "lane" + ((i % 3) + 1)));
-		}
-
-		// Create datastores and insert them after their producer
-		DataInstanceDescriptor ds1 = new DataInstanceDescriptor("datastore1", "lane2", tasks.get(0).id,
-				Arrays.asList(tasks.get(1).id, tasks.get(2).id));
-
-		DataInstanceDescriptor ds2 = new DataInstanceDescriptor("datastore2", "lane1", tasks.get(2).id,
-				Arrays.asList(tasks.get(4).id, tasks.get(5).id, tasks.get(6).id));
-
-		DataInstanceDescriptor ds3 = new DataInstanceDescriptor("datastore3", "lane3", tasks.get(7).id,
-				Arrays.asList(tasks.get(8).id, tasks.get(9).id));
-
-		DataInstanceDescriptor ds4 = new DataInstanceDescriptor("datastore4", "lane3", tasks.get(7).id,
-				Arrays.asList());
-		// 3️ Add tasks and datastores to the list in correct order
-		for (int i = 0; i < tasks.size(); i++) {
-			elements.add(tasks.get(i));
-
-			// Insert datastore after its producer
-			if (tasks.get(i).id.equals(ds1.producer)) {
-				elements.add(ds1);
-			}
-			if (tasks.get(i).id.equals(ds2.producer)) {
-				elements.add(ds2);
-			}
-			if (tasks.get(i).id.equals(ds3.producer)) {
-				elements.add(ds3);
-			}
-			if (tasks.get(i).id.equals(ds4.producer)) {
-				elements.add(ds4);
-			}
-		}
-
-		return elements;
-	}
-
 	public static String generateBPMNModel(AbstractTestDefinition atd) {
 		List<ElementDescriptor> descriptors = createDescriptors(atd);
-		for (int i = 0; i < descriptors.size(); i++) {
-			ElementDescriptor e = descriptors.get(i);
-			if (e instanceof TaskDescriptor) {
-			} else if (e instanceof DataInstanceDescriptor) {
-				DataInstanceDescriptor ds = (DataInstanceDescriptor) e;
-			}
-		}
 		BpmnModelInstance modelInstance = generateBPMNModel(descriptors);
 		return Bpmn.convertToString(modelInstance);
 	}
@@ -176,17 +107,15 @@ public class CamundaParser {
 		// 1) fetch step identifiers and split them into lane & task id
 		Map<String, String> actionLane = new HashMap<>();
 		Map<String, List<String>> dataSetConsumer = new HashMap<>();
-		Map<String, DataInstanceDescriptor> datastoreMap = new HashMap<>();
 		List<TaskDescriptor> tasks = new ArrayList<>();
-		//how to add the consumer in the database and then remove the data base that do not have consumer
-		//I can create a map :: datastores and the consumers before and then when I create a database
-		// with the same name I add the consumer
+		Map<String, List<Map.Entry<String, Binding>>> outputsMap = new HashMap<>();
+		Map<String, DataInstanceDescriptor> dataInstanceMap = new HashMap<>();
+
+		// For generating datastoresdataStore :: Add the consumer in the dataStores and
+		// then remove the dataStores that do not have consumer
 		for (AbstractTestSequence sys : atd.getTestSeq()) {
 			for (AbstractStep step : sys.getStep()) {
-				String caseName = step.getName().replaceAll(".*_(.*_.*)$", "$1");
-				Function function = (Function) step.getCaseRef().eContainer();
-				String consumerName = function.getName() + "_" + caseName;
-
+				String consumerName = getConsumerName(step);
 				step.getStepRef().stream().forEach(a ->{ 				
 					a.getRefData().forEach(s-> {s.getName();
 							//check if we have it already in the map, if yes, add the consumer, if not add both
@@ -198,73 +127,83 @@ public class CamundaParser {
 			}
 		}
 
-		for (Map.Entry<String, List<String>> entry : dataSetConsumer.entrySet()) {
-			String datasetName = entry.getKey();
-			List<String> consumers = entry.getValue();
-
-		}
-
 		for (AbstractTestSequence sys : atd.getTestSeq()) {
-			// for each step fetch the data
-
 			for (AbstractStep step : sys.getStep()) {
-				// System.out.println("getName step" + step.getName());
-				String caseName = step.getName().replaceAll(".*_(.*_.*)$", "$1");
-
-				// make mapping output var name -> IO object 
-				Map<String, Binding> outputMap = new HashMap<>();
-					outputMap = step.getOutput().stream()
-					    .collect(Collectors.toMap(
-					        out -> out.getName().getName(), // key mapper
-					        out -> out                     // value mapper
-			    ));
+				Set<Binding> outputs = new HashSet<>();
+				// make output
 				
-				Set<String> suppressed = new HashSet<>();
+				step.getOutput().forEach(a -> {
+					outputs.add(a);
+				});
 
-				if (step.getSuppress() != null) {
-					suppressed = step.getSuppress().getVarFields().stream().filter(exp -> exp instanceof ExpressionVariable)   // lambda returning boolean
-							.map(exp -> (ExpressionVariable) exp) // cast to ExpressionVariable
-							.map(vr -> vr.getVariable().getName()) // get the name
-							.collect(Collectors.toSet());
-				}
+				// Get suppressed
+				final Set<String> suppressed = (step.getSuppress() != null) ? step.getSuppress().getVarFields().stream()
+						.filter(exp -> exp instanceof ExpressionVariable).map(exp -> (ExpressionVariable) exp)
+						.map(vr -> vr.getVariable().getName()).collect(Collectors.toSet()) : Collections.emptySet();
 
 				// Remove suppressed ones
-				outputMap.keySet().removeAll(suppressed);
+				outputs.removeIf(out -> suppressed.contains(out.getName().getName()));
 
 				// name of action/ task id
-				Function function = (Function) step.getCaseRef().eContainer();
-
+				String taskName = getConsumerName(step);
+				
 				// name of system block/lane
-				Block block = (Block) function.eContainer();
-				String taskName = function.getName() + "_" + caseName;
-
+				String lane_name = getComponentName(step);
+				
 				// 2) create the taskDescriptor objects
-				actionLane.put(taskName, block.getName());
-				TaskDescriptor task = new TaskDescriptor(taskName, block.getName());
+				actionLane.put(taskName, lane_name);
+				TaskDescriptor task = new TaskDescriptor(taskName, lane_name);
 				task.step = step;
 				tasks.add(task);
 
-				// 3) derive datastores out of the output-data elements in each run/compose-step
-				outputMap.forEach((name, output) -> {
-					List<String> consumers = dataSetConsumer.getOrDefault(name, new ArrayList<>());
-					if (!datastoreMap.containsKey(name)) {
-						// 4) create the DataInstanceDescriptor objects
-						DataInstanceDescriptor ds = new DataInstanceDescriptor(name, block.getName(), taskName, 
-								// fetch from the map with the same dataname
-								consumers
-						);
-						ds.bind_producer = output;
-						datastoreMap.put(name, ds);
-					}
+				// 3) derive DataInstance out of the output-data elements in each run/compose-step
+				outputs.forEach(output -> {
+					String dataStoreName = output.getName().getName();
+					// create the outputMap:: which includes dataStores, the producer and the
+					// context
+					Map.Entry<String, Binding> entry = Map.entry(taskName, output);
+					// Add to map under DataInstance name
+					outputsMap.computeIfAbsent(dataStoreName, k -> new ArrayList<>()).add(entry);
 				});
 			}
 
 		}
-		
-		// 4.1) checking datastoreDescriptor objects created inside the first loop
-		for (Entry<String, DataInstanceDescriptor> entry : datastoreMap.entrySet()) {
-			String datasetName = entry.getKey();
-			DataInstanceDescriptor consumers = entry.getValue();
+
+		// create data instance and the consumers:
+		for (AbstractTestSequence sys : atd.getTestSeq()) {
+			for (AbstractStep step : sys.getStep()) {
+				String consumerName = getConsumerName(step);
+				String lane_name = getComponentName(step);
+				step.getStepRef().stream().forEach(a -> {
+					a.getRefData().forEach(s -> {
+						String dataProducer = getConsumerName(a.getRefStep());
+						String consumedData = s.getName();
+						java.util.Optional<Entry<String, Binding>> matchedEntryOpt;
+						if (outputsMap.containsKey(consumedData)) {
+
+							matchedEntryOpt = outputsMap.getOrDefault(consumedData, Collections.emptyList()).stream()
+									.filter(entry -> entry.getKey().equals(dataProducer)).findFirst();
+
+							if (matchedEntryOpt.isPresent()) {
+								String producerName = matchedEntryOpt.get().getKey();
+								String key = consumedData + "_" + producerName;
+								DataInstanceDescriptor existing = dataInstanceMap.get(key);
+
+								if (existing != null) {
+									existing.consumers.add(consumerName);
+								} else {
+									DataInstanceDescriptor dataInstance = new DataInstanceDescriptor(
+											key,
+											lane_name, producerName, 
+											new ArrayList<>(List.of(consumerName)));
+									dataInstance.bind_producer = matchedEntryOpt.get().getValue();
+									dataInstanceMap.put(key, dataInstance);
+								}
+							}
+						}
+					});
+				});
+			}
 		}
 
 		// 5) Add tasks and datastores to the list in correct order
@@ -272,7 +211,8 @@ public class CamundaParser {
 			elements.add(task); // Add the task first
 
 			// Check for datastores that have this task as their producer
-			for (DataInstanceDescriptor ds : datastoreMap.values()) {
+			for (DataInstanceDescriptor ds : dataInstanceMap.values()) {
+
 				if (task.id.equals(ds.producer)) {
 					elements.add(ds);
 				}
@@ -281,11 +221,27 @@ public class CamundaParser {
 		return elements;
 	}
 
+	private static String getComponentName(AbstractStep step) {
+		Function function = (Function) step.getCaseRef().eContainer();
+		Block block = (Block) function.eContainer();
+		int component_idx = block.getElabels().size()>1? 1:0;
+
+		return block.getElabels().get(component_idx);
+	}
+
+	private static String getConsumerName(AbstractStep step) {
+		String caseName = step.getName().replaceAll(".*_(.*_.*)$", "$1").replace('_', ' ');
+		Function function = (Function) step.getCaseRef().eContainer();
+		String function_name = function.getElabels();
+
+		return function_name + " " + caseName;
+	}
+
 	public static BpmnModelInstance generateBPMNModel(List<ElementDescriptor> elements) {
-		BpmnModelInstance modelInstance = Bpmn.createEmptyModel();
+		BpmnModelInstance modelInstance = Bpmn4sModel.createEmptyModel();
 		Definitions definitions = createDefinitions(modelInstance);
-		createDataTypes(modelInstance, definitions);
 		Process process = createProcess(modelInstance, definitions);
+		createDataTypes(modelInstance, process);
 		LaneSet laneSet = createLaneSet(modelInstance, process);
 		BpmnPlane plane = createDiagram(modelInstance, definitions, process);
 
@@ -308,7 +264,7 @@ public class CamundaParser {
 				double x = offsetX + (nodeIdx + 1) * offsetX;
 				double y = laneYMap.get(td.lane) + 20.0;
 
-				Task task = createTaskWithIO(modelInstance, process, taskId, td.id);
+				Task task = createTaskWithIO(modelInstance, process, td);
 				addBpmnExtension(task, td.step);
 				laneMap.get(td.lane).getFlowNodeRefs().add(task);
 				taskMap.put(taskId, task);
@@ -346,8 +302,8 @@ public class CamundaParser {
 			}
 			nodeIdx++;
 		}
-		System.out.println("------------here----------------");
 		nodeIdx = 0;
+
 		for (ElementDescriptor e : elements) {
 			if (e instanceof DataInstanceDescriptor ds) {
 				double x = offsetX + (nodeIdx + 1) * offsetX;
@@ -356,29 +312,29 @@ public class CamundaParser {
 			}
 			nodeIdx++;
 		}
-		System.out.println("------------createLanes----------------");
 
 		return modelInstance;
 	}
 
 	private static void addBpmnExtension(Task task, AbstractStep step) {
-		if(step instanceof ComposeStep) {
+		if (step instanceof ComposeStep) {
 			task.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_SUB_TYPE, BPMN4S_COMPOSE_TASK);
-		} else if(step instanceof RunStep) {
+		} else if (step instanceof RunStep) {
 			task.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_SUB_TYPE, BPMN4S_RUN_TASK);
-		} else if(step instanceof AssertionStep) {
+		} else if (step instanceof AssertionStep) {
 			task.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_SUB_TYPE, BPMN4S_ASSERT_TASK);
-		} else throw new IllegalArgumentException("Unexpected value: " + step);
+		} else
+			throw new IllegalArgumentException("Unexpected value: " + step);
 	}
 
 	private static void addBpmnExtension(DataAssociation da, Binding bind) {
 		ConcreteExpressionHandler ceh = new ConcreteExpressionHandler();
 		TypeDecl b_type = bind.getName().getType().getType();
 		JsonValue b_val = bind.getJsonvals();
-		String b_str = ceh.createTypeDeclValue(b_type,b_val);
+		String b_str = ceh.createTypeDeclValue(b_type, b_val);
 		da.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_UPDATE, b_str);
 	}
-	
+
 	private static Definitions createDefinitions(BpmnModelInstance modelInstance) {
 		Definitions definitions = modelInstance.newInstance(Definitions.class);
 		definitions.setTargetNamespace("http://bpmn.io/schema/bpmn");
@@ -394,10 +350,39 @@ public class CamundaParser {
 		return definitions;
 	}
 
-	private static void createDataTypes(BpmnModelInstance modelInstance, Definitions definitions) {
-		// TODO
+	private static void createDataTypes(BpmnModelInstance modelInstance, Process process) {
+		ExtensionElements extElem = modelInstance.newInstance(ExtensionElements.class);
+		DataTypes dtype_list = modelInstance.newInstance(DataTypes.class);
+
+		DataType dt_dataset = modelInstance.newInstance(DataType.class);
+		dt_dataset.setAttributeValue("id", "dataset_id");
+		dt_dataset.setAttributeValue("name", "Dataset");
+		dt_dataset.setAttributeValue("type", "String");
+
+		DataType dt_list = modelInstance.newInstance(DataType.class);
+		dt_list.setAttributeValue("id", "list_id");
+		dt_list.setAttributeValue("name", "ListOfDatasets");
+		dt_list.setAttributeValue("type", "List");
+		dt_list.setAttributeValue("valueTypeRef", "dataset_id");
+
+		DataType dt_record = modelInstance.newInstance(DataType.class);
+		dt_record.setAttributeValue("id", "record_id");
+		dt_record.setAttributeValue("name", "MyDataType");
+		dt_record.setAttributeValue("type", "Record");
+
+		Field field = modelInstance.newInstance(Field.class);
+		field.setAttributeValue("name", "my_list_of_datasets");
+		field.setAttributeValue("typeRef", "dataset_id");
+		dt_record.addChildElement(field);
+
+		dtype_list.addChildElement(dt_dataset);
+		dtype_list.addChildElement(dt_list);
+		dtype_list.addChildElement(dt_record);
+
+		extElem.addChildElement(dtype_list);
+		process.addChildElement(extElem);
 	}
-	
+
 	private static Process createProcess(BpmnModelInstance modelInstance, Definitions definitions) {
 		Process process = modelInstance.newInstance(Process.class);
 		process.setExecutable(true);
@@ -470,18 +455,27 @@ public class CamundaParser {
 		plane.addChildElement(shape);
 	}
 
-	private static Task createTaskWithIO(BpmnModelInstance modelInstance, Process process, String id, String name) {
+	private static Task createTaskWithIO(BpmnModelInstance modelInstance, Process process, TaskDescriptor td) {
 		Task task = modelInstance.newInstance(Task.class);
-		task.setId(id);
-		task.setName(name);
+		String task_id = normalizeTaskId(td);
+		task.setId(task_id);
+		task.setName(td.id);
 		process.addChildElement(task);
 
 		Property prop = modelInstance.newInstance(Property.class);
-		prop.setId(name + "_placeholder_id");
-		prop.setName(name + "_placeholder");
+		prop.setId(task_id + "_placeholder_id");
+		prop.setName(td.id+ "_placeholder");
 		task.addChildElement(prop);
 
 		return task;
+	}
+
+	private static String normalizeTaskId(TaskDescriptor td) {
+		return normalizeTaskId(td.id);
+	}
+
+	private static String normalizeTaskId(String td_id) {
+		return td_id.replaceAll("\\s+", "_");
 	}
 
 	private static StartEvent createStartEvent(BpmnModelInstance modelInstance, Process process, String laneName,
@@ -542,21 +536,26 @@ public class CamundaParser {
 		plane.addChildElement(edge);
 	}
 
-	private static DataStore linkDataStoreToTasks(BpmnModelInstance modelInstance, Definitions definitions,
+	private static DataObject linkDataStoreToTasks(BpmnModelInstance modelInstance, Definitions definitions,
 			Process process, BpmnPlane plane, DataInstanceDescriptor dsDescriptor, Map<String, Task> taskMap,
 			Map<BaseElement, Bounds> elemBounds, double x, double y) {
 
-		String dsId = "datastore_" + dsDescriptor.id.replaceAll("\\s+", "_");
+		String dsId = "dataobject_" + dsDescriptor.id.replaceAll("\\s+", "_");
 
 		// 1️ Create top-level DataStore in definitions
-		DataStore dataStore = modelInstance.newInstance(DataStore.class);
-		dataStore.setId(dsId);
-		dataStore.setName(dsDescriptor.id);
+		DataObject dataObject = modelInstance.newInstance(DataObject.class);
+		dataObject.setId(dsId);
+		dataObject.setName(dsDescriptor.id);
+		process.addChildElement(dataObject);
 
-		// 2️ Create DataStoreReference in the process
-		DataStoreReference dsRef = modelInstance.newInstance(DataStoreReference.class);
+		// 2️ Create DataObjectReference in the process
+		DataObjectReference dsRef = modelInstance.newInstance(DataObjectReference.class);
 		dsRef.setId(dsId + "_ref");
-		dsRef.setName(dsDescriptor.id);
+		dsRef.setName(normalizeTaskId(dsDescriptor.id));
+		dsRef.setDataObject(dataObject);
+		dsRef.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_SUB_TYPE, BPMN4S_QUEUE);
+		dsRef.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_DATATYPE_REF, "record_id");
+
 		process.addChildElement(dsRef);
 
 		// 3️ Add diagram shape for the DataStoreReference
@@ -603,12 +602,12 @@ public class CamundaParser {
 				dia.setId("dia_" + dstaskLabel + uid);
 				dia.getSources().add(dsRef);
 				dia.setTarget(inputProp);
-				
+
 				Binding bind = dsDescriptor.bind_consumers.getOrDefault(consumer.getName(), null);
 				if (bind != null) {
 					addBpmnExtension(dia, bind);
 				}
-				
+
 				consumer.addChildElement(dia);
 
 				// Create diagram edge
@@ -617,7 +616,7 @@ public class CamundaParser {
 			}
 		}
 
-		return dataStore;
+		return dataObject;
 	}
 
 	private static void createDataAssociationEdge(BpmnModelInstance modelInstance, BpmnPlane plane,
