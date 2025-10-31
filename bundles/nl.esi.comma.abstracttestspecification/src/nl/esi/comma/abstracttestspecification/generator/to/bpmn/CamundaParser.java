@@ -12,9 +12,6 @@
  */
 package nl.esi.comma.abstracttestspecification.generator.to.bpmn;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -60,7 +57,6 @@ import nl.asml.matala.bpmn4s.extensions.DataTypes;
 import nl.asml.matala.bpmn4s.extensions.Field;
 import nl.asml.matala.product.product.Block;
 import nl.asml.matala.product.product.Function;
-import nl.asml.matala.product.product.Update;
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractStep;
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractTestDefinition;
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractTestSequence;
@@ -116,14 +112,14 @@ public class CamundaParser {
 		for (AbstractTestSequence sys : atd.getTestSeq()) {
 			for (AbstractStep step : sys.getStep()) {
 				String consumerName = getConsumerName(step);
-				step.getStepRef().stream().forEach(a ->{ 				
-					a.getRefData().forEach(s-> {s.getName();
-							//check if we have it already in the map, if yes, add the consumer, if not add both
-							dataSetConsumer.computeIfAbsent(s.getName(), k -> new ArrayList<>()).add(consumerName);
-							}
-						);					
-					}
-				);
+				step.getStepRef().stream().forEach(a -> {
+					a.getRefData().forEach(s -> {
+						s.getName();
+						// check if we have it already in the map, if yes, add the consumer, if not add
+						// both
+						dataSetConsumer.computeIfAbsent(s.getName(), k -> new ArrayList<>()).add(consumerName);
+					});
+				});
 			}
 		}
 
@@ -131,7 +127,6 @@ public class CamundaParser {
 			for (AbstractStep step : sys.getStep()) {
 				Set<Binding> outputs = new HashSet<>();
 				// make output
-				
 				step.getOutput().forEach(a -> {
 					outputs.add(a);
 				});
@@ -146,17 +141,18 @@ public class CamundaParser {
 
 				// name of action/ task id
 				String taskName = getConsumerName(step);
-				
+
 				// name of system block/lane
 				String lane_name = getComponentName(step);
-				
+
 				// 2) create the taskDescriptor objects
 				actionLane.put(taskName, lane_name);
 				TaskDescriptor task = new TaskDescriptor(taskName, lane_name);
 				task.step = step;
 				tasks.add(task);
 
-				// 3) derive DataInstance out of the output-data elements in each run/compose-step
+				// 3) derive DataInstance out of the output-data elements in each
+				// run/compose-step
 				outputs.forEach(output -> {
 					String dataStoreName = output.getName().getName();
 					// create the outputMap:: which includes dataStores, the producer and the
@@ -224,7 +220,7 @@ public class CamundaParser {
 	private static String getComponentName(AbstractStep step) {
 		Function function = (Function) step.getCaseRef().eContainer();
 		Block block = (Block) function.eContainer();
-		int component_idx = block.getElabels().size()>1? 1:0;
+		int component_idx = block.getElabels().size() > 1 ? 1 : 0;
 
 		return block.getElabels().get(component_idx);
 	}
@@ -464,7 +460,7 @@ public class CamundaParser {
 
 		Property prop = modelInstance.newInstance(Property.class);
 		prop.setId(task_id + "_placeholder_id");
-		prop.setName(td.id+ "_placeholder");
+		prop.setName(td.id + "_placeholder");
 		task.addChildElement(prop);
 
 		return task;
@@ -589,6 +585,7 @@ public class CamundaParser {
 			Task consumer = taskMap.get(consumerId);
 			String dstaskLabel = dsId + "_" + consumer.getId();
 			String uid =  "_" + UUID.randomUUID().toString();
+
 			if (consumer != null) {
 
 				// Create a Property inside the consumer task
@@ -613,6 +610,7 @@ public class CamundaParser {
 				// Create diagram edge
 				Bounds consumerBounds = elemBounds.get(consumer);
 				createDataAssociationEdge(modelInstance, plane, dia, dsBounds, consumerBounds);
+
 			}
 		}
 
@@ -624,6 +622,7 @@ public class CamundaParser {
 		BpmnEdge edge = modelInstance.newInstance(BpmnEdge.class);
 		edge.setId(association.getId() + "_edge");
 		edge.setBpmnElement(association);
+
 
 		Waypoint wp1 = modelInstance.newInstance(Waypoint.class);
 		wp1.setX(sourceBounds.getX() + sourceBounds.getWidth());
@@ -649,5 +648,6 @@ public class CamundaParser {
 
 		plane.addChildElement(edge);
 	}
+
 
 }
