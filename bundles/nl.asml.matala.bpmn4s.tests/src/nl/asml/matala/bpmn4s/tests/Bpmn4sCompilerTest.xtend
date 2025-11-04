@@ -15,12 +15,15 @@ package nl.asml.matala.bpmn4s.tests
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
+import java.util.Map
+import java.util.TreeMap
 import nl.asml.matala.bpmn4s.Main
 import org.apache.commons.io.FileUtils
 import org.junit.jupiter.api.Test
-import static extension java.nio.file.Files.*
 
 import static org.junit.jupiter.api.Assertions.*
+
+import static extension java.nio.file.Files.*
 
 class Bpmn4sCompilerTest {
     def void testCompilation(String inputFileName, String expectedFileName, boolean simulation) {
@@ -42,16 +45,24 @@ class Bpmn4sCompilerTest {
         assertTrue(expectedDir.isDirectory,
             '''Expected output does not exist, please inspect the actual output at «actualDir».''')
 
-        val expectedFiles = Files.walk(expectedDir).filter[isRegularFile].toList.sort
-        val actualFiles = Files.walk(actualDir).filter[isRegularFile].toList.sort
-        assertEquals(expectedFiles.map[fileName], actualFiles.map[fileName])
+        val expectedFiles = expectedDir.listRegularFiles
+        val actualFiles = actualDir.listRegularFiles
+        assertEquals(expectedFiles.keySet, actualFiles.keySet)
 
-        for (expectedFile : expectedFiles) {
-            val actualFile = actualFiles.findFirst[it.fileName == expectedFile.fileName]
-            assertLinesMatch(expectedFile.lines, actualFile.lines, '''Different content for «expectedFile.fileName»''')
-            Files.delete(actualFile)
+        for (expectedFileEntry : expectedFiles.entrySet) {
+            val expectedFile = expectedFileEntry.value
+            val actualFile = actualFiles.get(expectedFileEntry.key)
+            assertLinesMatch(expectedFile.lines, actualFile.lines, '''Different content for «expectedFile.toString»''')
         }
-        Files.delete(actualDir)
+        FileUtils.deleteDirectory(actualDir.toAbsolutePath.toFile)
+    }
+
+    private def Map<String, Path> listRegularFiles(Path path) {
+        val files = new TreeMap()
+        for (file : Files.walk(path).filter[isRegularFile].toList) {
+            files.put(file.relativize(path).toString, file)
+        }
+        return files;
     }
 
     @Test

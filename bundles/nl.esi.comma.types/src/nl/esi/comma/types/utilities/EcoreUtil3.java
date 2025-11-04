@@ -24,6 +24,7 @@ import org.eclipse.emf.common.util.BasicDiagnostic;
 import org.eclipse.emf.common.util.Diagnostic;
 import org.eclipse.emf.common.util.DiagnosticException;
 import org.eclipse.emf.common.util.URI;
+import org.eclipse.emf.common.util.WrappedException;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.util.Diagnostician;
@@ -43,11 +44,15 @@ import com.google.inject.Module;
 import nl.esi.comma.types.types.Import;
 
 public class EcoreUtil3 extends EcoreUtil2 {
-	/**
-	 * @see EcoreUtil2#getResource(Resource, String)
-	 */
 	public static Resource getResource(Import imp) {
-		return EcoreUtil2.getResource(imp.eResource(), imp.getImportURI());
+		URI uri = resolveUri(imp);
+		try {
+			return imp.eResource().getResourceSet().getResource(uri, true);
+		} catch (WrappedException e) {
+			throw e;
+		} catch (RuntimeException e) {
+			throw new WrappedException("Cannot load resource: " + uri, e);
+		}
 	}
 
 	/**

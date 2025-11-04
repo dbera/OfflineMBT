@@ -1,0 +1,135 @@
+import "issue249.ps"
+
+using issue249.ContextIssueProducer.part1
+using issue249.ContextIssueProducer.part2
+using issue249.ContextIssueProducer.report
+using issue249.ContextIssueProducer.message
+using issue249.ContextIssueProducer.configuration
+using issue249.ContextIssueProducer.Event_1p0urs4
+using issue249.ContextIssueProducer.Event_0m7n0r6
+using issue249.ContextIssueProducer.between_Start_and_ComposeContext
+using issue249.ContextIssueProducer.between_ComposeContext_and_RunContext
+using issue249.ContextIssueProducer.between_RunContext_and_ComposeLocal
+using issue249.ContextIssueProducer.between_ComposeLocal_and_RunLocal
+using issue249.ContextIssueProducer.between_RunLocal_and_Compose
+using issue249.ContextIssueConsumer.Event_0fmv4m5
+
+abstract-test-definition
+
+Test-Scenario: S1
+
+compose-step-name: ContextIssueProducer_ComposeContext_default_0
+action-case: issue249.ContextIssueProducer.ComposeContext.default
+input-binding:
+between_Start_and_ComposeContext : {
+    "id": 0,
+    "prod_field": "Hello Consumer!"
+}
+output-data:
+between_ComposeContext_and_RunContext : {
+    "id": 0,
+    "prod_field": "Hello Consumer!"
+}
+suppress(between_ComposeContext_and_RunContext.id)
+
+run-step-name: ContextIssueProducer_RunContext_default_0 step-type: "ProducerRunType"
+action-case: issue249.ContextIssueProducer.RunContext.default
+consumes-from-step: ContextIssueProducer_ComposeContext_default_0 { between_ComposeContext_and_RunContext }
+input-binding:
+between_ComposeContext_and_RunContext : {
+    "id": 0,
+    "prod_field": "Hello Consumer!"
+}
+output-data:
+between_RunContext_and_ComposeLocal : {
+    "id": 0,
+    "prod_field": "Hello Consumer!"
+}
+suppress(between_RunContext_and_ComposeLocal.id)
+
+compose-step-name: ContextIssueProducer_ComposeLocal_default_0
+action-case: issue249.ContextIssueProducer.ComposeLocal.default
+input-binding:
+between_RunContext_and_ComposeLocal : {
+    "id": 0,
+    "prod_field": "Hello Consumer!"
+}
+output-data:
+between_ComposeLocal_and_RunLocal : {
+    "id": 0,
+    "prod_field": "Hello Consumer!"
+}
+message : {
+    "id": 0,
+    "part1": "Hello Message!"
+}
+suppress(between_ComposeLocal_and_RunLocal, message.id)
+
+run-step-name: ContextIssueProducer_RunLocal_default_0 step-type: "ProducerRunType"
+action-case: issue249.ContextIssueProducer.RunLocal.default
+consumes-from-step: ContextIssueProducer_ComposeLocal_default_0 { between_ComposeLocal_and_RunLocal message }
+input-binding:
+between_ComposeLocal_and_RunLocal : {
+    "id": 0,
+    "prod_field": "Hello Consumer!"
+}
+message : {
+    "id": 0,
+    "part1": "Hello Message!"
+}
+configuration : {
+    "id": 0,
+    "prod_field": " Conf"
+}
+output-data:
+between_RunLocal_and_Compose : {
+    "id": 0,
+    "prod_field": "Hello Consumer!"
+}
+suppress(between_RunLocal_and_Compose.id)
+
+compose-step-name: ContextIssueProducer_Compose_default_0
+action-case: issue249.ContextIssueProducer.Compose.default
+input-binding:
+between_RunLocal_and_Compose : {
+    "id": 0,
+    "prod_field": "Hello Consumer!"
+}
+output-data:
+Event_0m7n0r6 : {
+    "id": 0,
+    "prod_field": "Hello Consumer!"
+}
+part1 : {
+    "id": 0,
+    "part1": "Hello Consumer!_1"
+}
+report : {
+    "id": 0
+}
+part2 : {
+    "id": 0,
+    "part2": "Hello Consumer!_2"
+}
+suppress(Event_0m7n0r6.id, part1.id, part2.id)
+
+run-step-name: ContextIssueConsumer_ConsumerRun_default_0 step-type: "ConsumerRunType"
+action-case: issue249.ContextIssueConsumer.ConsumerRun.default
+consumes-from-step: ContextIssueProducer_Compose_default_0 { part1 part2 }
+input-binding:
+part1 : {
+    "id": 0,
+    "part1": "Hello Consumer!_1"
+}
+part2 : {
+    "id": 0,
+    "part2": "Hello Consumer!_2"
+}
+output-data:
+Event_0fmv4m5 : {
+    "unit": 0
+}
+suppress(Event_0fmv4m5)
+
+generate-file "./dataset/"
+

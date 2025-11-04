@@ -1,0 +1,26 @@
+import "../../../input/issue249/issue249.types"
+
+record ProducerRunType {
+    ProducerRunTypeInput input
+    ProducerRunTypeOutput output
+}
+
+record ProducerRunTypeInput {
+    ProdCtx between_ComposeContext_and_RunContext
+    ProdCtx between_RunContext_and_ComposeLocal
+    ProdCtx between_Start_and_ComposeContext
+    ProdCtx between_ComposeLocal_and_RunLocal
+    ProdCons1 message
+    ProdCtx configuration
+    ProdCtx between_RunLocal_and_Compose
+}
+
+record ProducerRunTypeOutput {
+    ProdCtx between_ComposeContext_and_RunContext
+    ProdCtx between_RunContext_and_ComposeLocal
+    ProdCtx between_Start_and_ComposeContext
+    ProdCtx between_ComposeLocal_and_RunLocal
+    ProdCons1 message
+    ProdCtx configuration
+    ProdCtx between_RunLocal_and_Compose
+}
