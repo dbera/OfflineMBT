@@ -49,7 +49,13 @@ public class EcoreUtil3 extends EcoreUtil2 {
 	public static Resource getResource(Import imp) {
 		URI uri = resolveUri(imp);
 		try {
-			return imp.eResource().getResourceSet().getResource(uri, true);
+			Resource res = imp.eResource().getResourceSet().getResource(uri, true);
+	        if (!res.getErrors().isEmpty()) {
+				throw new RuntimeException("Resource contains errors: \n\t"
+						+ res.getErrors().stream().map(org.eclipse.emf.ecore.resource.Resource.Diagnostic::getMessage)
+								.collect(Collectors.joining("\n\t")));
+	        }
+	        return res;
 		} catch (WrappedException e) {
 			throw e;
 		} catch (RuntimeException e) {

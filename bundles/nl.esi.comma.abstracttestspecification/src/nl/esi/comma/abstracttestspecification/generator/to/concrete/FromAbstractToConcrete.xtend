@@ -34,7 +34,6 @@ import org.eclipse.xtext.generator.IGeneratorContext
 import static extension nl.esi.comma.abstracttestspecification.generator.utils.Utils.*
 import static extension nl.esi.comma.types.utilities.EcoreUtil3.*
 import static extension nl.esi.comma.types.utilities.TypeUtilities.*
-import java.io.IOException
 
 class FromAbstractToConcrete extends AbstractGenerator {
 
@@ -288,13 +287,8 @@ class FromAbstractToConcrete extends AbstractGenerator {
 
     def private Iterable<URI> getTypesImports(Resource res) {
         val typesImports = newLinkedHashSet
-        res.resolveAll
         for (psImport : res.getImports('ps')) {
             val psRes = psImport.resource
-            if (!psRes.errors.isEmpty) {
-                throw new IOException('''«psRes.URI» contains errors: «psRes.errors.join(', ')[message]»''')
-            }
-            psRes.resolveAll
             for (typesImport : psRes.getImports('types')) {
                 typesImports += typesImport.resolveUri.deresolve(res.URI)
             }
