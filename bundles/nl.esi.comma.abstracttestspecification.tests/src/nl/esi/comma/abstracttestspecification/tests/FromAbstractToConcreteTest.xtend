@@ -18,7 +18,6 @@ import java.util.Map
 import java.util.TreeMap
 import nl.esi.comma.abstracttestspecification.generator.to.concrete.FromAbstractToConcrete
 import org.apache.commons.io.FileUtils
-import org.eclipse.emf.common.util.URI
 import org.eclipse.emf.ecore.util.EcoreUtil
 import org.eclipse.xtext.resource.XtextResourceSet
 import org.eclipse.xtext.testing.InjectWith
@@ -43,7 +42,7 @@ class FromAbstractToConcreteTest {
         assertTrue(inputFile.isReadable, '''Input «inputFile» does not exist or cannot be read.''')
 
         val resourceSet = new XtextResourceSet()
-        val inputResource = resourceSet.getResource(URI.createFileURI(inputFile.toString), true)
+        val inputResource = resourceSet.getResource(TestFileSystemAccess.getURI(inputFile), true)
         assertTrue(inputResource.errors.isEmpty, '''Input «testcase» contains errors: «inputResource.errors.join(', ')[message]»''')
         EcoreUtil.resolveAll(inputResource)
 

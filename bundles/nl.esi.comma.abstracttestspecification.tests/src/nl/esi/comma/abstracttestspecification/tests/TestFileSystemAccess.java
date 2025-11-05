@@ -27,14 +27,18 @@ import org.eclipse.xtext.util.StringInputStream;
 public class TestFileSystemAccess implements IFileSystemAccess2 {
 	private final Path basePath;
 	
-	public TestFileSystemAccess(Path basePath) {
-		this.basePath = basePath.toAbsolutePath();
+	public TestFileSystemAccess(Path basePath) throws IOException {
+		this.basePath = basePath.toRealPath();
 	}
 	
 	private Path resolve(String path) {
 		return basePath.resolve(path);
 	}
 	
+	public static URI getURI(Path path) {
+		return URI.createURI(path.toUri().toString());
+	}
+
 	@Override
 	public void generateFile(String fileName, CharSequence contents) {
 		generateFile(fileName, new StringInputStream(contents.toString()));
@@ -66,7 +70,7 @@ public class TestFileSystemAccess implements IFileSystemAccess2 {
 
 	@Override
 	public URI getURI(String path) {
-		return URI.createFileURI(resolve(path).toString());
+		return getURI(resolve(path));
 	}
 
 	@Override
