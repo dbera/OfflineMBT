@@ -13,7 +13,6 @@
 package nl.esi.comma.abstracttestspecification.generator.to.concrete
 
 import java.util.HashSet
-import nl.asml.matala.product.product.Product
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractTestDefinition
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AssertionStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.Binding
@@ -34,6 +33,8 @@ import org.eclipse.xtext.generator.IGeneratorContext
 
 import static extension nl.esi.comma.abstracttestspecification.generator.utils.Utils.*
 import static extension nl.esi.comma.types.utilities.EcoreUtil3.*
+import static extension nl.esi.comma.types.utilities.TypeUtilities.*
+import java.io.IOException
 
 class FromAbstractToConcrete extends AbstractGenerator {
 
@@ -47,7 +48,7 @@ class FromAbstractToConcrete extends AbstractGenerator {
         for (sys : atd.systems) {
             val typesFile = '''types/«sys».types'''
             val typesURI = fsa.getURI(typesFile)
-            val typesImports = typesImportURIs.map[resolve(res.URI).deresolve(typesURI).toString]
+            val typesImports = typesImportURIs.map[resolve(res.URI).deresolve(typesURI).toString].toSet
             fsa.generateFile(typesFile, atd.generateTypesFile(sys, typesImports))
             fsa.generateFile('''parameters/«sys».params''', atd.generateParamsFile(sys))
         }
@@ -287,10 +288,14 @@ class FromAbstractToConcrete extends AbstractGenerator {
 
     def private Iterable<URI> getTypesImports(Resource res) {
         val typesImports = newLinkedHashSet
-        for (psImport : res.contents.filter(TSMain).flatMap[imports].filter[importURI.endsWith('.ps')]) {
-            for (typesImport : psImport.resource.contents.filter(Product).flatMap[imports].filter [
-                importURI.endsWith('.types')
-            ]) {
+        res.resolveAll
+        for (psImport : res.getImports('ps')) {
+            val psRes = psImport.resource
+            if (!psRes.errors.isEmpty) {
+                throw new IOException('''«psRes.URI» contains errors: «psRes.errors.join(', ')[message]»''')
+            }
+            psRes.resolveAll
+            for (typesImport : psRes.getImports('types')) {
                 typesImports += typesImport.resolveUri.deresolve(res.URI)
             }
         }
