@@ -12,7 +12,6 @@
  */
 package nl.asml.matala.bpmn4s.tests
 
-import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.Map
@@ -27,15 +26,16 @@ import static extension java.nio.file.Files.*
 
 class Bpmn4sCompilerTest {
     def void testCompilation(String inputFileName, String expectedFileName, boolean simulation) {
-        val resourcesDir = Path.of('resources')
+        val resourcesDir = Path.of('resources').toRealPath
         assertTrue(resourcesDir.isDirectory)
+        println("Test-resources directory: " + resourcesDir)
 
         val inputFile = resourcesDir.resolve('''input/«inputFileName».bpmn''')
         assertTrue(inputFile.isReadable, '''Input for «inputFileName» does not exist or cannot be read.''')
 
         val actualDir = resourcesDir.resolve('''actual/«expectedFileName»''')
         if (actualDir.exists) {
-            FileUtils.deleteDirectory(new File(actualDir.toString()))
+            FileUtils.deleteDirectory(actualDir.toFile)
         }
         actualDir.createDirectories
 
@@ -54,7 +54,7 @@ class Bpmn4sCompilerTest {
             val actualFile = actualFiles.get(expectedFileEntry.key)
             assertLinesMatch(expectedFile.lines, actualFile.lines, '''Different content for «expectedFile.toString»''')
         }
-        FileUtils.deleteDirectory(actualDir.toAbsolutePath.toFile)
+        FileUtils.deleteDirectory(actualDir.toFile)
     }
 
     private def Map<String, Path> listRegularFiles(Path path) {

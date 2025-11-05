@@ -35,20 +35,21 @@ import static extension java.nio.file.Files.*
 @InjectWith(AbstractTestspecificationInjectorProvider)
 class FromAbstractToConcreteTest {
     private def void testGenerator(String testcase) {
-        val resourcesDir = Path.of('resources')
+        val resourcesDir = Path.of('resources').toRealPath
         assertTrue(resourcesDir.isDirectory)
+        println("Test-resources directory: " + resourcesDir)
 
         val inputFile = resourcesDir.resolve('''input/«testcase»/«testcase».atspec''')
         assertTrue(inputFile.isReadable, '''Input «inputFile» does not exist or cannot be read.''')
 
         val resourceSet = new XtextResourceSet()
-        val inputResource = resourceSet.getResource(URI.createFileURI(inputFile.toAbsolutePath.toString), true)
+        val inputResource = resourceSet.getResource(URI.createFileURI(inputFile.toString), true)
         assertTrue(inputResource.errors.isEmpty, '''Input «testcase» contains errors: «inputResource.errors.join(', ')[message]»''')
         EcoreUtil.resolveAll(inputResource)
 
         val actualDir = resourcesDir.resolve('''actual/«testcase»''')
         if (actualDir.exists) {
-            FileUtils.deleteDirectory(actualDir.toAbsolutePath.toFile)
+            FileUtils.deleteDirectory(actualDir.toFile)
         }
         actualDir.createDirectories
 
@@ -67,7 +68,7 @@ class FromAbstractToConcreteTest {
             val actualFile = actualFiles.get(expectedFileEntry.key)
             assertLinesMatch(expectedFile.lines, actualFile.lines, '''Different content for «expectedFile.toString»''')
         }
-        FileUtils.deleteDirectory(actualDir.toAbsolutePath.toFile)
+        FileUtils.deleteDirectory(actualDir.toFile)
     }
 
     private def Map<String, Path> listRegularFiles(Path path) {
