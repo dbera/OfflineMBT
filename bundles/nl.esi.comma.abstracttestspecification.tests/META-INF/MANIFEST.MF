@@ -7,6 +7,7 @@ Bundle-Version: 4.2.0.qualifier
 Bundle-SymbolicName: nl.esi.comma.abstracttestspecification.tests; singleton:=true
 Bundle-ActivationPolicy: lazy
 Require-Bundle: nl.esi.comma.abstracttestspecification,
+ nl.asml.matala.product,
  org.eclipse.xtext.testing,
  org.eclipse.xtext.xbase.testing,
  org.eclipse.xtext.xbase.lib;bundle-version="2.36.0"
