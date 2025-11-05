@@ -15,4 +15,5 @@
     <stringAttribute key="org.eclipse.jdt.launching.MODULE_NAME" value="nl.esi.comma.assertthat"/>
     <stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="src/nl/esi/comma/assertthat/GenerateAssertThat.mwe2"/>
     <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="nl.esi.comma.assertthat"/>
+    <stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-Xmx512m"/>
 </launchConfiguration>

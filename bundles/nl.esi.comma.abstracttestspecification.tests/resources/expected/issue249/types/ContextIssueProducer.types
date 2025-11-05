@@ -7,20 +7,22 @@ record ProducerRunType {
 
 record ProducerRunTypeInput {
     ProdCtx between_ComposeContext_and_RunContext
-    ProdCtx between_RunContext_and_ComposeLocal
+    ProdCtx Gateway_1ywuak3
     ProdCtx between_Start_and_ComposeContext
-    ProdCtx between_ComposeLocal_and_RunLocal
+    ProdCtx Gateway_1ww9hic
     ProdCons1 message
     ProdCtx configuration
+    ProdCtx sutConf
     ProdCtx between_RunLocal_and_Compose
 }
 
 record ProducerRunTypeOutput {
     ProdCtx between_ComposeContext_and_RunContext
-    ProdCtx between_RunContext_and_ComposeLocal
+    ProdCtx Gateway_1ywuak3
     ProdCtx between_Start_and_ComposeContext
-    ProdCtx between_ComposeLocal_and_RunLocal
+    ProdCtx Gateway_1ww9hic
     ProdCons1 message
     ProdCtx configuration
+    ProdCtx sutConf
     ProdCtx between_RunLocal_and_Compose
 }

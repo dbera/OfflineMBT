@@ -37,3 +37,9 @@ ProducerRunType step_ContextIssueProducer_RunContext_default_0
 ProducerRunType step_ContextIssueProducer_RunLocal_default_0
 ConsumerRunType step_ContextIssueConsumer_ConsumerRun_default_0
 
+sut-param-init 
+step_ContextIssueProducer_RunLocal_default_0.input.sutConf := ProdCtx {
+    prod_field = "sut",
+    id = 0,
+    loop = true
+}

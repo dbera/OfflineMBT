@@ -9,6 +9,7 @@ record ProdReport {
 record ProdCtx {
     string	prod_field
     int	id
+    bool	loop
 }
 
 record ProdCons1 {
