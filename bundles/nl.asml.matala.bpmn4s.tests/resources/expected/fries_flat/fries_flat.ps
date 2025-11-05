@@ -14,8 +14,8 @@ specification fries_flat
         FriesContext	Gateway_0k04hvx
         FriesContext	start_event
         FriesContext	end_event
-        FriesContext	Flow_1fk5b3r
         FriesContext	Flow_003weme
+        FriesContext	Flow_1fk5b3r
         FriesContext	Flow_0z70hyg
         FriesContext	Flow_0bwi85w
     
@@ -28,13 +28,13 @@ specification fries_flat
         
         action			ChooseKetchup
         element-label	"Choose Ketchup"
-        case			default
+        case			default step-type "null" action-type COMPOSE
         with-inputs		choice
         with-guard		choice.client_id == "Tom"
         produces-outputs	Gateway_0k04hvx
         updates:
             Gateway_0k04hvx := choice
-        produces-outputs	topping
+        produces-outputs	topping symbolic-link
         updates:
             topping := Topping {
              ctx = choice,
@@ -43,12 +43,12 @@ specification fries_flat
         
         action			ChooseMayo
         element-label	"Choose Mayo"
-        case			default
+        case			default step-type "null" action-type COMPOSE
         with-inputs		choice
         produces-outputs	Gateway_0k04hvx
         updates:
             Gateway_0k04hvx := choice
-        produces-outputs	topping
+        produces-outputs	topping symbolic-link
         updates:
             topping := Topping {
              ctx = choice,
@@ -57,13 +57,13 @@ specification fries_flat
         
         action			AddTopping
         element-label	"Add Topping"
-        case			default
+        case			default step-type "fries_flat" action-type RUN
         with-inputs		Flow_1fk5b3r, topping
         with-guard		topping.ctx == Flow_1fk5b3r
         produces-outputs	Flow_003weme
         updates:
             Flow_003weme := Flow_1fk5b3r
-        produces-outputs	fries
+        produces-outputs	fries symbolic-link
         updates:
             fries := Fries {
              dressing = topping,
@@ -83,8 +83,13 @@ specification fries_flat
         
         action			Eat
         element-label	"Eat"
-        case			default
+        case			default step-type "fries_flat" action-type ASSERT
         with-inputs		Flow_0bwi85w, fries
+        assertions default {
+            my_fries : assert-that(fries.dressing.sauce) {
+                close-to 0 within-margin absolute (2.0)
+            }
+        }
         produces-outputs	end_event
         updates:
             end_event := Flow_0bwi85w
@@ -109,7 +114,7 @@ specification fries_flat
         element-labels ["Fries"]
     }
     
-	SUT-blocks 
+	SUT-blocks Fries
 	depth-limits 300
 	num-tests 1
 }

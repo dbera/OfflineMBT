@@ -61,19 +61,19 @@ specification fries_comp
         
         action			AwaitDelivery
         element-label	"Await Delivery"
-        case			default
+        case			default step-type "null" action-type COMPOSE
         with-inputs		Flow_09zlhyo, friesDelivery
         with-guard		friesDelivery.clientOrder.client_id == Flow_09zlhyo.client_id
         produces-outputs	Flow_0ipnerm
         updates:
             Flow_0ipnerm := Flow_09zlhyo
-        produces-outputs	table
+        produces-outputs	table symbolic-link
         updates:
             table := friesDelivery
         
         action			EatFries
         element-label	"Eat Fries"
-        case			default
+        case			default step-type "EatFries" action-type RUN
         with-inputs		Flow_1m4nc7r, table
         produces-outputs	Event_022qurv
         updates:
@@ -135,19 +135,14 @@ specification fries_comp
         
         action			CheckReceipt
         element-label	"Check Receipt"
-        case			default step-type "Check_Receipt" action-type ASSERT
+        case			default
         with-inputs		Flow_0ipnerm, table
         with-guard		// TODO: Convert to assert task to avoid deadlocks!
         table.clientOrder.fries == Flow_0ipnerm.fries
-        assertions default {
-            correct_amount: assert-that (table.receipt.amount) {
-              equal-to 5.0 within-margin absolute (0.50)
-            }
-        }
         produces-outputs	Flow_1m4nc7r
         updates:
             Flow_1m4nc7r := Flow_0ipnerm
-        produces-outputs	table symbolic-link
+        produces-outputs	table
         updates:
             table := table
     
@@ -163,10 +158,11 @@ specification fries_comp
         FriesDelivery		friesDelivery
     
         local
+        FriesDelivery	friesReady
         
         DeliveryServiceContext	Event_00idax9
-        DeliveryServiceContext	Flow_0happwq
         DeliveryServiceContext	Flow_1b6215f
+        DeliveryServiceContext	Flow_0happwq
     
         // init
     
@@ -175,14 +171,14 @@ specification fries_comp
         
         action			DeliverFries
         element-label	"Deliver Fries"
-        case			default
-        with-inputs		Flow_0happwq
+        case			default step-type "DeliverFries" action-type RUN
+        with-inputs		Flow_0happwq, friesReady
         produces-outputs	Event_00idax9
         updates:
             Event_00idax9 := Flow_0happwq
-        produces-outputs	friesDelivery
+        produces-outputs	friesDelivery symbolic-link
         updates:
-            friesDelivery := Flow_0happwq.delivery
+            friesDelivery := friesReady
         
         action			TakeRequest
         element-label	"Take Request"
@@ -196,11 +192,14 @@ specification fries_comp
         
         action			Travel
         element-label	"Travel"
-        case			default
+        case			default step-type "null" action-type COMPOSE
         with-inputs		Flow_1b6215f
         produces-outputs	Flow_0happwq
         updates:
             Flow_0happwq := Flow_1b6215f
+        produces-outputs	friesReady symbolic-link
+        updates:
+            friesReady := Flow_1b6215f.delivery
     
         element-labels ["Fries", "Delivery Service"]
     }
@@ -272,7 +271,7 @@ specification fries_comp
         element-labels ["Fries", "Snackbar"]
     }
     
-	SUT-blocks 
+	SUT-blocks FriesClient FriesDeliveryService
 	depth-limits 300
 	num-tests 1
 }
