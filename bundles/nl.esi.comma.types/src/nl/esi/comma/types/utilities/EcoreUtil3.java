@@ -12,6 +12,8 @@
  */
 package nl.esi.comma.types.utilities;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
@@ -75,11 +77,20 @@ public class EcoreUtil3 extends EcoreUtil2 {
 	 */
 	public static URI resolveUri(Resource context, String path) {
 		URI contextURI = context.getURI();
+		System.out.print(contextURI + " + " + path + " => ");
 		URI referenceURI = URI.createURI(path);
-		if (contextURI.isHierarchical() && !contextURI.isRelative()
-				&& (referenceURI.isRelative() && !referenceURI.isEmpty())) {
-			referenceURI = referenceURI.resolve(contextURI);
+		if (contextURI.isHierarchical() && (referenceURI.isRelative() && !referenceURI.isEmpty())) {
+			if (!contextURI.isRelative()) {
+				referenceURI = referenceURI.resolve(contextURI);
+			} else if (contextURI.isFile()) {
+				Path contextPath = Path.of(contextURI.toFileString());
+				if (!Files.isDirectory(contextPath)) {
+					contextPath = contextPath.getParent();
+				}
+				referenceURI = URI.createURI(contextPath.resolve(path).toUri().toString());
+			}
 		}
+		System.out.println(referenceURI);
 		return referenceURI;
 	}
 	
