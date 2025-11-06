@@ -7,7 +7,7 @@ Bundle-Version: 4.2.0.qualifier
 Bundle-SymbolicName: nl.esi.comma.abstracttestspecification; singleton:=true
 Bundle-ActivationPolicy: lazy
 Require-Bundle: nl.esi.comma.assertthat;visibility:=reexport,
- nl.asml.matala.product,
+ nl.asml.matala.product;visibility:=reexport,
  org.eclipse.xtext,
  org.camunda.bpm.model.bpmn;bundle-version="7.22.0",
  org.camunda.bpm.model.xml;bundle-version="7.22.0",

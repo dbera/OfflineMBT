@@ -12,17 +12,22 @@
  */
 package nl.esi.comma.abstracttestspecification.tests
 
-import java.nio.file.Files
 import java.nio.file.Path
 import java.util.Map
 import java.util.TreeMap
+import nl.asml.matala.product.ProductStandaloneSetup
+import nl.asml.matala.product.product.ProductPackage
+import nl.esi.comma.abstracttestspecification.AbstractTestspecificationStandaloneSetup
+import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractTestspecificationPackage
 import nl.esi.comma.abstracttestspecification.generator.to.concrete.FromAbstractToConcrete
 import org.apache.commons.io.FileUtils
+import org.eclipse.emf.ecore.EPackage
 import org.eclipse.emf.ecore.util.EcoreUtil
 import org.eclipse.xtext.resource.XtextResourceSet
 import org.eclipse.xtext.testing.InjectWith
 import org.eclipse.xtext.testing.extensions.InjectionExtension
 import org.eclipse.xtext.util.CancelIndicator
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.^extension.ExtendWith
 
@@ -33,6 +38,18 @@ import static extension java.nio.file.Files.*
 @ExtendWith(InjectionExtension)
 @InjectWith(AbstractTestspecificationInjectorProvider)
 class FromAbstractToConcreteTest {
+    @BeforeAll
+    static def void setup() {
+        if (!EPackage.Registry.INSTANCE.containsKey(ProductPackage.eNS_URI)) {
+            System.out.println("Registering product language");
+            ProductStandaloneSetup.doSetup
+        }
+        if (!EPackage.Registry.INSTANCE.containsKey(AbstractTestspecificationPackage.eNS_URI)) {
+            System.out.println("Registering abstract TSPEC language");
+            AbstractTestspecificationStandaloneSetup.doSetup
+        }
+    }
+
     private def void testGenerator(String testcase) {
         val resourcesDir = Path.of('resources').toRealPath
         assertTrue(resourcesDir.isDirectory)
@@ -72,7 +89,7 @@ class FromAbstractToConcreteTest {
 
     private def Map<String, Path> listRegularFiles(Path path) {
         val files = new TreeMap()
-        for (file : Files.walk(path).filter[isRegularFile].toList) {
+        for (file : path.walk.filter[isRegularFile].toList) {
             files.put(file.relativize(path).toString, file)
         }
         return files;

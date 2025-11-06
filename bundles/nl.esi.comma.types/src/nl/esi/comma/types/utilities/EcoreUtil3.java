@@ -83,7 +83,6 @@ public class EcoreUtil3 extends EcoreUtil2 {
 	 */
 	public static URI resolveUri(Resource context, String path) {
 		URI contextURI = context.getURI();
-		System.out.print(contextURI + " + " + path + " => ");
 		URI referenceURI = URI.createURI(path);
 		if (contextURI.isHierarchical() && (referenceURI.isRelative() && !referenceURI.isEmpty())) {
 			if (!contextURI.isRelative()) {
@@ -96,7 +95,6 @@ public class EcoreUtil3 extends EcoreUtil2 {
 				referenceURI = URI.createURI(contextPath.resolve(path).toUri().toString());
 			}
 		}
-		System.out.println(referenceURI);
 		return referenceURI;
 	}
 	

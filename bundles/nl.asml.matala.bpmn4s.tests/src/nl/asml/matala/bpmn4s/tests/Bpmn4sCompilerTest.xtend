@@ -12,7 +12,6 @@
  */
 package nl.asml.matala.bpmn4s.tests
 
-import java.nio.file.Files
 import java.nio.file.Path
 import java.util.Map
 import java.util.TreeMap
@@ -59,7 +58,7 @@ class Bpmn4sCompilerTest {
 
     private def Map<String, Path> listRegularFiles(Path path) {
         val files = new TreeMap()
-        for (file : Files.walk(path).filter[isRegularFile].toList) {
+        for (file : path.walk.filter[isRegularFile].toList) {
             files.put(file.relativize(path).toString, file)
         }
         return files;
