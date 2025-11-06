@@ -16,12 +16,10 @@ import java.nio.file.Path
 import java.util.Map
 import java.util.TreeMap
 import nl.asml.matala.product.ProductStandaloneSetup
-import nl.asml.matala.product.product.ProductPackage
 import nl.esi.comma.abstracttestspecification.AbstractTestspecificationStandaloneSetup
-import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractTestspecificationPackage
 import nl.esi.comma.abstracttestspecification.generator.to.concrete.FromAbstractToConcrete
 import org.apache.commons.io.FileUtils
-import org.eclipse.emf.ecore.EPackage
+import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.emf.ecore.util.EcoreUtil
 import org.eclipse.xtext.resource.XtextResourceSet
 import org.eclipse.xtext.testing.InjectWith
@@ -40,11 +38,11 @@ import static extension java.nio.file.Files.*
 class FromAbstractToConcreteTest {
     @BeforeAll
     static def void setup() {
-        if (!EPackage.Registry.INSTANCE.containsKey(ProductPackage.eNS_URI)) {
+        if (!Resource.Factory.Registry.INSTANCE.getExtensionToFactoryMap().containsKey('ps')) {
             System.out.println("Registering product language");
             ProductStandaloneSetup.doSetup
         }
-        if (!EPackage.Registry.INSTANCE.containsKey(AbstractTestspecificationPackage.eNS_URI)) {
+        if (!Resource.Factory.Registry.INSTANCE.getExtensionToFactoryMap().containsKey('atspec')) {
             System.out.println("Registering abstract TSPEC language");
             AbstractTestspecificationStandaloneSetup.doSetup
         }
