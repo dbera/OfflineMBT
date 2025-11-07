@@ -50,7 +50,9 @@ import org.camunda.bpm.model.bpmn.instance.bpmndi.BpmnPlane;
 import org.camunda.bpm.model.bpmn.instance.bpmndi.BpmnShape;
 import org.camunda.bpm.model.bpmn.instance.dc.Bounds;
 import org.camunda.bpm.model.bpmn.instance.di.Waypoint;
+
 import org.camunda.bpm.model.xml.instance.ModelElementInstance;
+
 
 import nl.asml.matala.bpmn4s.extensions.Bpmn4sModel;
 import nl.asml.matala.bpmn4s.extensions.DataType;
@@ -189,6 +191,7 @@ public class CamundaParser {
 								if (existing != null) {
 									existing.consumers.add(consumerName);
 								} else {
+
 									DataInstanceDescriptor dataInstance = new DataInstanceDescriptor(key, lane_name,
 											producerName, new ArrayList<>(List.of(consumerName)));
 									dataInstance.bind_producer = matchedEntryOpt.get().getValue();
@@ -300,6 +303,7 @@ public class CamundaParser {
 			nodeIdx++;
 		}
 		nodeIdx = 0;
+
 
 		Map<String, Integer> producerDataCount = new HashMap<>();
 
@@ -602,6 +606,7 @@ public class CamundaParser {
 				producer.addChildElement(doa);
 
 				Bounds producerBounds = elemBounds.get(producer);
+
 				// Count total outputs from this producer
 				int outputIndex = getOutputIndex(producer, doa);
 				int totalOutputs = countTotalOutputs(producer);
@@ -660,6 +665,7 @@ public class CamundaParser {
 		BpmnEdge edge = modelInstance.newInstance(BpmnEdge.class);
 		edge.setId(association.getId() + "_edge");
 		edge.setBpmnElement(association);
+
 
 		double sourceRightX = sourceBounds.getX() + sourceBounds.getWidth();
 		double sourceBottomY = sourceBounds.getY() + sourceBounds.getHeight();
