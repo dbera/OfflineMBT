@@ -49,6 +49,8 @@ import java.util.Set
 import java.util.LinkedHashSet
 import nl.esi.comma.expressions.expression.ExpressionRecord
 import nl.esi.comma.testspecification.testspecification.AssertionStep
+import nl.esi.comma.expressions.expression.Field
+import nl.esi.comma.expressions.expression.ExpressionVector
 
 class FromConcreteToFast extends AbstractGenerator {
 
@@ -142,6 +144,28 @@ class FromConcreteToFast extends AbstractGenerator {
         }
         return null
     }
+
+    def boolean isCommentBasedOnString(Action act) {
+        var cont = act
+        var TypeDecl fieldType = switch (cont) {
+            Field: cont.recordField.type.type
+            RecordFieldAssignmentAction: (cont.fieldAccess as ExpressionRecordAccess).field.type.type
+            ExpressionVector: cont.typeAnnotation.type.type
+            default: null
+        }
+        if (fieldType instanceof SimpleTypeDecl) {
+            var isBasedOnString = fieldType.base?.name?.equals('string')
+            if (isBasedOnString) {
+                var baseName = fieldType.name
+                return switch baseName {
+                    case 'Comment': true
+                    default: false
+                }
+            }
+        }
+        return false
+    }
+    
 
     def boolean isPrintableAssignment(Action act) {
         return switch (act) {
@@ -566,6 +590,7 @@ class FromConcreteToFast extends AbstractGenerator {
             
             in.data.steps = [
                 «FOR elm : tsi.steps SEPARATOR ','»
+                    «IF !elm.comment.nullOrEmpty»«elm.comment»«ENDIF»
                     «IF generateFASTRefStepTxt(elm).empty»
                         { "id" : "«elm.id»", "type" : "«elm.type.replaceAll("_dot_",".")»", "input_file" : "#valueof(global.params['testcase_data'] + '«elm.inputFile»')" }
                     «ELSE»
@@ -828,7 +853,12 @@ class FromConcreteToFast extends AbstractGenerator {
                     stepInst.recordExp = lhs.value // Note DB: This keeps overwriting (record prefix)
                     // 4.6.3) check if record field assignment should be in its own json file
                     var String match = findMatchingRecordName(lhs.value, record_def_file_names)
-                    if (match instanceof String) {
+                    // Note DD: Retrieves step comments from fields with `type Comment based on string`. 
+                    //        : Field is be suppressed 
+                    var boolean isComment = isCommentBasedOnString(act)
+                    if(isComment){
+                        stepInst.comment += mapLHStoRHS.value.replaceAll("(?m)^", "//")+'\n'
+                    } else if (match instanceof String) {
                         // 4.6.3.1) record field is part of step input_file
                         if (stepInst.isStepRefPresent(lhs.value)) {
                             var rStep = stepInst.getStepRefs(lhs.value)
