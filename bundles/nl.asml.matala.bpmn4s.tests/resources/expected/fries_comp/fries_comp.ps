@@ -1,18 +1,18 @@
 import "fries_comp.types"
 specification fries_comp
 {
-    system Activity_1nx4k9r
+    system FriesClient
     {
         inputs
-        FriesDelivery	DataObjectReference_08usvro
+        FriesDelivery	friesDelivery
         
         outputs
-        FriesOrder		DataObjectReference_1kx41i3
+        FriesOrder		friesOrder
     
         local
-        FriesDelivery	DataStoreReference_0kulgbq
-        ClientContext	Gateway_0bsgusg
-        ClientContext	Gateway_01j7v59
+        FriesDelivery	table
+        ClientContext	ChooseStyle
+        ClientContext	ChooseSize
         
         ClientContext	Event_022qurv
         ClientContext	Flow_09zlhyo
@@ -20,7 +20,7 @@ specification fries_comp
         ClientContext	Flow_1m4nc7r
     
         init
-        Gateway_01j7v59 := ClientContext {
+        ChooseSize := ClientContext {
          client_id = "Tom",
          premium = true,
          fries = Fries {
@@ -28,7 +28,7 @@ specification fries_comp
           size = Size::Undefined
          }
         }
-        Gateway_01j7v59 := ClientContext {
+        ChooseSize := ClientContext {
          client_id = "Bob",
          premium = false,
          fries = Fries {
@@ -38,127 +38,127 @@ specification fries_comp
         }
     
     
-        desc "Activity_1nx4k9r_Model"
+        desc "FriesClient_Model"
         
-        action			Activity_1z0bwek
-        element-label	"Activity_1z0bwek"
+        action			ChooseSmall
+        element-label	"Choose Small"
         case			default
-        with-inputs		Gateway_01j7v59
-        produces-outputs	Gateway_0bsgusg
+        with-inputs		ChooseSize
+        produces-outputs	ChooseStyle
         updates:
-            Gateway_0bsgusg := Gateway_01j7v59
-            Gateway_0bsgusg.fries.size := Size::Small
+            ChooseStyle := ChooseSize
+            ChooseStyle.fries.size := Size::Small
         
-        action			Activity_1nbx27m
-        element-label	"Activity_1nbx27m"
+        action			ChooseMayo
+        element-label	"Choose Mayo"
         case			default
-        with-inputs		Gateway_0bsgusg
-        with-guard		size(Gateway_0bsgusg.fries.style) < 3
-        produces-outputs	Gateway_0bsgusg
+        with-inputs		ChooseStyle
+        with-guard		size(ChooseStyle.fries.style) < 3
+        produces-outputs	ChooseStyle
         updates:
-            Gateway_0bsgusg := Gateway_0bsgusg
-            Gateway_0bsgusg.fries.style := add(Gateway_0bsgusg.fries.style, Topping::Mayo)
+            ChooseStyle := ChooseStyle
+            ChooseStyle.fries.style := add(ChooseStyle.fries.style, Topping::Mayo)
         
-        action			Activity_0b1ce28
-        element-label	"Activity_0b1ce28"
+        action			AwaitDelivery
+        element-label	"Await Delivery"
         case			default step-type "null" action-type COMPOSE
-        with-inputs		Flow_09zlhyo, DataObjectReference_08usvro
-        with-guard		DataObjectReference_08usvro.clientOrder.client_id == Flow_09zlhyo.client_id
+        with-inputs		Flow_09zlhyo, friesDelivery
+        with-guard		friesDelivery.clientOrder.client_id == Flow_09zlhyo.client_id
         produces-outputs	Flow_0ipnerm
         updates:
             Flow_0ipnerm := Flow_09zlhyo
-        produces-outputs	DataStoreReference_0kulgbq symbolic-link
+        produces-outputs	table symbolic-link
         updates:
-            DataStoreReference_0kulgbq := DataObjectReference_08usvro
+            table := friesDelivery
         
-        action			Activity_194q85o
-        element-label	"Activity_194q85o"
+        action			EatFries
+        element-label	"Eat Fries"
         case			default step-type "EatFries" action-type RUN
-        with-inputs		Flow_1m4nc7r, DataStoreReference_0kulgbq
+        with-inputs		Flow_1m4nc7r, table
         produces-outputs	Event_022qurv
         updates:
             Event_022qurv := Flow_1m4nc7r
         
-        action			Activity_1e34xy9
-        element-label	"Activity_1e34xy9"
+        action			PlaceOrder
+        element-label	"Place Order"
         case			default
-        with-inputs		Gateway_0bsgusg
-        with-guard		Gateway_0bsgusg.fries.size != Size::Undefined
+        with-inputs		ChooseStyle
+        with-guard		ChooseStyle.fries.size != Size::Undefined
         produces-outputs	Flow_09zlhyo
         updates:
-            Flow_09zlhyo := Gateway_0bsgusg
-        produces-outputs	DataObjectReference_1kx41i3
+            Flow_09zlhyo := ChooseStyle
+        produces-outputs	friesOrder
         updates:
-            DataObjectReference_1kx41i3 := FriesOrder {
-             client_id = Gateway_0bsgusg.client_id,
-             fries = Gateway_0bsgusg.fries
+            friesOrder := FriesOrder {
+             client_id = ChooseStyle.client_id,
+             fries = ChooseStyle.fries
             }
         
-        action			Activity_10xjyk8
-        element-label	"Activity_10xjyk8"
+        action			ChooseLarge
+        element-label	"Choose Large"
         case			default
-        with-inputs		Gateway_01j7v59
-        with-guard		Gateway_01j7v59.premium
-        produces-outputs	Gateway_0bsgusg
+        with-inputs		ChooseSize
+        with-guard		ChooseSize.premium
+        produces-outputs	ChooseStyle
         updates:
-            Gateway_0bsgusg := Gateway_01j7v59
-            Gateway_0bsgusg.fries.size := Size::Large
+            ChooseStyle := ChooseSize
+            ChooseStyle.fries.size := Size::Large
         
-        action			Activity_0sti0aj
-        element-label	"Activity_0sti0aj"
+        action			ChooseOnions
+        element-label	"Choose Onions"
         case			default
-        with-inputs		Gateway_0bsgusg
-        with-guard		size(Gateway_0bsgusg.fries.style) < 3 AND Gateway_0bsgusg.premium
-        produces-outputs	Gateway_0bsgusg
+        with-inputs		ChooseStyle
+        with-guard		size(ChooseStyle.fries.style) < 3 AND ChooseStyle.premium
+        produces-outputs	ChooseStyle
         updates:
-            Gateway_0bsgusg := Gateway_0bsgusg
-            Gateway_0bsgusg.fries.style := add(Gateway_0bsgusg.fries.style, Topping::Onions)
+            ChooseStyle := ChooseStyle
+            ChooseStyle.fries.style := add(ChooseStyle.fries.style, Topping::Onions)
         
-        action			Activity_033uadp
-        element-label	"Activity_033uadp"
+        action			ChooseMedium
+        element-label	"Choose Medium"
         case			default
-        with-inputs		Gateway_01j7v59
-        produces-outputs	Gateway_0bsgusg
+        with-inputs		ChooseSize
+        produces-outputs	ChooseStyle
         updates:
-            Gateway_0bsgusg := Gateway_01j7v59
-            Gateway_0bsgusg.fries.size := Size::Medium
+            ChooseStyle := ChooseSize
+            ChooseStyle.fries.size := Size::Medium
         
-        action			Activity_0migtdi
-        element-label	"Activity_0migtdi"
+        action			ChooseKetchup
+        element-label	"Choose Ketchup"
         case			default
-        with-inputs		Gateway_0bsgusg
-        with-guard		size(Gateway_0bsgusg.fries.style) < 3
-        produces-outputs	Gateway_0bsgusg
+        with-inputs		ChooseStyle
+        with-guard		size(ChooseStyle.fries.style) < 3
+        produces-outputs	ChooseStyle
         updates:
-            Gateway_0bsgusg := Gateway_0bsgusg
-            Gateway_0bsgusg.fries.style := add(Gateway_0bsgusg.fries.style, Topping::Ketchup)
+            ChooseStyle := ChooseStyle
+            ChooseStyle.fries.style := add(ChooseStyle.fries.style, Topping::Ketchup)
         
-        action			Activity_018jco6
-        element-label	"Activity_018jco6"
+        action			CheckReceipt
+        element-label	"Check Receipt"
         case			default
-        with-inputs		Flow_0ipnerm, DataStoreReference_0kulgbq
+        with-inputs		Flow_0ipnerm, table
         with-guard		// TODO: Convert to assert task to avoid deadlocks!
-        DataStoreReference_0kulgbq.clientOrder.fries == Flow_0ipnerm.fries
+        table.clientOrder.fries == Flow_0ipnerm.fries
         produces-outputs	Flow_1m4nc7r
         updates:
             Flow_1m4nc7r := Flow_0ipnerm
-        produces-outputs	DataStoreReference_0kulgbq
+        produces-outputs	table
         updates:
-            DataStoreReference_0kulgbq := DataStoreReference_0kulgbq
+            table := table
     
-        element-labels ["Process_1", "Activity_1nx4k9r"]
+        element-labels ["Fries", "Client"]
     }
     
-    system Activity_18pdfak
+    system FriesDeliveryService
     {
         inputs
-        FriesDelivery	DataObjectReference_1pzevyf
+        FriesDelivery	deliveryRequest
         
         outputs
-        FriesDelivery		DataObjectReference_08usvro
+        FriesDelivery		friesDelivery
     
         local
-        FriesDelivery	DataStoreReference_0f8nra8
+        FriesDelivery	friesReady
         
         DeliveryServiceContext	Event_00idax9
         DeliveryServiceContext	Flow_1b6215f
@@ -167,53 +167,53 @@ specification fries_comp
         // init
     
     
-        desc "Activity_18pdfak_Model"
+        desc "FriesDelivery Service_Model"
         
-        action			Activity_19g7d8q
-        element-label	"Activity_19g7d8q"
+        action			DeliverFries
+        element-label	"Deliver Fries"
         case			default step-type "DeliverFries" action-type RUN
-        with-inputs		Flow_0happwq, DataStoreReference_0f8nra8
+        with-inputs		Flow_0happwq, friesReady
         produces-outputs	Event_00idax9
         updates:
             Event_00idax9 := Flow_0happwq
-        produces-outputs	DataObjectReference_08usvro symbolic-link
+        produces-outputs	friesDelivery symbolic-link
         updates:
-            DataObjectReference_08usvro := DataStoreReference_0f8nra8
+            friesDelivery := friesReady
         
-        action			Activity_0nh18fo
-        element-label	"Activity_0nh18fo"
+        action			TakeRequest
+        element-label	"Take Request"
         case			default
-        with-inputs		DataObjectReference_1pzevyf
+        with-inputs		deliveryRequest
         produces-outputs	Flow_1b6215f
         updates:
             Flow_1b6215f := DeliveryServiceContext {
-             delivery =  DataObjectReference_1pzevyf
+             delivery =  deliveryRequest
             }
         
-        action			Activity_00tgl1w
-        element-label	"Activity_00tgl1w"
+        action			Travel
+        element-label	"Travel"
         case			default step-type "null" action-type COMPOSE
         with-inputs		Flow_1b6215f
         produces-outputs	Flow_0happwq
         updates:
             Flow_0happwq := Flow_1b6215f
-        produces-outputs	DataStoreReference_0f8nra8 symbolic-link
+        produces-outputs	friesReady symbolic-link
         updates:
-            DataStoreReference_0f8nra8 := Flow_1b6215f.delivery
+            friesReady := Flow_1b6215f.delivery
     
-        element-labels ["Process_1", "Activity_18pdfak"]
+        element-labels ["Fries", "Delivery Service"]
     }
     
-    system Activity_0n48uxi
+    system FriesSnackbar
     {
         inputs
-        FriesOrder	DataObjectReference_1kx41i3
+        FriesOrder	friesOrder
         
         outputs
-        FriesDelivery		DataObjectReference_1pzevyf
+        FriesDelivery		deliveryRequest
     
         local
-        SnackbarContext	Gateway_098asuz
+        SnackbarContext	Endofshift_QMK_
         SnackbarContext	Event_0uxsyhg
         SnackbarContext	Event_04cb9z0
         SnackbarContext	Flow_16vj7d4
@@ -225,53 +225,53 @@ specification fries_comp
         }
     
     
-        desc "Activity_0n48uxi_Model"
+        desc "FriesSnackbar_Model"
         
-        action			Activity_1180u0i
-        element-label	"Activity_1180u0i"
+        action			SlicePotatoes
+        element-label	"Slice Potatoes"
         case			default
         with-inputs		Flow_16vj7d4
-        produces-outputs	Gateway_098asuz
+        produces-outputs	Endofshift_QMK_
         updates:
-            Gateway_098asuz := Flow_16vj7d4
+            Endofshift_QMK_ := Flow_16vj7d4
         
-        action			Activity_0llc4s9
-        element-label	"Activity_0llc4s9"
+        action			BakeFriesandAddTopping
+        element-label	"Bake Fries and Add Topping"
         case			default
-        with-inputs		Gateway_098asuz, DataObjectReference_1kx41i3
-        with-guard		Gateway_098asuz.orders < 2
-        produces-outputs	Gateway_098asuz
+        with-inputs		Endofshift_QMK_, friesOrder
+        with-guard		Endofshift_QMK_.orders < 2
+        produces-outputs	Endofshift_QMK_
         updates:
-            Gateway_098asuz := Gateway_098asuz
-            Gateway_098asuz.orders := Gateway_098asuz.orders + 1
-        produces-outputs	DataObjectReference_1pzevyf
+            Endofshift_QMK_ := Endofshift_QMK_
+            Endofshift_QMK_.orders := Endofshift_QMK_.orders + 1
+        produces-outputs	deliveryRequest
         updates:
-            DataObjectReference_1pzevyf := FriesDelivery {
-             clientOrder = DataObjectReference_1kx41i3,
+            deliveryRequest := FriesDelivery {
+             clientOrder = friesOrder,
              receipt = Receipt { amount = 5.0 }
             }
         
-        action			Activity_15uaf19
-        element-label	"Activity_15uaf19"
+        action			PeelPotatoes
+        element-label	"Peel Potatoes"
         case			default
         with-inputs		Event_0uxsyhg
         produces-outputs	Flow_16vj7d4
         updates:
             Flow_16vj7d4 := Event_0uxsyhg
         
-        action			Activity_0957lig
-        element-label	"Activity_0957lig"
+        action			CleanUp
+        element-label	"Clean Up"
         case			default
-        with-inputs		Gateway_098asuz
-        with-guard		Gateway_098asuz.orders >= 2
+        with-inputs		Endofshift_QMK_
+        with-guard		Endofshift_QMK_.orders >= 2
         produces-outputs	Event_04cb9z0
         updates:
-            Event_04cb9z0 := Gateway_098asuz
+            Event_04cb9z0 := Endofshift_QMK_
     
-        element-labels ["Process_1", "Activity_0n48uxi"]
+        element-labels ["Fries", "Snackbar"]
     }
     
-	SUT-blocks Activity_1nx4k9r Activity_18pdfak
+	SUT-blocks FriesClient FriesDeliveryService
 	depth-limits 300
 	num-tests 1
 }

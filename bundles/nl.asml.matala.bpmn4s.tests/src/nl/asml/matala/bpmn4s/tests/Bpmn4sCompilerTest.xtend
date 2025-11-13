@@ -65,27 +65,22 @@ class Bpmn4sCompilerTest {
     }
 
     @Test
-    def void testFriesFlatSimulator() {
+    def void testFriesFlat() {
         testCompilation('fries_flat', 'fries_flat', true);
     }
 
     @Test
-    def void testFriesSubSimulator() {
+    def void testFriesSub() {
         testCompilation('fries_sub', 'fries_sub', true);
     }
 
     @Test
-    def void testFriesCompSimulator() {
+    def void testFriesComp() {
         testCompilation('fries_comp', 'fries_comp', true);
     }
 
     @Test
-    def void testPrinterSimulator() {
-        testCompilation('printer', 'printer_sim', true);
-    }
-
-    @Test
-    def void testPrinterTests() {
-        testCompilation('printer', 'printer_tests', false);
+    def void testPrinter() {
+        testCompilation('printer', 'printer', true);
     }
 }
