@@ -18,7 +18,7 @@ specification issue249
         ProdCtx	Gateway_1ywuak3
         ProdCtx	Event_1p0urs4
         ProdCtx	Event_0m7n0r6
-        ProdCtx	between_RunLocal_and_Compose
+        ProdCtx	Flow_168eaxr
     
         init
         Event_1p0urs4 := ProdCtx {
@@ -44,24 +44,24 @@ specification issue249
         action			Compose
         element-label	"Compose"
         case			default step-type "null" action-type COMPOSE
-        with-inputs		between_RunLocal_and_Compose
+        with-inputs		Flow_168eaxr
         produces-outputs	Event_0m7n0r6 suppress(Event_0m7n0r6.id, Event_0m7n0r6.loop)
         updates:
-            Event_0m7n0r6 := between_RunLocal_and_Compose
+            Event_0m7n0r6 := Flow_168eaxr
         produces-outputs	part1 symbolic-link suppress(part1.id)
         updates:
             part1 := ProdCons1 {
-             part1 = between_RunLocal_and_Compose.prod_field + "_1",
-             id = between_RunLocal_and_Compose.id
+             part1 = Flow_168eaxr.prod_field + "_1",
+             id = Flow_168eaxr.id
             }
         produces-outputs	report
         updates:
-            report := ProdReport { id = between_RunLocal_and_Compose.id }
+            report := ProdReport { id = Flow_168eaxr.id }
         produces-outputs	part2 symbolic-link suppress(part2.id)
         updates:
             part2 := ProdCons2 {
-             part2 = between_RunLocal_and_Compose.prod_field + "_2",
-             id = between_RunLocal_and_Compose.id
+             part2 = Flow_168eaxr.prod_field + "_2",
+             id = Flow_168eaxr.id
             }
         
         action			Loop
@@ -79,9 +79,9 @@ specification issue249
         case			default step-type "ProducerRunType" action-type RUN
         with-inputs		Gateway_1ww9hic, message, configuration, sutConf
         with-guard		not Gateway_1ww9hic.loop and configuration.id == message.id
-        produces-outputs	between_RunLocal_and_Compose suppress(between_RunLocal_and_Compose.loop, between_RunLocal_and_Compose.id)
+        produces-outputs	Flow_168eaxr suppress(Flow_168eaxr.id, Flow_168eaxr.loop)
         updates:
-            between_RunLocal_and_Compose := Gateway_1ww9hic
+            Flow_168eaxr := Gateway_1ww9hic
         
         action			Start
         element-label	"Start"

@@ -10,7 +10,7 @@ using issue249.ContextIssueProducer.Gateway_1ww9hic
 using issue249.ContextIssueProducer.Gateway_1ywuak3
 using issue249.ContextIssueProducer.Event_1p0urs4
 using issue249.ContextIssueProducer.Event_0m7n0r6
-using issue249.ContextIssueProducer.between_RunLocal_and_Compose
+using issue249.ContextIssueProducer.Flow_168eaxr
 using issue249.ContextIssueConsumer.Event_0fmv4m5
 
 abstract-test-definition
@@ -61,18 +61,18 @@ sutConf : {
     "prod_field": "sut"
 }
 output-data:
-between_RunLocal_and_Compose : {
+Flow_168eaxr : {
     "id": 0,
     "loop": false,
     "prod_field": "Hello Consumer!"
 }
-suppress(between_RunLocal_and_Compose.loop, between_RunLocal_and_Compose.id)
+suppress(Flow_168eaxr.id, Flow_168eaxr.loop)
 sut-var: { sutConf  }
 
 compose-step-name: ContextIssueProducer_Compose_default_0
 action-case: issue249.ContextIssueProducer.Compose.default
 input-binding:
-between_RunLocal_and_Compose : {
+Flow_168eaxr : {
     "id": 0,
     "loop": false,
     "prod_field": "Hello Consumer!"
