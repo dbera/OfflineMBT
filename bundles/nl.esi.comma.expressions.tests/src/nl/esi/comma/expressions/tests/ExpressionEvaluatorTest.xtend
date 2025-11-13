@@ -46,6 +46,37 @@ class ExpressionEvaluatorTest {
     }
 
     @Test
+    def void complexExpression() {
+        val types = '''
+            record T {
+                int ti
+                bool tb
+            }
+        '''
+        assertEval('''
+            «types»
+            bool a
+            bool b = not a
+
+            T t = T {
+                ti = 5,
+«««             TODO: Should variable references always be put between parenthesis?
+«««             i.e. tb = true or ( ( not a ) and true )
+                tb = true or ( not a and true )
+            }
+        ''', '''
+            «types»
+            bool a
+            bool b = not a
+
+            T t = T {
+                ti = (1 + 2) * 3 - 4,
+                tb = (1 == 1 and 2 == 2) or (b and 3 == 3)
+            }
+        ''')
+    }
+
+    @Test
     def void expressionVariable() {
         // Resolved variable
         assertEval('''
