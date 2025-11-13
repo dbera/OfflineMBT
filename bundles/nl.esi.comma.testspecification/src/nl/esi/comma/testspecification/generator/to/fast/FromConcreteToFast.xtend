@@ -146,12 +146,11 @@ class FromConcreteToFast extends AbstractGenerator {
     }
 
     def boolean isCommentBasedOnString(Action act) {
-        var TypeDecl fieldType = switch (act) {
-            RecordFieldAssignmentAction: (act.fieldAccess as ExpressionRecordAccess).field.type.type
-            default: null
-        }
-        if (fieldType instanceof SimpleTypeDecl) {
-            return fieldType.name == 'Comment'  && fieldType.base?.name == 'string'
+        if (act instanceof RecordFieldAssignmentAction){
+            var TypeDecl fieldType = (act.fieldAccess as ExpressionRecordAccess)?.field.type.type
+            if (fieldType instanceof SimpleTypeDecl) {
+                return fieldType.name == 'Comment'  && fieldType.base?.name == 'string'
+            }
         }
         return false
     }
