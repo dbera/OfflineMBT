@@ -10,12 +10,6 @@ test-sequence from_abstract_to_concrete {
 
 step-sequence test_single_sequence {
 
-step-id    step_ContextIssueProducer_RunContext_default_0
-step-type  ProducerRunType
-step-input ContextIssueProducerInput
-ref-to-step-output
-    ContextIssueProducerInput.between_ComposeContext_and_RunContext.prod_field := "Hello Consumer!"
-
 step-id    step_ContextIssueProducer_RunLocal_default_0
 step-type  ProducerRunType
 step-input ContextIssueProducerInput
@@ -33,7 +27,6 @@ ref-to-step-output
 generate-file "./dataset/"
 
 step-parameters
-ProducerRunType step_ContextIssueProducer_RunContext_default_0
 ProducerRunType step_ContextIssueProducer_RunLocal_default_0
 ConsumerRunType step_ContextIssueConsumer_ConsumerRun_default_0
 

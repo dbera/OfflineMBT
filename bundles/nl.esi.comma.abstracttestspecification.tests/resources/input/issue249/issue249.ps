@@ -14,12 +14,10 @@ specification issue249
         ProdReport	report
         ProdCons1	message
         ProdCtx	configuration
-        ProdCtx	Gateway_1ywuak3
         ProdCtx	Gateway_1ww9hic
+        ProdCtx	Gateway_1ywuak3
         ProdCtx	Event_1p0urs4
         ProdCtx	Event_0m7n0r6
-        ProdCtx	between_Start_and_ComposeContext
-        ProdCtx	between_ComposeContext_and_RunContext
         ProdCtx	between_RunLocal_and_Compose
     
         init
@@ -66,44 +64,6 @@ specification issue249
              id = between_RunLocal_and_Compose.id
             }
         
-        action			RunContext
-        element-label	"Run Context"
-        case			default step-type "ProducerRunType" action-type RUN
-        with-inputs		between_ComposeContext_and_RunContext
-        produces-outputs	Gateway_1ywuak3 suppress(Gateway_1ywuak3.loop, Gateway_1ywuak3.id)
-        updates:
-            Gateway_1ywuak3 := between_ComposeContext_and_RunContext
-        
-        action			ComposeContext
-        element-label	"Compose Context"
-        case			default step-type "null" action-type COMPOSE
-        with-inputs		between_Start_and_ComposeContext
-        produces-outputs	between_ComposeContext_and_RunContext suppress(between_ComposeContext_and_RunContext.loop, between_ComposeContext_and_RunContext.id)
-        updates:
-            between_ComposeContext_and_RunContext := between_Start_and_ComposeContext
-        
-        action			Start
-        element-label	"Start"
-        case			default
-        with-inputs		Event_1p0urs4
-        produces-outputs	between_Start_and_ComposeContext suppress(between_Start_and_ComposeContext.loop, between_Start_and_ComposeContext.id)
-        updates:
-            between_Start_and_ComposeContext := Event_1p0urs4
-        
-        action			ComposeLocal
-        element-label	"Compose Local"
-        case			default step-type "null" action-type COMPOSE
-        with-inputs		Gateway_1ywuak3
-        produces-outputs	Gateway_1ww9hic suppress
-        updates:
-            Gateway_1ww9hic := Gateway_1ywuak3
-        produces-outputs	message symbolic-link suppress(message.id)
-        updates:
-            message := ProdCons1 {
-             part1 = "Hello Message!",
-             id = Gateway_1ywuak3.id
-            }
-        
         action			Loop
         element-label	"Loop"
         case			default
@@ -122,6 +82,28 @@ specification issue249
         produces-outputs	between_RunLocal_and_Compose suppress(between_RunLocal_and_Compose.loop, between_RunLocal_and_Compose.id)
         updates:
             between_RunLocal_and_Compose := Gateway_1ww9hic
+        
+        action			Start
+        element-label	"Start"
+        case			default
+        with-inputs		Event_1p0urs4
+        produces-outputs	Gateway_1ywuak3 suppress(Gateway_1ywuak3.loop, Gateway_1ywuak3.id)
+        updates:
+            Gateway_1ywuak3 := Event_1p0urs4
+        
+        action			ComposeLocal
+        element-label	"Compose Local"
+        case			default step-type "null" action-type COMPOSE
+        with-inputs		Gateway_1ywuak3
+        produces-outputs	Gateway_1ww9hic suppress
+        updates:
+            Gateway_1ww9hic := Gateway_1ywuak3
+        produces-outputs	message symbolic-link suppress(message.id)
+        updates:
+            message := ProdCons1 {
+             part1 = "Hello Message!",
+             id = Gateway_1ywuak3.id
+            }
     
         element-labels ["ContextIssue", "Producer"]
     }
@@ -153,7 +135,7 @@ specification issue249
         element-labels ["ContextIssue", "Consumer"]
     }
     
-	SUT-blocks ContextIssueConsumer ContextIssueProducer ContextIssueProducer
-	depth-limits 300
+	SUT-blocks ContextIssueConsumer ContextIssueProducer
+	depth-limits 15000
 	num-tests 1
 }

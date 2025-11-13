@@ -6,51 +6,16 @@ using issue249.ContextIssueProducer.sutConf
 using issue249.ContextIssueProducer.report
 using issue249.ContextIssueProducer.message
 using issue249.ContextIssueProducer.configuration
-using issue249.ContextIssueProducer.Gateway_1ywuak3
 using issue249.ContextIssueProducer.Gateway_1ww9hic
+using issue249.ContextIssueProducer.Gateway_1ywuak3
 using issue249.ContextIssueProducer.Event_1p0urs4
 using issue249.ContextIssueProducer.Event_0m7n0r6
-using issue249.ContextIssueProducer.between_Start_and_ComposeContext
-using issue249.ContextIssueProducer.between_ComposeContext_and_RunContext
 using issue249.ContextIssueProducer.between_RunLocal_and_Compose
 using issue249.ContextIssueConsumer.Event_0fmv4m5
 
 abstract-test-definition
 
 Test-Scenario: S1
-
-compose-step-name: ContextIssueProducer_ComposeContext_default_0
-action-case: issue249.ContextIssueProducer.ComposeContext.default
-input-binding:
-between_Start_and_ComposeContext : {
-    "id": 0,
-    "loop": false,
-    "prod_field": "Hello Consumer!"
-}
-output-data:
-between_ComposeContext_and_RunContext : {
-    "id": 0,
-    "loop": false,
-    "prod_field": "Hello Consumer!"
-}
-suppress(between_ComposeContext_and_RunContext.loop, between_ComposeContext_and_RunContext.id)
-
-run-step-name: ContextIssueProducer_RunContext_default_0 step-type: "ProducerRunType"
-action-case: issue249.ContextIssueProducer.RunContext.default
-consumes-from-step: ContextIssueProducer_ComposeContext_default_0 { between_ComposeContext_and_RunContext }
-input-binding:
-between_ComposeContext_and_RunContext : {
-    "id": 0,
-    "loop": false,
-    "prod_field": "Hello Consumer!"
-}
-output-data:
-Gateway_1ywuak3 : {
-    "id": 0,
-    "loop": false,
-    "prod_field": "Hello Consumer!"
-}
-suppress(Gateway_1ywuak3.loop, Gateway_1ywuak3.id)
 
 compose-step-name: ContextIssueProducer_ComposeLocal_default_0
 action-case: issue249.ContextIssueProducer.ComposeLocal.default
@@ -74,7 +39,7 @@ suppress(Gateway_1ww9hic, message.id)
 
 run-step-name: ContextIssueProducer_RunLocal_default_0 step-type: "ProducerRunType"
 action-case: issue249.ContextIssueProducer.RunLocal.default
-consumes-from-step: ContextIssueProducer_ComposeLocal_default_0 { Gateway_1ww9hic message }
+consumes-from-step: ContextIssueProducer_ComposeLocal_default_0 { message  }
 input-binding:
 Gateway_1ww9hic : {
     "id": 0,
@@ -133,7 +98,7 @@ suppress(Event_0m7n0r6.id, Event_0m7n0r6.loop, part1.id, part2.id)
 
 run-step-name: ContextIssueConsumer_ConsumerRun_default_0 step-type: "ConsumerRunType"
 action-case: issue249.ContextIssueConsumer.ConsumerRun.default
-consumes-from-step: ContextIssueProducer_Compose_default_0 { part1 part2 }
+consumes-from-step: ContextIssueProducer_Compose_default_0 { part1 part2  }
 input-binding:
 part1 : {
     "id": 0,
