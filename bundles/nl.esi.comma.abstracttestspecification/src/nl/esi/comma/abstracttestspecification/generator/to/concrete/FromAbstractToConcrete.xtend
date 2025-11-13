@@ -13,10 +13,10 @@
 package nl.esi.comma.abstracttestspecification.generator.to.concrete
 
 import java.util.HashSet
-import nl.asml.matala.product.product.Product
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractTestDefinition
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AssertionStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.Binding
+import nl.esi.comma.abstracttestspecification.abstractTestspecification.ComposeStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.ExecutableStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.RunStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.TSMain
@@ -24,6 +24,7 @@ import nl.esi.comma.assertthat.assertThat.DataAssertionItem
 import nl.esi.comma.expressions.expression.ExpressionVariable
 import nl.esi.comma.expressions.services.ExpressionGrammarAccess
 import nl.esi.comma.types.utilities.EcoreUtil3
+import org.eclipse.emf.common.util.URI
 import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.generator.AbstractGenerator
@@ -32,6 +33,7 @@ import org.eclipse.xtext.generator.IGeneratorContext
 
 import static extension nl.esi.comma.abstracttestspecification.generator.utils.Utils.*
 import static extension nl.esi.comma.types.utilities.EcoreUtil3.*
+import static extension nl.esi.comma.types.utilities.TypeUtilities.*
 
 class FromAbstractToConcrete extends AbstractGenerator {
 
@@ -40,10 +42,13 @@ class FromAbstractToConcrete extends AbstractGenerator {
         if (atd === null) {
             throw new Exception('No abstract tspec found in resource: ' + res.URI)
         }
-        
-        val typesImports = getTypesImports(res)
+
+        val typesImportURIs = getTypesImports(res)
         for (sys : atd.systems) {
-            fsa.generateFile('''types/«sys».types''', atd.generateTypesFile(sys, typesImports))
+            val typesFile = '''types/«sys».types'''
+            val typesURI = fsa.getURI(typesFile)
+            val typesImports = typesImportURIs.map[resolve(res.URI).deresolve(typesURI).toString].toSet
+            fsa.generateFile(typesFile, atd.generateTypesFile(sys, typesImports))
             fsa.generateFile('''parameters/«sys».params''', atd.generateParamsFile(sys))
         }
         val conTspecFileName = res.URI.lastSegment.replaceAll('\\.atspec$','.tspec')
@@ -155,14 +160,11 @@ class FromAbstractToConcrete extends AbstractGenerator {
     }
 
     def private _printOutputs_(RunStep rstep) {
-        // At most one (TODO validate this)
-        // Observation: when multiple steps have indistinguishable outputs, 
-        // multiple consumes from is possible. TODO Warn user.   
-        val composeSteps = rstep.composeSteps
         // Get text for concrete data expressions
-        var conDataExpr = (new ConcreteExpressionHandler()).prepareStepInputExpressions(rstep, composeSteps)
+        var conDataExpr = (new ConcreteExpressionHandler()).prepareStepInputExpressions(rstep, rstep.composeStepRefs)
         // Append text for reference data expressions
-        val refDataExpr = (new ReferenceExpressionHandler()).resolveStepReferenceExpressions(rstep, composeSteps)
+        val refDataExpr = (new ReferenceExpressionHandler())
+            .resolveStepReferenceExpressions(rstep, rstep.stepRef.map[refStep].filter(ComposeStep))
 
         return '''
             «conDataExpr»
@@ -178,9 +180,9 @@ class FromAbstractToConcrete extends AbstractGenerator {
         // At most one (TODO validate this)
         // Observation: when multiple steps have indistinguishable outputs, 
         // multiple consumes from is possible. TODO Warn user.   
-        val runSteps = astep.runSteps
+        val runStepRefs = astep.runStepRefs
         // Get text for concrete data expressions
-        var conDataExpr = (new ConcreteExpressionHandler()).prepareStepInputExpressions(astep, runSteps)
+        var conDataExpr = (new ConcreteExpressionHandler()).prepareStepInputExpressions(astep, runStepRefs)
 
         return '''
             «conDataExpr»
@@ -197,7 +199,7 @@ class FromAbstractToConcrete extends AbstractGenerator {
             }
             rstep.input.forEach[i|ios.putIfAbsent(i.name, i)]
             rstep.output.forEach[o|ios.putIfAbsent(o.name, o)]
-            for (cstep : rstep.composeSteps) {
+            for (cstep : rstep.composeStepRefs.map[refStep]) {
                 cstep.input.forEach[i|ios.putIfAbsent(i.name, i)]
                 cstep.output.forEach[o|ios.putIfAbsent(o.name, o)]
             }
@@ -208,7 +210,7 @@ class FromAbstractToConcrete extends AbstractGenerator {
             }
             astep.input.forEach[i|ios.putIfAbsent(i.name, i)]
             astep.output.forEach[o|ios.putIfAbsent(o.name, o)]
-            for (cstep : astep.runSteps) {
+            for (cstep : astep.runStepRefs.map[refStep]) {
                 cstep.input.forEach[i|ios.putIfAbsent(i.name, i)]
                 cstep.output.forEach[o|ios.putIfAbsent(o.name, o)]
             }
@@ -219,7 +221,7 @@ class FromAbstractToConcrete extends AbstractGenerator {
     // Print types for each step
     def private printTypes(Iterable<Binding> ios, String type, Iterable<String> typesImports) '''
         «FOR ti : typesImports»
-            import "../../«ti»"
+            import "«ti»"
         «ENDFOR»
         
         record «type» {
@@ -283,14 +285,12 @@ class FromAbstractToConcrete extends AbstractGenerator {
         return atd.steps.filter(ExecutableStep).filter[system == sys]
     }
 
-    def private Iterable<String> getTypesImports(Resource res) {
+    def private Iterable<URI> getTypesImports(Resource res) {
         val typesImports = newLinkedHashSet
-        for (psImport : res.contents.filter(TSMain).flatMap[imports].filter[importURI.endsWith('.ps')]) {
-            for (typesImport : psImport.resource.contents.filter(Product).flatMap[imports].filter [
-                importURI.endsWith('.types')
-            ]) {
-                val typesImportURI = typesImport.resolveUri.deresolve(res.URI)
-                typesImports += typesImportURI.toString
+        for (psImport : res.getImports('ps')) {
+            val psRes = psImport.resource
+            for (typesImport : psRes.getImports('types')) {
+                typesImports += typesImport.resolveUri.deresolve(res.URI)
             }
         }
         return typesImports;

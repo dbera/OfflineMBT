@@ -240,8 +240,9 @@
                                 <exclude>**/*.bpmn</exclude>
                                 <exclude>**/*.types</exclude>
                                 <exclude>**/*.ps</exclude>
-                                <exclude>**/*.atest</exclude>
-                                <exclude>**/*.test</exclude>
+                                <exclude>**/*.atspec</exclude>
+                                <exclude>**/*.tspec</exclude>
+                                <exclude>**/*.params</exclude>
                                 <exclude>**/*.json</exclude>
                                 <!-- End: Matala file types -->
                                 <exclude>.META-INF_MANIFEST.MF</exclude>
