@@ -95,7 +95,7 @@ specification issue249
         element-label	"Compose Local"
         case			default step-type "null" action-type COMPOSE
         with-inputs		Gateway_1ywuak3
-        produces-outputs	Gateway_1ww9hic suppress
+        produces-outputs	Gateway_1ww9hic suppress(Gateway_1ww9hic.id, Gateway_1ww9hic.loop)
         updates:
             Gateway_1ww9hic := Gateway_1ywuak3
         produces-outputs	message symbolic-link suppress(message.id)
@@ -136,6 +136,6 @@ specification issue249
     }
     
 	SUT-blocks ContextIssueConsumer ContextIssueProducer
-	depth-limits 15000
+	depth-limits 300
 	num-tests 1
 }

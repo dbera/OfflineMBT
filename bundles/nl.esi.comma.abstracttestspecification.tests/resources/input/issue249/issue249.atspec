@@ -35,7 +35,7 @@ message : {
     "id": 0,
     "part1": "Hello Message!"
 }
-suppress(Gateway_1ww9hic, message.id)
+suppress(Gateway_1ww9hic.id, Gateway_1ww9hic.loop, message.id)
 
 run-step-name: ContextIssueProducer_RunLocal_default_0 step-type: "ProducerRunType"
 action-case: issue249.ContextIssueProducer.RunLocal.default

@@ -61,7 +61,7 @@
       <bpmn2:dataObject id="DataObject_102q1g2" />
       <bpmn2:sequenceFlow id="Flow_0b7a15r" sourceRef="Activity_1nqrvhd" targetRef="Gateway_1ww9hic" />
       <bpmn2:sequenceFlow id="Flow_168eaxr" sourceRef="Activity_1xx659x" targetRef="Activity_1maegx9" />
-      <bpmn2:task id="Activity_1nqrvhd" name="Compose Local" bpmn4s:subType="ComposeTask" bpmn4s:suppressUpdate="true">
+      <bpmn2:task id="Activity_1nqrvhd" name="Compose Local" bpmn4s:subType="ComposeTask" bpmn4s:suppressUpdate="false">
         <bpmn2:incoming>Flow_1f7c6w0</bpmn2:incoming>
         <bpmn2:outgoing>Flow_0b7a15r</bpmn2:outgoing>
         <bpmn2:dataOutputAssociation id="DataOutputAssociation_1kw0bvo" bpmn4s:update="message := ProdCons1 {&#10;	part1 = &#34;Hello Message!&#34;,&#10;	id = prodCtx.id&#10;}">
@@ -191,12 +191,19 @@
           <dc:Bounds x="1528" y="222" width="26" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_175uaqa_di" bpmnElement="Activity_175uaqa">
+        <dc:Bounds x="580" y="360" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_0m7n0r6_di" bpmnElement="Event_0m7n0r6">
         <dc:Bounds x="1522" y="382" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_1b7z57j_di" bpmnElement="Activity_1maegx9">
         <dc:Bounds x="1310" y="360" width="100" height="80" />
         <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1p0urs4_di" bpmnElement="Event_1p0urs4">
+        <dc:Bounds x="482" y="382" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DataStoreReference_1im9msy_di" bpmnElement="DataStoreReference_1im9msy">
         <dc:Bounds x="1515" y="525" width="50" height="50" />
@@ -243,13 +250,6 @@
         <bpmndi:BPMNLabel>
           <dc:Bounds x="1211" y="582" width="39" height="14" />
         </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_175uaqa_di" bpmnElement="Activity_175uaqa">
-        <dc:Bounds x="580" y="360" width="100" height="80" />
-        <bpmndi:BPMNLabel />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_1p0urs4_di" bpmnElement="Event_1p0urs4">
-        <dc:Bounds x="482" y="382" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="Flow_1816mxi_di" bpmnElement="Flow_1816mxi">
         <di:waypoint x="680" y="400" />
