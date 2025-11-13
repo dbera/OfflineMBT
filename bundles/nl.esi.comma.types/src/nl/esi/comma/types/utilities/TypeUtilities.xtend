@@ -69,9 +69,21 @@ class TypeUtilities {
 	}
 	
 	def static boolean isRecordType(Type t){
-		t.getTypeObject instanceof RecordTypeDecl
+		t.getTypeObject.isRecordType
 	}
 	
+    def static boolean isRecordType(TypeObject t){
+        t instanceof RecordTypeDecl
+    }
+
+    def static boolean isEnumType(Type t) {
+        return t.getTypeObject.isEnumType
+    }
+
+    def static boolean isEnumType(TypeObject t) {
+        t instanceof EnumTypeDecl
+    }
+
 	def static boolean isStructuredType(Type t){
 		val to = t.getTypeObject
 		to instanceof VectorTypeConstructor || 
