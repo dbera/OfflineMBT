@@ -18,6 +18,7 @@ package nl.esi.comma.expressions.tests
 import com.google.inject.Inject
 import nl.esi.comma.expressions.evaluation.ExpressionEvaluator
 import nl.esi.comma.expressions.expression.Expressions
+import nl.esi.comma.expressions.validation.ExpressionValidator
 import nl.esi.comma.types.utilities.EcoreUtil3
 import org.eclipse.xtext.resource.SaveOptions
 import org.eclipse.xtext.serializer.ISerializer
@@ -44,11 +45,14 @@ class ExpressionEvaluatorTest {
         Assertions.assertTrue(expressions.eResource.errors.isEmpty, '''Unexpected errors in input: «expressions.eResource.errors.join(", ")»''')
         Assertions.assertEquals(expressions.variables.size, expressions.variables.map[variable.name].toSet.size, 'Variables cannot be declared multiple times')
         val evaluator = new ExpressionEvaluator()
-        val context = expressions.variables.toMap([variable], [expression])
+        val context = expressions.variables.reverseView.toMap([variable], [expression])
         for (assignment : expressions.variables.reject[expression === null]) {
-            assignment.expression = evaluator.evaluate(assignment.expression) [ varExpr |
+            val value = evaluator.evaluate(assignment.expression) [ varExpr |
                 return context.get(varExpr.variable)
             ]
+            val type = ExpressionValidator.typeOf(assignment.expression)
+            assignment.expression = evaluator.createValueExpression(value, type)
+//            context.put(assignment.variable, assignment.expression)
         }
         val actualFormatted = serializer.serialize(EcoreUtil3.unformat(expressions), SAVE_OPTIONS)
         val expectedExprs = parser.parse(expected)
@@ -58,212 +62,234 @@ class ExpressionEvaluatorTest {
     }
 
     @Test
-    def void complexExpression() {
+    def void recordsAndTypes() {
         val types = '''
+            enum Count { ONE TWO THREE }
+
             record T {
                 int ti
+                real tr
                 bool tb
+                Count te
+                string[] tss
+                map<int, string> ti2s
             }
         '''
         assertEval('''
             «types»
-            bool a
-            bool b = not a
-
             T t = T {
-                ti = 5,
-«««             TODO: Should variable references always be put between parenthesis?
-«««             i.e. tb = true or ( ( not a ) and true )
-                tb = true or ( not a and true )
+                ti = 1,
+                tr = 1.1,
+                tb = true,
+                te = Count::TWO,
+                tss = <string[]> [ "Hello", "World" ],
+                ti2s = <map<int, string>> { 1 -> "Hello", 2 -> "World" }
             }
         ''', '''
             «types»
-            bool a
-            bool b = not a
-
             T t = T {
-                ti = (1 + 2) * 3 - 4,
-                tb = (1 == 1 and 2 == 2) or (b and 3 == 3)
+                ti = 1,
+                tr = 1.1,
+                tb = true,
+                te = Count::TWO,
+                tss = <string[]> [ "Hello", "World" ],
+                ti2s = <map<int, string>> { 1 -> "Hello", 2 -> "World" }
             }
         ''')
     }
 
     @Test
-    def void expressionVariable() {
+    def void variables() {
+        val types = '''
+            enum Count { ONE TWO THREE }
+
+            record T {
+                int ti
+                real tr
+                bool tb
+                Count te
+                string[] tss
+                map<int, string> ti2s
+            }
+        '''
         // Resolved variable
         assertEval('''
-            bool a = false
-            bool b = false
+            «types»
+            int a = 1
+            int b = 1
         ''', '''
-            bool a = false
-            bool b = a
+            «types»
+            int a = 1
+            int b = a
         ''')
         // Unresolved variable
         assertEval('''
-            bool a
-            bool b = a
-            bool c = a
-        ''', '''
-            bool a
-            bool b = a
-            bool c = b
-        ''')
-    }
-
-    @Test
-    def void expressionRecordAccess() {
-        val types = '''
-            record T {
-                int ti
-                bool tb
-            }
-        '''
-        // Resolved variable
-        assertEval('''
             «types»
-            int a = 1
-            T b = T {
-                ti = 1
-            }
-            int c = 1
+            int a
+            T t
         ''', '''
             «types»
-            int a = 1
-            T b = T {
+            int a
+            T t = T {
                 ti = a
             }
-            int c = b.ti
         ''')
-        // Unresolved variable
+        // If 1 variable cannot be resolved, the result will be undefined
         assertEval('''
             «types»
-            T a
-            int b = a.ti
+            int a = 1
+            bool b
+            T t
         ''', '''
             «types»
-            T a
-            int b = a.ti
+            int a = 1
+            bool b
+            T t = T {
+                ti = a,
+                tb = b
+            }
         ''')
-        // Unresolved field
-        assertEval('''
-            «types»
-            T a = T {
-                tb = false
-            }
-            T b = T {
-                ti = a.ti
-            }
-            int c = a.ti
-        ''', '''
-            «types»
-            T a = T {
-                tb = false
-            }
-            T b = T {
-                ti = a.ti
-            }
-            int c = b.ti
-        ''')
-
-//        assertEval('''
-//            «types»
-//            step3 = symbolA + 1
-//        ''', '''
-//            «types»
-//            symbolA
-//            step1 = [
-//                synmbolA
-//            ]
-//            step2 = get(step1, 0)
-//            step3 = step2 + 1
-//        ''')
-//
-//        assertEval('''
-//            «types»
-//            step3 = get(step1, 5) + 1
-//        ''', '''
-//            «types»
-//            [] step1
-//            step2 = get(step1, 1 + 4)
-//            step3 = step2 + 1
-//        ''')
-//        
-//        'a = "list["  + toString(10) + "].item"' -> 'list[10].item'
     }
 
-    // ExpressionUnary
-
     @Test
-    def void expressionBracket() {
-        // Constants
-        assertEval('int a = 1', 'int a = (1)')
+    def void level1BasicTypes() {
         // Resolved variable
         assertEval('''
-            bool a = true
-            bool b = true
+            bool v_and_1 = true
+            bool v_and_2 = false
+            bool v_or_1 = true
+            bool v_or_2 = false
         ''', '''
-            bool a = true
-            bool b = (a)
-        ''')
-        // Unresolved variable
-        assertEval('''
-            bool a
-            bool b = (a)
-        ''', '''
-            bool a
-            bool b = (a)
+            bool v_and_1 = true and true
+            bool v_and_2 = true and false
+            bool v_or_1 = false or true
+            bool v_or_2 = false or false
         ''')
     }
 
     @Test
-    def void expressionMinus() {
-        assertEval('int a = -1', 'int a = -1')
-        assertEval('int a = -1.0', 'int a = -1.0')
-    }
-
-    @Test
-    def void exprNot() {
-        assertEval('bool b = false', 'bool b = not true')
-        assertEval('bool b = true', 'bool b = not false')
+    def void level2BasicTypes() {
         // Resolved variable
         assertEval('''
-            bool a = false
-            bool b = true
-            bool c = false
+            bool v_eq_int_1 = true
+            bool v_eq_int_2 = false
+            bool v_eq_real_1 = true
+            bool v_eq_real_2 = false
+            bool v_eq_string_1 = true
+            bool v_eq_string_2 = false
+            bool v_eq_null_1 = true
+            bool v_eq_null_2 = false
+
+            bool v_neq_int_1 = false
+            bool v_neq_int_2 = true
+            bool v_neq_real_1 = false
+            bool v_neq_real_2 = true
+            bool v_neq_string_1 = false
+            bool v_neq_string_2 = true
+            bool v_neq_null_1 = false
+            bool v_neq_null_2 = true
         ''', '''
-            bool a = false
-            bool b = not a
-            bool c = not b
-        ''')
-        // Unresolved variable
-        assertEval('''
-            bool a
-            bool b = not a
-        ''', '''
-            bool a
-            bool b = not a
+            bool v_eq_int_1 = 1 == 1
+            bool v_eq_int_2 = 1 == 2
+            bool v_eq_real_1 = 1.1 == 1.1
+            bool v_eq_real_2 = 1.1 == 2.2
+            bool v_eq_string_1 = "Hello" == "Hello"
+            bool v_eq_string_2 = "Hello" == "World"
+            bool v_eq_null_1 = null == null
+            bool v_eq_null_2 = null == 1
+
+            bool v_neq_int_1 = 1 != 1
+            bool v_neq_int_2 = 1 != 2
+            bool v_neq_real_1 = 1.1 != 1.1
+            bool v_neq_real_2 = 1.1 != 2.2
+            bool v_neq_string_1 = "Hello" != "Hello"
+            bool v_neq_string_2 = "Hello" != "World"
+            bool v_neq_null_1 = null != null
+            bool v_neq_null_2 = null != 1
         ''')
     }
 
     @Test
-    def void expressionPlus() {
-        assertEval('int a = 1', 'int a = +1')
-        assertEval('int a = 1.0', 'int a = +1.0')
+    def void level3BasicTypes() {
         // Resolved variable
         assertEval('''
-            int a
-            int b = a
+            bool v_gt_int_1 = true
+            bool v_gt_int_2 = false
+            bool v_gt_real_1 = true
+            bool v_gt_real_2 = false
+            bool v_geq_int_1 = true
+            bool v_geq_int_2 = true
+            bool v_geq_int_3 = false
+            bool v_geq_real_1 = true
+            bool v_geq_real_2 = true
+            bool v_geq_real_3 = false
+
+            bool v_lt_int_1 = true
+            bool v_lt_int_2 = false
+            bool v_lt_real_1 = true
+            bool v_lt_real_2 = false
+            bool v_leq_int_1 = true
+            bool v_leq_int_2 = true
+            bool v_leq_int_3 = false
+            bool v_leq_real_1 = true
+            bool v_leq_real_2 = true
+            bool v_leq_real_3 = false
         ''', '''
-            int a
-            int b = +a
+            bool v_gt_int_1 = 2 > 1
+            bool v_gt_int_2 = 1 > 1
+            bool v_gt_real_1 = 2.2 > 1.1
+            bool v_gt_real_2 = 2.2 > 2.2
+            bool v_geq_int_1 = 2 >= 1
+            bool v_geq_int_2 = 1 >= 1
+            bool v_geq_int_3 = 1 >= 2
+            bool v_geq_real_1 = 2.2 >= 1.1
+            bool v_geq_real_2 = 1.1 >= 1.1
+            bool v_geq_real_3 = 1.1 >= 2.2
+
+            bool v_lt_int_1 = 1 < 2
+            bool v_lt_int_2 = 1 < 1
+            bool v_lt_real_1 = 1.1 < 2.2
+            bool v_lt_real_2 = 1.1 < 1.1
+            bool v_leq_int_1 = 1 <= 2
+            bool v_leq_int_2 = 1 <= 1
+            bool v_leq_int_3 = 2 <= 1
+            bool v_leq_real_1 = 1.1 <= 2.2
+            bool v_leq_real_2 = 1.1 <= 1.1
+            bool v_leq_real_3 = 2.2 <= 1.1
         ''')
-        // Unresolved variable
+    }
+    
+    @Test
+    def void level4BasicTypes() {
+        // Resolved variable
         assertEval('''
-            int a
-            int b = a
+            int v_add_int_1 = 3
+            int v_add_int_2 = 6
+            real v_add_real_1 = 3.3
+            real v_add_real_2 = 6.6
+            real v_add_string_1 = "aabb"
+            real v_add_string_2 = "aabbcc"
+
+            int v_sub_int_1 = 1
+            int v_sub_int_2 = - 2
+            int v_sub_int_3 = 2
+            int v_sub_real_1 = 1.1
+            int v_sub_real_2 = - 2.2
+            int v_sub_real_3 = 1.3
         ''', '''
-            int a
-            int b = +a
+            int v_add_int_1 = 1 + 2
+            int v_add_int_2 = 1 + 2 + 3
+            real v_add_real_1 = 1.1 + 2.2
+            real v_add_real_2 = 1.1 + 2.2 + 3.3
+            real v_add_string_1 = "aa" + "bb"
+            real v_add_string_2 = "aa" + "bb" + "cc"
+
+            int v_sub_int_1 = 2 - 1
+            int v_sub_int_2 = 2 - 4
+            int v_sub_int_3 = 10 - 5 - 3
+            int v_sub_real_1 = 2.2 - 1.1
+            int v_sub_real_2 = 2.2 - 4.4
+            int v_sub_real_3 = 10.10 - 5.5 - 3.3
         ''')
     }
 }
