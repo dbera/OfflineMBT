@@ -471,7 +471,9 @@ class Utils
                                 parts = elm.depends_on.split("@")
                                 new_name = parts[0] + parts[3]
                                 txt += "consumes-from-step: %s { " % new_name
-                                txt += elm.var_ref
+                                for v in elm.var_ref:
+                                    txt += v + " "
+                                # txt += elm.var_ref
                                 txt += " }\n"
                         txt += "input-binding:\n"
                         txt += self.printData(idata)
@@ -574,6 +576,8 @@ class Utils
                 self.is_assert = _is_assert
         
             def compare(self, _step, mapTrAssert):
+                step_dep = StepDependency()
+                isMatched = False
                 for ipdata in self.output_data:
                     if ipdata in self.output_suppress:
                         continue
@@ -584,29 +588,35 @@ class Utils
                                 # print("     Matched %s - %s" % (ipdata,opdata))
                                 if _step.input_data[opdata] == self.output_data[ipdata]:
                                     # print("     Payload Matched!")
-                                    step_dep = StepDependency()
+                                    # step_dep = StepDependency()
                                     step_dep.step_name = _step.step_name
                                     step_dep.depends_on = self.step_name
-                                    step_dep.var_ref = ipdata
+                                    # step_dep.var_ref = ipdata
+                                    step_dep.var_ref.append(ipdata)
                                     step_dep.payload = _step.input_data[opdata]
-                                    return step_dep
+                                    isMatched = True
+                                    # return step_dep
                                 # else:
                                 # print("     Payload Not Matched!")
                                 # print(_step.input_data[opdata])
                                 # print(self.output_data[ipdata])
                                 # print("\n")
-                return None
+                if isMatched:
+                    return step_dep
+                else:
+                    return None
         
         
         class StepDependency:
             step_name = ""
             depends_on = ""
-            var_ref = ""
+            var_ref = []
             payload = ""
         
             def __init__(self):
                 self.step_name = ""
                 self.depends_on = ""
+                self.var_ref = []
                 self.payload = ""
         
         
