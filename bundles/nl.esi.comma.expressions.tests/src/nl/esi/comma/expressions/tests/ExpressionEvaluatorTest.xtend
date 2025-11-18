@@ -18,7 +18,6 @@ package nl.esi.comma.expressions.tests
 import com.google.inject.Inject
 import nl.esi.comma.expressions.evaluation.ExpressionEvaluator
 import nl.esi.comma.expressions.expression.Expressions
-import nl.esi.comma.expressions.validation.ExpressionValidator
 import nl.esi.comma.types.utilities.EcoreUtil3
 import org.eclipse.xtext.resource.SaveOptions
 import org.eclipse.xtext.serializer.ISerializer
@@ -45,13 +44,11 @@ class ExpressionEvaluatorTest {
         Assertions.assertTrue(expressions.eResource.errors.isEmpty, '''Unexpected errors in input: «expressions.eResource.errors.join(", ")»''')
         Assertions.assertEquals(expressions.variables.size, expressions.variables.map[variable.name].toSet.size, 'Variables cannot be declared multiple times')
         val evaluator = new ExpressionEvaluator()
-        val context = expressions.variables.reverseView.toMap([variable], [expression])
+        val context = expressions.variables.toMap([variable], [expression])
         for (assignment : expressions.variables.reject[expression === null]) {
-            val value = evaluator.evaluate(assignment.expression) [ varExpr |
+            assignment.expression = evaluator.evaluate(assignment.expression) [ varExpr |
                 return context.get(varExpr.variable)
             ]
-            val type = ExpressionValidator.typeOf(assignment.expression)
-            assignment.expression = evaluator.createValueExpression(value, type)
 //            context.put(assignment.variable, assignment.expression)
         }
         val actualFormatted = serializer.serialize(EcoreUtil3.unformat(expressions), SAVE_OPTIONS)
@@ -126,7 +123,9 @@ class ExpressionEvaluatorTest {
         assertEval('''
             «types»
             int a
-            T t
+            T t = T {
+                ti = a
+            }
         ''', '''
             «types»
             int a
@@ -139,7 +138,10 @@ class ExpressionEvaluatorTest {
             «types»
             int a = 1
             bool b
-            T t
+            T t = T {
+                ti = 1,
+                tb = b
+            }
         ''', '''
             «types»
             int a = 1

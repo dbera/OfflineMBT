@@ -16,7 +16,7 @@
 package nl.esi.comma.expressions.tests
 
 import com.google.inject.Inject
-import nl.esi.comma.expressions.evaluation.ExpressionOptimizer
+import nl.esi.comma.expressions.evaluation.ExpressionEvaluator
 import nl.esi.comma.expressions.expression.Expressions
 import nl.esi.comma.types.utilities.EcoreUtil3
 import org.eclipse.xtext.resource.SaveOptions
@@ -39,14 +39,14 @@ class ExpressionOptimizerTest {
 
     val SAVE_OPTIONS = SaveOptions.newBuilder.format.options
 
-    protected def void assertOptimize(String expected, String input) {
+    protected def void assertEval(String expected, String input) {
         val expressions = parser.parse(input)
         Assertions.assertTrue(expressions.eResource.errors.isEmpty, '''Unexpected errors in input: «expressions.eResource.errors.join(", ")»''')
         Assertions.assertEquals(expressions.variables.size, expressions.variables.map[variable.name].toSet.size, 'Variables cannot be declared multiple times')
-        val optimizer = new ExpressionOptimizer()
+        val evaluator = new ExpressionEvaluator()
         val context = expressions.variables.toMap([variable], [expression])
         for (assignment : expressions.variables.reject[expression === null]) {
-            assignment.expression = optimizer.optimize(assignment.expression) [ varExpr |
+            assignment.expression = evaluator.evaluate(assignment.expression) [ varExpr |
                 return context.get(varExpr.variable)
             ]
 //            context.put(assignment.variable, assignment.expression)
@@ -67,7 +67,7 @@ class ExpressionOptimizerTest {
                 int[] tv
             }
         '''
-        assertOptimize('''
+        assertEval('''
             «types»
             bool a
             bool b = not a
@@ -86,64 +86,60 @@ class ExpressionOptimizerTest {
                 tb = (1 == 1 and 2 == 2) or (b and 3 == 3)
             }
         ''')
-//        assertOptimize('''
-//            «types»
-//            T step1 = T {
-//                tb = true
-//            }
-//            T step2 = T {
-//                tv = <int[]> [ step1.ti ]
-//            }
-//            T step3 = T {
-//                ti = step1.ti
-//            }
-//            T step4 = T {
-//                ti = step1.ti + 1
-//            }
-//        ''', '''
-//            «types»
-//            T step1 = T {
-//                tb = true
-//            }
-//            T step2 = T {
-//                tv = <int[]> [ step1.ti ]
-//            }
-//            T step3 = T {
-//                ti = get(step2.tv, 0)
-//            }
-//            T step4 = T {
-//                ti = step3.ti + 1
-//            }
-//        ''')
-//        assertOptimize('''
-//            «types»
-//            T step1 = T {
-//                tv = <int[]> [ ]
-//            }
-//            T step2 = T {
-//                ti = get(step1.tv, 5)
-//            }
-//            T step3 = T {
-//                ti = get(step1.tv, 5) + 1
-//            }
-//        ''', '''
-//            «types»
-//            T step1 = T {
-//                tv = <int[]> [ ]
-//            }
-//            T step2 = T {
-//                ti = get(step1.tv, 1 + 4)
-//            }
-//            T step3 = T {
-//                ti = step2.ti + 1
-//            }
-//        ''')
+        assertEval('''
+            «types»
+            T step1 = T {
+                tb = true
+            }
+            T step2 = T {
+                tv = <int[]> [ step1.ti ]
+            }
+            T step3 = T {
+                ti = step1.ti
+            }
+            T step4 = T {
+                ti = step1.ti + 1
+            }
+        ''', '''
+            «types»
+            T step1 = T {
+                tb = true
+            }
+            T step2 = T {
+                tv = <int[]> [ step1.ti ]
+            }
+            T step3 = T {
+                ti = get(step2.tv, 1 - 1)
+            }
+            T step4 = T {
+                ti = step3.ti + 1
+            }
+        ''')
+        assertEval('''
+            «types»
+            T step1
+            T step2 = T {
+                ti = get(step1.tv, 5)
+            }
+            T step3 = T {
+                ti = get(step1.tv, 5) + 1
+            }
+        ''', '''
+            «types»
+            T step1
+            T step2 = T {
+                ti = get(step1.tv, 1 + 4)
+            }
+            T step3 = T {
+                ti = step2.ti + 1
+            }
+        ''')
     }
 
     @Test
     def void expressionVariable() {
         // Resolved variable
-        assertOptimize('''
+        assertEval('''
             bool a = false
             bool b = false
         ''', '''
@@ -151,7 +147,7 @@ class ExpressionOptimizerTest {
             bool b = a
         ''')
         // Unresolved variable
-        assertOptimize('''
+        assertEval('''
             bool a
             bool b = a
             bool c = a
@@ -171,7 +167,7 @@ class ExpressionOptimizerTest {
             }
         '''
         // Resolved variable
-        assertOptimize('''
+        assertEval('''
             «types»
             int a = 1
             T b = T {
@@ -187,7 +183,7 @@ class ExpressionOptimizerTest {
             int c = b.ti
         ''')
         // Unresolved variable
-        assertOptimize('''
+        assertEval('''
             «types»
             T a
             int b = a.ti
@@ -197,7 +193,7 @@ class ExpressionOptimizerTest {
             int b = a.ti
         ''')
         // Unresolved field
-        assertOptimize('''
+        assertEval('''
             «types»
             T a = T {
                 tb = false
@@ -223,9 +219,9 @@ class ExpressionOptimizerTest {
     @Test
     def void expressionBracket() {
         // Constants
-        assertOptimize('int a = 1', 'int a = (1)')
+        assertEval('int a = 1', 'int a = (1)')
         // Resolved variable
-        assertOptimize('''
+        assertEval('''
             bool a = true
             bool b = true
         ''', '''
@@ -233,7 +229,7 @@ class ExpressionOptimizerTest {
             bool b = (a)
         ''')
         // Unresolved variable
-        assertOptimize('''
+        assertEval('''
             bool a
             bool b = a
         ''', '''
@@ -244,16 +240,16 @@ class ExpressionOptimizerTest {
 
     @Test
     def void expressionMinus() {
-        assertOptimize('int a = -1', 'int a = -1')
-        assertOptimize('int a = -1.0', 'int a = -1.0')
+        assertEval('int a = -1', 'int a = -1')
+        assertEval('int a = -1.0', 'int a = -1.0')
     }
 
     @Test
     def void exprNot() {
-        assertOptimize('bool b = false', 'bool b = not true')
-        assertOptimize('bool b = true', 'bool b = not false')
+        assertEval('bool b = false', 'bool b = not true')
+        assertEval('bool b = true', 'bool b = not false')
         // Resolved variable
-        assertOptimize('''
+        assertEval('''
             bool a = false
             bool b = true
             bool c = false
@@ -263,7 +259,7 @@ class ExpressionOptimizerTest {
             bool c = not b
         ''')
         // Unresolved variable
-        assertOptimize('''
+        assertEval('''
             bool a
             bool b = not a
         ''', '''
@@ -274,10 +270,10 @@ class ExpressionOptimizerTest {
 
     @Test
     def void expressionPlus() {
-        assertOptimize('int a = 1', 'int a = +1')
-        assertOptimize('int a = 1.0', 'int a = +1.0')
+        assertEval('int a = 1', 'int a = +1')
+        assertEval('int a = 1.0', 'int a = +1.0')
         // Resolved variable
-        assertOptimize('''
+        assertEval('''
             int a
             int b = a
         ''', '''
@@ -285,7 +281,7 @@ class ExpressionOptimizerTest {
             int b = +a
         ''')
         // Unresolved variable
-        assertOptimize('''
+        assertEval('''
             int a
             int b = a
         ''', '''

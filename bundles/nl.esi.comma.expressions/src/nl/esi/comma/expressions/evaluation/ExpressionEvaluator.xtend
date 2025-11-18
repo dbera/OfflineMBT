@@ -1,27 +1,11 @@
-/**
- * Copyright (c) 2024, 2025 TNO-ESI
- *
- * See the NOTICE file(s) distributed with this work for additional
- * information regarding copyright ownership.
- *
- * This program and the accompanying materials are made available
- * under the terms of the MIT License which is available at
- * https://opensource.org/licenses/MIT
- *
- * SPDX-License-Identifier: MIT
- */
 package nl.esi.comma.expressions.evaluation
 
-import java.math.BigDecimal
-import java.util.ArrayList
-import java.util.LinkedHashMap
-import java.util.List
-import java.util.Map
-import java.util.Optional
 import nl.esi.comma.expressions.expression.Expression
 import nl.esi.comma.expressions.expression.ExpressionAddition
 import nl.esi.comma.expressions.expression.ExpressionAnd
+import nl.esi.comma.expressions.expression.ExpressionAny
 import nl.esi.comma.expressions.expression.ExpressionBracket
+import nl.esi.comma.expressions.expression.ExpressionBulkData
 import nl.esi.comma.expressions.expression.ExpressionConstantBool
 import nl.esi.comma.expressions.expression.ExpressionConstantInt
 import nl.esi.comma.expressions.expression.ExpressionConstantReal
@@ -30,6 +14,7 @@ import nl.esi.comma.expressions.expression.ExpressionDivision
 import nl.esi.comma.expressions.expression.ExpressionEnumLiteral
 import nl.esi.comma.expressions.expression.ExpressionEqual
 import nl.esi.comma.expressions.expression.ExpressionFactory
+import nl.esi.comma.expressions.expression.ExpressionFnCall
 import nl.esi.comma.expressions.expression.ExpressionFunctionCall
 import nl.esi.comma.expressions.expression.ExpressionGeq
 import nl.esi.comma.expressions.expression.ExpressionGreater
@@ -39,354 +24,271 @@ import nl.esi.comma.expressions.expression.ExpressionMap
 import nl.esi.comma.expressions.expression.ExpressionMapRW
 import nl.esi.comma.expressions.expression.ExpressionMaximum
 import nl.esi.comma.expressions.expression.ExpressionMinimum
-import nl.esi.comma.expressions.expression.ExpressionMinus
 import nl.esi.comma.expressions.expression.ExpressionModulo
 import nl.esi.comma.expressions.expression.ExpressionMultiply
 import nl.esi.comma.expressions.expression.ExpressionNEqual
 import nl.esi.comma.expressions.expression.ExpressionNot
 import nl.esi.comma.expressions.expression.ExpressionNullLiteral
 import nl.esi.comma.expressions.expression.ExpressionOr
+import nl.esi.comma.expressions.expression.ExpressionPackage
 import nl.esi.comma.expressions.expression.ExpressionPlus
 import nl.esi.comma.expressions.expression.ExpressionPower
+import nl.esi.comma.expressions.expression.ExpressionQuantifier
 import nl.esi.comma.expressions.expression.ExpressionRecord
 import nl.esi.comma.expressions.expression.ExpressionRecordAccess
 import nl.esi.comma.expressions.expression.ExpressionSubtraction
 import nl.esi.comma.expressions.expression.ExpressionVariable
 import nl.esi.comma.expressions.expression.ExpressionVector
-import nl.esi.comma.types.types.EnumTypeDecl
-import nl.esi.comma.types.types.RecordTypeDecl
-import nl.esi.comma.types.types.TypeObject
-
-import static extension nl.esi.comma.types.utilities.TypeUtilities.*
-import static extension org.eclipse.emf.ecore.util.EcoreUtil.copy
+import nl.esi.comma.expressions.validation.ExpressionFunction
+import org.eclipse.emf.common.util.EList
+import org.eclipse.emf.ecore.EObject
+import org.eclipse.emf.ecore.util.EcoreUtil
 
 class ExpressionEvaluator {
     static extension val ExpressionFactory m_exp = ExpressionFactory.eINSTANCE
 
-    protected val LITERAL_NULL = new Object {}
-
-    def boolean isUndefined(Object _value) {
-        return switch (_value) {
-            case null: true
-            List<Object>: _value.exists[undefined]
-            Map<Object, Object>: _value.entrySet.exists[key.undefined || value.undefined]
-            default: false
-        }
-    }
-
-    def Expression createValueExpression(Object _value, TypeObject _type) {
-        return switch (_value) {
-            case _value.undefined || _type === null: null
-            case LITERAL_NULL: createExpressionNullLiteral
-            Boolean: createExpressionConstantBool => [value = _value]
-            Long case _value < 0L: createExpressionMinus => [sub = createExpressionConstantInt => [value = -_value]]
-            Long: createExpressionConstantInt => [value = _value]
-            BigDecimal case _value < BigDecimal.ZERO: createExpressionMinus => [sub = createExpressionConstantReal => [value = _value.abs.doubleValue]]
-            BigDecimal: createExpressionConstantReal => [value = _value.doubleValue]
-            String case _type.isEnumType: createExpressionEnumLiteral => [
-                type = _type as EnumTypeDecl
-                literal = type.literals.findFirst[name == _value]
-                if (literal === null) throw new RuntimeException('''Unsupported value '«_value»' for type «_type.typeName»''')
-            ]
-            String: createExpressionConstantString => [value = _value]
-            List<Object> case _type.isVectorType: createExpressionVector => [
-                typeAnnotation = createTypeAnnotation => [ type = _type.asType.copy ]
-                elements += _value.map[createValueExpression(_type.elementType)]
-            ]
-            Map<Object, Object> case _type.isMapType: createExpressionMap => [
-                typeAnnotation = createTypeAnnotation => [ type = _type.asType.copy ]
-                pairs += _value.entrySet.map[ entry | createPair => [
-                    key = entry.key.createValueExpression(_type.keyType)
-                    value = entry.value.createValueExpression(_type.valueType)
-                ]]
-            ]
-            Map<String, Object> case _type.isRecordType: createExpressionRecord => [ rec |
-                rec.type = _type as RecordTypeDecl
-                rec.fields += _value.entrySet.map [ entry | createField => [
-                    recordField = rec.type.fields.findFirst[name == entry.key]
-                    if (recordField === null) throw new RuntimeException('''Unknown record field '«entry.key»' for type «rec.type.typeName»''')
-                    exp = entry.value.createValueExpression(recordField.type.typeObject)
-                ]]
-            ]
-            default: throw new RuntimeException('''Unsupported value '«_value»' for type «_type.typeName»''')
-        }
-    }
-
-    def Object evaluate(Expression expression, IEvaluationContext context) {
-        if (expression === null) {
+    def Expression evaluate(Expression expression, IEvaluationContext context) {
+        if (expression === null || context === null) {
             return null
         }
-        val ctx = InternalEvaluationContext.wrap(context)
-        if (ctx.hasValue(expression)) {
-            return ctx.getValue(expression)
+        val Expression evaluated = switch (expression) {
+            ExpressionVariable: {
+                val reference = context.getExpression(expression)
+                if (reference !== null) {
+                    // Reference should be evaluated before used, hence wrap it with brackets.
+                    // Reduction will remove the brackets if the evaluated value doesn't require them.
+                    val wrapped = createExpressionBracket
+                    // IMPORTANT: Referenced expression should be copied before it can be contained!
+                    wrapped.sub = EcoreUtil.copy(reference)
+                    wrapped.evaluate(context)
+                }
+            }
+            ExpressionRecordAccess: {
+                val recordExpression = expression.record.evaluate(context)
+                if (recordExpression instanceof ExpressionRecord) {
+                    recordExpression.fields.findFirst[recordField == expression.field]?.exp
+                }
+            }
+            default: {
+                expression.optimizeAllContainments(context)
+                expression.doEvaluate(context)
+            }
         }
-        val value = doEvaluate(expression, ctx)
-        ctx.setValue(expression, value)
-        return value
+        if (evaluated === null || EcoreUtil.equals(evaluated, expression)) {
+            return expression
+        }
+        return evaluated
+    }
+
+//    protected def Expression optimize(Expression expression, IEvaluationContext context) {
+//        if (expression === null || context === null) {
+//            return null
+//        }
+//        val evaluated = expression.evaluate(context)
+//        if (evaluated !== expression) {
+//            EcoreUtil.replace(expression, evaluated)
+//        }
+//        return evaluated
+//    }
+//
+//    protected def EList<Expression> optimizeAll(EList<Expression> expressions, IEvaluationContext context) {
+//        if (expressions === null || context === null) {
+//            return null
+//        }
+//        for (var index = 0; index < expressions.size; index++) {
+//            val expression = expressions.get(index)
+//            val evaluated = expression.evaluate(context)
+//            if (evaluated !== expression) {
+//                expressions.set(index, evaluated)
+//            }
+//        }
+//        return expressions
+//    }
+
+    private def void optimizeAllContainments(EObject eObject, IEvaluationContext context) {
+        if (eObject === null || context === null) {
+            return
+        }
+        for (ref : eObject.eClass.EAllContainments) {
+            if (ExpressionPackage.Literals.EXPRESSION.isSuperTypeOf(ref.EReferenceType)) {
+                if (ref.isMany) {
+                    val refValue = eObject.eGet(ref, true) as EList<Expression>
+                    for (var index = 0; index < refValue.size; index++) {
+                        val refExpr = refValue.get(index)
+                        val refEval = refExpr.evaluate(context)
+                        if (refEval !== refExpr) {
+                            refValue.set(index, refEval)
+                        }
+                    }
+                } else {
+                    val refValue = eObject.eGet(ref, true) as Expression
+                    val refEval = refValue.evaluate(context)
+                    if (refEval !== refValue) {
+                        eObject.eSet(ref, refEval)
+                    }
+                }
+            } else if (ref.isMany) {
+                val refValue = eObject.eGet(ref, true) as EList<EObject>
+                refValue.forEach[optimizeAllContainments(context)]
+            } else {
+                val refValue = eObject.eGet(ref, true) as EObject
+                refValue.optimizeAllContainments(context)
+            }
+        }
     }
 
     /**
-     * Returning {@code null} results in an undefined result (i.e. {@link Optional#isEmpty()}.
-     * Use {@link #LITERAL_NULL} to return a {@code null} result.
+     * Returning {@code null} will evaluate to the expression itself.
      */
-    protected dispatch def Object doEvaluate(Expression expression, IEvaluationContext context) {
-        return null
+    protected dispatch def Expression doEvaluate(Expression expression, IEvaluationContext context) {
+        return expression
     }
 
-    protected dispatch def Object doEvaluate(ExpressionFunctionCall expression, IEvaluationContext context) {
-        // TODO
+    // Functions
+
+    protected dispatch def Expression doEvaluate(ExpressionFunctionCall expression, IEvaluationContext context) {
+        return ExpressionFunction.valueOf(expression)?.evaluate2(expression.args, context)
+    }
+
+    protected dispatch def Expression doEvaluate(ExpressionMapRW expression, IEvaluationContext context) {
+        val mapExpr = expression.map
+        if (mapExpr instanceof ExpressionMap) {
+            if (expression.value === null) {
+                return mapExpr.pairs.findFirst[EcoreUtil.equals(key, expression.key)]?.value
+            } else {
+                mapExpr.pairs += createPair => [
+                    key = expression.key
+                    value = expression.value
+                ]
+                return mapExpr
+            }
+        }
+    }
+
+    protected dispatch def Expression doEvaluate(ExpressionQuantifier expression, IEvaluationContext context) {
+        throw new UnsupportedOperationException('Not supported: ' + expression.quantifier.literal)
     }
 
     // Binary
 
-    protected dispatch def Object doEvaluate(ExpressionAnd expression, IEvaluationContext context) {
-        val left = expression.left.evaluate(context)
-        val right = expression.right.evaluate(context)
-        return switch (expression) {
-            case left instanceof Boolean && right instanceof Boolean: (left as Boolean) && (right as Boolean)
-            default: null
+    protected dispatch def Expression doEvaluate(ExpressionAnd expression, extension IEvaluationContext context) {
+        return expression.calcIfBool[l, r | l && r]
+    }
+
+    protected dispatch def Expression doEvaluate(ExpressionOr expression, extension IEvaluationContext context) {
+        return expression.calcIfBool[l, r | l || r]
+    }
+
+    protected dispatch def Expression doEvaluate(ExpressionEqual expression, extension IEvaluationContext context) {
+        if (expression.left.isValue && expression.right.isValue) {
+            return EcoreUtil.equals(expression.left, expression.right).toBool
         }
     }
 
-    protected dispatch def Object doEvaluate(ExpressionOr expression, IEvaluationContext context) {
-        val left = expression.left.evaluate(context)
-        val right = expression.right.evaluate(context)
-        return switch (expression) {
-            case left instanceof Boolean && right instanceof Boolean: (left as Boolean) || (right as Boolean)
-            default: null
+    protected dispatch def Expression doEvaluate(ExpressionNEqual expression, extension IEvaluationContext context) {
+        if (expression.left.isValue && expression.right.isValue) {
+            return (!EcoreUtil.equals(expression.left, expression.right)).toBool
         }
     }
 
-    protected dispatch def Object doEvaluate(ExpressionEqual expression, IEvaluationContext context) {
-        val left = expression.left.evaluate(context)
-        val right = expression.right.evaluate(context)
-        return left === null || right === null ? null : left == right
+    protected dispatch def Expression doEvaluate(ExpressionGeq expression, extension IEvaluationContext context) {
+        return expression.calcIfInt[l, r | l >= r]
+            ?: expression.calcIfReal[l, r | l >= r]
     }
 
-    protected dispatch def Object doEvaluate(ExpressionNEqual expression, IEvaluationContext context) {
-        val left = expression.left.evaluate(context)
-        val right = expression.right.evaluate(context)
-        return left === null || right === null ? null : left != right
+    protected dispatch def Expression doEvaluate(ExpressionGreater expression, extension IEvaluationContext context) {
+        return expression.calcIfInt[l, r | l > r]
+            ?: expression.calcIfReal[l, r | l > r]
     }
 
-    protected dispatch def Object doEvaluate(ExpressionGeq expression, IEvaluationContext context) {
-        val left = expression.left.evaluate(context)
-        val right = expression.right.evaluate(context)
-        return switch (expression) {
-            case left instanceof Long && right instanceof Long: (left as Long) >= (right as Long)
-            case left instanceof BigDecimal && right instanceof BigDecimal: (left as BigDecimal) >= (right as BigDecimal)
-            default: null
-        }
+    protected dispatch def Expression doEvaluate(ExpressionLeq expression, extension IEvaluationContext context) {
+        return expression.calcIfInt[l, r | l <= r]
+            ?: expression.calcIfReal[l, r | l <= r]
     }
 
-    protected dispatch def Object doEvaluate(ExpressionGreater expression, IEvaluationContext context) {
-        val left = expression.left.evaluate(context)
-        val right = expression.right.evaluate(context)
-        return switch (expression) {
-            case left instanceof Long && right instanceof Long: (left as Long) > (right as Long)
-            case left instanceof BigDecimal && right instanceof BigDecimal: (left as BigDecimal) > (right as BigDecimal)
-            default: null
-        }
+    protected dispatch def Expression doEvaluate(ExpressionLess expression, extension IEvaluationContext context) {
+        return expression.calcIfInt[l, r | l < r]
+            ?: expression.calcIfReal[l, r | l < r]
     }
 
-    protected dispatch def Object doEvaluate(ExpressionLeq expression, IEvaluationContext context) {
-        val left = expression.left.evaluate(context)
-        val right = expression.right.evaluate(context)
-        return switch (expression) {
-            case left instanceof Long && right instanceof Long: (left as Long) <= (right as Long)
-            case left instanceof BigDecimal && right instanceof BigDecimal: (left as BigDecimal) <= (right as BigDecimal)
-            default: null
-        }
+    protected dispatch def Expression doEvaluate(ExpressionAddition expression, extension IEvaluationContext context) {
+        return expression.calcIfInt[l, r | l + r]
+            ?: expression.calcIfReal[l, r | l + r]
+            ?: expression.calcIfString[l, r | l + r]
     }
 
-    protected dispatch def Object doEvaluate(ExpressionLess expression, IEvaluationContext context) {
-        val left = expression.left.evaluate(context)
-        val right = expression.right.evaluate(context)
-        return switch (expression) {
-            case left instanceof Long && right instanceof Long: (left as Long) < (right as Long)
-            case left instanceof BigDecimal && right instanceof BigDecimal: (left as BigDecimal) < (right as BigDecimal)
-            default: null
-        }
+    protected dispatch def Expression doEvaluate(ExpressionSubtraction expression, extension IEvaluationContext context) {
+        return expression.calcIfInt[l, r | l - r]
+            ?: expression.calcIfReal[l, r | l - r]
     }
 
-    protected dispatch def Object doEvaluate(ExpressionAddition expression, IEvaluationContext context) {
-        val left = expression.left.evaluate(context)
-        val right = expression.right.evaluate(context)
-        return switch (expression) {
-            case left instanceof Long && right instanceof Long: (left as Long) + (right as Long)
-            case left instanceof BigDecimal && right instanceof BigDecimal: (left as BigDecimal) + (right as BigDecimal)
-            case left instanceof String && right instanceof String: (left as String) + (right as String)
-            default: null
-        }
+    protected dispatch def Expression doEvaluate(ExpressionMultiply expression, extension IEvaluationContext context) {
+        return expression.calcIfInt[l, r | l* r]
+            ?: expression.calcIfReal[l, r | l * r]
     }
 
-    protected dispatch def Object doEvaluate(ExpressionSubtraction expression, IEvaluationContext context) {
-        val left = expression.left.evaluate(context)
-        val right = expression.right.evaluate(context)
-        return switch (expression) {
-            case left instanceof Long && right instanceof Long: (left as Long) - (right as Long)
-            case left instanceof BigDecimal && right instanceof BigDecimal: (left as BigDecimal) - (right as BigDecimal)
-            default: null
-        }
+    protected dispatch def Expression doEvaluate(ExpressionDivision expression, extension IEvaluationContext context) {
+        return expression.calcIfInt[l, r | l / r]
+            ?: expression.calcIfReal[l, r | l / r]
     }
 
-    protected dispatch def Object doEvaluate(ExpressionMultiply expression, IEvaluationContext context) {
-        val left = expression.left.evaluate(context)
-        val right = expression.right.evaluate(context)
-        return switch (expression) {
-            case left instanceof Long && right instanceof Long: (left as Long) * (right as Long)
-            case left instanceof BigDecimal && right instanceof BigDecimal: (left as BigDecimal) * (right as BigDecimal)
-            default: null
-        }
+    protected dispatch def Expression doEvaluate(ExpressionMaximum expression, extension IEvaluationContext context) {
+        return expression.calcIfInt[l, r | l.max(r)]
+            ?: expression.calcIfReal[l, r | l.max(r)]
     }
 
-    protected dispatch def Object doEvaluate(ExpressionDivision expression, IEvaluationContext context) {
-        val left = expression.left.evaluate(context)
-        val right = expression.right.evaluate(context)
-        return switch (expression) {
-            case left instanceof Long && right instanceof Long: (left as Long) / (right as Long)
-            case left instanceof BigDecimal && right instanceof BigDecimal: (left as BigDecimal) / (right as BigDecimal)
-            default: null
-        }
+    protected dispatch def Expression doEvaluate(ExpressionMinimum expression, extension IEvaluationContext context) {
+        return expression.calcIfInt[l, r | l.min(r)]
+            ?: expression.calcIfReal[l, r | l.min(r)]
     }
 
-    protected dispatch def Object doEvaluate(ExpressionMaximum expression, IEvaluationContext context) {
-        val left = expression.left.evaluate(context)
-        val right = expression.right.evaluate(context)
-        return switch (expression) {
-            case left instanceof Long && right instanceof Long: Math.max(left as Long, right as Long)
-            case left instanceof BigDecimal && right instanceof BigDecimal: (left as BigDecimal).max(right as BigDecimal)
-            default: null
-        }
+    protected dispatch def Expression doEvaluate(ExpressionModulo expression, extension IEvaluationContext context) {
+        return expression.calcIfInt[l, r | l % r]
     }
 
-    protected dispatch def Object doEvaluate(ExpressionMinimum expression, IEvaluationContext context) {
-        val left = expression.left.evaluate(context)
-        val right = expression.right.evaluate(context)
-        return switch (expression) {
-            case left instanceof Long && right instanceof Long: Math.min(left as Long, right as Long)
-            case left instanceof BigDecimal && right instanceof BigDecimal: (left as BigDecimal).min(right as BigDecimal)
-            default: null
-        }
-    }
-
-    protected dispatch def Object doEvaluate(ExpressionModulo expression, IEvaluationContext context) {
-        val left = expression.left.evaluate(context)
-        val right = expression.right.evaluate(context)
-        return switch (expression) {
-            case left instanceof Long && right instanceof Long: (left as Long) % (right as Long)
-            default: null
-        }
-    }
-
-    protected dispatch def Object doEvaluate(ExpressionPower expression, IEvaluationContext context) {
-        val left = expression.left.evaluate(context)
-        val right = expression.right.evaluate(context)
-        return switch (expression) {
-            case left instanceof Long && right instanceof Long: Math.round(Math.pow(left as Long, right as Long))
-            case left instanceof BigDecimal && right instanceof BigDecimal: 
-                BigDecimal.valueOf(Math.pow((left as BigDecimal).doubleValue, (right as BigDecimal).doubleValue))
-            default: null
-        }
+    protected dispatch def Expression doEvaluate(ExpressionPower expression, extension IEvaluationContext context) {
+        return expression.calcIfInt[l, r | l.pow(r.intValueExact)]
+            ?: expression.calcIfReal[l, r | l.pow(r.intValueExact)]
     }
 
     // Unary
 
-    protected dispatch def Object doEvaluate(ExpressionNot expression, IEvaluationContext context) {
-        return switch (result: expression.sub.evaluate(context)) {
-            Boolean: !result
-            default: null
-        }
-    }
-
-    protected dispatch def Object doEvaluate(ExpressionMinus expression, IEvaluationContext context) {
-        return switch (result: expression.sub.evaluate(context)) {
-            Long: -result
-            BigDecimal: -result
-            default: null
+    protected dispatch def Expression doEvaluate(ExpressionNot expression, extension IEvaluationContext context) {
+        val subValue = expression.sub.asBool
+        if (subValue !== null ) {
+            return (!subValue).toBool
         }
     }
 
     // Derived
 
-    protected dispatch def Object doEvaluate(ExpressionVariable expression, IEvaluationContext context) {
-        return context.getExpression(expression).evaluate(context)
-    }
-
-    protected dispatch def Object doEvaluate(ExpressionRecordAccess expression, IEvaluationContext context) {
-        val recordValue = expression.record.evaluate(context)
-        if (recordValue instanceof Map) {
-            return recordValue.get(expression.field.name)
+    protected dispatch def Expression doEvaluate(ExpressionBracket expression, IEvaluationContext context) {
+        return switch (expression.sub) {
+            // ExpressionLevel8
+            ExpressionRecordAccess,
+            ExpressionMapRW,
+            // ExpressionLevel9
+            ExpressionConstantBool,
+            ExpressionConstantInt,
+            ExpressionConstantReal,
+            ExpressionConstantString,
+            ExpressionEnumLiteral,
+            ExpressionNullLiteral,
+            ExpressionVariable,
+            ExpressionRecord,
+            ExpressionAny,
+            ExpressionBulkData,
+            ExpressionFnCall,
+            ExpressionFunctionCall,
+            ExpressionQuantifier,
+            ExpressionVector,
+            ExpressionMap,
+            ExpressionBracket: expression.sub
+            default: expression
         }
     }
 
-    protected dispatch def Object doEvaluate(ExpressionMapRW expression, IEvaluationContext context) {
-        val mapValue = expression.map.evaluate(context)
-        if (mapValue instanceof Map) {
-            val keyValue = expression.key.evaluate(context)
-            if (expression.value === null) {
-                return mapValue.get(keyValue)
-            } else {
-                // The setter is side-effect-free and returns a new instance of the map
-                val result = new LinkedHashMap(mapValue)
-                // If the key of a map is undefined, the value is always undefined!
-                result.put(keyValue, keyValue === null ? null : expression.value.evaluate(context))
-                return result
-            }
-        }
-    }
-
-    protected dispatch def Object doEvaluate(ExpressionBracket expression, IEvaluationContext context) {
-        return expression.sub.evaluate(context)
-    }
-
-    protected dispatch def Object doEvaluate(ExpressionPlus expression, IEvaluationContext context) {
-        return expression.sub.evaluate(context)
-    }
-
-    // Collections
-
-    protected dispatch def Object doEvaluate(ExpressionRecord expression, IEvaluationContext context) {
-        return expression.fields.toMap([recordField.name], [exp.evaluate(context)])
-    }
-
-    protected dispatch def Object doEvaluate(ExpressionMap expression, IEvaluationContext context) {
-        val result = newLinkedHashMap
-        for (pair : expression.pairs) {
-            val keyValue = pair.key.evaluate(context)
-            // If the key of a map is undefined, the value is always undefined!
-            result.put(keyValue, keyValue === null ? null : pair.value.evaluate(context))
-        }
-        return result
-    }
-
-    protected dispatch def Object doEvaluate(ExpressionVector expression, IEvaluationContext context) {
-        return new ArrayList(expression.elements.map[evaluate(context)])
-    }
-
-    // Constants
-
-    protected dispatch def Object doEvaluate(ExpressionConstantBool expression, IEvaluationContext context) {
-        return expression.value
-    }
-
-    protected dispatch def Object doEvaluate(ExpressionConstantInt expression, IEvaluationContext context) {
-        return expression.value
-    }
-
-    protected dispatch def Object doEvaluate(ExpressionConstantReal expression, IEvaluationContext context) {
-        return BigDecimal.valueOf(expression.value)
-    }
-
-    protected dispatch def Object doEvaluate(ExpressionConstantString expression, IEvaluationContext context) {
-        return expression.value
-    }
-
-    protected dispatch def Object doEvaluate(ExpressionEnumLiteral expression, IEvaluationContext context) {
-        return expression.literal?.name
-    }
-
-    protected dispatch def Object doEvaluate(ExpressionNullLiteral expression, IEvaluationContext context) {
-        return LITERAL_NULL
+    protected dispatch def Expression doEvaluate(ExpressionPlus expression, IEvaluationContext context) {
+        return expression.sub
     }
 }

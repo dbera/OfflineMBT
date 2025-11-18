@@ -22,13 +22,21 @@ import static nl.esi.comma.types.utilities.TypeUtilities.isMapType;
 import static nl.esi.comma.types.utilities.TypeUtilities.isVectorType;
 import static nl.esi.comma.types.utilities.TypeUtilities.subTypeOf;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.xtext.xbase.lib.Pair;
 
+import nl.esi.comma.expressions.evaluation.ExpressionEvaluator;
+import nl.esi.comma.expressions.evaluation.IEvaluationContext;
 import nl.esi.comma.expressions.expression.Expression;
 import nl.esi.comma.expressions.expression.ExpressionFunctionCall;
+import nl.esi.comma.expressions.expression.ExpressionVector;
 import nl.esi.comma.types.types.TypeObject;
 import nl.esi.comma.types.utilities.TypeUtilities;
 
@@ -51,6 +59,14 @@ public enum ExpressionFunction {
 				result = Pair.of(0, "Function isEmpty expects argument 1 to be of type vector");
 			}
 			return result;
+		}
+		
+		@Override
+		public Object evaluate(List<Object> args) {
+			if (args.get(0) instanceof List<?>) {
+				return ((List<?>) args.get(0)).isEmpty();
+			}
+			return null;
 		}
 
 		@Override
@@ -79,6 +95,17 @@ public enum ExpressionFunction {
 		}
 
 		@Override
+		public Object evaluate(List<Object> args) {
+			if (args.get(0) instanceof List<?>) {
+				return ((List<?>) args.get(0)).size();
+			}
+			if (args.get(0) instanceof Map<?, ?>) {
+				return ((Map<?, ?>) args.get(0)).size();
+			}
+			return null;
+		}
+
+		@Override
 		public String getDocumentation() {
 			return String.format("%s(vector|map): int", name());
 		}
@@ -101,6 +128,14 @@ public enum ExpressionFunction {
 				result = Pair.of(0, "Function contains expects argument 1 to be of type vector");
 			}
 			return result;
+		}
+
+		@Override
+		public Object evaluate(List<Object> args) {
+			if (args.get(0) instanceof List<?> && args.get(1) != null) {
+				return ((List<?>) args.get(0)).contains(args.get(1));
+			}
+			return null;
 		}
 
 		@Override
@@ -132,6 +167,16 @@ public enum ExpressionFunction {
 		}
 		
 		@Override
+		public Object evaluate(List<Object> args) {
+			if (args.get(0) instanceof List<?>) {
+				ArrayList<Object> result = new ArrayList<>((List<?>) args.get(0));
+				result.add(args.get(1));
+				return result;
+			}
+			return null;
+		}
+
+		@Override
 		public String getDocumentation() {
 			return String.format("<T> %s(vector<T>, T): vector<T>", name());
 		}
@@ -155,6 +200,14 @@ public enum ExpressionFunction {
 		}
 
 		@Override
+		public Object evaluate(List<Object> args) {
+			if (args.get(0) instanceof Long) {
+				return BigDecimal.valueOf((Long) args.get(0));
+			}
+			return null;
+		}
+
+		@Override
 		public String getDocumentation() {
 			return String.format("%s(int): real", name());
 		}
@@ -164,7 +217,7 @@ public enum ExpressionFunction {
 		public TypeObject inferType(List<Expression> args, int argIndex) {
 			switch (argIndex) {
 			case -1:
-				return intType;
+				return inferType(args, 0);
 			default:
 				return super.inferType(args, argIndex);
 			}
@@ -177,6 +230,17 @@ public enum ExpressionFunction {
 				result = Pair.of(0, "Function abs expects argument 1 to be of numeric type");
 			}
 			return result;
+		}
+
+		@Override
+		public Object evaluate(List<Object> args) {
+			if (args.get(0) instanceof Long) {
+				return Math.abs((Long) args.get(0));
+			}
+			if (args.get(0) instanceof BigDecimal) {
+				return ((BigDecimal) args.get(0)).abs();
+			}
+			return null;
 		}
 
 		@Override
@@ -231,6 +295,14 @@ public enum ExpressionFunction {
 		}
 
 		@Override
+		public Object evaluate(List<Object> args) {
+			if (args.get(0) instanceof Map<?, ?> && args.get(1) != null) {
+				return ((Map<?, ?>) args.get(0)).containsKey(args.get(1));
+			}
+			return null;
+		}
+
+		@Override
 		public String getDocumentation() {
 			return String.format("<K, V> %s(map<K, V>, K): bool", name());
 		}
@@ -256,6 +328,16 @@ public enum ExpressionFunction {
 				result = Pair.of(0, "Function hasKey expects argument 1 to be of type map");
 			}
 			return result;
+		}
+
+		@Override
+		public Object evaluate(List<Object> args) {
+			if (args.get(0) instanceof Map<?, ?> && args.get(1) != null) {
+				Map<Object, Object> result = new LinkedHashMap<>((Map<?, ?>) args.get(0));
+				result.remove(args.get(1));
+				return result;
+			}
+			return null;
 		}
 
 		@Override
@@ -287,6 +369,29 @@ public enum ExpressionFunction {
 		}
 
 		@Override
+		public Object evaluate(List<Object> args) {
+			if (args.get(0) instanceof List<?> && args.get(1) instanceof Long) {
+				return ((List<?>) args.get(0)).get(((Long) args.get(1)).intValue());
+			}
+			return null;
+		}
+		
+		// TODO: Implement new evaluation method for all functions
+		
+		@Override
+		public Expression evaluate2(List<Expression> args, IEvaluationContext context) {
+			BigInteger arg1 = context.asInt(args.get(1));
+			if (arg1 != null && args.get(0) instanceof ExpressionVector expr) {
+				int index = arg1.intValueExact();
+				if (index < 0 || index >= expr.getElements().size()) {
+					throw new IndexOutOfBoundsException(index);
+				}
+				return expr.getElements().get(index);
+			}
+			return null;
+		}
+
+		@Override
 		public String getDocumentation() {
 			return String.format("<T> %s(vector<T>, int): T", name());
 		}
@@ -314,6 +419,17 @@ public enum ExpressionFunction {
 				result = Pair.of(0, "Function at expects argument 1 to be of type vector");
 			}
 			return result;
+		}
+
+		@Override
+		public Object evaluate(List<Object> args) {
+			if (args.get(0) instanceof List<?> && args.get(1) instanceof Long) {
+				int index = ((Long) args.get(1)).intValue();
+				ArrayList<Object> result = new ArrayList<>((List<?>) args.get(0));
+				result.set(index, args.get(2));
+				return result;
+			}
+			return null;
 		}
 
 		@Override
@@ -354,6 +470,38 @@ public enum ExpressionFunction {
 
 	public abstract String getDocumentation();
 	
+	/**
+	 * Evaluates this function to a value (if possible), also see
+	 * {@link ExpressionEvaluator}.
+	 * <p>
+	 * <b>IMPORTANT:</b> This method should only be called when
+	 * {@link #validate(List)} returned {@code null}!
+	 * </p>
+	 * <p>
+	 * Supported Object types (i.e. args and return values):
+	 * </p>
+	 * <ul>
+	 * <li>{@link Boolean} for bool</li>
+	 * <li>{@link Long} for int</li>
+	 * <li>{@link BigDecimal} for real</li>
+	 * <li>{@link String} for string</li>
+	 * <li>{@link List}{@code <Object>} for array</li>
+	 * <li>{@link Map}{@code <Object, Object>} for map</li>
+	 * <li>{@link Map}{@code <String, Object>} for record</li>
+	 * </ul>
+	 * 
+	 * @param args function arguments
+	 * @return {@code null} if value cannot be evaluated (i.e. undefined).
+	 * @see ExpressionEvaluator
+	 */
+	public Object evaluate(List<Object> args) {
+		return null;
+	}
+	
+	public Expression evaluate2(List<Expression> args, IEvaluationContext context) {
+		return null;
+	}
+
 	/**
 	 * NOTE: This function will not throw IllegalArgumentException, it will return {@code null} instead.
 	 * @see #valueOf(String)
