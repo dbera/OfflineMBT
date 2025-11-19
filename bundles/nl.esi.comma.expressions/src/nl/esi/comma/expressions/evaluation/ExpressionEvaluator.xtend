@@ -158,6 +158,10 @@ class ExpressionEvaluator {
         }
     }
 
+    protected dispatch def Expression doEvaluate(ExpressionFnCall expression, IEvaluationContext context) {
+        throw new UnsupportedOperationException('Not supported: ' + expression.function.name)
+    }
+
     protected dispatch def Expression doEvaluate(ExpressionQuantifier expression, IEvaluationContext context) {
         throw new UnsupportedOperationException('Not supported: ' + expression.quantifier.literal)
     }
