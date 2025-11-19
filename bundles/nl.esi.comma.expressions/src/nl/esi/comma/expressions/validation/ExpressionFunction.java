@@ -24,18 +24,17 @@ import static nl.esi.comma.types.utilities.TypeUtilities.subTypeOf;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
+import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.xtext.xbase.lib.Pair;
 
 import nl.esi.comma.expressions.evaluation.ExpressionEvaluator;
 import nl.esi.comma.expressions.evaluation.IEvaluationContext;
 import nl.esi.comma.expressions.expression.Expression;
 import nl.esi.comma.expressions.expression.ExpressionFunctionCall;
+import nl.esi.comma.expressions.expression.ExpressionMap;
 import nl.esi.comma.expressions.expression.ExpressionVector;
 import nl.esi.comma.types.types.TypeObject;
 import nl.esi.comma.types.utilities.TypeUtilities;
@@ -62,9 +61,9 @@ public enum ExpressionFunction {
 		}
 		
 		@Override
-		public Object evaluate(List<Object> args) {
-			if (args.get(0) instanceof List<?>) {
-				return ((List<?>) args.get(0)).isEmpty();
+		public Expression evaluate(List<Expression> args, IEvaluationContext context) {
+			if (args.get(0) instanceof ExpressionVector expr) {
+				return context.toBool(expr.getElements().isEmpty());
 			}
 			return null;
 		}
@@ -95,12 +94,12 @@ public enum ExpressionFunction {
 		}
 
 		@Override
-		public Object evaluate(List<Object> args) {
-			if (args.get(0) instanceof List<?>) {
-				return ((List<?>) args.get(0)).size();
+		public Expression evaluate(List<Expression> args, IEvaluationContext context) {
+			if (args.get(0) instanceof ExpressionVector expr) {
+				return context.toInt(expr.getElements().size());
 			}
-			if (args.get(0) instanceof Map<?, ?>) {
-				return ((Map<?, ?>) args.get(0)).size();
+			if (args.get(0) instanceof ExpressionMap expr) {
+				return context.toInt(expr.getPairs().size());
 			}
 			return null;
 		}
@@ -131,9 +130,10 @@ public enum ExpressionFunction {
 		}
 
 		@Override
-		public Object evaluate(List<Object> args) {
-			if (args.get(0) instanceof List<?> && args.get(1) != null) {
-				return ((List<?>) args.get(0)).contains(args.get(1));
+		public Expression evaluate(List<Expression> args, IEvaluationContext context) {
+			if (args.get(0) instanceof ExpressionVector expr) {
+				Expression value = args.get(1);
+				return context.toBool(expr.getElements().stream().anyMatch(e -> EcoreUtil.equals(e, value)));
 			}
 			return null;
 		}
@@ -165,13 +165,12 @@ public enum ExpressionFunction {
 			}
 			return result;
 		}
-		
+
 		@Override
-		public Object evaluate(List<Object> args) {
-			if (args.get(0) instanceof List<?>) {
-				ArrayList<Object> result = new ArrayList<>((List<?>) args.get(0));
-				result.add(args.get(1));
-				return result;
+		public Expression evaluate(List<Expression> args, IEvaluationContext context) {
+			if (args.get(0) instanceof ExpressionVector expr) {
+				expr.getElements().add(args.get(1));
+				return expr;
 			}
 			return null;
 		}
@@ -200,11 +199,9 @@ public enum ExpressionFunction {
 		}
 
 		@Override
-		public Object evaluate(List<Object> args) {
-			if (args.get(0) instanceof Long) {
-				return BigDecimal.valueOf((Long) args.get(0));
-			}
-			return null;
+		public Expression evaluate(List<Expression> args, IEvaluationContext context) {
+			BigInteger value = context.asInt(args.get(0));
+			return value == null ? null : context.toReal(new BigDecimal(value));
 		}
 
 		@Override
@@ -233,12 +230,14 @@ public enum ExpressionFunction {
 		}
 
 		@Override
-		public Object evaluate(List<Object> args) {
-			if (args.get(0) instanceof Long) {
-				return Math.abs((Long) args.get(0));
+		public Expression evaluate(List<Expression> args, IEvaluationContext context) {
+			BigInteger intValue = context.asInt(args.get(0));
+			if (intValue != null) {
+				return context.toInt(intValue.abs());
 			}
-			if (args.get(0) instanceof BigDecimal) {
-				return ((BigDecimal) args.get(0)).abs();
+			BigDecimal realValue = context.asReal(args.get(0));
+			if (realValue != null) {
+				return context.toReal(realValue.abs());
 			}
 			return null;
 		}
@@ -295,9 +294,10 @@ public enum ExpressionFunction {
 		}
 
 		@Override
-		public Object evaluate(List<Object> args) {
-			if (args.get(0) instanceof Map<?, ?> && args.get(1) != null) {
-				return ((Map<?, ?>) args.get(0)).containsKey(args.get(1));
+		public Expression evaluate(List<Expression> args, IEvaluationContext context) {
+			if (args.get(0) instanceof ExpressionMap expr) {
+				Expression value = args.get(1);
+				return context.toBool(expr.getPairs().stream().anyMatch(p -> EcoreUtil.equals(p.getKey(), value)));
 			}
 			return null;
 		}
@@ -331,11 +331,11 @@ public enum ExpressionFunction {
 		}
 
 		@Override
-		public Object evaluate(List<Object> args) {
-			if (args.get(0) instanceof Map<?, ?> && args.get(1) != null) {
-				Map<Object, Object> result = new LinkedHashMap<>((Map<?, ?>) args.get(0));
-				result.remove(args.get(1));
-				return result;
+		public Expression evaluate(List<Expression> args, IEvaluationContext context) {
+			if (args.get(0) instanceof ExpressionMap expr) {
+				Expression value = args.get(1);
+				expr.getPairs().removeIf(p -> EcoreUtil.equals(p.getKey(), value));
+				return expr;
 			}
 			return null;
 		}
@@ -369,17 +369,7 @@ public enum ExpressionFunction {
 		}
 
 		@Override
-		public Object evaluate(List<Object> args) {
-			if (args.get(0) instanceof List<?> && args.get(1) instanceof Long) {
-				return ((List<?>) args.get(0)).get(((Long) args.get(1)).intValue());
-			}
-			return null;
-		}
-		
-		// TODO: Implement new evaluation method for all functions
-		
-		@Override
-		public Expression evaluate2(List<Expression> args, IEvaluationContext context) {
+		public Expression evaluate(List<Expression> args, IEvaluationContext context) {
 			BigInteger arg1 = context.asInt(args.get(1));
 			if (arg1 != null && args.get(0) instanceof ExpressionVector expr) {
 				int index = arg1.intValueExact();
@@ -422,12 +412,15 @@ public enum ExpressionFunction {
 		}
 
 		@Override
-		public Object evaluate(List<Object> args) {
-			if (args.get(0) instanceof List<?> && args.get(1) instanceof Long) {
-				int index = ((Long) args.get(1)).intValue();
-				ArrayList<Object> result = new ArrayList<>((List<?>) args.get(0));
-				result.set(index, args.get(2));
-				return result;
+		public Expression evaluate(List<Expression> args, IEvaluationContext context) {
+			BigInteger arg1 = context.asInt(args.get(1));
+			if (arg1 != null && args.get(0) instanceof ExpressionVector expr) {
+				int index = arg1.intValueExact();
+				if (index < 0 || index >= expr.getElements().size()) {
+					throw new IndexOutOfBoundsException(index);
+				}
+				expr.getElements().set(index, args.get(2));
+				return expr;
 			}
 			return null;
 		}
@@ -471,34 +464,19 @@ public enum ExpressionFunction {
 	public abstract String getDocumentation();
 	
 	/**
-	 * Evaluates this function to a value (if possible), also see
+	 * Evaluates this function (if possible) and returns its minimal form, also see
 	 * {@link ExpressionEvaluator}.
 	 * <p>
+	 * The {@code args} are already resolved to their minimal form. <br>
 	 * <b>IMPORTANT:</b> This method should only be called when
 	 * {@link #validate(List)} returned {@code null}!
 	 * </p>
-	 * <p>
-	 * Supported Object types (i.e. args and return values):
-	 * </p>
-	 * <ul>
-	 * <li>{@link Boolean} for bool</li>
-	 * <li>{@link Long} for int</li>
-	 * <li>{@link BigDecimal} for real</li>
-	 * <li>{@link String} for string</li>
-	 * <li>{@link List}{@code <Object>} for array</li>
-	 * <li>{@link Map}{@code <Object, Object>} for map</li>
-	 * <li>{@link Map}{@code <String, Object>} for record</li>
-	 * </ul>
 	 * 
 	 * @param args function arguments
 	 * @return {@code null} if value cannot be evaluated (i.e. undefined).
 	 * @see ExpressionEvaluator
 	 */
-	public Object evaluate(List<Object> args) {
-		return null;
-	}
-	
-	public Expression evaluate2(List<Expression> args, IEvaluationContext context) {
+	public Expression evaluate(List<Expression> args, IEvaluationContext context) {
 		return null;
 	}
 

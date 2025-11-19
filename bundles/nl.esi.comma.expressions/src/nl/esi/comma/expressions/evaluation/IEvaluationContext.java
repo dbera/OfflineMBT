@@ -113,7 +113,12 @@ public interface IEvaluationContext {
 	 * 
 	 * @see IEvaluationContext#toBool(Boolean)
 	 * @see IEvaluationContext#toString(String)
+	 * @see IEvaluationContext#toString(CharSequence)
+	 * @see IEvaluationContext#toInt(Integer)
+	 * @see IEvaluationContext#toInt(Long)
 	 * @see IEvaluationContext#toInt(BigInteger)
+	 * @see IEvaluationContext#toReal(Float)
+	 * @see IEvaluationContext#toReal(Double)
 	 * @see IEvaluationContext#toReal(BigDecimal)
 	 */
 	default Expression toExpression(Object value) {
@@ -121,9 +126,19 @@ public interface IEvaluationContext {
 			return toBool(b);
 		} else if (value instanceof String s) {
 			return toString(s);
+		} else if (value instanceof CharSequence s) {
+			return toString(s);
 		} else if (value instanceof BigInteger i) {
 			return toInt(i);
+		} else if (value instanceof Integer i) {
+			return toInt(i);
+		} else if (value instanceof Long i) {
+			return toInt(i);
 		} else if (value instanceof BigDecimal r) {
+			return toReal(r);
+		} else if (value instanceof Double r) {
+			return toReal(r);
+		} else if (value instanceof Float r) {
 			return toReal(r);
 		} else {
 			return null;
@@ -153,6 +168,10 @@ public interface IEvaluationContext {
 		return null;
 	}
 
+	default ExpressionConstantString toString(CharSequence value) {
+		return value == null ? null : toString(value.toString());
+	}
+
 	default ExpressionConstantString toString(String value) {
 		if (value != null) {
 			ExpressionConstantString expression = ExpressionFactory.eINSTANCE.createExpressionConstantString();
@@ -170,6 +189,14 @@ public interface IEvaluationContext {
 			return value == null ? null : value.negate();
 		}
 		return null;
+	}
+
+	default Expression toInt(Integer value) {
+		return value == null ? null : toInt(BigInteger.valueOf(value));
+	}
+
+	default Expression toInt(Long value) {
+		return value == null ? null : toInt(BigInteger.valueOf(value));
 	}
 
 	default Expression toInt(BigInteger value) {
@@ -194,6 +221,14 @@ public interface IEvaluationContext {
 			return value == null ? null : value.negate();
 		}
 		return null;
+	}
+
+	default Expression toReal(Float value) {
+		return value == null ? null : toReal(BigDecimal.valueOf(value));
+	}
+
+	default Expression toReal(Double value) {
+		return value == null ? null : toReal(BigDecimal.valueOf(value));
 	}
 
 	default Expression toReal(BigDecimal value) {

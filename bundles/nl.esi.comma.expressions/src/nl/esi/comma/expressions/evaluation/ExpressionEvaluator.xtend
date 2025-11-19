@@ -1,3 +1,15 @@
+/**
+ * Copyright (c) 2024, 2025 TNO-ESI
+ *
+ * See the NOTICE file(s) distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This program and the accompanying materials are made available
+ * under the terms of the MIT License which is available at
+ * https://opensource.org/licenses/MIT
+ *
+ * SPDX-License-Identifier: MIT
+ */
 package nl.esi.comma.expressions.evaluation
 
 import nl.esi.comma.expressions.expression.Expression
@@ -147,7 +159,7 @@ class ExpressionEvaluator {
     // Functions
 
     protected dispatch def Expression doEvaluate(ExpressionFunctionCall expression, IEvaluationContext context) {
-        return ExpressionFunction.valueOf(expression)?.evaluate2(expression.args, context)
+        return ExpressionFunction.valueOf(expression)?.evaluate(expression.args, context)
     }
 
     protected dispatch def Expression doEvaluate(ExpressionMapRW expression, IEvaluationContext context) {

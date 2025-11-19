@@ -15,47 +15,102 @@
  */
 package nl.esi.comma.expressions.tests
 
-import com.google.inject.Inject
-import nl.esi.comma.expressions.evaluation.ExpressionEvaluator
-import nl.esi.comma.expressions.expression.Expressions
-import nl.esi.comma.types.utilities.EcoreUtil3
-import org.eclipse.xtext.resource.SaveOptions
-import org.eclipse.xtext.serializer.ISerializer
-import org.eclipse.xtext.testing.InjectWith
-import org.eclipse.xtext.testing.extensions.InjectionExtension
-import org.eclipse.xtext.testing.util.ParseHelper
-import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.^extension.ExtendWith
 
-@ExtendWith(InjectionExtension)
-@InjectWith(ExpressionInjectorProvider)
-class ExpressionOptimizerTest {
-    @Inject
-    ParseHelper<Expressions> parser
+class ExpressionEvaluatorComplexTest extends ExpressionEvaluatorTestBase {
+    @Test
+    def void recordsAndTypes() {
+        val types = '''
+            enum Count { ONE TWO THREE }
 
-    @Inject
-    ISerializer serializer
+            record T {
+                int ti
+                real tr
+                bool tb
+                Count te
+                string[] tss
+                map<int, string> ti2s
+            }
+        '''
+        assertEval('''
+            «types»
+            T t = T {
+                ti = 1,
+                tr = 1.1,
+                tb = true,
+                te = Count::TWO,
+                tss = <string[]> [ "Hello", "World" ],
+                ti2s = <map<int, string>> { 1 -> "Hello", 2 -> "World" }
+            }
+        ''', '''
+            «types»
+            T t = T {
+                ti = 1,
+                tr = 1.1,
+                tb = true,
+                te = Count::TWO,
+                tss = <string[]> [ "Hello", "World" ],
+                ti2s = <map<int, string>> { 1 -> "Hello", 2 -> "World" }
+            }
+        ''')
+    }
 
-    val SAVE_OPTIONS = SaveOptions.newBuilder.format.options
+    @Test
+    def void variables() {
+        val types = '''
+            enum Count { ONE TWO THREE }
 
-    protected def void assertEval(String expected, String input) {
-        val expressions = parser.parse(input)
-        Assertions.assertTrue(expressions.eResource.errors.isEmpty, '''Unexpected errors in input: «expressions.eResource.errors.join(", ")»''')
-        Assertions.assertEquals(expressions.variables.size, expressions.variables.map[variable.name].toSet.size, 'Variables cannot be declared multiple times')
-        val evaluator = new ExpressionEvaluator()
-        val context = expressions.variables.toMap([variable], [expression])
-        for (assignment : expressions.variables.reject[expression === null]) {
-            assignment.expression = evaluator.evaluate(assignment.expression) [ varExpr |
-                return context.get(varExpr.variable)
-            ]
-//            context.put(assignment.variable, assignment.expression)
-        }
-        val actualFormatted = serializer.serialize(EcoreUtil3.unformat(expressions), SAVE_OPTIONS)
-        val expectedExprs = parser.parse(expected)
-        Assertions.assertTrue(expectedExprs.eResource.errors.isEmpty, '''Unexpected errors in input: «expectedExprs.eResource.errors.join(", ")»''')
-        val expectedFormatted = serializer.serialize(EcoreUtil3.unformat(expectedExprs), SAVE_OPTIONS)
-        Assertions.assertEquals(expectedFormatted, actualFormatted)
+            record T {
+                int ti
+                real tr
+                bool tb
+                Count te
+                string[] tss
+                map<int, string> ti2s
+            }
+        '''
+        // Resolved variable
+        assertEval('''
+            «types»
+            int a = 1
+            int b = 1
+        ''', '''
+            «types»
+            int a = 1
+            int b = a
+        ''')
+        // Unresolved variable
+        assertEval('''
+            «types»
+            int a
+            T t = T {
+                ti = a
+            }
+        ''', '''
+            «types»
+            int a
+            T t = T {
+                ti = a
+            }
+        ''')
+        // If 1 variable cannot be resolved, the result will be undefined
+        assertEval('''
+            «types»
+            int a = 1
+            bool b
+            T t = T {
+                ti = 1,
+                tb = b
+            }
+        ''', '''
+            «types»
+            int a = 1
+            bool b
+            T t = T {
+                ti = a,
+                tb = b
+            }
+        ''')
     }
 
     @Test
