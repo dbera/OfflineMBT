@@ -54,6 +54,7 @@ import nl.esi.comma.expressions.expression.ExpressionVector
 import nl.esi.comma.expressions.validation.ExpressionFunction
 import org.eclipse.emf.common.util.EList
 import org.eclipse.emf.ecore.EObject
+import org.eclipse.emf.ecore.EReference
 import org.eclipse.emf.ecore.util.EcoreUtil
 
 class ExpressionEvaluator {
@@ -63,65 +64,24 @@ class ExpressionEvaluator {
         if (expression === null || context === null) {
             return null
         }
-        val Expression evaluated = switch (expression) {
-            ExpressionVariable: {
-                val reference = context.getExpression(expression)
-                if (reference !== null) {
-                    // Reference should be evaluated before used, hence wrap it with brackets.
-                    // Reduction will remove the brackets if the evaluated value doesn't require them.
-                    val wrapped = createExpressionBracket
-                    // IMPORTANT: Referenced expression should be copied before it can be contained!
-                    wrapped.sub = EcoreUtil.copy(reference)
-                    wrapped.evaluate(context)
-                }
-            }
-            ExpressionRecordAccess: {
-                val recordExpression = expression.record.evaluate(context)
-                if (recordExpression instanceof ExpressionRecord) {
-                    recordExpression.fields.findFirst[recordField == expression.field]?.exp
-                }
-            }
-            default: {
-                expression.optimizeAllContainments(context)
-                expression.doEvaluate(context)
-            }
-        }
-        if (evaluated === null || EcoreUtil.equals(evaluated, expression)) {
-            return expression
-        }
-        return evaluated
+
+        // Before evaluating this expression, try to optimize all its contained expressions,
+        // such that the evaluation can use primitives as much as possible.
+        expression.optimizeContainments(context)
+
+        val evaluated = expression.doEvaluate(context);
+        return evaluated === null || EcoreUtil.equals(evaluated, expression) ? expression : evaluated
     }
 
-//    protected def Expression optimize(Expression expression, IEvaluationContext context) {
-//        if (expression === null || context === null) {
-//            return null
-//        }
-//        val evaluated = expression.evaluate(context)
-//        if (evaluated !== expression) {
-//            EcoreUtil.replace(expression, evaluated)
-//        }
-//        return evaluated
-//    }
-//
-//    protected def EList<Expression> optimizeAll(EList<Expression> expressions, IEvaluationContext context) {
-//        if (expressions === null || context === null) {
-//            return null
-//        }
-//        for (var index = 0; index < expressions.size; index++) {
-//            val expression = expressions.get(index)
-//            val evaluated = expression.evaluate(context)
-//            if (evaluated !== expression) {
-//                expressions.set(index, evaluated)
-//            }
-//        }
-//        return expressions
-//    }
-
-    private def void optimizeAllContainments(EObject eObject, IEvaluationContext context) {
-        if (eObject === null || context === null) {
-            return
+    protected def boolean shouldOptimize(EReference eReference, EObject eObject) {
+        return switch (eReference) {
+            case ExpressionPackage.Literals.EXPRESSION_RECORD_ACCESS__RECORD: false
+            default: true
         }
-        for (ref : eObject.eClass.EAllContainments) {
+    }
+
+    private def void optimizeContainments(EObject eObject, IEvaluationContext context) {
+        for (ref : eObject.eClass.EAllContainments.filter[shouldOptimize(eObject)]) {
             if (ExpressionPackage.Literals.EXPRESSION.isSuperTypeOf(ref.EReferenceType)) {
                 if (ref.isMany) {
                     val refValue = eObject.eGet(ref, true) as EList<Expression>
@@ -141,10 +101,10 @@ class ExpressionEvaluator {
                 }
             } else if (ref.isMany) {
                 val refValue = eObject.eGet(ref, true) as EList<EObject>
-                refValue.forEach[optimizeAllContainments(context)]
+                refValue.forEach[optimizeContainments(context)]
             } else {
                 val refValue = eObject.eGet(ref, true) as EObject
-                refValue.optimizeAllContainments(context)
+                refValue.optimizeContainments(context)
             }
         }
     }
@@ -154,6 +114,27 @@ class ExpressionEvaluator {
      */
     protected dispatch def Expression doEvaluate(Expression expression, IEvaluationContext context) {
         return expression
+    }
+
+    protected dispatch def Expression doEvaluate(ExpressionVariable expression, IEvaluationContext context) {
+        val reference = context.getExpression(expression)
+        if (reference !== null) {
+            // Reference should be evaluated before used, hence wrap it with brackets.
+            // Reduction will remove the brackets if the evaluated value doesn't require them.
+            val wrapped = createExpressionBracket
+            // IMPORTANT: Referenced expression should be copied before it can be contained!
+            wrapped.sub = EcoreUtil.copy(reference)
+            return wrapped.evaluate(context)
+        }
+    }
+
+    protected dispatch def Expression doEvaluate(ExpressionRecordAccess expression, IEvaluationContext context) {
+        // ExpressionRecordAccess#getRecord() is not optimized, see #shouldOptimize(EReference, EObject).
+        // Hence it should be evaluated before used
+        val recordExpression = expression.record.evaluate(context)
+        if (recordExpression instanceof ExpressionRecord) {
+            return recordExpression.fields.findFirst[recordField == expression.field]?.exp
+        }
     }
 
     // Functions
