@@ -1,0 +1,55 @@
+record UNIT {
+	int	unit
+}
+
+record ReportJobB {
+    int	job_id
+}
+
+record Parameters {
+    int	count
+    string	tag
+}
+
+record ReportJobA {
+    int	job_id
+    symbolic string	some_value
+}
+
+record InputJobB {
+    int	job_id
+    mixed KeyValuePair[]	list_of_key_value_pairs
+    int	uuid
+}
+
+record KeyValuePair {
+    string	key
+    mixed string	value
+}
+
+record InputJobA {
+    int	job_id
+}
+
+record JobB {
+    int	job_id
+    string	some_label
+    int	count
+}
+
+record JobA {
+    int	job_id
+}
+
+record ContextController {
+    int	job_count
+    int	number_of_jobs
+    Parameters	model_parameters
+}
+
+record ContextComposeJobB {
+    int	iteration_index
+    int	iteration_limit
+    int	job_id
+}
+

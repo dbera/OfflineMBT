@@ -66,6 +66,7 @@ RecordFieldAssignmentAction:
  * In ComMA we can only change field values of records that are stored in a variable.
  * Since we cannot access elements in collections, syntax like collection[i].a := v is not supported
  */
+ // TODO: Why not just reuse ExpressionRecordAccess here?
 FieldAccessExp returns expr::Expression:
 	ExpressionVariable ({expr::ExpressionRecordAccess.record = current} '.' field = [types::RecordField | ID])+
 ;
