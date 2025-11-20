@@ -14,6 +14,7 @@ package nl.esi.comma.expressions.validation;
 
 import static nl.esi.comma.expressions.validation.ExpressionValidator.boolType;
 import static nl.esi.comma.expressions.validation.ExpressionValidator.intType;
+import static nl.esi.comma.expressions.validation.ExpressionValidator.stringType;
 import static nl.esi.comma.expressions.validation.ExpressionValidator.numeric;
 import static nl.esi.comma.expressions.validation.ExpressionValidator.realType;
 import static nl.esi.comma.expressions.validation.ExpressionValidator.typeOf;
@@ -28,6 +29,7 @@ import java.util.List;
 import org.eclipse.xtext.xbase.lib.Pair;
 
 import nl.esi.comma.expressions.expression.Expression;
+import nl.esi.comma.expressions.expression.ExpressionConstantInt;
 import nl.esi.comma.expressions.expression.ExpressionFunctionCall;
 import nl.esi.comma.types.types.TypeObject;
 import nl.esi.comma.types.utilities.TypeUtilities;
@@ -130,7 +132,7 @@ public enum ExpressionFunction {
 			}
 			return result;
 		}
-		
+
 		@Override
 		public String getDocumentation() {
 			return String.format("<T> %s(vector<T>, T): vector<T>", name());
@@ -320,12 +322,123 @@ public enum ExpressionFunction {
 		public String getDocumentation() {
 			return String.format("<T> %s(vector<T>, int, T): vector<T>", name());
 		}
+	},
+	intToString {
+		@Override
+		public TypeObject inferType(List<Expression> args, int argIndex) {
+			switch (argIndex) {
+			case -1:
+				return stringType;
+			case 0:
+				return intType;
+			default:
+				return super.inferType(args, argIndex);
+			}
+		}
+
+		@Override
+		public Pair<Integer, String> validate(List<Expression> args) {
+			Pair<Integer, String> result = validateArgs(args, 1);
+			if (result == null) {
+				TypeObject argType = inferType(args, 0);
+				if (argType == null || !TypeUtilities.getTypeName(argType).equals(TypeUtilities.getTypeName(intType))) {
+					result = Pair.of(0, "Function intToString expects argument 1 to be of type int");
+				}
+			}
+			return result;
+		}
+
+		@Override
+		public String getDocumentation() {
+			return String.format("%s(int): string", name());
+		}
+	},
+	concat {
+		@Override
+		public TypeObject inferType(List<Expression> args, int argIndex) {
+			switch (argIndex) {
+			case -1:
+				return inferType(args, 0);
+			case 0:
+				return super.inferType(args, argIndex);
+			case 1:
+				return inferType(args, 0);
+			default:
+				return super.inferType(args, argIndex);
+			}
+		}
+
+		@Override
+		public Pair<Integer, String> validate(List<Expression> args) {
+			Pair<Integer, String> result = validateArgs(args, 2);
+			if (result == null) {
+				TypeObject firstArgType = inferType(args, 0);
+				TypeObject secondArgType = inferType(args, 1);
+
+				if (!isVectorType(firstArgType)) {
+					result = Pair.of(0, "Function concat expects argument 1 to be of type vector");
+				}
+
+	else if (!isVectorType(secondArgType)) {
+					result = Pair.of(1, "Function concat expects argument 2 to be of type vector");
+				}
+
+	else if (!TypeUtilities.getTypeName(firstArgType).equals(TypeUtilities.getTypeName(secondArgType))) {
+					result = Pair.of(1, "Function concat expects both arguments to be vectors of the same type");
+				}
+			}
+			return result;
+		}
+
+		@Override
+		public String getDocumentation() {
+			return String.format("<T> %s(vector<T>, vector<T>): vector<T>", name());
+		}
+	},
+	range {
+		@Override
+		public TypeObject inferType(List<Expression> args, int argIndex) {
+			switch (argIndex) {
+			case -1:
+				return TypeUtilities.vectorOf(intType);
+			case 0:
+			case 1:
+			case 2:
+				return intType;
+			default:
+				return super.inferType(args, argIndex);
+			}
+		}
+
+		@Override
+		public Pair<Integer, String> validate(List<Expression> args) {
+			int argCount = args.size();
+
+			if (argCount < 1 || argCount > 3) {
+				return Pair.of(-1, "Function range expects 1, 2, or 3 arguments, got " + argCount);
+			}
+			for (int i = 0; i < argCount; i++) {
+				TypeObject argType = super.inferType(args, i);
+				if (argType == null || !TypeUtilities.isIntType(argType)) {
+					return Pair.of(i, "Function range expects argument " + (i + 1) + " to be of type int");
+				}
+			}
+
+			return null;
+		}
+
+		@Override
+		public String getDocumentation() {
+			return String.format(
+					"%s(stop): vector<int> | %s(start, stop): vector<int> | %s(start, stop, step): vector<int>", name(),
+					name(), name());
+		}
 	};
-	
+
 	public static final int RETURN_ARG = -1;
 
 	public TypeObject inferType(List<Expression> args, int argIndex) {
-		if(argIndex < 0) {
+		if (argIndex < 0) {
 			// Default return type is void
 			return voidType;
 		} else if (argIndex < args.size()) {
@@ -334,9 +447,9 @@ public enum ExpressionFunction {
 			return null;
 		}
 	}
-	
+
 	public abstract Pair<Integer, String> validate(List<Expression> args);
-	
+
 	Pair<Integer, String> validateArgs(List<Expression> args, int expectedNrOfArgs) {
 		if (args.size() != expectedNrOfArgs) {
 			return Pair.of(-1, String.format("Function %s expects %d arguments", name(), expectedNrOfArgs));
@@ -353,9 +466,11 @@ public enum ExpressionFunction {
 	}
 
 	public abstract String getDocumentation();
-	
+
 	/**
-	 * NOTE: This function will not throw IllegalArgumentException, it will return {@code null} instead.
+	 * NOTE: This function will not throw IllegalArgumentException, it will return
+	 * {@code null} instead.
+	 * 
 	 * @see #valueOf(String)
 	 */
 	public static ExpressionFunction valueOf(ExpressionFunctionCall call) {

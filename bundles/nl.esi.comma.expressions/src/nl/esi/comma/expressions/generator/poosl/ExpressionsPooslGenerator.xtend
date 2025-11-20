@@ -187,6 +187,9 @@ abstract class ExpressionsPooslGenerator extends TypesPooslGenerator {
     «IF expr.functionName.equals('length')»((«generateExpression(expr.args.get(0))») getSize)«ENDIF»
     «IF expr.functionName.equals('hasKey')»((«generateExpression(expr.args.get(0))») includesKey(«generateExpression(expr.args.get(1))»))«ENDIF»
     «IF expr.functionName.equals('deleteKey')»(«generateExpression(expr.args.get(0))» clone removeAt(«generateExpression(expr.args.get(1))»))«ENDIF»
+    «IF expr.functionName.equals('intToString')»((«generateExpression(expr.args.get(0))») asString)«ENDIF»
+    «IF expr.functionName.equals('concat')»(«generateExpression(expr.args.get(0))» deepCopy addAll: «generateExpression(expr.args.get(1))»)«ENDIF»
+    «IF expr.functionName.equals('range')»«IF expr.args.size == 1»(0 to: («generateExpression(expr.args.get(0))») - 1) asArray«ELSEIF expr.args.size == 2»(«generateExpression(expr.args.get(0))» to: («generateExpression(expr.args.get(1))») - 1) asArray«ELSEIF expr.args.size == 3»(«generateExpression(expr.args.get(0))» to: («generateExpression(expr.args.get(1))») - 1 by: «generateExpression(expr.args.get(2))») asArray«ENDIF»«ENDIF»
     '''
     
     def dispatch CharSequence generateExpression(ExpressionMap expr)
