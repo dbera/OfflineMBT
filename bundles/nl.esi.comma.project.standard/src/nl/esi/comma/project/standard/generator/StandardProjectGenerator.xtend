@@ -15,9 +15,12 @@
  */
 package nl.esi.comma.project.standard.generator
 
+import com.google.inject.Inject
+import com.google.inject.Injector
 import java.util.HashMap
 import nl.asml.matala.product.generator.ProductGenerator
 import nl.asml.matala.product.product.Product
+import nl.esi.comma.abstracttestspecification.generator.to.bpmn.FromAbstractToBpmn
 import nl.esi.comma.abstracttestspecification.generator.to.concrete.FromAbstractToConcrete
 import nl.esi.comma.project.standard.standardProject.OfflineGenerationBlock
 import nl.esi.comma.project.standard.standardProject.OfflineGenerationTarget
@@ -36,7 +39,6 @@ import static extension nl.esi.comma.types.utilities.EcoreUtil3.*
 import static extension nl.esi.comma.types.utilities.FileSystemAccessUtil.*
 import static extension org.eclipse.emf.ecore.util.EcoreUtil.*
 import static extension org.eclipse.xtext.EcoreUtil2.*
-import nl.esi.comma.abstracttestspecification.generator.to.bpmn.FromAbstractToBpmn
 
 /**
  * Generates code from your model files on save.
@@ -44,6 +46,9 @@ import nl.esi.comma.abstracttestspecification.generator.to.bpmn.FromAbstractToBp
  * See https://www.eclipse.org/Xtext/documentation/303_runtime_concepts.html#code-generation
  */
 class StandardProjectGenerator extends AbstractGenerator {
+    @Inject
+    var Injector injector
+
     override doGenerate(Resource res, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
         for (project : res.contents.filter(Project)) {
             for (task : project.offlineBlocks) {
@@ -114,7 +119,7 @@ class StandardProjectGenerator extends AbstractGenerator {
 
             // Generate concrete tspec
             val conTspecFsa = fsa.createFolderAccess('tspec_concrete/' + tspecName)
-            val fromAbstractToConcreteGen = new FromAbstractToConcrete()
+            val fromAbstractToConcreteGen = injector.getInstance(FromAbstractToConcrete)
             fromAbstractToConcreteGen.doGenerate(absTspecRes, conTspecFsa, ctx)
 
             val conTspecFileName = tspecName + '.tspec'

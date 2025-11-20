@@ -147,6 +147,8 @@ class ExpressionEvaluator {
         val mapExpr = expression.map
         if (mapExpr instanceof ExpressionMap) {
             if (expression.value === null) {
+                // TODO: Should we return a null literal if the key was not found?
+                // Only do this when the key is a value
                 return mapExpr.pairs.findFirst[EcoreUtil.equals(key, expression.key)]?.value
             } else {
                 mapExpr.pairs += createPair => [
@@ -177,6 +179,7 @@ class ExpressionEvaluator {
     }
 
     protected dispatch def Expression doEvaluate(ExpressionEqual expression, extension IEvaluationContext context) {
+        // TODO: Remove isValue check, align with neq, contains and mapRW
         if (expression.left.isValue && expression.right.isValue) {
             return EcoreUtil.equals(expression.left, expression.right).toBool
         }
@@ -220,7 +223,7 @@ class ExpressionEvaluator {
     }
 
     protected dispatch def Expression doEvaluate(ExpressionMultiply expression, extension IEvaluationContext context) {
-        return expression.calcIfInt[l, r | l* r]
+        return expression.calcIfInt[l, r | l * r]
             ?: expression.calcIfReal[l, r | l * r]
     }
 
