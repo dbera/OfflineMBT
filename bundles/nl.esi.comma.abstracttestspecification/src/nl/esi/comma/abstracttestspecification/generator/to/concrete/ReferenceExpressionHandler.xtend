@@ -12,7 +12,6 @@
  */
 package nl.esi.comma.abstracttestspecification.generator.to.concrete
 
-import com.google.inject.Inject
 import java.util.ArrayList
 import java.util.HashMap
 import java.util.List
@@ -25,7 +24,6 @@ import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
 import nl.esi.comma.expressions.evaluation.ExpressionEvaluator
 import nl.esi.comma.expressions.expression.ExpressionPackage
 import nl.esi.comma.types.utilities.EcoreUtil3
-import org.eclipse.xtext.CrossReference
 import org.eclipse.xtext.resource.XtextResource
 
 class ReferenceExpressionHandler
@@ -415,18 +413,7 @@ class ReferenceExpressionHandler
     private def _printRecord_(String varRefName, String runStepName, ComposeStep composeStep,
         RecordFieldAssignmentAction rec, boolean isFirstCompose) {
 
-//        // Run block input data structure = Concrete TSpec step input data structure
-//        var blockInputName = new String
-//        var pi = new String
-//
-//        // System.out.println(" Field: " + printField(rec.fieldAccess, true))
-//        var field = new String
-//        blockInputName = runStepName.split("_").get(0) + "Input"
-//        pi = blockInputName + "."
-//        field = rec.fieldAccess.printField
-        
         // Run block input data structure = Concrete TSpec step input data structure
-
         val field = isFirstCompose
             ? '''«runStepName.split("_").get(0)»Input.«EcoreUtil3.serialize(rec.fieldAccess)»'''
             : '''step_«composeStep.name».output.«EcoreUtil3.serialize(rec.fieldAccess)»'''
@@ -437,7 +424,7 @@ class ReferenceExpressionHandler
         ]
         val ga_prd = (rec.eResource as XtextResource).resourceServiceProvider.get(ProductGrammarAccess)
         val variableReferences = ga_prd.findCrossReferences(ExpressionPackage.Literals.VARIABLE);
-        val value = EcoreUtil3.serializeXtext(rec.exp)[ iNode |
+        val value = EcoreUtil3.serializeXtext(expression)[ iNode |
             if (variableReferences.contains(iNode.grammarElement)) {
                 val varName = iNode.text
                 val stepRef = composeStep.stepRef.findFirst[refData.exists[name == varName]]

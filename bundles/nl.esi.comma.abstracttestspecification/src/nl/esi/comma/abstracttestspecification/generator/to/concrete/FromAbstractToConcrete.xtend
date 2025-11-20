@@ -12,8 +12,6 @@
  */
 package nl.esi.comma.abstracttestspecification.generator.to.concrete
 
-import com.google.inject.Inject
-import com.google.inject.Injector
 import java.util.HashSet
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractTestDefinition
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AssertionStep
@@ -38,8 +36,6 @@ import static extension nl.esi.comma.types.utilities.EcoreUtil3.*
 import static extension nl.esi.comma.types.utilities.TypeUtilities.*
 
 class FromAbstractToConcrete extends AbstractGenerator {
-    @Inject
-    var Injector injector
 
     override doGenerate(Resource res, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
         val atd = res.contents.filter(TSMain).map[model].filter(AbstractTestDefinition).head
@@ -167,7 +163,7 @@ class FromAbstractToConcrete extends AbstractGenerator {
         // Get text for concrete data expressions
         var conDataExpr = (new ConcreteExpressionHandler()).prepareStepInputExpressions(rstep, rstep.composeStepRefs)
         // Append text for reference data expressions
-        val refDataExpr = injector.getInstance(ReferenceExpressionHandler)
+        val refDataExpr = (new ReferenceExpressionHandler())
             .resolveStepReferenceExpressions(rstep, rstep.stepRef.map[refStep].filter(ComposeStep))
 
         return '''
