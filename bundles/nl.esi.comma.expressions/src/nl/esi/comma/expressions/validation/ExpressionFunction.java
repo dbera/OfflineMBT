@@ -22,7 +22,6 @@ import static nl.esi.comma.expressions.validation.ExpressionValidator.voidType;
 import static nl.esi.comma.types.utilities.TypeUtilities.isMapType;
 import static nl.esi.comma.types.utilities.TypeUtilities.isVectorType;
 import static nl.esi.comma.types.utilities.TypeUtilities.subTypeOf;
-
 import java.util.Arrays;
 import java.util.List;
 
@@ -341,7 +340,7 @@ public enum ExpressionFunction {
 			Pair<Integer, String> result = validateArgs(args, 1);
 			if (result == null) {
 				TypeObject argType = inferType(args, 0);
-				if (argType == null || !TypeUtilities.getTypeName(argType).equals(TypeUtilities.getTypeName(intType))) {
+				if (argType == null || !TypeUtilities.isIntType(argType)) {
 					result = Pair.of(0, "Function intToString expects argument 1 to be of type int");
 				}
 			}
@@ -379,11 +378,11 @@ public enum ExpressionFunction {
 					result = Pair.of(0, "Function concat expects argument 1 to be of type vector");
 				}
 
-	else if (!isVectorType(secondArgType)) {
+				else if (!isVectorType(secondArgType)) {
 					result = Pair.of(1, "Function concat expects argument 2 to be of type vector");
 				}
 
-	else if (!TypeUtilities.getTypeName(firstArgType).equals(TypeUtilities.getTypeName(secondArgType))) {
+				else if (!TypeUtilities.getTypeName(firstArgType).equals(TypeUtilities.getTypeName(secondArgType))) {
 					result = Pair.of(1, "Function concat expects both arguments to be vectors of the same type");
 				}
 			}

@@ -323,4 +323,14 @@ class TypeUtilities {
             MapTypeConstructor: '''map<«type.type.name»,«type.valueType.typeName»>'''
         }
     }
+    
+    def static VectorTypeConstructor vectorOf(TypeObject element) {
+        val vtc = TypesFactory.eINSTANCE.createVectorTypeConstructor
+        vtc.dimensions.add(TypesFactory.eINSTANCE.createDimension)
+        vtc.type = asType(element).type
+        return vtc
+    }
+   def static boolean isIntType(TypeObject t) {
+        return t instanceof SimpleTypeDecl && (t as SimpleTypeDecl).name == 'int'
+    }
 }
