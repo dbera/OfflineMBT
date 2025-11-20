@@ -133,15 +133,19 @@ class CausalGraphBDD {
                 prevKw = keyword
                 var stepName = stepNameProcessing(node.stepName)
 
-                // arguments
-                val args = step.stepArguments.filter[a|a instanceof AssignmentAction].map [ a |
-                    val aa = a as AssignmentAction
-                    "<" + aa.getAssignment().getName() + ">"
-                ]
-                if (!args.empty)
-                    steps.add(keyword + " " + stepName + " with " + args.join(" and "))
-                else
+                // Get parameter names and values using the same logic as emitSingleScenario
+                val argMap = getParaArgMap(node, step)
+                
+                if (!argMap.empty) {
+                    // Format as "paramName value" for each parameter, removing underscore prefix
+                    val formattedArgs = argMap.entrySet.map[entry | 
+                        val cleanParamName = if(entry.key.startsWith("_")) entry.key.substring(1) else entry.key
+                        cleanParamName + " " + entry.value
+                    ]
+                    steps.add(keyword + " " + stepName + " with " + formattedArgs.join(" and "))
+                } else {
                     steps.add(keyword + " " + stepName)
+                }
 
                 stepNum++
                 node = findNextNode(cg, node, sc.name, stepNum)
@@ -221,7 +225,12 @@ class CausalGraphBDD {
             val argMap = getParaArgMap(node, step)
 
             if (!argMap.empty) {
-                content.append(" with ").append(argMap.values.join(" and ")).append("\n")
+                // Format as "paramName value" for each parameter, removing underscore prefix
+                val formattedArgs = argMap.entrySet.map[entry | 
+                    val cleanParamName = if(entry.key.startsWith("_")) entry.key.substring(1) else entry.key
+                    cleanParamName + " " + entry.value
+                ]
+                content.append(" with ").append(formattedArgs.join(" and ")).append("\n")
             } else {
                 content.append("\n")
             }
@@ -239,6 +248,7 @@ class CausalGraphBDD {
         val assignmentArgs = (step?.stepArguments ?: #[]).filter[a|a instanceof AssignmentAction].map [ a |
             a as AssignmentAction
         ]
+        
         // 3) Build an ordered argMap aligned to parameterNames
         val argMap = new LinkedHashMap<String, String>
         for (pName : parameterNames) {
