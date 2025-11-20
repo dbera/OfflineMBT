@@ -1,0 +1,428 @@
+import "issue299.ps"
+
+using issue299.ModelForYuriC2ComposeJobA.jobA
+using issue299.ModelForYuriC2ComposeJobA.job_a_input
+using issue299.ModelForYuriC2ComposeJobA.Event_0ww9k8j
+using issue299.ModelForYuriC2RunJobA.job_a_report
+using issue299.ModelForYuriC2RunJobA.Event_0t40etv
+using issue299.ModelForYuriC3ComposeJobB.jobB
+using issue299.ModelForYuriC3ComposeJobB.job_b_input
+using issue299.ModelForYuriC3ComposeJobB.temp_job_b_input
+using issue299.ModelForYuriC3ComposeJobB.Gateway_0uysc4w
+using issue299.ModelForYuriC3ComposeJobB.Event_1880doa
+using issue299.ModelForYuriC3RunJobB.job_b_report
+using issue299.ModelForYuriC3RunJobB.Event_18fn07m
+using issue299.ModelForYuriC1.model_parameters
+using issue299.ModelForYuriC1.Gateway_0r5pxtv
+using issue299.ModelForYuriC1.Gateway_1habvb7
+using issue299.ModelForYuriC1.Event_0rch5hf
+using issue299.ModelForYuriC1.Flow_1ngqot2
+
+abstract-test-definition
+
+Test-Scenario: S1
+
+compose-step-name: ModelForYuriC2ComposeJobA_ComposeA_default_0
+action-case: issue299.ModelForYuriC2ComposeJobA.ComposeA.default
+input-binding:
+jobA : {
+    "job_id": 0
+}
+output-data:
+Event_0ww9k8j : {
+    "unit": 0
+}
+job_a_input : {
+    "job_id": 0
+}
+suppress(Event_0ww9k8j)
+
+run-step-name: ModelForYuriC2RunJobA_RunA_default_0 step-type: "JobA"
+action-case: issue299.ModelForYuriC2RunJobA.RunA.default
+consumes-from-step: ModelForYuriC2ComposeJobA_ComposeA_default_0 { job_a_input  }
+input-binding:
+job_a_input : {
+    "job_id": 0
+}
+output-data:
+Event_0t40etv : {
+    "unit": 0
+}
+job_a_report : {
+    "job_id": 0
+}
+suppress(Event_0t40etv)
+
+compose-step-name: ModelForYuriC3ComposeJobB_JobBintake_default_0
+action-case: issue299.ModelForYuriC3ComposeJobB.JobBintake.default
+input-binding:
+jobB : {
+    "count": 0,
+    "job_id": 0,
+    "some_label": "some_name"
+}
+output-data:
+Gateway_0uysc4w : {
+    "iteration_index": 0,
+    "iteration_limit": 0,
+    "job_id": 0
+}
+temp_job_b_input : {
+    "job_id": 0,
+    "list_of_key_value_pairs": [],
+    "uuid": 0
+}
+
+compose-step-name: ModelForYuriC3ComposeJobB_FinishcomposingjobB_default_0
+action-case: issue299.ModelForYuriC3ComposeJobB.FinishcomposingjobB.default
+consumes-from-step: ModelForYuriC3ComposeJobB_JobBintake_default_0 { temp_job_b_input  }
+input-binding:
+Gateway_0uysc4w : {
+    "iteration_index": 0,
+    "iteration_limit": 0,
+    "job_id": 0
+}
+temp_job_b_input : {
+    "job_id": 0,
+    "list_of_key_value_pairs": [],
+    "uuid": 0
+}
+output-data:
+Event_1880doa : {
+    "iteration_index": 0,
+    "iteration_limit": 0,
+    "job_id": 0
+}
+job_b_input : {
+    "job_id": 0,
+    "list_of_key_value_pairs": [],
+    "uuid": 0
+}
+data-references: job_b_input
+issue299.ModelForYuriC3ComposeJobB.FinishcomposingjobB.default.x0
+
+run-step-name: ModelForYuriC3RunJobB_RunB_default_0 step-type: "BJob"
+action-case: issue299.ModelForYuriC3RunJobB.RunB.default
+consumes-from-step: ModelForYuriC3ComposeJobB_FinishcomposingjobB_default_0 { job_b_input  }
+input-binding:
+job_b_input : {
+    "job_id": 0,
+    "list_of_key_value_pairs": [],
+    "uuid": 0
+}
+output-data:
+Event_18fn07m : {
+    "unit": 0
+}
+job_b_report : {
+    "job_id": 0
+}
+suppress(Event_18fn07m)
+
+compose-step-name: ModelForYuriC2ComposeJobA_ComposeA_default_1
+action-case: issue299.ModelForYuriC2ComposeJobA.ComposeA.default
+input-binding:
+jobA : {
+    "job_id": 1
+}
+output-data:
+Event_0ww9k8j : {
+    "unit": 0
+}
+job_a_input : {
+    "job_id": 1
+}
+suppress(Event_0ww9k8j)
+
+run-step-name: ModelForYuriC2RunJobA_RunA_default_1 step-type: "JobA"
+action-case: issue299.ModelForYuriC2RunJobA.RunA.default
+consumes-from-step: ModelForYuriC2ComposeJobA_ComposeA_default_1 { job_a_input  }
+input-binding:
+job_a_input : {
+    "job_id": 1
+}
+output-data:
+Event_0t40etv : {
+    "unit": 0
+}
+job_a_report : {
+    "job_id": 1
+}
+suppress(Event_0t40etv)
+
+compose-step-name: ModelForYuriC3ComposeJobB_JobBintake_default_1
+action-case: issue299.ModelForYuriC3ComposeJobB.JobBintake.default
+input-binding:
+jobB : {
+    "count": 1,
+    "job_id": 1,
+    "some_label": "some_name"
+}
+output-data:
+Gateway_0uysc4w : {
+    "iteration_index": 0,
+    "iteration_limit": 1,
+    "job_id": 1
+}
+temp_job_b_input : {
+    "job_id": 1,
+    "list_of_key_value_pairs": [],
+    "uuid": 0
+}
+
+compose-step-name: ModelForYuriC3ComposeJobB_AddjobAreport_default_0
+action-case: issue299.ModelForYuriC3ComposeJobB.AddjobAreport.default
+consumes-from-step: ModelForYuriC2RunJobA_RunA_default_0 { job_a_report  }
+consumes-from-step: ModelForYuriC3ComposeJobB_JobBintake_default_1 { temp_job_b_input  }
+input-binding:
+Gateway_0uysc4w : {
+    "iteration_index": 0,
+    "iteration_limit": 1,
+    "job_id": 1
+}
+job_a_report : {
+    "job_id": 0
+}
+temp_job_b_input : {
+    "job_id": 1,
+    "list_of_key_value_pairs": [],
+    "uuid": 0
+}
+output-data:
+Gateway_0uysc4w : {
+    "iteration_index": 1,
+    "iteration_limit": 1,
+    "job_id": 1
+}
+temp_job_b_input : {
+    "job_id": 1,
+    "list_of_key_value_pairs": [],
+    "uuid": 1
+}
+job_a_report : {
+    "job_id": 0
+}
+suppress(job_a_report)
+data-references: temp_job_b_input
+issue299.ModelForYuriC3ComposeJobB.AddjobAreport.default.x0
+issue299.ModelForYuriC3ComposeJobB.AddjobAreport.default.x1
+
+compose-step-name: ModelForYuriC3ComposeJobB_FinishcomposingjobB_default_1
+action-case: issue299.ModelForYuriC3ComposeJobB.FinishcomposingjobB.default
+consumes-from-step: ModelForYuriC3ComposeJobB_AddjobAreport_default_0 { temp_job_b_input  }
+input-binding:
+Gateway_0uysc4w : {
+    "iteration_index": 1,
+    "iteration_limit": 1,
+    "job_id": 1
+}
+temp_job_b_input : {
+    "job_id": 1,
+    "list_of_key_value_pairs": [],
+    "uuid": 1
+}
+output-data:
+Event_1880doa : {
+    "iteration_index": 1,
+    "iteration_limit": 1,
+    "job_id": 1
+}
+job_b_input : {
+    "job_id": 1,
+    "list_of_key_value_pairs": [],
+    "uuid": 1
+}
+data-references: job_b_input
+issue299.ModelForYuriC3ComposeJobB.FinishcomposingjobB.default.x0
+
+run-step-name: ModelForYuriC3RunJobB_RunB_default_1 step-type: "BJob"
+action-case: issue299.ModelForYuriC3RunJobB.RunB.default
+consumes-from-step: ModelForYuriC3ComposeJobB_FinishcomposingjobB_default_1 { job_b_input  }
+input-binding:
+job_b_input : {
+    "job_id": 1,
+    "list_of_key_value_pairs": [],
+    "uuid": 1
+}
+output-data:
+Event_18fn07m : {
+    "unit": 0
+}
+job_b_report : {
+    "job_id": 1
+}
+suppress(Event_18fn07m)
+
+compose-step-name: ModelForYuriC2ComposeJobA_ComposeA_default_2
+action-case: issue299.ModelForYuriC2ComposeJobA.ComposeA.default
+input-binding:
+jobA : {
+    "job_id": 2
+}
+output-data:
+Event_0ww9k8j : {
+    "unit": 0
+}
+job_a_input : {
+    "job_id": 2
+}
+suppress(Event_0ww9k8j)
+
+run-step-name: ModelForYuriC2RunJobA_RunA_default_2 step-type: "JobA"
+action-case: issue299.ModelForYuriC2RunJobA.RunA.default
+consumes-from-step: ModelForYuriC2ComposeJobA_ComposeA_default_2 { job_a_input  }
+input-binding:
+job_a_input : {
+    "job_id": 2
+}
+output-data:
+Event_0t40etv : {
+    "unit": 0
+}
+job_a_report : {
+    "job_id": 2
+}
+suppress(Event_0t40etv)
+
+compose-step-name: ModelForYuriC3ComposeJobB_JobBintake_default_2
+action-case: issue299.ModelForYuriC3ComposeJobB.JobBintake.default
+input-binding:
+jobB : {
+    "count": 2,
+    "job_id": 2,
+    "some_label": "some_name"
+}
+output-data:
+Gateway_0uysc4w : {
+    "iteration_index": 0,
+    "iteration_limit": 2,
+    "job_id": 2
+}
+temp_job_b_input : {
+    "job_id": 2,
+    "list_of_key_value_pairs": [],
+    "uuid": 0
+}
+
+compose-step-name: ModelForYuriC3ComposeJobB_AddjobAreport_default_1
+action-case: issue299.ModelForYuriC3ComposeJobB.AddjobAreport.default
+consumes-from-step: ModelForYuriC2RunJobA_RunA_default_0 { job_a_report  }
+consumes-from-step: ModelForYuriC3ComposeJobB_JobBintake_default_2 { temp_job_b_input  }
+input-binding:
+Gateway_0uysc4w : {
+    "iteration_index": 0,
+    "iteration_limit": 2,
+    "job_id": 2
+}
+job_a_report : {
+    "job_id": 0
+}
+temp_job_b_input : {
+    "job_id": 2,
+    "list_of_key_value_pairs": [],
+    "uuid": 0
+}
+output-data:
+Gateway_0uysc4w : {
+    "iteration_index": 1,
+    "iteration_limit": 2,
+    "job_id": 2
+}
+temp_job_b_input : {
+    "job_id": 2,
+    "list_of_key_value_pairs": [],
+    "uuid": 1
+}
+job_a_report : {
+    "job_id": 0
+}
+suppress(job_a_report)
+data-references: temp_job_b_input
+issue299.ModelForYuriC3ComposeJobB.AddjobAreport.default.x0
+issue299.ModelForYuriC3ComposeJobB.AddjobAreport.default.x1
+
+compose-step-name: ModelForYuriC3ComposeJobB_AddjobAreport_default_2
+action-case: issue299.ModelForYuriC3ComposeJobB.AddjobAreport.default
+consumes-from-step: ModelForYuriC2RunJobA_RunA_default_1 { job_a_report  }
+consumes-from-step: ModelForYuriC3ComposeJobB_AddjobAreport_default_1 { temp_job_b_input  }
+input-binding:
+Gateway_0uysc4w : {
+    "iteration_index": 1,
+    "iteration_limit": 2,
+    "job_id": 2
+}
+job_a_report : {
+    "job_id": 1
+}
+temp_job_b_input : {
+    "job_id": 2,
+    "list_of_key_value_pairs": [],
+    "uuid": 1
+}
+output-data:
+Gateway_0uysc4w : {
+    "iteration_index": 2,
+    "iteration_limit": 2,
+    "job_id": 2
+}
+temp_job_b_input : {
+    "job_id": 2,
+    "list_of_key_value_pairs": [],
+    "uuid": 2
+}
+job_a_report : {
+    "job_id": 1
+}
+suppress(job_a_report)
+data-references: temp_job_b_input
+issue299.ModelForYuriC3ComposeJobB.AddjobAreport.default.x0
+issue299.ModelForYuriC3ComposeJobB.AddjobAreport.default.x1
+
+compose-step-name: ModelForYuriC3ComposeJobB_FinishcomposingjobB_default_2
+action-case: issue299.ModelForYuriC3ComposeJobB.FinishcomposingjobB.default
+consumes-from-step: ModelForYuriC3ComposeJobB_AddjobAreport_default_2 { temp_job_b_input  }
+input-binding:
+Gateway_0uysc4w : {
+    "iteration_index": 2,
+    "iteration_limit": 2,
+    "job_id": 2
+}
+temp_job_b_input : {
+    "job_id": 2,
+    "list_of_key_value_pairs": [],
+    "uuid": 2
+}
+output-data:
+Event_1880doa : {
+    "iteration_index": 2,
+    "iteration_limit": 2,
+    "job_id": 2
+}
+job_b_input : {
+    "job_id": 2,
+    "list_of_key_value_pairs": [],
+    "uuid": 2
+}
+data-references: job_b_input
+issue299.ModelForYuriC3ComposeJobB.FinishcomposingjobB.default.x0
+
+run-step-name: ModelForYuriC3RunJobB_RunB_default_2 step-type: "BJob"
+action-case: issue299.ModelForYuriC3RunJobB.RunB.default
+consumes-from-step: ModelForYuriC3ComposeJobB_FinishcomposingjobB_default_2 { job_b_input  }
+input-binding:
+job_b_input : {
+    "job_id": 2,
+    "list_of_key_value_pairs": [],
+    "uuid": 2
+}
+output-data:
+Event_18fn07m : {
+    "unit": 0
+}
+job_b_report : {
+    "job_id": 2
+}
+suppress(Event_18fn07m)
+
+generate-file "./dataset/"
+
