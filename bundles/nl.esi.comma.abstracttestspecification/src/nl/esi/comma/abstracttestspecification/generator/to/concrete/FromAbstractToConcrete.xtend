@@ -23,9 +23,7 @@ import nl.esi.comma.abstracttestspecification.abstractTestspecification.TSMain
 import nl.esi.comma.assertthat.assertThat.DataAssertionItem
 import nl.esi.comma.expressions.expression.ExpressionVariable
 import nl.esi.comma.expressions.services.ExpressionGrammarAccess
-import nl.esi.comma.types.utilities.EcoreUtil3
 import org.eclipse.emf.common.util.URI
-import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
@@ -138,25 +136,20 @@ class FromAbstractToConcrete extends AbstractGenerator {
     «ENDFOR»
     }
     '''
-    
+
     def printDai(DataAssertionItem item, AssertionStep step) {
-        
-        val replacer = [ EObject semanticElement, EObject grammarElement |
-            val gaExpression = EcoreUtil3.getService(semanticElement, ExpressionGrammarAccess)
+        return item.serializeXtext[
+            val gaExpression = semanticElement.getService(ExpressionGrammarAccess)
             if (gaExpression === null) {
                 return null
             }
             var abs_assert = step
             var cexpr_handler = new ConcreteExpressionHandler()
-            return switch (grammarElement) {
-                case gaExpression.expressionLevel9Access.expressionVariableParserRuleCall_7: {
-                    val exprVar = semanticElement as ExpressionVariable
-                    return cexpr_handler.prepareAssertionStepExpressions(abs_assert, exprVar)
-                }
+            if (grammarElement == gaExpression.expressionLevel9Access.expressionVariableParserRuleCall_7) {
+                val exprVar = semanticElement as ExpressionVariable
+                return cexpr_handler.prepareAssertionStepExpressions(abs_assert, exprVar)
             }
         ]
-        var dai_seri = EcoreUtil3.serialize(item, replacer)
-        return dai_seri
     }
 
     def private _printOutputs_(RunStep rstep) {

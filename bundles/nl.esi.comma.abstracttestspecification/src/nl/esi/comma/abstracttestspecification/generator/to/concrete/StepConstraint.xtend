@@ -22,5 +22,5 @@ class StepConstraint
     val String lhs
     val String rhs
 
-    def String getText() '''«lhs.trim» := «rhs.trim»'''
+    def String getText() '''«lhs» := «rhs»'''
 }

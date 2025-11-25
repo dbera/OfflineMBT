@@ -117,7 +117,7 @@ class ExpressionEvaluator {
     }
 
     protected dispatch def Expression doEvaluate(ExpressionVariable expression, IEvaluationContext context) {
-        val reference = context.getExpression(expression)
+        val reference = context.getExpression(expression.variable)
         if (reference !== null) {
             // Reference should be evaluated before used, hence wrap it with brackets.
             // Reduction will remove the brackets if the evaluated value doesn't require them.
@@ -181,13 +181,13 @@ class ExpressionEvaluator {
     protected dispatch def Expression doEvaluate(ExpressionEqual expression, extension IEvaluationContext context) {
         // TODO: Remove isValue check, align with neq, contains and mapRW
         if (expression.left.isValue && expression.right.isValue) {
-            return EcoreUtil.equals(expression.left, expression.right).toBool
+            return EcoreUtil.equals(expression.left, expression.right).toBoolExpr
         }
     }
 
     protected dispatch def Expression doEvaluate(ExpressionNEqual expression, extension IEvaluationContext context) {
         if (expression.left.isValue && expression.right.isValue) {
-            return (!EcoreUtil.equals(expression.left, expression.right)).toBool
+            return (!EcoreUtil.equals(expression.left, expression.right)).toBoolExpr
         }
     }
 
@@ -256,7 +256,7 @@ class ExpressionEvaluator {
     protected dispatch def Expression doEvaluate(ExpressionNot expression, extension IEvaluationContext context) {
         val subValue = expression.sub.asBool
         if (subValue !== null ) {
-            return (!subValue).toBool
+            return (!subValue).toBoolExpr
         }
     }
 

@@ -63,7 +63,7 @@ public enum ExpressionFunction {
 		@Override
 		public Expression evaluate(List<Expression> args, IEvaluationContext context) {
 			if (args.get(0) instanceof ExpressionVector expr) {
-				return context.toBool(expr.getElements().isEmpty());
+				return context.toBoolExpr(expr.getElements().isEmpty());
 			}
 			return null;
 		}
@@ -96,10 +96,10 @@ public enum ExpressionFunction {
 		@Override
 		public Expression evaluate(List<Expression> args, IEvaluationContext context) {
 			if (args.get(0) instanceof ExpressionVector expr) {
-				return context.toInt(expr.getElements().size());
+				return context.toIntExpr(expr.getElements().size());
 			}
 			if (args.get(0) instanceof ExpressionMap expr) {
-				return context.toInt(expr.getPairs().size());
+				return context.toIntExpr(expr.getPairs().size());
 			}
 			return null;
 		}
@@ -133,7 +133,7 @@ public enum ExpressionFunction {
 		public Expression evaluate(List<Expression> args, IEvaluationContext context) {
 			if (args.get(0) instanceof ExpressionVector expr) {
 				Expression value = args.get(1);
-				return context.toBool(expr.getElements().stream().anyMatch(e -> EcoreUtil.equals(e, value)));
+				return context.toBoolExpr(expr.getElements().stream().anyMatch(e -> EcoreUtil.equals(e, value)));
 			}
 			return null;
 		}
@@ -201,7 +201,7 @@ public enum ExpressionFunction {
 		@Override
 		public Expression evaluate(List<Expression> args, IEvaluationContext context) {
 			BigInteger value = context.asInt(args.get(0));
-			return value == null ? null : context.toReal(new BigDecimal(value));
+			return value == null ? null : context.toRealExpr(new BigDecimal(value));
 		}
 
 		@Override
@@ -233,11 +233,11 @@ public enum ExpressionFunction {
 		public Expression evaluate(List<Expression> args, IEvaluationContext context) {
 			BigInteger intValue = context.asInt(args.get(0));
 			if (intValue != null) {
-				return context.toInt(intValue.abs());
+				return context.toIntExpr(intValue.abs());
 			}
 			BigDecimal realValue = context.asReal(args.get(0));
 			if (realValue != null) {
-				return context.toReal(realValue.abs());
+				return context.toRealExpr(realValue.abs());
 			}
 			return null;
 		}
@@ -297,7 +297,7 @@ public enum ExpressionFunction {
 		public Expression evaluate(List<Expression> args, IEvaluationContext context) {
 			if (args.get(0) instanceof ExpressionMap expr) {
 				Expression value = args.get(1);
-				return context.toBool(expr.getPairs().stream().anyMatch(p -> EcoreUtil.equals(p.getKey(), value)));
+				return context.toBoolExpr(expr.getPairs().stream().anyMatch(p -> EcoreUtil.equals(p.getKey(), value)));
 			}
 			return null;
 		}

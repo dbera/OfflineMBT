@@ -45,8 +45,8 @@ abstract class ExpressionEvaluatorTestBase {
         val evaluator = new ExpressionEvaluator()
         val context = expressions.variables.toMap([variable], [expression])
         for (assignment : expressions.variables.reject[expression === null]) {
-            assignment.expression = evaluator.evaluate(assignment.expression) [ varExpr |
-                return context.get(varExpr.variable)
+            assignment.expression = evaluator.evaluate(assignment.expression) [ variable |
+                return context.get(variable)
             ]
 //            context.put(assignment.variable, assignment.expression)
         }

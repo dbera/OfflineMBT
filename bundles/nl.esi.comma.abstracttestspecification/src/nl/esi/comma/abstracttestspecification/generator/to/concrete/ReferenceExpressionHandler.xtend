@@ -16,15 +16,17 @@ import java.util.ArrayList
 import java.util.HashMap
 import java.util.List
 import nl.asml.matala.product.product.VarRef
-import nl.asml.matala.product.services.ProductGrammarAccess
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AssertionStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.ComposeStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.RunStep
 import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
 import nl.esi.comma.expressions.evaluation.ExpressionEvaluator
-import nl.esi.comma.expressions.expression.ExpressionPackage
+import nl.esi.comma.expressions.expression.ExpressionVariable
 import nl.esi.comma.types.utilities.EcoreUtil3
-import org.eclipse.xtext.resource.XtextResource
+
+import static extension nl.esi.comma.assertthat.utilities.AssertThatUtilities.*
+import static extension nl.esi.comma.types.utilities.EcoreUtil3.*
+import static extension nl.esi.comma.types.utilities.TypeUtilities.*
 
 class ReferenceExpressionHandler
 {
@@ -418,24 +420,22 @@ class ReferenceExpressionHandler
             ? '''«runStepName.split("_").get(0)»Input.«EcoreUtil3.serialize(rec.fieldAccess)»'''
             : '''step_«composeStep.name».output.«EcoreUtil3.serialize(rec.fieldAccess)»'''
 
-//        var value = (new ExpressionGenerator(composeStep.stepRef, runStepName, varRefName)).exprToComMASyntax(rec.exp)
-        val expression = new ExpressionEvaluator().evaluate(rec.exp)[ exprVar |
-//            composeStep.input.findFirst[name == exprVar].jsonvals
+        rec.exp = new ExpressionEvaluator().evaluate(rec.exp)[ variable |
+            composeStep.input.findFirst[name == variable]?.jsonvals.toExpression(variable.type.typeObject, self)
         ]
-        val ga_prd = (rec.eResource as XtextResource).resourceServiceProvider.get(ProductGrammarAccess)
-        val variableReferences = ga_prd.findCrossReferences(ExpressionPackage.Literals.VARIABLE);
-        val value = EcoreUtil3.serializeXtext(expression)[ iNode |
-            if (variableReferences.contains(iNode.grammarElement)) {
-                val varName = iNode.text
-                val stepRef = composeStep.stepRef.findFirst[refData.exists[name == varName]]
+
+        val value = rec.exp.serialize[ obj |
+            if (obj instanceof ExpressionVariable) {
+                val stepRef = composeStep.stepRef.findFirst[refData.exists[name == obj.variable.name]]
                 if (stepRef !== null) {
-                    return '''step_«stepRef.refStep.name».output.«varName»'''
+                    return '''step_«stepRef.refStep.name».output.«obj.variable.name»'''
                 }
             }
         ]
 
-        return new StepConstraint(runStepName, composeStep.name, field, value)
+        return new StepConstraint(runStepName, composeStep.name, field.trim, value.trim)
     }
+
 
     // Gets the list of referenced compose steps by a compose step, recursively!
     // RULE. Compose Step may reference at most one preceding Compose Step.  

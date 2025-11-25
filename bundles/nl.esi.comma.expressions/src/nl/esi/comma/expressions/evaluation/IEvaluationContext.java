@@ -28,13 +28,14 @@ import nl.esi.comma.expressions.expression.ExpressionConstantString;
 import nl.esi.comma.expressions.expression.ExpressionFactory;
 import nl.esi.comma.expressions.expression.ExpressionMinus;
 import nl.esi.comma.expressions.expression.ExpressionVariable;
+import nl.esi.comma.expressions.expression.Variable;
 import nl.esi.comma.expressions.validation.ExpressionValidator;
 import nl.esi.comma.types.types.TypeObject;
 
 public interface IEvaluationContext {
 	static final IEvaluationContext EMPTY = variable -> null;
 
-	Expression getExpression(ExpressionVariable variable);
+	Expression getExpression(Variable variable);
 
 	/**
 	 * Returns {@code true} if an only if the {@code expression} resolves to a full
@@ -123,23 +124,23 @@ public interface IEvaluationContext {
 	 */
 	default Expression toExpression(Object value) {
 		if (value instanceof Boolean b) {
-			return toBool(b);
+			return toBoolExpr(b);
 		} else if (value instanceof String s) {
-			return toString(s);
+			return toStringExpr(s);
 		} else if (value instanceof CharSequence s) {
-			return toString(s);
+			return toStringExpr(s);
 		} else if (value instanceof BigInteger i) {
-			return toInt(i);
+			return toIntExpr(i);
 		} else if (value instanceof Integer i) {
-			return toInt(i);
+			return toIntExpr(i);
 		} else if (value instanceof Long i) {
-			return toInt(i);
+			return toIntExpr(i);
 		} else if (value instanceof BigDecimal r) {
-			return toReal(r);
+			return toRealExpr(r);
 		} else if (value instanceof Double r) {
-			return toReal(r);
+			return toRealExpr(r);
 		} else if (value instanceof Float r) {
-			return toReal(r);
+			return toRealExpr(r);
 		} else {
 			return null;
 		}
@@ -152,7 +153,7 @@ public interface IEvaluationContext {
 		return null;
 	}
 
-	default ExpressionConstantBool toBool(Boolean value) {
+	default ExpressionConstantBool toBoolExpr(Boolean value) {
 		if (value != null) {
 			ExpressionConstantBool expression = ExpressionFactory.eINSTANCE.createExpressionConstantBool();
 			expression.setValue(value);
@@ -168,11 +169,11 @@ public interface IEvaluationContext {
 		return null;
 	}
 
-	default ExpressionConstantString toString(CharSequence value) {
-		return value == null ? null : toString(value.toString());
+	default ExpressionConstantString toStringExpr(CharSequence value) {
+		return value == null ? null : toStringExpr(value.toString());
 	}
 
-	default ExpressionConstantString toString(String value) {
+	default ExpressionConstantString toStringExpr(String value) {
 		if (value != null) {
 			ExpressionConstantString expression = ExpressionFactory.eINSTANCE.createExpressionConstantString();
 			expression.setValue(value);
@@ -191,15 +192,15 @@ public interface IEvaluationContext {
 		return null;
 	}
 
-	default Expression toInt(Integer value) {
-		return value == null ? null : toInt(BigInteger.valueOf(value));
+	default Expression toIntExpr(Integer value) {
+		return value == null ? null : toIntExpr(BigInteger.valueOf(value));
 	}
 
-	default Expression toInt(Long value) {
-		return value == null ? null : toInt(BigInteger.valueOf(value));
+	default Expression toIntExpr(Long value) {
+		return value == null ? null : toIntExpr(BigInteger.valueOf(value));
 	}
 
-	default Expression toInt(BigInteger value) {
+	default Expression toIntExpr(BigInteger value) {
 		if (value != null) {
 			ExpressionConstantInt intExpression = ExpressionFactory.eINSTANCE.createExpressionConstantInt();
 			intExpression.setValue(value.abs().longValue());
@@ -223,15 +224,15 @@ public interface IEvaluationContext {
 		return null;
 	}
 
-	default Expression toReal(Float value) {
-		return value == null ? null : toReal(BigDecimal.valueOf(value));
+	default Expression toRealExpr(Float value) {
+		return value == null ? null : toRealExpr(BigDecimal.valueOf(value));
 	}
 
-	default Expression toReal(Double value) {
-		return value == null ? null : toReal(BigDecimal.valueOf(value));
+	default Expression toRealExpr(Double value) {
+		return value == null ? null : toRealExpr(BigDecimal.valueOf(value));
 	}
 
-	default Expression toReal(BigDecimal value) {
+	default Expression toRealExpr(BigDecimal value) {
 		if (value != null) {
 			ExpressionConstantReal realExpression = ExpressionFactory.eINSTANCE.createExpressionConstantReal();
 			realExpression.setValue(value.abs().doubleValue());
