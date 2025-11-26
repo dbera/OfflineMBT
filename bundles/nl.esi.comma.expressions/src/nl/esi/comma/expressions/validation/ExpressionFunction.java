@@ -322,7 +322,7 @@ public enum ExpressionFunction {
 			return String.format("<T> %s(vector<T>, int, T): vector<T>", name());
 		}
 	},
-	intToString {
+	toString {
 		@Override
 		public TypeObject inferType(List<Expression> args, int argIndex) {
 			switch (argIndex) {
@@ -337,14 +337,7 @@ public enum ExpressionFunction {
 
 		@Override
 		public Pair<Integer, String> validate(List<Expression> args) {
-			Pair<Integer, String> result = validateArgs(args, 1);
-			if (result == null) {
-				TypeObject argType = inferType(args, 0);
-				if (argType == null || !TypeUtilities.isIntType(argType)) {
-					result = Pair.of(0, "Function intToString expects argument 1 to be of type int");
-				}
-			}
-			return result;
+			return validateArgs(args, 1);
 		}
 
 		@Override
@@ -361,7 +354,7 @@ public enum ExpressionFunction {
 			case 0:
 				return super.inferType(args, argIndex);
 			case 1:
-				return inferType(args, 0);
+				return super.inferType(args, argIndex);
 			default:
 				return super.inferType(args, argIndex);
 			}
@@ -376,13 +369,9 @@ public enum ExpressionFunction {
 
 				if (!isVectorType(firstArgType)) {
 					result = Pair.of(0, "Function concat expects argument 1 to be of type vector");
-				}
-
-				else if (!isVectorType(secondArgType)) {
+				} else if (!isVectorType(secondArgType)) {
 					result = Pair.of(1, "Function concat expects argument 2 to be of type vector");
-				}
-
-				else if (!TypeUtilities.getTypeName(firstArgType).equals(TypeUtilities.getTypeName(secondArgType))) {
+				} else if (!TypeUtilities.identical(firstArgType, secondArgType)) {
 					result = Pair.of(1, "Function concat expects both arguments to be vectors of the same type");
 				}
 			}
@@ -414,16 +403,9 @@ public enum ExpressionFunction {
 			int argCount = args.size();
 
 			if (argCount < 1 || argCount > 3) {
-				return Pair.of(-1, "Function range expects 1, 2, or 3 arguments, got " + argCount);
+				return Pair.of(-1, "Function range expects 1, 2, or 3 arguments");
 			}
-			for (int i = 0; i < argCount; i++) {
-				TypeObject argType = super.inferType(args, i);
-				if (argType == null || !TypeUtilities.isIntType(argType)) {
-					return Pair.of(i, "Function range expects argument " + (i + 1) + " to be of type int");
-				}
-			}
-
-			return null;
+			return validateArgs(args, argCount);
 		}
 
 		@Override

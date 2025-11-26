@@ -324,13 +324,17 @@ class TypeUtilities {
         }
     }
     
-    def static VectorTypeConstructor vectorOf(TypeObject element) {
+      def static dispatch VectorTypeConstructor vectorOf(TypeDecl td) {
         val vtc = TypesFactory.eINSTANCE.createVectorTypeConstructor
-        vtc.dimensions.add(TypesFactory.eINSTANCE.createDimension)
-        vtc.type = asType(element).type
+        vtc.dimensions += TypesFactory.eINSTANCE.createDimension
+        vtc.type = EcoreUtil.copy(td)
         return vtc
     }
-   def static boolean isIntType(TypeObject t) {
-        return t instanceof SimpleTypeDecl && (t as SimpleTypeDecl).name == 'int'
+    
+    def static dispatch VectorTypeConstructor vectorOf(VectorTypeDecl vtd) {
+        val vtc = EcoreUtil.copy(vtd.constructor)
+        vtc.dimensions += TypesFactory.eINSTANCE.createDimension
+        return vtc
     }
+    
 }
