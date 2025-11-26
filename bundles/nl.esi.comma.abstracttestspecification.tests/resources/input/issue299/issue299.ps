@@ -1,7 +1,7 @@
 import "issue299.types"
 specification issue299
 {
-    system ModelForYuriC2ComposeJobA
+    system Issue299C2ComposeJobA
     {
         inputs
         JobA	jobA
@@ -16,7 +16,7 @@ specification issue299
         // init
     
     
-        desc "ModelForYuriC2Compose Job A_Model"
+        desc "Issue299C2Compose Job A_Model"
         
         action			ComposeA
         element-label	"Compose A"
@@ -27,10 +27,10 @@ specification issue299
         updates:
             job_a_input := InputJobA { job_id = jobA.job_id }
     
-        element-labels ["ModelForYuri", "C2", "Compose Job A"]
+        element-labels ["Issue299", "C2", "Compose Job A"]
     }
     
-    system ModelForYuriC2RunJobA
+    system Issue299C2RunJobA
     {
         inputs
         InputJobA	job_a_input
@@ -45,7 +45,7 @@ specification issue299
         // init
     
     
-        desc "ModelForYuriC2Run Job A_Model"
+        desc "Issue299C2Run Job A_Model"
         
         action			RunA
         element-label	"Run A"
@@ -56,10 +56,10 @@ specification issue299
         updates:
             job_a_report := ReportJobA { job_id = job_a_input.job_id }
     
-        element-labels ["ModelForYuri", "C2", "Run Job A"]
+        element-labels ["Issue299", "C2", "Run Job A"]
     }
     
-    system ModelForYuriC3ComposeJobB
+    system Issue299C3ComposeJobB
     {
         inputs
         ReportJobA	job_a_report
@@ -77,7 +77,7 @@ specification issue299
         // init
     
     
-        desc "ModelForYuriC3Compose Job B_Model"
+        desc "Issue299C3Compose Job B_Model"
         
         action			FinishcomposingjobB
         element-label	"Finish composing job B"
@@ -145,10 +145,10 @@ specification issue299
              uuid = 0
             }
     
-        element-labels ["ModelForYuri", "C3", "Compose Job B"]
+        element-labels ["Issue299", "C3", "Compose Job B"]
     }
     
-    system ModelForYuriC3RunJobB
+    system Issue299C3RunJobB
     {
         inputs
         InputJobB	job_b_input
@@ -163,7 +163,7 @@ specification issue299
         // init
     
     
-        desc "ModelForYuriC3Run Job B_Model"
+        desc "Issue299C3Run Job B_Model"
         
         action			RunB
         element-label	"Run B"
@@ -174,10 +174,10 @@ specification issue299
         updates:
             job_b_report := ReportJobB { job_id = job_b_input.job_id }
     
-        element-labels ["ModelForYuri", "C3", "Run Job B"]
+        element-labels ["Issue299", "C3", "Run Job B"]
     }
     
-    system ModelForYuriC1
+    system Issue299C1
     {
         inputs
         Parameters	model_parameters
@@ -200,7 +200,7 @@ specification issue299
         }
     
     
-        desc "ModelForYuriC1_Model"
+        desc "Issue299C1_Model"
         
         action			DojobB
         element-label	"Do job B"
@@ -259,10 +259,10 @@ specification issue299
         updates:
             Event_0rch5hf := Gateway_0r5pxtv
     
-        element-labels ["ModelForYuri", "C1"]
+        element-labels ["Issue299", "C1"]
     }
     
-	SUT-blocks ModelForYuriC2RunJobA ModelForYuriC3RunJobB
+	SUT-blocks Issue299C2RunJobA Issue299C3RunJobB
 	depth-limits 300
 	num-tests 1
 }

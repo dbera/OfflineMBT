@@ -95,6 +95,11 @@ class FromAbstractToConcreteTest {
     }
 
     @Test
+    def void testPrinter() {
+        testGenerator('printer');
+    }
+
+    @Test
     def void testIssue249() {
         testGenerator('issue249');
     }

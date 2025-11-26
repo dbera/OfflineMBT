@@ -1,0 +1,24 @@
+import "../../../input/printer/printer.types"
+
+record ExecuteInspection {
+    ExecuteInspectionInput input
+    ExecuteInspectionOutput output
+}
+
+record ExecuteInspectionInput {
+    UNIT Flow_07l0yyj
+    MeasureRequest measureRequest
+    Report inspectionReport
+    Result inspectionResult
+    MeasureRequest inspectionJob
+    Report printReport
+}
+
+record ExecuteInspectionOutput {
+    UNIT Flow_07l0yyj
+    MeasureRequest measureRequest
+    Report inspectionReport
+    Result inspectionResult
+    MeasureRequest inspectionJob
+    Report printReport
+}
