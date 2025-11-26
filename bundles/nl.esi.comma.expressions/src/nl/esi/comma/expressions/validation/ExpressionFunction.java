@@ -131,8 +131,8 @@ public enum ExpressionFunction {
 
 		@Override
 		public Expression evaluate(List<Expression> args, IEvaluationContext context) {
-			if (args.get(0) instanceof ExpressionVector expr) {
-				Expression value = args.get(1);
+			Expression value = args.get(1);
+			if (args.get(0) instanceof ExpressionVector expr && context.isValue(value)) {
 				return context.toBoolExpr(expr.getElements().stream().anyMatch(e -> EcoreUtil.equals(e, value)));
 			}
 			return null;
@@ -295,9 +295,9 @@ public enum ExpressionFunction {
 
 		@Override
 		public Expression evaluate(List<Expression> args, IEvaluationContext context) {
-			if (args.get(0) instanceof ExpressionMap expr) {
-				Expression value = args.get(1);
-				return context.toBoolExpr(expr.getPairs().stream().anyMatch(p -> EcoreUtil.equals(p.getKey(), value)));
+			Expression key = args.get(1);
+			if (args.get(0) instanceof ExpressionMap expr && context.isValue(key)) {
+				return context.toBoolExpr(expr.getPairs().stream().anyMatch(p -> EcoreUtil.equals(p.getKey(), key)));
 			}
 			return null;
 		}
@@ -332,9 +332,9 @@ public enum ExpressionFunction {
 
 		@Override
 		public Expression evaluate(List<Expression> args, IEvaluationContext context) {
-			if (args.get(0) instanceof ExpressionMap expr) {
-				Expression value = args.get(1);
-				expr.getPairs().removeIf(p -> EcoreUtil.equals(p.getKey(), value));
+			Expression key = args.get(1);
+			if (args.get(0) instanceof ExpressionMap expr && context.isValue(key)) {
+				expr.getPairs().removeIf(p -> EcoreUtil.equals(p.getKey(), key));
 				return expr;
 			}
 			return null;
@@ -386,6 +386,7 @@ public enum ExpressionFunction {
 			return String.format("<T> %s(vector<T>, int): T", name());
 		}
 	},
+	// TODO: Should we rename this function to set?!?
 	at {
 		@Override
 		public TypeObject inferType(List<Expression> args, int argIndex) {

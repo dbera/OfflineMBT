@@ -32,6 +32,7 @@ class ExpressionEvaluatorComplexTest extends ExpressionEvaluatorTestBase {
                 map<int, string> ti2s
             }
         '''
+
         assertEval('''
             «types»
             T t = T {
@@ -69,6 +70,7 @@ class ExpressionEvaluatorComplexTest extends ExpressionEvaluatorTestBase {
                 map<int, string> ti2s
             }
         '''
+
         // Resolved variable
         assertEval('''
             «types»
@@ -79,6 +81,7 @@ class ExpressionEvaluatorComplexTest extends ExpressionEvaluatorTestBase {
             int a = 1
             int b = a
         ''')
+
         // Unresolved variable
         assertEval('''
             «types»
@@ -93,7 +96,7 @@ class ExpressionEvaluatorComplexTest extends ExpressionEvaluatorTestBase {
                 ti = a
             }
         ''')
-        // If 1 variable cannot be resolved, the result will be undefined
+
         assertEval('''
             «types»
             int a = 1
@@ -122,6 +125,7 @@ class ExpressionEvaluatorComplexTest extends ExpressionEvaluatorTestBase {
                 int[] tv
             }
         '''
+
         assertEval('''
             «types»
             bool a
@@ -141,6 +145,7 @@ class ExpressionEvaluatorComplexTest extends ExpressionEvaluatorTestBase {
                 tb = (1 == 1 and 2 == 2) or (b and 3 == 3)
             }
         ''')
+
         assertEval('''
             «types»
             T step1 = T {
@@ -170,6 +175,7 @@ class ExpressionEvaluatorComplexTest extends ExpressionEvaluatorTestBase {
                 ti = step3.ti + 1
             }
         ''')
+
         assertEval('''
             «types»
             T step1
@@ -201,6 +207,7 @@ class ExpressionEvaluatorComplexTest extends ExpressionEvaluatorTestBase {
             bool a = false
             bool b = a
         ''')
+
         // Unresolved variable
         assertEval('''
             bool a
@@ -221,6 +228,7 @@ class ExpressionEvaluatorComplexTest extends ExpressionEvaluatorTestBase {
                 bool tb
             }
         '''
+
         // Resolved variable
         assertEval('''
             «types»
@@ -237,6 +245,7 @@ class ExpressionEvaluatorComplexTest extends ExpressionEvaluatorTestBase {
             }
             int c = b.ti
         ''')
+
         // Unresolved variable
         assertEval('''
             «types»
@@ -247,6 +256,7 @@ class ExpressionEvaluatorComplexTest extends ExpressionEvaluatorTestBase {
             T a
             int b = a.ti
         ''')
+
         // Unresolved field
         assertEval('''
             «types»
@@ -275,6 +285,7 @@ class ExpressionEvaluatorComplexTest extends ExpressionEvaluatorTestBase {
     def void expressionBracket() {
         // Constants
         assertEval('int a = 1', 'int a = (1)')
+
         // Resolved variable
         assertEval('''
             bool a = true
@@ -283,6 +294,7 @@ class ExpressionEvaluatorComplexTest extends ExpressionEvaluatorTestBase {
             bool a = true
             bool b = (a)
         ''')
+
         // Unresolved variable
         assertEval('''
             bool a
@@ -303,6 +315,7 @@ class ExpressionEvaluatorComplexTest extends ExpressionEvaluatorTestBase {
     def void exprNot() {
         assertEval('bool b = false', 'bool b = not true')
         assertEval('bool b = true', 'bool b = not false')
+
         // Resolved variable
         assertEval('''
             bool a = false
@@ -313,6 +326,7 @@ class ExpressionEvaluatorComplexTest extends ExpressionEvaluatorTestBase {
             bool b = not a
             bool c = not b
         ''')
+
         // Unresolved variable
         assertEval('''
             bool a
@@ -327,6 +341,7 @@ class ExpressionEvaluatorComplexTest extends ExpressionEvaluatorTestBase {
     def void expressionPlus() {
         assertEval('int a = 1', 'int a = +1')
         assertEval('int a = 1.0', 'int a = +1.0')
+
         // Resolved variable
         assertEval('''
             int a
@@ -335,6 +350,7 @@ class ExpressionEvaluatorComplexTest extends ExpressionEvaluatorTestBase {
             int a
             int b = +a
         ''')
+
         // Unresolved variable
         assertEval('''
             int a

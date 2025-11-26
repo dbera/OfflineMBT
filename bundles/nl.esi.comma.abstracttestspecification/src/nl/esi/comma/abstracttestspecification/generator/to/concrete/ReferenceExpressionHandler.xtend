@@ -426,9 +426,10 @@ class ReferenceExpressionHandler
 
         val value = rec.exp.serialize[ obj |
             if (obj instanceof ExpressionVariable) {
-                val stepRef = composeStep.stepRef.findFirst[refData.exists[name == obj.variable.name]]
+                val vname = obj.variable.name
+                val stepRef = composeStep.stepRef.findFirst[refData.exists[name == vname]]
                 if (stepRef !== null) {
-                    return '''step_«stepRef.refStep.name».output.«obj.variable.name»'''
+                    return '''step_«stepRef.refStep.name».output.«vname»'''
                 }
             }
         ]

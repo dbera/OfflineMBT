@@ -113,7 +113,7 @@ class ExpressionEvaluator {
      * Returning {@code null} will evaluate to the expression itself.
      */
     protected dispatch def Expression doEvaluate(Expression expression, IEvaluationContext context) {
-        return expression
+        return null
     }
 
     protected dispatch def Expression doEvaluate(ExpressionVariable expression, IEvaluationContext context) {
@@ -133,6 +133,7 @@ class ExpressionEvaluator {
         // Hence it should be evaluated before used
         val recordExpression = expression.record.evaluate(context)
         if (recordExpression instanceof ExpressionRecord) {
+            // TODO: Should we throw an Exception when the field is not associated with a value?
             return recordExpression.fields.findFirst[recordField == expression.field]?.exp
         }
     }
@@ -143,12 +144,13 @@ class ExpressionEvaluator {
         return ExpressionFunction.valueOf(expression)?.evaluate(expression.args, context)
     }
 
-    protected dispatch def Expression doEvaluate(ExpressionMapRW expression, IEvaluationContext context) {
+    protected dispatch def Expression doEvaluate(ExpressionMapRW expression, extension IEvaluationContext context) {
         val mapExpr = expression.map
         if (mapExpr instanceof ExpressionMap) {
-            if (expression.value === null) {
-                // TODO: Should we return a null literal if the key was not found?
-                // Only do this when the key is a value
+            if (!expression.key.isValue) {
+                return null
+            } else if (expression.value === null) {
+                // TODO: Should we throw an Exception when the key is not associated with a value?
                 return mapExpr.pairs.findFirst[EcoreUtil.equals(key, expression.key)]?.value
             } else {
                 mapExpr.pairs += createPair => [
@@ -179,7 +181,6 @@ class ExpressionEvaluator {
     }
 
     protected dispatch def Expression doEvaluate(ExpressionEqual expression, extension IEvaluationContext context) {
-        // TODO: Remove isValue check, align with neq, contains and mapRW
         if (expression.left.isValue && expression.right.isValue) {
             return EcoreUtil.equals(expression.left, expression.right).toBoolExpr
         }

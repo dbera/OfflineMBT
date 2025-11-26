@@ -189,6 +189,10 @@ public class EcoreUtil3 extends EcoreUtil2 {
 		if (serializer == null) {
 			throw new IllegalStateException("Cannot serialize an eObject that has no associated serializer");
 		}
+		if (replacer.apply(eObject) instanceof CharSequence replacement) {
+			// A full replacement
+			return replacement.toString();
+		}
 		ITextRegionAccess regionAccess = serializer.serializeToRegions(eObject);
 		ITextRegionRewriter rewriter = regionAccess.getRewriter();
 		ArrayList<ITextReplacement> replacements = new ArrayList<ITextReplacement>();
@@ -196,9 +200,13 @@ public class EcoreUtil3 extends EcoreUtil2 {
 			EObject next = i.next();
 			CharSequence replacement = replacer.apply(next);
 			if (replacement != null) {
+				// A partial replacement
 				IEObjectRegion objRegion = regionAccess.regionForEObject(next);
-				replacements.add(rewriter.createReplacement(objRegion.getOffset(), objRegion.getLength(),
+				replacements.add(rewriter.createReplacement(
+						objRegion.getOffset(), 
+						objRegion.getLength(),
 						replacement.toString()));
+				// Prevent replacing descendant AST nodes
 				i.prune();
 			}
 		}
