@@ -15,7 +15,6 @@ package nl.esi.comma.types.utilities;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -37,6 +36,7 @@ import org.eclipse.xtext.formatting2.regionaccess.IEObjectRegion;
 import org.eclipse.xtext.formatting2.regionaccess.ITextRegionAccess;
 import org.eclipse.xtext.formatting2.regionaccess.ITextRegionRewriter;
 import org.eclipse.xtext.formatting2.regionaccess.ITextReplacement;
+import org.eclipse.xtext.nodemodel.BidiTreeIterable;
 import org.eclipse.xtext.nodemodel.ICompositeNode;
 import org.eclipse.xtext.nodemodel.INode;
 import org.eclipse.xtext.nodemodel.util.NodeModelUtils;
@@ -226,21 +226,21 @@ public class EcoreUtil3 extends EcoreUtil2 {
 	 */
 	public static String serializeXtext(EObject eObject, Function<? super INode, ? extends CharSequence> replacer) {
 		ICompositeNode eObjectNode = NodeModelUtils.getNode(eObject);
-		if (eObjectNode == null) {
+		if (eObjectNode instanceof BidiTreeIterable<?> iterable) {
+			ITextRegion eObjectTextRegion = eObjectNode.getTotalTextRegion();
+			StringBuilder text = new StringBuilder(eObjectNode.getText());
+			for (@SuppressWarnings("unchecked") INode node: (Iterable<INode>) iterable.reverse()) {
+				CharSequence replacement = replacer.apply(node);
+				if (replacement != null) {
+					int replaceStart = node.getOffset() - eObjectTextRegion.getOffset();
+					int replaceEnd = replaceStart + node.getLength();
+					text.replace(replaceStart, replaceEnd, replacement.toString());
+				}
+			}
+			return text.toString();
+		} else {
 			throw new IllegalStateException("Cannot serialize an eObject that has no associated node");
 		}
-		ITextRegion eObjectTextRegion = eObjectNode.getTotalTextRegion();
-		StringBuilder text = new StringBuilder(eObjectNode.getText());
-		for (Iterator<INode> iterator = eObjectNode.getChildren().reverse().iterator(); iterator.hasNext();) {
-			INode node = iterator.next();
-			CharSequence replacement = replacer.apply(node);
-			if (replacement != null) {
-				int replaceStart = node.getOffset() - eObjectTextRegion.getOffset();
-				int replaceEnd = replaceStart + node.getLength();
-				text.replace(replaceStart, replaceEnd, replacement.toString());
-			}
-		}
-		return text.toString();
 	}
 	
 	/**

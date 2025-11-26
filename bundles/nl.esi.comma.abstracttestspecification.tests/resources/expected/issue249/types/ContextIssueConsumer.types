@@ -9,7 +9,7 @@ record ConsumerRunTypeInput {
     ProdCons1 part1
     ProdCons2 part2
     UNIT Event_0fmv4m5
-    ProdCtx between_RunLocal_and_Compose
+    ProdCtx Flow_168eaxr
     ProdCtx Event_0m7n0r6
     ProdReport report
 }
@@ -18,7 +18,7 @@ record ConsumerRunTypeOutput {
     ProdCons1 part1
     ProdCons2 part2
     UNIT Event_0fmv4m5
-    ProdCtx between_RunLocal_and_Compose
+    ProdCtx Flow_168eaxr
     ProdCtx Event_0m7n0r6
     ProdReport report
 }

@@ -88,7 +88,8 @@ class FromAbstractToConcreteTest {
     private def Map<String, Path> listRegularFiles(Path path) {
         val files = new TreeMap()
         for (file : path.walk.filter[isRegularFile].toList) {
-            files.put(file.relativize(path).toString, file)
+            val relativePath = path.relativize(file)
+            files.put(relativePath.toString, file)
         }
         return files;
     }
