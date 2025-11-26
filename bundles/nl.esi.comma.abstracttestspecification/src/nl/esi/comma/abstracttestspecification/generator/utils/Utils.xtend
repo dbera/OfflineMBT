@@ -63,6 +63,7 @@ import nl.esi.comma.abstracttestspecification.generator.to.concrete.ConcreteExpr
 import java.util.LinkedHashMap
 import java.util.Map
 import java.util.Set
+import nl.esi.comma.abstracttestspecification.abstractTestspecification.StepReference
 
 class Utils 
 {
@@ -86,30 +87,29 @@ class Utils
 
     static def getInputVar(ExecutableStep rstep) '''«rstep.system»Input'''
 
-    // Gets the list of referenced compose steps
-    // RULE. Exactly one referenced Compose Step.
-    static def getComposeSteps(RunStep step) {
-        return step.stepRef.map[refStep].filter(ComposeStep)
+    static def getComposeStepRefs(RunStep step) {
+        return step.stepRef.filter[refStep instanceof ComposeStep]
     }
 
-    static def getRunSteps(AssertionStep step) {
-        return step.stepRef.map[refStep].filter(RunStep)
+    static def getRunStepRefs(AssertionStep step) {
+        return step.stepRef.filter[refStep instanceof RunStep]
     }
 
-    static def getSuppressedVarFields(ComposeStep cstep) {
-        switch (cstep.suppress) {
-            case null: newArrayList
-            case cstep.suppress.varFields.isEmpty: cstep.output.map[it.name.name]
-            default: cstep.suppress.varFields.map[it.serialize]
+    static def List<String> getSuppressedVarFields(StepReference stepRef) {
+        val fields = newArrayList
+        val suppress = stepRef.refStep.suppress
+        if (suppress !== null) {
+            if (suppress.varFields.isEmpty) {
+                // All outputs need to be suppressed
+                return stepRef.refStep.output.map[it.name.name]
+            }
+            // Suppress the marked variable(-fields)
+            fields += stepRef.refStep.suppress.varFields.map[it.serialize]
         }
-    }
-
-    static def getSuppressedVarFields(RunStep rstep) {
-        switch (rstep.suppress) {
-            case null: newArrayList
-            case rstep.suppress.varFields.isEmpty: rstep.output.map[it.name.name]
-            default: rstep.suppress.varFields.map[it.serialize]
-        }
+        // Also suppress all unreferenced output variables
+        val unreferencedOutputs = stepRef.refStep.output.reject[stepRef.refData.contains(name)]
+        fields += unreferencedOutputs.map[it.name.name]
+        return fields
     }
 
     dispatch static def String printField(ExpressionRecordAccess exp) {

@@ -12,6 +12,8 @@
  */
 package nl.esi.comma.types.utilities;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
@@ -24,6 +26,7 @@ import org.eclipse.emf.common.util.BasicDiagnostic;
 import org.eclipse.emf.common.util.Diagnostic;
 import org.eclipse.emf.common.util.DiagnosticException;
 import org.eclipse.emf.common.util.URI;
+import org.eclipse.emf.common.util.WrappedException;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.util.Diagnostician;
@@ -43,11 +46,21 @@ import com.google.inject.Module;
 import nl.esi.comma.types.types.Import;
 
 public class EcoreUtil3 extends EcoreUtil2 {
-	/**
-	 * @see EcoreUtil2#getResource(Resource, String)
-	 */
 	public static Resource getResource(Import imp) {
-		return EcoreUtil2.getResource(imp.eResource(), imp.getImportURI());
+		URI uri = resolveUri(imp);
+		try {
+			Resource res = imp.eResource().getResourceSet().getResource(uri, true);
+	        if (!res.getErrors().isEmpty()) {
+				throw new RuntimeException("Resource contains errors: \n\t"
+						+ res.getErrors().stream().map(org.eclipse.emf.ecore.resource.Resource.Diagnostic::getMessage)
+								.collect(Collectors.joining("\n\t")));
+	        }
+	        return res;
+		} catch (WrappedException e) {
+			throw e;
+		} catch (RuntimeException e) {
+			throw new WrappedException("Cannot load resource: " + uri, e);
+		}
 	}
 
 	/**
@@ -71,9 +84,16 @@ public class EcoreUtil3 extends EcoreUtil2 {
 	public static URI resolveUri(Resource context, String path) {
 		URI contextURI = context.getURI();
 		URI referenceURI = URI.createURI(path);
-		if (contextURI.isHierarchical() && !contextURI.isRelative()
-				&& (referenceURI.isRelative() && !referenceURI.isEmpty())) {
-			referenceURI = referenceURI.resolve(contextURI);
+		if (contextURI.isHierarchical() && (referenceURI.isRelative() && !referenceURI.isEmpty())) {
+			if (!contextURI.isRelative()) {
+				referenceURI = referenceURI.resolve(contextURI);
+			} else if (contextURI.isFile()) {
+				Path contextPath = Path.of(contextURI.toFileString());
+				if (!Files.isDirectory(contextPath)) {
+					contextPath = contextPath.getParent();
+				}
+				referenceURI = URI.createURI(contextPath.resolve(path).toUri().toString());
+			}
 		}
 		return referenceURI;
 	}

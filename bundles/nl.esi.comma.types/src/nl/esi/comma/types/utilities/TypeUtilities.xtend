@@ -29,6 +29,8 @@ import nl.esi.comma.types.types.TypesFactory
 import nl.esi.comma.types.types.VectorTypeConstructor
 import nl.esi.comma.types.types.VectorTypeDecl
 import org.eclipse.emf.ecore.util.EcoreUtil
+import org.eclipse.emf.ecore.resource.Resource
+import nl.esi.comma.types.types.ModelContainer
 
 class TypeUtilities {
     public static val SimpleTypeDecl ANY_TYPE = TypesFactory.eINSTANCE.createSimpleTypeDecl() => [
@@ -337,4 +339,13 @@ class TypeUtilities {
         return vtc
     }
     
+
+    def static getImports(Resource res) {
+        return res.contents.filter(ModelContainer).flatMap[imports]
+    }
+
+    def static getImports(Resource res, String fileExtension) {
+        val suffix = '.' + fileExtension.toLowerCase
+        return res.imports.filter[importURI.toLowerCase.endsWith(suffix)]
+    }
 }

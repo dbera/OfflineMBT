@@ -1,0 +1,12 @@
+import "../types/ContextIssueConsumer.types"
+
+data-instances
+ConsumerRunTypeInput ContextIssueConsumerInput
+ConsumerRunTypeOutput ContextIssueConsumerOutput
+
+data-implementation
+// Empty
+
+path-prefix "./dataset/"
+var-ref ContextIssueConsumerInput -> file-name "ContextIssueConsumerInput.json"
+var-ref ContextIssueConsumerOutput -> file-name "ContextIssueConsumerOutput.json"

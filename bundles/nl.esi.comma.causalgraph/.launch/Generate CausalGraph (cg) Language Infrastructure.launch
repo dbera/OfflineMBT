@@ -17,7 +17,7 @@
     <booleanAttribute key="org.eclipse.jdt.launching.ATTR_USE_CLASSPATH_ONLY_JAR" value="false"/>
     <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="org.eclipse.emf.mwe2.launch.runtime.Mwe2Launcher"/>
     <stringAttribute key="org.eclipse.jdt.launching.MODULE_NAME" value="nl.esi.comma.causalgraph"/>
-    <stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="nl.esi.comma.causalgraph.GenerateCausalGraph"/>
+    <stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="src/nl/esi/comma/causalgraph/GenerateCausalGraph.mwe2"/>
     <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="nl.esi.comma.causalgraph"/>
     <stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-Xmx512m"/>
 </launchConfiguration>
