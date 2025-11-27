@@ -337,6 +337,20 @@ class TypeUtilities {
             MapTypeConstructor: '''map<«type.type.name»,«type.valueType.typeName»>'''
         }
     }
+    
+      def static dispatch VectorTypeConstructor vectorOf(TypeDecl td) {
+        val vtc = TypesFactory.eINSTANCE.createVectorTypeConstructor
+        vtc.dimensions += TypesFactory.eINSTANCE.createDimension
+        vtc.type = EcoreUtil.copy(td)
+        return vtc
+    }
+    
+    def static dispatch VectorTypeConstructor vectorOf(VectorTypeDecl vtd) {
+        val vtc = EcoreUtil.copy(vtd.constructor)
+        vtc.dimensions += TypesFactory.eINSTANCE.createDimension
+        return vtc
+    }
+    
 
     def static getImports(Resource res) {
         return res.contents.filter(ModelContainer).flatMap[imports]

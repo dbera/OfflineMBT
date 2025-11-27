@@ -231,7 +231,19 @@ class SnakesHelper {
 				String map = expression(e.getArgs().get(0), variablePrefix);
 				String key = expression(e.getArgs().get(1), variablePrefix);
 				return String.format("{_k: _v for _k, _v in %s.items() if _k != %s}", map, key);
-			}
+			} else if (e.getFunctionName().equals("range")) {
+			    if (e.getArgs().size() == 1) {
+			        return String.format("list(range(%s))", expression(e.getArgs().get(0), variablePrefix));
+			    } else if (e.getArgs().size() == 2) {
+			        return String.format("list(range(%s, %s))", expression(e.getArgs().get(0), variablePrefix), expression(e.getArgs().get(1), variablePrefix));
+			    } else if (e.getArgs().size() == 3) {
+			        return String.format("list(range(%s, %s, %s))", expression(e.getArgs().get(0), variablePrefix), expression(e.getArgs().get(1), variablePrefix), expression(e.getArgs().get(2), variablePrefix));
+			    }
+			} else if (e.getFunctionName().equals("toString")) {
+			    return String.format("str(%s)", expression(e.getArgs().get(0), variablePrefix));
+			} else if (e.getFunctionName().equals("concat")) {
+			    return String.format("%s + %s", expression(e.getArgs().get(0), variablePrefix), expression(e.getArgs().get(1), variablePrefix));
+			} 
 		} else if (expression instanceof ExpressionQuantifier) {
 			ExpressionQuantifier e = (ExpressionQuantifier) expression;
 			String collection = expression(e.getCollection(), variablePrefix);

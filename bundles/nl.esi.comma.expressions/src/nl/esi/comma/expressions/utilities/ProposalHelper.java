@@ -268,7 +268,7 @@ public class ProposalHelper {
 				String map = expression(e.getArgs().get(0), variablePrefix);
 				String key = expression(e.getArgs().get(1), variablePrefix);
 				return String.format("{_k: _v for _k, _v in %s.items() if _k != %s}", map, key);
-			}
+		    }
 		} else if (expression instanceof ExpressionQuantifier) {
 			ExpressionQuantifier e = (ExpressionQuantifier) expression;
 			String collection = expression(e.getCollection(), variablePrefix);
