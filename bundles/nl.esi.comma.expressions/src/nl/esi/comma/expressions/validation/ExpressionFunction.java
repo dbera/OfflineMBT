@@ -351,10 +351,6 @@ public enum ExpressionFunction {
 			switch (argIndex) {
 			case -1:
 				return inferType(args, 0);
-			case 0:
-				return super.inferType(args, argIndex);
-			case 1:
-				return super.inferType(args, argIndex);
 			default:
 				return super.inferType(args, argIndex);
 			}
