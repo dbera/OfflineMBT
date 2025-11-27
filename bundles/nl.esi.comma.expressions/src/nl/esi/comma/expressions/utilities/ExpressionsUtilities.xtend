@@ -19,18 +19,21 @@ import nl.esi.comma.expressions.expression.ExpressionFactory
 import nl.esi.comma.expressions.expression.ExpressionQuantifier
 import nl.esi.comma.expressions.expression.ExpressionVariable
 import nl.esi.comma.expressions.expression.Variable
+import nl.esi.comma.types.types.EnumTypeDecl
 import nl.esi.comma.types.types.MapTypeConstructor
 import nl.esi.comma.types.types.MapTypeDecl
+import nl.esi.comma.types.types.RecordFieldKind
+import nl.esi.comma.types.types.RecordTypeDecl
 import nl.esi.comma.types.types.SimpleTypeDecl
+import nl.esi.comma.types.types.Type
 import nl.esi.comma.types.types.TypeObject
+import nl.esi.comma.types.types.TypeReference
 import nl.esi.comma.types.types.VectorTypeConstructor
 import nl.esi.comma.types.types.VectorTypeDecl
 import org.eclipse.xtext.EcoreUtil2
 
 import static extension nl.esi.comma.types.utilities.TypeUtilities.*
-import nl.esi.comma.types.types.EnumTypeDecl
-import nl.esi.comma.types.types.RecordTypeDecl
-import nl.esi.comma.types.types.RecordFieldKind
+import static extension org.eclipse.emf.ecore.util.EcoreUtil.*
 
 class ExpressionsUtilities {
     static extension val ExpressionFactory EXPRESSION_FACTORY = ExpressionFactory.eINSTANCE
@@ -50,12 +53,29 @@ class ExpressionsUtilities {
         result.toList
     }
 
+    def static Type asExprType(Type type) {
+        return switch (type) {
+            VectorTypeConstructor: createVectorTypeConstructor => [
+                type = type.type
+                dimensions += type.dimensions.copyAll
+            ]
+            MapTypeConstructor: createMapTypeConstructor => [
+                type = type.type
+                valueType = type.valueType.asExprType
+            ]
+            TypeReference: createTypeReference => [
+                type = type.type
+            ]
+            default: throw new RuntimeException('Unsupported type: ' + type.typeName)
+        }
+    }
+
     def static Expression createDefaultValue(TypeObject typeObj) {
         return switch (typeObj) {
             SimpleTypeDecl case typeObj.name == 'int': createExpressionConstantInt
             SimpleTypeDecl case typeObj.name == 'real': createExpressionConstantReal
             SimpleTypeDecl case typeObj.name == 'bool': createExpressionConstantBool
-            SimpleTypeDecl: createExpressionConstantString
+            SimpleTypeDecl: createExpressionConstantString => [ value = "" ]
 
             EnumTypeDecl: createExpressionEnumLiteral => [
                 type = typeObj
@@ -74,17 +94,12 @@ class ExpressionsUtilities {
 
             VectorTypeDecl: typeObj.constructor.createDefaultValue
             VectorTypeConstructor: createExpressionVector => [
-                val elementType = typeObj.elementType
-                typeAnnotation = createTypeAnnotation => [
-                    type = elementType.asType
-                ]
+                typeAnnotation = createTypeAnnotation => [ type = typeObj.asExprType ]
             ]
 
             MapTypeDecl: typeObj.constructor.createDefaultValue
             MapTypeConstructor: createExpressionMap => [
-                typeAnnotation = createTypeAnnotation => [
-                    //type = 
-                ]
+                typeAnnotation = createTypeAnnotation => [ type = typeObj.asExprType ]
             ]
         }
     }

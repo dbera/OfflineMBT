@@ -1,0 +1,24 @@
+import "../../../input/printer/printer.types"
+
+record Assert_Visual_Inspection {
+    Assert_Visual_InspectionInput input
+    Assert_Visual_InspectionOutput output
+}
+
+record Assert_Visual_InspectionInput {
+    FactoryCtx Flow_0kbycuh
+    Report inspectionReport
+    FactoryCtx Flow_0fe8hce
+    UNIT Flow_07l0yyj
+    MeasureRequest measureRequest
+    Result inspectionResult
+}
+
+record Assert_Visual_InspectionOutput {
+    FactoryCtx Flow_0kbycuh
+    Report inspectionReport
+    FactoryCtx Flow_0fe8hce
+    UNIT Flow_07l0yyj
+    MeasureRequest measureRequest
+    Result inspectionResult
+}

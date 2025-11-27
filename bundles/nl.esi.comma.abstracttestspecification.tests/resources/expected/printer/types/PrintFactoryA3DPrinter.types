@@ -1,0 +1,30 @@
+import "../../../input/printer/printer.types"
+
+record ExecutePrinter {
+    ExecutePrinterInput input
+    ExecutePrinterOutput output
+}
+
+record ExecutePrinterInput {
+    UNIT Flow_1u2qmtt
+    PrintRequest request
+    UNIT Event_0jcg6zx
+    Result printResult
+    Report printReport
+    PrintRequest printJob
+    CorrectionsReport corrections
+    UNIT Flow_0iaelzn
+    UNIT Event_0mxx05p
+}
+
+record ExecutePrinterOutput {
+    UNIT Flow_1u2qmtt
+    PrintRequest request
+    UNIT Event_0jcg6zx
+    Result printResult
+    Report printReport
+    PrintRequest printJob
+    CorrectionsReport corrections
+    UNIT Flow_0iaelzn
+    UNIT Event_0mxx05p
+}

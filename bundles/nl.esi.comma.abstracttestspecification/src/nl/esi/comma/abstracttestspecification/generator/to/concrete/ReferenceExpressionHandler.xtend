@@ -16,16 +16,20 @@ import java.util.ArrayList
 import java.util.HashMap
 import java.util.List
 import nl.asml.matala.product.product.VarRef
-import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
+import nl.esi.comma.abstracttestspecification.abstractTestspecification.AssertionStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.ComposeStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.RunStep
-import nl.esi.comma.abstracttestspecification.abstractTestspecification.AssertionStep
-import nl.esi.comma.abstracttestspecification.abstractTestspecification.StepReference
-import org.eclipse.emf.common.util.EList
+import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
+import nl.esi.comma.expressions.evaluation.ExpressionEvaluator
+import nl.esi.comma.expressions.expression.ExpressionVariable
+import nl.esi.comma.types.types.RecordFieldKind
+import nl.esi.comma.types.utilities.EcoreUtil3
 
-import static extension nl.esi.comma.abstracttestspecification.generator.utils.Utils.*
+import static extension nl.esi.comma.assertthat.utilities.AssertThatUtilities.*
+import static extension nl.esi.comma.types.utilities.EcoreUtil3.*
+import static extension nl.esi.comma.types.utilities.TypeUtilities.*
 
-class ReferenceExpressionHandler 
+class ReferenceExpressionHandler
 {
     /*
      * Support Interleaving of Compose and Run Steps. 
@@ -159,10 +163,8 @@ class ReferenceExpressionHandler
                 // System.out.println("    -|> constraint-var: " + cons.name)
                 for(refcons : cons.ce) {
                     var varRefName = (refcons.eContainer.eContainer as VarRef).ref.name
-                    for (a : refcons.act.actions) {
-                        var constraint = _printRecord_(varRefName, cstep.name, 
-                                                    rstep.name, cstep.stepRef, 
-                                                    a as RecordFieldAssignmentAction, true)
+                    for (action : refcons.act.actions.filter(RecordFieldAssignmentAction)) {
+                        var constraint = _printRecord_(varRefName, rstep.name, cstep, action, true)
                         refTxt += constraint.getText + "\n"
                         // mapLHStoRHS.put(constraint.lhs, constraint.rhs)
                         if(mapLHStoRHS.containsKey(constraint.lhs)) {
@@ -186,9 +188,8 @@ class ReferenceExpressionHandler
                     // System.out.println("        -> constraint-var: " + cons.name)
                     for(refcons : cons.ce) {
                         var varRefName = (refcons.eContainer.eContainer as VarRef).ref.name
-                        for (a : refcons.act.actions) {
-                            var constraint = _printRecord_(varRefName, cs.name, rstep.name, cs.stepRef, 
-                                                a as RecordFieldAssignmentAction, false)
+                        for (action : refcons.act.actions.filter(RecordFieldAssignmentAction)) {
+                            var constraint = _printRecord_(varRefName, rstep.name, cs, action, false)
                             refTxt += constraint.getText + "\n"
                             // if(!refTxt.isEmpty) System.out.println("\nRef Constraints:\n" + refTxt)
                             // mapLHStoRHS.put(constraint.lhs, constraint.rhs)
@@ -412,35 +413,34 @@ class ReferenceExpressionHandler
         return _mapLHStoRHS
     }
 
-    def _printRecord_(String varRefName, String composeStepName, String runStepName, EList<StepReference> stepRef,
+    private def _printRecord_(String varRefName, String runStepName, ComposeStep composeStep,
         RecordFieldAssignmentAction rec, boolean isFirstCompose) {
 
         // Run block input data structure = Concrete TSpec step input data structure
-        var blockInputName = new String
-        var pi = new String
+        val field = isFirstCompose
+            ? '''«runStepName.split("_").get(0)»Input.«EcoreUtil3.serialize(rec.fieldAccess)»'''
+            : '''step_«composeStep.name».output.«EcoreUtil3.serialize(rec.fieldAccess)»'''
 
-        // System.out.println(" Field: " + printField(rec.fieldAccess, true))
-        var field = new String
-        if (isFirstCompose) {
-            blockInputName = runStepName.split("_").get(0) + "Input"
-            pi = blockInputName + "."
-            field = rec.fieldAccess.printField
-        } else {
-            blockInputName = "step_" + composeStepName + ".output."
-            pi = blockInputName
-            field = rec.fieldAccess.printField
-        }
+        rec.exp = new ExpressionEvaluator().evaluate(rec.exp)[ variable |
+            composeStep.input.findFirst[name == variable]?.jsonvals.toExpression(variable.type.typeObject, self) [
+                // Only consider concrete values as we're evaluating symbolic expressions here
+                kind == RecordFieldKind::CONCRETE
+            ]
+        ]
 
-        var value = (new ExpressionGenerator(stepRef, runStepName, varRefName)).exprToComMASyntax(rec.exp)
+        val value = rec.exp.serialize[ obj |
+            if (obj instanceof ExpressionVariable) {
+                val vname = obj.variable.name
+                val stepRef = composeStep.stepRef.findFirst[refData.exists[name == vname]]
+                if (stepRef !== null) {
+                    return '''step_«stepRef.refStep.name».output.«vname»'''
+                }
+            }
+        ]
 
-        return new StepConstraint(
-            runStepName,
-            composeStepName,
-            pi + field, // lhs
-            value.toString, // rhs
-            pi + field + " := " + value // text
-        )
+        return new StepConstraint(runStepName, composeStep.name, field.trim, value.trim)
     }
+
 
     // Gets the list of referenced compose steps by a compose step, recursively!
     // RULE. Compose Step may reference at most one preceding Compose Step.  

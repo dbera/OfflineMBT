@@ -1,0 +1,12 @@
+import "../types/PrintFactoryA3DPrinter.types"
+
+data-instances
+ExecutePrinterInput PrintFactoryA3DPrinterInput
+ExecutePrinterOutput PrintFactoryA3DPrinterOutput
+
+data-implementation
+// Empty
+
+path-prefix "./dataset/"
+var-ref PrintFactoryA3DPrinterInput -> file-name "PrintFactoryA3DPrinterInput.json"
+var-ref PrintFactoryA3DPrinterOutput -> file-name "PrintFactoryA3DPrinterOutput.json"

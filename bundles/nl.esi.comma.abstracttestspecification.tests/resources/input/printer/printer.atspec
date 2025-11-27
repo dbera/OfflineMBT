@@ -1,0 +1,696 @@
+import "printer.ps"
+
+using printer.PrintFactoryA3DPrinter.printJob
+using printer.PrintFactoryA3DPrinter.corrections
+using printer.PrintFactoryA3DPrinter.printResult
+using printer.PrintFactoryA3DPrinter.printReport
+using printer.PrintFactoryA3DPrinter.request
+using printer.PrintFactoryA3DPrinter.Event_0mxx05p
+using printer.PrintFactoryA3DPrinter.Event_0jcg6zx
+using printer.PrintFactoryA3DPrinter.Flow_1u2qmtt
+using printer.PrintFactoryA3DPrinter.Flow_0iaelzn
+using printer.PrintFactoryInspection.inspectionJob
+using printer.PrintFactoryInspection.inspectionReport
+using printer.PrintFactoryInspection.inspectionResult
+using printer.PrintFactoryInspection.measureRequest
+using printer.PrintFactoryInspection.Flow_07l0yyj
+using printer.PrintFactoryOptimization.optJob
+using printer.PrintFactoryOptimization.optResult
+using printer.PrintFactoryOptimization.optimizeJob
+using printer.PrintFactoryOptimization.Event_1oozdnw
+using printer.PrintFactoryOptimization.Flow_0y8u5pd
+using printer.PrintFactoryFactoryAutomation.printRequests
+using printer.PrintFactoryFactoryAutomation.Gateway_0p2uo9v
+using printer.PrintFactoryFactoryAutomation.Gateway_1wpvmtk
+using printer.PrintFactoryFactoryAutomation.Flow_16s4ey1
+using printer.PrintFactoryFactoryAutomation.Flow_1dcdx0e
+using printer.PrintFactoryFactoryAutomation.Flow_1dt29vl
+using printer.PrintFactoryFactoryAutomation.Flow_0kbycuh
+using printer.PrintFactoryFactoryAutomation.Flow_01m2s0h
+using printer.PrintFactoryFactoryAutomation.Flow_09b0flo
+using printer.PrintFactoryFactoryAutomation.Flow_1rkhqnd
+using printer.PrintFactoryFactoryAutomation.Flow_1vq9t2p
+using printer.PrintFactoryFactoryAutomation.Flow_0fe8hce
+using printer.PrintFactoryFactoryAutomation.Flow_1y4bjf4
+using printer.PrintFactoryFactoryAutomation.Flow_1f74bn4
+
+abstract-test-definition
+
+Test-Scenario: S1
+
+compose-step-name: PrintFactoryA3DPrinter_ComposePrintJob_default_0
+action-case: printer.PrintFactoryA3DPrinter.ComposePrintJob.default
+input-binding:
+printJob : {
+    "color": "ColorType::MONOCHROME",
+    "id": 1,
+    "opType": "OperationType::PRINT",
+    "resolution": "PrintResolution::LOW",
+    "scale": 50.0
+}
+corrections : {
+    "correctionsMap": {
+        "0": [
+            {
+                "data": "X"
+            },
+            {
+                "data": "Y"
+            }
+        ],
+        "1": [
+            {
+                "data": "A"
+            },
+            {
+                "data": "B"
+            }
+        ]
+    },
+    "id": 1
+}
+output-data:
+Flow_1u2qmtt : {
+    "unit": 0
+}
+request : {
+    "color": "ColorType::MONOCHROME",
+    "id": 1,
+    "opType": "OperationType::PRINT",
+    "resolution": "PrintResolution::LOW",
+    "scale": 50.0
+}
+suppress(Flow_1u2qmtt)
+
+run-step-name: PrintFactoryA3DPrinter_RunPrintJob_default_0 step-type: "ExecutePrinter"
+action-case: printer.PrintFactoryA3DPrinter.RunPrintJob.default
+consumes-from-step: PrintFactoryA3DPrinter_ComposePrintJob_default_0 { request  }
+input-binding:
+Flow_1u2qmtt : {
+    "unit": 0
+}
+request : {
+    "color": "ColorType::MONOCHROME",
+    "id": 1,
+    "opType": "OperationType::PRINT",
+    "resolution": "PrintResolution::LOW",
+    "scale": 50.0
+}
+output-data:
+Event_0jcg6zx : {
+    "unit": 0
+}
+printResult : {
+    "verdict": "Outcome::OK"
+}
+printReport : {
+    "id": 1
+}
+suppress(Event_0jcg6zx)
+
+compose-step-name: PrintFactoryA3DPrinter_ComposePrepareJob_default_0
+action-case: printer.PrintFactoryA3DPrinter.ComposePrepareJob.default
+input-binding:
+printJob : {
+    "color": "ColorType::MONOCHROME",
+    "id": 1,
+    "opType": "OperationType::PREP",
+    "resolution": "PrintResolution::LOW",
+    "scale": null
+}
+output-data:
+Flow_0iaelzn : {
+    "unit": 0
+}
+request : {
+    "color": "ColorType::MONOCHROME",
+    "id": 1,
+    "opType": "OperationType::PREP",
+    "resolution": "PrintResolution::LOW",
+    "scale": null
+}
+suppress(Flow_0iaelzn)
+
+run-step-name: PrintFactoryA3DPrinter_RunPrepareJob_default_0 step-type: "ExecutePrinter"
+action-case: printer.PrintFactoryA3DPrinter.RunPrepareJob.default
+consumes-from-step: PrintFactoryA3DPrinter_ComposePrepareJob_default_0 { request  }
+input-binding:
+Flow_0iaelzn : {
+    "unit": 0
+}
+request : {
+    "color": "ColorType::MONOCHROME",
+    "id": 1,
+    "opType": "OperationType::PREP",
+    "resolution": "PrintResolution::LOW",
+    "scale": null
+}
+output-data:
+Event_0mxx05p : {
+    "unit": 0
+}
+printResult : {
+    "verdict": "Outcome::OK"
+}
+suppress(Event_0mxx05p)
+
+compose-step-name: PrintFactoryInspection_ComposeVisualInspectionJob_default_0
+action-case: printer.PrintFactoryInspection.ComposeVisualInspectionJob.default
+consumes-from-step: PrintFactoryA3DPrinter_RunPrintJob_default_0 { printReport  }
+input-binding:
+inspectionJob : {
+    "id": 1
+}
+printReport : {
+    "id": 1
+}
+output-data:
+Flow_07l0yyj : {
+    "unit": 0
+}
+measureRequest : {
+    "id": 1
+}
+printReport : {
+    "id": 1
+}
+suppress(Flow_07l0yyj, printReport)
+data-references: measureRequest
+printer.PrintFactoryInspection.ComposeVisualInspectionJob.default.reportLinking
+
+run-step-name: PrintFactoryInspection_RunVisualinspection_default_0 step-type: "ExecuteInspection"
+action-case: printer.PrintFactoryInspection.RunVisualinspection.default
+consumes-from-step: PrintFactoryInspection_ComposeVisualInspectionJob_default_0 { measureRequest  }
+input-binding:
+Flow_07l0yyj : {
+    "unit": 0
+}
+measureRequest : {
+    "id": 1
+}
+output-data:
+inspectionReport : {
+    "id": 1
+}
+inspectionResult : {
+    "verdict": "Outcome::OK"
+}
+
+assert-step-name: PrintFactoryFactoryAutomation_AssertVisualInspection_default_0 assert-type: "Assert_Visual_Inspection"
+action-case: printer.PrintFactoryFactoryAutomation.AssertVisualInspection.default
+consumes-from-step: PrintFactoryInspection_RunVisualinspection_default_0 { inspectionReport  }
+input-binding:
+Flow_0kbycuh : {
+    "color": "ColorType::MONOCHROME",
+    "id": 1,
+    "resolution": "PrintResolution::LOW",
+    "scale": 50.0
+}
+inspectionReport : {
+    "id": 1
+}
+output-data:
+Flow_0fe8hce : {
+    "color": "ColorType::MONOCHROME",
+    "id": 1,
+    "resolution": "PrintResolution::LOW",
+    "scale": 50.0
+}
+inspectionReport : {
+    "id": 1
+}
+output-assertion: PrintFactoryInspection_RunVisualinspection_default_0
+printer.PrintFactoryFactoryAutomation.AssertVisualInspection.default.default
+
+compose-step-name: PrintFactoryOptimization_ComposeOptimizationJob_default_0
+action-case: printer.PrintFactoryOptimization.ComposeOptimizationJob.default
+consumes-from-step: PrintFactoryInspection_RunVisualinspection_default_0 { inspectionReport  }
+consumes-from-step: PrintFactoryFactoryAutomation_AssertVisualInspection_default_0 { inspectionReport  }
+input-binding:
+optJob : {
+    "id": 1
+}
+inspectionReport : {
+    "id": 1
+}
+output-data:
+Flow_0y8u5pd : {
+    "unit": 0
+}
+optimizeJob : {
+    "id": 1
+}
+inspectionReport : {
+    "id": 1
+}
+suppress(Flow_0y8u5pd, inspectionReport)
+
+run-step-name: PrintFactoryOptimization_RunOptimizationJob_default_0 step-type: "ExecuteOptimizer"
+action-case: printer.PrintFactoryOptimization.RunOptimizationJob.default
+consumes-from-step: PrintFactoryOptimization_ComposeOptimizationJob_default_0 { optimizeJob  }
+input-binding:
+Flow_0y8u5pd : {
+    "unit": 0
+}
+optimizeJob : {
+    "id": 1
+}
+output-data:
+Event_1oozdnw : {
+    "unit": 0
+}
+corrections : {
+    "id": 2
+}
+optResult : {
+    "verdict": "Outcome::OK"
+}
+suppress(Event_1oozdnw)
+
+compose-step-name: PrintFactoryA3DPrinter_ComposePrintJob_default_1
+action-case: printer.PrintFactoryA3DPrinter.ComposePrintJob.default
+consumes-from-step: PrintFactoryOptimization_RunOptimizationJob_default_0 { corrections  }
+input-binding:
+printJob : {
+    "color": "ColorType::COLOR",
+    "id": 2,
+    "opType": "OperationType::PRINT",
+    "resolution": "PrintResolution::MED",
+    "scale": 75.0
+}
+corrections : {
+    "id": 2
+}
+output-data:
+Flow_1u2qmtt : {
+    "unit": 0
+}
+request : {
+    "color": "ColorType::COLOR",
+    "id": 2,
+    "opType": "OperationType::PRINT",
+    "resolution": "PrintResolution::MED",
+    "scale": 75.0
+}
+suppress(Flow_1u2qmtt)
+
+run-step-name: PrintFactoryA3DPrinter_RunPrintJob_default_1 step-type: "ExecutePrinter"
+action-case: printer.PrintFactoryA3DPrinter.RunPrintJob.default
+consumes-from-step: PrintFactoryA3DPrinter_ComposePrintJob_default_1 { request  }
+input-binding:
+Flow_1u2qmtt : {
+    "unit": 0
+}
+request : {
+    "color": "ColorType::COLOR",
+    "id": 2,
+    "opType": "OperationType::PRINT",
+    "resolution": "PrintResolution::MED",
+    "scale": 75.0
+}
+output-data:
+Event_0jcg6zx : {
+    "unit": 0
+}
+printResult : {
+    "verdict": "Outcome::OK"
+}
+printReport : {
+    "id": 2
+}
+suppress(Event_0jcg6zx)
+
+compose-step-name: PrintFactoryA3DPrinter_ComposePrepareJob_default_1
+action-case: printer.PrintFactoryA3DPrinter.ComposePrepareJob.default
+input-binding:
+printJob : {
+    "color": "ColorType::COLOR",
+    "id": 2,
+    "opType": "OperationType::PREP",
+    "resolution": "PrintResolution::MED",
+    "scale": null
+}
+output-data:
+Flow_0iaelzn : {
+    "unit": 0
+}
+request : {
+    "color": "ColorType::COLOR",
+    "id": 2,
+    "opType": "OperationType::PREP",
+    "resolution": "PrintResolution::MED",
+    "scale": null
+}
+suppress(Flow_0iaelzn)
+
+run-step-name: PrintFactoryA3DPrinter_RunPrepareJob_default_1 step-type: "ExecutePrinter"
+action-case: printer.PrintFactoryA3DPrinter.RunPrepareJob.default
+consumes-from-step: PrintFactoryA3DPrinter_ComposePrepareJob_default_1 { request  }
+input-binding:
+Flow_0iaelzn : {
+    "unit": 0
+}
+request : {
+    "color": "ColorType::COLOR",
+    "id": 2,
+    "opType": "OperationType::PREP",
+    "resolution": "PrintResolution::MED",
+    "scale": null
+}
+output-data:
+Event_0mxx05p : {
+    "unit": 0
+}
+printResult : {
+    "verdict": "Outcome::OK"
+}
+suppress(Event_0mxx05p)
+
+compose-step-name: PrintFactoryInspection_ComposeVisualInspectionJob_default_1
+action-case: printer.PrintFactoryInspection.ComposeVisualInspectionJob.default
+consumes-from-step: PrintFactoryA3DPrinter_RunPrintJob_default_1 { printReport  }
+input-binding:
+inspectionJob : {
+    "id": 2
+}
+printReport : {
+    "id": 2
+}
+output-data:
+Flow_07l0yyj : {
+    "unit": 0
+}
+measureRequest : {
+    "id": 2
+}
+printReport : {
+    "id": 2
+}
+suppress(Flow_07l0yyj, printReport)
+data-references: measureRequest
+printer.PrintFactoryInspection.ComposeVisualInspectionJob.default.reportLinking
+
+run-step-name: PrintFactoryInspection_RunVisualinspection_default_1 step-type: "ExecuteInspection"
+action-case: printer.PrintFactoryInspection.RunVisualinspection.default
+consumes-from-step: PrintFactoryInspection_ComposeVisualInspectionJob_default_1 { measureRequest  }
+input-binding:
+Flow_07l0yyj : {
+    "unit": 0
+}
+measureRequest : {
+    "id": 2
+}
+output-data:
+inspectionReport : {
+    "id": 2
+}
+inspectionResult : {
+    "verdict": "Outcome::OK"
+}
+
+assert-step-name: PrintFactoryFactoryAutomation_AssertVisualInspection_default_1 assert-type: "Assert_Visual_Inspection"
+action-case: printer.PrintFactoryFactoryAutomation.AssertVisualInspection.default
+consumes-from-step: PrintFactoryInspection_RunVisualinspection_default_0 { inspectionReport  }
+consumes-from-step: PrintFactoryFactoryAutomation_AssertVisualInspection_default_0 { inspectionReport  }
+input-binding:
+Flow_0kbycuh : {
+    "color": "ColorType::COLOR",
+    "id": 2,
+    "resolution": "PrintResolution::MED",
+    "scale": 75.0
+}
+inspectionReport : {
+    "id": 1
+}
+output-data:
+Flow_0fe8hce : {
+    "color": "ColorType::COLOR",
+    "id": 2,
+    "resolution": "PrintResolution::MED",
+    "scale": 75.0
+}
+inspectionReport : {
+    "id": 1
+}
+output-assertion: PrintFactoryFactoryAutomation_AssertVisualInspection_default_0
+printer.PrintFactoryFactoryAutomation.AssertVisualInspection.default.default
+
+compose-step-name: PrintFactoryOptimization_ComposeOptimizationJob_default_1
+action-case: printer.PrintFactoryOptimization.ComposeOptimizationJob.default
+consumes-from-step: PrintFactoryInspection_RunVisualinspection_default_1 { inspectionReport  }
+input-binding:
+optJob : {
+    "id": 2
+}
+inspectionReport : {
+    "id": 2
+}
+output-data:
+Flow_0y8u5pd : {
+    "unit": 0
+}
+optimizeJob : {
+    "id": 2
+}
+inspectionReport : {
+    "id": 2
+}
+suppress(Flow_0y8u5pd, inspectionReport)
+
+run-step-name: PrintFactoryOptimization_RunOptimizationJob_default_1 step-type: "ExecuteOptimizer"
+action-case: printer.PrintFactoryOptimization.RunOptimizationJob.default
+consumes-from-step: PrintFactoryOptimization_ComposeOptimizationJob_default_1 { optimizeJob  }
+input-binding:
+Flow_0y8u5pd : {
+    "unit": 0
+}
+optimizeJob : {
+    "id": 2
+}
+output-data:
+Event_1oozdnw : {
+    "unit": 0
+}
+corrections : {
+    "id": 3
+}
+optResult : {
+    "verdict": "Outcome::OK"
+}
+suppress(Event_1oozdnw)
+
+compose-step-name: PrintFactoryA3DPrinter_ComposePrintJob_default_2
+action-case: printer.PrintFactoryA3DPrinter.ComposePrintJob.default
+consumes-from-step: PrintFactoryOptimization_RunOptimizationJob_default_1 { corrections  }
+input-binding:
+printJob : {
+    "color": "ColorType::COLOR",
+    "id": 3,
+    "opType": "OperationType::PRINT",
+    "resolution": "PrintResolution::HIGH",
+    "scale": 75.0
+}
+corrections : {
+    "id": 3
+}
+output-data:
+Flow_1u2qmtt : {
+    "unit": 0
+}
+request : {
+    "color": "ColorType::COLOR",
+    "id": 3,
+    "opType": "OperationType::PRINT",
+    "resolution": "PrintResolution::HIGH",
+    "scale": 75.0
+}
+suppress(Flow_1u2qmtt)
+
+run-step-name: PrintFactoryA3DPrinter_RunPrintJob_default_2 step-type: "ExecutePrinter"
+action-case: printer.PrintFactoryA3DPrinter.RunPrintJob.default
+consumes-from-step: PrintFactoryA3DPrinter_ComposePrintJob_default_2 { request  }
+input-binding:
+Flow_1u2qmtt : {
+    "unit": 0
+}
+request : {
+    "color": "ColorType::COLOR",
+    "id": 3,
+    "opType": "OperationType::PRINT",
+    "resolution": "PrintResolution::HIGH",
+    "scale": 75.0
+}
+output-data:
+Event_0jcg6zx : {
+    "unit": 0
+}
+printResult : {
+    "verdict": "Outcome::OK"
+}
+printReport : {
+    "id": 3
+}
+suppress(Event_0jcg6zx)
+
+compose-step-name: PrintFactoryA3DPrinter_ComposePrepareJob_default_2
+action-case: printer.PrintFactoryA3DPrinter.ComposePrepareJob.default
+input-binding:
+printJob : {
+    "color": "ColorType::COLOR",
+    "id": 3,
+    "opType": "OperationType::PREP",
+    "resolution": "PrintResolution::HIGH",
+    "scale": null
+}
+output-data:
+Flow_0iaelzn : {
+    "unit": 0
+}
+request : {
+    "color": "ColorType::COLOR",
+    "id": 3,
+    "opType": "OperationType::PREP",
+    "resolution": "PrintResolution::HIGH",
+    "scale": null
+}
+suppress(Flow_0iaelzn)
+
+run-step-name: PrintFactoryA3DPrinter_RunPrepareJob_default_2 step-type: "ExecutePrinter"
+action-case: printer.PrintFactoryA3DPrinter.RunPrepareJob.default
+consumes-from-step: PrintFactoryA3DPrinter_ComposePrepareJob_default_2 { request  }
+input-binding:
+Flow_0iaelzn : {
+    "unit": 0
+}
+request : {
+    "color": "ColorType::COLOR",
+    "id": 3,
+    "opType": "OperationType::PREP",
+    "resolution": "PrintResolution::HIGH",
+    "scale": null
+}
+output-data:
+Event_0mxx05p : {
+    "unit": 0
+}
+printResult : {
+    "verdict": "Outcome::OK"
+}
+suppress(Event_0mxx05p)
+
+compose-step-name: PrintFactoryInspection_ComposeVisualInspectionJob_default_2
+action-case: printer.PrintFactoryInspection.ComposeVisualInspectionJob.default
+consumes-from-step: PrintFactoryA3DPrinter_RunPrintJob_default_2 { printReport  }
+input-binding:
+inspectionJob : {
+    "id": 3
+}
+printReport : {
+    "id": 3
+}
+output-data:
+Flow_07l0yyj : {
+    "unit": 0
+}
+measureRequest : {
+    "id": 3
+}
+printReport : {
+    "id": 3
+}
+suppress(Flow_07l0yyj, printReport)
+data-references: measureRequest
+printer.PrintFactoryInspection.ComposeVisualInspectionJob.default.reportLinking
+
+run-step-name: PrintFactoryInspection_RunVisualinspection_default_2 step-type: "ExecuteInspection"
+action-case: printer.PrintFactoryInspection.RunVisualinspection.default
+consumes-from-step: PrintFactoryInspection_ComposeVisualInspectionJob_default_2 { measureRequest  }
+input-binding:
+Flow_07l0yyj : {
+    "unit": 0
+}
+measureRequest : {
+    "id": 3
+}
+output-data:
+inspectionReport : {
+    "id": 3
+}
+inspectionResult : {
+    "verdict": "Outcome::OK"
+}
+
+assert-step-name: PrintFactoryFactoryAutomation_AssertVisualInspection_default_2 assert-type: "Assert_Visual_Inspection"
+action-case: printer.PrintFactoryFactoryAutomation.AssertVisualInspection.default
+consumes-from-step: PrintFactoryInspection_RunVisualinspection_default_0 { inspectionReport  }
+consumes-from-step: PrintFactoryFactoryAutomation_AssertVisualInspection_default_0 { inspectionReport  }
+consumes-from-step: PrintFactoryFactoryAutomation_AssertVisualInspection_default_1 { inspectionReport  }
+input-binding:
+Flow_0kbycuh : {
+    "color": "ColorType::COLOR",
+    "id": 3,
+    "resolution": "PrintResolution::HIGH",
+    "scale": 75.0
+}
+inspectionReport : {
+    "id": 1
+}
+output-data:
+Flow_0fe8hce : {
+    "color": "ColorType::COLOR",
+    "id": 3,
+    "resolution": "PrintResolution::HIGH",
+    "scale": 75.0
+}
+inspectionReport : {
+    "id": 1
+}
+output-assertion: PrintFactoryFactoryAutomation_AssertVisualInspection_default_1
+printer.PrintFactoryFactoryAutomation.AssertVisualInspection.default.default
+
+compose-step-name: PrintFactoryOptimization_ComposeOptimizationJob_default_2
+action-case: printer.PrintFactoryOptimization.ComposeOptimizationJob.default
+consumes-from-step: PrintFactoryInspection_RunVisualinspection_default_2 { inspectionReport  }
+input-binding:
+optJob : {
+    "id": 3
+}
+inspectionReport : {
+    "id": 3
+}
+output-data:
+Flow_0y8u5pd : {
+    "unit": 0
+}
+optimizeJob : {
+    "id": 3
+}
+inspectionReport : {
+    "id": 3
+}
+suppress(Flow_0y8u5pd, inspectionReport)
+
+run-step-name: PrintFactoryOptimization_RunOptimizationJob_default_2 step-type: "ExecuteOptimizer"
+action-case: printer.PrintFactoryOptimization.RunOptimizationJob.default
+consumes-from-step: PrintFactoryOptimization_ComposeOptimizationJob_default_2 { optimizeJob  }
+input-binding:
+Flow_0y8u5pd : {
+    "unit": 0
+}
+optimizeJob : {
+    "id": 3
+}
+output-data:
+Event_1oozdnw : {
+    "unit": 0
+}
+corrections : {
+    "id": 4
+}
+optResult : {
+    "verdict": "Outcome::OK"
+}
+suppress(Event_1oozdnw)
+
+generate-file "./dataset/"
+

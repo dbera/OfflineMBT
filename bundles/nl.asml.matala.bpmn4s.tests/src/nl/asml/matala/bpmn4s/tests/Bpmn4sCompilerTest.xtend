@@ -46,7 +46,7 @@ class Bpmn4sCompilerTest {
 
         val expectedFiles = expectedDir.listRegularFiles
         val actualFiles = actualDir.listRegularFiles
-        assertEquals(expectedFiles.keySet, actualFiles.keySet)
+        assertEquals(expectedFiles.keySet, actualFiles.keySet, '''Different file set''')
 
         for (expectedFileEntry : expectedFiles.entrySet) {
             val expectedFile = expectedFileEntry.value
@@ -59,7 +59,8 @@ class Bpmn4sCompilerTest {
     private def Map<String, Path> listRegularFiles(Path path) {
         val files = new TreeMap()
         for (file : path.walk.filter[isRegularFile].toList) {
-            files.put(file.relativize(path).toString, file)
+            val relativePath = path.relativize(file)
+            files.put(relativePath.toString, file)
         }
         return files;
     }

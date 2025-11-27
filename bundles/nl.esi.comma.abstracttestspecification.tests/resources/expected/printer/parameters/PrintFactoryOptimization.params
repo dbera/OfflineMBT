@@ -1,0 +1,12 @@
+import "../types/PrintFactoryOptimization.types"
+
+data-instances
+ExecuteOptimizerInput PrintFactoryOptimizationInput
+ExecuteOptimizerOutput PrintFactoryOptimizationOutput
+
+data-implementation
+// Empty
+
+path-prefix "./dataset/"
+var-ref PrintFactoryOptimizationInput -> file-name "PrintFactoryOptimizationInput.json"
+var-ref PrintFactoryOptimizationOutput -> file-name "PrintFactoryOptimizationOutput.json"
