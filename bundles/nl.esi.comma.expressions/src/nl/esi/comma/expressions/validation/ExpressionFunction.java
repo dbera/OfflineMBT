@@ -37,6 +37,7 @@ import nl.esi.comma.expressions.expression.Expression;
 import nl.esi.comma.expressions.expression.ExpressionFunctionCall;
 import nl.esi.comma.expressions.expression.ExpressionMap;
 import nl.esi.comma.expressions.expression.ExpressionVector;
+import nl.esi.comma.expressions.utilities.ExpressionsUtilities;
 import nl.esi.comma.types.types.TypeObject;
 import nl.esi.comma.types.utilities.TypeUtilities;
 
@@ -451,6 +452,12 @@ public enum ExpressionFunction {
 		}
 
 		@Override
+		public Expression evaluate(List<Expression> args, IEvaluationContext context) {
+			BigInteger arg0 = context.asInt(args.get(0));
+			return arg0 == null ? null : context.toStringExpr(arg0.toString());
+		}
+
+		@Override
 		public String getDocumentation() {
 			return String.format("%s(int): string", name());
 		}
@@ -485,6 +492,15 @@ public enum ExpressionFunction {
 		}
 
 		@Override
+		public Expression evaluate(List<Expression> args, IEvaluationContext context) {
+			if (args.get(0) instanceof ExpressionVector expr0 && args.get(1) instanceof ExpressionVector expr1) {
+				expr0.getElements().addAll(expr1.getElements());
+				return expr0;
+			}
+			return null;
+		}
+
+		@Override
 		public String getDocumentation() {
 			return String.format("<T> %s(vector<T>, vector<T>): vector<T>", name());
 		}
@@ -512,6 +528,23 @@ public enum ExpressionFunction {
 				return Pair.of(-1, "Function range expects 1, 2, or 3 arguments");
 			}
 			return validateArgs(args, argCount);
+		}
+
+		@Override
+		public Expression evaluate(List<Expression> args, IEvaluationContext context) {
+			List<BigInteger> intArgs = args.stream().map(context::asInt).toList();
+			if (intArgs.contains(null)) {
+				return null;
+			}
+			BigInteger start = intArgs.size() > 1 ? intArgs.get(0) : BigInteger.ZERO;
+			BigInteger stop = intArgs.size() > 1 ? intArgs.get(1) : intArgs.get(0);
+			BigInteger step = intArgs.size() > 2 ? intArgs.get(2) : BigInteger.ONE;
+			ExpressionVector vector = (ExpressionVector)
+					ExpressionsUtilities.createDefaultValue(TypeUtilities.vectorOf(intType));
+			for (BigInteger value = start; value.compareTo(stop) < 0; value = value.add(step)) {
+				vector.getElements().add(context.toIntExpr(value));
+			}
+			return vector;
 		}
 
 		@Override
