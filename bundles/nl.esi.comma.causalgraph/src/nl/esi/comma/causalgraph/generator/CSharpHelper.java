@@ -221,7 +221,26 @@ class CSharpHelper {
 				String map = expression(e.getArgs().get(0), variablePrefix);
 				String key = expression(e.getArgs().get(1), variablePrefix);
 				return String.format("{_k: _v for _k, _v in %s.items() if _k != %s}", map, key);
-			}
+			} else if (e.getFunctionName().equals("range")) {
+		        if (e.getArgs().size() == 1) {
+		            return String.format("Enumerable.Range(0, %s).ToList()", expression(e.getArgs().get(0), variablePrefix));
+		        } else if (e.getArgs().size() == 2) {
+		            return String.format("Enumerable.Range(%s, (%s) - (%s)).ToList()", 
+		                expression(e.getArgs().get(0), variablePrefix), 
+		                expression(e.getArgs().get(1), variablePrefix), 
+		                expression(e.getArgs().get(0), variablePrefix));
+		        } else if (e.getArgs().size() == 3) {
+		            String start = expression(e.getArgs().get(0), variablePrefix);
+		            String stop = expression(e.getArgs().get(1), variablePrefix);
+		            String step = expression(e.getArgs().get(2), variablePrefix);
+		            return String.format("Enumerable.Range(0, ((%s) - (%s) + (%s) - 1) / (%s)).Select(i => (%s) + i * (%s)).ToList()", 
+		                stop, start, step, step, start, step);
+		        }
+		    } else if (e.getFunctionName().equals("toString")) {
+		        return String.format("(%s).ToString()", expression(e.getArgs().get(0), variablePrefix));
+		    } else if (e.getFunctionName().equals("concat")) {
+		        return String.format("%s.Concat(%s).ToList()", expression(e.getArgs().get(0), variablePrefix), expression(e.getArgs().get(1), variablePrefix));
+		    } 
 		} else if (expression instanceof ExpressionQuantifier) {
 			ExpressionQuantifier e = (ExpressionQuantifier) expression;
 			String collection = expression(e.getCollection(), variablePrefix);
