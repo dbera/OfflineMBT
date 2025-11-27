@@ -59,44 +59,129 @@ input-binding:
 jobB : {
     "count": 0,
     "job_id": 0,
-    "some_label": "some_name"
+    "some_label": "some_job"
 }
 output-data:
 Gateway_0uysc4w : {
     "iteration_index": 0,
-    "iteration_limit": 0,
-    "job_id": 0
+    "job": {
+        "count": 0,
+        "job_id": 0,
+        "some_label": "some_job"
+    }
 }
 temp_job_b_input : {
-    "job_id": 0,
-    "list_of_key_value_pairs": [],
-    "uuid": 0
+    "input": {
+        "job_id": 0,
+        "list_of_key_value_pairs": [
+            {
+                "key": "concrete",
+                "value": "concreteValue"
+            }
+        ]
+    },
+    "iteration_index": 0
 }
 
-compose-step-name: Issue299C3ComposeJobB_FinishcomposingjobB_default_0
-action-case: issue299.Issue299C3ComposeJobB.FinishcomposingjobB.default
+compose-step-name: Issue299C3ComposeJobB_AddjobAreport_default_0
+action-case: issue299.Issue299C3ComposeJobB.AddjobAreport.default
+consumes-from-step: Issue299C2RunJobA_RunA_default_0 { job_a_report  }
 consumes-from-step: Issue299C3ComposeJobB_JobBintake_default_0 { temp_job_b_input  }
 input-binding:
 Gateway_0uysc4w : {
     "iteration_index": 0,
-    "iteration_limit": 0,
+    "job": {
+        "count": 0,
+        "job_id": 0,
+        "some_label": "some_job"
+    }
+}
+job_a_report : {
     "job_id": 0
 }
 temp_job_b_input : {
-    "job_id": 0,
-    "list_of_key_value_pairs": [],
-    "uuid": 0
+    "input": {
+        "job_id": 0,
+        "list_of_key_value_pairs": [
+            {
+                "key": "concrete",
+                "value": "concreteValue"
+            }
+        ]
+    },
+    "iteration_index": 0
+}
+output-data:
+Gateway_0uysc4w : {
+    "iteration_index": 1,
+    "job": {
+        "count": 0,
+        "job_id": 0,
+        "some_label": "some_job"
+    }
+}
+temp_job_b_input : {
+    "input": {
+        "job_id": 0,
+        "list_of_key_value_pairs": [
+            {
+                "key": "concrete",
+                "value": "concreteValue"
+            }
+        ]
+    },
+    "iteration_index": 0
+}
+job_a_report : {
+    "job_id": 0
+}
+suppress(job_a_report)
+data-references: temp_job_b_input
+issue299.Issue299C3ComposeJobB.AddjobAreport.default.x0
+issue299.Issue299C3ComposeJobB.AddjobAreport.default.x1
+
+compose-step-name: Issue299C3ComposeJobB_FinishcomposingjobB_default_0
+action-case: issue299.Issue299C3ComposeJobB.FinishcomposingjobB.default
+consumes-from-step: Issue299C3ComposeJobB_JobBintake_default_0 { temp_job_b_input  }
+consumes-from-step: Issue299C3ComposeJobB_AddjobAreport_default_0 { temp_job_b_input  }
+input-binding:
+Gateway_0uysc4w : {
+    "iteration_index": 1,
+    "job": {
+        "count": 0,
+        "job_id": 0,
+        "some_label": "some_job"
+    }
+}
+temp_job_b_input : {
+    "input": {
+        "job_id": 0,
+        "list_of_key_value_pairs": [
+            {
+                "key": "concrete",
+                "value": "concreteValue"
+            }
+        ]
+    },
+    "iteration_index": 0
 }
 output-data:
 Event_1880doa : {
-    "iteration_index": 0,
-    "iteration_limit": 0,
-    "job_id": 0
+    "iteration_index": 1,
+    "job": {
+        "count": 0,
+        "job_id": 0,
+        "some_label": "some_job"
+    }
 }
 job_b_input : {
     "job_id": 0,
-    "list_of_key_value_pairs": [],
-    "uuid": 0
+    "list_of_key_value_pairs": [
+        {
+            "key": "concrete",
+            "value": "concreteValue"
+        }
+    ]
 }
 data-references: job_b_input
 issue299.Issue299C3ComposeJobB.FinishcomposingjobB.default.x0
@@ -107,8 +192,12 @@ consumes-from-step: Issue299C3ComposeJobB_FinishcomposingjobB_default_0 { job_b_
 input-binding:
 job_b_input : {
     "job_id": 0,
-    "list_of_key_value_pairs": [],
-    "uuid": 0
+    "list_of_key_value_pairs": [
+        {
+            "key": "concrete",
+            "value": "concreteValue"
+        }
+    ]
 }
 output-data:
 Event_18fn07m : {
@@ -156,48 +245,78 @@ input-binding:
 jobB : {
     "count": 1,
     "job_id": 1,
-    "some_label": "some_name"
+    "some_label": "some_job"
 }
 output-data:
 Gateway_0uysc4w : {
     "iteration_index": 0,
-    "iteration_limit": 1,
-    "job_id": 1
+    "job": {
+        "count": 1,
+        "job_id": 1,
+        "some_label": "some_job"
+    }
 }
 temp_job_b_input : {
-    "job_id": 1,
-    "list_of_key_value_pairs": [],
-    "uuid": 0
+    "input": {
+        "job_id": 1,
+        "list_of_key_value_pairs": [
+            {
+                "key": "concrete",
+                "value": "concreteValue"
+            }
+        ]
+    },
+    "iteration_index": 0
 }
 
-compose-step-name: Issue299C3ComposeJobB_AddjobAreport_default_0
+compose-step-name: Issue299C3ComposeJobB_AddjobAreport_default_1
 action-case: issue299.Issue299C3ComposeJobB.AddjobAreport.default
 consumes-from-step: Issue299C2RunJobA_RunA_default_0 { job_a_report  }
 consumes-from-step: Issue299C3ComposeJobB_JobBintake_default_1 { temp_job_b_input  }
 input-binding:
 Gateway_0uysc4w : {
     "iteration_index": 0,
-    "iteration_limit": 1,
-    "job_id": 1
+    "job": {
+        "count": 1,
+        "job_id": 1,
+        "some_label": "some_job"
+    }
 }
 job_a_report : {
     "job_id": 0
 }
 temp_job_b_input : {
-    "job_id": 1,
-    "list_of_key_value_pairs": [],
-    "uuid": 0
+    "input": {
+        "job_id": 1,
+        "list_of_key_value_pairs": [
+            {
+                "key": "concrete",
+                "value": "concreteValue"
+            }
+        ]
+    },
+    "iteration_index": 0
 }
 output-data:
 Gateway_0uysc4w : {
     "iteration_index": 1,
-    "iteration_limit": 1,
-    "job_id": 1
+    "job": {
+        "count": 1,
+        "job_id": 1,
+        "some_label": "some_job"
+    }
 }
 temp_job_b_input : {
-    "job_id": 1,
-    "list_of_key_value_pairs": [],
-    "uuid": 1
+    "input": {
+        "job_id": 1,
+        "list_of_key_value_pairs": [
+            {
+                "key": "concrete",
+                "value": "concreteValue"
+            }
+        ]
+    },
+    "iteration_index": 0
 }
 job_a_report : {
     "job_id": 0
@@ -207,30 +326,105 @@ data-references: temp_job_b_input
 issue299.Issue299C3ComposeJobB.AddjobAreport.default.x0
 issue299.Issue299C3ComposeJobB.AddjobAreport.default.x1
 
-compose-step-name: Issue299C3ComposeJobB_FinishcomposingjobB_default_1
-action-case: issue299.Issue299C3ComposeJobB.FinishcomposingjobB.default
-consumes-from-step: Issue299C3ComposeJobB_AddjobAreport_default_0 { temp_job_b_input  }
+compose-step-name: Issue299C3ComposeJobB_AddjobAreport_default_2
+action-case: issue299.Issue299C3ComposeJobB.AddjobAreport.default
+consumes-from-step: Issue299C2RunJobA_RunA_default_1 { job_a_report  }
+consumes-from-step: Issue299C3ComposeJobB_JobBintake_default_1 { temp_job_b_input  }
+consumes-from-step: Issue299C3ComposeJobB_AddjobAreport_default_1 { temp_job_b_input  }
 input-binding:
 Gateway_0uysc4w : {
     "iteration_index": 1,
-    "iteration_limit": 1,
+    "job": {
+        "count": 1,
+        "job_id": 1,
+        "some_label": "some_job"
+    }
+}
+job_a_report : {
     "job_id": 1
 }
 temp_job_b_input : {
-    "job_id": 1,
-    "list_of_key_value_pairs": [],
-    "uuid": 1
+    "input": {
+        "job_id": 1,
+        "list_of_key_value_pairs": [
+            {
+                "key": "concrete",
+                "value": "concreteValue"
+            }
+        ]
+    },
+    "iteration_index": 0
+}
+output-data:
+Gateway_0uysc4w : {
+    "iteration_index": 2,
+    "job": {
+        "count": 1,
+        "job_id": 1,
+        "some_label": "some_job"
+    }
+}
+temp_job_b_input : {
+    "input": {
+        "job_id": 1,
+        "list_of_key_value_pairs": [
+            {
+                "key": "concrete",
+                "value": "concreteValue"
+            }
+        ]
+    },
+    "iteration_index": 1
+}
+job_a_report : {
+    "job_id": 1
+}
+suppress(job_a_report)
+data-references: temp_job_b_input
+issue299.Issue299C3ComposeJobB.AddjobAreport.default.x0
+issue299.Issue299C3ComposeJobB.AddjobAreport.default.x1
+
+compose-step-name: Issue299C3ComposeJobB_FinishcomposingjobB_default_1
+action-case: issue299.Issue299C3ComposeJobB.FinishcomposingjobB.default
+consumes-from-step: Issue299C3ComposeJobB_AddjobAreport_default_2 { temp_job_b_input  }
+input-binding:
+Gateway_0uysc4w : {
+    "iteration_index": 2,
+    "job": {
+        "count": 1,
+        "job_id": 1,
+        "some_label": "some_job"
+    }
+}
+temp_job_b_input : {
+    "input": {
+        "job_id": 1,
+        "list_of_key_value_pairs": [
+            {
+                "key": "concrete",
+                "value": "concreteValue"
+            }
+        ]
+    },
+    "iteration_index": 1
 }
 output-data:
 Event_1880doa : {
-    "iteration_index": 1,
-    "iteration_limit": 1,
-    "job_id": 1
+    "iteration_index": 2,
+    "job": {
+        "count": 1,
+        "job_id": 1,
+        "some_label": "some_job"
+    }
 }
 job_b_input : {
     "job_id": 1,
-    "list_of_key_value_pairs": [],
-    "uuid": 1
+    "list_of_key_value_pairs": [
+        {
+            "key": "concrete",
+            "value": "concreteValue"
+        }
+    ]
 }
 data-references: job_b_input
 issue299.Issue299C3ComposeJobB.FinishcomposingjobB.default.x0
@@ -241,8 +435,12 @@ consumes-from-step: Issue299C3ComposeJobB_FinishcomposingjobB_default_1 { job_b_
 input-binding:
 job_b_input : {
     "job_id": 1,
-    "list_of_key_value_pairs": [],
-    "uuid": 1
+    "list_of_key_value_pairs": [
+        {
+            "key": "concrete",
+            "value": "concreteValue"
+        }
+    ]
 }
 output-data:
 Event_18fn07m : {
@@ -290,48 +488,78 @@ input-binding:
 jobB : {
     "count": 2,
     "job_id": 2,
-    "some_label": "some_name"
+    "some_label": "some_job"
 }
 output-data:
 Gateway_0uysc4w : {
     "iteration_index": 0,
-    "iteration_limit": 2,
-    "job_id": 2
+    "job": {
+        "count": 2,
+        "job_id": 2,
+        "some_label": "some_job"
+    }
 }
 temp_job_b_input : {
-    "job_id": 2,
-    "list_of_key_value_pairs": [],
-    "uuid": 0
+    "input": {
+        "job_id": 2,
+        "list_of_key_value_pairs": [
+            {
+                "key": "concrete",
+                "value": "concreteValue"
+            }
+        ]
+    },
+    "iteration_index": 0
 }
 
-compose-step-name: Issue299C3ComposeJobB_AddjobAreport_default_1
+compose-step-name: Issue299C3ComposeJobB_AddjobAreport_default_3
 action-case: issue299.Issue299C3ComposeJobB.AddjobAreport.default
 consumes-from-step: Issue299C2RunJobA_RunA_default_0 { job_a_report  }
 consumes-from-step: Issue299C3ComposeJobB_JobBintake_default_2 { temp_job_b_input  }
 input-binding:
 Gateway_0uysc4w : {
     "iteration_index": 0,
-    "iteration_limit": 2,
-    "job_id": 2
+    "job": {
+        "count": 2,
+        "job_id": 2,
+        "some_label": "some_job"
+    }
 }
 job_a_report : {
     "job_id": 0
 }
 temp_job_b_input : {
-    "job_id": 2,
-    "list_of_key_value_pairs": [],
-    "uuid": 0
+    "input": {
+        "job_id": 2,
+        "list_of_key_value_pairs": [
+            {
+                "key": "concrete",
+                "value": "concreteValue"
+            }
+        ]
+    },
+    "iteration_index": 0
 }
 output-data:
 Gateway_0uysc4w : {
     "iteration_index": 1,
-    "iteration_limit": 2,
-    "job_id": 2
+    "job": {
+        "count": 2,
+        "job_id": 2,
+        "some_label": "some_job"
+    }
 }
 temp_job_b_input : {
-    "job_id": 2,
-    "list_of_key_value_pairs": [],
-    "uuid": 1
+    "input": {
+        "job_id": 2,
+        "list_of_key_value_pairs": [
+            {
+                "key": "concrete",
+                "value": "concreteValue"
+            }
+        ]
+    },
+    "iteration_index": 0
 }
 job_a_report : {
     "job_id": 0
@@ -341,37 +569,115 @@ data-references: temp_job_b_input
 issue299.Issue299C3ComposeJobB.AddjobAreport.default.x0
 issue299.Issue299C3ComposeJobB.AddjobAreport.default.x1
 
-compose-step-name: Issue299C3ComposeJobB_AddjobAreport_default_2
+compose-step-name: Issue299C3ComposeJobB_AddjobAreport_default_4
 action-case: issue299.Issue299C3ComposeJobB.AddjobAreport.default
 consumes-from-step: Issue299C2RunJobA_RunA_default_1 { job_a_report  }
-consumes-from-step: Issue299C3ComposeJobB_AddjobAreport_default_1 { temp_job_b_input  }
+consumes-from-step: Issue299C3ComposeJobB_JobBintake_default_2 { temp_job_b_input  }
+consumes-from-step: Issue299C3ComposeJobB_AddjobAreport_default_3 { temp_job_b_input  }
 input-binding:
 Gateway_0uysc4w : {
     "iteration_index": 1,
-    "iteration_limit": 2,
-    "job_id": 2
+    "job": {
+        "count": 2,
+        "job_id": 2,
+        "some_label": "some_job"
+    }
 }
 job_a_report : {
     "job_id": 1
 }
 temp_job_b_input : {
-    "job_id": 2,
-    "list_of_key_value_pairs": [],
-    "uuid": 1
+    "input": {
+        "job_id": 2,
+        "list_of_key_value_pairs": [
+            {
+                "key": "concrete",
+                "value": "concreteValue"
+            }
+        ]
+    },
+    "iteration_index": 0
 }
 output-data:
 Gateway_0uysc4w : {
     "iteration_index": 2,
-    "iteration_limit": 2,
-    "job_id": 2
+    "job": {
+        "count": 2,
+        "job_id": 2,
+        "some_label": "some_job"
+    }
 }
 temp_job_b_input : {
-    "job_id": 2,
-    "list_of_key_value_pairs": [],
-    "uuid": 2
+    "input": {
+        "job_id": 2,
+        "list_of_key_value_pairs": [
+            {
+                "key": "concrete",
+                "value": "concreteValue"
+            }
+        ]
+    },
+    "iteration_index": 1
 }
 job_a_report : {
     "job_id": 1
+}
+suppress(job_a_report)
+data-references: temp_job_b_input
+issue299.Issue299C3ComposeJobB.AddjobAreport.default.x0
+issue299.Issue299C3ComposeJobB.AddjobAreport.default.x1
+
+compose-step-name: Issue299C3ComposeJobB_AddjobAreport_default_5
+action-case: issue299.Issue299C3ComposeJobB.AddjobAreport.default
+consumes-from-step: Issue299C2RunJobA_RunA_default_2 { job_a_report  }
+consumes-from-step: Issue299C3ComposeJobB_AddjobAreport_default_4 { temp_job_b_input  }
+input-binding:
+Gateway_0uysc4w : {
+    "iteration_index": 2,
+    "job": {
+        "count": 2,
+        "job_id": 2,
+        "some_label": "some_job"
+    }
+}
+job_a_report : {
+    "job_id": 2
+}
+temp_job_b_input : {
+    "input": {
+        "job_id": 2,
+        "list_of_key_value_pairs": [
+            {
+                "key": "concrete",
+                "value": "concreteValue"
+            }
+        ]
+    },
+    "iteration_index": 1
+}
+output-data:
+Gateway_0uysc4w : {
+    "iteration_index": 3,
+    "job": {
+        "count": 2,
+        "job_id": 2,
+        "some_label": "some_job"
+    }
+}
+temp_job_b_input : {
+    "input": {
+        "job_id": 2,
+        "list_of_key_value_pairs": [
+            {
+                "key": "concrete",
+                "value": "concreteValue"
+            }
+        ]
+    },
+    "iteration_index": 2
+}
+job_a_report : {
+    "job_id": 2
 }
 suppress(job_a_report)
 data-references: temp_job_b_input
@@ -380,28 +686,45 @@ issue299.Issue299C3ComposeJobB.AddjobAreport.default.x1
 
 compose-step-name: Issue299C3ComposeJobB_FinishcomposingjobB_default_2
 action-case: issue299.Issue299C3ComposeJobB.FinishcomposingjobB.default
-consumes-from-step: Issue299C3ComposeJobB_AddjobAreport_default_2 { temp_job_b_input  }
+consumes-from-step: Issue299C3ComposeJobB_AddjobAreport_default_5 { temp_job_b_input  }
 input-binding:
 Gateway_0uysc4w : {
-    "iteration_index": 2,
-    "iteration_limit": 2,
-    "job_id": 2
+    "iteration_index": 3,
+    "job": {
+        "count": 2,
+        "job_id": 2,
+        "some_label": "some_job"
+    }
 }
 temp_job_b_input : {
-    "job_id": 2,
-    "list_of_key_value_pairs": [],
-    "uuid": 2
+    "input": {
+        "job_id": 2,
+        "list_of_key_value_pairs": [
+            {
+                "key": "concrete",
+                "value": "concreteValue"
+            }
+        ]
+    },
+    "iteration_index": 2
 }
 output-data:
 Event_1880doa : {
-    "iteration_index": 2,
-    "iteration_limit": 2,
-    "job_id": 2
+    "iteration_index": 3,
+    "job": {
+        "count": 2,
+        "job_id": 2,
+        "some_label": "some_job"
+    }
 }
 job_b_input : {
     "job_id": 2,
-    "list_of_key_value_pairs": [],
-    "uuid": 2
+    "list_of_key_value_pairs": [
+        {
+            "key": "concrete",
+            "value": "concreteValue"
+        }
+    ]
 }
 data-references: job_b_input
 issue299.Issue299C3ComposeJobB.FinishcomposingjobB.default.x0
@@ -412,8 +735,12 @@ consumes-from-step: Issue299C3ComposeJobB_FinishcomposingjobB_default_2 { job_b_
 input-binding:
 job_b_input : {
     "job_id": 2,
-    "list_of_key_value_pairs": [],
-    "uuid": 2
+    "list_of_key_value_pairs": [
+        {
+            "key": "concrete",
+            "value": "concreteValue"
+        }
+    ]
 }
 output-data:
 Event_18fn07m : {

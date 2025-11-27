@@ -7,8 +7,8 @@ record ReportJobB {
 }
 
 record Parameters {
-    int	count
-    string	tag
+    int	job_count
+    string	job_tag
 }
 
 record ReportJobA {
@@ -19,7 +19,6 @@ record ReportJobA {
 record InputJobB {
     int	job_id
     mixed KeyValuePair[]	list_of_key_value_pairs
-    int	uuid
 }
 
 record KeyValuePair {
@@ -42,14 +41,17 @@ record JobA {
 }
 
 record ContextController {
-    int	job_count
-    int	number_of_jobs
+    int	job_index
     Parameters	model_parameters
+}
+
+record TempInputJobB {
+    int	iteration_index
+    InputJobB	input
 }
 
 record ContextComposeJobB {
     int	iteration_index
-    int	iteration_limit
-    int	job_id
+    JobB	job
 }
 

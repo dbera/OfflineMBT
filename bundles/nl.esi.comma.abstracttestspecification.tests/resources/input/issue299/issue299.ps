@@ -69,7 +69,7 @@ specification issue299
         InputJobB		job_b_input
     
         local
-        InputJobB	temp_job_b_input
+        TempInputJobB	temp_job_b_input
         ContextComposeJobB	Gateway_0uysc4w
         
         ContextComposeJobB	Event_1880doa
@@ -83,26 +83,26 @@ specification issue299
         element-label	"Finish composing job B"
         case			default step-type "null" action-type COMPOSE
         with-inputs		Gateway_0uysc4w, temp_job_b_input
-        with-guard		Gateway_0uysc4w.iteration_index >= Gateway_0uysc4w.iteration_limit
+        with-guard		Gateway_0uysc4w.iteration_index > Gateway_0uysc4w.job.count
         and
-        temp_job_b_input.job_id == Gateway_0uysc4w.job_id
+        temp_job_b_input.input.job_id == Gateway_0uysc4w.job.job_id
         produces-outputs	Event_1880doa
         updates:
             Event_1880doa := Gateway_0uysc4w
         produces-outputs	job_b_input
         references {
-            x0: job_b_input.list_of_key_value_pairs := temp_job_b_input.list_of_key_value_pairs
+            x0: job_b_input.list_of_key_value_pairs := temp_job_b_input.input.list_of_key_value_pairs
         } symbolic-link
         updates:
-            job_b_input := temp_job_b_input
+            job_b_input := temp_job_b_input.input
         
         action			AddjobAreport
         element-label	"Add job A report"
         case			default step-type "null" action-type COMPOSE
         with-inputs		Gateway_0uysc4w, job_a_report, temp_job_b_input
-        with-guard		Gateway_0uysc4w.iteration_index < Gateway_0uysc4w.iteration_limit
+        with-guard		Gateway_0uysc4w.iteration_index <= Gateway_0uysc4w.job.count
         and
-        temp_job_b_input.job_id == Gateway_0uysc4w.job_id
+        temp_job_b_input.input.job_id == Gateway_0uysc4w.job.job_id
         and 
         job_a_report.job_id == Gateway_0uysc4w.iteration_index
         produces-outputs	Gateway_0uysc4w
@@ -111,8 +111,8 @@ specification issue299
             Gateway_0uysc4w.iteration_index := Gateway_0uysc4w.iteration_index + 1
         produces-outputs	temp_job_b_input
         references {
-            x0: temp_job_b_input.list_of_key_value_pairs := temp_job_b_input.list_of_key_value_pairs
-            x1: temp_job_b_input.list_of_key_value_pairs := <KeyValuePair[]>[
+            x0: temp_job_b_input.input.list_of_key_value_pairs := temp_job_b_input.input.list_of_key_value_pairs
+            x1: temp_job_b_input.input.list_of_key_value_pairs := <KeyValuePair[]>[
               KeyValuePair {
              key = "index__" + get(<string[]>["0","1","2","3"], Gateway_0uysc4w.iteration_index) + "__",
              value = job_a_report.some_value
@@ -121,7 +121,7 @@ specification issue299
         } symbolic-link
         updates:
             temp_job_b_input := temp_job_b_input
-            temp_job_b_input.uuid := temp_job_b_input.uuid + 1
+            temp_job_b_input.iteration_index := Gateway_0uysc4w.iteration_index
         produces-outputs	job_a_report symbolic-link suppress
         updates:
             job_a_report := job_a_report
@@ -134,15 +134,19 @@ specification issue299
         updates:
             Gateway_0uysc4w := ContextComposeJobB {
              iteration_index = 0,
-             iteration_limit = jobB.count,
-             job_id = jobB.job_id
+             job = jobB
             }
         produces-outputs	temp_job_b_input symbolic-link
         updates:
-            temp_job_b_input := InputJobB {
-             job_id = jobB.job_id,
-             list_of_key_value_pairs = <KeyValuePair[]>[],
-             uuid = 0
+            temp_job_b_input := TempInputJobB {
+             iteration_index = 0,
+             input = InputJobB {
+              job_id = jobB.job_id,
+              list_of_key_value_pairs = <KeyValuePair[]>[KeyValuePair {
+                        key = "concrete",
+                        value = "concreteValue"
+                    }]
+             }
             }
     
         element-labels ["Issue299", "C3", "Compose Job B"]
@@ -195,8 +199,8 @@ specification issue299
     
         init
         model_parameters := Parameters {
-         count = 2,
-         tag = "some_name"
+         job_count = 2,
+         job_tag = "some_job"
         }
     
     
@@ -212,9 +216,9 @@ specification issue299
         produces-outputs	jobB
         updates:
             jobB := JobB {
-             job_id = Flow_1ngqot2.job_count,
-             some_label = Flow_1ngqot2.model_parameters.tag,
-             count = Flow_1ngqot2.job_count
+             job_id = Flow_1ngqot2.job_index,
+             some_label = Flow_1ngqot2.model_parameters.job_tag,
+             count = Flow_1ngqot2.job_index
             }
         
         action			DojobA
@@ -226,17 +230,17 @@ specification issue299
             Flow_1ngqot2 := Gateway_1habvb7
         produces-outputs	jobA
         updates:
-            jobA := JobA { job_id = Gateway_1habvb7.job_count }
+            jobA := JobA { job_id = Gateway_1habvb7.job_index }
         
         action			Iterate
         element-label	"Iterate"
         case			default
         with-inputs		Gateway_0r5pxtv
-        with-guard		Gateway_0r5pxtv.job_count < Gateway_0r5pxtv.number_of_jobs
+        with-guard		Gateway_0r5pxtv.job_index < Gateway_0r5pxtv.model_parameters.job_count
         produces-outputs	Gateway_1habvb7
         updates:
             Gateway_1habvb7 := Gateway_0r5pxtv
-            Gateway_1habvb7.job_count := Gateway_1habvb7.job_count + 1
+            Gateway_1habvb7.job_index := Gateway_1habvb7.job_index + 1
         
         action			Initializecontroller
         element-label	"Initialize controller"
@@ -245,8 +249,7 @@ specification issue299
         produces-outputs	Gateway_1habvb7
         updates:
             Gateway_1habvb7 := ContextController {
-             job_count = 0,
-             number_of_jobs = model_parameters.count,
+             job_index = 0,
              model_parameters = model_parameters
             }
         
@@ -254,7 +257,7 @@ specification issue299
         element-label	"Finish"
         case			default
         with-inputs		Gateway_0r5pxtv
-        with-guard		Gateway_0r5pxtv.job_count >= Gateway_0r5pxtv.number_of_jobs
+        with-guard		Gateway_0r5pxtv.job_index >= Gateway_0r5pxtv.model_parameters.job_count
         produces-outputs	Event_0rch5hf
         updates:
             Event_0rch5hf := Gateway_0r5pxtv

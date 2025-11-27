@@ -22,6 +22,7 @@ import nl.esi.comma.abstracttestspecification.abstractTestspecification.RunStep
 import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
 import nl.esi.comma.expressions.evaluation.ExpressionEvaluator
 import nl.esi.comma.expressions.expression.ExpressionVariable
+import nl.esi.comma.types.types.RecordFieldKind
 import nl.esi.comma.types.utilities.EcoreUtil3
 
 import static extension nl.esi.comma.assertthat.utilities.AssertThatUtilities.*
@@ -421,7 +422,10 @@ class ReferenceExpressionHandler
             : '''step_«composeStep.name».output.«EcoreUtil3.serialize(rec.fieldAccess)»'''
 
         rec.exp = new ExpressionEvaluator().evaluate(rec.exp)[ variable |
-            composeStep.input.findFirst[name == variable]?.jsonvals.toExpression(variable.type.typeObject, self)
+            composeStep.input.findFirst[name == variable]?.jsonvals.toExpression(variable.type.typeObject, self) [
+                // Only consider concrete values as we're evaluating symbolic expressions here
+                kind == RecordFieldKind::CONCRETE
+            ]
         ]
 
         val value = rec.exp.serialize[ obj |
