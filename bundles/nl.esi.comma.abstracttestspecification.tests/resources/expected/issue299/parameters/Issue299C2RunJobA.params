@@ -1,0 +1,12 @@
+import "../types/Issue299C2RunJobA.types"
+
+data-instances
+JobAInput Issue299C2RunJobAInput
+JobAOutput Issue299C2RunJobAOutput
+
+data-implementation
+// Empty
+
+path-prefix "./dataset/"
+var-ref Issue299C2RunJobAInput -> file-name "Issue299C2RunJobAInput.json"
+var-ref Issue299C2RunJobAOutput -> file-name "Issue299C2RunJobAOutput.json"

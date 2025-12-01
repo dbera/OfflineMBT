@@ -82,6 +82,8 @@ temp_job_b_input : {
     },
     "iteration_index": 0
 }
+data-references: temp_job_b_input
+issue299.Issue299C3ComposeJobB.JobBintake.default.a1
 
 compose-step-name: Issue299C3ComposeJobB_AddjobAreport_default_0
 action-case: issue299.Issue299C3ComposeJobB.AddjobAreport.default
@@ -130,7 +132,7 @@ temp_job_b_input : {
             }
         ]
     },
-    "iteration_index": 0
+    "iteration_index": 1
 }
 job_a_report : {
     "job_id": 0
@@ -142,7 +144,6 @@ issue299.Issue299C3ComposeJobB.AddjobAreport.default.x1
 
 compose-step-name: Issue299C3ComposeJobB_FinishcomposingjobB_default_0
 action-case: issue299.Issue299C3ComposeJobB.FinishcomposingjobB.default
-consumes-from-step: Issue299C3ComposeJobB_JobBintake_default_0 { temp_job_b_input  }
 consumes-from-step: Issue299C3ComposeJobB_AddjobAreport_default_0 { temp_job_b_input  }
 input-binding:
 Gateway_0uysc4w : {
@@ -163,7 +164,7 @@ temp_job_b_input : {
             }
         ]
     },
-    "iteration_index": 0
+    "iteration_index": 1
 }
 output-data:
 Event_1880doa : {
@@ -268,6 +269,8 @@ temp_job_b_input : {
     },
     "iteration_index": 0
 }
+data-references: temp_job_b_input
+issue299.Issue299C3ComposeJobB.JobBintake.default.a1
 
 compose-step-name: Issue299C3ComposeJobB_AddjobAreport_default_1
 action-case: issue299.Issue299C3ComposeJobB.AddjobAreport.default
@@ -316,7 +319,7 @@ temp_job_b_input : {
             }
         ]
     },
-    "iteration_index": 0
+    "iteration_index": 1
 }
 job_a_report : {
     "job_id": 0
@@ -329,7 +332,6 @@ issue299.Issue299C3ComposeJobB.AddjobAreport.default.x1
 compose-step-name: Issue299C3ComposeJobB_AddjobAreport_default_2
 action-case: issue299.Issue299C3ComposeJobB.AddjobAreport.default
 consumes-from-step: Issue299C2RunJobA_RunA_default_1 { job_a_report  }
-consumes-from-step: Issue299C3ComposeJobB_JobBintake_default_1 { temp_job_b_input  }
 consumes-from-step: Issue299C3ComposeJobB_AddjobAreport_default_1 { temp_job_b_input  }
 input-binding:
 Gateway_0uysc4w : {
@@ -353,7 +355,7 @@ temp_job_b_input : {
             }
         ]
     },
-    "iteration_index": 0
+    "iteration_index": 1
 }
 output-data:
 Gateway_0uysc4w : {
@@ -374,7 +376,7 @@ temp_job_b_input : {
             }
         ]
     },
-    "iteration_index": 1
+    "iteration_index": 2
 }
 job_a_report : {
     "job_id": 1
@@ -406,7 +408,7 @@ temp_job_b_input : {
             }
         ]
     },
-    "iteration_index": 1
+    "iteration_index": 2
 }
 output-data:
 Event_1880doa : {
@@ -511,6 +513,8 @@ temp_job_b_input : {
     },
     "iteration_index": 0
 }
+data-references: temp_job_b_input
+issue299.Issue299C3ComposeJobB.JobBintake.default.a1
 
 compose-step-name: Issue299C3ComposeJobB_AddjobAreport_default_3
 action-case: issue299.Issue299C3ComposeJobB.AddjobAreport.default
@@ -559,7 +563,7 @@ temp_job_b_input : {
             }
         ]
     },
-    "iteration_index": 0
+    "iteration_index": 1
 }
 job_a_report : {
     "job_id": 0
@@ -572,7 +576,6 @@ issue299.Issue299C3ComposeJobB.AddjobAreport.default.x1
 compose-step-name: Issue299C3ComposeJobB_AddjobAreport_default_4
 action-case: issue299.Issue299C3ComposeJobB.AddjobAreport.default
 consumes-from-step: Issue299C2RunJobA_RunA_default_1 { job_a_report  }
-consumes-from-step: Issue299C3ComposeJobB_JobBintake_default_2 { temp_job_b_input  }
 consumes-from-step: Issue299C3ComposeJobB_AddjobAreport_default_3 { temp_job_b_input  }
 input-binding:
 Gateway_0uysc4w : {
@@ -596,7 +599,7 @@ temp_job_b_input : {
             }
         ]
     },
-    "iteration_index": 0
+    "iteration_index": 1
 }
 output-data:
 Gateway_0uysc4w : {
@@ -617,7 +620,7 @@ temp_job_b_input : {
             }
         ]
     },
-    "iteration_index": 1
+    "iteration_index": 2
 }
 job_a_report : {
     "job_id": 1
@@ -653,7 +656,7 @@ temp_job_b_input : {
             }
         ]
     },
-    "iteration_index": 1
+    "iteration_index": 2
 }
 output-data:
 Gateway_0uysc4w : {
@@ -674,7 +677,7 @@ temp_job_b_input : {
             }
         ]
     },
-    "iteration_index": 2
+    "iteration_index": 3
 }
 job_a_report : {
     "job_id": 2
@@ -706,7 +709,7 @@ temp_job_b_input : {
             }
         ]
     },
-    "iteration_index": 2
+    "iteration_index": 3
 }
 output-data:
 Event_1880doa : {

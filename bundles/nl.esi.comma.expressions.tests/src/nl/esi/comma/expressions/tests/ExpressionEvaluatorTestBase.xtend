@@ -39,6 +39,14 @@ abstract class ExpressionEvaluatorTestBase {
     val SAVE_OPTIONS = SaveOptions.newBuilder.format.options
 
     protected def void assertEval(String expected, String input) {
+        val actualFormatted = eval(input)
+        val expectedExprs = parser.parse(expected)
+        Assertions.assertTrue(expectedExprs.eResource.errors.isEmpty, '''Unexpected errors in expected output: «expectedExprs.eResource.errors.join(", ")»''')
+        val expectedFormatted = serializer.serialize(EcoreUtil3.unformat(expectedExprs), SAVE_OPTIONS)
+        Assertions.assertEquals(expectedFormatted, actualFormatted)
+    }
+
+    protected def String eval(String input) {
         val expressions = parser.parse(input)
         Assertions.assertTrue(expressions.eResource.errors.isEmpty, '''Unexpected errors in input: «expressions.eResource.errors.join(", ")»''')
         Assertions.assertEquals(expressions.variables.size, expressions.variables.map[variable.name].toSet.size, 'Variables cannot be declared multiple times')
@@ -50,10 +58,6 @@ abstract class ExpressionEvaluatorTestBase {
             ]
 //            context.put(assignment.variable, assignment.expression)
         }
-        val actualFormatted = serializer.serialize(EcoreUtil3.unformat(expressions), SAVE_OPTIONS)
-        val expectedExprs = parser.parse(expected)
-        Assertions.assertTrue(expectedExprs.eResource.errors.isEmpty, '''Unexpected errors in input: «expectedExprs.eResource.errors.join(", ")»''')
-        val expectedFormatted = serializer.serialize(EcoreUtil3.unformat(expectedExprs), SAVE_OPTIONS)
-        Assertions.assertEquals(expectedFormatted, actualFormatted)
+        return serializer.serialize(EcoreUtil3.unformat(expressions), SAVE_OPTIONS)
     }
 }

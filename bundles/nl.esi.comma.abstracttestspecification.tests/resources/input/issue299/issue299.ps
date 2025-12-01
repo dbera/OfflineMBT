@@ -121,7 +121,7 @@ specification issue299
         } symbolic-link
         updates:
             temp_job_b_input := temp_job_b_input
-            temp_job_b_input.iteration_index := Gateway_0uysc4w.iteration_index
+            temp_job_b_input.iteration_index := Gateway_0uysc4w.iteration_index + 1
         produces-outputs	job_a_report symbolic-link suppress
         updates:
             job_a_report := job_a_report
@@ -136,7 +136,10 @@ specification issue299
              iteration_index = 0,
              job = jobB
             }
-        produces-outputs	temp_job_b_input symbolic-link
+        produces-outputs	temp_job_b_input
+        references {
+            a1: temp_job_b_input.input.list_of_key_value_pairs := <KeyValuePair[]>[]
+        } symbolic-link
         updates:
             temp_job_b_input := TempInputJobB {
              iteration_index = 0,
@@ -266,6 +269,6 @@ specification issue299
     }
     
 	SUT-blocks Issue299C2RunJobA Issue299C3RunJobB
-	depth-limits 300
+	depth-limits 3000
 	num-tests 1
 }

@@ -375,9 +375,6 @@ public enum ExpressionFunction {
 			BigInteger arg1 = context.asInt(args.get(1));
 			if (arg1 != null && args.get(0) instanceof ExpressionVector expr) {
 				int index = arg1.intValueExact();
-				if (index < 0 || index >= expr.getElements().size()) {
-					throw new IndexOutOfBoundsException(index);
-				}
 				return expr.getElements().get(index);
 			}
 			return null;
@@ -419,9 +416,6 @@ public enum ExpressionFunction {
 			BigInteger arg1 = context.asInt(args.get(1));
 			if (arg1 != null && args.get(0) instanceof ExpressionVector expr) {
 				int index = arg1.intValueExact();
-				if (index < 0 || index >= expr.getElements().size()) {
-					throw new IndexOutOfBoundsException(index);
-				}
 				expr.getElements().set(index, args.get(2));
 				return expr;
 			}

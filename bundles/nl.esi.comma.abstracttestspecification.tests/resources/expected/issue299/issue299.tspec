@@ -1,0 +1,116 @@
+import "parameters/Issue299C2RunJobA.params"
+import "parameters/Issue299C3RunJobB.params"
+
+Test-Purpose    "The purpose of this test is..."
+Background      "The background of this test is..."
+
+test-sequence from_abstract_to_concrete {
+    test_single_sequence
+}
+
+step-sequence test_single_sequence {
+
+step-id    step_Issue299C2RunJobA_RunA_default_0
+step-type  JobA
+step-input Issue299C2RunJobAInput
+ref-to-step-output
+    Issue299C2RunJobAInput.job_a_input.job_id := 0
+
+step-id    step_Issue299C3RunJobB_RunB_default_0
+step-type  BJob
+step-input Issue299C3RunJobBInput
+ref-to-step-output
+    Issue299C3RunJobBInput.job_b_input.job_id := 0
+    Issue299C3RunJobBInput.job_b_input.list_of_key_value_pairs := <KeyValuePair[]>[
+        KeyValuePair {
+            key = "concrete",
+            value = "concreteValue"
+        }
+    ]
+    Issue299C3RunJobBInput.job_b_input.list_of_key_value_pairs := <KeyValuePair[]>[]
+    Issue299C3RunJobBInput.job_b_input.list_of_key_value_pairs := <KeyValuePair[]>[
+                  KeyValuePair {
+                 key ="index__0__",
+                 value = step_Issue299C2RunJobA_RunA_default_0.output.job_a_report.some_value
+                  }
+                ]
+
+step-id    step_Issue299C2RunJobA_RunA_default_1
+step-type  JobA
+step-input Issue299C2RunJobAInput
+ref-to-step-output
+    Issue299C2RunJobAInput.job_a_input.job_id := 1
+
+step-id    step_Issue299C3RunJobB_RunB_default_1
+step-type  BJob
+step-input Issue299C3RunJobBInput
+ref-to-step-output
+    Issue299C3RunJobBInput.job_b_input.job_id := 1
+    Issue299C3RunJobBInput.job_b_input.list_of_key_value_pairs := <KeyValuePair[]>[
+        KeyValuePair {
+            key = "concrete",
+            value = "concreteValue"
+        }
+    ]
+    Issue299C3RunJobBInput.job_b_input.list_of_key_value_pairs := <KeyValuePair[]>[]
+    Issue299C3RunJobBInput.job_b_input.list_of_key_value_pairs := <KeyValuePair[]>[
+                  KeyValuePair {
+                 key ="index__0__",
+                 value = step_Issue299C2RunJobA_RunA_default_0.output.job_a_report.some_value
+                  }
+                ]
+    Issue299C3RunJobBInput.job_b_input.list_of_key_value_pairs := <KeyValuePair[]>[
+                  KeyValuePair {
+                 key ="index__1__",
+                 value = step_Issue299C2RunJobA_RunA_default_1.output.job_a_report.some_value
+                  }
+                ]
+
+step-id    step_Issue299C2RunJobA_RunA_default_2
+step-type  JobA
+step-input Issue299C2RunJobAInput
+ref-to-step-output
+    Issue299C2RunJobAInput.job_a_input.job_id := 2
+
+step-id    step_Issue299C3RunJobB_RunB_default_2
+step-type  BJob
+step-input Issue299C3RunJobBInput
+ref-to-step-output
+    Issue299C3RunJobBInput.job_b_input.job_id := 2
+    Issue299C3RunJobBInput.job_b_input.list_of_key_value_pairs := <KeyValuePair[]>[
+        KeyValuePair {
+            key = "concrete",
+            value = "concreteValue"
+        }
+    ]
+    Issue299C3RunJobBInput.job_b_input.list_of_key_value_pairs := <KeyValuePair[]>[]
+    Issue299C3RunJobBInput.job_b_input.list_of_key_value_pairs := <KeyValuePair[]>[
+                  KeyValuePair {
+                 key ="index__0__",
+                 value = step_Issue299C2RunJobA_RunA_default_0.output.job_a_report.some_value
+                  }
+                ]
+    Issue299C3RunJobBInput.job_b_input.list_of_key_value_pairs := <KeyValuePair[]>[
+                  KeyValuePair {
+                 key ="index__1__",
+                 value = step_Issue299C2RunJobA_RunA_default_1.output.job_a_report.some_value
+                  }
+                ]
+    Issue299C3RunJobBInput.job_b_input.list_of_key_value_pairs := <KeyValuePair[]>[
+                  KeyValuePair {
+                 key ="index__2__",
+                 value = step_Issue299C2RunJobA_RunA_default_2.output.job_a_report.some_value
+                  }
+                ]
+}
+
+generate-file "./dataset/"
+
+step-parameters
+JobA step_Issue299C2RunJobA_RunA_default_0
+BJob step_Issue299C3RunJobB_RunB_default_0
+JobA step_Issue299C2RunJobA_RunA_default_1
+BJob step_Issue299C3RunJobB_RunB_default_1
+JobA step_Issue299C2RunJobA_RunA_default_2
+BJob step_Issue299C3RunJobB_RunB_default_2
+
