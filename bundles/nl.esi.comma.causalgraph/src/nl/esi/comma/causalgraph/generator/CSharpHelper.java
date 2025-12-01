@@ -50,6 +50,7 @@ import nl.esi.comma.expressions.expression.ExpressionModulo;
 import nl.esi.comma.expressions.expression.ExpressionMultiply;
 import nl.esi.comma.expressions.expression.ExpressionNEqual;
 import nl.esi.comma.expressions.expression.ExpressionNot;
+import nl.esi.comma.expressions.expression.ExpressionNullLiteral;
 import nl.esi.comma.expressions.expression.ExpressionOr;
 import nl.esi.comma.expressions.expression.ExpressionPlus;
 import nl.esi.comma.expressions.expression.ExpressionPower;
@@ -63,6 +64,7 @@ import nl.esi.comma.expressions.expression.QUANTIFIER;
 import nl.esi.comma.expressions.generator.ExpressionsCommaGenerator;
 import nl.esi.comma.types.types.EnumTypeDecl;
 import nl.esi.comma.types.types.MapTypeDecl;
+import nl.esi.comma.types.types.RecordFieldKind;
 import nl.esi.comma.types.types.RecordTypeDecl;
 import nl.esi.comma.types.types.SimpleTypeDecl;
 import nl.esi.comma.types.types.TypeDecl;
@@ -88,6 +90,7 @@ class CSharpHelper {
 			return "{}";
 		} else if (type instanceof RecordTypeDecl) {
 			String value = ((RecordTypeDecl) type).getFields().stream()
+				.filter(f -> !RecordFieldKind.SYMBOLIC.equals(f.getKind()))
 				.map(f -> String.format("\"%s\":%s", f.getName(), defaultValue(f.getType().getType())))
 				.collect(Collectors.joining(","));
 			return String.format("{%s}", value);
@@ -164,6 +167,8 @@ class CSharpHelper {
 		} else if (expression instanceof ExpressionEnumLiteral) {
 			ExpressionEnumLiteral e = (ExpressionEnumLiteral) expression;
 			return String.format("\"%s:%s\"", e.getType().getName(), e.getLiteral().getName());
+		} else if (expression instanceof ExpressionNullLiteral) {
+			return "null";
 		} else if (expression instanceof ExpressionVector) {
 			ExpressionVector e = (ExpressionVector) expression;
 			return String.format("[%s]", e.getElements().stream().map(ee -> expression (ee, variablePrefix)).collect(Collectors.joining(", ")));
@@ -216,7 +221,26 @@ class CSharpHelper {
 				String map = expression(e.getArgs().get(0), variablePrefix);
 				String key = expression(e.getArgs().get(1), variablePrefix);
 				return String.format("{_k: _v for _k, _v in %s.items() if _k != %s}", map, key);
-			}
+			} else if (e.getFunctionName().equals("range")) {
+		        if (e.getArgs().size() == 1) {
+		            return String.format("Enumerable.Range(0, %s).ToList()", expression(e.getArgs().get(0), variablePrefix));
+		        } else if (e.getArgs().size() == 2) {
+		            return String.format("Enumerable.Range(%s, (%s) - (%s)).ToList()", 
+		                expression(e.getArgs().get(0), variablePrefix), 
+		                expression(e.getArgs().get(1), variablePrefix), 
+		                expression(e.getArgs().get(0), variablePrefix));
+		        } else if (e.getArgs().size() == 3) {
+		            String start = expression(e.getArgs().get(0), variablePrefix);
+		            String stop = expression(e.getArgs().get(1), variablePrefix);
+		            String step = expression(e.getArgs().get(2), variablePrefix);
+		            return String.format("Enumerable.Range(0, ((%s) - (%s) + (%s) - 1) / (%s)).Select(i => (%s) + i * (%s)).ToList()", 
+		                stop, start, step, step, start, step);
+		        }
+		    } else if (e.getFunctionName().equals("toString")) {
+		        return String.format("(%s).ToString()", expression(e.getArgs().get(0), variablePrefix));
+		    } else if (e.getFunctionName().equals("concat")) {
+		        return String.format("%s.Concat(%s).ToList()", expression(e.getArgs().get(0), variablePrefix), expression(e.getArgs().get(1), variablePrefix));
+		    } 
 		} else if (expression instanceof ExpressionQuantifier) {
 			ExpressionQuantifier e = (ExpressionQuantifier) expression;
 			String collection = expression(e.getCollection(), variablePrefix);

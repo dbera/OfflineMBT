@@ -12,24 +12,22 @@
  */
 package nl.esi.comma.types.generator
 
-import nl.esi.comma.types.types.TypeReference
-import nl.esi.comma.types.types.TypeDecl
-import nl.esi.comma.types.types.VectorTypeConstructor
-import nl.esi.comma.types.types.SimpleTypeDecl
-import nl.esi.comma.types.types.EnumTypeDecl
-import nl.esi.comma.types.types.RecordTypeDecl
-import nl.esi.comma.types.utilities.TypeUtilities
-import nl.esi.comma.types.types.VectorTypeDecl
-import nl.esi.comma.types.types.MapTypeConstructor
-import nl.esi.comma.types.types.MapTypeDecl
-import nl.esi.comma.types.types.TypesModel
-import org.eclipse.emf.ecore.resource.Resource
-import java.util.List
 import java.util.ArrayList
-import nl.esi.comma.types.types.RecordField
 import java.util.HashMap
-import java.util.Map
 import java.util.HashSet
+import java.util.List
+import java.util.Map
+import nl.esi.comma.types.types.EnumTypeDecl
+import nl.esi.comma.types.types.MapTypeConstructor
+import nl.esi.comma.types.types.RecordField
+import nl.esi.comma.types.types.RecordFieldKind
+import nl.esi.comma.types.types.RecordTypeDecl
+import nl.esi.comma.types.types.SimpleTypeDecl
+import nl.esi.comma.types.types.TypeDecl
+import nl.esi.comma.types.types.TypeReference
+import nl.esi.comma.types.types.TypesModel
+import nl.esi.comma.types.types.VectorTypeConstructor
+import nl.esi.comma.types.utilities.TypeUtilities
 
 /*
  * This class provides methods that map ComMA types to Z3 representation
@@ -269,7 +267,7 @@ class TypesZ3Generator {
 	
 	def dispatch CharSequence generateDefaultValue(RecordTypeDecl  t){
 		// '''«typeToZ3Syntax(t)»{«FOR f : TypeUtilities::getAllFields(t) SEPARATOR ', '»«f.name» = «generateDefaultValue(f.type)»«ENDFOR»}'''
-		'''«t.name».init(«FOR f : TypeUtilities::getAllFields(t) SEPARATOR ', '»«generateDefaultValue(f.type.type)»«ENDFOR»)''' 
+		'''«t.name».init(«FOR f : TypeUtilities::getAllFields(t).reject[kind == RecordFieldKind::SYMBOLIC] SEPARATOR ', '»«generateDefaultValue(f.type.type)»«ENDFOR»)''' 
 	}
 
 

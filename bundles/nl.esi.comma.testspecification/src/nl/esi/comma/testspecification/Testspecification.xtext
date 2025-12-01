@@ -19,6 +19,7 @@ import "http://www.esi.nl/comma/signature/InterfaceSignature" as sig
 import "http://www.esi.nl/comma/types/Types" as types
 import "http://www.esi.nl/comma/expressions/Expression" as expr
 import "http://www.asml.nl/matala/product/Product" as prod
+import "http://www.esi.nl/comma/assertthat/AssertThat" as assertthat
 
 TSMain:
 	imports += Import*
@@ -32,12 +33,7 @@ NamedElement returns types::NamedElement:
 ;
 
 ModelType:
-	APIDefinition | TestDefinition
-;
-
-APIDefinition:
-	('data-instances' vars+=Variable+)
-	('data-init' initActions+=(AssignmentAction | RecordFieldAssignmentAction)+)?
+	TestDefinition
 ;
 
 TestDefinition:
@@ -70,11 +66,24 @@ TestSequence:
 
 StepSequence:
 	'step-sequence' name = ID '{'
-		step += Step+
+		step += AbstractStep+
 	'}'
 ;
 
-Step:
+AbstractStep:
+    AssertionStep | RunStep
+;
+
+AssertionStep:
+	'assertion-id' inputVar = [expr::Variable|ID]
+	'assertion-type' type = [types::TypeDecl|ID]
+	'assertion-input' stepVar = [expr::Variable|ID]
+	('for-features' featuresForStep += [expr::Variable|ID]+ )?
+    'assertion-items' '{' asserts += DataAssertions+ '}'
+	refStep += RefStep*
+;
+
+RunStep:
 	//'step-id' identifier = ID
 	'step-id' inputVar = [expr::Variable|ID]
 	'step-type' type = [types::TypeDecl|ID]

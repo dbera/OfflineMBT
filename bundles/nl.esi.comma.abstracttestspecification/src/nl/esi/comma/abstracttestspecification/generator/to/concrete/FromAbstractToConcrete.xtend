@@ -12,14 +12,20 @@
  */
 package nl.esi.comma.abstracttestspecification.generator.to.concrete
 
-import java.util.HashMap
 import java.util.HashSet
-import java.util.Map
-import nl.asml.matala.product.product.Product
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractTestDefinition
+import nl.esi.comma.abstracttestspecification.abstractTestspecification.AssertionStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.Binding
+import nl.esi.comma.abstracttestspecification.abstractTestspecification.ComposeStep
+import nl.esi.comma.abstracttestspecification.abstractTestspecification.ExecutableStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.RunStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.TSMain
+import nl.esi.comma.assertthat.assertThat.DataAssertionItem
+import nl.esi.comma.expressions.expression.ExpressionVariable
+import nl.esi.comma.expressions.services.ExpressionGrammarAccess
+import nl.esi.comma.types.utilities.EcoreUtil3
+import org.eclipse.emf.common.util.URI
+import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
@@ -27,19 +33,9 @@ import org.eclipse.xtext.generator.IGeneratorContext
 
 import static extension nl.esi.comma.abstracttestspecification.generator.utils.Utils.*
 import static extension nl.esi.comma.types.utilities.EcoreUtil3.*
+import static extension nl.esi.comma.types.utilities.TypeUtilities.*
 
 class FromAbstractToConcrete extends AbstractGenerator {
-
-    Map<String, String> rename = new HashMap<String, String>()
-    Map<String, String> args = new HashMap<String, String>()
-
-    new() {
-    }
-
-    new(Map<String, String> rename, Map<String, String> params) {
-        this.rename = rename
-        this.args = params
-    }
 
     override doGenerate(Resource res, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
         val atd = res.contents.filter(TSMain).map[model].filter(AbstractTestDefinition).head
@@ -47,15 +43,16 @@ class FromAbstractToConcrete extends AbstractGenerator {
             throw new Exception('No abstract tspec found in resource: ' + res.URI)
         }
 
-        val typesImports = getTypesImports(res)
+        val typesImportURIs = getTypesImports(res)
         for (sys : atd.systems) {
-            fsa.generateFile('''types/«sys».types''', atd.generateTypesFile(sys, typesImports))
+            val typesFile = '''types/«sys».types'''
+            val typesURI = fsa.getURI(typesFile)
+            val typesImports = typesImportURIs.map[resolve(res.URI).deresolve(typesURI).toString].toSet
+            fsa.generateFile(typesFile, atd.generateTypesFile(sys, typesImports))
             fsa.generateFile('''parameters/«sys».params''', atd.generateParamsFile(sys))
         }
         val conTspecFileName = res.URI.lastSegment.replaceAll('\\.atspec$','.tspec')
         fsa.generateFile(conTspecFileName, atd.generateConcreteTest())
-        fsa.generateFile("reference.kvp", (new RefKVPGenerator()).generateRefKVP(atd))
-        fsa.generateFile("vfd.xml", (new VFDXMLGenerator(this.args, this.rename)).generateXMLFromSUTVars(atd))
  
     }
 
@@ -73,38 +70,101 @@ class FromAbstractToConcrete extends AbstractGenerator {
         
         step-sequence test_single_sequence {
         «FOR test : atd.testSeq»
-            «FOR step : test.step.filter(RunStep)»
+            «FOR step : test.step.filter(ExecutableStep)»
                 
-                step-id    step_«step.name»
-                step-type  «step.stepType.get(0)»
-                step-input «step.system»Input
-                «IF !_printOutputs_(step).toString.nullOrEmpty»
-                    ref-to-step-output
-                        «_printOutputs_(step)»
-                «ENDIF»
+                «printStep(step)»
             «ENDFOR»
         «ENDFOR»
         }
         
-        generate-file "./vfab2_scenario/FAST/generated_FAST/"
+        generate-file "«atd.filePath»"
         
         step-parameters
         «FOR test : atd.testSeq»
-            «FOR step : test.step.filter(RunStep)»
+            «FOR step : test.step.filter(ExecutableStep)»
                 «step.stepType.get(0)» step_«step.name»
             «ENDFOR»
         «ENDFOR»
+        
+        «var sutexpr = extractSUTVarExpressions(atd)»
+        «IF !sutexpr.empty»
+        sut-param-init 
+        «FOR lhs: sutexpr.keySet»
+            «FOR rhs: sutexpr.get(lhs)»
+                «lhs» := «rhs»
+            «ENDFOR»
+        «ENDFOR»
+        «ENDIF»
+    '''
+    
+    def printStep(ExecutableStep step) {
+        return switch (step) {
+        	RunStep: printStep(step as RunStep)
+        	AssertionStep: printStep(step as AssertionStep)
+            default: throw new UnsupportedOperationException("Unsupported ExecutableStep sub-type")
+        }
+    }
+    def printStep(RunStep step) '''
+        step-id    step_«step.name»
+        step-type  «step.stepType.get(0)»
+        step-input «step.system»Input
+        «IF !_printOutputs_(step).toString.nullOrEmpty»
+            ref-to-step-output
+                «_printOutputs_(step)»
+        «ENDIF»
     '''
 
+    def printStep(AssertionStep step) '''
+        assertion-id    step_«step.name»
+        assertion-type  «step.stepType.get(0)»
+        assertion-input «step.system»Input
+        «IF !step.asserts.nullOrEmpty»
+        «_printAssertions(step)»
+        «ENDIF»
+        «IF !_printOutputs_(step).toString.nullOrEmpty»
+            ref-to-step-output
+                «_printOutputs_(step)»
+        «ENDIF»
+    '''
+    
+    def _printAssertions(AssertionStep step) '''
+    assertion-items {
+    «FOR ce : step.asserts.flatMap[ce]»
+        assertions «ce.name» { 
+            «FOR dai: ce.constr»
+                «printDai(dai, step)»
+            «ENDFOR»
+         }
+    «ENDFOR»
+    }
+    '''
+    
+    def printDai(DataAssertionItem item, AssertionStep step) {
+        
+        val replacer = [ EObject semanticElement, EObject grammarElement |
+            val gaExpression = EcoreUtil3.getService(semanticElement, ExpressionGrammarAccess)
+            if (gaExpression === null) {
+                return null
+            }
+            var abs_assert = step
+            var cexpr_handler = new ConcreteExpressionHandler()
+            return switch (grammarElement) {
+                case gaExpression.expressionLevel9Access.expressionVariableParserRuleCall_7: {
+                    val exprVar = semanticElement as ExpressionVariable
+                    return cexpr_handler.prepareAssertionStepExpressions(abs_assert, exprVar)
+                }
+            }
+        ]
+        var dai_seri = EcoreUtil3.serialize(item, replacer)
+        return dai_seri
+    }
+
     def private _printOutputs_(RunStep rstep) {
-        // At most one (TODO validate this)
-        // Observation: when multiple steps have indistinguishable outputs, 
-        // multiple consumes from is possible. TODO Warn user.   
-        val composeSteps = rstep.composeSteps
         // Get text for concrete data expressions
-        var conDataExpr = (new ConcreteExpressionHandler()).prepareStepInputExpressions(rstep, composeSteps)
+        var conDataExpr = (new ConcreteExpressionHandler()).prepareStepInputExpressions(rstep, rstep.composeStepRefs)
         // Append text for reference data expressions
-        val refDataExpr = (new ReferenceExpressionHandler()).resolveStepReferenceExpressions(rstep, composeSteps)
+        val refDataExpr = (new ReferenceExpressionHandler())
+            .resolveStepReferenceExpressions(rstep, rstep.stepRef.map[refStep].filter(ComposeStep))
 
         return '''
             «conDataExpr»
@@ -113,6 +173,19 @@ class FromAbstractToConcrete extends AbstractGenerator {
                     «entry.key» := «v»
                 «ENDFOR»
             «ENDFOR»
+        '''
+    }
+
+    def private _printOutputs_(AssertionStep astep) {
+        // At most one (TODO validate this)
+        // Observation: when multiple steps have indistinguishable outputs, 
+        // multiple consumes from is possible. TODO Warn user.   
+        val runStepRefs = astep.runStepRefs
+        // Get text for concrete data expressions
+        var conDataExpr = (new ConcreteExpressionHandler()).prepareStepInputExpressions(astep, runStepRefs)
+
+        return '''
+            «conDataExpr»
         '''
     }
 
@@ -126,7 +199,18 @@ class FromAbstractToConcrete extends AbstractGenerator {
             }
             rstep.input.forEach[i|ios.putIfAbsent(i.name, i)]
             rstep.output.forEach[o|ios.putIfAbsent(o.name, o)]
-            for (cstep : rstep.composeSteps) {
+            for (cstep : rstep.composeStepRefs.map[refStep]) {
+                cstep.input.forEach[i|ios.putIfAbsent(i.name, i)]
+                cstep.output.forEach[o|ios.putIfAbsent(o.name, o)]
+            }
+        }
+        for (astep : atd.getAssertionSteps(system)) {
+            if (!astep.stepType.isEmpty) {
+                type = astep.stepType.last
+            }
+            astep.input.forEach[i|ios.putIfAbsent(i.name, i)]
+            astep.output.forEach[o|ios.putIfAbsent(o.name, o)]
+            for (cstep : astep.runStepRefs.map[refStep]) {
                 cstep.input.forEach[i|ios.putIfAbsent(i.name, i)]
                 cstep.output.forEach[o|ios.putIfAbsent(o.name, o)]
             }
@@ -137,7 +221,7 @@ class FromAbstractToConcrete extends AbstractGenerator {
     // Print types for each step
     def private printTypes(Iterable<Binding> ios, String type, Iterable<String> typesImports) '''
         «FOR ti : typesImports»
-            import "../«ti»"
+            import "«ti»"
         «ENDFOR»
         
         record «type» {
@@ -162,15 +246,15 @@ class FromAbstractToConcrete extends AbstractGenerator {
     def private generateParamsFile(AbstractTestDefinition atd, String system) {
         var paramTxt = ''
         val processedTypes = new HashSet<String>()
-        for (step : atd.getRunSteps(system)) {
+        for (step : atd.getExecutableSteps(system)) {
             for (type : step.stepType.filter[processedTypes.add(it)]) {
-                paramTxt += printParams(step, type)
+                paramTxt += printParams(atd, step, type)
             }
         }
         return paramTxt
     }
 
-    def private printParams(RunStep step, String type) '''
+    def private printParams(AbstractTestDefinition atd, ExecutableStep step, String type) '''
         import "../types/«step.system».types"
         
         data-instances
@@ -180,27 +264,33 @@ class FromAbstractToConcrete extends AbstractGenerator {
         data-implementation
         // Empty
         
-        path-prefix "./vfab2_scenario/FAST/generated_FAST/dataset/"
+        path-prefix "«atd.filePath»"
         var-ref «step.system»Input -> file-name "«step.system»Input.json"
         var-ref «step.system»Output -> file-name "«step.system»Output.json"
     '''
-
+    
     def private getSystems(AbstractTestDefinition atd) {
-        return atd.steps.filter(RunStep).map[system].toSet
+        return atd.steps.filter(ExecutableStep).map[system].toSet
     }
 
     def private getRunSteps(AbstractTestDefinition atd, String sys) {
         return atd.steps.filter(RunStep).filter[system == sys]
     }
 
-    def private Iterable<String> getTypesImports(Resource res) {
+    def private getAssertionSteps(AbstractTestDefinition atd, String sys) {
+        return atd.steps.filter(AssertionStep).filter[system == sys]
+    }
+
+    def private getExecutableSteps(AbstractTestDefinition atd, String sys) {
+        return atd.steps.filter(ExecutableStep).filter[system == sys]
+    }
+
+    def private Iterable<URI> getTypesImports(Resource res) {
         val typesImports = newLinkedHashSet
-        for (psImport : res.contents.filter(TSMain).flatMap[imports].filter[importURI.endsWith('.ps')]) {
-            for (typesImport : psImport.resource.contents.filter(Product).flatMap[imports].filter [
-                importURI.endsWith('.types')
-            ]) {
-                val typesImportURI = typesImport.resolveUri.deresolve(res.URI)
-                typesImports += typesImportURI.toString
+        for (psImport : res.getImports('ps')) {
+            val psRes = psImport.resource
+            for (typesImport : psRes.getImports('types')) {
+                typesImports += typesImport.resolveUri.deresolve(res.URI)
             }
         }
         return typesImports;

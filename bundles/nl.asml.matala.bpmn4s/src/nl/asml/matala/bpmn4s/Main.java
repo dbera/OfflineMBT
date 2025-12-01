@@ -16,8 +16,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.camunda.bpm.model.bpmn.Bpmn;
 import org.camunda.bpm.model.bpmn.BpmnModelInstance;
@@ -50,10 +48,12 @@ import nl.asml.matala.bpmn4s.bpmn4s.ElementType;
 import nl.asml.matala.bpmn4s.bpmn4s.EnumerationType;
 import nl.asml.matala.bpmn4s.bpmn4s.ListType;
 import nl.asml.matala.bpmn4s.bpmn4s.MapType;
+import nl.asml.matala.bpmn4s.bpmn4s.RecordFieldKind;
 import nl.asml.matala.bpmn4s.bpmn4s.RecordType;
 import nl.asml.matala.bpmn4s.bpmn4s.SetType;
 import nl.asml.matala.bpmn4s.extensions.DataType;
 import nl.asml.matala.bpmn4s.extensions.DataTypeImpl;
+import nl.asml.matala.bpmn4s.extensions.DataTypesImpl;
 import nl.asml.matala.bpmn4s.extensions.Field;
 import nl.asml.matala.bpmn4s.extensions.FieldImpl;
 import nl.asml.matala.bpmn4s.extensions.Literal;
@@ -126,89 +126,7 @@ public class Main {
         	model.setDepthLimit(depthLimit);
         	model.setNumOfTests(numOfTests);
         	parseBPMN(modelInst);
-        	Bpmn4sCompiler compiler;
-        	if (simulation) {
-        		compiler = new Bpmn4sCompiler() {
-        			
-        			@Override
-        			protected String repr(Element el) {
-        				return el.getId();
-        			}
-        			
-        			@Override
-        			/**
-        			 * Connected components of XOR gates are collapsed for optimization. A specific gate id
-        			 * is chosen as the name for each collapsed set of gates.
-        			 * Given an xor gate X, the name of its compiled collapsed component is obtained following this 
-        			 * algorithm:
-        			 * fun(X)
-        			 * IF X is fork gate:
-        			 *   get input of X 
-        			 *   IF input is xor-fork gate:
-        			 *     return fun(X)
-        			 *   
-        			 * ELSE IF X is merge gate:
-        			 *   get output of X
-        			 *   IF output is xor gate:
-        			 *     return fun(X)
-        			 * return id of X
-        			 */
-        			protected String getCompiledXorName(String xorId) {
-        				Element xor = model.getElementById(xorId);
-        				if (model.isForkGate(xorId)) {
-        					Edge inputEdge = xor.getFlowInputs().get(0);
-        					String srcId = inputEdge.getSrc();
-        					if (model.isXor(srcId) && model.isForkGate(srcId)) {
-        						return getCompiledXorName(srcId);
-        					}
-        				} else if (model.isMergeGate(xorId)) {
-        					Edge outputEdge = xor.getFlowOutputs().get(0);
-        					String tarId = outputEdge.getTar();
-        					if (model.isXor(tarId)) {
-        						return getCompiledXorName(tarId);
-        					}
-        				} 
-        				return repr(xor);
-        			}
-        			
-        			@Override
-        			protected String getCompiledComponentName(String componentId) {
-        				return repr(model.getElementById(componentId));
-        			}
-        			
-        			@Override
-        			protected String namePlaceBetweenTransitions(String flowId, String src, String dst) {
-        				return flowId;
-        			}
-        			
-        			@Override
-        			protected Map<String, String> buildReplaceMap (Element transition) {
-        				Map<String, String> replaceMap = new HashMap<String, String>();
-        				ArrayList<String> replaceIds = getInputOutputIds(transition);
-        				for(String id: replaceIds) {
-        					replaceMap.put(model.getElementById(id).getName(), compile(id));
-        				}
-        				return replaceMap;
-        			}
-
-        			private ArrayList<String> getInputOutputIds(Element elem) {
-        				ArrayList<String> result = new ArrayList<String>();
-        				for (Edge e: elem.getAllInputs()) {
-        					if(isAPlace(e.getSrc())) {
-        						result.add(e.getSrc());
-        					}
-        				}
-        				for (Edge e: elem.getAllOutputs()) {
-        					if(isAPlace(e.getTar())) {
-        						result.add(e.getTar());
-        					}
-        				}
-        				return result;
-        			}
-        		};
-        	}else {
-        		compiler = new Bpmn4sCompiler();
-        	}
+        	Bpmn4sCompiler compiler = new Bpmn4sCompiler();
         	compiler.compile(model);
         	compiler.writeModelToFiles(outputFolder);
         } catch (Exception e) { e.printStackTrace(); }
@@ -218,6 +136,7 @@ public class Main {
 
 	private static void registerModelExtensionTypes() {
 		DataTypeImpl.registerType(Bpmn.INSTANCE.getBpmnModelBuilder());
+		DataTypesImpl.registerType(Bpmn.INSTANCE.getBpmnModelBuilder());
 		FieldImpl.registerType(Bpmn.INSTANCE.getBpmnModelBuilder());
 		LiteralImpl.registerType(Bpmn.INSTANCE.getBpmnModelBuilder());
 		TargetDataRefImpl.registerType(Bpmn.INSTANCE.getBpmnModelBuilder());
@@ -394,8 +313,9 @@ public class Main {
 				}
 			}
 			ftype = ftype.equals("") ? tref : ftype;
+			RecordFieldKind fKind = RecordFieldKind.parse(f.getAttributeValueNs("http://bpmn4s", "kind"));
 			Boolean fSuppress = "true".equalsIgnoreCase(f.getAttributeValueNs("http://bpmn4s", "suppressUpdate"));
-			rec.addField(fname, ftype, fSuppress);
+			rec.addField(fname, ftype, fKind, fSuppress);
 		}
 		return rec;
 	}
@@ -513,7 +433,7 @@ public class Main {
 				contextTypeName = contextTypeId;
 			}
 		}
-		if(contextInit != null && contextInit.strip().startsWith("=")) {
+		if(contextInit != null && contextInit.startsWith("=")) {
 			contextInit = contextInit.substring(1); // FIXME due to issues with bpmn4s editor lsp integration
 		}
 		node.setContext(contextName, contextTypeName, contextInit);
@@ -552,11 +472,7 @@ public class Main {
 	}
 	
 	static String getName(ModelElementInstance elem) {
-		String name = elem.getAttributeValue("name");
-		if (name == null) {
-			name = elem.getAttributeValue("id");
-		}
-		return name;
+		return elem.getAttributeValue("name");
 	}
 
 	/* 

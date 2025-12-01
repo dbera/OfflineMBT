@@ -1,0 +1,24 @@
+import "../../../input/issue249/issue249.types"
+
+record ConsumerRunType {
+    ConsumerRunTypeInput input
+    ConsumerRunTypeOutput output
+}
+
+record ConsumerRunTypeInput {
+    ProdCons1 part1
+    ProdCons2 part2
+    UNIT Event_0fmv4m5
+    ProdCtx between_RunLocal_and_Compose
+    ProdCtx Event_0m7n0r6
+    ProdReport report
+}
+
+record ConsumerRunTypeOutput {
+    ProdCons1 part1
+    ProdCons2 part2
+    UNIT Event_0fmv4m5
+    ProdCtx between_RunLocal_and_Compose
+    ProdCtx Event_0m7n0r6
+    ProdReport report
+}

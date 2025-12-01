@@ -92,7 +92,7 @@ def gensym(length=32, prefix="gensym_", timestamp:bool=False):
     """
     if timestamp:
         now = datetime.datetime.now()
-        symbol = now.strftime("%Y%m%d_%H%M%S%f")
+        symbol = now.strftime("%m%d_%H%M%S")
         return prefix + symbol    
     alphabet = string.ascii_uppercase + string.ascii_lowercase + string.digits
     symbol = "".join([secrets.choice(alphabet) for i in range(length)])

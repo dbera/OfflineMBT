@@ -14,7 +14,6 @@ package nl.esi.comma.project.standard.ui.handler;
 
 import static com.google.common.collect.Maps.uniqueIndex;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -28,7 +27,6 @@ import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.xtext.builder.EclipseOutputConfigurationProvider;
 import org.eclipse.xtext.builder.EclipseResourceFileSystemAccess2;
@@ -85,13 +83,6 @@ public class ProjectUIGenerator implements IRunnableWithProgress {
 		this.launch = launchShortcut;
 	}
 
-	public void launch() {
-		Display.getDefault().syncExec(new Runnable() {
-			public void run() {
-			}
-		});
-	}
-
 	@Override
 	public void run(IProgressMonitor monitor) {
 		runGeneration(monitor);
@@ -99,36 +90,28 @@ public class ProjectUIGenerator implements IRunnableWithProgress {
 		
 	}
 	
-	public List<String> runGeneration(IProgressMonitor monitor) {
+	public void runGeneration(IProgressMonitor monitor) {
 		SubMonitor subMonitor = SubMonitor.convert(monitor, 3);
 		Map<String, OutputConfiguration> outputConfigurations = getOutputConfigurations(file.getProject());
-		final List<String> errors = new ArrayList<>();
 		
-		try {
+		URI uri = URI.createPlatformResourceURI(file.getFullPath().toString(), true);
+		Resource res = resourceSetProvider.get(project).getResource(uri, true);			
 		
-			URI uri = URI.createPlatformResourceURI(file.getFullPath().toString(), true);
-			Resource res = resourceSetProvider.get(project).getResource(uri, true);			
-			
-			if(containsErrors(res, subMonitor)) {				
-				MessageDialog.openError(shell, ERROR_RESOURCE_TITLE , String.format(ERROR_RESOURCE_TEXT, res.getURI().lastSegment()));
-				return errors;
-			}
-
-			fsa.setProject(project);
-			fsa.setMonitor(subMonitor);
-			fsa.setOutputConfigurations(outputConfigurations);
-			
-			if (subMonitor.isCanceled()) {
-				throw new OperationCanceledException();
-			}
-			
-			var generator = (StandardProjectGenerator) this.generator;
-			generator.doGenerate(res, fsa, null);
-
-		} catch (Exception e) {
-			errors.add(this.getClass().getSimpleName() + e.getMessage() + e.getStackTrace());
+		if(containsErrors(res, subMonitor)) {				
+			MessageDialog.openError(shell, ERROR_RESOURCE_TITLE , String.format(ERROR_RESOURCE_TEXT, res.getURI().lastSegment()));
+			return;
 		}
-		return errors;
+
+		fsa.setProject(project);
+		fsa.setMonitor(subMonitor);
+		fsa.setOutputConfigurations(outputConfigurations);
+		
+		if (subMonitor.isCanceled()) {
+			throw new OperationCanceledException();
+		}
+		
+		var generator = (StandardProjectGenerator) this.generator;
+		generator.doGenerate(res, fsa, null);
 	}
 
 	private boolean containsErrors(Resource resource, IProgressMonitor monitor) {
