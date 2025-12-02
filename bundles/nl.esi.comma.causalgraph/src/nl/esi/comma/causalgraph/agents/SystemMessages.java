@@ -201,13 +201,39 @@ Output:
     },
     "step-body":"Variable = param; if (_param1 == constant1) {variable = value1; val = true;} elif  (_param1 == constant2) {variable = value2;} else {Throw an error ;}"
 }
+
+EXAMPLE - Complex data types 2:
+Input:
+scenario config_validator_T1 step 19:
+    step-body:
+    «
+    ASSERT_TRUE(m_validator->settingsMatchExpected(expectedConfigA));
+    »
+
+scenario config_validator_T2 step 48:
+    step-body:
+    «
+    ASSERT_TRUE(m_validator->settingsMatchExpected(expectedConfigB));
+    »
+
+Output:
+{
+    "step-arguments": {
+        "scenario config_validator_T1, step 19": {"_expectedConfigType": "expectedConfigA"},
+        "scenario config_validator_T2, step 48": {"_expectedConfigType": "expectedConfigB"}
+    },
+    "step-parameters": {
+        "_expectedConfigType": "string"
+    },
+    "step-body": "if (_expectedConfigType == \"expectedConfigA\") {\\n    ASSERT_TRUE(m_validator->settingsMatchExpected(expectedConfigA));\\n} else if (_expectedConfigType == \"expectedConfigB\") {\\n    ASSERT_TRUE(m_validator->settingsMatchExpected(expectedConfigB));\\n} else {\\n    throw std::runtime_error(\"Unknown config type\");\\n}"
+}
 """;
 
     /**
      * Example for multiple scenarios with complex data types.
      */
     public static final String EXAMPLE_MULTIPLE_SCENARIOS_COMPLEX_DATA_TYPES = """
-EXAMPLE - Multiple Scenarios 1:
+EXAMPLE - Complex data types 1:
 Input:
 scenario causal_graph_T4 step 2:
     step-body:
@@ -257,6 +283,8 @@ Output:
     },
     "step-body": "std::vector<Entity> entities;\\nif (_includeTypeA) {\\nLevel l = static_cast<Level>(_typeALevel);\\nEntity typeAInstance(TypeA(l, _typeAFlag), {}, {});\\nentities.push_back(typeAInstance);\\nprocessor.ProcessItem(typeAInstance);\\n}\\nif (_includeTypeB) {\\nLevel l = static_cast<Level>(_typeBLevel);\\nEntity typeBInstance({}, TypeB(_paramX, l, _paramY, _typeBFlag), {});\\nentities.push_back(typeBInstance);\\nprocessor.ProcessItem(typeBInstance);\\n}\\nif (_includeTypeC) {\\nLevel l = static_cast<Level>(_typeCLevel);\\nEntity typeCInstance({}, {}, TypeC(l, _paramZ, _typeCFlag));\\nentities.push_back(typeCInstance);\\nprocessor.ProcessItem(typeCInstance);\\n}"
 }
+
+
 """;
 
     /**
@@ -407,8 +435,9 @@ STEP NAME RULES:
 2. Base the step-name on the provided scenarios
 3. Make it descriptive but concise
 4. Focus on the main action/purpose, not implementation details
-5. If multiple scenarios, find the common purpose that unifies them
-6. Avoid technical jargon when possible
+5. If the step is setting a variable, be clear that it is setting a variable e.g. set x variable to value
+6. If multiple scenarios, find the common purpose that unifies them
+7. Avoid technical jargon when possible
 
 Return ONLY the step name as a plain string. No JSON, no explanations, no additional text.
 
@@ -452,8 +481,8 @@ scenario %s step %s:
 
         StringBuilder prompt = new StringBuilder("""
 You should generate step-arguments, step-parameters, and step-body for the following scenarios and parameterize and merge where possible when there are
-    multiple scenarios.
-First I will present some ground rules you should follow for this process. Secondly, I will present multiple examples of multiple
+multiple scenarios.
+First I will present some ground rules you should follow for this process. Secondly, I will present examples of multiple
 scenarios that are merged into a single step definition. Thirdly, you will be provided with the source code files to help you understand the
 context and structure of the system under test. Use the source code to understand data types, class structures, method signatures, and test
 patterns. Lastly, I will present the previous steps of the test cases of current scenarios.
@@ -500,13 +529,13 @@ RULES:
 
 4. COMPLEX TYPES:
    - Use primitive types only (int, real, string, bool) in step-arguments
-   - For complex types, use string modes with conditionals for example when you have Level::HIGH it becomes: if(_mode == "HIGH") { level = Level::HIGH; } or you should be able to infer the value of the enum from the source code or previous steps
+   - *Very important*: For complex types (NOT int, real, string, bool) do not use in functions, use string modes with conditionals for example when you have Level::HIGH it becomes: if(_mode == "HIGH") { level = Level::HIGH; } or you should be able to infer the value of the enum from the source code or previous steps
 """);
 
-        //prompt.append(RULES_ARITHMETIC_MULTIPLE_STEPS);
+//        prompt.append(RULES_ARITHMETIC_MULTIPLE_STEPS);
         prompt.append(EXAMPLE_MULTIPLE_SCENARIOS_COMPLEX_DATA_TYPE_IF_ELSE);
-        //prompt.append(EXAMPLE_MULTIPLE_SCENARIOS_VARIABLE_DEPENDENCIES);
-        //prompt.append(EXAMPLE_MULTIPLE_SCENARIOS_SUM_VARIABLES);
+//        prompt.append(EXAMPLE_MULTIPLE_SCENARIOS_VARIABLE_DEPENDENCIES);
+//        prompt.append(EXAMPLE_MULTIPLE_SCENARIOS_SUM_VARIABLES);
 
         // Add source code files for context
         if (sourceCode != null && !sourceCode.isEmpty()) {

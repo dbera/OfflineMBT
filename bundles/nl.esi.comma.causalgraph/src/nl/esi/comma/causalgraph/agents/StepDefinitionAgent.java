@@ -222,11 +222,23 @@ public class StepDefinitionAgent {
     private Map<String, String> extractVariables(CausalGraph graph) {
         Map<String, String> variables = new HashMap<>();
         
-        
         if (graph.getVariables() != null) {
             for (Variable variable : graph.getVariables()) {
-                variables.put(variable.getName(), variable.getType().toString());
-                System.out.println(String.format("Extracted variable: %s of type %s", variable.getName(), variable.getType().toString()));
+                String typeName;
+                try {
+                    // Extract the actual type name from TypeReference
+                    if (variable.getType() != null && variable.getType().getType() != null) {
+                        typeName = variable.getType().getType().getName();
+                    } else {
+                        typeName = "unknown";
+                    }
+                } catch (Exception e) {
+                    System.err.println(String.format("Error extracting type for variable %s: %s", variable.getName(), e.getMessage()));
+                    typeName = "unknown";
+                }
+                
+                variables.put(variable.getName(), typeName);
+                System.out.println(String.format("Extracted variable: %s of type %s", variable.getName(), typeName));
             }
         }
         
