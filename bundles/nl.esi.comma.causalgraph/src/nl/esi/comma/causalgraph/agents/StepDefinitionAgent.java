@@ -226,19 +226,16 @@ public class StepDefinitionAgent {
             for (Variable variable : graph.getVariables()) {
                 String typeName;
                 try {
-                    // Extract the actual type name from TypeReference
                     if (variable.getType() != null && variable.getType().getType() != null) {
                         typeName = variable.getType().getType().getName();
                     } else {
                         typeName = "unknown";
                     }
                 } catch (Exception e) {
-                    System.err.println(String.format("Error extracting type for variable %s: %s", variable.getName(), e.getMessage()));
                     typeName = "unknown";
                 }
                 
                 variables.put(variable.getName(), typeName);
-                System.out.println(String.format("Extracted variable: %s of type %s", variable.getName(), typeName));
             }
         }
         
