@@ -303,6 +303,9 @@ class ExpressionEvaluatorFunctionTest extends ExpressionEvaluatorTestBase {
             T t3 = T {
                 tis = <int[]>[ 5, 8 ]
             }
+            T t4 = T {
+                tis = <int[]>[ 5, 8, 11 ]
+            }
         ''', '''
             «TYPES»
             T t1 = T {
@@ -313,6 +316,9 @@ class ExpressionEvaluatorFunctionTest extends ExpressionEvaluatorTestBase {
             }
             T t3 = T {
                 tis = range(5, 11, 3)
+            }
+            T t4 = T {
+                tis = range(5, 12, 3)
             }
         ''')
     }

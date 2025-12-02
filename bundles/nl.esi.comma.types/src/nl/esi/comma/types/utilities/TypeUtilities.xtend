@@ -338,7 +338,7 @@ class TypeUtilities {
     def static dispatch VectorTypeConstructor vectorOf(TypeDecl td) {
         val vtc = TypesFactory.eINSTANCE.createVectorTypeConstructor
         vtc.dimensions += TypesFactory.eINSTANCE.createDimension
-        vtc.type = EcoreUtil.copy(td)
+        vtc.type = td
         return vtc
     }
 
