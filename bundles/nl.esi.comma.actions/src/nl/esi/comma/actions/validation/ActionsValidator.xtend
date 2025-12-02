@@ -45,6 +45,7 @@ import org.eclipse.xtext.validation.Check
 import static extension nl.esi.comma.types.utilities.TypeUtilities.*
 import static extension nl.esi.comma.actions.utilities.ActionsUtilities.*
 import nl.esi.comma.actions.actions.Multiplicity
+import nl.esi.comma.types.BasicTypes
 
 class ActionsValidator extends AbstractActionsValidator {
 	public static final String REPLY_WRONG_NUMBER_PARAMS = "trigger_remove_param"
@@ -82,7 +83,7 @@ class ActionsValidator extends AbstractActionsValidator {
 	@Check
 	def checkTypingIfAction(IfAction act){
 		val t  = act.guard?.typeOf
-		if(!t.subTypeOf(boolType)){
+		if(!t.subTypeOf(BasicTypes.getBoolType(act))){
 			error("Type mismatch: the type of the condition must be boolean", ActionsPackage.Literals.IF_ACTION__GUARD)
 		}
 	}

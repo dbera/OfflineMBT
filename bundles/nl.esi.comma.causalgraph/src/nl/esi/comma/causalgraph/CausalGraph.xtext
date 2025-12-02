@@ -20,22 +20,34 @@ import "http://www.esi.nl/comma/expressions/Expression" as expr
 
 @Override
 ModelContainer returns types::ModelContainer:
-    super::ModelContainer | CausalGraph
+    super | CausalGraph
 ;
 
+@Override
+NamedElement returns types::NamedElement:
+    super | CausalGraph | RequirementDecl | ScenarioDecl | Node
+;
+
+@Override
+TypeDecl returns types::TypeDecl:
+    super | AliasTypeDecl
+;
+
+// The graph type is not used in the grammar, but defines the 
+// file-extensions for the different graph types, see also 
+// nl.esi.comma.causalgraph.utilities.CausalGraphQueries#getType(nl.esi.comma.causalgraph.causalGraph.CausalGraph)
 enum GraphType:
     cg = 'CausalGraph' |
-    ucg = 'UnifiedCausalGraph' |
     rcg = 'ReducedCausalGraph' |
-    bdducg = 'BDDUnifiedCausalGraph' |
-    bddcg = 'BDDCausalGraph'
+    ucg = 'UnifiedCausalGraph' |
+    bdducg = 'BDDUnifiedCausalGraph'
 ;
 
 enum StepType:
+    none = 'None' |
     given = 'Given' |
     when = 'When' |
-    then = 'Then' |
-    and = 'And'
+    then = 'Then'
 ;
 
 CausalGraph:
@@ -43,28 +55,26 @@ CausalGraph:
     requirements += RequirementDecl+
     scenarios += ScenarioDecl+
     'graph' name=ID ':'
-        'type' ':' type = GraphType
         ('language' ':' language = STRING)?
         ('header' ':' header = BODY)?
         ('types' ':' types += TypeDecl+)?
         ('functions' ':' functions += FunctionDecl+)?
         ('variables' ':' variables += Variable+)?
+        ('initializations' ':' assignments += AssignmentAction+)?
         nodes += Node+
-        'edges' ':' edges += Edge+
+        ('edges' ':' edges += Edge+)?
 ;
 
 RequirementDecl:
-    'requirement' name = ID
+    'requirement' name = ID ( ':'
+        ('description' ':' description = STRING)?
+    )?
 ;
 
 ScenarioDecl:
     'scenario' name = ID ':'
         'requirements' ':' requirements += [RequirementDecl|ID]+
-;
-
-@Ov@Override
-TypeDecl returns types::TypeDecl:
-	super | AliasTypeDecl
+        ('description' ':' description = STRING)?
 ;
 
 AliasTypeDecl:
@@ -73,17 +83,27 @@ AliasTypeDecl:
 
 Node:
     'node' name=ID ':'
-    'step-name' ':' stepName = STRING
-    'step-type' ':' stepType = StepType
-    ('step-parameters' ':' stepParameters += Variable+
-     'step-body' ':' stepBody = StepBody)?
-    tests += ScenarioStep+
+    'step-name' ':' (function?='function')? stepName = STRING
+    ('step-type' ':' stepType = StepType)?
+    ('step-parameters' ':' stepParameters += Variable+)?
+    ('step-body' ':' stepBody = StepBody)?
+    steps += ScenarioStep+
 ;
 
 ScenarioStep:
-    'scenario' name=[ScenarioDecl|ID] 'step' stepNumber = INT ':'
-    ( ('step-arguments' ':' stepArguments += (AssignmentAction | RecordFieldAssignmentAction)+)
-    | ('step-body' ':' stepBody = StepBody))
+    'scenario' scenario=[ScenarioDecl|ID] 'step' stepNumber = INT ( ':'
+        ('step-arguments' ':' stepArguments += AssignmentAction+)?
+        ('step-variables' ':' stepVariables += StepVariable+)?
+        ('step-body' ':' stepBody = StepBody)?
+    )?
+;
+
+StepVariable:
+    access = VariableAccess variable = [expr::Variable | ID]
+;
+
+enum VariableAccess:
+    READ = 'read' | WRITE = 'write' | READ_WRITE = 'read-write'
 ;
 
 StepBody:

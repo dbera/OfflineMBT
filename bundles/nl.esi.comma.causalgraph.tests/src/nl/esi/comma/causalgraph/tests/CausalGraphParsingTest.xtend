@@ -39,7 +39,6 @@ class CausalGraphParsingTest {
               requirements: R1
             
             graph G1:
-              type: CausalGraph
               
               node N1:
                 step-name: "Some when"
