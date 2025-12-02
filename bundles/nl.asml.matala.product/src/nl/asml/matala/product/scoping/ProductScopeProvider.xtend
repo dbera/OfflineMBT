@@ -16,6 +16,7 @@
 package nl.asml.matala.product.scoping;
 
 import nl.asml.matala.product.product.Block
+import nl.asml.matala.product.product.RefConstraint
 import nl.asml.matala.product.product.Update
 import nl.asml.matala.product.product.UpdateOutVar
 import nl.esi.comma.actions.actions.ActionsPackage
@@ -26,6 +27,7 @@ import org.eclipse.emf.ecore.EReference
 import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.scoping.IScope
 import org.eclipse.xtext.scoping.Scopes
+import nl.asml.matala.product.product.VarRef
 
 /**
  * This class contains custom scoping description.
@@ -45,6 +47,10 @@ class ProductScopeProvider extends AbstractProductScopeProvider {
             UpdateOutVar case reference == ActionsPackage.Literals.ASSIGNMENT_ACTION__ASSIGNMENT,
             UpdateOutVar case reference == ExpressionPackage.Literals.EXPRESSION_VARIABLE__VARIABLE: {
                 Scopes.scopeFor(context.fnOut.map[ref])
+            }
+            RefConstraint case reference == ActionsPackage.Literals.ASSIGNMENT_ACTION__ASSIGNMENT,
+            RefConstraint case reference == ExpressionPackage.Literals.EXPRESSION_VARIABLE__VARIABLE: {
+                Scopes.scopeFor(#[EcoreUtil2.getContainerOfType(context, VarRef).ref])
             }
             case reference.EType == ExpressionPackage.Literals.VARIABLE: {
                 val scope = EcoreUtil2.getContainerOfType(context, Block)

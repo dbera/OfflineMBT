@@ -24,6 +24,10 @@ Workflow {
 			project = StandardProjectConfig {
 				baseName = "nl.esi.comma.abstracttestspecification"
 				rootPath = rootPath
+                runtimeTest = {
+                    root = "${rootPath}/nl.esi.comma.abstracttestspecification.tests/"
+                    enabled = true
+                }
 				eclipsePlugin = {
 					enabled = true
 				}

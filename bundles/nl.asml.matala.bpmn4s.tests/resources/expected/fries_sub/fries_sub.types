@@ -1,0 +1,20 @@
+record UNIT {
+	int	unit
+}
+
+record Topping {
+    FriesContext	ctx
+    Sauce	sauce
+}
+
+record FriesContext {
+    string	client_id
+}
+
+record Fries {
+    Topping	dressing
+    string	client_id
+}
+
+enum Sauce { Ketchup Mayo }
+

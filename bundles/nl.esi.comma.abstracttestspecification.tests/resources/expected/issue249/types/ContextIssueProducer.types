@@ -1,0 +1,24 @@
+import "../../../input/issue249/issue249.types"
+
+record ProducerRunType {
+    ProducerRunTypeInput input
+    ProducerRunTypeOutput output
+}
+
+record ProducerRunTypeInput {
+    ProdCtx Gateway_1ww9hic
+    ProdCons1 message
+    ProdCtx configuration
+    ProdCtx sutConf
+    ProdCtx between_RunLocal_and_Compose
+    ProdCtx Gateway_1ywuak3
+}
+
+record ProducerRunTypeOutput {
+    ProdCtx Gateway_1ww9hic
+    ProdCons1 message
+    ProdCtx configuration
+    ProdCtx sutConf
+    ProdCtx between_RunLocal_and_Compose
+    ProdCtx Gateway_1ywuak3
+}

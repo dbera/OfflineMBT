@@ -18,7 +18,7 @@ import java.util.LinkedHashSet
 import java.util.Set
 import nl.asml.matala.product.product.Block
 import nl.asml.matala.product.product.Blocks
-import nl.asml.matala.product.product.DataAssertions
+import nl.esi.comma.assertthat.assertThat.DataAssertions
 import nl.asml.matala.product.product.DataConstraints
 import nl.asml.matala.product.product.DataReferences
 import nl.asml.matala.product.product.Function
@@ -436,7 +436,7 @@ class Utils
                     #     txt += self.recurseJson(j[jk], "%s.%s" % (k,jk))
                 return txt
                 
-            def generateTSpec(self, idx, sutTypesList, sutVarTransitionMap, output_dir):
+            def generateTSpec(self, idx, sutTypesList, sutVarTransitionMap, transitionQnameMap, output_dir):
                 txt = ""
                 txt += "import \"«pSpecFile»\"\n\n"
                 «(new Utils()).usageList(prod)»
@@ -459,13 +459,21 @@ class Utils
                         elif "COMPOSE" in parts[2]:
                             txt += "\ncompose-step-name: %s\n" % new_name
                         else:
-                            txt += "\nassert-step-name: %s\n" % new_name
+                            type_name = ""
+                            if not "null" in parts[1]:
+                                type_name = " assert-type: \"%s\"" % parts[1] 
+                            txt += "\nassert-step-name: %s%s\n" % (new_name, type_name)
+                        if parts[0] in transitionQnameMap:
+                            qname = transitionQnameMap[parts[0]]
+                            txt += "action-case: %s\n" % (qname)
                         for elm in self.step_dependencies:
                             if elm.step_name == name:
                                 parts = elm.depends_on.split("@")
                                 new_name = parts[0] + parts[3]
                                 txt += "consumes-from-step: %s { " % new_name
-                                txt += elm.var_ref
+                                for v in elm.var_ref:
+                                    txt += v + " "
+                                # txt += elm.var_ref
                                 txt += " }\n"
                         txt += "input-binding:\n"
                         txt += self.printData(idata)
@@ -530,7 +538,7 @@ class Utils
                             txt += "output-assertion: %s\n" % new_name
                             txt += "%s\n" % self.tr_assert_ref_dict[name.rsplit("_",1)[0]]
                         txt += "\n"
-                txt += '\ngenerate-file "./vfab2_scenario/"\n\n'
+                txt += '\ngenerate-file "./dataset/"\n\n'
                 fname = output_dir / f"_scenario{str(idx)}.atspec"
                 print(str(fname))
                 os.makedirs(os.path.dirname(fname), exist_ok=True)
@@ -568,6 +576,8 @@ class Utils
                 self.is_assert = _is_assert
         
             def compare(self, _step, mapTrAssert):
+                step_dep = StepDependency()
+                isMatched = False
                 for ipdata in self.output_data:
                     if ipdata in self.output_suppress:
                         continue
@@ -578,29 +588,35 @@ class Utils
                                 # print("     Matched %s - %s" % (ipdata,opdata))
                                 if _step.input_data[opdata] == self.output_data[ipdata]:
                                     # print("     Payload Matched!")
-                                    step_dep = StepDependency()
+                                    # step_dep = StepDependency()
                                     step_dep.step_name = _step.step_name
                                     step_dep.depends_on = self.step_name
-                                    step_dep.var_ref = ipdata
+                                    # step_dep.var_ref = ipdata
+                                    step_dep.var_ref.append(ipdata)
                                     step_dep.payload = _step.input_data[opdata]
-                                    return step_dep
+                                    isMatched = True
+                                    # return step_dep
                                 # else:
                                 # print("     Payload Not Matched!")
                                 # print(_step.input_data[opdata])
                                 # print(self.output_data[ipdata])
                                 # print("\n")
-                return None
+                if isMatched:
+                    return step_dep
+                else:
+                    return None
         
         
         class StepDependency:
             step_name = ""
             depends_on = ""
-            var_ref = ""
+            var_ref = []
             payload = ""
         
             def __init__(self):
                 self.step_name = ""
                 self.depends_on = ""
+                self.var_ref = []
                 self.payload = ""
         
         

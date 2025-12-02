@@ -107,6 +107,7 @@ ExpressionLevel9 returns Expression:
 	ExpressionConstantReal |
 	ExpressionConstantString |
 	ExpressionEnumLiteral |
+    ExpressionNullLiteral |
 	ExpressionVariable |
 	ExpressionRecord |
 	ExpressionAny |
@@ -143,6 +144,11 @@ ExpressionConstantString:
 
 ExpressionEnumLiteral: 
 	(interface = [signature::Signature|ID] '::')? type = [types::EnumTypeDecl] "::" literal = [types::EnumElement] 
+;
+
+ExpressionNullLiteral:
+    {ExpressionNullLiteral}
+    'null'
 ;
 
 ExpressionVariable: 
@@ -258,7 +264,7 @@ BOOL_LITERAL returns ecore::EBoolean:
 ;	
 
 FLOAT returns ecore::EDouble:
-	INT '.' INT (('E' | 'e') ('-')? INT)?
+	INT (('.' INT) | (('E' | 'e') ('-')? INT) | ('.' INT ('E' | 'e') ('-')? INT))
 ;
 
 Long returns ecore::ELong: INT;

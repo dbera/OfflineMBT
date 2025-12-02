@@ -15,10 +15,36 @@
  */
 package nl.asml.matala.product.ide.contentassist
 
+import com.google.inject.Inject
+import nl.asml.matala.product.product.DataReferences
+import nl.esi.comma.actions.services.ActionsGrammarAccess
+import nl.esi.comma.expressions.services.ExpressionGrammarAccess
+import nl.esi.comma.types.types.RecordField
+import org.eclipse.xtext.CrossReference
+import org.eclipse.xtext.EcoreUtil2
+import org.eclipse.xtext.ide.editor.contentassist.ContentAssistContext
+import nl.esi.comma.types.types.RecordFieldKind
 
 /**
  * See https://www.eclipse.org/Xtext/documentation/310_eclipse_support.html#content-assist
  * on how to customize the content assistant.
  */
 class ProductIdeProposalProvider extends AbstractProductIdeProposalProvider {
+    @Inject
+    ExpressionGrammarAccess expressionGrammarAccess
+
+    @Inject
+    ActionsGrammarAccess actionsGrammarAccess
+
+    override protected getCrossrefFilter(CrossReference reference, ContentAssistContext context) {
+        return switch (reference) {
+            case expressionGrammarAccess.fieldAccess.recordFieldRecordFieldCrossReference_0_0,
+            case expressionGrammarAccess.expressionLevel8Access.fieldRecordFieldCrossReference_1_0_2_0,
+            case actionsGrammarAccess.fieldAccessExpAccess.fieldRecordFieldCrossReference_1_2_0: [
+                val ctxSymbolic = EcoreUtil2.getContainerOfType(context.currentModel, DataReferences) !== null
+                return ctxSymbolic || (EObjectOrProxy as RecordField).kind != RecordFieldKind.SYMBOLIC
+            ]
+            default: super.getCrossrefFilter(reference, context)
+        }
+    }
 }

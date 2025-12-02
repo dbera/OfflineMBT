@@ -15,9 +15,12 @@ package nl.esi.comma.testspecification.generator.utils
 import java.util.ArrayList
 import java.util.List
 import java.util.HashSet
+import nl.esi.comma.testspecification.testspecification.RunStep
 
 class Step {
 	public var String id = new String
+	public var String comment = new String
+	public var RunStep runStep = null
 	public var String type = new String
 	public var String inputFile = new String
 	public var List<KeyValue> parameters = new ArrayList<KeyValue>
@@ -27,6 +30,7 @@ class Step {
 	
 	
 	def getId() { return id }
+	def getRunStep() { return runStep }
 	def getType() { return type }
 	def getInputFile() { return inputFile }
 	def getParameters() { return parameters }

@@ -65,6 +65,10 @@ class DocGen
 		return txt
 	}
 	
+   def generatePlantUMLFile(ArrayList<Step> listStepInstances){
+       generatePlantUMLFile(listStepInstances, new HashMap<String, List<String>>) 
+   }
+	
 	def generatePlantUMLFile(
 		ArrayList<Step> listStepInstances, 
 		HashMap<String, List<String>> mapStepSeqToSteps

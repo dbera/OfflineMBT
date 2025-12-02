@@ -1,0 +1,24 @@
+record UNIT {
+	int	unit
+}
+
+record ProdReport {
+    int	id
+}
+
+record ProdCtx {
+    string	prod_field
+    int	id
+    bool	loop
+}
+
+record ProdCons1 {
+    string	part1
+    int	id
+}
+
+record ProdCons2 {
+    string	part2
+    int	id
+}
+

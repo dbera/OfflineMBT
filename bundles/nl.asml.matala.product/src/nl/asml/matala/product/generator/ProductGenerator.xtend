@@ -17,6 +17,7 @@ package nl.asml.matala.product.generator
 
 import java.util.ArrayList
 import java.util.HashMap
+import java.util.LinkedHashMap
 import java.util.List
 import java.util.Map
 import java.util.Set
@@ -66,17 +67,17 @@ class ProductGenerator extends AbstractGenerator {
 		val import_list = newArrayList
 		val var_decl_map = newLinkedHashMap
 		
-		/* Generate Z3 Data Types */
-		for(imp : prod.imports) {
-			// Assumption: At most one
-			val typeResource = EcoreUtil2.getResource(resource, imp.importURI)
-			var typeInst = typeResource.allContents.head
-			if(typeInst instanceof TypesModel) {
-				var txt = (new TypesZ3Generator).generateAllUserDefinedTypes(typeInst) 
-				fsa.generateFile('CPNServer//' + specName + '//Z3//' + specName + '_z3types.py', txt)
-			}
-			import_list.add(imp.importURI)
-		}
+//		/* Generate Z3 Data Types */
+//		for(imp : prod.imports) {
+//			// Assumption: At most one
+//			val typeResource = EcoreUtil2.getResource(resource, imp.importURI)
+//			var typeInst = typeResource.allContents.head
+//			if(typeInst instanceof TypesModel) {
+//				var txt = (new TypesZ3Generator).generateAllUserDefinedTypes(typeInst) 
+//				fsa.generateFile('CPNServer//' + specName + '//Z3//' + specName + '_z3types.py', txt)
+//			}
+//			import_list.add(imp.importURI)
+//		}
 		
 		for(b : prod.specification.blocks) {
 			val Block block = b.block ?: b.refBlock?.system
@@ -107,6 +108,7 @@ class ProductGenerator extends AbstractGenerator {
 			for(b : prod.specification.envBlock) listOfEnvBlocks.add(b.name)
 			
 			var listOfAssertTransitions = new ArrayList<String>
+			var mapOfTransitionQnames = new LinkedHashMap<String,String>
 			for(b : prod.specification.blocks) {
 				if (b.block !== null) {
 					val block = b.block
@@ -119,6 +121,7 @@ class ProductGenerator extends AbstractGenerator {
 						        || u.actionType.equals(ActionType.ASSERT)
 						    ) {
 						        listOfAssertTransitions.add(transitionName)
+						        mapOfTransitionQnames.put(transitionName, new Utils().printConstraint(u))
 						    }
 						    
 						    // Added DB. 15.04.2025. Create map of sut-var to transitions
@@ -174,28 +177,18 @@ class ProductGenerator extends AbstractGenerator {
 			}
 			
 			fsa.generateFile('CPNServer//' + specName + '//' + specName + '.py', pnet.toSnakes(
-			    specName, specName, listOfEnvBlocks, listOfAssertTransitions, 
-			    mapOfSuppressTransitionVars, inout_places, 
+			    specName, specName, listOfEnvBlocks, listOfAssertTransitions,
+			     mapOfTransitionQnames, mapOfSuppressTransitionVars, inout_places, 
 			    init_places, depth_limit, num_tests, sutTransitionMap
 			))
-			//fsa.generateFile('CPNServer//' + specName + '//' + 'server.py', (new FlaskSimulationGenerator).generateServer(name))
-			//fsa.generateFile('CPNserver.py', (new FlaskSimulationGenerator).generateCPNServer)	
-			//fsa.generateFile('CPNclient.py', (new FlaskSimulationGenerator).generateCPNClient(specName))
-			//fsa.generateFile('CPNServer//' + specName + '//' + 'client.py', (new FlaskSimulationGenerator).generateClient)
 			fsa.generateFile('CPNServer//' + specName + '//' + specName + '_Simulation.py', pnet.toSnakesSimulation)
 
+			fsa.generateFile('CPNServer//' + specName + '//' + specName + '_data.py', (new Utils()).getDataContainerClass(dataGetterTxt, methodTxt))
+			fsa.generateFile('CPNServer//' + specName + '//' + specName + '_TestSCN.py', (new Utils()).generateTestSCNTxt(specName + "_types", prod, resource.URI.lastSegment))
             // generate utils for HTTP server
             fsa.generateFile('CPNServer//' + specName + '//' + '__init__.py', 
                 (new FlaskSimulationGenerator).generateInitForCPNSpecPkg(prod)
             )
-//            fsa.generateFile('CPNServer//' + '__init__.py', 
-//                (new FlaskSimulationGenerator).generateInitForCPNServerSpecPkg(prod)
-//            )
-			fsa.generateFile('CPNServer//' + specName + '//' + specName + '_data.py', (new Utils()).getDataContainerClass(dataGetterTxt, methodTxt))
-			fsa.generateFile('CPNServer//' + specName + '//' + specName + '_TestSCN.py', (new Utils()).generateTestSCNTxt(specName + "_types", prod, resource.URI.lastSegment))
-//            fsa.generateFile('__init__.py', 
-//                (new FlaskSimulationGenerator).generateInitForSrcGen()
-//            )
 		}
 	}
 	
@@ -240,7 +233,8 @@ class ProductGenerator extends AbstractGenerator {
 			{
 				System.out.println("  > case: " + update.name)
 				var tname = f.name + "_" + update.name + "@" + update.stepType + "@" + update.actionType + "@"
-				var tr = new Transition(block.name, block.name+"_"+tname)
+				var qname = new Utils().printConstraint(update)
+				var tr = new Transition(block.name, block.name+"_"+tname, qname)
 				pnet.transitions.add(tr)
 				var input_var_list = new HashMap<String,TypeDecl> // ArrayList<String>
 				for(v : update.fnInp) 

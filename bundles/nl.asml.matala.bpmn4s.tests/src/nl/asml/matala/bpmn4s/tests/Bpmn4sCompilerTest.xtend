@@ -12,48 +12,75 @@
  */
 package nl.asml.matala.bpmn4s.tests
 
-import java.io.File
-import java.nio.file.Files
 import java.nio.file.Path
+import java.util.Map
+import java.util.TreeMap
 import nl.asml.matala.bpmn4s.Main
 import org.apache.commons.io.FileUtils
 import org.junit.jupiter.api.Test
-import static extension java.nio.file.Files.*
 
 import static org.junit.jupiter.api.Assertions.*
 
+import static extension java.nio.file.Files.*
+
 class Bpmn4sCompilerTest {
-    def void testCompilation(String fileName, boolean simulation) {
-        val resourcesDir = Path.of('resources')
+    def void testCompilation(String inputFileName, String expectedFileName, boolean simulation) {
+        val resourcesDir = Path.of('resources').toRealPath
         assertTrue(resourcesDir.isDirectory)
+        println("Test-resources directory: " + resourcesDir)
 
-        val inputFile = resourcesDir.resolve('''input/«fileName».bpmn''')
-        assertTrue(inputFile.isReadable, '''Input for «fileName» does not exist or cannot be read.''')
+        val inputFile = resourcesDir.resolve('''input/«inputFileName».bpmn''')
+        assertTrue(inputFile.isReadable, '''Input for «inputFileName» does not exist or cannot be read.''')
 
-        val actualDir = resourcesDir.resolve('''actual/«fileName»''')
+        val actualDir = resourcesDir.resolve('''actual/«expectedFileName»''')
         if (actualDir.exists) {
-            FileUtils.deleteDirectory(new File(actualDir.toString()))
+            FileUtils.deleteDirectory(actualDir.toFile)
         }
         actualDir.createDirectories
 
         Main.compile(inputFile.toString, simulation, actualDir.toString)
 
-        val expectedDir = resourcesDir.resolve('''expected/«fileName»''')
+        val expectedDir = resourcesDir.resolve('''expected/«expectedFileName»''')
         assertTrue(expectedDir.isDirectory,
             '''Expected output does not exist, please inspect the actual output at «actualDir».''')
 
-        val expectedFiles = Files.walk(expectedDir).filter[isRegularFile].toList.sort
-        val actualFiles = Files.walk(actualDir).filter[isRegularFile].toList.sort
-        assertEquals(expectedFiles.map[fileName], actualFiles.map[fileName])
+        val expectedFiles = expectedDir.listRegularFiles
+        val actualFiles = actualDir.listRegularFiles
+        assertEquals(expectedFiles.keySet, actualFiles.keySet)
 
-        for (expectedFile : expectedFiles) {
-            val actualFile = actualFiles.findFirst[it.fileName == expectedFile.fileName]
-            assertLinesMatch(expectedFile.lines, actualFile.lines, '''Different content for «expectedFile.fileName»''')
+        for (expectedFileEntry : expectedFiles.entrySet) {
+            val expectedFile = expectedFileEntry.value
+            val actualFile = actualFiles.get(expectedFileEntry.key)
+            assertLinesMatch(expectedFile.lines, actualFile.lines, '''Different content for «expectedFile.toString»''')
         }
+        FileUtils.deleteDirectory(actualDir.toFile)
+    }
+
+    private def Map<String, Path> listRegularFiles(Path path) {
+        val files = new TreeMap()
+        for (file : path.walk.filter[isRegularFile].toList) {
+            files.put(file.relativize(path).toString, file)
+        }
+        return files;
     }
 
     @Test
-    def void testFriesFlatSimulator() {
-        testCompilation('fries_flat', true);
+    def void testFriesFlat() {
+        testCompilation('fries_flat', 'fries_flat', true);
+    }
+
+    @Test
+    def void testFriesSub() {
+        testCompilation('fries_sub', 'fries_sub', true);
+    }
+
+    @Test
+    def void testFriesComp() {
+        testCompilation('fries_comp', 'fries_comp', true);
+    }
+
+    @Test
+    def void testPrinter() {
+        testCompilation('printer', 'printer', true);
     }
 }

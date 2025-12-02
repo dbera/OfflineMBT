@@ -1,0 +1,133 @@
+import "fries_sub.types"
+specification fries_sub
+{
+    system Fries
+    {
+        //inputs
+        
+        //outputs
+    
+        local
+        Fries	fries
+        Topping	topping
+        FriesContext	choice
+        FriesContext	Gateway_05dn8q0
+        FriesContext	start_event
+        FriesContext	end_event
+        FriesContext	Flow_003weme
+        FriesContext	Flow_0sre3lm
+        FriesContext	Flow_0cyzh2k
+        FriesContext	Flow_0rmtq35
+        FriesContext	Flow_0z70hyg
+        FriesContext	Flow_0bwi85w
+    
+        init
+        start_event := FriesContext { client_id = "Tom" }
+        start_event := FriesContext { client_id = "Bob" }
+    
+    
+        desc "Fries_Model"
+        
+        action			parallel
+        element-label	"parallel"
+        case			default
+        with-inputs		start_event
+        produces-outputs	choice
+        updates:
+            choice := start_event
+        produces-outputs	Flow_0z70hyg
+        updates:
+            Flow_0z70hyg := start_event
+        
+        action			PeelPotatoes
+        element-label	"Peel Potatoes"
+        case			default
+        with-inputs		Flow_0z70hyg
+        produces-outputs	Flow_0cyzh2k
+        updates:
+            Flow_0cyzh2k := Flow_0z70hyg
+        
+        action			join
+        element-label	"join"
+        case			default
+        with-inputs		Gateway_05dn8q0, Flow_003weme
+        with-guard		Flow_003weme == Gateway_05dn8q0
+        produces-outputs	Flow_0bwi85w
+        updates:
+            Flow_0bwi85w := Gateway_05dn8q0
+        
+        action			AddTopping
+        element-label	"Add Topping"
+        case			default
+        with-inputs		Flow_0sre3lm, topping
+        with-guard		topping.ctx == Flow_0sre3lm
+        produces-outputs	Flow_003weme
+        updates:
+            Flow_003weme := Flow_0sre3lm
+        produces-outputs	fries
+        updates:
+            fries := Fries {
+             dressing = topping,
+             client_id = Flow_0sre3lm.client_id
+            }
+        
+        action			BakeFries
+        element-label	"Bake Fries"
+        case			default
+        with-inputs		Flow_0rmtq35
+        produces-outputs	Flow_0sre3lm
+        updates:
+            Flow_0sre3lm := Flow_0rmtq35
+        
+        action			Eat
+        element-label	"Eat"
+        case			default
+        with-inputs		Flow_0bwi85w, fries
+        produces-outputs	end_event
+        updates:
+            end_event := Flow_0bwi85w
+        
+        action			ChooseMayo
+        element-label	"Choose Mayo"
+        case			default
+        with-inputs		choice
+        produces-outputs	Gateway_05dn8q0
+        updates:
+            Gateway_05dn8q0 := choice
+        produces-outputs	topping
+        updates:
+            topping := Topping {
+             ctx = choice,
+             sauce = Sauce::Mayo
+            }
+        
+        action			SlicePotatoes
+        element-label	"Slice Potatoes"
+        case			default
+        with-inputs		Flow_0cyzh2k
+        produces-outputs	Flow_0rmtq35
+        updates:
+            Flow_0rmtq35 := Flow_0cyzh2k
+        
+        action			ChooseKetchup
+        element-label	"Choose Ketchup"
+        case			default
+        with-inputs		choice
+        with-guard		choice.client_id == "Tom"
+        produces-outputs	Gateway_05dn8q0
+        updates:
+            Gateway_05dn8q0 := choice
+        produces-outputs	topping
+        updates:
+            topping := Topping {
+             ctx = choice,
+             sauce = Sauce::Ketchup
+            }
+    
+        element-labels ["Fries"]
+    }
+    
+	SUT-blocks 
+	depth-limits 300
+	num-tests 1
+}

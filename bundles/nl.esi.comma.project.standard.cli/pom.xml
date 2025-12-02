@@ -46,6 +46,22 @@
                             </resources>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>copy-models</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/dist/models</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${maven.multiModuleProjectDirectory}/bundles/nl.asml.matala.bpmn4s.tests/resources/input</directory>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
             <plugin>
@@ -77,29 +93,6 @@
                             <overWriteIfNewer>true</overWriteIfNewer>
                             <excludeTransitive>true</excludeTransitive>
                             <excludeArtifactIds>
-                                com.ibm.icu,
-                                org.apache.ant,
-                                org.apache.commons.lang,
-                                org.apache.commons.logging,
-                                org.eclipse.core.commands,
-                                org.eclipse.core.contenttype,
-                                org.eclipse.core.expressions,
-                                org.eclipse.core.filesystem,
-                                org.eclipse.core.jobs,
-                                org.eclipse.core.variables,
-                                org.eclipse.debug.core,
-                                org.eclipse.emf.codegen.ecore,
-                                org.eclipse.emf.codegen,
-                                org.eclipse.emf.mwe.core,
-                                org.eclipse.emf.mwe.utils,
-                                org.eclipse.emf.mwe2.lib,
-                                org.eclipse.emf.mwe2.runtime,
-                                org.eclipse.equinox.app,
-                                org.eclipse.equinox.preferences,
-                                org.eclipse.jdt.core,
-                                org.eclipse.jdt.debug,
-                                org.eclipse.jdt.launching,
-                                org.eclipse.text,
                                 org.eclipse.justj.openjdk.hotspot.jre.minimal.stripped,
                                 org.eclipse.justj.openjdk.hotspot.jre.minimal.stripped.linux.x86_64,
                                 org.eclipse.justj.openjdk.hotspot.jre.minimal.stripped.win32.x86_64
@@ -131,28 +124,27 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.3.0</version>
+                <version>3.6.0</version>
                 <configuration>
                     <transformers>
-                        <transformer
-                            implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                        <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                             <mainClass>${project.artifactId}.Main</mainClass>
                         </transformer>
-                        <transformer
-                            implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                        <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
                             <resource>plugin.properties</resource>
                         </transformer>
-                        <transformer
-                            implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"></transformer>
+                        <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer">
+                        </transformer>
                     </transformers>
                     <artifactSet>
                         <excludes>
-                            <!-- avoid duplicate inclusion due to addjars plugin -->
-                            <exclude>org.eclipse.jdt:*</exclude>
-                            <exclude>*:${project.artifactId}-*.source-*</exclude>
+                            <!-- Do not include sources  -->
+                            <exclude>*:*.source-*</exclude>
+                            <!--Aavoid duplicate inclusion due to addjars plugin -->
                             <!-- HINT: use the next grep command on de maven-shade-plugin warnings to produce the list below -->
                             <!-- mvn verify | tee mvn.log -->
                             <!-- grep -e '^\[WARNING\]' mvn.log |  grep -o -e 'nl.esi.comma.project.standard.cli-[^-]*' | sort -u | sed 's#\(.*\)-\(.*\)#<exclude>*:${project.artifactId}-\2-*</exclude>#g' -->
+                            <exclude>*:${project.artifactId}-Java-*</exclude>
                             <exclude>*:${project.artifactId}-aopalliance-*</exclude>
                             <exclude>*:${project.artifactId}-asm-*</exclude>
                             <exclude>*:${project.artifactId}-camunda-*</exclude>
@@ -167,7 +159,10 @@
                             <exclude>*:${project.artifactId}-jakarta.inject-*</exclude>
                             <exclude>*:${project.artifactId}-jna-*</exclude>
                             <exclude>*:${project.artifactId}-nl.asml.matala.bpmn4s-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.asml.matala.generator.fast-*</exclude>
                             <exclude>*:${project.artifactId}-nl.asml.matala.product-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.asml.matala.product.lsp.server-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.esi.comma.abstracttestspecification-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.actions-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.assertthat-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.automata-*</exclude>
@@ -183,9 +178,14 @@
                             <exclude>*:${project.artifactId}-nl.esi.comma.systemconfig-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.testspecification-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.types-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.esi.xtext.lsp.server-*</exclude>
                             <exclude>*:${project.artifactId}-org.aopalliance-*</exclude>
+                            <exclude>*:${project.artifactId}-org.apache.aries.spifly.dynamic.bundle-*</exclude>
+                            <exclude>*:${project.artifactId}-org.eclipse.lsp4j-*</exclude>
+                            <exclude>*:${project.artifactId}-org.eclipse.lsp4j.jsonrpc-*</exclude>
                             <exclude>*:${project.artifactId}-org.osgi.service.prefs-*</exclude>
                             <exclude>*:${project.artifactId}-reload4j-*</exclude>
+                            <exclude>*:${project.artifactId}-slf4j-*</exclude>
                         </excludes>
                     </artifactSet>
                     <filters>
@@ -208,6 +208,9 @@
                                 <exclude>**/*.g</exclude>
                                 <exclude>**/*.mwe2</exclude>
                                 <exclude>**/*.xtext</exclude>
+                                <exclude>**/*.dll</exclude>
+                                <exclude>**/*.so</exclude>
+                                <exclude>**/rotalumis.exe</exclude>
                             </excludes>
                         </filter>
                     </filters>

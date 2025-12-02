@@ -18,13 +18,14 @@ import static nl.asml.matala.bpmn4s.extensions.Constants.DATATYPE_TYPE;
 import static nl.asml.matala.bpmn4s.extensions.Constants.BPMN4S_NS;
 
 import org.camunda.bpm.model.bpmn.impl.instance.BpmnModelElementInstanceImpl;
+import org.camunda.bpm.model.bpmn.impl.instance.ExtensionElementsImpl;
 import org.camunda.bpm.model.xml.ModelBuilder;
 import org.camunda.bpm.model.xml.impl.instance.ModelTypeInstanceContext;
 import org.camunda.bpm.model.xml.type.ModelElementTypeBuilder;
 import org.camunda.bpm.model.xml.type.ModelElementTypeBuilder.ModelTypeInstanceProvider;
 import org.camunda.bpm.model.xml.type.attribute.Attribute;
 
-public class DataTypeImpl extends BpmnModelElementInstanceImpl implements DataType{
+public class DataTypeImpl extends ExtensionElementsImpl implements DataType{
 
 	protected static Attribute<String> type;
 	protected static Attribute<String> name;

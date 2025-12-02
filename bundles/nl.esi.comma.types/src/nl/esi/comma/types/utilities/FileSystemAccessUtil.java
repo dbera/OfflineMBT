@@ -22,6 +22,7 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.emf.ecore.resource.Resource.Diagnostic;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.xtext.generator.IFileSystemAccess2;
 import org.eclipse.xtext.util.RuntimeIOException;
@@ -55,12 +56,24 @@ public class FileSystemAccessUtil {
 	}
 
 	public static Resource loadResource(IFileSystemAccess2 fsa, String fileName, ResourceSet resourceSet) {
-		return resourceSet.getResource(fsa.getURI(fileName), true);
+		return checkResource(resourceSet.getResource(fsa.getURI(fileName), true));
 	}
 
 	public static Resource loadResource(IFileSystemAccess2 fsa, String fileName, String outputConfiguration,
 			ResourceSet resourceSet) {
-		return resourceSet.getResource(fsa.getURI(fileName, outputConfiguration), true);
+		return checkResource(resourceSet.getResource(fsa.getURI(fileName, outputConfiguration), true));
+	}
+	
+	private static Resource checkResource(Resource resource) {
+		if (!resource.getErrors().isEmpty()) {
+			StringBuilder message = new StringBuilder(resource.getURI() + " contains errors");
+			for (Diagnostic error : resource.getErrors()) {
+				message.append("\n\t").append(error.getMessage()).append(" (line: ").append(error.getLine())
+						.append(", column: ").append(error.getColumn()).append(")");
+			}
+			throw new RuntimeIOException(message.toString());
+		}
+		return resource;
 	}
 
 	public static void refresh(IFileSystemAccess2 fsa) throws CoreException {

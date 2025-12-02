@@ -12,8 +12,6 @@
  */
 package nl.esi.comma.project.standard.ui.handler;
 
-import java.util.List;
-
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -39,18 +37,12 @@ public class ProjectUIGeneratorJob extends Job {
 
 	@Override
 	protected IStatus run(IProgressMonitor monitor) {
-		List<String> errors = gen.runGeneration(monitor);
-
-		if (!errors.isEmpty()) {
-			String message = "";
-			for (String e : errors) {
-				message += e + System.lineSeparator();
-			}
-			return new Status(IStatus.ERROR, "nl.esi.comma.project.Project", message);
+		try {
+			gen.runGeneration(monitor);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return new Status(IStatus.ERROR, "nl.esi.comma.project.Project", e.getLocalizedMessage(), e);
 		}
-		
-		gen.launch();
-		return new Status(IStatus.OK, "nl.esi.comma.project.Project", "");
+		return Status.OK_STATUS;
 	}
-
 }

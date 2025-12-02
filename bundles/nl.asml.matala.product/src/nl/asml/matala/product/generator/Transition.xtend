@@ -16,8 +16,10 @@ package nl.asml.matala.product.generator
 class Transition {
 	public var bname = new String
 	public var name = new String
-	new (String b, String n) {
+	public var qname = new String
+	new (String b, String n, String q) {
 		bname = b
 		name = n
+		qname = q
 	}
 }

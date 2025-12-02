@@ -12,7 +12,13 @@
  */
 package nl.esi.comma.types.utilities;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.eclipse.emf.common.CommonPlugin;
@@ -20,15 +26,19 @@ import org.eclipse.emf.common.util.BasicDiagnostic;
 import org.eclipse.emf.common.util.Diagnostic;
 import org.eclipse.emf.common.util.DiagnosticException;
 import org.eclipse.emf.common.util.URI;
+import org.eclipse.emf.common.util.WrappedException;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.util.Diagnostician;
 import org.eclipse.emf.ecore.util.EObjectValidator;
 import org.eclipse.xtext.EcoreUtil2;
+import org.eclipse.xtext.IGrammarAccess;
+import org.eclipse.xtext.nodemodel.BidiTreeIterable;
 import org.eclipse.xtext.nodemodel.INode;
 import org.eclipse.xtext.resource.SaveOptions;
 import org.eclipse.xtext.resource.XtextResource;
 import org.eclipse.xtext.serializer.ISerializer;
+import org.eclipse.xtext.util.ITextRegion;
 
 import com.google.inject.Guice;
 import com.google.inject.Module;
@@ -36,11 +46,21 @@ import com.google.inject.Module;
 import nl.esi.comma.types.types.Import;
 
 public class EcoreUtil3 extends EcoreUtil2 {
-	/**
-	 * @see EcoreUtil2#getResource(Resource, String)
-	 */
 	public static Resource getResource(Import imp) {
-		return EcoreUtil2.getResource(imp.eResource(), imp.getImportURI());
+		URI uri = resolveUri(imp);
+		try {
+			Resource res = imp.eResource().getResourceSet().getResource(uri, true);
+	        if (!res.getErrors().isEmpty()) {
+				throw new RuntimeException("Resource contains errors: \n\t"
+						+ res.getErrors().stream().map(org.eclipse.emf.ecore.resource.Resource.Diagnostic::getMessage)
+								.collect(Collectors.joining("\n\t")));
+	        }
+	        return res;
+		} catch (WrappedException e) {
+			throw e;
+		} catch (RuntimeException e) {
+			throw new WrappedException("Cannot load resource: " + uri, e);
+		}
 	}
 
 	/**
@@ -64,9 +84,16 @@ public class EcoreUtil3 extends EcoreUtil2 {
 	public static URI resolveUri(Resource context, String path) {
 		URI contextURI = context.getURI();
 		URI referenceURI = URI.createURI(path);
-		if (contextURI.isHierarchical() && !contextURI.isRelative()
-				&& (referenceURI.isRelative() && !referenceURI.isEmpty())) {
-			referenceURI = referenceURI.resolve(contextURI);
+		if (contextURI.isHierarchical() && (referenceURI.isRelative() && !referenceURI.isEmpty())) {
+			if (!contextURI.isRelative()) {
+				referenceURI = referenceURI.resolve(contextURI);
+			} else if (contextURI.isFile()) {
+				Path contextPath = Path.of(contextURI.toFileString());
+				if (!Files.isDirectory(contextPath)) {
+					contextPath = contextPath.getParent();
+				}
+				referenceURI = URI.createURI(contextPath.resolve(path).toUri().toString());
+			}
 		}
 		return referenceURI;
 	}
@@ -111,6 +138,84 @@ public class EcoreUtil3 extends EcoreUtil2 {
 		}
 		return serializer.serialize(eObject, opt.getOptions()).trim();
 	}
+	
+	public static <T> T getService(EObject eObject, Class<T> serviceClazz) {
+		if (eObject == null) {
+			return null;
+		}
+		if (eObject.eResource() instanceof XtextResource xtextResource) {
+			return xtextResource.getResourceServiceProvider().get(serviceClazz);
+		}
+		return null;
+	}
+
+	/**
+	 * Serializes the {@code eObject} into text, allowing to replace parts of
+	 * descendant {@link EObject}s by means of providing a {@code replacer}. The
+	 * {@code eObject} should be loaded in an {@link XtextResource} for this
+	 * function to work properly. The {@code replacer} should avoid to replace text
+	 * of ancestor EObjects when a replacement has already been applied to one of
+	 * its descendants.
+	 * 
+	 * @param eObject  the Xtext EObject to serialize
+	 * @param replacer A replacer that provides replacements for specific descendant
+	 *                 {@link EObject}s, returns {@code null} when no replacement is
+	 *                 required for the {@link EObject}.
+	 * @return the serialized text.
+	 */
+	public static String serialize(EObject eObject, Function<? super EObject, ? extends CharSequence> replacer) {
+		return serializeXtext(eObject, node -> {
+			return node.hasDirectSemanticElement() ? replacer.apply(node.getSemanticElement()) : null;
+		});
+	}
+
+	/**
+	 * Serializes the {@code eObject} into text, allowing to replace parts of
+	 * descendant {@link EObject}s by means of providing a {@code replacer}. The
+	 * {@code eObject} should be loaded in an {@link XtextResource} for this
+	 * function to work properly. The {@code replacer} should avoid to replace text
+	 * of ancestor EObjects when a replacement has already been applied to one of
+	 * its descendants.
+	 * 
+	 * @param eObject  the Xtext EObject to serialize
+	 * @param replacer A replacer that provides replacements for specific descendant
+	 *                 {@link EObject}s (first argument) and specific grammar rules
+	 *                 (second argument), returns {@code null} when no replacement
+	 *                 is required for the {@link EObject}.
+	 * @return the serialized text.
+	 * @see IGrammarAccess
+	 */
+	public static String serialize(EObject eObject, BiFunction<? super EObject, ? super EObject, ? extends CharSequence> replacer) {
+		return serializeXtext(eObject, node -> {
+			EObject semanticElement = node.getSemanticElement();
+			EObject grammarElement = node.getGrammarElement();
+			if (semanticElement != null && grammarElement != null) {
+				return replacer.apply(semanticElement, grammarElement);
+			}
+			return null;
+		});
+	}
+
+	public static String serializeXtext(EObject eObject, Function<? super INode, ? extends CharSequence> replacer) {
+		Optional<INode> eObjectNode = eObject.eAdapters().stream().filter(INode.class::isInstance).map(INode.class::cast).findFirst();
+		if (eObjectNode.isEmpty()) {
+			throw new IllegalArgumentException("Not an Xtext eObject");
+		}
+		ITextRegion eObjectTextRegion = eObjectNode.get().getTotalTextRegion();
+		StringBuilder text = new StringBuilder(eObjectNode.get().getText());
+		if (eObjectNode.get() instanceof BidiTreeIterable<?> iterable) {
+			for (@SuppressWarnings("unchecked") Iterator<INode> iterator = (Iterator<INode>) iterable.reverse().iterator(); iterator.hasNext();) {
+				INode node = iterator.next();
+				CharSequence replacement = replacer.apply(node);
+				if (replacement != null) {
+					int replaceStart = node.getOffset() - eObjectTextRegion.getOffset();
+					int replaceEnd = replaceStart + node.getLength();
+					text.replace(replaceStart, replaceEnd, replacement.toString());
+				}
+			}
+		}
+		return text.toString();
+	}
 
 	/**
 	 * @throws ValidationException
@@ -127,7 +232,7 @@ public class EcoreUtil3 extends EcoreUtil2 {
 			throw new ValidationException(diagnostics);
 		}
 	}
-	
+
 	/**
 	 * @throws ValidationException
 	 * @see {@link Diagnostician#validate(EObject)}

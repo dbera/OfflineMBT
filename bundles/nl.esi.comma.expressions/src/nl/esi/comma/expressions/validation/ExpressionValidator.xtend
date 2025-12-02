@@ -43,6 +43,7 @@ import nl.esi.comma.expressions.expression.ExpressionModulo
 import nl.esi.comma.expressions.expression.ExpressionMultiply
 import nl.esi.comma.expressions.expression.ExpressionNEqual
 import nl.esi.comma.expressions.expression.ExpressionNot
+import nl.esi.comma.expressions.expression.ExpressionNullLiteral
 import nl.esi.comma.expressions.expression.ExpressionOr
 import nl.esi.comma.expressions.expression.ExpressionPackage
 import nl.esi.comma.expressions.expression.ExpressionPlus
@@ -119,6 +120,7 @@ class ExpressionValidator extends AbstractExpressionValidator {
 			ExpressionConstantString : BasicTypes.getStringType(e)
 			ExpressionBracket : e.sub?.typeOf
 			ExpressionEnumLiteral : e.type
+            ExpressionNullLiteral : BasicTypes.getAnyType(e)
 			ExpressionRecord : e.type
 			ExpressionRecordAccess : e.field?.type?.typeObject
 			ExpressionBulkData : BasicTypes.getBulkDataType(e)
@@ -177,6 +179,14 @@ class ExpressionValidator extends AbstractExpressionValidator {
 	@Check
 	def checkTypingExpression(Expression e){
 		switch(e){
+		    ExpressionEqual:{
+		        val leftType = e.left.typeOf
+		        val rightType = e.right.typeOf
+		        if(leftType === null || rightType === null) {return}
+                if(!leftType.synonym(rightType)){
+                    error("Type mismatch: actual type does not match the expected type", ExpressionPackage.Literals.EXPRESSION_BINARY__LEFT)
+                }
+		    }
 			ExpressionAnd |
 			ExpressionOr : {
 				val leftType = e.left.typeOf

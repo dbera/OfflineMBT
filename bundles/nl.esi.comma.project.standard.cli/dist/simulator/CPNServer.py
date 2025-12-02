@@ -124,15 +124,15 @@ def generate_fast_tests( model_path:str, num_tests:int=1, depth_limit:int=500):
 def handle_bpmn():
     _bpmn = request.files['bpmn-file']
     fname = _bpmn.filename
-    filename = f'{fname}{utils.gensym(prefix="_",timestamp=True)}'
+    filename = fname + utils.gensym(prefix="_",timestamp=True)
     bpmn_path = os.path.join(TEMP_PATH,f"{filename}.bpmn")
-    
+    _bpmn.save(bpmn_path)
+
     status_code = 200
     response = {'response': {'uuid': filename}}
     try:
         if utils.is_loaded_module(filename): 
             raise Exception(F"BPMN model '{filename}' is already loaded!")
-        _bpmn.save(bpmn_path)
         module, result = build_and_load_model(bpmn_path)
         bpmn_dir = os.path.join(module.__path__[0],'bpmn')
         os.makedirs(bpmn_dir, exist_ok=True)
@@ -169,7 +169,7 @@ def test_generator():
     depthLimit = _args.get('depth-limit',1000)
 
     fname = _bpmn.filename
-    filename = f'{fname}{utils.gensym(prefix="_",timestamp=True)}'
+    filename = fname + utils.gensym(prefix="_",timestamp=True)
     model_path = os.path.join(TEMP_PATH,f"{filename}.bpmn")
     _bpmn.save(model_path)
 
@@ -290,6 +290,7 @@ def handle_markings_reload(uuid: str):
 
 # Running the API
 if __name__ == "__main__":
+    print(f'# Using temporary directory:  "{TEMP_PATH}"')
     # Setting host = "0.0.0.0" runs it on localhost
     app.run(host="0.0.0.0", debug=False)
 
