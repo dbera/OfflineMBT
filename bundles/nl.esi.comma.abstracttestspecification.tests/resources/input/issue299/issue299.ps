@@ -114,7 +114,7 @@ specification issue299
             x0: temp_job_b_input.input.list_of_key_value_pairs := temp_job_b_input.input.list_of_key_value_pairs
             x1: temp_job_b_input.input.list_of_key_value_pairs := <KeyValuePair[]>[
               KeyValuePair {
-             key = "index__" + get(<string[]>["0","1","2","3"], Gateway_0uysc4w.iteration_index) + "__",
+             key = "index__" + toString(Gateway_0uysc4w.iteration_index) + "__",
              value = job_a_report.some_value
               }
             ]
