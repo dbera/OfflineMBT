@@ -1,13 +1,13 @@
 /**
  * Copyright (c) 2024, 2025 TNO-ESI
- *
+ * 
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
- *
+ * 
  * This program and the accompanying materials are made available
  * under the terms of the MIT License which is available at
  * https://opensource.org/licenses/MIT
- *
+ * 
  * SPDX-License-Identifier: MIT
  */
 /*
@@ -15,22 +15,50 @@
  */
 package nl.esi.comma.causalgraph.ui.quickfix
 
+import nl.esi.comma.causalgraph.causalGraph.CausalGraph
+import nl.esi.comma.causalgraph.causalGraph.CausalGraphFactory
+import nl.esi.comma.causalgraph.causalGraph.DataFlowEdge
+import nl.esi.comma.causalgraph.validation.CausalGraphValidator
+import org.eclipse.emf.ecore.util.EcoreUtil
+import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.ui.editor.quickfix.DefaultQuickfixProvider
+import org.eclipse.xtext.ui.editor.quickfix.Fix
+import org.eclipse.xtext.ui.editor.quickfix.IssueResolutionAcceptor
+import org.eclipse.xtext.validation.Issue
 
 /**
  * Custom quickfixes.
- *
+ * 
  * See https://www.eclipse.org/Xtext/documentation/310_eclipse_support.html#quick-fixes
  */
 class CausalGraphQuickfixProvider extends DefaultQuickfixProvider {
 
-//	@Fix(CausalGraphValidator.INVALID_NAME)
-//	def capitalizeName(Issue issue, IssueResolutionAcceptor acceptor) {
-//		acceptor.accept(issue, 'Capitalize name', 'Capitalize the name.', 'upcase.png') [
-//			context |
-//			val xtextDocument = context.xtextDocument
-//			val firstLetter = xtextDocument.get(issue.offset, 1)
-//			xtextDocument.replace(issue.offset, 1, firstLetter.toUpperCase)
-//		]
-//	}
+    @Fix(CausalGraphValidator.SCENARIO_STEP_CONTROL_FLOW)
+    def addControlFlow(Issue issue, IssueResolutionAcceptor acceptor) {
+        acceptor.accept(issue, 'Add control flow', 'Add the missing control flow edge.', null) [ element, context |
+            val graph = EcoreUtil2.getContainerOfType(element, CausalGraph)
+            graph.edges += CausalGraphFactory::eINSTANCE.createControlFlowEdge() => [
+                source = graph.nodes.findFirst[name == issue.data.get(0)]
+                target = graph.nodes.findFirst[name == issue.data.get(1)]
+            ]
+        ]
+    }
+
+    @Fix(CausalGraphValidator.DATA_FLOW_SUPERFLUOUS)
+    def removeDataFlow(Issue issue, IssueResolutionAcceptor acceptor) {
+        acceptor.accept(issue, 'Remove data flow', 'Remove the data flow edge.', null) [ dataReference, context |
+            val dataFlow = dataReference.eContainer as DataFlowEdge
+            // When removing the last data-reference, remove the whole data flow edge
+            EcoreUtil.delete(dataFlow.dataReferences.size == 1 ? dataFlow : dataReference)
+        ]
+    }
+
+    @Fix(CausalGraphValidator.ELEMENT_UNUSED)
+    @Fix(CausalGraphValidator.CONTROL_FLOW_SUPERFLUOUS)
+    def removeRequirement(Issue issue, IssueResolutionAcceptor acceptor) {
+        val type = issue.data.get(0)
+        acceptor.accept(issue, '''Remove «type»''', '''Remove the «type».''', null) [ element, context |
+            EcoreUtil.delete(element)
+        ]
+    }
 }

@@ -12,13 +12,8 @@
  */
 package nl.esi.comma.expressions.validation;
 
-import static nl.esi.comma.expressions.validation.ExpressionValidator.boolType;
-import static nl.esi.comma.expressions.validation.ExpressionValidator.intType;
 import static nl.esi.comma.expressions.validation.ExpressionValidator.numeric;
-import static nl.esi.comma.expressions.validation.ExpressionValidator.realType;
-import static nl.esi.comma.expressions.validation.ExpressionValidator.stringType;
 import static nl.esi.comma.expressions.validation.ExpressionValidator.typeOf;
-import static nl.esi.comma.expressions.validation.ExpressionValidator.voidType;
 import static nl.esi.comma.types.utilities.TypeUtilities.isMapType;
 import static nl.esi.comma.types.utilities.TypeUtilities.isVectorType;
 import static nl.esi.comma.types.utilities.TypeUtilities.subTypeOf;
@@ -38,6 +33,7 @@ import nl.esi.comma.expressions.expression.ExpressionFunctionCall;
 import nl.esi.comma.expressions.expression.ExpressionMap;
 import nl.esi.comma.expressions.expression.ExpressionVector;
 import nl.esi.comma.expressions.utilities.ExpressionsUtilities;
+import nl.esi.comma.types.BasicTypes;
 import nl.esi.comma.types.types.TypeObject;
 import nl.esi.comma.types.utilities.TypeUtilities;
 
@@ -47,7 +43,7 @@ public enum ExpressionFunction {
 		public TypeObject inferType(List<Expression> args, int argIndex) {
 			switch (argIndex) {
 			case -1:
-				return boolType;
+				return BasicTypes.getBoolType();
 			default:
 				return super.inferType(args, argIndex);
 			}
@@ -80,7 +76,7 @@ public enum ExpressionFunction {
 		public TypeObject inferType(List<Expression> args, int argIndex) {
 			switch (argIndex) {
 			case -1:
-				return intType;
+				return BasicTypes.getIntType();
 			default:
 				return super.inferType(args, argIndex);
 			}
@@ -116,7 +112,7 @@ public enum ExpressionFunction {
 		public TypeObject inferType(List<Expression> args, int argIndex) {
 			switch (argIndex) {
 			case -1:
-				return boolType;
+				return BasicTypes.getBoolType();
 			default:
 				return super.inferType(args, argIndex);
 			}
@@ -187,9 +183,9 @@ public enum ExpressionFunction {
 		public TypeObject inferType(List<Expression> args, int argIndex) {
 			switch (argIndex) {
 			case -1:
-				return realType;
+				return BasicTypes.getRealType();
 			case 0:
-				return intType;
+				return BasicTypes.getIntType();
 			default:
 				return super.inferType(args, argIndex);
 			}
@@ -277,7 +273,7 @@ public enum ExpressionFunction {
 		public TypeObject inferType(List<Expression> args, int argIndex) {
 			switch (argIndex) {
 			case -1:
-				return boolType;
+				return BasicTypes.getBoolType();
 			case 1:
 				TypeObject argType = inferType(args, 0);
 				return isMapType(argType) ? TypeUtilities.getKeyType(argType) : null;
@@ -355,7 +351,7 @@ public enum ExpressionFunction {
 				TypeObject argType = inferType(args, 0);
 				return isVectorType(argType) ? TypeUtilities.getElementType(argType) : null;
 			case 1:
-				return intType;
+				return BasicTypes.getIntType();
 			default:
 				return super.inferType(args, argIndex);
 			}
@@ -393,7 +389,7 @@ public enum ExpressionFunction {
 			case -1:
 				return inferType(args, 0);
 			case 1:
-				return intType;
+				return BasicTypes.getIntType();
 			case 2:
 				TypeObject argType = inferType(args, 0);
 				return isVectorType(argType) ? TypeUtilities.getElementType(argType) : null;
@@ -432,9 +428,9 @@ public enum ExpressionFunction {
 		public TypeObject inferType(List<Expression> args, int argIndex) {
 			switch (argIndex) {
 			case -1:
-				return stringType;
+				return BasicTypes.getStringType();
 			case 0:
-				return intType;
+				return BasicTypes.getIntType();
 			default:
 				return super.inferType(args, argIndex);
 			}
@@ -504,11 +500,11 @@ public enum ExpressionFunction {
 		public TypeObject inferType(List<Expression> args, int argIndex) {
 			switch (argIndex) {
 			case -1:
-				return TypeUtilities.vectorOf(intType);
+				return TypeUtilities.vectorOf(BasicTypes.getIntType());
 			case 0:
 			case 1:
 			case 2:
-				return intType;
+				return BasicTypes.getIntType();
 			default:
 				return super.inferType(args, argIndex);
 			}
@@ -533,8 +529,8 @@ public enum ExpressionFunction {
 			BigInteger start = intArgs.size() > 1 ? intArgs.get(0) : BigInteger.ZERO;
 			BigInteger stop = intArgs.size() > 1 ? intArgs.get(1) : intArgs.get(0);
 			BigInteger step = intArgs.size() > 2 ? intArgs.get(2) : BigInteger.ONE;
-			ExpressionVector vector = (ExpressionVector)
-					ExpressionsUtilities.createDefaultValue(TypeUtilities.vectorOf(intType));
+			ExpressionVector vector = (ExpressionVector) ExpressionsUtilities.createDefaultValue(
+					TypeUtilities.vectorOf(BasicTypes.getIntType(args.get(0))));
 			for (BigInteger value = start; value.compareTo(stop) < 0; value = value.add(step)) {
 				vector.getElements().add(context.toIntExpr(value));
 			}
@@ -554,7 +550,7 @@ public enum ExpressionFunction {
 	public TypeObject inferType(List<Expression> args, int argIndex) {
 		if (argIndex < 0) {
 			// Default return type is void
-			return voidType;
+			return BasicTypes.getVoidType();
 		} else if (argIndex < args.size()) {
 			return typeOf(args.get(argIndex));
 		} else {

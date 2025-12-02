@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="ASCII"?>
+<fragment:ModelFragments xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:fragment="http://www.eclipse.org/ui/2010/UIModel/fragment" xmlns:menu="http://www.eclipse.org/ui/2010/UIModel/application/ui/menu" xmlns:ui="http://www.eclipse.org/ui/2010/UIModel/application/ui" xmi:id="_BxaXACerEeWxCPrV0pAZQQ">
+  <fragments xsi:type="fragment:StringModelFragment" xmi:id="_p9Hx0HNPEfCZnvGKHlXapA" featurename="menuContributions" parentElementId="org.eclipse.e4.legacy.ide.application">
+    <elements xsi:type="menu:MenuContribution" xmi:id="_9gJFgHNPEfCZnvGKHlXapA" elementId="nl.esi.comma.causalgraph.ui.menucontribution.0" positionInParent="after=additions" parentId="popup">
+      <children xsi:type="menu:DirectMenuItem" xmi:id="_C_BwEHNQEfCZnvGKHlXapA" elementId="nl.esi.comma.causalgraph.ui.menuitem.mergecg" label="Merge Causal Graphs..." iconURI="platform:/plugin/nl.esi.comma.causalgraph.ui/icons/merge.png" tooltip="Merge reduced causal graphs into a unified causal graph" contributionURI="bundleclass://nl.esi.comma.causalgraph.ui/nl.esi.comma.causalgraph.ui.handlers.Rcg2UcgHandler">
+        <visibleWhen xsi:type="ui:ImperativeExpression" xmi:id="_WomXsHNQEfCZnvGKHlXapA" contributionURI="bundleclass://nl.esi.comma.causalgraph.ui/nl.esi.comma.causalgraph.ui.handlers.Rcg2UcgHandler"/>
+      </children>
+    </elements>
+  </fragments>
+</fragment:ModelFragments>

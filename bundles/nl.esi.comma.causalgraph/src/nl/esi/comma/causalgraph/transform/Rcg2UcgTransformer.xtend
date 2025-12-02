@@ -1,0 +1,244 @@
+/**
+ * Copyright (c) 2024, 2025 TNO-ESI
+ *
+ * See the NOTICE file(s) distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This program and the accompanying materials are made available
+ * under the terms of the MIT License which is available at
+ * https://opensource.org/licenses/MIT
+ *
+ * SPDX-License-Identifier: MIT
+ */
+package nl.esi.comma.causalgraph.transform
+
+import java.util.List
+import java.util.Set
+import nl.esi.comma.causalgraph.causalGraph.CausalGraph
+import nl.esi.comma.causalgraph.causalGraph.CausalGraphFactory
+import nl.esi.comma.causalgraph.causalGraph.GraphType
+import nl.esi.comma.causalgraph.causalGraph.Node
+import nl.esi.comma.causalgraph.causalGraph.StepType
+import nl.esi.comma.causalgraph.utilities.NodeAttributes
+import nl.esi.comma.expressions.expression.Variable
+import nl.esi.comma.types.types.NamedElement
+import org.eclipse.emf.ecore.EObject
+import org.eclipse.emf.ecore.util.EcoreUtil
+import org.eclipse.xtend.lib.annotations.Accessors
+import org.eclipse.xtend.lib.annotations.Data
+import org.eclipse.xtext.EcoreUtil2
+
+import static extension nl.esi.comma.causalgraph.utilities.CausalGraphQueries.*
+import static extension org.eclipse.lsat.common.xtend.Queries.*
+
+class Rcg2UcgTransformer {
+    static extension val CausalGraphFactory m_cg = CausalGraphFactory::eINSTANCE
+
+    def CausalGraph merge(CausalGraph... rcgs) {
+        if (!rcgs.forall[type == GraphType.RCG]) {
+            throw new IllegalArgumentException('Expected ' + GraphType.RCG.literal)
+        } else if (rcgs.map[name].toSet.size != rcgs.size) {
+            throw new IllegalArgumentException('Graphs should have unique names')
+        } else if (rcgs.map[language].toSet.size > 1) {
+            throw new IllegalArgumentException('Cannot merge graphs for different languages: ' +
+                rcgs.map[language].toSet)
+        }
+        rcgs.forEach[EcoreUtil.resolveAll(it)]
+
+        // Prepare the merged graph, just copy the imports, requirements and scenarios
+        val outputGraph = createCausalGraph
+        outputGraph.name = rcgs.join('__')[name]
+        outputGraph.type = GraphType::UCG
+        outputGraph.language = rcgs.head.language
+        // Concatenate all headers, but avoid duplication if they are equal after trimming them
+        outputGraph.header = rcgs.map[header.nullIfEmpty].filterNull.unique[left, right | left.trim.equals(right.trim)].join('\n').nullIfEmpty
+        outputGraph.imports += rcgs.flatMap[imports].unique[left, right | EcoreUtil.equals(left, right)]
+
+        outputGraph.requirements += rcgs.flatMap[requirements].resolveNameConflicts(true, true)
+        outputGraph.scenarios += rcgs.flatMap[scenarios].resolveNameConflicts(false, true)
+
+        outputGraph.types += rcgs.flatMap[types].resolveNameConflicts(true, true)
+        // FIXME: merging variables is not done correctly yet
+        // The assignments of a variable could conflict,
+        // implying that these variables cannot be merged.
+        // Currently this will result in a model validation error
+        outputGraph.variables += rcgs.flatMap[variables].resolveNameConflicts(true, false)
+        outputGraph.assignments += rcgs.flatMap[assignments].unique[left, right | EcoreUtil.equals(left, right)]
+
+        // Important: grouping nodes should be done after merging the variables!
+        val nodeGroups = rcgs.groupNodes
+
+        // All add output nodes to the merged graph
+        nodeGroups.forEach[group, index |
+            group.outputNode.name = 'n' + index
+            outputGraph.nodes += group.outputNode
+        ]
+
+        // Now create the content and edges of the output nodes
+        for (group : nodeGroups) {
+            // Just move all the steps from the group to the output node
+            group.outputNode.steps += group.inputNodes.flatMap[steps].toList
+            if (group.outputNode.steps.size > 1 &&
+                group.outputNode.steps.map[stepBody].unique[left, right | EcoreUtil.equals(left, right)].size == 1
+            ) {
+                // All step bodies are equivalent, so promote the body to the node
+                group.outputNode.stepBody = group.outputNode.steps.head.stepBody
+                group.outputNode.steps.tail.forEach[stepBody = null]
+            }
+
+            // Get all the original control flows and group them based on their output node, i.e. resolveOne()
+            val controlFlows = group.inputNodes.flatMap[outgoingControlFlows].groupBy[nodeGroups.resolveOne(target)]
+            controlFlows.keySet.forEach[ targetNode |
+                outputGraph.edges += createControlFlowEdge => [
+                    source = group.outputNode
+                    target = targetNode
+                ]
+            ]
+
+            // Get all the original data flows and group them based on their output node
+            val dataFlows = group.inputNodes.flatMap[outgoingDataFlows].groupBy[nodeGroups.resolveOne(target)]
+            dataFlows.entrySet.forEach[ dfEntry |
+                val dataRefsByScenario = dfEntry.value
+                    .flatMap[dataReferences]
+                    .groupBy[scenario] 
+                
+                outputGraph.edges += createDataFlowEdge => [
+                    source = group.outputNode
+                    target = dfEntry.key
+                    // Create one data reference per scenario with merged variables
+                    dataRefsByScenario.entrySet.forEach[ scenarioEntry |
+                        dataReferences += createDataReference => [
+                            scenario = scenarioEntry.key
+                            variables += scenarioEntry.value
+                                .flatMap[variables]
+                                .toList
+                                .unique[left, right | EcoreUtil.equals(left, right)]
+                        ]
+                    ]
+                ]
+            ]
+        }
+
+        return outputGraph
+    }
+
+    def protected List<NodeGroup> groupNodes(CausalGraph... rcgs) {
+        val nodeGroupsMap = rcgs.flatMap[nodes].groupBy[NodeAttributes.valueOf(it)]
+        // The asserts that are not functions should not be matched by their step-name,
+        // we need to look at their incoming data dependencies to find possible matches.
+        val nonFunctionAsserts = nodeGroupsMap.filter[k, v |!k.function && k.stepType == StepType::THEN].values.flatten.toList
+        nonFunctionAsserts.forEach[assertNode | nodeGroupsMap.remove(NodeAttributes.valueOf(assertNode))]
+
+        val nodeGroups = nodeGroupsMap.entrySet.map[new NodeGroup(key, value)].toList
+
+        val assertGroups = nonFunctionAsserts.groupBy[assertGroupKey].values.sortedBy[size]
+        for (assertGroup : assertGroups) {
+            val stepName = assertGroup.map[stepName].toSet.join(', ')
+            var groupKey = new NodeAttributes(false, stepName, StepType::THEN)
+            nodeGroups += new NodeGroup(groupKey, assertGroup)
+        }
+
+        nodeGroups.groupBy[key].filter[k, v|v.size > 1].forEach [k, v |
+            System.err.println('''Found «v.size» overlapping nodes for «k»''')
+        ]
+        return nodeGroups
+    }
+
+    private static def <T extends NamedElement> Iterable<T> resolveNameConflicts(Iterable<T> elements, boolean merge, boolean rename) {
+        val mergedElements = newLinkedHashMap
+        val conflicts = newLinkedHashSet
+        for (element : elements) {
+            val registered = mergedElements.putIfAbsent(element.name, element)
+            if (registered !== null && registered !== element) {
+                if(merge && EcoreUtil.equals(registered, element)) {
+                    // These elements can be merged, update all references to use the registered element
+                    element.graph.replaceAllReferences(element, registered)
+                } else if (rename) {
+                    // Found a conflicting type, use different names for the elements
+                    registered.name = registered.graph.name + '_' + registered.name
+                    mergedElements.put(registered.name, registered)
+                    element.name = element.graph.name + '_' + element.name
+                    mergedElements.put(element.name, element)
+                } else {
+                    // We cannot do anything else then add the conflict, 
+                    // this will result in a non-validating model
+                    conflicts += element
+                }
+            }
+        }
+        return mergedElements.values.union(conflicts).toSet
+    }
+
+    private static def getGraph(EObject eObject) {
+        return EcoreUtil2.getContainerOfType(eObject, CausalGraph)
+    }
+
+    private static def replaceAllReferences(EObject root, EObject from, EObject to) {
+        for (eObject : root.eAllContents.toIterable.union(root)) {
+            val eReferences = eObject.eClass.EAllReferences
+                .reject[containment]
+                .filter[changeable && EReferenceType.isInstance(from) && EReferenceType.isInstance(to)]
+            for (eReference : eReferences) {
+                if (eReference.isMany) {
+                    val value = eObject.eGet(eReference) as List<EObject>
+                    var i = -1
+                    while ((i = value.indexOf(from)) >= 0) {
+                        value.set(i, to)
+                    }
+                } else if (eObject.eGet(eReference) == from) {
+                    eObject.eSet(eReference, to)
+                }
+            }
+        }
+    }
+
+    private static def <T> Iterable<T> unique(Iterable<T> source, (T, T)=>boolean equalismFunctor) {
+        val result = newArrayList
+        for (item : source) {
+            if (!result.exists[equalismFunctor.apply(it, item)]) {
+                result += item
+            }
+        }
+        return result
+    }
+
+    private static def nullIfEmpty(String text) {
+        return text.nullOrEmpty ? null : text
+    }
+
+    /**
+     * When asserts use the same variables from the same nodes, they can be (potentially) merged.
+     */
+    protected def getAssertGroupKey(Node node) {
+        return node.outgoingDataFlows.map[ edge |
+            new AssertGroupKey(NodeAttributes.valueOf(edge.target), edge.dataReferences.flatMap[variables].toSet)
+        ].toSet
+    }
+
+    @Data
+    protected static class AssertGroupKey {
+        val NodeAttributes key
+        val Set<Variable> variables
+    }
+
+    protected def Node resolveOne(List<NodeGroup> nodeGroups, Node node) {
+        return nodeGroups.findFirst[inputNodes.contains(node)]?.outputNode
+    }
+
+    @Accessors
+    protected static class NodeGroup {
+        val NodeAttributes key
+        val List<Node> inputNodes = newArrayList()
+        val Node outputNode
+
+        new(NodeAttributes _key, Iterable<Node> _inputNodes) {
+            key = _key;
+            inputNodes += _inputNodes
+            outputNode = CausalGraphFactory::eINSTANCE.createNode => [ node |
+                node.function = _key.function
+                node.stepName = _key.stepName
+                node.stepType = _key.stepType
+            ]
+        }
+    }
+}

@@ -46,6 +46,7 @@ import nl.esi.comma.expressions.expression.ExpressionFnCall
 import nl.esi.comma.expressions.expression.Expression
 import nl.esi.comma.expressions.expression.ExpressionNot
 import nl.esi.comma.expressions.expression.ExpressionBracket
+import nl.esi.comma.expressions.expression.ExpressionMinus
 import nl.esi.comma.expressions.expression.ExpressionNullLiteral
 
 class ExpressionsCommaGenerator extends TypesCommaGenerator {
@@ -61,6 +62,9 @@ class ExpressionsCommaGenerator extends TypesCommaGenerator {
 	
 	def dispatch CharSequence exprToComMASyntax(ExpressionConstantInt e)
 	'''«e.value»'''
+	
+	def dispatch CharSequence exprToComMASyntax(ExpressionMinus e)
+    '''-«e.sub.exprToComMASyntax»'''
 	
 	def dispatch CharSequence exprToComMASyntax(ExpressionConstantReal e)
 	'''«e.value»'''

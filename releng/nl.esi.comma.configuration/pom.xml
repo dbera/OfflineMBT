@@ -209,6 +209,9 @@
                         <tpd>JAVADOC_STYLE</tpd>
                         <types>JAVADOC_STYLE</types>
                         <tsx>SLASHSTAR_STYLE</tsx>
+                        <bdducg>JAVADOC_STYLE</bdducg>
+                        <rcg>JAVADOC_STYLE</rcg>
+                        <ucg>JAVADOC_STYLE</ucg>
                     </mapping>
                     <licenseSets>
                         <licenseSet>

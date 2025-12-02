@@ -29,14 +29,11 @@ import nl.esi.comma.types.types.TypesFactory
 import nl.esi.comma.types.types.VectorTypeConstructor
 import nl.esi.comma.types.types.VectorTypeDecl
 import org.eclipse.emf.ecore.util.EcoreUtil
+import nl.esi.comma.types.BasicTypes
 import org.eclipse.emf.ecore.resource.Resource
 import nl.esi.comma.types.types.ModelContainer
 
 class TypeUtilities {
-    public static val SimpleTypeDecl ANY_TYPE = TypesFactory.eINSTANCE.createSimpleTypeDecl() => [
-        name = 'any'
-    ]
-
 	/*
 	 * Methods for getting the type object from a type. 
 	 * Type is either a reference to a type declaration or an inline type constructor
@@ -299,7 +296,7 @@ class TypeUtilities {
     def static boolean subTypeOf(TypeObject t1, TypeObject t2) {
         if(t1 === null || t2 === null) return false
         if(t1.synonym(t2)) return true // reflexive case
-        if(t1.identical(ANY_TYPE)) return true // any is subtype of all types
+        if(t1.identical(BasicTypes.anyType)) return true // any is subtype of all types
         if (t1 instanceof RecordTypeDecl && t2 instanceof RecordTypeDecl) // record type subtyping
             return getAllParents(t1 as RecordTypeDecl).contains(t2)
 
