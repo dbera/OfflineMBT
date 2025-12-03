@@ -16,7 +16,6 @@ import java.util.HashSet
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractTestDefinition
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AssertionStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.Binding
-import nl.esi.comma.abstracttestspecification.abstractTestspecification.ComposeStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.ExecutableStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.RunStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.TSMain
@@ -156,8 +155,7 @@ class FromAbstractToConcrete extends AbstractGenerator {
         // Get text for concrete data expressions
         var conDataExpr = (new ConcreteExpressionHandler()).prepareStepInputExpressions(rstep, rstep.composeStepRefs)
         // Append text for reference data expressions
-        val refDataExpr = (new ReferenceExpressionHandler())
-            .resolveStepReferenceExpressions(rstep, rstep.stepRef.map[refStep].filter(ComposeStep))
+        val refDataExpr = (new ReferenceExpressionHandler()).resolveStepReferenceExpressions(rstep)
 
         return '''
             «conDataExpr»

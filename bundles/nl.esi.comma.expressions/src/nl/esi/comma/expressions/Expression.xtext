@@ -29,9 +29,7 @@ VariableAssignment:
     variable=Variable ('=' expression=Expression)?
 ;
 
-Variable:
-    type = Type name= ID
-;
+Variable: type = Type name= ID ;
 
 FunctionDecl:
     returnType = Type name = ID '(' (params += Variable (',' params += Variable)*)? ')'
