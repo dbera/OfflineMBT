@@ -544,7 +544,20 @@ class Utils
                 os.makedirs(os.path.dirname(fname), exist_ok=True)
                 with open(fname, 'w') as f:
                     f.write(txt)
-        
+
+            def generateJSON(self, idx, scenario, output_dir):
+                jsonScenario = {}
+                for nr, step in enumerate(scenario):
+                    jsonScenario[nr] = {
+                        'transition' : step[1].name,
+                        'substitution' : step[2].dict()
+                    }
+                fname = output_dir / f"_scenario{str(idx)}.json"
+                print(str(fname))
+                os.makedirs(os.path.dirname(fname), exist_ok=True)
+                with open(fname, 'w') as f:
+                    f.write(json.dumps(jsonScenario, indent=4))
+
             def compute_dependencies(self):
                 for step in self.step_list:
                     idx = self.step_list.index(step)

@@ -497,6 +497,7 @@ class PetriNet {
 		                    j = j + 1
 		                _test_scn.compute_dependencies()
 		                _test_scn.generate_viz(i, output_dir=p.plantuml_dir)
+		                _test_scn.generateJSON(i, entry, output_dir=p.tspec_dir)
 		                _test_scn.generateTSpec(i, pn.sutTypesList, pn.sutVarTransitionMap, pn.mapOfTransitionQnames, output_dir=p.tspec_dir)
 		                _tests.list_of_test_scn.append(_test_scn)
 		            i = i + 1
