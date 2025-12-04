@@ -1,0 +1,22 @@
+import "../../../input/issue299/issue299.types"
+
+record JobA {
+    JobAInput input
+    JobAOutput output
+}
+
+record JobAInput {
+    InputJobA job_a_input
+    UNIT Event_0t40etv
+    ReportJobA job_a_report
+    JobA jobA
+    UNIT Event_0ww9k8j
+}
+
+record JobAOutput {
+    InputJobA job_a_input
+    UNIT Event_0t40etv
+    ReportJobA job_a_report
+    JobA jobA
+    UNIT Event_0ww9k8j
+}

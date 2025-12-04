@@ -68,9 +68,21 @@ class TypeUtilities {
 	}
 	
 	def static boolean isRecordType(Type t){
-		t.getTypeObject instanceof RecordTypeDecl
+		t.getTypeObject.isRecordType
 	}
 	
+    def static boolean isRecordType(TypeObject t){
+        t instanceof RecordTypeDecl
+    }
+
+    def static boolean isEnumType(Type t) {
+        return t.getTypeObject.isEnumType
+    }
+
+    def static boolean isEnumType(TypeObject t) {
+        t instanceof EnumTypeDecl
+    }
+
 	def static boolean isStructuredType(Type t){
 		val to = t.getTypeObject
 		to instanceof VectorTypeConstructor || 
@@ -322,20 +334,19 @@ class TypeUtilities {
             MapTypeConstructor: '''map<«type.type.name»,«type.valueType.typeName»>'''
         }
     }
-    
-      def static dispatch VectorTypeConstructor vectorOf(TypeDecl td) {
+
+    def static dispatch VectorTypeConstructor vectorOf(TypeDecl td) {
         val vtc = TypesFactory.eINSTANCE.createVectorTypeConstructor
         vtc.dimensions += TypesFactory.eINSTANCE.createDimension
-        vtc.type = EcoreUtil.copy(td)
+        vtc.type = td
         return vtc
     }
-    
+
     def static dispatch VectorTypeConstructor vectorOf(VectorTypeDecl vtd) {
         val vtc = EcoreUtil.copy(vtd.constructor)
         vtc.dimensions += TypesFactory.eINSTANCE.createDimension
         return vtc
     }
-    
 
     def static getImports(Resource res) {
         return res.contents.filter(ModelContainer).flatMap[imports]

@@ -24,6 +24,9 @@ Workflow {
 			project = StandardProjectConfig {
 				baseName = "nl.esi.comma.expressions"
 				rootPath = rootPath
+                runtimeTest = {
+                    enabled = true
+                }
 				eclipsePlugin = {
 					enabled = true
 				}

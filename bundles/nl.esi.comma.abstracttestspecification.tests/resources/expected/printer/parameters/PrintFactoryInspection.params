@@ -1,0 +1,12 @@
+import "../types/PrintFactoryInspection.types"
+
+data-instances
+ExecuteInspectionInput PrintFactoryInspectionInput
+ExecuteInspectionOutput PrintFactoryInspectionOutput
+
+data-implementation
+// Empty
+
+path-prefix "./dataset/"
+var-ref PrintFactoryInspectionInput -> file-name "PrintFactoryInspectionInput.json"
+var-ref PrintFactoryInspectionOutput -> file-name "PrintFactoryInspectionOutput.json"

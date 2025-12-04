@@ -10,7 +10,7 @@ record ProducerRunTypeInput {
     ProdCons1 message
     ProdCtx configuration
     ProdCtx sutConf
-    ProdCtx between_RunLocal_and_Compose
+    ProdCtx Flow_168eaxr
     ProdCtx Gateway_1ywuak3
 }
 
@@ -19,6 +19,6 @@ record ProducerRunTypeOutput {
     ProdCons1 message
     ProdCtx configuration
     ProdCtx sutConf
-    ProdCtx between_RunLocal_and_Compose
+    ProdCtx Flow_168eaxr
     ProdCtx Gateway_1ywuak3
 }

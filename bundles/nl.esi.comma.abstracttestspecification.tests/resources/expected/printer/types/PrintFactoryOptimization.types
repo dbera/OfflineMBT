@@ -1,0 +1,26 @@
+import "../../../input/printer/printer.types"
+
+record ExecuteOptimizer {
+    ExecuteOptimizerInput input
+    ExecuteOptimizerOutput output
+}
+
+record ExecuteOptimizerInput {
+    UNIT Flow_0y8u5pd
+    OptimizeRequest optimizeJob
+    UNIT Event_1oozdnw
+    CorrectionsReport corrections
+    Result optResult
+    OptimizeRequest optJob
+    Report inspectionReport
+}
+
+record ExecuteOptimizerOutput {
+    UNIT Flow_0y8u5pd
+    OptimizeRequest optimizeJob
+    UNIT Event_1oozdnw
+    CorrectionsReport corrections
+    Result optResult
+    OptimizeRequest optJob
+    Report inspectionReport
+}

@@ -1,0 +1,175 @@
+import "parameters/PrintFactoryA3DPrinter.params"
+import "parameters/PrintFactoryInspection.params"
+import "parameters/PrintFactoryFactoryAutomation.params"
+import "parameters/PrintFactoryOptimization.params"
+
+Test-Purpose    "The purpose of this test is..."
+Background      "The background of this test is..."
+
+test-sequence from_abstract_to_concrete {
+    test_single_sequence
+}
+
+step-sequence test_single_sequence {
+
+step-id    step_PrintFactoryA3DPrinter_RunPrintJob_default_0
+step-type  ExecutePrinter
+step-input PrintFactoryA3DPrinterInput
+ref-to-step-output
+    PrintFactoryA3DPrinterInput.request.id := 1
+    PrintFactoryA3DPrinterInput.request.resolution := PrintResolution::LOW
+    PrintFactoryA3DPrinterInput.request.scale := 50.0
+    PrintFactoryA3DPrinterInput.request.color := ColorType::MONOCHROME
+    PrintFactoryA3DPrinterInput.request.opType := OperationType::PRINT
+
+step-id    step_PrintFactoryA3DPrinter_RunPrepareJob_default_0
+step-type  ExecutePrinter
+step-input PrintFactoryA3DPrinterInput
+ref-to-step-output
+    PrintFactoryA3DPrinterInput.request.id := 1
+    PrintFactoryA3DPrinterInput.request.resolution := PrintResolution::LOW
+    PrintFactoryA3DPrinterInput.request.scale := null
+    PrintFactoryA3DPrinterInput.request.color := ColorType::MONOCHROME
+    PrintFactoryA3DPrinterInput.request.opType := OperationType::PREP
+
+step-id    step_PrintFactoryInspection_RunVisualinspection_default_0
+step-type  ExecuteInspection
+step-input PrintFactoryInspectionInput
+ref-to-step-output
+    PrintFactoryInspectionInput.measureRequest.id := 1
+    PrintFactoryInspectionInput.measureRequest.printJobReport := step_PrintFactoryA3DPrinter_RunPrintJob_default_0.output.printReport
+
+assertion-id    step_PrintFactoryFactoryAutomation_AssertVisualInspection_default_0
+assertion-type  Assert_Visual_Inspection
+assertion-input PrintFactoryFactoryAutomationInput
+assertion-items {
+assertions default { 
+    
+                assert_kpi: assert-that (step_PrintFactoryInspection_RunVisualinspection_default_0.output.inspectionReport.kpi) {
+                  equal-to 9.0 within-margin relative (1.0)
+                }
+ }
+}
+ref-to-step-output
+    PrintFactoryFactoryAutomationInput.inspectionReport.id := 1
+
+step-id    step_PrintFactoryOptimization_RunOptimizationJob_default_0
+step-type  ExecuteOptimizer
+step-input PrintFactoryOptimizationInput
+ref-to-step-output
+    PrintFactoryOptimizationInput.optimizeJob.id := 1
+
+step-id    step_PrintFactoryA3DPrinter_RunPrintJob_default_1
+step-type  ExecutePrinter
+step-input PrintFactoryA3DPrinterInput
+ref-to-step-output
+    PrintFactoryA3DPrinterInput.request.id := 2
+    PrintFactoryA3DPrinterInput.request.resolution := PrintResolution::MED
+    PrintFactoryA3DPrinterInput.request.scale := 75.0
+    PrintFactoryA3DPrinterInput.request.color := ColorType::COLOR
+    PrintFactoryA3DPrinterInput.request.opType := OperationType::PRINT
+
+step-id    step_PrintFactoryA3DPrinter_RunPrepareJob_default_1
+step-type  ExecutePrinter
+step-input PrintFactoryA3DPrinterInput
+ref-to-step-output
+    PrintFactoryA3DPrinterInput.request.id := 2
+    PrintFactoryA3DPrinterInput.request.resolution := PrintResolution::MED
+    PrintFactoryA3DPrinterInput.request.scale := null
+    PrintFactoryA3DPrinterInput.request.color := ColorType::COLOR
+    PrintFactoryA3DPrinterInput.request.opType := OperationType::PREP
+
+step-id    step_PrintFactoryInspection_RunVisualinspection_default_1
+step-type  ExecuteInspection
+step-input PrintFactoryInspectionInput
+ref-to-step-output
+    PrintFactoryInspectionInput.measureRequest.id := 2
+    PrintFactoryInspectionInput.measureRequest.printJobReport := step_PrintFactoryA3DPrinter_RunPrintJob_default_1.output.printReport
+
+assertion-id    step_PrintFactoryFactoryAutomation_AssertVisualInspection_default_1
+assertion-type  Assert_Visual_Inspection
+assertion-input PrintFactoryFactoryAutomationInput
+assertion-items {
+assertions default { 
+    
+                assert_kpi: assert-that (step_PrintFactoryInspection_RunVisualinspection_default_0.output.inspectionReport.kpi) {
+                  equal-to 9.0 within-margin relative (1.0)
+                }
+ }
+}
+ref-to-step-output
+    PrintFactoryFactoryAutomationInput.inspectionReport.id := 1
+
+step-id    step_PrintFactoryOptimization_RunOptimizationJob_default_1
+step-type  ExecuteOptimizer
+step-input PrintFactoryOptimizationInput
+ref-to-step-output
+    PrintFactoryOptimizationInput.optimizeJob.id := 2
+
+step-id    step_PrintFactoryA3DPrinter_RunPrintJob_default_2
+step-type  ExecutePrinter
+step-input PrintFactoryA3DPrinterInput
+ref-to-step-output
+    PrintFactoryA3DPrinterInput.request.id := 3
+    PrintFactoryA3DPrinterInput.request.resolution := PrintResolution::HIGH
+    PrintFactoryA3DPrinterInput.request.scale := 75.0
+    PrintFactoryA3DPrinterInput.request.color := ColorType::COLOR
+    PrintFactoryA3DPrinterInput.request.opType := OperationType::PRINT
+
+step-id    step_PrintFactoryA3DPrinter_RunPrepareJob_default_2
+step-type  ExecutePrinter
+step-input PrintFactoryA3DPrinterInput
+ref-to-step-output
+    PrintFactoryA3DPrinterInput.request.id := 3
+    PrintFactoryA3DPrinterInput.request.resolution := PrintResolution::HIGH
+    PrintFactoryA3DPrinterInput.request.scale := null
+    PrintFactoryA3DPrinterInput.request.color := ColorType::COLOR
+    PrintFactoryA3DPrinterInput.request.opType := OperationType::PREP
+
+step-id    step_PrintFactoryInspection_RunVisualinspection_default_2
+step-type  ExecuteInspection
+step-input PrintFactoryInspectionInput
+ref-to-step-output
+    PrintFactoryInspectionInput.measureRequest.id := 3
+    PrintFactoryInspectionInput.measureRequest.printJobReport := step_PrintFactoryA3DPrinter_RunPrintJob_default_2.output.printReport
+
+assertion-id    step_PrintFactoryFactoryAutomation_AssertVisualInspection_default_2
+assertion-type  Assert_Visual_Inspection
+assertion-input PrintFactoryFactoryAutomationInput
+assertion-items {
+assertions default { 
+    
+                assert_kpi: assert-that (step_PrintFactoryInspection_RunVisualinspection_default_0.output.inspectionReport.kpi) {
+                  equal-to 9.0 within-margin relative (1.0)
+                }
+ }
+}
+ref-to-step-output
+    PrintFactoryFactoryAutomationInput.inspectionReport.id := 1
+
+step-id    step_PrintFactoryOptimization_RunOptimizationJob_default_2
+step-type  ExecuteOptimizer
+step-input PrintFactoryOptimizationInput
+ref-to-step-output
+    PrintFactoryOptimizationInput.optimizeJob.id := 3
+}
+
+generate-file "./dataset/"
+
+step-parameters
+ExecutePrinter step_PrintFactoryA3DPrinter_RunPrintJob_default_0
+ExecutePrinter step_PrintFactoryA3DPrinter_RunPrepareJob_default_0
+ExecuteInspection step_PrintFactoryInspection_RunVisualinspection_default_0
+Assert_Visual_Inspection step_PrintFactoryFactoryAutomation_AssertVisualInspection_default_0
+ExecuteOptimizer step_PrintFactoryOptimization_RunOptimizationJob_default_0
+ExecutePrinter step_PrintFactoryA3DPrinter_RunPrintJob_default_1
+ExecutePrinter step_PrintFactoryA3DPrinter_RunPrepareJob_default_1
+ExecuteInspection step_PrintFactoryInspection_RunVisualinspection_default_1
+Assert_Visual_Inspection step_PrintFactoryFactoryAutomation_AssertVisualInspection_default_1
+ExecuteOptimizer step_PrintFactoryOptimization_RunOptimizationJob_default_1
+ExecutePrinter step_PrintFactoryA3DPrinter_RunPrintJob_default_2
+ExecutePrinter step_PrintFactoryA3DPrinter_RunPrepareJob_default_2
+ExecuteInspection step_PrintFactoryInspection_RunVisualinspection_default_2
+Assert_Visual_Inspection step_PrintFactoryFactoryAutomation_AssertVisualInspection_default_2
+ExecuteOptimizer step_PrintFactoryOptimization_RunOptimizationJob_default_2
+

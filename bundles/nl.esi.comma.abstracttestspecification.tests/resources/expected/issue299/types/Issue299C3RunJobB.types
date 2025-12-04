@@ -1,0 +1,24 @@
+import "../../../input/issue299/issue299.types"
+
+record BJob {
+    BJobInput input
+    BJobOutput output
+}
+
+record BJobInput {
+    InputJobB job_b_input
+    UNIT Event_18fn07m
+    ReportJobB job_b_report
+    ContextComposeJobB Gateway_0uysc4w
+    TempInputJobB temp_job_b_input
+    ContextComposeJobB Event_1880doa
+}
+
+record BJobOutput {
+    InputJobB job_b_input
+    UNIT Event_18fn07m
+    ReportJobB job_b_report
+    ContextComposeJobB Gateway_0uysc4w
+    TempInputJobB temp_job_b_input
+    ContextComposeJobB Event_1880doa
+}

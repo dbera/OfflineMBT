@@ -1,0 +1,12 @@
+import "../types/PrintFactoryFactoryAutomation.types"
+
+data-instances
+Assert_Visual_InspectionInput PrintFactoryFactoryAutomationInput
+Assert_Visual_InspectionOutput PrintFactoryFactoryAutomationOutput
+
+data-implementation
+// Empty
+
+path-prefix "./dataset/"
+var-ref PrintFactoryFactoryAutomationInput -> file-name "PrintFactoryFactoryAutomationInput.json"
+var-ref PrintFactoryFactoryAutomationOutput -> file-name "PrintFactoryFactoryAutomationOutput.json"

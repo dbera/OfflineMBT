@@ -18,7 +18,8 @@ Require-Bundle: nl.esi.comma.assertthat;visibility:=reexport,
  org.eclipse.xtend.lib;bundle-version="2.36.0",
  org.eclipse.emf.common,
  org.antlr.runtime;bundle-version="[3.2.0,3.2.1)",
- org.eclipse.xtext.xbase.lib;bundle-version="2.36.0"
+ org.eclipse.xtext.xbase.lib;bundle-version="2.36.0",
+ org.eclipse.lsat.common.xtend;bundle-version="0.4.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: nl.esi.comma.abstracttestspecification.validation,
  nl.esi.comma.abstracttestspecification.parser.antlr.internal,

@@ -51,11 +51,16 @@ import nl.esi.comma.expressions.expression.Variable
 import nl.esi.comma.expressions.services.ExpressionGrammarAccess
 import nl.esi.comma.types.formatting2.TypesFormatter
 import org.eclipse.xtext.formatting2.IFormattableDocument
+import nl.esi.comma.expressions.expression.VariableAssignment
 
 class ExpressionFormatter extends TypesFormatter {
 	
 	@Inject extension ExpressionGrammarAccess
 	
+    def dispatch void format(VariableAssignment assignment, extension IFormattableDocument document) {      
+        assignment.variable.prepend(newLine);
+    }
+
 	def dispatch void format(Variable variable, extension IFormattableDocument document) {		
 		variable.getType.prepend(oneSpace);
 	}
