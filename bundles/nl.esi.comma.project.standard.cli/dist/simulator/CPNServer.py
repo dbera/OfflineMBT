@@ -127,6 +127,10 @@ def handle_bpmn():
     filename = fname + utils.gensym(prefix="_",timestamp=True)
     bpmn_path = os.path.join(TEMP_PATH,f"{filename}.bpmn")
     _bpmn.save(bpmn_path)
+    if 'scenario-file' in request.files:
+        _scenario = request.files['scenario-file']
+        _scenario_path = os.path.join(TEMP_PATH,f"{filename}.json")
+        _scenario.save(_scenario_path)
 
     status_code = 200
     response = {'response': {'uuid': filename}}

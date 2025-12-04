@@ -393,7 +393,17 @@ class PetriNet {
 		    tr_assert_ref_dict = {}
 		    map_transition_assert = {}
 		
+		    # Replay scenario data
+		    map_transition_filter = {}
+		    currentStep = 0
+		    markedStep = 0
+
 		    def __init__(self):
+		        scenario_file = os.path.join(os.path.dirname(__file__), 'bpmn/«prod_name».json')
+		        if os.path.isfile(scenario_file) and os.access(scenario_file, os.R_OK):
+		            self.map_transition_filter = json.load(open(scenario_file))
+		            print('[INFO] Loaded scenario with ' + str(len(self.map_transition_filter)) + ' steps.')
+
 		        self.rg_txt = '@startuml\n'
 		        self.rg_txt += '[*] --> 0\n'
 		        self.listOfEnvBlocks = [«FOR elm : listOfEnvBlocks SEPARATOR ','»"«elm»"«ENDFOR»]
@@ -644,7 +654,7 @@ class PetriNet {
 		    print("[INFO]    * PlantUML View Generation: %s" % (e - d))
 		    
 		    # print("[INFO] Starting Command-Line Simulation.")
-		    # Simulation().simulateUI(pn.n)
+		    # simulate(pn.n)
 		    
 		    #if not p.no_sim:
 			#    print('[SIM] Start Simulation? (Y/N) :')
@@ -666,10 +676,12 @@ class PetriNet {
 
 	    def saveMarking(self):
 	        self.SavedMarking = self.n.get_marking()
-	    
+	        self.markedStep = self.currentStep
+
 	    def gotoSavedMarking(self):
 	        print('[INFO] Setting Petri net to Saved Marking: ', self.SavedMarking)
 	        self.n.set_marking(self.SavedMarking)
+	        self.currentStep = self.markedStep
 
 	    @staticmethod
 	    def fireEnabledTransition(choices, cid):
@@ -677,19 +689,31 @@ class PetriNet {
 	        _r = _t.flow(_m)
 	        _t.fire(_m)
 	        print('[INFO] Transition Fired with ID: ', cid)
+	        self.currentStep += 1
 	        return _r
 
 	    def getEnabledTransitions(self):
 	        enabled_transition_modes = {}
 	        choices = {}
+	        filter = None
+	        if len(self.map_transition_filter) > 0:
+	            if str(self.currentStep) in self.map_transition_filter:
+	                filter = self.map_transition_filter[str(self.currentStep)]
+	            else:
+	                print('[INFO] End of scenario reached:')
+	                return choices
 	        for _t in self.n.transition():
 	            enabled_transition_modes[_t] = _t.modes()
 	            # print(enabled_transition_modes)
 	            chidx = 0
 	            for _key, _value in enabled_transition_modes.items():
 	                for _elm in _value:
-	                    choices[chidx] = _key, _elm
-	                    chidx = chidx + 1
+	                    if not filter or (_key.name == filter['transition'] and _elm.dict() == filter['substitution']):
+	                        choices[chidx] = _key, _elm
+	                        chidx = chidx + 1
+	        if (len(choices) == 0):
+	            print('[ERROR] Scenario step is not available: ', self.currentStep)
+	            exit(1)
 	        print('[INFO] Enabled Transition Choices: ', choices)
 	        return choices
 	    
