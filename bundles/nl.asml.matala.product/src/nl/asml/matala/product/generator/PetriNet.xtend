@@ -399,7 +399,7 @@ class PetriNet {
 		    markedStep = 0
 
 		    def __init__(self):
-		        scenario_file = os.path.join(os.path.dirname(__file__), 'bpmn/«prod_name».json')
+		        scenario_file = os.path.join(os.path.dirname(__file__), 'bpmn', '«prod_name».json')
 		        if os.path.isfile(scenario_file) and os.access(scenario_file, os.R_OK):
 		            self.map_transition_filter = json.load(open(scenario_file))
 		            print('[INFO] Loaded scenario with ' + str(len(self.map_transition_filter)) + ' steps.')
@@ -683,8 +683,7 @@ class PetriNet {
 	        self.n.set_marking(self.SavedMarking)
 	        self.currentStep = self.markedStep
 
-	    @staticmethod
-	    def fireEnabledTransition(choices, cid):
+	    def fireEnabledTransition(self, choices, cid):
 	        _t, _m = choices.get(int(cid))
 	        _r = _t.flow(_m)
 	        _t.fire(_m)
@@ -711,7 +710,7 @@ class PetriNet {
 	                    if not filter or (_key.name == filter['transition'] and _elm.dict() == filter['substitution']):
 	                        choices[chidx] = _key, _elm
 	                        chidx = chidx + 1
-	        if (len(choices) == 0):
+	        if len(self.map_transition_filter) > 0 and len(choices) == 0:
 	            print('[ERROR] Scenario step is not available: ', self.currentStep)
 	            exit(1)
 	        print('[INFO] Enabled Transition Choices: ', choices)
