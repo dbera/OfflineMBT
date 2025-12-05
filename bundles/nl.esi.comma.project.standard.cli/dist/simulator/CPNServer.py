@@ -49,7 +49,7 @@ def build_and_load_model(model_path:str):
       }}
     }}
     """
-    
+    # Generate the module
     prj_filename:str = os.path.join(model_dir,f'{model_name}.prj')
     with open(prj_filename, "w") as file1:
         prj_content = prj_template.format(taskname,model_name)
@@ -62,11 +62,13 @@ def build_and_load_model(model_path:str):
             }, 
             result=result
             )
-    module = utils.load_module(source=model_name,package=f"src-gen.{taskname}.CPNServer")
-    bpmn_dir = os.path.join(module.__path__[0],'bpmn')
+    # Move all input files to the bpmn folder within the generated module
+    bpmn_dir = os.path.join(model_dir, 'src-gen', taskname, 'CPNServer', model_name, 'bpmn')
     os.makedirs(bpmn_dir, exist_ok=True)
     filename_wildcard = os.path.join(TEMP_PATH,f"{model_name}.*")
     utils.move(filename_wildcard, bpmn_dir)
+    # Now load the module
+    module = utils.load_module(source=model_name,package=f"src-gen.{taskname}.CPNServer")
     return module, result
 
 def generate_fast_tests( model_path:str, num_tests:int=1, depth_limit:int=500):
@@ -127,6 +129,10 @@ def handle_bpmn():
     filename = fname + utils.gensym(prefix="_",timestamp=True)
     bpmn_path = os.path.join(TEMP_PATH,f"{filename}.bpmn")
     _bpmn.save(bpmn_path)
+    if 'scenario-file' in request.files:
+        _scenario = request.files['scenario-file']
+        _scenario_path = os.path.join(TEMP_PATH,f"{filename}.json")
+        _scenario.save(_scenario_path)
 
     status_code = 200
     response = {'response': {'uuid': filename}}
