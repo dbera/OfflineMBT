@@ -377,8 +377,7 @@ class PetriNet {
 		    visitedTList = [[]]
 		    visitedTProdList = [[]]
 		    rg_txt = ""
-		    SavedMarking = Marking()
-		    
+
 		    # test generation data
 		    sutTypesList = [«FOR elm : sutTransitionMap.keySet SEPARATOR ','»'«elm»'«ENDFOR»]
 		    sutVarTransitionMap = {}
@@ -393,10 +392,11 @@ class PetriNet {
 		    tr_assert_ref_dict = {}
 		    map_transition_assert = {}
 		
+		    # Simulation data
+		    stepsList = []
+		    markedIndex = 0
 		    # Replay scenario data
 		    map_transition_filter = {}
-		    currentStep = 0
-		    markedStep = 0
 
 		    def __init__(self):
 		        scenario_file = os.path.join(os.path.dirname(__file__), 'bpmn', '«prod_name».json')
@@ -418,6 +418,7 @@ class PetriNet {
 		        «transitionsTxt»
 		        «inputArcsTxt»
 		        «outputArcsTxt»
+		        self.stepsList.append(self.n.get_marking())
 		    
 		    «print_SCNGen(num_tests, depth_limit)»
 		    
@@ -675,31 +676,36 @@ class PetriNet {
 	        return self.n.get_marking()
 
 	    def saveMarking(self):
-	        self.SavedMarking = self.n.get_marking()
-	        self.markedStep = self.currentStep
+	        self.markedIndex = len(self.stepsList) - 1
+	        print('[INFO] Save petri net marking', self.markedIndex)
 
 	    def gotoSavedMarking(self):
-	        print('[INFO] Setting Petri net to Saved Marking: ', self.SavedMarking)
-	        self.n.set_marking(self.SavedMarking)
-	        self.currentStep = self.markedStep
+	        print('[INFO] Setting petri net to saved marking')
+	        self.gotoMarking(self.markedIndex)
+
+	    def gotoMarking(self, index):
+	        print('[INFO] Setting petri net to marking', index)
+	        self.n.set_marking(self.stepsList[index])
+	        self.stepsList = self.stepsList[:index + 1]
 
 	    def fireEnabledTransition(self, choices, cid):
 	        _t, _m = choices.get(int(cid))
 	        _r = _t.flow(_m)
 	        _t.fire(_m)
-	        print('[INFO] Transition Fired with ID: ', cid)
-	        self.currentStep += 1
+	        # print('[INFO] Transition Fired with ID: ', cid)
+	        self.stepsList.append(self.n.get_marking())
 	        return _r
 
 	    def getEnabledTransitions(self):
 	        enabled_transition_modes = {}
 	        choices = {}
-	        filter = None
+	        stepIndex = len(self.stepsList)
+	        stepFilter = None
 	        if len(self.map_transition_filter) > 0:
-	            if str(self.currentStep) in self.map_transition_filter:
-	                filter = self.map_transition_filter[str(self.currentStep)]
+	            if str(stepIndex) in self.map_transition_filter:
+	                stepFilter = self.map_transition_filter[str(stepIndex)]
 	            else:
-	                print('[INFO] End of scenario reached:')
+	                print('[INFO] End of scenario reached at step:', stepIndex)
 	                return choices
 	        for _t in self.n.transition():
 	            enabled_transition_modes[_t] = _t.modes()
@@ -707,13 +713,13 @@ class PetriNet {
 	            chidx = 0
 	            for _key, _value in enabled_transition_modes.items():
 	                for _elm in _value:
-	                    if not filter or (_key.name == filter['transition'] and _elm.dict() == filter['substitution']):
+	                    if not stepFilter or (_key.name == stepFilter['transition'] and _elm.dict() == stepFilter['substitution']):
 	                        choices[chidx] = _key, _elm
 	                        chidx = chidx + 1
-	        if len(self.map_transition_filter) > 0 and len(choices) == 0:
-	            print('[ERROR] Scenario step is not available: ', self.currentStep)
-	            exit(1)
-	        print('[INFO] Enabled Transition Choices: ', choices)
+	        if stepFilter and (len(choices) == 0):
+	            print('[ERROR] Scenario step is not available: ', stepIndex)
+	            raise RuntimeError('Scenario step is not available: ' + str(stepIndex))
+	        # print('[INFO] Enabled Transition Choices: ', choices)
 	        return choices
 	    
 	    def generateSCN(self, level, visitedT, visitedTP):

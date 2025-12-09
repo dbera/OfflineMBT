@@ -548,7 +548,7 @@ class Utils
             def generateJSON(self, idx, scenario, output_dir):
                 jsonScenario = {}
                 for nr, step in enumerate(scenario):
-                    jsonScenario[nr] = {
+                    jsonScenario[nr + 1] = {
                         'transition' : step[1].name,
                         'substitution' : step[2].dict()
                     }
