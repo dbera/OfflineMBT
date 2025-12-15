@@ -399,11 +399,6 @@ class PetriNet {
 		    map_transition_filter = {}
 
 		    def __init__(self):
-		        scenario_file = os.path.join(os.path.dirname(__file__), 'bpmn', '«prod_name».json')
-		        if os.path.isfile(scenario_file) and os.access(scenario_file, os.R_OK):
-		            self.map_transition_filter = json.load(open(scenario_file))
-		            print('[INFO] Loaded scenario with ' + str(len(self.map_transition_filter)) + ' steps.')
-
 		        self.rg_txt = '@startuml\n'
 		        self.rg_txt += '[*] --> 0\n'
 		        self.listOfEnvBlocks = [«FOR elm : listOfEnvBlocks SEPARATOR ','»"«elm»"«ENDFOR»]
@@ -671,14 +666,21 @@ class PetriNet {
 	def print_SCNGen(int num_tests, int depth_limit) {
 		return
 		'''
+	    def loadScenario(self, scenario):
+	        self.map_transition_filter = scenario
+	        print('[INFO] Loaded scenario with ' + str(len(self.map_transition_filter)) + ' steps.')
+	        self.gotoMarking(0)
+
 	    def getCurrentMarking(self):
 	        # print('[INFO] Current Marking: ', self.n.get_marking())
 	        return self.n.get_marking()
 
+	    # Deprecated, use gotoMarking
 	    def saveMarking(self):
 	        self.markedIndex = len(self.stepsList) - 1
 	        print('[INFO] Save petri net marking', self.markedIndex)
 
+	    # Deprecated, use gotoMarking
 	    def gotoSavedMarking(self):
 	        print('[INFO] Setting petri net to saved marking')
 	        self.gotoMarking(self.markedIndex)
