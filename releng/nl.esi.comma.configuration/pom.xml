@@ -51,6 +51,7 @@
         <license.maven.plugin.version>4.6</license.maven.plugin.version>
 
         <mwe2-workflow>PLEASE SPECIFY THE 'mwe2-workflow' PROPERTY IN YOUR MAVEN POM</mwe2-workflow>
+        <mwe2-skip>false</mwe2-skip>
     </properties>
 
     <scm>
@@ -364,6 +365,9 @@
                                 <goals>
                                     <goal>java</goal>
                                 </goals>
+                                <configuration>
+                                    <skip>${mwe2-skip}</skip>
+                                </configuration>
                             </execution>
                         </executions>
                         <configuration>
