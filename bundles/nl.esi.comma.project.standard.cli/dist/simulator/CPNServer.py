@@ -129,10 +129,6 @@ def handle_bpmn():
     filename = fname + utils.gensym(prefix="_",timestamp=True)
     bpmn_path = os.path.join(TEMP_PATH,f"{filename}.bpmn")
     _bpmn.save(bpmn_path)
-    if 'scenario-file' in request.files:
-        _scenario = request.files['scenario-file']
-        _scenario_path = os.path.join(TEMP_PATH,f"{filename}.json")
-        _scenario.save(_scenario_path)
 
     status_code = 200
     response = {'response': {'uuid': filename}}
@@ -227,6 +223,27 @@ def handle_request(uuid: str):
         response['error'] = f'CPN "{uuid}" not loaded.'
 
     return jsonify(response)
+
+
+@app.route(rule="/CPNServer/<uuid>/scenario/load", methods=["POST"])
+def handle_scenario_load(uuid: str):
+    print(f'Received Request [{uuid}]: load_scenario')
+    pn = utils.get_cpn(uuid)
+
+    status_code = 200
+    response = {}
+    try:
+        scenarioFile = request.files['scenario-file']
+        scenarioJson = json.load(scenarioFile)
+        pn.loadScenario(scenarioJson)
+        response['message'] = 'The scenario has been loaded'
+        response['steps'] = len(scenarioJson)
+
+    except Exception as e:
+        status_code = 400
+        response['exception'] = str(e)
+
+    return jsonify(response), status_code
 
 
 @app.route(rule="/CPNServer/<uuid>/markings", methods=["GET"])
