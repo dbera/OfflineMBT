@@ -127,7 +127,7 @@ class StandardProjectGenerator extends AbstractGenerator {
                 // TODO fetch these FAST configuration parameters from somewhere else (e.g., .prj task)
                 val renamingRules = task.renamingRules !== null ? createPropertiesMap(task.renamingRules) : new HashMap
                 val genParams = task.generatorParams !== null ? createPropertiesMap(task.generatorParams) : new HashMap
-                genParams.put('prefixPath', './vfab2_scenario/FAST/testcases/' + specName + '_' + tspecName + '/') // TODO fetch this from somewhere else
+                genParams.putIfAbsent('prefixPath', './vfab2_scenario/FAST/testcases/' + specName + '_' + tspecName + '/') // TODO fetch this from somewhere else
                 // Generate FAST testcase
                 val fromConcreteToFastGen = new FromConcreteToFast(renamingRules, genParams)
                 fromConcreteToFastGen.doGenerate(conTspecRes, fsa, ctx)
