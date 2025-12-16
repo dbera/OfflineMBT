@@ -64,7 +64,7 @@ class ProductGenerator extends AbstractGenerator {
 		
 		val num_tests = prod.specification.numTests
 		
-		val import_list = newArrayList
+//		val import_list = newArrayList
 		val var_decl_map = newLinkedHashMap
 		
 //		/* Generate Z3 Data Types */
@@ -96,7 +96,7 @@ class ProductGenerator extends AbstractGenerator {
 			methodTxt += tuple.value		
 		}
 		
-		fsa.generateFile('CPNServer//' + specName + '//' + specName + '_types.py', (new Utils()).toTypes(specName + "_types", import_list, var_decl_map))
+//		fsa.generateFile('CPNServer//' + specName + '//' + specName + '_types.py', (new Utils()).toTypes(specName + "_types", import_list, var_decl_map))
 		fsa.generateFile('CPNServer//' + specName + '//plantuml//' + specName + '_model.plantuml', pnet.toPlantUML(pnet, false))
 		fsa.generateFile('CPNServer//' + specName + '//plantuml//' + specName + '_system.plantuml', pnet.toPlantUML(pnet, true))
 		
