@@ -59,20 +59,12 @@ This product includes software developed by the Electronic Systems Group at
 the Department of Electrical Engineering of Eindhoven University of Technology.
    </license>
 
-   <plugin
-         id="nl.esi.comma.expressions.ui"
-         version="0.0.0"/>
-
-   <plugin
-         id="nl.esi.comma.actions.ui"
-         version="0.0.0"/>
+   <requires>
+      <import plugin="nl.esi.xtext.lsp.server"/>
+   </requires>
 
    <plugin
          id="nl.esi.comma.types.ide"
-         version="0.0.0"/>
-
-   <plugin
-         id="nl.esi.comma.signature.ui"
          version="0.0.0"/>
 
    <plugin
@@ -104,10 +96,6 @@ the Department of Electrical Engineering of Eindhoven University of Technology.
          version="0.0.0"/>
 
    <plugin
-         id="nl.esi.comma.types.ui"
-         version="0.0.0"/>
-
-   <plugin
          id="nl.esi.comma.testspecification"
          version="0.0.0"/>
 
@@ -116,19 +104,11 @@ the Department of Electrical Engineering of Eindhoven University of Technology.
          version="0.0.0"/>
 
    <plugin
-         id="nl.esi.comma.testspecification.ui"
-         version="0.0.0"/>
-
-   <plugin
          id="nl.esi.comma.inputspecification"
          version="0.0.0"/>
 
    <plugin
          id="nl.esi.comma.inputspecification.ide"
-         version="0.0.0"/>
-
-   <plugin
-         id="nl.esi.comma.inputspecification.ui"
          version="0.0.0"/>
 
    <plugin
@@ -144,23 +124,11 @@ the Department of Electrical Engineering of Eindhoven University of Technology.
          version="0.0.0"/>
 
    <plugin
-         id="nl.esi.comma.behavior.scl.ui"
-         version="0.0.0"/>
-
-   <plugin
          id="nl.esi.comma.constraints"
          version="0.0.0"/>
 
    <plugin
-         id="nl.esi.comma.constraints.dashboard"
-         version="0.0.0"/>
-
-   <plugin
          id="nl.esi.comma.constraints.ide"
-         version="0.0.0"/>
-
-   <plugin
-         id="nl.esi.comma.constraints.ui"
          version="0.0.0"/>
 
    <plugin
@@ -172,27 +140,11 @@ the Department of Electrical Engineering of Eindhoven University of Technology.
          version="0.0.0"/>
 
    <plugin
-         id="nl.esi.comma.project.standard.ui"
-         version="0.0.0"/>
-
-   <plugin
          id="nl.esi.comma.scenarios"
          version="0.0.0"/>
 
    <plugin
-         id="nl.esi.comma.scenarios.dashboard"
-         version="0.0.0"/>
-
-   <plugin
          id="nl.esi.comma.scenarios.ide"
-         version="0.0.0"/>
-
-   <plugin
-         id="nl.esi.comma.scenarios.tests"
-         version="0.0.0"/>
-
-   <plugin
-         id="nl.esi.comma.scenarios.ui"
          version="0.0.0"/>
 
    <plugin
@@ -204,23 +156,11 @@ the Department of Electrical Engineering of Eindhoven University of Technology.
          version="0.0.0"/>
 
    <plugin
-         id="nl.esi.comma.steps.ui"
-         version="0.0.0"/>
-
-   <plugin
          id="nl.esi.comma.systemconfig"
          version="0.0.0"/>
 
    <plugin
          id="nl.esi.comma.systemconfig.ide"
-         version="0.0.0"/>
-
-   <plugin
-         id="nl.esi.comma.systemconfig.tests"
-         version="0.0.0"/>
-
-   <plugin
-         id="nl.esi.comma.systemconfig.ui"
          version="0.0.0"/>
 
    <plugin
@@ -232,14 +172,6 @@ the Department of Electrical Engineering of Eindhoven University of Technology.
          version="0.0.0"/>
 
    <plugin
-         id="nl.asml.matala.product.lsp.server"
-         version="0.0.0"/>
-
-   <plugin
-         id="nl.asml.matala.product.ui"
-         version="0.0.0"/>
-
-   <plugin
          id="nl.esi.comma.assertthat"
          version="0.0.0"/>
 
@@ -248,11 +180,31 @@ the Department of Electrical Engineering of Eindhoven University of Technology.
          version="0.0.0"/>
 
    <plugin
-         id="nl.esi.comma.assertthat.ui"
+         id="nl.asml.matala.bpmn4s"
          version="0.0.0"/>
 
    <plugin
-         id="nl.asml.matala.bpmn4s"
+         id="nl.esi.comma.abstracttestspecification"
+         version="0.0.0"/>
+
+   <plugin
+         id="nl.esi.comma.abstracttestspecification.ide"
+         version="0.0.0"/>
+
+   <plugin
+         id="nl.asml.matala.product.lsp.server"
+         version="0.0.0"/>
+
+   <plugin
+         id="nl.esi.comma.abstracttestspecification.tests"
+         version="0.0.0"/>
+
+   <plugin
+         id="nl.esi.comma.causalgraph"
+         version="0.0.0"/>
+
+   <plugin
+         id="nl.esi.comma.causalgraph.ide"
          version="0.0.0"/>
 
 </feature>
