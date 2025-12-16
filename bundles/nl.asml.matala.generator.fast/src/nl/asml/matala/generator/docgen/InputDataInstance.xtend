@@ -10,7 +10,7 @@
  * 
  * SPDX-License-Identifier: MIT
  */
-package nl.esi.comma.testspecification.generator.to.docgen
+package nl.asml.matala.generator.docgen
 
 import java.util.ArrayList
 import java.util.HashMap
@@ -19,9 +19,9 @@ import nl.esi.comma.actions.actions.AssignmentAction
 import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
 import nl.esi.comma.inputspecification.inputSpecification.APIDefinition
 import nl.esi.comma.inputspecification.inputSpecification.Main
-import nl.esi.comma.testspecification.generator.TestSpecificationInstance
 import nl.esi.comma.testspecification.generator.utils.JSONData
 import nl.esi.comma.testspecification.generator.utils.KeyValue
+import nl.esi.comma.testspecification.generator.utils.TestSpecificationInstance
 import nl.esi.comma.testspecification.testspecification.TSMain
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.EcoreUtil2

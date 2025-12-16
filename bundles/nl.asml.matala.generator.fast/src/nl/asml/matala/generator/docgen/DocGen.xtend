@@ -10,13 +10,13 @@
  *
  * SPDX-License-Identifier: MIT
  */
-package nl.esi.comma.testspecification.generator.to.docgen
+package nl.asml.matala.generator.docgen
 
 import java.util.ArrayList
 import java.util.HashMap
 import java.util.List
-import nl.esi.comma.testspecification.generator.TestSpecificationInstance
 import nl.esi.comma.testspecification.generator.utils.Step
+import nl.esi.comma.testspecification.generator.utils.TestSpecificationInstance
 
 class DocGen 
 {

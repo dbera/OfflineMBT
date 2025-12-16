@@ -3,11 +3,17 @@ Bundle-ManifestVersion: 2
 Bundle-Name: FAST Generators
 Bundle-SymbolicName: nl.asml.matala.generator.fast
 Bundle-Version: 4.2.0.qualifier
+Export-Package: nl.asml.matala.generator.docgen,
+ nl.asml.matala.generator.fast
 Bundle-Vendor: ASML
 Automatic-Module-Name: nl.asml.matala.generator.fast
 Bundle-RequiredExecutionEnvironment: JavaSE-21
-Require-Bundle: com.google.guava,
- org.eclipse.xtext.xbase.lib,
- org.eclipse.xtend.lib,
- org.eclipse.xtend.lib.macro,
- nl.esi.comma.testspecification
+Require-Bundle: org.eclipse.xtext,
+ org.eclipse.xtext.xbase,
+ org.eclipse.equinox.common;bundle-version="3.16.0",
+ org.eclipse.emf.ecore,
+ org.eclipse.xtext.xbase.lib;bundle-version="2.36.0",
+ org.eclipse.emf.common,
+ org.eclipse.xtend.lib;bundle-version="2.36.0",
+ nl.esi.comma.testspecification,
+ nl.esi.comma.inputspecification

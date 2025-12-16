@@ -10,7 +10,7 @@
  * 
  * SPDX-License-Identifier: MIT
  */
-package nl.esi.comma.testspecification.generator.to.fast
+package nl.asml.matala.generator.fast
 
 import java.util.ArrayList
 import java.util.List

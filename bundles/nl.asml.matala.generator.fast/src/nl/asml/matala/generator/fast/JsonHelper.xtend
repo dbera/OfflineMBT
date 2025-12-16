@@ -10,7 +10,7 @@
  *
  * SPDX-License-Identifier: MIT
  */
-package nl.esi.comma.testspecification.generator.to.fast
+package nl.asml.matala.generator.fast
 
 import java.util.HashMap
 import java.util.Map
@@ -43,11 +43,11 @@ class JsonHelper {
      */
     def static String jsonElement(JsonObject jsonObject) {
         return '''
-        {
-            «FOR aMember: jsonObject.members SEPARATOR ","»
-                «jsonElement(aMember)»
-            «ENDFOR»
-        }'''
+		{
+		    «FOR aMember: jsonObject.members SEPARATOR ","»
+		    	«jsonElement(aMember)»
+		    «ENDFOR»
+		}'''
     }
 
     /**
@@ -60,20 +60,20 @@ class JsonHelper {
      */
     def static String jsonElement(JsonArray elem) {
         return '''
-        [
-            «FOR element : elem.values SEPARATOR ","»
-                «jsonElement(element)»
-            «ENDFOR»
-        ]'''
+		[
+		    «FOR element : elem.values SEPARATOR ","»
+		    	«jsonElement(element)»
+		    «ENDFOR»
+		]'''
     }
 
     def static String jsonElement(List<JsonCollection> list) {
         return '''
-        [
-            «FOR element : list SEPARATOR ","»
-                «jsonElement(element)»
-            «ENDFOR»
-        ]'''
+		[
+		    «FOR element : list SEPARATOR ","»
+		    	«jsonElement(element)»
+		    «ENDFOR»
+		]'''
     }
 
     /**
@@ -109,31 +109,31 @@ class JsonHelper {
     
     def static String toXMLElement(JsonObject jsonObject, Map<String,String> rename)
         '''
-        «FOR aMember: jsonObject.members»
-        «toXMLElement(aMember, rename)»
-        «ENDFOR»
-        '''
+		«FOR aMember: jsonObject.members»
+			«toXMLElement(aMember, rename)»
+		«ENDFOR»
+	'''
     def static String toXMLElement(JsonArray jsonObject, Map<String,String> rename)
         '''
-        «FOR aMember: jsonObject.values»
-        «toXMLElement(aMember, rename)»
-        «ENDFOR»
-        '''
+		«FOR aMember: jsonObject.values»
+			«toXMLElement(aMember, rename)»
+		«ENDFOR»
+	'''
 
     /**
      * parses a json member into a "key:value" string format
      */
     def static String toXMLElement(JsonMember elem, Map<String,String> rename)  
         '''
-        «val elemKey = rename.getOrDefault(elem.key,elem.key)»
-        «IF (isBasicType(elem.value) && elem.value !== null)  »
-        <«elemKey»>«toXMLElement(elem.value, rename)»</«elemKey»>
-        «ELSE»
-        <«elemKey»>
-            «toXMLElement(elem.value, rename)»
-        </«elemKey»>
-        «ENDIF»
-        '''
+		«val elemKey = rename.getOrDefault(elem.key,elem.key)»
+		«IF (isBasicType(elem.value) && elem.value !== null)  »
+			<«elemKey»>«toXMLElement(elem.value, rename)»</«elemKey»>
+		«ELSE»
+			<«elemKey»>
+			    «toXMLElement(elem.value, rename)»
+			</«elemKey»>
+		«ENDIF»
+	'''
 
     def static String toXMLElement(JsonValue elem) { return toXMLElement(elem, new HashMap<String,String>()); }
     def static String toXMLElement(JsonValue elem, Map<String,String> rename) {

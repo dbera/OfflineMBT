@@ -10,7 +10,7 @@
  *
  * SPDX-License-Identifier: MIT
  */
-package nl.esi.comma.testspecification.generator.to.fast
+package nl.asml.matala.generator.fast
 
 import java.util.Map
 import nl.esi.comma.actions.actions.AssignmentAction
@@ -55,7 +55,6 @@ import nl.esi.comma.expressions.expression.Field
 import nl.esi.comma.expressions.expression.VectorTypeConstructor
 import nl.esi.comma.types.types.SimpleTypeDecl
 import nl.esi.comma.types.types.TypeDecl
-import nl.esi.comma.types.types.RecordField
 
 class ExpressionsParser {
 	
@@ -65,9 +64,9 @@ class ExpressionsParser {
     def static dispatch CharSequence generateExpression(ExpressionMap expr, CharSequence ref)
 	'''
 	{
-    «FOR e : expr.pairs.filter[!(it.value instanceof ExpressionNullLiteral)] SEPARATOR ', '»
-	       «generateExpression(e.key, ref)» : «generateExpression(e.value, ref)»
-   «ENDFOR»
+	   «FOR e : expr.pairs.filter[!(it.value instanceof ExpressionNullLiteral)] SEPARATOR ', '»
+	   	«generateExpression(e.key, ref)» : «generateExpression(e.value, ref)»
+	  «ENDFOR»
 	}'''
 	
 	def static dispatch CharSequence generateExpression(ExpressionMapRW expr, CharSequence ref)
@@ -80,17 +79,17 @@ class ExpressionsParser {
 	def static dispatch CharSequence generateExpression(ExpressionRecord expr, CharSequence ref)
 	//'''new «expr.type.name»(«IF !generateRecExpression(expr, ref).toString.contains('''ANY''')»«generateRecExpression(expr, ref)»«ENDIF»)''' 
 	'''
-	{
-	    «generateRecExpression(expr, ref)»
-	}
+		{
+		    «generateRecExpression(expr, ref)»
+		}
 	'''
 	
 	def static CharSequence generateRecExpression(ExpressionRecord expr, CharSequence ref)
 	//'''«FOR f : expr.fields SEPARATOR ", "»«IF generateExpression(f, ref).toString.contains('''ANY''')»«JavaGeneratorUtilities::generateJavaTypeInitializer(f.recordField.type.type)»«ELSE»«generateExpression(f, ref)»«ENDIF»«ENDFOR»'''
 	'''
-	«FOR f : expr.fields.reject[exp instanceof ExpressionNullLiteral] SEPARATOR ", "»
-	   «generateExpression(f, ref)»
-	«ENDFOR»
+		«FOR f : expr.fields.reject[exp instanceof ExpressionNullLiteral] SEPARATOR ", "»
+			«generateExpression(f, ref)»
+		«ENDFOR»
 	'''
 
 	def static dispatch CharSequence generateExpression(Field expr, CharSequence ref)
@@ -99,12 +98,12 @@ class ExpressionsParser {
 	def static dispatch CharSequence generateExpression(ExpressionVector expr, CharSequence ref)
 	//'''new «JavaGeneratorUtilities::generateJavaDataType(expr.typeAnnotation.type.type)»«generateDim(expr)»{«FOR elm : expr.elements SEPARATOR " ,"»«IF elm instanceof ExpressionVector»«generateExpression(elm as ExpressionVector, ref)»«ELSE»«generateExpression(elm, ref)»«ENDIF»«ENDFOR»}''' 
 	'''
-	[
-	   «FOR elm : expr.elements SEPARATOR " ,"»
-	       «IF elm instanceof ExpressionVector»«generateExpression(elm as ExpressionVector, ref)»«ELSE»«generateExpression(elm, ref)»«ENDIF»
-	   «ENDFOR»
-	]
-   '''
+		[
+		   «FOR elm : expr.elements SEPARATOR " ,"»
+		   	«IF elm instanceof ExpressionVector»«generateExpression(elm as ExpressionVector, ref)»«ELSE»«generateExpression(elm, ref)»«ENDIF»
+		   «ENDFOR»
+		]
+	'''
 
 	def static dispatch CharSequence generateExpression(ExpressionVariable expr, CharSequence ref)
 	//'''«IF JavaGeneratorUtilities::isStateMachineVariable(expr.variable)»«ref»«expr.variable.name»«ELSE»«expr.variable.name»«ENDIF»'''
@@ -284,10 +283,10 @@ class ExpressionsParser {
     
     def static dispatch CharSequence generateXMLElement(ExpressionRecord expr, Map<String,String> rename)
     '''
-    «FOR f : expr.fields.reject[exp instanceof ExpressionNullLiteral]»
-    «generateXMLElement(f, rename)»
-    «ENDFOR»
-    '''
+		«FOR f : expr.fields.reject[exp instanceof ExpressionNullLiteral]»
+			«generateXMLElement(f, rename)»
+		«ENDFOR»
+	'''
 
     def static dispatch CharSequence generateXMLElement(Field expr, Map<String,String> rename){
         var isBasicType = isBasicType(expr.exp)
@@ -297,18 +296,18 @@ class ExpressionsParser {
             return '''<«elemKey»>«elemValue»</«elemKey»>'''
         }
         return '''
-        <«elemKey»>
-            «elemValue»
-        </«elemKey»>'''
+		<«elemKey»>
+		    «elemValue»
+		</«elemKey»>'''
     }
 
     def static dispatch CharSequence generateXMLElement(ExpressionVector expr, Map<String,String> rename)
     '''
-   «FOR elm : expr.elements»
-   «IF elm instanceof ExpressionVector»«generateXMLElement(elm as ExpressionVector, rename)»
-   «ELSE»«generateXMLElement(elm, rename)»«ENDIF»
-   «ENDFOR»
-   '''
+		«FOR elm : expr.elements»
+			«IF elm instanceof ExpressionVector»«generateXMLElement(elm as ExpressionVector, rename)»
+			«ELSE»«generateXMLElement(elm, rename)»«ENDIF»
+		«ENDFOR»
+	'''
 
     def static dispatch CharSequence generateXMLElement(ExpressionConstantString expr, Map<String,String> rename)      
     '''«expr.value»''' 

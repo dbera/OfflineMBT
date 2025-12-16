@@ -10,7 +10,7 @@
  *
  * SPDX-License-Identifier: MIT
  */
-package nl.esi.comma.testspecification.generator.to.docgen
+package nl.asml.matala.generator.docgen
 
 import java.util.ArrayList
 import java.util.HashMap
@@ -20,11 +20,11 @@ import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
 import nl.esi.comma.expressions.expression.Variable
 import nl.esi.comma.inputspecification.inputSpecification.APIDefinition
 import nl.esi.comma.inputspecification.inputSpecification.Main
-import nl.esi.comma.testspecification.generator.TestSpecificationInstance
 import nl.esi.comma.testspecification.generator.utils.Step
+import nl.esi.comma.testspecification.generator.utils.TestSpecificationInstance
+import nl.esi.comma.testspecification.testspecification.RunStep
 import nl.esi.comma.testspecification.testspecification.TSMain
 import nl.esi.comma.testspecification.testspecification.TestDefinition
-import nl.esi.comma.testspecification.testspecification.RunStep
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.generator.AbstractGenerator
@@ -76,9 +76,9 @@ class FromConcreteToDocumentation extends AbstractGenerator
     def generateBatFile(IFileSystemAccess2 fsa, String plantuml_filename) {
         var txt = 
         '''
-        java -DPLANTUML_LIMIT_SIZE=122192 -jar ./lib/plantuml-1.2023.8.jar ./src-gen/«plantuml_filename».plantuml -tsvg
-        pause
-        '''
+			java -DPLANTUML_LIMIT_SIZE=122192 -jar ./lib/plantuml-1.2023.8.jar ./src-gen/«plantuml_filename».plantuml -tsvg
+			pause
+		'''
         fsa.generateFile("./../gen_svg_for_" + plantuml_filename + ".bat", txt)
     }
     

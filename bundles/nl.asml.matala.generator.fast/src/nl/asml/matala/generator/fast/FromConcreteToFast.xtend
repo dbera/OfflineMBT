@@ -10,29 +10,33 @@
  * 
  * SPDX-License-Identifier: MIT
  */
-package nl.esi.comma.testspecification.generator.to.fast
+package nl.asml.matala.generator.fast
 
 import java.util.ArrayList
 import java.util.HashMap
 import java.util.HashSet
 import java.util.LinkedHashMap
+import java.util.LinkedHashSet
 import java.util.List
 import java.util.Map
+import java.util.Set
 import java.util.regex.Pattern
+import nl.asml.matala.generator.docgen.DocGen
 import nl.esi.comma.actions.actions.Action
 import nl.esi.comma.actions.actions.AssignmentAction
 import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
 import nl.esi.comma.expressions.expression.Expression
 import nl.esi.comma.expressions.expression.ExpressionNullLiteral
+import nl.esi.comma.expressions.expression.ExpressionRecord
 import nl.esi.comma.expressions.expression.ExpressionRecordAccess
 import nl.esi.comma.expressions.expression.ExpressionVariable
 import nl.esi.comma.inputspecification.inputSpecification.APIDefinition
 import nl.esi.comma.inputspecification.inputSpecification.Main
-import nl.esi.comma.testspecification.generator.TestSpecificationInstance
-import nl.esi.comma.testspecification.generator.to.docgen.DocGen
 import nl.esi.comma.testspecification.generator.utils.JSONData
 import nl.esi.comma.testspecification.generator.utils.KeyValue
 import nl.esi.comma.testspecification.generator.utils.Step
+import nl.esi.comma.testspecification.generator.utils.TestSpecificationInstance
+import nl.esi.comma.testspecification.testspecification.AssertionStep
 import nl.esi.comma.testspecification.testspecification.RunStep
 import nl.esi.comma.testspecification.testspecification.TSMain
 import nl.esi.comma.testspecification.testspecification.TestDefinition
@@ -45,12 +49,7 @@ import org.eclipse.xtext.generator.IGeneratorContext
 
 import static extension nl.esi.comma.types.utilities.EcoreUtil3.*
 import static extension nl.esi.comma.types.utilities.FileSystemAccessUtil.*
-import java.util.Set
-import java.util.LinkedHashSet
-import nl.esi.comma.expressions.expression.ExpressionRecord
-import nl.esi.comma.testspecification.testspecification.AssertionStep
-import nl.esi.comma.expressions.expression.Field
-import nl.esi.comma.expressions.expression.ExpressionVector
+import static extension org.eclipse.emf.ecore.util.EcoreUtil.*
 
 class FromConcreteToFast extends AbstractGenerator {
 

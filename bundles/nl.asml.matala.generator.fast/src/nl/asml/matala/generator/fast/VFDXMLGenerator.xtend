@@ -10,16 +10,13 @@
  *
  * SPDX-License-Identifier: MIT
  */
-package nl.esi.comma.testspecification.generator.to.fast
+package nl.asml.matala.generator.fast
 
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.HashMap
 import java.util.Map
-import nl.esi.comma.testspecification.testspecification.TestDefinition
-import java.util.Set
-import java.util.LinkedHashSet
-import nl.esi.comma.testspecification.generator.TestSpecificationInstance
+import nl.esi.comma.testspecification.generator.utils.TestSpecificationInstance
 
 class VFDXMLGenerator {
 
@@ -70,27 +67,27 @@ class VFDXMLGenerator {
         var now = LocalDateTime.now();
 
         return '''
-        <?xml version="1.0" encoding="UTF-8"?>
-        <VirtualFabDefinition:VirtualFabDefinition xmlns:VirtualFabDefinition="«this.ns»" xmlns:xsi="«this.xsi»" xsi:schemaLocation="«this.loc»">
-          <Header>
-            <Title>«this.title»</Title>
-            <CreateTime>«now.format(VFDXMLGenerator.formatter)»</CreateTime>
-          </Header>
-          <Definition>
-            <Name>atd</Name>
-            <Description>sutsdesc</Description>
-            <SUTList>
-            «FOR sd_key : tsi.sutDefinitionsVFDXML.keySet»
-            «FOR item : tsi.sutDefinitionsVFDXML.get(sd_key)»
-                <SUT>
-                    «item»
-                </SUT>
-            «ENDFOR»
-            «ENDFOR»
-            </SUTList>
-          </Definition>
-        </VirtualFabDefinition:VirtualFabDefinition>
-        '''
+			<?xml version="1.0" encoding="UTF-8"?>
+			<VirtualFabDefinition:VirtualFabDefinition xmlns:VirtualFabDefinition="«this.ns»" xmlns:xsi="«this.xsi»" xsi:schemaLocation="«this.loc»">
+			  <Header>
+			    <Title>«this.title»</Title>
+			    <CreateTime>«now.format(VFDXMLGenerator.formatter)»</CreateTime>
+			  </Header>
+			  <Definition>
+			    <Name>atd</Name>
+			    <Description>sutsdesc</Description>
+			    <SUTList>
+			    «FOR sd_key : tsi.sutDefinitionsVFDXML.keySet»
+			    	«FOR item : tsi.sutDefinitionsVFDXML.get(sd_key)»
+			    		<SUT>
+			    		    «item»
+			    		</SUT>
+			    	«ENDFOR»
+			    «ENDFOR»
+			    </SUTList>
+			  </Definition>
+			</VirtualFabDefinition:VirtualFabDefinition>
+		'''
     }
     
     def setRenamingRules(Map<String, String> map) {
