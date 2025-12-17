@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: FAST Generators
-Bundle-SymbolicName: nl.asml.matala.generator.fast
+Bundle-SymbolicName: nl.asml.matala.generator.fast;singleton:=true
 Bundle-Version: 4.2.0.qualifier
 Export-Package: nl.asml.matala.generator.docgen,
  nl.asml.matala.generator.fast
@@ -16,4 +16,5 @@ Require-Bundle: org.eclipse.xtext,
  org.eclipse.emf.common,
  org.eclipse.xtend.lib;bundle-version="2.36.0",
  nl.esi.comma.testspecification,
- nl.esi.comma.inputspecification
+ nl.esi.comma.inputspecification,
+ nl.esi.comma.project.standard

@@ -5,6 +5,8 @@ Bundle-Vendor: TNO-ESI
 Bundle-Version: 4.2.0.qualifier
 Bundle-SymbolicName: nl.esi.comma.project.standard; singleton:=true
 Bundle-ActivationPolicy: lazy
+Bundle-Activator: nl.esi.comma.project.standard.StandardProjectPlugin
+Bundle-ClassPath: .
 Require-Bundle: nl.esi.comma.types;visibility:=reexport,
  org.eclipse.xtext,
  org.eclipse.xtext.xbase,
@@ -16,6 +18,7 @@ Require-Bundle: nl.esi.comma.types;visibility:=reexport,
  org.eclipse.xtend.lib;bundle-version="2.15.0",
  org.eclipse.emf.common,
  org.eclipse.core.resources;bundle-version="3.16.0",
+ org.eclipse.core.runtime,
  nl.asml.matala.bpmn4s,
  nl.asml.matala.product,
  nl.esi.comma.abstracttestspecification,
@@ -23,20 +26,20 @@ Require-Bundle: nl.esi.comma.types;visibility:=reexport,
  nl.esi.comma.testspecification,
  nl.esi.comma.automata,
  nl.esi.comma.constraints,
- nl.esi.comma.scenarios,
- nl.asml.matala.generator.fast
+ nl.esi.comma.scenarios
 Bundle-RequiredExecutionEnvironment: JavaSE-21
-Export-Package: nl.esi.comma.project.standard.standardProject,
- nl.esi.comma.project.standard.parser.antlr.internal,
- nl.esi.comma.project.standard.serializer,
+Export-Package: nl.esi.comma.project.standard,
+ nl.esi.comma.project.standard.formatting2,
  nl.esi.comma.project.standard.generator,
+ nl.esi.comma.project.standard.generator.extension,
  nl.esi.comma.project.standard.parser.antlr,
- nl.esi.comma.project.standard.validation,
- nl.esi.comma.project.standard,
+ nl.esi.comma.project.standard.parser.antlr.internal,
+ nl.esi.comma.project.standard.scoping,
+ nl.esi.comma.project.standard.serializer,
+ nl.esi.comma.project.standard.services,
+ nl.esi.comma.project.standard.standardProject,
  nl.esi.comma.project.standard.standardProject.impl,
  nl.esi.comma.project.standard.standardProject.util,
- nl.esi.comma.project.standard.scoping,
- nl.esi.comma.project.standard.services,
- nl.esi.comma.project.standard.formatting2
+ nl.esi.comma.project.standard.validation
 Import-Package: org.apache.log4j
 Automatic-Module-Name: nl.esi.comma.project.standard

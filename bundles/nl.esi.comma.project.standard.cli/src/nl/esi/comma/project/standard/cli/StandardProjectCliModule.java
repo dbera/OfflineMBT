@@ -12,15 +12,23 @@
  */
 package nl.esi.comma.project.standard.cli;
 
-import org.eclipse.xtext.resource.ResourceServiceProviderServiceLoader;
 import org.eclipse.xtext.resource.IResourceServiceProvider.Registry;
+import org.eclipse.xtext.resource.ResourceServiceProviderServiceLoader;
+
+import com.google.inject.Provider;
 
 import nl.esi.comma.project.standard.StandardProjectRuntimeModule;
+import nl.esi.comma.project.standard.generator.extension.IStandardProjectGeneratorExtension;
+import nl.esi.comma.project.standard.generator.extension.StandardProjectGeneratorExtensionServiceLoader;
 
 class StandardProjectCliModule extends StandardProjectRuntimeModule {
 	@Override
 	public Registry bindIResourceServiceProvider$Registry() {
 		// Enabling discovery of languages via service provider API
 		return new ResourceServiceProviderServiceLoader().get();
+	}
+
+	public Class<? extends Provider<? extends IStandardProjectGeneratorExtension.Registry>> provideIStandardProjectGeneratorExtension$Registry() {
+		return StandardProjectGeneratorExtensionServiceLoader.class;
 	}
 }

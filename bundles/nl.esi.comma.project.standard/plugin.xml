@@ -15,6 +15,7 @@
 -->
 <?eclipse version="3.0"?>
 <plugin>
+   <extension-point id="generator_extension" name="Generator Extension" schema="schema/generator_extension.exsd"/>
 	<extension point="org.eclipse.emf.ecore.generated_package">
 		<package 
 			uri = "http://www.esi.nl/comma/project/standard/StandardProject"

@@ -99,6 +99,27 @@
                             </excludeArtifactIds>
                         </configuration>
                     </execution>
+                    <!-- Packaging the FAST generators as extensions in the distribution -->
+                    <execution>
+                        <id>copy-extensions</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifact>
+                                    <groupId>${project.groupId}</groupId>
+                                    <artifactId>nl.asml.matala.generator.fast</artifactId>
+                                    <version>${project.version}</version>
+                                    <type>jar</type>
+                                    <overWrite>true</overWrite>
+                                    <outputDirectory>${project.build.directory}/dist</outputDirectory>
+                                    <destFileName>bpmn4s-extensions.jar</destFileName>
+                                </artifact>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
             <plugin>
@@ -128,7 +149,10 @@
                 <configuration>
                     <transformers>
                         <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                            <mainClass>${project.artifactId}.Main</mainClass>
+                            <manifestEntries>
+                                <Main-Class>${project.artifactId}.Main</Main-Class>
+                                <Class-Path>bpmn4s-extensions.jar</Class-Path>
+                            </manifestEntries>
                         </transformer>
                         <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
                             <resource>plugin.properties</resource>
@@ -159,25 +183,34 @@
                             <exclude>*:${project.artifactId}-jakarta.inject-*</exclude>
                             <exclude>*:${project.artifactId}-jna-*</exclude>
                             <exclude>*:${project.artifactId}-nl.asml.matala.bpmn4s-*</exclude>
-                            <exclude>*:${project.artifactId}-nl.asml.matala.generator.fast-*</exclude>
                             <exclude>*:${project.artifactId}-nl.asml.matala.product-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.asml.matala.product.ide-*</exclude>
                             <exclude>*:${project.artifactId}-nl.asml.matala.product.lsp.server-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.abstracttestspecification-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.esi.comma.abstracttestspecification.ide-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.actions-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.esi.comma.actions.ide-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.assertthat-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.esi.comma.assertthat.ide-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.automata-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.constraints-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.constraints.dashboard-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.esi.comma.constraints.ide-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.expressions-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.esi.comma.expressions.ide-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.inputspecification-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.esi.comma.inputspecification.ide-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.project.standard-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.scenarios-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.scenarios.dashboard-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.esi.comma.scenarios.ide-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.signature-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.steps-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.systemconfig-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.testspecification-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.esi.comma.testspecification.ide-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.types-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.esi.comma.types.ide-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.xtext.lsp.server-*</exclude>
                             <exclude>*:${project.artifactId}-org.aopalliance-*</exclude>
                             <exclude>*:${project.artifactId}-org.apache.aries.spifly.dynamic.bundle-*</exclude>

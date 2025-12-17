@@ -15,12 +15,14 @@
  */
 package nl.esi.comma.project.standard.generator
 
+import com.google.inject.Inject
 import java.util.HashMap
-import nl.asml.matala.generator.fast.FromConcreteToFast
 import nl.asml.matala.product.generator.ProductGenerator
 import nl.asml.matala.product.product.Product
 import nl.esi.comma.abstracttestspecification.generator.to.bpmn.FromAbstractToBpmn
 import nl.esi.comma.abstracttestspecification.generator.to.concrete.FromAbstractToConcrete
+import nl.esi.comma.project.standard.generator.^extension.IStandardProjectGeneratorExtension
+import nl.esi.comma.project.standard.generator.^extension.StandardProjectGeneratorContext
 import nl.esi.comma.project.standard.standardProject.OfflineGenerationBlock
 import nl.esi.comma.project.standard.standardProject.OfflineGenerationTarget
 import nl.esi.comma.project.standard.standardProject.Project
@@ -44,6 +46,9 @@ import static extension org.eclipse.xtext.EcoreUtil2.*
  * See https://www.eclipse.org/Xtext/documentation/303_runtime_concepts.html#code-generation
  */
 class StandardProjectGenerator extends AbstractGenerator {
+    @Inject
+    IStandardProjectGeneratorExtension.Registry generatorExtensions;
+
     override doGenerate(Resource res, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
         for (project : res.contents.filter(Project)) {
             for (task : project.offlineBlocks) {
@@ -123,16 +128,14 @@ class StandardProjectGenerator extends AbstractGenerator {
             conTspecRes.save(null)
             conTspecRes.validate()
 
-            // TODO: This last generator step should be designed as an addon via some mechanism
-            // like extension points or service provider, to allow customer specific extensions.
             // TODO fetch these FAST configuration parameters from somewhere else (e.g., .prj task)
             val renamingRules = task.renamingRules !== null ? createPropertiesMap(task.renamingRules) : new HashMap
             val genParams = task.generatorParams !== null ? createPropertiesMap(task.generatorParams) : new HashMap
             // TODO fetch this from somewhere else
             genParams.putIfAbsent('prefixPath', './vfab2_scenario/FAST/testcases/' + specName + '_' + tspecName + '/')
-            // Generate FAST testcase
-            val fromConcreteToFastGen = new FromConcreteToFast(renamingRules, genParams)
-            fromConcreteToFastGen.doGenerate(conTspecRes, fsa, ctx)
+
+            val extensionContext = new StandardProjectGeneratorContext(ctx?.cancelIndicator, renamingRules, genParams)
+            generatorExtensions.forEach[doGenerate(conTspecRes, fsa, extensionContext)]
         }
     }
 

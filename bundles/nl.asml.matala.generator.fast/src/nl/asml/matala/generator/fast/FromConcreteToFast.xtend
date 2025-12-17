@@ -32,6 +32,8 @@ import nl.esi.comma.expressions.expression.ExpressionRecordAccess
 import nl.esi.comma.expressions.expression.ExpressionVariable
 import nl.esi.comma.inputspecification.inputSpecification.APIDefinition
 import nl.esi.comma.inputspecification.inputSpecification.Main
+import nl.esi.comma.project.standard.generator.^extension.IStandardProjectGeneratorExtension
+import nl.esi.comma.project.standard.generator.^extension.StandardProjectGeneratorContext
 import nl.esi.comma.testspecification.generator.utils.JSONData
 import nl.esi.comma.testspecification.generator.utils.KeyValue
 import nl.esi.comma.testspecification.generator.utils.Step
@@ -51,19 +53,7 @@ import static extension nl.esi.comma.types.utilities.EcoreUtil3.*
 import static extension nl.esi.comma.types.utilities.FileSystemAccessUtil.*
 import static extension org.eclipse.emf.ecore.util.EcoreUtil.*
 
-class FromConcreteToFast extends AbstractGenerator {
-
-    var Map<String, String> rename = new HashMap<String, String>()
-    var Map<String, String> args = new HashMap<String, String>()
-
-    new() {
-    }
-
-    new(Map<String, String> rename, Map<String, String> params) {
-        this.rename = rename
-        this.args = params
-    }
-
+class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGeneratorExtension {
     /* TODO this should come from project task? Investigate and Implement it. */
     var List<String> record_def_file_names = List.of("lot_definition", "job_definition")
     var List<String> setup_file_names = List.of("setup_file")
@@ -75,14 +65,14 @@ class FromConcreteToFast extends AbstractGenerator {
             throw new Exception('No concrete tspec found in resource: ' + res.URI)
         }
 
-        generateContents(res, fsa) // Parsing and File Generation
+        generateContents(res, fsa, ctx as StandardProjectGeneratorContext) // Parsing and File Generation
     }
 
 // Generate data.kvp and referenced JSON files
-    def private generateContents(Resource res, IFileSystemAccess2 fsa) {
+    def private generateContents(Resource res, IFileSystemAccess2 fsa, StandardProjectGeneratorContext ctx) {
         // 0) setup FAST directory structure
         val baseFsa = fsa.createFolderAccess('generated_FAST/')
-        val testPath = this.args.getOrDefault('prefixPath', './')
+        val testPath = ctx.generatorParams.getOrDefault('prefixPath', './')
         val testFsa = baseFsa.createFolderAccess(testPath)
         val datasetFsa = testFsa.createFolderAccess('dataset/')
 
@@ -101,9 +91,9 @@ class FromConcreteToFast extends AbstractGenerator {
         // 3.1) Step variable name to step-type (step-parameters field in .tspec file)
         tsi._process_Step_Parameters(modelInst)
         // 3.2) Global parameters key and value (LHS and RHS, resp.)
-        tsi._process_Global_Param_Init(modelInst)
+        tsi._process_Global_Param_Init(modelInst, testPath)
         // 3.3) SUT initialization key and value (LHS and RHS, resp.)
-        tsi._process_Sut_Param_Init(modelInst)
+        tsi._process_Sut_Param_Init(modelInst, ctx.renamingRules)
 
         // 4) Parse step-sequence (precondition: steps 2-3, where import and step-parameters are processed)
         val stepSequence = getRunStepSequence(model)
@@ -126,7 +116,7 @@ class FromConcreteToFast extends AbstractGenerator {
         testFsa.generateFile('variants/single_variant/reference.kvp', refkvpgen.generateRefKVP(model))
 
         // 8) parse sut-param-init actions into a XML elements of a vfd XML file
-        var vfdgen = new VFDXMLGenerator(this.args, this.rename)
+        var vfdgen = new VFDXMLGenerator(ctx.generatorParams, ctx.renamingRules)
         testFsa.generateFile('variants/single_variant/vfd.xml', vfdgen.generateXML(tsi))
 
         // 9) generate PlantUML files Generation for Review /* Added DB: 12.05.2025*/
@@ -702,10 +692,8 @@ class FromConcreteToFast extends AbstractGenerator {
         }
     }
 
-    protected def void _process_Global_Param_Init(TestSpecificationInstance tsi, TSMain modelInst) {
-        val Map<String,String> gparams = Map.of(
-            "testcase_data", '"%s/dataset/"'.formatted(this.args.getOrDefault('prefixPath', './'))
-        )
+    protected def void _process_Global_Param_Init(TestSpecificationInstance tsi, TSMain modelInst, String testPath) {
+        val Map<String,String> gparams = Map.of("testcase_data", '''"«testPath»/dataset/"''')
         for (key : gparams.keySet) {
             var value = gparams.get(key)
             tsi.dataVarToDataInstance.putIfAbsent(key, new ArrayList)
@@ -741,7 +729,7 @@ class FromConcreteToFast extends AbstractGenerator {
         return false
     }
 
-    protected def void _process_Sut_Param_Init(TestSpecificationInstance tsi, TSMain modelInst) {
+    protected def void _process_Sut_Param_Init(TestSpecificationInstance tsi, TSMain modelInst, Map<String, String> renamingRules) {
         val model = modelInst.model as TestDefinition
         var sutInitInput = model.sutInitActions.filter[isInputDataSut(it)]
 
@@ -802,7 +790,7 @@ class FromConcreteToFast extends AbstractGenerator {
         // 3.3.2) Fetching XML elements (as strings) for vfd.xml file
         var Set<String> SUTList_items = new LinkedHashSet()
         for (act : vfdXmlItems) {
-            var item = ExpressionsParser.generateXMLElement(act, this.rename)
+            var item = ExpressionsParser.generateXMLElement(act, renamingRules)
             if (SUTList_items.add(item.toString)) {
                 tsi.sutDefinitionsVFDXML.putIfAbsent(act.ID, new ArrayList)
                 tsi.sutDefinitionsVFDXML.get(act.ID).add(item.toString)
