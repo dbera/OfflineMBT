@@ -60,7 +60,7 @@ the Department of Electrical Engineering of Eindhoven University of Technology.
    </license>
 
    <requires>
-      <import plugin="nl.esi.xtext.lsp.server"/>
+      <import plugin="nl.esi.xtext.lsp.server" version="0.0.0" match="greaterOrEqual"/>
    </requires>
 
    <plugin
@@ -189,10 +189,6 @@ the Department of Electrical Engineering of Eindhoven University of Technology.
 
    <plugin
          id="nl.esi.comma.abstracttestspecification.ide"
-         version="0.0.0"/>
-
-   <plugin
-         id="nl.asml.matala.product.lsp.server"
          version="0.0.0"/>
 
    <plugin

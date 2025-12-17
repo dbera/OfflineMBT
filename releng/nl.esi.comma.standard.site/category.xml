@@ -23,7 +23,11 @@
    <feature id="nl.esi.comma.core.feature">
       <category name="ComMA"/>
    </feature>
-   <bundle id="nl.esi.xtext.lsp.server">
+   <bundle id="nl.esi.xtext.lsp.server"/>
+   <bundle id="nl.esi.comma.project.standard.cli">
+      <category name="ComMA"/>
+   </bundle>
+   <bundle id="nl.asml.matala.product.lsp.server">
       <category name="ComMA"/>
    </bundle>
    <category-def name="ComMA" label="ComMA">

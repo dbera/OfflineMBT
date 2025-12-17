@@ -12,15 +12,14 @@
  */
 package nl.esi.comma.project.standard.cli;
 
+import com.google.inject.Guice;
 import com.google.inject.Injector;
 
-import nl.esi.comma.types.generator.CommaMain;
+import nl.esi.comma.project.standard.StandardProjectStandaloneSetupGenerated;
 
-public class Main {
-	public static void main(String[] args) {
-		Injector injector = new StandardProjectCliSetup().createInjectorAndDoEMFRegistration();
-		CommaMain main = injector.getInstance(CommaMain.class);
-		main.configure(args, "ComMA Standard project generator", "project", ".prj");
-		main.read();
+class StandardProjectCliSetup extends StandardProjectStandaloneSetupGenerated {
+	@Override
+	public Injector createInjector() {
+		return Guice.createInjector(new StandardProjectCliModule());
 	}
 }

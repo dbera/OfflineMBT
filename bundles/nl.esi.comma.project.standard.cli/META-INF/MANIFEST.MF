@@ -4,12 +4,16 @@ Bundle-Name: nl.esi.comma.project.standard.cli
 Bundle-SymbolicName: nl.esi.comma.project.standard.cli
 Bundle-Vendor: TNO-ESI
 Bundle-Version: 4.2.0.qualifier
-Require-Bundle: com.google.inject,
- nl.asml.matala.product,
- nl.esi.comma.inputspecification,
- nl.esi.comma.testspecification,
- nl.esi.comma.abstracttestspecification,
- nl.esi.comma.project.standard,
+Export-Package: nl.esi.comma.project.standard.cli
+Require-Bundle: nl.esi.comma.project.standard;visibility:=reexport,
+ com.google.inject,
+ org.eclipse.xtext.ide,
+ nl.asml.matala.product.ide,
+ nl.esi.comma.abstracttestspecification.ide,
+ nl.esi.comma.inputspecification.ide,
+ nl.esi.comma.testspecification.ide,
+ nl.esi.comma.constraints.ide,
+ nl.esi.comma.scenarios.ide,
  nl.asml.matala.product.lsp.server
 Automatic-Module-Name: nl.esi.comma.project.standard.cli
 Bundle-RequiredExecutionEnvironment: JavaSE-21

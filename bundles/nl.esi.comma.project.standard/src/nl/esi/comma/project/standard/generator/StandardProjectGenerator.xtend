@@ -123,15 +123,16 @@ class StandardProjectGenerator extends AbstractGenerator {
             conTspecRes.save(null)
             conTspecRes.validate()
 
-            if (task.target == OfflineGenerationTarget.FAST) {
-                // TODO fetch these FAST configuration parameters from somewhere else (e.g., .prj task)
-                val renamingRules = task.renamingRules !== null ? createPropertiesMap(task.renamingRules) : new HashMap
-                val genParams = task.generatorParams !== null ? createPropertiesMap(task.generatorParams) : new HashMap
-                genParams.putIfAbsent('prefixPath', './vfab2_scenario/FAST/testcases/' + specName + '_' + tspecName + '/') // TODO fetch this from somewhere else
-                // Generate FAST testcase
-                val fromConcreteToFastGen = new FromConcreteToFast(renamingRules, genParams)
-                fromConcreteToFastGen.doGenerate(conTspecRes, fsa, ctx)
-            }
+            // TODO: This last generator step should be designed as an addon via some mechanism
+            // like extension points or service provider, to allow customer specific extensions.
+            // TODO fetch these FAST configuration parameters from somewhere else (e.g., .prj task)
+            val renamingRules = task.renamingRules !== null ? createPropertiesMap(task.renamingRules) : new HashMap
+            val genParams = task.generatorParams !== null ? createPropertiesMap(task.generatorParams) : new HashMap
+            // TODO fetch this from somewhere else
+            genParams.putIfAbsent('prefixPath', './vfab2_scenario/FAST/testcases/' + specName + '_' + tspecName + '/')
+            // Generate FAST testcase
+            val fromConcreteToFastGen = new FromConcreteToFast(renamingRules, genParams)
+            fromConcreteToFastGen.doGenerate(conTspecRes, fsa, ctx)
         }
     }
 

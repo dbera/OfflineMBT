@@ -212,6 +212,7 @@
                         <bdducg>JAVADOC_STYLE</bdducg>
                         <rcg>JAVADOC_STYLE</rcg>
                         <ucg>JAVADOC_STYLE</ucg>
+                        <prj>JAVADOC_STYLE</prj>
                     </mapping>
                     <licenseSets>
                         <licenseSet>

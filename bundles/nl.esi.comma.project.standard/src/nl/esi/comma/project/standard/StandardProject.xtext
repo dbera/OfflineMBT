@@ -45,7 +45,7 @@ TargetConfigItem:
 ;
 
 enum OfflineGenerationTarget:
-    SIMULATOR='Simulator' | TESTS='Tests' | FAST='FAST';
+    SIMULATOR='Simulator' | TESTS='Tests';
 
 StateMachineGenerationBlock:
 	'Conformance-Coverage-And-Test-Generation' '{'
