@@ -71,15 +71,17 @@ Block:
 			('outputs' outvars+=Variable* )? &
 			('local' localvars+=Variable* )? &
             ('suts' sutvars += [expr::Variable|ID] (',' sutvars+=[expr::Variable|ID])*)? &
-			('init' initActions+=(AssignmentAction | RecordFieldAssignmentAction)*)? &
+			('init' initActions+=AssignmentAction*)? &
 			'desc' type = STRING
 		)
 		functions += Function*
+		('element-labels' '[' elabels += STRING (',' elabels+=STRING+)* ']')?
 	'}'
 ;
 
 Function:
 	'action' name = ID
+	('element-label'  elabels = STRING )?
 	updates += Update*
 ;
 
@@ -135,14 +137,3 @@ RefConstraint:
 SymbConstraint:
 	name=ID ':' symbExpr = Expression
 ;
-
-//TODO Refactor as Grammar Mixins
-
-///// assert-that DSL (et al.)
-
-DataAssertions: {DataAssertions}
-    'assertions' name = ID '{' 
-        constr += DataAssertionItem+
-     '}'
-;
-

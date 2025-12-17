@@ -30,6 +30,8 @@ import nl.esi.comma.types.types.VectorTypeConstructor
 import nl.esi.comma.types.types.VectorTypeDecl
 import org.eclipse.emf.ecore.util.EcoreUtil
 import nl.esi.comma.types.BasicTypes
+import org.eclipse.emf.ecore.resource.Resource
+import nl.esi.comma.types.types.ModelContainer
 
 class TypeUtilities {
 	/*
@@ -235,6 +237,10 @@ class TypeUtilities {
 		
 		result
 	}
+
+    def static RecordTypeDecl getRecordType(RecordField rf) {
+        return rf.eContainer as RecordTypeDecl
+    }
 	
 	def static EnumElement getEnumElementByValue(EnumTypeDecl enumType, int value){
 		var currentValue = -1
@@ -315,5 +321,28 @@ class TypeUtilities {
             VectorTypeConstructor: '''«type.type.name»«FOR dim : type.dimensions»[]«ENDFOR»'''
             MapTypeConstructor: '''map<«type.type.name»,«type.valueType.typeName»>'''
         }
+    }
+    
+      def static dispatch VectorTypeConstructor vectorOf(TypeDecl td) {
+        val vtc = TypesFactory.eINSTANCE.createVectorTypeConstructor
+        vtc.dimensions += TypesFactory.eINSTANCE.createDimension
+        vtc.type = EcoreUtil.copy(td)
+        return vtc
+    }
+    
+    def static dispatch VectorTypeConstructor vectorOf(VectorTypeDecl vtd) {
+        val vtc = EcoreUtil.copy(vtd.constructor)
+        vtc.dimensions += TypesFactory.eINSTANCE.createDimension
+        return vtc
+    }
+    
+
+    def static getImports(Resource res) {
+        return res.contents.filter(ModelContainer).flatMap[imports]
+    }
+
+    def static getImports(Resource res, String fileExtension) {
+        val suffix = '.' + fileExtension.toLowerCase
+        return res.imports.filter[importURI.toLowerCase.endsWith(suffix)]
     }
 }

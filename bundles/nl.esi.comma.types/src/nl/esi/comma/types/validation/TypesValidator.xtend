@@ -24,21 +24,22 @@ import nl.esi.comma.types.types.Import
 import nl.esi.comma.types.types.MapTypeConstructor
 import nl.esi.comma.types.types.ModelContainer
 import nl.esi.comma.types.types.NamedElement
+import nl.esi.comma.types.types.RecordFieldKind
 import nl.esi.comma.types.types.RecordTypeDecl
 import nl.esi.comma.types.types.SimpleTypeDecl
 import nl.esi.comma.types.types.Type
 import nl.esi.comma.types.types.TypesModel
 import nl.esi.comma.types.types.TypesPackage
+import org.eclipse.core.runtime.Platform
 import org.eclipse.emf.common.util.URI
+import org.eclipse.emf.ecore.EValidator
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.resource.impl.ResourceDescriptionsProvider
 import org.eclipse.xtext.validation.Check
+import org.eclipse.xtext.validation.EValidatorRegistrar
 
 import static extension nl.esi.comma.types.utilities.TypeUtilities.*
-import org.eclipse.xtext.validation.EValidatorRegistrar
-import org.eclipse.core.runtime.Platform
-import org.eclipse.emf.ecore.EValidator
 import nl.esi.comma.types.BasicTypes
 
 /**
@@ -313,5 +314,16 @@ class TypesValidator extends AbstractTypesValidator {
         		}
         	}	
     	}
+    }
+
+     /**
+     * All fields of a record cannot be marked symbolic.
+     */
+    @Check
+    def checkSymbolicField(RecordTypeDecl type) {
+        val allField = type.allFields
+        if (allField.forall[kind != RecordFieldKind::CONCRETE]) {
+            error('''At least 1 field must be concrete for record «type.name»''', TypesPackage.Literals.RECORD_TYPE_DECL__FIELDS)
+        }
     }
 }

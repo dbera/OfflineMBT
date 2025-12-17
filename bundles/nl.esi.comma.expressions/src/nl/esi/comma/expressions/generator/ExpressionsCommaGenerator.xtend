@@ -47,8 +47,12 @@ import nl.esi.comma.expressions.expression.Expression
 import nl.esi.comma.expressions.expression.ExpressionNot
 import nl.esi.comma.expressions.expression.ExpressionBracket
 import nl.esi.comma.expressions.expression.ExpressionMinus
+import nl.esi.comma.expressions.expression.ExpressionNullLiteral
 
 class ExpressionsCommaGenerator extends TypesCommaGenerator {
+	
+	def dispatch CharSequence exprToComMASyntax(ExpressionNullLiteral e)
+	'''null'''
 	
 	def dispatch CharSequence exprToComMASyntax(ExpressionConstantBool e)
 	'''«e.value»'''
@@ -185,7 +189,24 @@ class ExpressionsCommaGenerator extends TypesCommaGenerator {
                 var idx = exprToComMASyntax(e.getArgs().get(1));
                 var v = exprToComMASyntax(e.getArgs().get(2));
                 return String.format("at(%s,%s,%s)", lst, idx, v);
-            }	
+            } else if (e.getFunctionName().equals("toString")) {
+                return String.format("toString(%s)", exprToComMASyntax(e.getArgs().get(0)))
+            } else if (e.getFunctionName().equals("concat")) {
+                return String.format("concat(%s,%s)", exprToComMASyntax(e.getArgs().get(0)), exprToComMASyntax(e.getArgs().get(1)))
+            } else if (e.getFunctionName().equals("range")) {
+                if (e.getArgs().size() == 1) {
+                    return String.format("range(%s)", exprToComMASyntax(e.getArgs().get(0)))
+                } else if (e.getArgs().size() == 2) {
+                    return String.format("range(%s,%s)", 
+                        exprToComMASyntax(e.getArgs().get(0)), 
+                        exprToComMASyntax(e.getArgs().get(1)))
+                } else if (e.getArgs().size() == 3) {
+                    return String.format("range(%s,%s,%s)", 
+                        exprToComMASyntax(e.getArgs().get(0)), 
+                        exprToComMASyntax(e.getArgs().get(1)), 
+                        exprToComMASyntax(e.getArgs().get(2)))
+                }
+            }
 	}
 
 	def dispatch CharSequence exprToComMASyntax(ExpressionVector e)

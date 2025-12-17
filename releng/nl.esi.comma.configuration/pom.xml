@@ -209,6 +209,9 @@
                         <tpd>JAVADOC_STYLE</tpd>
                         <types>JAVADOC_STYLE</types>
                         <tsx>SLASHSTAR_STYLE</tsx>
+                        <bdducg>JAVADOC_STYLE</bdducg>
+                        <rcg>JAVADOC_STYLE</rcg>
+                        <ucg>JAVADOC_STYLE</ucg>
                     </mapping>
                     <licenseSets>
                         <licenseSet>
@@ -240,8 +243,9 @@
                                 <exclude>**/*.bpmn</exclude>
                                 <exclude>**/*.types</exclude>
                                 <exclude>**/*.ps</exclude>
-                                <exclude>**/*.atest</exclude>
-                                <exclude>**/*.test</exclude>
+                                <exclude>**/*.atspec</exclude>
+                                <exclude>**/*.tspec</exclude>
+                                <exclude>**/*.params</exclude>
                                 <exclude>**/*.json</exclude>
                                 <!-- End: Matala file types -->
                                 <exclude>.META-INF_MANIFEST.MF</exclude>
@@ -251,6 +255,7 @@
                                 <exclude>checkstyle.xml</exclude>
                                 <exclude>plugin.xml_gen</exclude>
                                 <exclude>pom.tycho</exclude>
+                                <exclude>nl.asml.matala.bpmn4s.editor/dist/**</exclude>
                             </excludes>
                         </licenseSet>
                     </licenseSets>

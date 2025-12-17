@@ -15,12 +15,16 @@
  */
 package nl.asml.matala.product.validation
 
+import com.google.common.collect.Iterators
 import java.util.HashSet
 import java.util.Set
+import nl.asml.matala.product.product.ActionType
 import nl.asml.matala.product.product.Block
 import nl.asml.matala.product.product.Function
 import nl.asml.matala.product.product.ProductPackage
+import nl.asml.matala.product.product.RefConstraint
 import nl.asml.matala.product.product.Update
+import nl.asml.matala.product.product.UpdateOutVar
 import nl.esi.comma.actions.actions.ActionsPackage
 import nl.esi.comma.actions.actions.AssignmentAction
 import nl.esi.comma.actions.actions.ForAction
@@ -28,13 +32,21 @@ import nl.esi.comma.actions.actions.IfAction
 import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
 import nl.esi.comma.expressions.expression.Expression
 import nl.esi.comma.expressions.expression.ExpressionPackage
+import nl.esi.comma.expressions.expression.ExpressionRecord
+import nl.esi.comma.expressions.expression.ExpressionRecordAccess
 import nl.esi.comma.expressions.expression.ExpressionVariable
+import nl.esi.comma.expressions.expression.Field
 import nl.esi.comma.expressions.expression.Variable
 import nl.esi.comma.types.types.Import
+import nl.esi.comma.types.types.RecordField
+import nl.esi.comma.types.types.RecordFieldKind
 import nl.esi.comma.types.types.TypesPackage
 import org.eclipse.emf.common.util.URI
 import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.validation.Check
+
+import static extension nl.esi.comma.actions.utilities.ActionsUtilities.*
+import static extension nl.esi.comma.types.utilities.TypeUtilities.*
 
 /**
  * This class contains custom validation rules. 
@@ -195,6 +207,164 @@ class ProductValidator extends AbstractProductValidator {
         expr.eContents.filter(Expression).forEach[preventIlligalVariableAccess(variables, direction)]
     }
 
+    /**
+     * A system block may have many RUN steps but they all must be of the same step-type
+     */
+     @Check
+    def checkMultiRunSteps(Block block) {
+        val runUpdates = block.functions.flatMap[updates].filter[actionType == ActionType::RUN]
+
+        val groupedByStepType = runUpdates.groupBy[stepType]
+
+        if (groupedByStepType.keySet.size > 1) {
+            val mostCommon = groupedByStepType.entrySet.maxBy[value.size].key
+            runUpdates.filter[stepType != mostCommon].forEach [ update |
+                error(
+                    "All step-types must be the same for action-type RUN (expected: " + mostCommon + ")",
+                    update,
+                    ProductPackage.Literals.UPDATE__STEP_TYPE
+                )
+            ]
+        }
+
+    }
+ 
+    /**
+     * Run step must always have step type.
+     */
+    @Check
+    def checkRunStep(Update update) {
+        if (update.actionType == ActionType::RUN || update.actionType == ActionType::ASSERT) {
+            if (update.stepType.isNullOrEmpty) {
+                error('''Actions with type «update.actionType.literal» must have a step-type defined''' +
+                    update.stepType, ProductPackage.Literals.UPDATE__STEP_TYPE)
+            }
+        }
+    }
+
+    /**
+     * Variables that are symbolic may not be used in guards
+     */
+    @Check
+    def checkConcreteVariablesGuard(Update update) {
+        if (update.guard !== null) {
+            update.guard.reportWarningOnAccess(RecordFieldKind::SYMBOLIC)[ field | '''Symbolic record field '«field.FQN»' should not be used in guard''']
+        }
+    }
+
+    /**
+     * Variables that are symbolic may not be used in concrete updates
+     */
+    @Check
+    def checkConcreteVariableUpdate(UpdateOutVar updateOutputVar) {
+        if (updateOutputVar.act === null) {
+            return
+        }
+        updateOutputVar.act.actions.forEach [ action |
+            switch (it: action) {
+                AssignmentAction: {
+                    exp.reportWarningOnAccess(RecordFieldKind::SYMBOLIC)[ field | '''Symbolic record field '«field.FQN»' should not be used in concrete update''']
+                }
+                RecordFieldAssignmentAction: {
+                    // LHS check
+                    fieldAccess.reportWarningOnAccess(RecordFieldKind::SYMBOLIC)[ field | '''Symbolic record field '«field.FQN»' should not be assigned in concrete update''']
+                    // RHS check
+                    exp.reportWarningOnAccess(RecordFieldKind::SYMBOLIC)[ field | '''Symbolic record field '«field.FQN»' should not be used in concrete update''']
+                }
+            }
+        ]
+    }
+
+    private def reportWarningOnAccess(Expression expression, RecordFieldKind accessKind, (RecordField)=>String messageProducer) {
+        Iterators.concat(#[expression].iterator, expression.eAllContents).forEach [ eObject |
+            switch (it: eObject) {
+                Field case recordField.kind == accessKind: {
+                    warning(messageProducer.apply(recordField), eObject, ExpressionPackage.Literals.FIELD__RECORD_FIELD)
+                }
+                ExpressionRecordAccess case field.kind == accessKind: {
+                    warning(messageProducer.apply(field), eObject, ExpressionPackage.Literals.EXPRESSION_RECORD_ACCESS__FIELD)
+                }
+            }
+        ]
+    }
+
+    /**
+     * Variables that are concrete may not be assigned in reference updates
+     */
+    @Check
+    def checkSymbolicVariableUpdate(RefConstraint refConstraint) {
+        if (refConstraint.act === null) {
+            return
+        }
+        refConstraint.act.actions.filter(RecordFieldAssignmentAction).forEach [
+            if (fields.forall[kind == RecordFieldKind.CONCRETE]) {
+                val field = fields.last
+                warning('''Concrete record field '«field.FQN»' should not be assigned in reference update''', it,
+                    ActionsPackage.Literals.RECORD_FIELD_ASSIGNMENT_ACTION__FIELD_ACCESS)
+            }
+        ]
+    }
+
+    /**
+     * Validate that all concrete record fields are assigned in a concrete update
+     */
+    @Check
+    def checkUpdateExpressionRecord(UpdateOutVar updateOutputVar) {
+        if (updateOutputVar.act === null) {
+            return;
+        }
+        updateOutputVar.act.eAllContents.filter(ExpressionRecord).forEach [ expRec |
+            expRec.type.allFields.filter[kind == RecordFieldKind.CONCRETE].forEach [ field |
+                if (!expRec.fields.exists[recordField == field]) {
+                    error('''Concrete record field '«field.FQN»' should be assigned''', expRec,
+                        ExpressionPackage.Literals.EXPRESSION_RECORD__TYPE);
+                }
+            ]
+        ]
+    }
+
+    /**
+     * Validate that all concrete record fields are assigned in an init
+     */
+    @Check
+    def checkInitExpressionRecord(Block block) {
+        block.initActions.flatMap[eAllContents.toIterable].filter(ExpressionRecord).forEach [ expRec |
+            expRec.type.allFields.filter[kind == RecordFieldKind.CONCRETE].forEach [ field |
+                if (!expRec.fields.exists[recordField == field]) {
+                    error('''Concrete record field '«field.FQN»' should be assigned''', expRec,
+                        ExpressionPackage.Literals.EXPRESSION_RECORD__TYPE);
+                }
+            ]
+        ]
+    }
+
+    private static def getFQN(RecordField rf) '''«rf.recordType.name».«rf.name»'''
+
+    /**
+     * Assignment in update function: A field of a record may be assigned a value if and only if the record variable
+     * itself was initialized either with a default constructor or through variable copy. Enforce 2 types of assignments
+     * to record variables.
+     **/
+    @Check
+    def checkUpdateAssignment(UpdateOutVar updateOutVar) {
+        if (updateOutVar.act === null) {
+            return;
+        }
+        val assignedVariables = newHashSet
+        for (action : updateOutVar.act.actions) {
+            if (action instanceof AssignmentAction) {
+                if (!assignedVariables.add(action.assignment)) {
+                    warning('''Variable «action.assignment.name» is already asigned''', action,
+                        ActionsPackage.Literals.ASSIGNMENT_ACTION__ASSIGNMENT);
+                }
+            } else if (action instanceof RecordFieldAssignmentAction) {
+                if (!assignedVariables.contains(action.assignment)) {
+                    error('''Record variable '«action.assignment?.name»' should be assigned first''', action,
+                        ActionsPackage.Literals.RECORD_FIELD_ASSIGNMENT_ACTION__FIELD_ACCESS)
+                }
+            }
+        }
+    }
 /* STRANGE BUG: Output Vars are Empty. Appears in Input Vars. 
  * Not appearing as problem during product generation!
  */

@@ -23,7 +23,10 @@ import nl.esi.comma.actions.actions.PCElement
 import nl.esi.comma.actions.actions.PCFragment
 import nl.esi.comma.actions.actions.PCFragmentDefinition
 import nl.esi.comma.actions.actions.PCFragmentReference
+import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
 import nl.esi.comma.expressions.expression.ExpressionAny
+import nl.esi.comma.expressions.expression.ExpressionRecordAccess
+import nl.esi.comma.expressions.expression.ExpressionVariable
 import nl.esi.comma.expressions.utilities.ExpressionsComparator
 
 class ActionsUtilities {
@@ -91,4 +94,24 @@ class ActionsUtilities {
 		}
 		return false
 	}
+	
+	def static getAssignment(RecordFieldAssignmentAction action) {
+	    var record = action.fieldAccess
+	    while (record instanceof ExpressionRecordAccess) {
+	        record = record.record
+	    }
+	    if (record instanceof ExpressionVariable) {
+	        return record.variable
+	    }
+	}
+
+    def static getFields(RecordFieldAssignmentAction action) {
+        val fields = newLinkedList()
+        var record = action.fieldAccess
+        while (record instanceof ExpressionRecordAccess) {
+            fields.addFirst(record.field)
+            record = record.record
+        }
+        return fields
+    }
 }

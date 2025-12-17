@@ -1,0 +1,38 @@
+import "parameters/ContextIssueProducer.params"
+import "parameters/ContextIssueConsumer.params"
+
+Test-Purpose    "The purpose of this test is..."
+Background      "The background of this test is..."
+
+test-sequence from_abstract_to_concrete {
+    test_single_sequence
+}
+
+step-sequence test_single_sequence {
+
+step-id    step_ContextIssueProducer_RunLocal_default_0
+step-type  ProducerRunType
+step-input ContextIssueProducerInput
+ref-to-step-output
+    ContextIssueProducerInput.message.part1 := "Hello Message!"
+
+step-id    step_ContextIssueConsumer_ConsumerRun_default_0
+step-type  ConsumerRunType
+step-input ContextIssueConsumerInput
+ref-to-step-output
+    ContextIssueConsumerInput.part1.part1 := "Hello Consumer!_1"
+    ContextIssueConsumerInput.part2.part2 := "Hello Consumer!_2"
+}
+
+generate-file "./dataset/"
+
+step-parameters
+ProducerRunType step_ContextIssueProducer_RunLocal_default_0
+ConsumerRunType step_ContextIssueConsumer_ConsumerRun_default_0
+
+sut-param-init 
+step_ContextIssueProducer_RunLocal_default_0.input.sutConf := ProdCtx {
+    prod_field = "sut",
+    id = 0,
+    loop = true
+}

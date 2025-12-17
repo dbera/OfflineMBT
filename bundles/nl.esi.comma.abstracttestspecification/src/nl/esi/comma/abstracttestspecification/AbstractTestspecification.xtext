@@ -18,7 +18,7 @@ import "http://www.eclipse.org/emf/2002/Ecore" as ecore
 import "http://www.esi.nl/comma/types/Types" as types
 import "http://www.esi.nl/comma/expressions/Expression" as expr
 import "http://www.asml.nl/matala/product/Product" as prod
-import "http://www.esi.nl/comma/assertthat/AssertThat" as asrt
+import "http://www.esi.nl/comma/assertthat/AssertThat" as assertthat
 
 TSMain:
     imports += Import*
@@ -59,15 +59,20 @@ ConstraintStep:
 
 AssertStep:
     'output-assertion' ':' name = ID
-    ce += [prod::DataAssertions|QualifiedName]+
+    ce += [assertthat::DataAssertions|QualifiedName]+
 ;
 
 AbstractStep:
-    ComposeStep | RunStep | AssertionStep
+    ComposeStep | ExecutableStep
+;
+
+ExecutableStep:
+    RunStep | AssertionStep
 ;
 
 ComposeStep:
     'compose-step-name' ':' name = ID
+    ('action-case' ':' caseRef = [prod::Update|QualifiedName] ) ?
     stepRef += StepReference*
     'input-binding' ':' input += Binding+
     'output-data' ':' output += Binding+ (suppress=Suppress)? // do not generate these in concrete TSpec
@@ -78,6 +83,7 @@ ComposeStep:
 RunStep:
     'run-step-name' ':' name = ID
     ('step-type' ':' stepType += STRING)?
+    ('action-case' ':' caseRef = [prod::Update|QualifiedName] ) ?
     stepRef += StepReference*
     'input-binding' ':' input += Binding+
     'output-data' ':' output += Binding+ (suppress=Suppress)? // do not generate these in concrete TSpec
@@ -86,10 +92,12 @@ RunStep:
 
 AssertionStep:
     'assert-step-name' ':' name = ID
+    ('assert-type' ':' stepType += STRING)?
+    ('action-case' ':' caseRef = [prod::Update|QualifiedName] ) ?
     stepRef += StepReference*
     'input-binding' ':' input += Binding+
     'output-data' ':' output += Binding+ (suppress=Suppress)? // do not generate these in concrete TSpec
-    asserts += AssertStep*
+    asserts += AssertStep+
     ('sut-var' ':' '{' varID += [expr::Variable|QualifiedName]+ '}')?
 ;
 
@@ -112,12 +120,13 @@ SuppressVarFieldExp returns expr::Expression:
 // Json Grammar
 
 @Override
-JsonExpression returns asrt::JsonExpression: 
+JsonExpression returns assertthat::JsonExpression: 
     expr = AbstractTestExpressionConstants
 ;
 
 AbstractTestExpressionConstants returns expr::Expression:
     ExpressionConstantInt  | ExpressionConstantReal | ExpressionConstantBool | ExpressionConstantString // basic types
     | ExpressionMinus | ExpressionPlus // signed numbers
+    | ExpressionNullLiteral // null value
 ;
 

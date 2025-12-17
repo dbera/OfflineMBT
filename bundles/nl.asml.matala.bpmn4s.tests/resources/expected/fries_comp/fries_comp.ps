@@ -1,0 +1,277 @@
+import "fries_comp.types"
+specification fries_comp
+{
+    system FriesClient
+    {
+        inputs
+        FriesDelivery	friesDelivery
+        
+        outputs
+        FriesOrder		friesOrder
+    
+        local
+        FriesDelivery	table
+        ClientContext	ChooseStyle
+        ClientContext	ChooseSize
+        
+        ClientContext	Event_022qurv
+        ClientContext	Flow_09zlhyo
+        ClientContext	Flow_0ipnerm
+        ClientContext	Flow_1m4nc7r
+    
+        init
+        ChooseSize := ClientContext {
+         client_id = "Tom",
+         premium = true,
+         fries = Fries {
+          style = <Topping[]>[],
+          size = Size::Undefined
+         }
+        }
+        ChooseSize := ClientContext {
+         client_id = "Bob",
+         premium = false,
+         fries = Fries {
+          style = <Topping[]>[],
+          size = Size::Undefined
+         }
+        }
+    
+    
+        desc "FriesClient_Model"
+        
+        action			ChooseSmall
+        element-label	"Choose Small"
+        case			default
+        with-inputs		ChooseSize
+        produces-outputs	ChooseStyle
+        updates:
+            ChooseStyle := ChooseSize
+            ChooseStyle.fries.size := Size::Small
+        
+        action			ChooseMayo
+        element-label	"Choose Mayo"
+        case			default
+        with-inputs		ChooseStyle
+        with-guard		size(ChooseStyle.fries.style) < 3
+        produces-outputs	ChooseStyle
+        updates:
+            ChooseStyle := ChooseStyle
+            ChooseStyle.fries.style := add(ChooseStyle.fries.style, Topping::Mayo)
+        
+        action			AwaitDelivery
+        element-label	"Await Delivery"
+        case			default step-type "null" action-type COMPOSE
+        with-inputs		Flow_09zlhyo, friesDelivery
+        with-guard		friesDelivery.clientOrder.client_id == Flow_09zlhyo.client_id
+        produces-outputs	Flow_0ipnerm
+        updates:
+            Flow_0ipnerm := Flow_09zlhyo
+        produces-outputs	table symbolic-link
+        updates:
+            table := friesDelivery
+        
+        action			EatFries
+        element-label	"Eat Fries"
+        case			default step-type "EatFries" action-type RUN
+        with-inputs		Flow_1m4nc7r, table
+        produces-outputs	Event_022qurv
+        updates:
+            Event_022qurv := Flow_1m4nc7r
+        
+        action			PlaceOrder
+        element-label	"Place Order"
+        case			default
+        with-inputs		ChooseStyle
+        with-guard		ChooseStyle.fries.size != Size::Undefined
+        produces-outputs	Flow_09zlhyo
+        updates:
+            Flow_09zlhyo := ChooseStyle
+        produces-outputs	friesOrder
+        updates:
+            friesOrder := FriesOrder {
+             client_id = ChooseStyle.client_id,
+             fries = ChooseStyle.fries
+            }
+        
+        action			ChooseLarge
+        element-label	"Choose Large"
+        case			default
+        with-inputs		ChooseSize
+        with-guard		ChooseSize.premium
+        produces-outputs	ChooseStyle
+        updates:
+            ChooseStyle := ChooseSize
+            ChooseStyle.fries.size := Size::Large
+        
+        action			ChooseOnions
+        element-label	"Choose Onions"
+        case			default
+        with-inputs		ChooseStyle
+        with-guard		size(ChooseStyle.fries.style) < 3 AND ChooseStyle.premium
+        produces-outputs	ChooseStyle
+        updates:
+            ChooseStyle := ChooseStyle
+            ChooseStyle.fries.style := add(ChooseStyle.fries.style, Topping::Onions)
+        
+        action			ChooseMedium
+        element-label	"Choose Medium"
+        case			default
+        with-inputs		ChooseSize
+        produces-outputs	ChooseStyle
+        updates:
+            ChooseStyle := ChooseSize
+            ChooseStyle.fries.size := Size::Medium
+        
+        action			ChooseKetchup
+        element-label	"Choose Ketchup"
+        case			default
+        with-inputs		ChooseStyle
+        with-guard		size(ChooseStyle.fries.style) < 3
+        produces-outputs	ChooseStyle
+        updates:
+            ChooseStyle := ChooseStyle
+            ChooseStyle.fries.style := add(ChooseStyle.fries.style, Topping::Ketchup)
+        
+        action			CheckReceipt
+        element-label	"Check Receipt"
+        case			default
+        with-inputs		Flow_0ipnerm, table
+        with-guard		// TODO: Convert to assert task to avoid deadlocks!
+        table.clientOrder.fries == Flow_0ipnerm.fries
+        produces-outputs	Flow_1m4nc7r
+        updates:
+            Flow_1m4nc7r := Flow_0ipnerm
+        produces-outputs	table
+        updates:
+            table := table
+    
+        element-labels ["Fries", "Client"]
+    }
+    
+    system FriesDeliveryService
+    {
+        inputs
+        FriesDelivery	deliveryRequest
+        
+        outputs
+        FriesDelivery		friesDelivery
+    
+        local
+        FriesDelivery	friesReady
+        
+        DeliveryServiceContext	Event_00idax9
+        DeliveryServiceContext	Flow_1b6215f
+        DeliveryServiceContext	Flow_0happwq
+    
+        // init
+    
+    
+        desc "FriesDelivery Service_Model"
+        
+        action			DeliverFries
+        element-label	"Deliver Fries"
+        case			default step-type "DeliverFries" action-type RUN
+        with-inputs		Flow_0happwq, friesReady
+        produces-outputs	Event_00idax9
+        updates:
+            Event_00idax9 := Flow_0happwq
+        produces-outputs	friesDelivery symbolic-link
+        updates:
+            friesDelivery := friesReady
+        
+        action			TakeRequest
+        element-label	"Take Request"
+        case			default
+        with-inputs		deliveryRequest
+        produces-outputs	Flow_1b6215f
+        updates:
+            Flow_1b6215f := DeliveryServiceContext {
+             delivery =  deliveryRequest
+            }
+        
+        action			Travel
+        element-label	"Travel"
+        case			default step-type "null" action-type COMPOSE
+        with-inputs		Flow_1b6215f
+        produces-outputs	Flow_0happwq
+        updates:
+            Flow_0happwq := Flow_1b6215f
+        produces-outputs	friesReady symbolic-link
+        updates:
+            friesReady := Flow_1b6215f.delivery
+    
+        element-labels ["Fries", "Delivery Service"]
+    }
+    
+    system FriesSnackbar
+    {
+        inputs
+        FriesOrder	friesOrder
+        
+        outputs
+        FriesDelivery		deliveryRequest
+    
+        local
+        SnackbarContext	Endofshift_QMK_
+        SnackbarContext	Event_0uxsyhg
+        SnackbarContext	Event_04cb9z0
+        SnackbarContext	Flow_16vj7d4
+    
+        init
+        Event_0uxsyhg := SnackbarContext {
+         employee_id = "Piet Friet",
+         orders = 0
+        }
+    
+    
+        desc "FriesSnackbar_Model"
+        
+        action			SlicePotatoes
+        element-label	"Slice Potatoes"
+        case			default
+        with-inputs		Flow_16vj7d4
+        produces-outputs	Endofshift_QMK_
+        updates:
+            Endofshift_QMK_ := Flow_16vj7d4
+        
+        action			BakeFriesandAddTopping
+        element-label	"Bake Fries and Add Topping"
+        case			default
+        with-inputs		Endofshift_QMK_, friesOrder
+        with-guard		Endofshift_QMK_.orders < 2
+        produces-outputs	Endofshift_QMK_
+        updates:
+            Endofshift_QMK_ := Endofshift_QMK_
+            Endofshift_QMK_.orders := Endofshift_QMK_.orders + 1
+        produces-outputs	deliveryRequest
+        updates:
+            deliveryRequest := FriesDelivery {
+             clientOrder = friesOrder,
+             receipt = Receipt { amount = 5.0 }
+            }
+        
+        action			PeelPotatoes
+        element-label	"Peel Potatoes"
+        case			default
+        with-inputs		Event_0uxsyhg
+        produces-outputs	Flow_16vj7d4
+        updates:
+            Flow_16vj7d4 := Event_0uxsyhg
+        
+        action			CleanUp
+        element-label	"Clean Up"
+        case			default
+        with-inputs		Endofshift_QMK_
+        with-guard		Endofshift_QMK_.orders >= 2
+        produces-outputs	Event_04cb9z0
+        updates:
+            Event_04cb9z0 := Endofshift_QMK_
+    
+        element-labels ["Fries", "Snackbar"]
+    }
+    
+	SUT-blocks FriesClient FriesDeliveryService
+	depth-limits 300
+	num-tests 1
+}
