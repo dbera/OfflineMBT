@@ -24,7 +24,8 @@ Please keep this console open during your BPMN4S modeling sessions, and just clo
 To run the simulation server, you need ``python v3.10 (or greater)`` and the following modules:
 
 ```
-pip install snakes 
+pip install snakes
+pip install requests
 pip install flask flask_cors
 ```
 
