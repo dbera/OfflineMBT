@@ -17,21 +17,17 @@ Require-Bundle: nl.esi.comma.assertthat;visibility:=reexport,
  org.antlr.runtime;bundle-version="[3.2.0,3.2.1)",
  com.google.gson;bundle-version="2.8.8",
  nl.asml.matala.product,
- nl.esi.comma.inputspecification,
  org.eclipse.xtend.lib;bundle-version="2.36.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-21
-Export-Package: nl.esi.comma.testspecification.parser.antlr.internal,
- nl.esi.comma.testspecification.parser.antlr,
- nl.esi.comma.testspecification,
- nl.esi.comma.testspecification.generator,
- nl.esi.comma.testspecification.generator.to.fast,
- nl.esi.comma.testspecification.generator.to.docgen,
+Export-Package: nl.esi.comma.testspecification,
  nl.esi.comma.testspecification.generator.utils,
- nl.esi.comma.testspecification.testspecification.util,
+ nl.esi.comma.testspecification.parser.antlr,
+ nl.esi.comma.testspecification.parser.antlr.internal,
  nl.esi.comma.testspecification.scoping,
  nl.esi.comma.testspecification.serializer,
  nl.esi.comma.testspecification.services,
- nl.esi.comma.testspecification.validation,
  nl.esi.comma.testspecification.testspecification,
- nl.esi.comma.testspecification.testspecification.impl
+ nl.esi.comma.testspecification.testspecification.impl,
+ nl.esi.comma.testspecification.testspecification.util,
+ nl.esi.comma.testspecification.validation
 Import-Package: org.apache.log4j

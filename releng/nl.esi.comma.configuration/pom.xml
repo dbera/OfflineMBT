@@ -40,7 +40,6 @@
         <maven-clean-plugin.version>3.2.0</maven-clean-plugin.version>
         <build-helper--plugin.version>3.6.0</build-helper--plugin.version>
 
-        <m2doc.version>2.0.3</m2doc.version>
         <jacoco.version>0.8.6</jacoco.version>
 
         <!-- sonar properties -->
@@ -213,6 +212,7 @@
                         <bdducg>JAVADOC_STYLE</bdducg>
                         <rcg>JAVADOC_STYLE</rcg>
                         <ucg>JAVADOC_STYLE</ucg>
+                        <prj>JAVADOC_STYLE</prj>
                     </mapping>
                     <licenseSets>
                         <licenseSet>

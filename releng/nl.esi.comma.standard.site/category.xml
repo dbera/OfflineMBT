@@ -17,9 +17,19 @@
    <description name="ComMA">
       ComMA DSLs and analysis tools.
    </description>
-   <feature id="nl.esi.comma.standard.feature" version="0.0.0">
+   <feature id="nl.esi.comma.standard.feature">
       <category name="ComMA"/>
    </feature>
+   <feature id="nl.esi.comma.core.feature">
+      <category name="ComMA"/>
+   </feature>
+   <bundle id="nl.esi.xtext.lsp.server"/>
+   <bundle id="nl.esi.comma.project.standard.cli">
+      <category name="ComMA"/>
+   </bundle>
+   <bundle id="nl.asml.matala.product.lsp.server">
+      <category name="ComMA"/>
+   </bundle>
    <category-def name="ComMA" label="ComMA">
       <description>
          ComMA framework with examples.

@@ -9,7 +9,13 @@ Require-Bundle: nl.esi.comma.project.standard;visibility:=reexport,
  nl.esi.comma.types.ide;visibility:=reexport,
  org.eclipse.xtext.ide,
  org.eclipse.xtext.xbase.ide,
- org.antlr.runtime;bundle-version="[3.2.0,3.2.1)"
+ org.antlr.runtime;bundle-version="[3.2.0,3.2.1)",
+ nl.asml.matala.product.ide,
+ nl.esi.comma.abstracttestspecification.ide,
+ nl.esi.comma.inputspecification.ide,
+ nl.esi.comma.testspecification.ide,
+ nl.esi.comma.constraints.ide,
+ nl.esi.comma.scenarios.ide
 Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: nl.esi.comma.project.standard.ide.contentassist.antlr,
  nl.esi.comma.project.standard.ide.contentassist.antlr.internal,

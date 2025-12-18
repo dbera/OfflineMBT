@@ -507,11 +507,6 @@ class PetriNet {
 		                _test_scn.generateTSpec(i, pn.sutTypesList, pn.sutVarTransitionMap, pn.mapOfTransitionQnames, output_dir=p.tspec_dir)
 		                _tests.list_of_test_scn.append(_test_scn)
 		            i = i + 1
-		            
-		        fname = p.tspec_dir / ("tcs"+".json")
-		        os.makedirs(os.path.dirname(fname), exist_ok=True)
-		        with open(fname, 'w') as f:
-		            f.write(_tests.toJSON())
 		    
 		    def chunkstring(self, string, length):
 		        return (string[0+i:length+i] for i in range(0, len(string), length))

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <?pde version="3.8"?>
-<target name="Generated from OfflineMBT" sequenceNumber="7">
+<target name="Generated from OfflineMBT" sequenceNumber="8">
   <locations>
     <location type="Target" uri="file:${project_loc:/nl.esi.comma.target}/nl.esi.comma.maven.target"/>
     <location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
@@ -22,9 +22,12 @@
       <unit id="org.apache.batik.constants" version="0.0.0"/>
       <unit id="org.apache.batik.i18n" version="0.0.0"/>
       <unit id="org.apache.batik.util" version="0.0.0"/>
+      <unit id="org.apache.commons.collections" version="0.0.0"/>
+      <unit id="org.apache.commons.commons-beanutils" version="0.0.0"/>
       <unit id="org.apache.commons.commons-io" version="0.0.0"/>
       <unit id="org.apache.commons.lang" version="0.0.0"/>
       <unit id="org.apache.commons.lang3" version="0.0.0"/>
+      <unit id="org.apache.commons.logging" version="0.0.0"/>
       <unit id="org.apache.felix.scr" version="0.0.0"/>
       <unit id="org.bndtools.headless.build.manager" version="0.0.0"/>
       <unit id="org.bndtools.headless.build.plugin.gradle" version="0.0.0"/>
@@ -32,6 +35,7 @@
       <unit id="org.bndtools.versioncontrol.ignores.manager" version="0.0.0"/>
       <unit id="org.bndtools.versioncontrol.ignores.plugin.git" version="0.0.0"/>
       <unit id="org.eclipse.equinox.executable.feature.group" version="0.0.0"/>
+      <unit id="org.eclipse.equinox.http.service.api" version="0.0.0"/>
       <unit id="org.eclipse.jdt.annotation" version="0.0.0"/>
       <unit id="org.eclipse.jetty.ee8.security" version="0.0.0"/>
       <unit id="org.eclipse.jetty.ee8.server" version="0.0.0"/>
@@ -46,9 +50,9 @@
       <unit id="org.eclipse.lsp4j" version="0.0.0"/>
       <unit id="org.eclipse.lsp4j.jsonrpc" version="0.0.0"/>
       <unit id="org.eclipse.orbit.xml-apis-ext" version="0.0.0"/>
-      <unit id="org.eclipse.osgi.services" version="0.0.0"/>
       <unit id="org.eclipse.sdk.feature.group" version="0.0.0"/>
       <unit id="org.eclipse.xtext.sdk.feature.group" version="0.0.0"/>
+      <unit id="org.jdom" version="0.0.0"/>
       <unit id="org.kohsuke.args4j" version="0.0.0"/>
       <unit id="org.mortbay.jasper.apache-el" version="0.0.0"/>
       <unit id="org.mortbay.jasper.apache-jsp" version="0.0.0"/>
@@ -57,6 +61,7 @@
       <unit id="org.osgi.namespace.extender" version="0.0.0"/>
       <unit id="org.osgi.namespace.service" version="0.0.0"/>
       <unit id="org.osgi.service.coordinator" version="0.0.0"/>
+      <unit id="org.osgi.service.http.whiteboard" version="0.0.0"/>
       <unit id="org.osgi.service.repository" version="0.0.0"/>
       <unit id="slf4j.api" version="0.0.0"/>
       <repository location="https://download.eclipse.org/releases/2024-09"/>
@@ -67,19 +72,12 @@
       <repository location="https://download.eclipse.org/tools/orbit/simrel/orbit-aggregation/2024-09"/>
     </location>
     <location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
-      <unit id="net.sourceforge.plantuml.ecore.feature.feature.group" version="0.0.0"/>
+      <unit id="net.sourceforge.plantuml.feature.feature.group" version="0.0.0"/>
       <repository location="http://hallvard.github.io/plantuml"/>
     </location>
     <location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
-      <unit id="org.eclipse.justj.openjdk.hotspot.jre.minimal.stripped.feature.group" version="0.0.0"/>
-      <repository location="https://download.eclipse.org/justj/jres/21/updates/release/21.0.4"/>
-    </location>
-    <location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
-      <unit id="javax.annotation" version="0.0.0"/>
-      <unit id="org.apache.commons.jxpath" version="0.0.0"/>
-      <unit id="org.apache.poi.feature.feature.group" version="0.0.0"/>
-      <unit id="org.eclipse.ecf.filetransfer.httpclient45.feature.feature.group" version="0.0.0"/>
-      <repository location="https://s3-eu-west-1.amazonaws.com/obeo-m2doc-releases/3.2.0/repository/"/>
+      <unit id="org.eclipse.justj.openjdk.hotspot.jre.minimal.stripped" version="0.0.0"/>
+      <repository location="https://download.eclipse.org/justj/jres/21/updates/release/latest"/>
     </location>
     <location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
       <unit id="de.itemis.xtext.antlr.feature.feature.group" version="0.0.0"/>

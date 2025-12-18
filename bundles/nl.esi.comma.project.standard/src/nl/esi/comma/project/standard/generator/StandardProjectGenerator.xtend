@@ -15,15 +15,18 @@
  */
 package nl.esi.comma.project.standard.generator
 
+import com.google.inject.Inject
 import java.util.HashMap
 import nl.asml.matala.product.generator.ProductGenerator
 import nl.asml.matala.product.product.Product
+import nl.esi.comma.abstracttestspecification.generator.to.bpmn.FromAbstractToBpmn
 import nl.esi.comma.abstracttestspecification.generator.to.concrete.FromAbstractToConcrete
+import nl.esi.comma.project.standard.generator.^extension.IStandardProjectGeneratorExtension
+import nl.esi.comma.project.standard.generator.^extension.StandardProjectGeneratorContext
 import nl.esi.comma.project.standard.standardProject.OfflineGenerationBlock
 import nl.esi.comma.project.standard.standardProject.OfflineGenerationTarget
 import nl.esi.comma.project.standard.standardProject.Project
 import nl.esi.comma.project.standard.standardProject.TargetConfig
-import nl.esi.comma.testspecification.generator.to.fast.FromConcreteToFast
 import nl.esi.comma.testspecification.generator.utils.MergeConcreteDataAssigments
 import nl.esi.comma.types.types.Import
 import org.eclipse.emf.ecore.resource.Resource
@@ -36,7 +39,6 @@ import static extension nl.esi.comma.types.utilities.EcoreUtil3.*
 import static extension nl.esi.comma.types.utilities.FileSystemAccessUtil.*
 import static extension org.eclipse.emf.ecore.util.EcoreUtil.*
 import static extension org.eclipse.xtext.EcoreUtil2.*
-import nl.esi.comma.abstracttestspecification.generator.to.bpmn.FromAbstractToBpmn
 
 /**
  * Generates code from your model files on save.
@@ -44,6 +46,9 @@ import nl.esi.comma.abstracttestspecification.generator.to.bpmn.FromAbstractToBp
  * See https://www.eclipse.org/Xtext/documentation/303_runtime_concepts.html#code-generation
  */
 class StandardProjectGenerator extends AbstractGenerator {
+    @Inject
+    IStandardProjectGeneratorExtension.Registry generatorExtensions;
+
     override doGenerate(Resource res, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
         for (project : res.contents.filter(Project)) {
             for (task : project.offlineBlocks) {
@@ -123,15 +128,14 @@ class StandardProjectGenerator extends AbstractGenerator {
             conTspecRes.save(null)
             conTspecRes.validate()
 
-            if (task.target == OfflineGenerationTarget.FAST) {
-                // TODO fetch these FAST configuration parameters from somewhere else (e.g., .prj task)
-                val renamingRules = task.renamingRules !== null ? createPropertiesMap(task.renamingRules) : new HashMap
-                val genParams = task.generatorParams !== null ? createPropertiesMap(task.generatorParams) : new HashMap
-                genParams.put('prefixPath', './vfab2_scenario/FAST/testcases/' + specName + '_' + tspecName + '/') // TODO fetch this from somewhere else
-                // Generate FAST testcase
-                val fromConcreteToFastGen = new FromConcreteToFast(renamingRules, genParams)
-                fromConcreteToFastGen.doGenerate(conTspecRes, fsa, ctx)
-            }
+            // TODO fetch these FAST configuration parameters from somewhere else (e.g., .prj task)
+            val renamingRules = task.renamingRules !== null ? createPropertiesMap(task.renamingRules) : new HashMap
+            val genParams = task.generatorParams !== null ? createPropertiesMap(task.generatorParams) : new HashMap
+            // TODO fetch this from somewhere else
+            genParams.putIfAbsent('prefixPath', './vfab2_scenario/FAST/testcases/' + specName + '_' + tspecName + '/')
+
+            val extensionContext = new StandardProjectGeneratorContext(ctx?.cancelIndicator, renamingRules, genParams)
+            generatorExtensions.forEach[doGenerate(conTspecRes, fsa, extensionContext)]
         }
     }
 

@@ -78,7 +78,7 @@ def generate_fast_tests( model_path:str, num_tests:int=1, depth_limit:int=500):
     model_name = utils.to_valid_variable_name(model_name)
     taskname:str = f"testgen"
     prj_template:str = """Project project {{
-      Generate FAST {{
+      Generate Tests {{
         {0} {{
           bpmn-file "{1}.bpmn"
           num-tests {2}
