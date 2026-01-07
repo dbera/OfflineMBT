@@ -1,0 +1,12 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Design Documentation
+Bundle-SymbolicName: nl.asml.matala.doc.design
+Bundle-Version: 4.2.0.qualifier
+Bundle-Vendor: TNO-ESI
+Automatic-Module-Name: nl.asml.matala.doc.design
+Bundle-RequiredExecutionEnvironment: JavaSE-21
+Require-Bundle: com.google.guava,
+ org.eclipse.xtext.xbase.lib,
+ org.eclipse.xtend.lib,
+ org.eclipse.xtend.lib.macro

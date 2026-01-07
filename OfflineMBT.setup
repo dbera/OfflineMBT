@@ -74,8 +74,12 @@
         name="org.eclipse.m2e.pde.feature.feature.group"/>
     <requirement
         name="org.eclipse.cbi.targetplatform.feature.feature.group"/>
+    <requirement
+        name="de.jcup.asciidoctoreditor.feature.group"/>
     <repository
         url="https://download.eclipse.org/cbi/updates/tpd/release/latest"/>
+    <repository
+        url="https://de-jcup.github.io/update-site-eclipse-asciidoctor-editor/update-site/"/>
     <description>Install the tools needed in the IDE to work with the source code for ${scope.project.label}</description>
   </setupTask>
   <setupTask

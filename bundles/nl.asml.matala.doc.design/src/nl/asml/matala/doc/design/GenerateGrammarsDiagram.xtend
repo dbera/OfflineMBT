@@ -1,0 +1,125 @@
+package nl.asml.matala.doc.design
+
+import java.io.InputStream
+import java.nio.file.Files
+import java.nio.file.Path
+import java.util.Set
+import java.util.jar.Manifest
+import java.util.regex.Pattern
+import java.util.stream.Collectors
+import java.util.stream.Stream
+import org.eclipse.xtend.lib.annotations.Accessors
+
+class GenerateGrammarsDiagram {
+    static val TERMINALS_GRAMMAR = new Grammar => [
+        bundle = 'org.eclipse.xtext.common'
+        name = 'Terminals'
+    ]
+
+    static val GRAMMAR_PATTERN = Pattern.compile('''^grammar\s+(\w+\.)*(\w+)\s+with\s+(\w+\.)*(\w+)''')
+    static val GENERATE_PATTERN = Pattern.compile('''^generate\s+(\w+)\s+"([^"]+)"''')
+    static val IMPORT_PATTERN = Pattern.compile('''^import\s+"([^"]+)"\s+as\s+(\w+)''')
+    static val FILE_EXTENSIONS_PATTERN = Pattern.compile('''^\s*fileExtensions\s+=\s+"([^"]+)"''')
+
+    def static void main(String[] args) {
+        val xtextFiles = Files.find(Path.of('../'), Integer.MAX_VALUE, [$0.toString.endsWith('.xtext')]).toIterable
+        val grammars = xtextFiles.map[createGrammar].filterNull.toList
+        grammars += TERMINALS_GRAMMAR
+        // Reduce grammar dependencies
+        grammars.forEach[
+            val parents = getParentGrammars(grammars)
+            grammarUses.removeAll(parents.map[uri])
+            bundleUses.removeAll(parents.map[bundle])
+        ]
+        grammars.sortInplace[a, b |
+            return switch (a) {
+                case a.getParentGrammars(grammars).contains(b): 1
+                case b.getParentGrammars(grammars).contains(a): -1
+            	default: 0
+            }
+        ]
+        Files.write(Path.of('grammars.plantuml'), #[grammars.generatePlantUml])
+    }
+
+    def static String generatePlantUml(Iterable<Grammar> grammars) '''
+        @startuml
+        'Declaring bundles and grammars 
+        «FOR g : grammars»
+        package «g.bundle» {
+            artifact «g.name»«IF !g.fileExtensions.nullOrEmpty» <<«g.fileExtensions»>>«ENDIF»
+        }
+        «ENDFOR»
+        'Declaring bundle and grammar dependencies
+        «FOR g : grammars»
+            «IF !g.parent.isNullOrEmpty»«g.parent» <|-- «g.name»«ENDIF»
+            «FOR use : g.grammarUses.map[uri | grammars.findFirst[gr | gr.uri == uri]].filterNull»
+            «g.name» --> «use.name»
+            «ENDFOR»
+            «FOR use : g.bundleUses.map[bundle | grammars.findFirst[gr | gr.bundle == bundle]].filterNull»
+            «g.bundle» ..> «use.bundle»
+            «ENDFOR»
+        «ENDFOR»
+        @enduml
+    '''
+
+    def static Grammar createGrammar(Path xtextFile) {
+        if (xtextFile.contains(Path.of('target'))) {
+            return null
+        }
+        val fileName = com.google.common.io.Files.getNameWithoutExtension(xtextFile.fileName.toString)
+        val xtextLines = Files.lines(xtextFile).toIterable
+        val mwe2Lines = Files.lines(xtextFile.resolveSibling('''Generate«fileName».mwe2''')).toIterable
+        val manifest = new Manifest(xtextFile.subpath(0, 2).resolve('META-INF/MANIFEST.MF').read)
+        val requiredBundles = manifest.mainAttributes.getValue('Require-Bundle')
+
+        return new Grammar => [
+            bundle = xtextFile.getName(1).toString
+            name = xtextLines.matchAndReturn(GRAMMAR_PATTERN, '$2').head
+            parent = xtextLines.matchAndReturn(GRAMMAR_PATTERN, '$4').head
+            uri = xtextLines.matchAndReturn(GENERATE_PATTERN, '$2').head
+            grammarUses += xtextLines.matchAndReturn(IMPORT_PATTERN, '$1')
+
+            fileExtensions = mwe2Lines.matchAndReturn(FILE_EXTENSIONS_PATTERN, '$1').head
+
+            bundleUses += requiredBundles.split(',').map[split(';').head]
+        ]
+    }
+
+    @Accessors
+    static class Grammar {
+        val Set<String> grammarUses = newLinkedHashSet
+        val Set<String> bundleUses = newLinkedHashSet
+
+        var String bundle
+        var String name
+        var String parent
+        var String uri
+        var String fileExtensions
+
+        def Set<Grammar> getParentGrammars(Iterable<Grammar> grammars) {
+            val parents = newLinkedHashSet
+            var parent = this.getParentGrammar(grammars)
+            while (parent !== null) {
+                parents += parent
+                parent = parent.getParentGrammar(grammars)
+            }
+            return parents
+        }
+
+        def Grammar getParentGrammar(Iterable<Grammar> grammars) {
+            return grammars.findFirst[g | g.name == this.parent]
+        }
+    }
+
+    def static <T> Iterable<T> toIterable(Stream<T> stream) {
+        return stream.collect(Collectors.toList)
+    }
+
+    def static InputStream read(Path path) {
+        return path.fileSystem.provider.newInputStream(path)
+    }
+
+    def static Iterable<String> matchAndReturn(Iterable<String> lines, Pattern pattern, String replacement) {
+        return lines.filter[l | pattern.matcher(l).find].map[l | pattern.matcher(l).replaceFirst(replacement)]
+    }
+}
