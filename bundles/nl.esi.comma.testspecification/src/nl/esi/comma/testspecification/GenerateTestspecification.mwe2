@@ -39,8 +39,8 @@ Workflow {
 			name = "nl.esi.comma.testspecification.Testspecification"
 			fileExtensions = "tspec"
 			
-			referencedResource = "platform:/resource/nl.esi.comma.actions/model/generated/Actions.genmodel"
-			referencedResource = "platform:/resource/nl.asml.matala.product/model/generated/Product.genmodel"
+            referencedResource = "platform:/resource/nl.esi.comma.actions/model/generated/Actions.genmodel"
+            referencedResource = "platform:/resource/nl.esi.comma.assertthat/model/generated/AssertThat.genmodel"
 			
 			serializer = {
 				generateStub = false

@@ -16,7 +16,6 @@ Require-Bundle: nl.esi.comma.assertthat;visibility:=reexport,
  org.eclipse.emf.common,
  org.antlr.runtime;bundle-version="[3.2.0,3.2.1)",
  com.google.gson;bundle-version="2.8.8",
- nl.asml.matala.product,
  org.eclipse.xtend.lib;bundle-version="2.36.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: nl.esi.comma.testspecification,
