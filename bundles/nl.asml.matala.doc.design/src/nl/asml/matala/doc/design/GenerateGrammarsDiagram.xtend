@@ -1,3 +1,15 @@
+/**
+ * Copyright (c) 2024, 2025 TNO-ESI
+ *
+ * See the NOTICE file(s) distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This program and the accompanying materials are made available
+ * under the terms of the MIT License which is available at
+ * https://opensource.org/licenses/MIT
+ *
+ * SPDX-License-Identifier: MIT
+ */
 package nl.asml.matala.doc.design
 
 import java.io.InputStream
@@ -22,8 +34,16 @@ class GenerateGrammarsDiagram {
     static val FILE_EXTENSIONS_PATTERN = Pattern.compile('''^\s*fileExtensions\s+=\s+"([^"]+)"''')
 
     def static void main(String[] args) {
-        val xtextFiles = Files.find(Path.of('../'), Integer.MAX_VALUE, [$0.toString.endsWith('.xtext')]).toIterable
-        val grammars = xtextFiles.map[createGrammar].filterNull.toList
+        if (args.size != 2) {
+            System.err.println('Expected two arguments: [bundles_directory] [output-file]')
+            System.exit(1)
+        }
+        val bundlesDir = Path.of(args.get(0)).toRealPath()
+        val outputFile = Path.of(args.get(1))
+        println('''Generate diagram: «bundlesDir» => «outputFile»''')
+
+        val xtextFiles = Files.find(bundlesDir, Integer.MAX_VALUE, [$0.toString.endsWith('.xtext')]).toIterable
+        val grammars = xtextFiles.map[createGrammar(bundlesDir)].filterNull.toList
         grammars += TERMINALS_GRAMMAR
         // Reduce grammar dependencies
         grammars.forEach[
@@ -35,14 +55,32 @@ class GenerateGrammarsDiagram {
             return switch (a) {
                 case a.getParentGrammars(grammars).contains(b): 1
                 case b.getParentGrammars(grammars).contains(a): -1
-            	default: 0
+                default: 0
             }
         ]
-        Files.write(Path.of('grammars.plantuml'), #[grammars.generatePlantUml])
+        Files.createDirectories(outputFile.parent)
+        Files.write(outputFile, #[grammars.generatePlantUml])
+
+        println(grammars.join('\n')['''<inputFile>${project.build.directory}/meta-models/«bundle»/model/generated/«name».ecore</inputFile>'''])
     }
 
     def static String generatePlantUml(Iterable<Grammar> grammars) '''
         @startuml
+        skinparam Arrow {
+            Color Black
+            Thickness 0.6
+        }
+        skinparam artifact {
+            BackgroundColor #white/business
+            BorderColor Black
+            BorderThickness 1
+        }
+        skinparam package {
+            BackgroundColor #white/motivation
+            BorderColor Black
+            BorderThickness 1
+        }
+
         'Declaring bundles and grammars 
         «FOR g : grammars»
         package «g.bundle» {
@@ -62,26 +100,25 @@ class GenerateGrammarsDiagram {
         @enduml
     '''
 
-    def static Grammar createGrammar(Path xtextFile) {
+    def static Grammar createGrammar(Path xtextFile, Path bundlesDir) {
         if (xtextFile.contains(Path.of('target'))) {
             return null
         }
         val fileName = com.google.common.io.Files.getNameWithoutExtension(xtextFile.fileName.toString)
         val xtextLines = Files.lines(xtextFile).toIterable
         val mwe2Lines = Files.lines(xtextFile.resolveSibling('''Generate«fileName».mwe2''')).toIterable
-        val manifest = new Manifest(xtextFile.subpath(0, 2).resolve('META-INF/MANIFEST.MF').read)
+        val bundlePath = xtextFile.getName(bundlesDir.nameCount)
+        val manifest = new Manifest(bundlesDir.resolve(bundlePath).resolve('META-INF/MANIFEST.MF').read)
         val requiredBundles = manifest.mainAttributes.getValue('Require-Bundle')
 
         return new Grammar => [
-            bundle = xtextFile.getName(1).toString
+            bundle = bundlePath.toString
             name = xtextLines.matchAndReturn(GRAMMAR_PATTERN, '$2').head
             parent = xtextLines.matchAndReturn(GRAMMAR_PATTERN, '$4').head
             uri = xtextLines.matchAndReturn(GENERATE_PATTERN, '$2').head
             grammarUses += xtextLines.matchAndReturn(IMPORT_PATTERN, '$1')
-
-            fileExtensions = mwe2Lines.matchAndReturn(FILE_EXTENSIONS_PATTERN, '$1').head
-
             bundleUses += requiredBundles.split(',').map[split(';').head]
+            fileExtensions = mwe2Lines.matchAndReturn(FILE_EXTENSIONS_PATTERN, '$1').head
         ]
     }
 

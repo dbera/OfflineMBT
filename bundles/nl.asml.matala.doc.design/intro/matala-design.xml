@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+
+    Copyright (c) 2024, 2025 TNO-ESI
+
+    See the NOTICE file(s) distributed with this work for additional
+    information regarding copyright ownership.
+
+    This program and the accompanying materials are made available
+    under the terms of the MIT License which is available at
+    https://opensource.org/licenses/MIT
+
+    SPDX-License-Identifier: MIT
+
+-->
+<introContent>
+  <extensionContent id="nl.asml.matala.doc.design" name="matala-design" alt-style="css/matala-design.properties" style="css/matala-design.css" path="tutorials/@">
+    <group label="Matala" id="matala" style-id="content-group">
+      <link url="http://org.eclipse.ui.intro/showHelpTopic?id=/nl.asml.matala.doc.design/target/eclipse-help/index.html"
+            label="Read the Matala design documentation" id="matala-design" style-id="content-link">
+        <text>Learn about the Matala design</text>
+      </link>
+    </group>
+  </extensionContent>
+</introContent>
