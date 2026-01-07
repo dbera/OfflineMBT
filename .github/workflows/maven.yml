@@ -26,6 +26,8 @@ jobs:
       with:
         java-version: 21
         java-distribution: temurin
+    - name: Setup Graphviz
+      uses: ts-graphviz/setup-graphviz@v2
     - name: Check license headers
       run: mvn license:check --batch-mode --update-snapshots --fail-at-end --file pom.xml
     - name: Build and test with Maven
