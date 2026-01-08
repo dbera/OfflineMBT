@@ -15,16 +15,8 @@
  */
 package nl.esi.comma.inputspecification.scoping
 
-import nl.esi.comma.expressions.expression.ExpressionPackage
-import nl.esi.comma.inputspecification.inputSpecification.InputSpecificationPackage
-import nl.esi.comma.inputspecification.inputSpecification.Tail
-import nl.esi.comma.signature.utilities.InterfaceUtilities
-import nl.esi.comma.types.utilities.CommaUtilities
 import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.EReference
-import org.eclipse.xtext.scoping.IScope
-
-import static org.eclipse.xtext.scoping.Scopes.*
 
 /**
  * This class contains custom scoping description.
@@ -34,19 +26,6 @@ import static org.eclipse.xtext.scoping.Scopes.*
  */
 class InputSpecificationScopeProvider extends AbstractInputSpecificationScopeProvider {
 	override getScope(EObject context, EReference reference) {
-
-		/*if (context instanceof EventData && reference == InputSpecificationPackage.Literals.EVENT_DATA__STATE) {
-			return scope_State(context as EventData, reference)
-		}
-
-		if (context instanceof Body && reference == InputSpecificationPackage.Literals.BODY__EVENT) {
-			return scope_Event(context as Body, reference)
-		}*/
-
-		if (context instanceof Tail && reference == InputSpecificationPackage.Literals.TAIL__NI_EVENT) {
-			return scope_Event(context as Tail, reference)
-		}
-		
 		// In Progress DB
 		/*if(context instanceof EventData && reference == InputSpecificationPackage.Literals.EVENT_DATA__INSTANCE) {
 			return scope_Event_Instance(context as EventData, reference)
@@ -57,36 +36,6 @@ class InputSpecificationScopeProvider extends AbstractInputSpecificationScopePro
 		}*/
 				
 		return super.getScope(context, reference);
-	}
-
-	/*def scope_State(EventData body, EReference reference) {
-		val machines = CommaUtilities::resolveProxy(body,
-			getScope(body, BehaviorPackage.Literals.ABSTRACT_BEHAVIOR__MACHINES).getAllElements)
-		var listOfStates = new ArrayList<State>
-
-		for (m : machines)
-			listOfStates.addAll((m as StateMachine).states)
-		return scopeFor(listOfStates)
-	}
-
-	def scope_Event(Body body, EReference reference) {
-		val intf = CommaUtilities::resolveProxy(body,
-			getScope(body, ExpressionPackage.Literals.INTERFACE_AWARE_TYPE__INTERFACE).getAllElements)
-		if(intf.empty) {
-			return IScope.NULLSCOPE
-		} else {
-			return scopeFor(InterfaceUtilities::getAllInterfaceEvents(intf.head))
-		}		
-	}*/
-
-	def scope_Event(Tail tail, EReference reference) {
-		val intf = CommaUtilities::resolveProxy(tail,
-			getScope(tail, ExpressionPackage.Literals.INTERFACE_AWARE_TYPE__INTERFACE).getAllElements)
-		if(intf.empty) {
-			return IScope.NULLSCOPE
-		} else {
-			return scopeFor(InterfaceUtilities::getAllInterfaceEvents(intf.head))
-		}		
 	}
 
 	// In Progress: DB	

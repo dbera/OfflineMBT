@@ -14,7 +14,6 @@ grammar nl.esi.comma.scenarios.Scenarios with nl.esi.comma.actions.Actions
 
 generate scenarios "http://www.esi.nl/comma/scenarios/Scenarios"
 
-//import "http://www.esi.nl/comma/signature/InterfaceSignature" as sig
 import "http://www.esi.nl/comma/types/Types" as types
 
 Scenarios: {Scenarios}

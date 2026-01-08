@@ -14,7 +14,6 @@ grammar nl.esi.comma.abstracttestspecification.AbstractTestspecification with nl
 
 generate abstractTestspecification "http://www.esi.nl/comma/abstracttestspecification/AbstractTestspecification"
 
-import "http://www.eclipse.org/emf/2002/Ecore" as ecore
 import "http://www.esi.nl/comma/types/Types" as types
 import "http://www.esi.nl/comma/expressions/Expression" as expr
 import "http://www.asml.nl/matala/product/Product" as prod
@@ -124,7 +123,7 @@ JsonExpression returns assertthat::JsonExpression:
     expr = AbstractTestExpressionConstants
 ;
 
-AbstractTestExpressionConstants returns expr::Expression:
+AbstractTestExpressionConstants returns expr::Expression :
     ExpressionConstantInt  | ExpressionConstantReal | ExpressionConstantBool | ExpressionConstantString // basic types
     | ExpressionMinus | ExpressionPlus // signed numbers
     | ExpressionNullLiteral // null value

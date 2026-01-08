@@ -26,6 +26,8 @@ jobs:
       with:
         java-version: 21
         java-distribution: temurin
+    - name: Setup Graphviz
+      uses: ts-graphviz/setup-graphviz@v2
     - name: Check license headers
       run: mvn license:check --batch-mode --update-snapshots --fail-at-end --file pom.xml
     - name: Build and test with Maven
@@ -44,6 +46,12 @@ jobs:
       with:
         name: bpmn4s-editor-dev
         path: bundles/nl.esi.comma.project.standard.cli/target/dist
+        retention-days: 10
+    - name: Attach Design Documentation
+      uses: actions/upload-artifact@v4
+      with:
+        name: matala-design-documentation
+        path: bundles/nl.asml.matala.doc.design/target/website
         retention-days: 10
     # Optional: Uploads the full dependency graph to GitHub to improve the quality of Dependabot alerts this repository can receive
     # - name: Update dependency graph

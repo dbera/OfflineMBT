@@ -10,12 +10,9 @@
  *
  * SPDX-License-Identifier: MIT
  */
-grammar nl.esi.comma.steps.Step with org.eclipse.xtext.common.Terminals //nl.esi.comma.expressions.Expression
+grammar nl.esi.comma.steps.Step with org.eclipse.xtext.common.Terminals
 
 generate step "http://www.esi.nl/comma/steps/Step"
-
-// import "http://www.esi.nl/comma/expressions/Expression" as expr
-// import "http://www.esi.nl/comma/types/Types" as types
 
 Steps:{Steps}
 	imports += Import* // for now we assume only one configuration file.

@@ -18,7 +18,7 @@ import java.util.List;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
-import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.RegistryFactory;
 import org.eclipse.emf.common.EMFPlugin.EclipsePlugin;
 import org.eclipse.emf.ecore.plugin.RegistryReader;
 
@@ -31,7 +31,7 @@ public class StandardProjectGeneratorExtensionRegistryReader extends RegistryRea
 	private final ArrayList<IStandardProjectGeneratorExtension> extensions = new ArrayList<>();
 
 	public StandardProjectGeneratorExtensionRegistryReader(EclipsePlugin plugin) {
-		super(Platform.getExtensionRegistry(), plugin.getBundle().getSymbolicName(), EXTENSION_POINT_ID);
+		super(RegistryFactory.getRegistry(), plugin.getBundle().getSymbolicName(), EXTENSION_POINT_ID);
 		this.plugin = plugin;
 	}
 

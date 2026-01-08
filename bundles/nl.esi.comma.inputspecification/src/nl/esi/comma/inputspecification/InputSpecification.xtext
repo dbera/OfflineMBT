@@ -14,9 +14,6 @@ grammar nl.esi.comma.inputspecification.InputSpecification with nl.esi.comma.act
 
 generate inputSpecification "http://www.esi.nl/comma/inputspecification/InputSpecification"
 
-// import "http://www.esi.nl/comma/behavior/interfaces/InterfaceDefinition" as intdef
-//import "http://www.esi.nl/comma/behavior/Behavior" as sm
-import "http://www.esi.nl/comma/signature/InterfaceSignature" as sig 
 import "http://www.esi.nl/comma/types/Types" as types
 import "http://www.esi.nl/comma/expressions/Expression" as expr
 
@@ -106,45 +103,4 @@ SUTDef:
     'define-sut' '{'
         name = ID
     '}'
-;
-
-
-/*Applications:
-	
-;*/
-
-
-//////////////////////// OBSOLETE ////////////////////////////////
-
-TagText:
-	(command ?= 'command')? 'tag' tag += (EventTag | EventOutcomeTag)+
-;
-
-EventTag:
-	'action' eventTag = STRING
-;
-
-EventOutcomeTag:
-	'data' (value += Expression (',' value += Expression)*)? '->' eventOutcomeTag = STRING
-;
-
-/*EventData:
-	'state:' state = [sm::State] ('select-transition-clause-id:' evtInst += EventInstance+ )? params += EventParams*
-;*/
-
-Tail:
-	('non-trigger:' niEvent = [sig::InterfaceEvent])
-	(tags += TagText*)
-;
-
-EventInstance:
-	'(' instanceID = INT ':' '(' evtCl += EventClause+ ')' params += EventParams* ')'
-;
-
-EventClause:
-	clauseID = INT | ',' clauseID = INT
-;
-
-EventParams: {EventParams}
-	'params:' '(' (value += Expression (',' value += Expression)*)? ')' ('feature-expr:' config = Expression)?
 ;

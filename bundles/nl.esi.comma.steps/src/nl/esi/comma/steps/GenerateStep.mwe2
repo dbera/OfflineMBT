@@ -45,9 +45,6 @@ Workflow {
 			name = "nl.esi.comma.steps.Step"
 			fileExtensions = "steps"
 			
-			//referencedResource = "platform:/resource/nl.esi.comma.expressions/model/generated/Expression.genmodel"
-			//referencedResource = "platform:/resource/nl.esi.comma.types/model/generated/Types.genmodel"
-
 			serializer = {
 				generateStub = false
 			}

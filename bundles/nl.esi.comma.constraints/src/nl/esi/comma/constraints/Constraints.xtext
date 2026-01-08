@@ -10,16 +10,14 @@
  *
  * SPDX-License-Identifier: MIT
  */
-grammar nl.esi.comma.constraints.Constraints with nl.esi.comma.actions.Actions //org.eclipse.xtext.common.Terminals //nl.esi.comma.types.Types
+grammar nl.esi.comma.constraints.Constraints with nl.esi.comma.actions.Actions
 
 generate constraints "http://www.esi.nl/comma/constraints/Constraints"
 
 import "http://www.esi.nl/comma/types/Types" as types
 import "http://www.esi.nl/comma/steps/Step" as step
-import "http://www.esi.nl/comma/expressions/Expression" as expr
 
-
-Constraints:{Constraints}
+Constraints: {Constraints}
 	imports += Import*
 	actors += ActorList*
 	actions += Actions*
@@ -35,9 +33,9 @@ Constraints:{Constraints}
 	useLabels?= 'use-provided-labels'?
 ;
 
-
-Import:
-    'import' importURI = STRING
+@Override
+ModelContainer returns types::ModelContainer:
+    super::ModelContainer | Constraints
 ;
 
 ActorList:{ActorList} 
@@ -61,6 +59,7 @@ Actions:
 //    act = ActionType name = ID label = STRING ( data += DataTable* )
 //;
 
+@Override
 Action returns Action:
     act = ActionType name = ID label = STRING ( data += DataTable* | actParam += ActionParam+)
 ;

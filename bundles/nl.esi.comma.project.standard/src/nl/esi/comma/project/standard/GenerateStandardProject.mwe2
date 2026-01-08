@@ -43,7 +43,7 @@ Workflow {
 			name = "nl.esi.comma.project.standard.StandardProject"
 			fileExtensions = "prj"
 			
-			referencedResource = "platform:/resource/nl.esi.comma.signature/model/generated/InterfaceSignature.genmodel"
+            referencedResource = "platform:/resource/nl.esi.comma.types/model/generated/Types.genmodel"
 
 			serializer = {
 				generateStub = false

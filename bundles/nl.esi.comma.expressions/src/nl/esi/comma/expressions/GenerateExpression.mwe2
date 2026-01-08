@@ -39,7 +39,7 @@ Workflow {
 		}
 		language = StandardLanguage {
 			name = "nl.esi.comma.expressions.Expression"
-			fileExtensions = "e"
+			fileExtensions = "expr"
 			
 			referencedResource = "platform:/resource/nl.esi.comma.types/model/generated/Types.genmodel"
 			referencedResource = "platform:/resource/nl.esi.comma.signature/model/generated/InterfaceSignature.genmodel"

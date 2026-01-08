@@ -26,19 +26,20 @@ import java.util.List
 import java.util.Set
 import nl.esi.comma.constraints.constraints.Act
 import nl.esi.comma.constraints.constraints.ActSequenceDef
+import nl.esi.comma.constraints.constraints.Action
 import nl.esi.comma.constraints.constraints.ActionData
+import nl.esi.comma.constraints.constraints.ActionType
 import nl.esi.comma.constraints.constraints.Constraints
 import nl.esi.comma.constraints.constraints.ConstraintsPackage
 import nl.esi.comma.constraints.constraints.DataTable
 import nl.esi.comma.constraints.constraints.ExampleCell
-import nl.esi.comma.constraints.constraints.Import
-import nl.esi.comma.constraints.constraints.Ref
+import nl.esi.comma.constraints.constraints.Existential
+import nl.esi.comma.constraints.constraints.Init
 import nl.esi.comma.constraints.constraints.RefActSequence
 import nl.esi.comma.constraints.constraints.RefAction
 import nl.esi.comma.constraints.constraints.RefStep
 import nl.esi.comma.constraints.constraints.RefStepSequence
 import nl.esi.comma.constraints.constraints.StepSequenceDef
-import nl.esi.comma.steps.step.Steps
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.emf.common.util.URI
@@ -47,10 +48,6 @@ import org.eclipse.emf.ecore.resource.ResourceSet
 import org.eclipse.emf.ecore.util.EcoreUtil
 import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.validation.Check
-import nl.esi.comma.constraints.constraints.Action
-import nl.esi.comma.constraints.constraints.Init
-import nl.esi.comma.constraints.constraints.ActionType
-import nl.esi.comma.constraints.constraints.Existential
 
 /**
  * This class contains custom validation rules. 

@@ -10,13 +10,9 @@
  *
  * SPDX-License-Identifier: MIT
  */
-grammar nl.esi.comma.behavior.scl.Scl with nl.esi.comma.actions.Actions // with nl.esi.comma.expressions.Expression
+grammar nl.esi.comma.behavior.scl.Scl with nl.esi.comma.actions.Actions
 
 generate scl "http://www.esi.nl/comma/behavior/scl/Scl"
-
-import "http://www.esi.nl/comma/signature/InterfaceSignature" as sig 
-import "http://www.esi.nl/comma/types/Types" as types
-import "http://www.esi.nl/comma/expressions/Expression" as expr
 
 Model:
 	imports += Import*
@@ -83,7 +79,7 @@ ActionParam:
 
 // name is used as reference|ID by templates. In generator this must be changed
 _Action:
-	act = ActionType name = ID label = STRING (actParam += ActionParam+)? 
+	act = ActionType name = ID label = STRING actParam += ActionParam*
 ;
 
 enum ActionType:

@@ -138,4 +138,8 @@ the Department of Electrical Engineering of Eindhoven University of Technology.
          id="nl.asml.matala.product.ui"
          version="0.0.0"/>
 
+   <plugin
+         id="nl.asml.matala.doc.design"
+         version="0.0.0"/>
+
 </feature>
