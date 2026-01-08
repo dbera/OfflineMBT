@@ -16,7 +16,19 @@ include::_initCommon.adoc[]
 [[xtext-languages]]
 == Xtext Languages Overview
 
-[plantuml, grammars, svg]
+Figure <<xtext-grammars>> shows a deployment diagram of all Xtext based DSLs and their relations, where:
+
+Package:: Denotes the bundle containing the Xtext grammar.
+The dashed arrows between the packages denote the bundle dependencies as defined by the `Require-Bundle` in the `MANIFEST.MF` of the bundle.
+
+Artifact:: Denotes the grammar which explained in more detail in section <<matala-meta-models>>.
+The stereotype denotes the file extensions of the DSL.
+The arrows between the artifact denote either language reuse (i.e. `with` keyword, denoted by open arrow) or language references (i.e. `import` keyword, denoted by closed arrow).
+For more information, please read the (i.e. https://eclipse.dev/Xtext/documentation/301_grammarlanguage.html#grammar-mixins[Grammar Mixins]) section of the Xtext documentation.
+
+[[xtext-grammars]]
+.Xtext languages and their relations
+[plantuml, xtext-grammars, svg]
 ....
-include::{gendocdir}/grammars.plantuml[]
+include::{gendocdir}/xtext-grammars.plantuml[]
 ....

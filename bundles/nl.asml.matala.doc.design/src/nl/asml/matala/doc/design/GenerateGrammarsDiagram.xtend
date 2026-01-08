@@ -25,10 +25,10 @@ import org.eclipse.xtend.lib.annotations.Accessors
 class GenerateGrammarsDiagram {
     static val TERMINALS_GRAMMAR = new Grammar => [
         bundle = 'org.eclipse.xtext.common'
-        name = 'Terminals'
+        name = 'org.eclipse.xtext.common.Terminals'
     ]
 
-    static val GRAMMAR_PATTERN = Pattern.compile('''^grammar\s+(\w+\.)*(\w+)\s+with\s+(\w+\.)*(\w+)''')
+    static val GRAMMAR_PATTERN = Pattern.compile('''^grammar\s+((\w+\.)*\w+)\s+with\s+((\w+\.)*\w+)''')
     static val GENERATE_PATTERN = Pattern.compile('''^generate\s+(\w+)\s+"([^"]+)"''')
     static val IMPORT_PATTERN = Pattern.compile('''^import\s+"([^"]+)"\s+as\s+(\w+)''')
     static val FILE_EXTENSIONS_PATTERN = Pattern.compile('''^\s*fileExtensions\s+=\s+"([^"]+)"''')
@@ -76,25 +76,27 @@ class GenerateGrammarsDiagram {
             BorderThickness 1
         }
         skinparam package {
-            BackgroundColor #white/motivation
-            BorderColor Black
+            FontStyle Plain
+            BorderColor LightSlateGray
             BorderThickness 1
         }
+        skinparam RoundCorner 8
 
-        'Declaring bundles and grammars 
+        'Declaring bundles and grammars
         «FOR g : grammars»
         package «g.bundle» {
-            artifact «g.name»«IF !g.fileExtensions.nullOrEmpty» <<«g.fileExtensions»>>«ENDIF»
+            artifact «g.simpleName» as «g.name»«IF !g.fileExtensions.nullOrEmpty» <<«g.fileExtensions»>>«ENDIF»
         }
         «ENDFOR»
+
         'Declaring bundle and grammar dependencies
         «FOR g : grammars»
-            «IF !g.parent.isNullOrEmpty»«g.parent» <|-- «g.name»«ENDIF»
+            «IF !g.parent.isNullOrEmpty»«g.name» -up-|> «g.parent»«ENDIF»
             «FOR use : g.grammarUses.map[uri | grammars.findFirst[gr | gr.uri == uri]].filterNull»
-            «g.name» --> «use.name»
+            «g.name» -down-> «use.name»
             «ENDFOR»
             «FOR use : g.bundleUses.map[bundle | grammars.findFirst[gr | gr.bundle == bundle]].filterNull»
-            «g.bundle» ..> «use.bundle»
+            «g.bundle» .down.> «use.bundle»
             «ENDFOR»
         «ENDFOR»
         @enduml
@@ -113,8 +115,8 @@ class GenerateGrammarsDiagram {
 
         return new Grammar => [
             bundle = bundlePath.toString
-            name = xtextLines.matchAndReturn(GRAMMAR_PATTERN, '$2').head
-            parent = xtextLines.matchAndReturn(GRAMMAR_PATTERN, '$4').head
+            name = xtextLines.matchAndReturn(GRAMMAR_PATTERN, '$1').head
+            parent = xtextLines.matchAndReturn(GRAMMAR_PATTERN, '$3').head
             uri = xtextLines.matchAndReturn(GENERATE_PATTERN, '$2').head
             grammarUses += xtextLines.matchAndReturn(IMPORT_PATTERN, '$1')
             bundleUses += requiredBundles.split(',').map[split(';').head]
@@ -132,6 +134,11 @@ class GenerateGrammarsDiagram {
         var String parent
         var String uri
         var String fileExtensions
+
+        def String getSimpleName() {
+            val prefix = bundle + '.'
+            return name.startsWith(prefix) ? name.substring(prefix.length) : name
+        }
 
         def Set<Grammar> getParentGrammars(Iterable<Grammar> grammars) {
             val parents = newLinkedHashSet

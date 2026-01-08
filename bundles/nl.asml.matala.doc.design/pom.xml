@@ -44,7 +44,7 @@
                             <includePluginDependencies>true</includePluginDependencies>
                             <arguments>
                                 <argument>${project.basedir}/..</argument>
-                                <argument>${project.build.directory}/adoc-gen/grammars.plantuml</argument>
+                                <argument>${project.build.directory}/adoc-gen/xtext-grammars.plantuml</argument>
                             </arguments>
                         </configuration>
                     </execution>
