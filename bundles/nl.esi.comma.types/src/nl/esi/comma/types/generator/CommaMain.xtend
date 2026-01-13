@@ -547,7 +547,14 @@ class CommaMain {
 		fileAccess.outputPath = outputdir
 		setCommaGen(fileAccess, outputdir)
 		
-		generator.generate(resource, fileAccess, new CmdLineContext)
+		try {
+            generator.generate(resource, fileAccess, new CmdLineContext)
+		} catch (Exception e) {
+            System.out.println(e.localizedMessage)
+            System.out.println(INFO_STOP)
+            System.exit(1)
+            return;
+		}
 	}
 
 	def cleanOutput(CommandLine cmdLine, Path outputdir) {

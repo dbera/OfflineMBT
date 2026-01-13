@@ -48,6 +48,10 @@ import org.eclipse.xtext.validation.Check
 import static extension nl.esi.comma.actions.utilities.ActionsUtilities.*
 import static extension nl.esi.comma.types.utilities.TypeUtilities.*
 
+
+import static extension org.eclipse.lsat.common.xtend.Queries.*
+import org.eclipse.emf.ecore.EObject
+
 /**
  * This class contains custom validation rules. 
  * 
@@ -166,18 +170,18 @@ class ProductValidator extends AbstractProductValidator {
         if (!outputs.contains(action.assignment)) {
             error('''Variable '«action.assignment.name»' is not defined as an output''', action, ActionsPackage.Literals.ASSIGNMENT_ACTION__ASSIGNMENT)
         }
-        action.exp?.preventIlligalVariableAccess(inputs, Direction::input)
+        action.exp?.preventIlligalExpressionVariableAccess(inputs, Direction::input)
         // As the variable is now assigned, we can also use it as input (imperative programming)
         inputs += action.assignment
     }
 
     private dispatch def void preventIlligalVariableAccess(RecordFieldAssignmentAction action, Set<Variable> inputs, Set<Variable> outputs) {
-        action.fieldAccess?.preventIlligalVariableAccess(outputs, Direction::output)
-        action.exp?.preventIlligalVariableAccess(inputs, Direction::input)
+        action.fieldAccess?.preventIlligalExpressionVariableAccess(outputs, Direction::output)
+        action.exp?.preventIlligalExpressionVariableAccess(inputs, Direction::input)
     }
 
     private dispatch def void preventIlligalVariableAccess(ForAction action, Set<Variable> inputs, Set<Variable> outputs) {
-        action.exp?.preventIlligalVariableAccess(inputs, Direction::input)
+        action.exp?.preventIlligalExpressionVariableAccess(inputs, Direction::input)
         if (action.doList !== null) {
             val doInputs = new HashSet(inputs)
             doInputs += action.^var
@@ -186,7 +190,7 @@ class ProductValidator extends AbstractProductValidator {
     }
 
     private dispatch def void preventIlligalVariableAccess(IfAction action, Set<Variable> inputs, Set<Variable> outputs) {
-        action.guard?.preventIlligalVariableAccess(inputs, Direction::input)
+        action.guard?.preventIlligalExpressionVariableAccess(inputs, Direction::input)
         if (action.thenList !== null) {
             action.thenList.actions.forEach[preventIlligalVariableAccess(inputs, outputs)]
         }
@@ -197,14 +201,16 @@ class ProductValidator extends AbstractProductValidator {
 
     private enum Direction { input, output }
 
-    private dispatch def void preventIlligalVariableAccess(ExpressionVariable exprVar, Set<Variable> variables, Direction direction) {
+    private dispatch def void preventIlligalExpressionVariableAccess(ExpressionVariable exprVar, Set<Variable> variables, Direction direction) {
         if (!variables.contains(exprVar.variable)) {
             error('''Variable '«exprVar.variable.name»' is not defined as an «direction»''', exprVar, ExpressionPackage.Literals.EXPRESSION_VARIABLE__VARIABLE)
         }
     }
 
-    private dispatch def void preventIlligalVariableAccess(Expression expr, Set<Variable> variables, Direction direction) {
-        expr.eContents.filter(Expression).forEach[preventIlligalVariableAccess(variables, direction)]
+    private dispatch def void preventIlligalExpressionVariableAccess(Expression expr, Set<Variable> variables, Direction direction) {
+        // Finds child expressions, but allows other classes in between (e.g. Record Field)
+        val subExpressions = #[expr as EObject].walkTree[eContents].findNearest(Expression)
+        subExpressions.forEach[preventIlligalExpressionVariableAccess(variables, direction)]
     }
 
     /**

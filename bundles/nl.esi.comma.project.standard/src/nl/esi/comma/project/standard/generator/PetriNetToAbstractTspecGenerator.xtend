@@ -13,7 +13,7 @@
 package nl.esi.comma.project.standard.generator
 
 import java.io.BufferedReader
-import java.io.InputStreamReader
+import java.util.concurrent.TimeUnit
 import org.eclipse.emf.common.util.URI
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.emf.ecore.resource.ResourceSet
@@ -23,7 +23,6 @@ import org.eclipse.xtext.generator.IGeneratorContext
 
 import static extension nl.esi.comma.types.utilities.EcoreUtil3.*
 import static extension nl.esi.comma.types.utilities.FileSystemAccessUtil.*
-import java.util.concurrent.TimeUnit
 
 class PetriNetToAbstractTspecGenerator extends AbstractGenerator {
     val String pythonExe;
@@ -49,14 +48,31 @@ class PetriNetToAbstractTspecGenerator extends AbstractGenerator {
             '-pudir=' + fsa.getURI('plantuml').toPath
         ])
 
-        var BufferedReader i = new BufferedReader(new InputStreamReader(process.getInputStream()))
-        var String line = null
-        while ((line = i.readLine()) !== null) {
-            System.err.println(line)
+        val out = process.inputReader.readAll
+        if (!out.isNullOrEmpty) {
+            System.out.print(out)
         }
-        process.waitFor(10, TimeUnit::SECONDS)
+        val err = process.errorReader.readAll
+        if (!err.isNullOrEmpty) {
+            System.err.print(err)
+        }
+        if (!process.waitFor(10, TimeUnit::SECONDS)) {
+            throw new RuntimeException('Python process did not end in time')
+        } else if (process.exitValue != 0) {
+            throw new RuntimeException(
+                '''Python process exited with exit code «process.exitValue», see error output for details.''')
+        }
 
         // Refresh the files-system to detect the generated files
         fsa.refresh
+    }
+
+    def String readAll(BufferedReader reader) {
+        var text = ''
+        var String line = null
+        while ((line = reader.readLine()) !== null) {
+            text += line + System.lineSeparator
+        }
+        return text
     }
 }
