@@ -71,7 +71,7 @@ def build_and_load_model(model_path:str):
     module = utils.load_module(source=model_name,package=f"src-gen.{taskname}.CPNServer")
     return module, result
 
-def generate_fast_tests( model_path:str, num_tests:int=1, depth_limit:int=500):
+def generate_tests( model_path:str, num_tests:int=1, depth_limit:int=500):
     
     model_dir, model_name = os.path.split(model_path)
     model_name, model_ext = os.path.splitext(model_name)
@@ -178,7 +178,7 @@ def test_generator():
     status_code = 200
     response = {'response': {'uuid': filename}}
     try:
-        zip_fname, result = generate_fast_tests(model_path, num_tests=numTests, depth_limit=depthLimit)
+        zip_fname, result = generate_tests(model_path, num_tests=numTests, depth_limit=depthLimit)
         zip_dir, zip_path = os.path.split(zip_fname)
         return send_from_directory(zip_dir, zip_path, mimetype='application/zip', as_attachment=True), status_code
     except utils.BPMN4SException as e:
