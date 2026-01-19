@@ -93,17 +93,17 @@ class GenerateGrammarsDiagram {
         «FOR g : grammars»
             «IF !g.parent.isNullOrEmpty»«g.name» -up-|> «g.parent»«ENDIF»
             «FOR use : g.grammarUses.map[uri | grammars.findFirst[gr | gr.uri == uri]].filterNull»
-            «g.name» -down-> «use.name»
+            «g.name» -up-> «use.name»
             «ENDFOR»
             «FOR use : g.bundleUses.map[bundle | grammars.findFirst[gr | gr.bundle == bundle]].filterNull»
-            «g.bundle» .down.> «use.bundle»
+            «g.bundle» .up.> «use.bundle»
             «ENDFOR»
         «ENDFOR»
         @enduml
     '''
 
     def static Grammar createGrammar(Path xtextFile, Path bundlesDir) {
-        if (xtextFile.contains(Path.of('target'))) {
+        if (xtextFile.contains(Path.of('target')) || xtextFile.contains(Path.of('bin'))) {
             return null
         }
         val fileName = com.google.common.io.Files.getNameWithoutExtension(xtextFile.fileName.toString)
