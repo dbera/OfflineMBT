@@ -30,7 +30,19 @@ For more information about the reuse of existing grammars, please read the (i.e.
 
 [[xtext-grammars]]
 .Xtext languages and their relations
-[plantuml, xtext-grammars, svg]
+[plantuml, images/xtext-grammars, svg]
 ....
+@startuml
+
 include::{gendocdir}/xtext-grammars.plantuml[]
+
+artifact nl.esi.comma.types.Types #white/aqua
+artifact nl.asml.matala.product.Product #white/aqua
+artifact nl.esi.comma.abstracttestspecification.AbstractTestspecification #white/aqua
+artifact nl.esi.comma.inputspecification.InputSpecification #white/aqua
+artifact nl.esi.comma.testspecification.Testspecification #white/aqua
+artifact nl.esi.comma.project.standard.StandardProject #white/aqua
+artifact nl.esi.comma.causalgraph.CausalGraph #white/aquamarine
+
+@enduml
 ....

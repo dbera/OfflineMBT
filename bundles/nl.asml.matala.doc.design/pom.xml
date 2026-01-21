@@ -124,6 +124,7 @@
                                 <renderDefaults>false</renderDefaults>
                                 <repeatInherited>false</repeatInherited>
                                 <renderDiagrams>true</renderDiagrams>
+                                <diagramsOutputPath>images</diagramsOutputPath>
                             </config>
                             <inputFiles>
                                 <inputFile>${project.build.directory}/meta-models/nl.esi.comma.types/model/generated/Types.ecore</inputFile>

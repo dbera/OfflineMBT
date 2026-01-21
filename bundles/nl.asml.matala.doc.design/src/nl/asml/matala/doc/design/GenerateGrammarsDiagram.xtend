@@ -65,7 +65,6 @@ class GenerateGrammarsDiagram {
     }
 
     def static String generatePlantUml(Iterable<Grammar> grammars) '''
-        @startuml
         skinparam Arrow {
             Color Black
             Thickness 0.6
@@ -99,7 +98,6 @@ class GenerateGrammarsDiagram {
             «g.bundle» .up.> «use.bundle»
             «ENDFOR»
         «ENDFOR»
-        @enduml
     '''
 
     def static Grammar createGrammar(Path xtextFile, Path bundlesDir) {
