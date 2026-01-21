@@ -1,0 +1,32 @@
+Manifest-Version: 1.0
+Automatic-Module-Name: nl.esi.xtext.common.lang
+Bundle-ManifestVersion: 2
+Bundle-Name: Base Language Core
+Bundle-Vendor: TNO-ESI
+Bundle-Version: 4.2.0.qualifier
+Bundle-SymbolicName: nl.esi.xtext.common.lang; singleton:=true
+Bundle-ActivationPolicy: lazy
+Require-Bundle: org.eclipse.xtext,
+ org.eclipse.xtext.xbase,
+ org.eclipse.equinox.common;bundle-version="3.16.0",
+ org.eclipse.emf.ecore,
+ org.eclipse.xtext.xbase.lib;bundle-version="2.36.0",
+ org.eclipse.xtend.lib;bundle-version="2.36.0",
+ org.eclipse.emf.common,
+ org.antlr.runtime;bundle-version="[3.2.0,3.2.1)",
+ org.eclipse.core.resources
+Bundle-RequiredExecutionEnvironment: JavaSE-21
+Export-Package: nl.esi.xtext.common.lang,
+ nl.esi.xtext.common.lang.base,
+ nl.esi.xtext.common.lang.base.impl,
+ nl.esi.xtext.common.lang.base.util,
+ nl.esi.xtext.common.lang.formatting2,
+ nl.esi.xtext.common.lang.generator,
+ nl.esi.xtext.common.lang.parser.antlr,
+ nl.esi.xtext.common.lang.parser.antlr.internal,
+ nl.esi.xtext.common.lang.scoping,
+ nl.esi.xtext.common.lang.serializer,
+ nl.esi.xtext.common.lang.services,
+ nl.esi.xtext.common.lang.utilities,
+ nl.esi.xtext.common.lang.validation
+Import-Package: org.apache.log4j

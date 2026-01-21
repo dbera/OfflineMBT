@@ -16,7 +16,7 @@
 package nl.asml.matala.product.tests
 
 import com.google.inject.Inject
-import nl.esi.comma.types.types.ModelContainer
+import nl.esi.xtext.common.lang.base.ModelContainer
 import org.eclipse.xtext.testing.InjectWith
 import org.eclipse.xtext.testing.extensions.InjectionExtension
 import org.eclipse.xtext.testing.util.ParseHelper

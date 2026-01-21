@@ -21,7 +21,7 @@ import nl.esi.comma.types.types.TypesFactory
 import nl.esi.comma.types.types.VectorTypeConstructor
 import org.eclipse.emf.ecore.util.EcoreUtil
 
-import static extension nl.esi.comma.types.utilities.EcoreUtil3.serialize
+import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.serialize
 
 class Utils 
 {

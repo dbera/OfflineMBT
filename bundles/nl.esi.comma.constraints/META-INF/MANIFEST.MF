@@ -7,6 +7,8 @@ Bundle-Version: 4.2.0.qualifier
 Bundle-SymbolicName: nl.esi.comma.constraints; singleton:=true
 Bundle-ActivationPolicy: lazy
 Require-Bundle: nl.esi.comma.actions;visibility:=reexport,
+ nl.esi.comma.steps,
+ nl.esi.comma.scenarios,
  org.eclipse.xtext,
  org.eclipse.xtext.xbase,
  org.eclipse.equinox.common;bundle-version="3.5.0",
@@ -20,9 +22,7 @@ Require-Bundle: nl.esi.comma.actions;visibility:=reexport,
  com.google.gson;bundle-version="2.8.2",
  org.eclipse.core.expressions;bundle-version="3.8.100",
  nl.esi.comma.constraints.dashboard,
- nl.esi.comma.automata,
- nl.esi.comma.scenarios,
- nl.esi.comma.steps
+ nl.esi.comma.automata
 Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: nl.esi.comma.constraints,
  nl.esi.comma.constraints.constraints,

@@ -16,7 +16,8 @@ Require-Bundle: nl.esi.comma.actions;visibility:=reexport,
  org.eclipse.emf.ecore,
  org.eclipse.emf.common,
  org.eclipse.core.resources;bundle-version="3.14.0",
- nl.esi.comma.automata
+ nl.esi.comma.automata,
+ org.eclipse.xtend.lib;bundle-version="2.36.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: nl.esi.comma.behavior.scl,
  nl.esi.comma.behavior.scl.validation,

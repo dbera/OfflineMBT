@@ -15,17 +15,28 @@ grammar nl.esi.comma.causalgraph.CausalGraph with nl.esi.comma.actions.Actions
 
 generate causalGraph "http://www.esi.nl/comma/causalgraph/CausalGraph"
 
+import "http://www.esi.nl/xtext/common/lang/Base" as base
 import "http://www.esi.nl/comma/types/Types" as types
 import "http://www.esi.nl/comma/expressions/Expression" as expr
 
-@Override
-ModelContainer returns types::ModelContainer:
-    super | CausalGraph
+CausalGraph returns base::ModelContainer: {CausalGraph}
+    imports += Import*
+    requirements += RequirementDecl+
+    scenarios += ScenarioDecl+
+    'graph' name=ID ':'
+        ('language' ':' language = STRING)?
+        ('header' ':' header = BODY)?
+        ('types' ':' types += TypeDecl+)?
+        ('functions' ':' functions += FunctionDecl+)?
+        ('variables' ':' variables += Variable+)?
+        ('initializations' ':' assignments += AssignmentAction+)?
+        nodes += Node+
+        ('edges' ':' edges += Edge+)?
 ;
 
 @Override
-NamedElement returns types::NamedElement:
-    super | CausalGraph | RequirementDecl | ScenarioDecl | Node
+NamedElement returns base::NamedElement:
+    {CausalGraph} | {RequirementDecl} | {ScenarioDecl} | {Node}
 ;
 
 @Override
@@ -48,21 +59,6 @@ enum StepType:
     given = 'Given' |
     when = 'When' |
     then = 'Then'
-;
-
-CausalGraph:
-    imports += Import*
-    requirements += RequirementDecl+
-    scenarios += ScenarioDecl+
-    'graph' name=ID ':'
-        ('language' ':' language = STRING)?
-        ('header' ':' header = BODY)?
-        ('types' ':' types += TypeDecl+)?
-        ('functions' ':' functions += FunctionDecl+)?
-        ('variables' ':' variables += Variable+)?
-        ('initializations' ':' assignments += AssignmentAction+)?
-        nodes += Node+
-        ('edges' ':' edges += Edge+)?
 ;
 
 RequirementDecl:

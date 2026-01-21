@@ -10,11 +10,13 @@
  *
  * SPDX-License-Identifier: MIT
  */
-grammar nl.esi.comma.project.standard.StandardProject with nl.esi.comma.types.Types
+grammar nl.esi.comma.project.standard.StandardProject with nl.esi.xtext.common.lang.Base
 
 generate standardProject "http://www.esi.nl/comma/project/standard/StandardProject"
 
-Project:
+import "http://www.esi.nl/xtext/common/lang/Base" as base
+
+Project returns base::ModelContainer: {Project}
 	'Project' name = ID '{'
 		(offlineBlocks += OfflineGenerationBlock)*
 		(statemachineBlocks += StateMachineGenerationBlock)*

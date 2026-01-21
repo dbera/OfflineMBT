@@ -14,7 +14,7 @@ package nl.esi.comma.types.ui.contentassist
 
 import com.google.inject.Inject
 import com.google.inject.Provider
-import nl.esi.comma.types.types.Import
+import nl.esi.xtext.common.lang.base.Import
 import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.util.EcoreUtil
 import org.eclipse.jface.text.IRegion

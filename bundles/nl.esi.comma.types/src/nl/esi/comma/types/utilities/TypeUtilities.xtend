@@ -14,6 +14,7 @@ package nl.esi.comma.types.utilities
 
 import java.util.ArrayList
 import java.util.List
+import nl.esi.comma.types.BasicTypes
 import nl.esi.comma.types.types.EnumElement
 import nl.esi.comma.types.types.EnumTypeDecl
 import nl.esi.comma.types.types.MapTypeConstructor
@@ -28,10 +29,9 @@ import nl.esi.comma.types.types.TypeReference
 import nl.esi.comma.types.types.TypesFactory
 import nl.esi.comma.types.types.VectorTypeConstructor
 import nl.esi.comma.types.types.VectorTypeDecl
-import org.eclipse.emf.ecore.util.EcoreUtil
-import nl.esi.comma.types.BasicTypes
+import nl.esi.xtext.common.lang.base.ModelContainer
 import org.eclipse.emf.ecore.resource.Resource
-import nl.esi.comma.types.types.ModelContainer
+import org.eclipse.emf.ecore.util.EcoreUtil
 
 class TypeUtilities {
 	/*

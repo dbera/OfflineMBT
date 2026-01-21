@@ -32,7 +32,6 @@ import nl.esi.comma.constraints.constraints.ActionType
 import nl.esi.comma.constraints.constraints.Constraints
 import nl.esi.comma.constraints.constraints.ConstraintsPackage
 import nl.esi.comma.constraints.constraints.DataTable
-import nl.esi.comma.constraints.constraints.ExampleCell
 import nl.esi.comma.constraints.constraints.Existential
 import nl.esi.comma.constraints.constraints.Init
 import nl.esi.comma.constraints.constraints.RefActSequence
@@ -80,7 +79,7 @@ class ConstraintsValidator extends AbstractConstraintsValidator {
 		if (act.dataRow.size > 0){
 			var dataRow = act.dataRow
 			if (act.act.data.size > 0) {
-				var dataTable = act.act.data.get(0)
+				var dataTable = act.act.data.head
 				if (!validateData(dataTable, dataRow)){
 					error('Action Data is not valid. Please check the data table.', ConstraintsPackage.eINSTANCE.act_Act)
 				}
@@ -446,7 +445,7 @@ class ConstraintsValidator extends AbstractConstraintsValidator {
 	}
 	
 	def validateData(DataTable dataTable, List<ActionData> data){
-		if(data.size !== dataTable.heading.cells.size){
+		if(data.size !== dataTable.header.cells.size){
 			return false
 		}
 		for (row : dataTable.rows) {
@@ -457,9 +456,9 @@ class ConstraintsValidator extends AbstractConstraintsValidator {
 		return false
 	}
 	
-	def matchDataRow(List<ExampleCell> cells, List<ActionData> data){
+	def matchDataRow(List<String> cells, List<ActionData> data){
 		for (var i =0; i<cells.size; i++){
-			if (!cells.get(i).value.replaceAll("\\|","").replaceAll("\\s+", "").equals(data.get(i).value)){
+			if (!cells.get(i).equals(data.get(i).value)){
 				return false
 			}
 		}

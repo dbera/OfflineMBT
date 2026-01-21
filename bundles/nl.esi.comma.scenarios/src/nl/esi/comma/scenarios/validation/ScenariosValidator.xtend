@@ -19,7 +19,8 @@ import nl.esi.comma.actions.actions.AnyEvent
 import nl.esi.comma.scenarios.scenarios.Scenario
 import nl.esi.comma.scenarios.scenarios.Scenarios
 import nl.esi.comma.scenarios.scenarios.ScenariosPackage
-import nl.esi.comma.types.types.Import
+import nl.esi.xtext.common.lang.base.BasePackage
+import org.eclipse.emf.ecore.EClass
 import org.eclipse.xtext.validation.Check
 
 /**
@@ -29,10 +30,9 @@ import org.eclipse.xtext.validation.Check
  */
 class ScenariosValidator extends AbstractScenariosValidator {
 	
-	@Check
-	override checkImportForValidity(Import imp){
-		
-	}
+    override protected isValidImportType(EClass importType) {
+        return BasePackage.Literals.MODEL_CONTAINER.isSuperTypeOf(importType)
+    }
 	
 	@Check
 	def checkDuplicatedNamesInScenarios(Scenarios s){

@@ -25,8 +25,8 @@ import nl.esi.comma.signature.interfaceSignature.Signature
 import nl.esi.comma.signature.services.InterfaceSignatureGrammarAccess
 import nl.esi.comma.types.formatting2.TypesFormatter
 import nl.esi.comma.types.types.TypeDecl
+import nl.esi.xtext.common.lang.base.Import
 import org.eclipse.xtext.formatting2.IFormattableDocument
-import nl.esi.comma.types.types.Import
 
 class InterfaceSignatureFormatter extends TypesFormatter {
 
@@ -37,7 +37,8 @@ class InterfaceSignatureFormatter extends TypesFormatter {
 		interfaceDefinition.signature.format;
 	}
 	
-	def dispatch void format(Import _import, extension IFormattableDocument document) {
+	override dispatch void format(Import _import, extension IFormattableDocument document) {
+	    super._format(_import, document)
 		formatTopElement(_import, document)
 	}	
 

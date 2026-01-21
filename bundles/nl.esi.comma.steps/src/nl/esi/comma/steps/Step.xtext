@@ -10,26 +10,19 @@
  *
  * SPDX-License-Identifier: MIT
  */
-grammar nl.esi.comma.steps.Step with org.eclipse.xtext.common.Terminals
+grammar nl.esi.comma.steps.Step with nl.esi.xtext.common.lang.Base
 
 generate step "http://www.esi.nl/comma/steps/Step"
 
-Steps:{Steps}
+import "http://www.esi.nl/xtext/common/lang/Base" as base
+
+Steps returns base::ModelContainer: {Steps}
 	imports += Import* // for now we assume only one configuration file.
 	(featureList = FeatureList)? // this should be optional
 	actionList = ActionsList
 ;
 
-Import:
-    'import' importURI = STRING
-;
-
-/* @Override
-ModelContainer returns types::ModelContainer:
-	super::ModelContainer | Steps
-;*/
-
-FeatureList: {FeatureList} 
+FeatureList: {FeatureList}
 	'feature-list' '{'
 		featureList += FeatureTag*
 	'}'

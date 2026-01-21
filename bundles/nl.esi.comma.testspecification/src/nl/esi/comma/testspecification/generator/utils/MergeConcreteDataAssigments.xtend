@@ -26,7 +26,7 @@ import nl.esi.comma.testspecification.testspecification.TestDefinition
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.emf.ecore.util.EcoreUtil
 
-import static extension nl.esi.comma.types.utilities.EcoreUtil3.*
+import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
 import nl.esi.comma.expressions.expression.ExpressionNullLiteral
 
 class MergeConcreteDataAssigments {

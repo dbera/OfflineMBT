@@ -14,9 +14,9 @@ grammar nl.esi.comma.scenarios.Scenarios with nl.esi.comma.actions.Actions
 
 generate scenarios "http://www.esi.nl/comma/scenarios/Scenarios"
 
-import "http://www.esi.nl/comma/types/Types" as types
+import "http://www.esi.nl/xtext/common/lang/Base" as base
 
-Scenarios: {Scenarios}
+Scenarios returns base::ModelContainer: {Scenarios}
 	imports += Import*
 	(
 		'Generating' 'Sequence' 'Diagrams' 'for' '{'
@@ -155,13 +155,8 @@ InfoArg:
 	'+' (elm += STRING)+
 ;
 
-@Override
-ModelContainer returns types::ModelContainer:
-	super::ModelContainer | Scenario
-;
-
 @Override 
-NamedElement returns types::NamedElement :
+NamedElement returns base::NamedElement :
 	{Scenario}
 ;
 

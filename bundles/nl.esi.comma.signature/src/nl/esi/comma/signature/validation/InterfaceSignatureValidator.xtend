@@ -17,7 +17,6 @@ package nl.esi.comma.signature.validation
 
 import com.google.inject.Inject
 import nl.esi.comma.signature.comments.InterfaceEventComment
-import nl.esi.comma.signature.interfaceSignature.Command
 import nl.esi.comma.signature.interfaceSignature.DIRECTION
 import nl.esi.comma.signature.interfaceSignature.InterfaceEvent
 import nl.esi.comma.signature.interfaceSignature.InterfaceSignatureDefinition
@@ -25,13 +24,12 @@ import nl.esi.comma.signature.interfaceSignature.InterfaceSignaturePackage
 import nl.esi.comma.signature.interfaceSignature.Notification
 import nl.esi.comma.signature.interfaceSignature.Signal
 import nl.esi.comma.signature.interfaceSignature.Signature
-import static extension nl.esi.comma.signature.utilities.InterfaceUtilities.*
-import nl.esi.comma.types.types.SimpleTypeDecl
-import nl.esi.comma.types.types.Type
-import nl.esi.comma.types.types.TypesPackage
+import nl.esi.xtext.common.lang.base.BasePackage
+import org.eclipse.emf.common.util.URI
 import org.eclipse.xtext.documentation.IEObjectDocumentationProvider
 import org.eclipse.xtext.validation.Check
-import org.eclipse.emf.common.util.URI
+
+import static extension nl.esi.comma.signature.utilities.InterfaceUtilities.*
 
 /**
  * This class contains custom validation rules. 
@@ -53,7 +51,7 @@ class InterfaceSignatureValidator extends AbstractInterfaceSignatureValidator {
 		for(import : root.imports){
 			val importedFilename = URI.createURI(import.importURI).trimFileExtension.lastSegment
 			if(importedFilename.equals(sigFilename))
-				error("Imported type file should have a different name than the current signature file.", import, TypesPackage.Literals.IMPORT__IMPORT_URI)
+				error("Imported type file should have a different name than the current signature file.", import, BasePackage.Literals.IMPORT__IMPORT_URI)
 		}
 	}
 	
@@ -80,14 +78,14 @@ class InterfaceSignatureValidator extends AbstractInterfaceSignatureValidator {
   		for(tLocal : decl.signature.types){
   			//Check if the local type duplicates an imported type
   			if(multiMap.containsKey(tLocal.name))
-  				error("Type with the same name is already imported", tLocal, TypesPackage.Literals.NAMED_ELEMENT__NAME)
+  				error("Type with the same name is already imported", tLocal, BasePackage.Literals.NAMED_ELEMENT__NAME)
   			else
   				multiMap.put(tLocal.name, tLocal)
   		}
   		for(ev : events){
   			//Check if the interface event has a name that duplicates type name
   			if(multiMap.containsKey(ev.name))
-  				error("Interface event duplicates type name", ev, TypesPackage.Literals.NAMED_ELEMENT__NAME)
+  				error("Interface event duplicates type name", ev, BasePackage.Literals.NAMED_ELEMENT__NAME)
   		}
   		multiMap
   	}
@@ -136,7 +134,7 @@ class InterfaceSignatureValidator extends AbstractInterfaceSignatureValidator {
 	def checkComment(InterfaceEvent ev){
 		val InterfaceEventComment evComment = new InterfaceEventComment(ev, documentationProvider.getDocumentation(ev))
 		if(!evComment.valid){
-			warning(evComment.errorMessage, ev, TypesPackage.Literals.NAMED_ELEMENT__NAME)
+			warning(evComment.errorMessage, ev, BasePackage.Literals.NAMED_ELEMENT__NAME)
 		}
 	}
 	

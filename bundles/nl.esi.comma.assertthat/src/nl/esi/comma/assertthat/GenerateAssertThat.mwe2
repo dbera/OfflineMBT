@@ -42,7 +42,6 @@ Workflow {
 
             referencedResource = "platform:/resource/nl.esi.comma.actions/model/generated/Actions.genmodel"
 
-
 			serializer = {
 				generateStub = false
 			}

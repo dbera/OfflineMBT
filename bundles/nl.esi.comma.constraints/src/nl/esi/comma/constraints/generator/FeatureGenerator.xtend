@@ -124,20 +124,17 @@ class FeatureGenerator {
 		}
 		return stepWithData
 	}
-	
-	def static getGherkinTextWithData(String action, Action act){
-	'''«action»«FOR dataTable : act.data»«FOR header : dataTable.heading.cells» "<«header.value.replaceAll("\\|","").replaceAll("\\s+", "")»>"«ENDFOR»«ENDFOR»
-	«dataExample(act.data)»
-	'''
-	}
-	
-	def static dataExample(EList<DataTable> list) {
-	'''
-	Example : 
-		«FOR dataTable: list»«FOR header : dataTable.heading.cells»«header.value»«ENDFOR»«ENDFOR»|
-		«FOR dataTable: list»«FOR row : dataTable.rows»«FOR cell : row.cells»«cell.value»«ENDFOR»«ENDFOR»«ENDFOR»|
-	'''
-	}
+
+    def static getGherkinTextWithData(String action, Action act) '''
+        «action»«FOR dataTable : act.data»«FOR cell : dataTable.header.cells» "<«cell»>"«ENDFOR»«ENDFOR»
+        «dataExample(act.data)»
+    '''
+
+    def static dataExample(EList<DataTable> list) '''
+        Example:
+        «FOR dataTable : list»«FOR cell : dataTable.header.cells»«cell»«ENDFOR»«ENDFOR»|
+        «FOR dataTable : list»«FOR row : dataTable.rows»«FOR cell : row.cells»«cell»«ENDFOR»«ENDFOR»«ENDFOR»|
+    '''
 	
 	def static getGherkinTextWithDataInstance(String action, Action act){
 		var strList = action.split("_")

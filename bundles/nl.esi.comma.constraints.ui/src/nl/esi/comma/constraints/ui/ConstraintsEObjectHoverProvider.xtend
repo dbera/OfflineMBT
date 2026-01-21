@@ -90,16 +90,16 @@ class ConstraintsEObjectHoverProvider extends DefaultEObjectHoverProvider {
 		if (o.data.size !== 0) {
 			var index = 0
 			info += "Data<br>"
-			var heading = o.data.get(0).heading
+			var header = o.data.head.header
 			info += "  <b>"
-			for(cell : heading.cells){
-				info += cell.value
+			for(cell : header.cells){
+				info += cell
 			}
 			info += "|</b><br>"
-			for(row : o.data.get(0).rows){
+			for(row : o.data.head.rows){
 				info += "|" + index
 				for(cell : row.cells){
-					info += cell.value
+					info += cell
 				}
 				info += "|<br>"
 				index++

@@ -37,7 +37,7 @@ import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
 import org.eclipse.xtext.nodemodel.util.NodeModelUtils
 
-import static extension nl.esi.comma.types.utilities.EcoreUtil3.*
+import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
 
 /**
  * Generates code from your model files on save.

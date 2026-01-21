@@ -7,7 +7,7 @@ Bundle-SymbolicName: nl.esi.comma.project.standard; singleton:=true
 Bundle-ActivationPolicy: lazy
 Bundle-Activator: nl.esi.comma.project.standard.StandardProjectPlugin
 Bundle-ClassPath: .
-Require-Bundle: nl.esi.comma.types;visibility:=reexport,
+Require-Bundle: nl.esi.xtext.common.lang;visibility:=reexport,
  org.eclipse.xtext,
  org.eclipse.xtext.xbase,
  org.eclipse.equinox.common;bundle-version="3.5.0",
@@ -22,7 +22,6 @@ Require-Bundle: nl.esi.comma.types;visibility:=reexport,
  nl.asml.matala.bpmn4s,
  nl.asml.matala.product,
  nl.esi.comma.abstracttestspecification,
- nl.esi.comma.inputspecification,
  nl.esi.comma.testspecification,
  nl.esi.comma.automata,
  nl.esi.comma.constraints,

@@ -15,11 +15,8 @@
  */
 package nl.esi.comma.inputspecification.validation
 
-import nl.esi.comma.types.types.Import
-import nl.esi.comma.types.types.TypesPackage
-import org.eclipse.emf.common.util.URI
-import org.eclipse.xtext.EcoreUtil2
-import org.eclipse.xtext.validation.Check
+import nl.esi.xtext.common.lang.base.BasePackage
+import org.eclipse.emf.ecore.EClass
 
 /**
  * This class contains custom validation rules. 
@@ -27,11 +24,7 @@ import org.eclipse.xtext.validation.Check
  * See https://www.eclipse.org/Xtext/documentation/303_runtime_concepts.html#validation
  */
 class InputSpecificationValidator extends AbstractInputSpecificationValidator {
-	
-	@Check
-	override checkImportForValidity(Import imp) {
-		if(! EcoreUtil2.isValidUri(imp, URI.createURI(imp.importURI))) {
-			error("Invalid resource", imp, TypesPackage.eINSTANCE.import_ImportURI)
-		}
-	}
+    override isValidImportType(EClass importType) {
+        return BasePackage.Literals.MODEL_CONTAINER.isSuperTypeOf(importType)
+    }
 }

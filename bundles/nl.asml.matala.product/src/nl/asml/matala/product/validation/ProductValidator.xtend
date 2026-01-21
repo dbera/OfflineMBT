@@ -37,20 +37,14 @@ import nl.esi.comma.expressions.expression.ExpressionRecordAccess
 import nl.esi.comma.expressions.expression.ExpressionVariable
 import nl.esi.comma.expressions.expression.Field
 import nl.esi.comma.expressions.expression.Variable
-import nl.esi.comma.types.types.Import
 import nl.esi.comma.types.types.RecordField
 import nl.esi.comma.types.types.RecordFieldKind
-import nl.esi.comma.types.types.TypesPackage
-import org.eclipse.emf.common.util.URI
-import org.eclipse.xtext.EcoreUtil2
+import org.eclipse.emf.ecore.EObject
 import org.eclipse.xtext.validation.Check
 
 import static extension nl.esi.comma.actions.utilities.ActionsUtilities.*
 import static extension nl.esi.comma.types.utilities.TypeUtilities.*
-
-
 import static extension org.eclipse.lsat.common.xtend.Queries.*
-import org.eclipse.emf.ecore.EObject
 
 /**
  * This class contains custom validation rules. 
@@ -58,21 +52,6 @@ import org.eclipse.emf.ecore.EObject
  * See https://www.eclipse.org/Xtext/documentation/303_runtime_concepts.html#validation
  */
 class ProductValidator extends AbstractProductValidator {
-
-    @Check
-    override checkImportForValidity(Import imp) {
-        if (!EcoreUtil2.isValidUri(imp, URI.createURI(imp.getImportURI()))) {
-            error("Invalid resource", imp, TypesPackage.eINSTANCE.getImport_ImportURI());
-        } else {
-            /*val Resource r = EcoreUtil2.getResource(imp.eResource, imp.importURI)
-             * if(! (r.allContents.head instanceof InterfaceDefinition ||
-             *     r.allContents.head instanceof FeatureDefinition
-             * ))
-             *     error("The imported resource is not an interface definition or a feature definition.", imp, TypesPackage.eINSTANCE.import_ImportURI)
-             }*/
-        }
-    }
-
     /**
      * Prevent Duplicate Updates in Actions
      */

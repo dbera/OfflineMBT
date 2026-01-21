@@ -14,17 +14,18 @@ grammar nl.esi.comma.testspecification.Testspecification with nl.esi.comma.asser
 
 generate testspecification "http://www.esi.nl/comma/testspecification/Testspecification"
 
+import "http://www.esi.nl/xtext/common/lang/Base" as base
 import "http://www.esi.nl/comma/types/Types" as types
 import "http://www.esi.nl/comma/expressions/Expression" as expr
 
-TSMain:
+TSMain returns base::ModelContainer: {TSMain}
 	imports += Import*
 	namespace += NameSpace*
 	model = ModelType
 ;
 
 @Override
-NamedElement returns types::NamedElement:
+NamedElement returns base::NamedElement:
 	name=QualifiedName | Variable
 ;
 
@@ -93,9 +94,4 @@ RunStep:
 
 RefStep:
 	'ref-to-step-output' input = ActionList 	('for-features' featuresToOutput += [expr::Variable|ID]+ )?
-;
-
-@Override
-ModelContainer returns types::ModelContainer:
-	super::ModelContainer | TSMain
 ;

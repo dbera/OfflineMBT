@@ -15,7 +15,7 @@ package nl.esi.comma.causalgraph.tests
 import java.nio.file.Path
 import nl.esi.comma.causalgraph.causalGraph.CausalGraph
 import nl.esi.comma.causalgraph.transform.Rcg2UcgTransformer
-import nl.esi.comma.types.utilities.EcoreUtil3
+import nl.esi.xtext.common.lang.utilities.EcoreUtil3
 import org.eclipse.emf.common.util.URI
 import org.eclipse.lsat.common.emf.ecore.resource.PersistorFactory
 import org.eclipse.xtext.resource.SaveOptions

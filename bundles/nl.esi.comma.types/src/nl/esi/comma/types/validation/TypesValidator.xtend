@@ -18,29 +18,27 @@ package nl.esi.comma.types.validation
 import com.google.common.collect.HashMultimap
 import com.google.inject.Inject
 import java.util.LinkedHashSet
+import nl.esi.comma.types.BasicTypes
 import nl.esi.comma.types.scoping.TypesImportUriGlobalScopeProvider
 import nl.esi.comma.types.types.EnumTypeDecl
-import nl.esi.comma.types.types.Import
 import nl.esi.comma.types.types.MapTypeConstructor
-import nl.esi.comma.types.types.ModelContainer
-import nl.esi.comma.types.types.NamedElement
 import nl.esi.comma.types.types.RecordFieldKind
 import nl.esi.comma.types.types.RecordTypeDecl
 import nl.esi.comma.types.types.SimpleTypeDecl
 import nl.esi.comma.types.types.Type
 import nl.esi.comma.types.types.TypesModel
 import nl.esi.comma.types.types.TypesPackage
+import nl.esi.xtext.common.lang.base.BasePackage
+import nl.esi.xtext.common.lang.base.ModelContainer
 import org.eclipse.core.runtime.Platform
 import org.eclipse.emf.common.util.URI
+import org.eclipse.emf.ecore.EClass
 import org.eclipse.emf.ecore.EValidator
-import org.eclipse.emf.ecore.resource.Resource
-import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.resource.impl.ResourceDescriptionsProvider
 import org.eclipse.xtext.validation.Check
 import org.eclipse.xtext.validation.EValidatorRegistrar
 
 import static extension nl.esi.comma.types.utilities.TypeUtilities.*
-import nl.esi.comma.types.BasicTypes
 
 /**
  * This class contains custom validation rules. 
@@ -52,29 +50,6 @@ class TypesValidator extends AbstractTypesValidator {
 	@Inject 
 	ResourceDescriptionsProvider rdp
 	
-	//Generic method to detect name duplications in a collection of a named elements
-    protected def checkForNameDuplications(Iterable<? extends NamedElement> elements, String desc, String code, String... issueData) {
-        checkForNameDuplicationsVerbose(elements, desc, null, code, issueData)
-    }
-
-	protected def checkForNameDuplicationsVerbose(Iterable<? extends NamedElement> elements, String desc, String namePrefix, String code, String... issueData) {
-		val multiMap = HashMultimap.create()
-		for (e : elements)
-			multiMap.put(e.name, e)
-  		for (entry : multiMap.asMap.entrySet) {
-  			val duplicates = entry.value
-  			if (duplicates.size > 1) {
-  				for (d : duplicates) {
-  				    var error = "Duplicate " + desc + " name"
-  				    if (namePrefix !== null) {
-  				        error += ": " + namePrefix + d.name
-  				    }
-  					error(error, d, TypesPackage.Literals.NAMED_ELEMENT__NAME, code, issueData)
-				}
-  			}
-  		}
-  	}				
-  	
   	//Used because the resource with the predefined types is somehow not loaded by the resource description provider
   	protected def placePredefinedTypes(HashMultimap<String, Object> multiMap) {
   	    BasicTypes.allBasicTypes.forEach[multiMap.put(name, null)]
@@ -102,7 +77,7 @@ class TypesValidator extends AbstractTypesValidator {
 		for (entry : multiMap.asMap.entrySet) {
   			val duplicates = entry.value    
   			if (duplicates.size > 1) {
-  				error("Imports contain duplicate type with name " + entry.key, decl, TypesPackage.Literals.MODEL_CONTAINER__IMPORTS, 0)
+  				error("Imports contain duplicate type with name " + entry.key, decl, BasePackage.Literals.MODEL_CONTAINER__IMPORTS, 0)
   			}
   		}
   		multiMap
@@ -118,7 +93,7 @@ class TypesValidator extends AbstractTypesValidator {
   		//Check the local types
   		for(tDecl : decl.types){
   			if(multiMap.containsKey(tDecl.name))
-  				error("Type with the same name is already imported", tDecl, TypesPackage.Literals.NAMED_ELEMENT__NAME)
+  				error("Type with the same name is already imported", tDecl, BasePackage.Literals.NAMED_ELEMENT__NAME)
   		}
   	}					
   	
@@ -174,7 +149,7 @@ class TypesValidator extends AbstractTypesValidator {
 			val inheritedFields = type.parent.getAllFields
 			for(f : type.fields){
 				if(!inheritedFields.filter(ff | ff.name.equals(f.name)).empty){
-					error("Local field overrides inherited field", f, TypesPackage.Literals.NAMED_ELEMENT__NAME)
+					error("Local field overrides inherited field", f, BasePackage.Literals.NAMED_ELEMENT__NAME)
 				}
 			}
 		}
@@ -202,7 +177,7 @@ class TypesValidator extends AbstractTypesValidator {
 			}
 			else{
 				if(l.value.value <= currentValue){
-					error("Enum value has to be greater than the previous value", l, TypesPackage.Literals.NAMED_ELEMENT__NAME);
+					error("Enum value has to be greater than the previous value", l, BasePackage.Literals.NAMED_ELEMENT__NAME);
 					return
 				}
 				else {
@@ -223,20 +198,11 @@ class TypesValidator extends AbstractTypesValidator {
 	
 	/*
 	 * Constrains:
-	 * - imports are valid URIs
 	 * - imported resources are type models
 	 */
-	@Check
-	def checkImportForValidity(Import imp){
-		
-		if(! EcoreUtil2.isValidUri(imp, URI.createURI(imp.importURI)))
-			error("Invalid resource", imp, TypesPackage.Literals.IMPORT__IMPORT_URI)
-		else{
-			val Resource r = EcoreUtil2.getResource(imp.eResource, imp.importURI)
-			if(! (r.allContents.head.eClass == TypesPackage.eINSTANCE.typesModel))
-				error("Only imports for type definitions are allowed", imp, TypesPackage.Literals.IMPORT__IMPORT_URI)
-		}
-	}
+    override protected isValidImportType(EClass importType) {
+        return TypesPackage.Literals.TYPES_MODEL.isSuperTypeOf(importType)
+    }
 	
 	/*
 	 * Constraints:

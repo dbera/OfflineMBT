@@ -12,31 +12,30 @@
  */
 package nl.esi.comma.scenarios.generator.traces
 
-import nl.esi.comma.expressions.generator.ExpressionsCommaGenerator
-import nl.esi.comma.scenarios.scenarios.Scenarios
-import org.eclipse.xtext.generator.IFileSystemAccess
-import nl.esi.comma.scenarios.scenarios.Scenario
-import nl.esi.comma.types.types.Import
-import java.util.List
-import nl.esi.comma.actions.actions.CommandEvent
-import nl.esi.comma.actions.actions.SignalEvent
-import nl.esi.comma.signature.interfaceSignature.Signature
-import nl.esi.comma.actions.actions.CommandReply
-import nl.esi.comma.types.utilities.TypeUtilities
-import nl.esi.comma.signature.interfaceSignature.InterfaceEvent
-import nl.esi.comma.expressions.expression.Expression
-import nl.esi.comma.types.types.Type
 import java.util.ArrayList
-import nl.esi.comma.types.types.TypeDecl
-import org.eclipse.emf.ecore.EObject
-import nl.esi.comma.expressions.expression.ExpressionAny
-import nl.esi.comma.signature.interfaceSignature.Command
-import nl.esi.comma.actions.actions.NotificationEvent
-import nl.esi.comma.actions.actions.EventPattern
-import nl.esi.comma.actions.actions.AnyEvent
-import nl.esi.comma.scenarios.scenarios.SpecFlowScenario
 import java.util.HashMap
+import java.util.List
+import nl.esi.comma.actions.actions.AnyEvent
+import nl.esi.comma.actions.actions.CommandEvent
+import nl.esi.comma.actions.actions.CommandReply
+import nl.esi.comma.actions.actions.EventPattern
+import nl.esi.comma.actions.actions.NotificationEvent
+import nl.esi.comma.actions.actions.SignalEvent
+import nl.esi.comma.expressions.expression.Expression
+import nl.esi.comma.expressions.expression.ExpressionAny
+import nl.esi.comma.expressions.generator.ExpressionsCommaGenerator
 import nl.esi.comma.scenarios.scenarios.ActionType
+import nl.esi.comma.scenarios.scenarios.Scenario
+import nl.esi.comma.scenarios.scenarios.Scenarios
+import nl.esi.comma.signature.interfaceSignature.Command
+import nl.esi.comma.signature.interfaceSignature.InterfaceEvent
+import nl.esi.comma.signature.interfaceSignature.Signature
+import nl.esi.comma.types.types.Type
+import nl.esi.comma.types.types.TypeDecl
+import nl.esi.comma.types.utilities.TypeUtilities
+import nl.esi.xtext.common.lang.base.Import
+import org.eclipse.emf.ecore.EObject
+import org.eclipse.xtext.generator.IFileSystemAccess
 
 class ScenarioTracesGenerator extends ExpressionsCommaGenerator {
 	final static String DEFAULT_SERVER_IP = "192.68.32.1"

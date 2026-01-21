@@ -7,6 +7,7 @@ Bundle-Version: 4.2.0.qualifier
 Bundle-SymbolicName: nl.esi.comma.testspecification;singleton:=true
 Bundle-ActivationPolicy: lazy
 Require-Bundle: nl.esi.comma.assertthat;visibility:=reexport,
+ nl.esi.comma.inputspecification,
  org.eclipse.xtext,
  org.eclipse.xtext.xbase,
  org.eclipse.equinox.common;bundle-version="3.5.0",

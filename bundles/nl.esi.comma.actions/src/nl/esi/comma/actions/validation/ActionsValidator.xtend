@@ -25,6 +25,7 @@ import nl.esi.comma.actions.actions.EventCall
 import nl.esi.comma.actions.actions.EventPattern
 import nl.esi.comma.actions.actions.IfAction
 import nl.esi.comma.actions.actions.InterfaceEventInstance
+import nl.esi.comma.actions.actions.Multiplicity
 import nl.esi.comma.actions.actions.PCElement
 import nl.esi.comma.actions.actions.PCFragment
 import nl.esi.comma.actions.actions.PCFragmentDefinition
@@ -37,15 +38,15 @@ import nl.esi.comma.expressions.expression.Field
 import nl.esi.comma.expressions.expression.Variable
 import nl.esi.comma.signature.interfaceSignature.Command
 import nl.esi.comma.signature.interfaceSignature.DIRECTION
+import nl.esi.comma.types.BasicTypes
 import nl.esi.comma.types.types.Type
-import nl.esi.comma.types.types.TypesPackage
 import nl.esi.comma.types.utilities.TypeUtilities
+import nl.esi.xtext.common.lang.base.BasePackage
 import org.eclipse.emf.ecore.EObject
 import org.eclipse.xtext.validation.Check
-import static extension nl.esi.comma.types.utilities.TypeUtilities.*
+
 import static extension nl.esi.comma.actions.utilities.ActionsUtilities.*
-import nl.esi.comma.actions.actions.Multiplicity
-import nl.esi.comma.types.BasicTypes
+import static extension nl.esi.comma.types.utilities.TypeUtilities.*
 
 class ActionsValidator extends AbstractActionsValidator {
 	public static final String REPLY_WRONG_NUMBER_PARAMS = "trigger_remove_param"
@@ -177,7 +178,7 @@ class ActionsValidator extends AbstractActionsValidator {
 			variables.addAll(db.vars)
 			var usedVariables = db.initActions.filter(AssignmentAction).map[assignment]
 			variables.removeAll(usedVariables)
-			variables.forEach[warning('Uninitialized variable.', it, TypesPackage.Literals.NAMED_ELEMENT__NAME)]
+			variables.forEach[warning('Uninitialized variable.', it, BasePackage.Literals.NAMED_ELEMENT__NAME)]
 		}
 	}
 	
@@ -208,7 +209,7 @@ class ActionsValidator extends AbstractActionsValidator {
 	def checkFragmentRefCircularity(PCFragmentDefinition fd){
 		val referencedFragments = fd.allReferencedFragments(new HashSet<PCFragmentDefinition>)
 		if(referencedFragments.contains(fd)){
-			error("Circular reference chain", TypesPackage.Literals.NAMED_ELEMENT__NAME)
+			error("Circular reference chain", BasePackage.Literals.NAMED_ELEMENT__NAME)
 		}
 		fd.components.filter(CommandReply).forEach[
 			error("Fragment definition cannot contain replies", ActionsPackage.Literals.PC_FRAGMENT__COMPONENTS, fd.components.indexOf(it))

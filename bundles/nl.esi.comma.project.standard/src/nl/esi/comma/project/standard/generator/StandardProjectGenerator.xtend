@@ -28,15 +28,15 @@ import nl.esi.comma.project.standard.standardProject.OfflineGenerationTarget
 import nl.esi.comma.project.standard.standardProject.Project
 import nl.esi.comma.project.standard.standardProject.TargetConfig
 import nl.esi.comma.testspecification.generator.utils.MergeConcreteDataAssigments
-import nl.esi.comma.types.types.Import
+import nl.esi.xtext.common.lang.base.Import
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.emf.ecore.resource.ResourceSet
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
 
-import static extension nl.esi.comma.types.utilities.EcoreUtil3.*
-import static extension nl.esi.comma.types.utilities.FileSystemAccessUtil.*
+import static extension nl.esi.xtext.common.lang.generator.FileSystemAccessUtil.*
+import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
 import static extension org.eclipse.emf.ecore.util.EcoreUtil.*
 import static extension org.eclipse.xtext.EcoreUtil2.*
 

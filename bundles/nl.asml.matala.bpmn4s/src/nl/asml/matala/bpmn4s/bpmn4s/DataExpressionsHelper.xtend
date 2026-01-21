@@ -21,7 +21,7 @@ import nl.esi.comma.actions.services.ActionsGrammarAccess
 import nl.esi.comma.assertthat.services.AssertThatGrammarAccess
 import nl.esi.comma.expressions.expression.ExpressionPackage
 import nl.esi.comma.expressions.services.ExpressionGrammarAccess
-import nl.esi.comma.types.utilities.EcoreUtil3
+import nl.esi.xtext.common.lang.utilities.EcoreUtil3
 import org.eclipse.xtext.CrossReference
 import org.eclipse.xtext.ParserRule
 import org.eclipse.xtext.parser.IParser

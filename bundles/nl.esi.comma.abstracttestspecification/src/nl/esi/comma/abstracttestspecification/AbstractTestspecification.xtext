@@ -14,25 +14,20 @@ grammar nl.esi.comma.abstracttestspecification.AbstractTestspecification with nl
 
 generate abstractTestspecification "http://www.esi.nl/comma/abstracttestspecification/AbstractTestspecification"
 
-import "http://www.esi.nl/comma/types/Types" as types
+import "http://www.esi.nl/xtext/common/lang/Base" as base
 import "http://www.esi.nl/comma/expressions/Expression" as expr
 import "http://www.asml.nl/matala/product/Product" as prod
 import "http://www.esi.nl/comma/assertthat/AssertThat" as assertthat
 
-TSMain:
+TSMain returns base::ModelContainer: {TSMain}
     imports += Import*
     namespace += NameSpace*
     model = ModelType
 ;
 
 @Override
-NamedElement returns types::NamedElement:
+NamedElement returns base::NamedElement:
     name=QualifiedName | Variable
-;
-
-@Override
-ModelContainer returns types::ModelContainer:
-    super::ModelContainer | TSMain
 ;
 
 ModelType:
