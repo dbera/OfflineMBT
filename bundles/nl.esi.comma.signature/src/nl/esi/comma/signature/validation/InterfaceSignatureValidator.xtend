@@ -71,24 +71,23 @@ class InterfaceSignatureValidator extends AbstractInterfaceSignatureValidator {
 	 * - interface event names do not duplicate type names
 	 */
 	@Check
-  	def checkLocalTypesForDuplications(InterfaceSignatureDefinition decl){
-  		val multiMap = super.checkDuplicationsInImportedTypes(decl)
-  		val events = decl.signature.getAllInterfaceEvents
-   		
-  		for(tLocal : decl.signature.types){
-  			//Check if the local type duplicates an imported type
-  			if(multiMap.containsKey(tLocal.name))
-  				error("Type with the same name is already imported", tLocal, BasePackage.Literals.NAMED_ELEMENT__NAME)
-  			else
-  				multiMap.put(tLocal.name, tLocal)
-  		}
-  		for(ev : events){
-  			//Check if the interface event has a name that duplicates type name
-  			if(multiMap.containsKey(ev.name))
-  				error("Interface event duplicates type name", ev, BasePackage.Literals.NAMED_ELEMENT__NAME)
-  		}
-  		multiMap
-  	}
+    def checkLocalTypesForDuplications(InterfaceSignatureDefinition decl) {
+        val importedTypes = checkDuplicationsInImportedTypes(decl)
+        val events = decl.signature.getAllInterfaceEvents
+
+        for (tLocal : decl.signature.types) {
+            // Check if the local type duplicates an imported type
+            if (!importedTypes.add(tLocal.name)) {
+                error("Type with the same name is already imported", tLocal, BasePackage.Literals.NAMED_ELEMENT__NAME)
+            }
+        }
+        for (ev : events) {
+            // Check if the interface event has a name that duplicates type name
+            if (importedTypes.contains(ev.name)) {
+                error("Interface event duplicates type name", ev, BasePackage.Literals.NAMED_ELEMENT__NAME)
+            }
+        }
+    }
 	
 	/*
 	 * Constraints:
