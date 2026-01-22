@@ -1,0 +1,40 @@
+////
+  // Copyright (c) 2024, 2025 TNO-ESI
+  //
+  // See the NOTICE file(s) distributed with this work for additional
+  // information regarding copyright ownership.
+  //
+  // This program and the accompanying materials are made available
+  // under the terms of the MIT License which is available at
+  // https://opensource.org/licenses/MIT
+  //
+  // SPDX-License-Identifier: MIT
+////
+
+include::_initCommon.adoc[]
+
+// Enable custom style in _main-docinfo.html
+:docinfo:
+
+= Matala Design
+
+ifdef::output-site[]
+ifdef::output-html[]
+TIP: The design document is also available in the Eclipse Help (via menu menu:Help[Help Contents] and it can be link:matala-design.pdf[downloaded as a PDF].
+endif::output-html[]
+endif::output-site[]
+
+This design document describes the high level design of the Matala solution, and highlights key design solutions.
+
+CAUTION: Reading this developer guide requires intermediate to advanced knowledge about programming for the Eclipse Modeling Framework (EMF).
+A good book to read as reference is https://www.google.com/search?q=ISBN+13%3A+9780321331885[EMF: Eclipse Modeling Framework].
+
+image::{imgsdir}/under_construction.png[width=5464,height=704]
+
+<<<
+
+include::_section_xtext_languages.adoc[]
+
+<<<
+
+include::{gendocdir}/ecore-documentation.adoc[leveloffset=1]

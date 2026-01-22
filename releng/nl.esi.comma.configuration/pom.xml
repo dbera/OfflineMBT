@@ -51,6 +51,13 @@
 
         <mwe2-workflow>PLEASE SPECIFY THE 'mwe2-workflow' PROPERTY IN YOUR MAVEN POM</mwe2-workflow>
         <mwe2-skip>false</mwe2-skip>
+
+        <!-- Documentation plug-in versions. -->
+        <asciidoctor.maven.plugin.version>3.0.0</asciidoctor.maven.plugin.version>
+        <asciidoctorj.version>2.5.13</asciidoctorj.version>
+        <asciidoctorj.diagram.version>2.3.1</asciidoctorj.diagram.version>
+        <asciidoctorj.pdf.version>2.3.17</asciidoctorj.pdf.version>
+        <geneclipsetoc.maven.plugin.version>1.0.3</geneclipsetoc.maven.plugin.version>
     </properties>
 
     <scm>
@@ -59,6 +66,32 @@
         <url>https://github.com/dbera/OfflineMBT</url>
         <tag>HEAD</tag>
     </scm>
+
+    <pluginRepositories>
+        <!-- com.bsiag.geneclipsetoc:geneclipsetoc-maven-plugin -->
+        <pluginRepository>
+            <id>geneclipsetoc-releases</id>
+            <url>https://bsi-software.github.io/geneclipsetoc</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </pluginRepository>
+
+        <!-- com.altran.general.emf.ecoredoc:ecoredoc-maven-plugin -->
+        <pluginRepository>
+            <id>ecoredoc-snapshots</id>
+            <url>https://altran-mde.github.io/ecore_doc/maven-repo</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </pluginRepository>
+    </pluginRepositories>
 
     <organization>
         <name>TNO - ESI</name>
@@ -155,6 +188,11 @@
                     </configuration>
                 </plugin>
                 <plugin>
+                    <groupId>org.eclipse.tycho</groupId>
+                    <artifactId>tycho-packaging-plugin</artifactId>
+                    <version>${tycho.version}</version>
+                </plugin>
+                <plugin>
                     <!--
                         Can be removed after first generator execution
                         https://bugs.eclipse.org/bugs/show_bug.cgi?id=480097
@@ -177,6 +215,49 @@
                     <groupId>org.eclipse.tycho</groupId>
                     <artifactId>tycho-versions-plugin</artifactId>
                     <version>${tycho.version}</version>
+                </plugin>
+
+                <!-- AsciiDoctor documentation generation configuration. -->
+                <plugin>
+                    <groupId>org.asciidoctor</groupId>
+                    <artifactId>asciidoctor-maven-plugin</artifactId>
+                    <version>${asciidoctor.maven.plugin.version}</version>
+                    <dependencies>
+                        <dependency>
+                            <groupId>org.asciidoctor</groupId>
+                            <artifactId>asciidoctorj</artifactId>
+                            <version>${asciidoctorj.version}</version>
+                        </dependency>
+                        <dependency>
+                            <groupId>org.asciidoctor</groupId>
+                            <artifactId>asciidoctorj-diagram</artifactId>
+                            <version>${asciidoctorj.diagram.version}</version>
+                        </dependency>
+                        <dependency>
+                            <groupId>org.asciidoctor</groupId>
+                            <artifactId>asciidoctorj-pdf</artifactId>
+                            <version>${asciidoctorj.pdf.version}</version>
+                        </dependency>
+                    </dependencies>
+                    <configuration>
+                        <requires>
+                            <require>asciidoctor-diagram</require>
+                        </requires>
+                        <!-- Attributes common to all documents. -->
+                        <attributes>
+                            <baseDir>${project.basedir}</baseDir>
+                            <attribute-missing>error</attribute-missing>
+                            <attribute-undefined>error</attribute-undefined>
+                            <last-update-label>false</last-update-label>
+                            <asciimath />
+                        </attributes>
+                    </configuration>
+                </plugin>
+
+                <plugin>
+                    <groupId>com.bsiag.geneclipsetoc</groupId>
+                    <artifactId>geneclipsetoc-maven-plugin</artifactId>
+                    <version>${geneclipsetoc.maven.plugin.version}</version>
                 </plugin>
             </plugins>
         </pluginManagement>
@@ -278,6 +359,19 @@
                 <artifactId>tycho-maven-plugin</artifactId>
                 <version>${tycho.version}</version>
                 <extensions>true</extensions>
+            </plugin>
+
+            <!-- Configure packaging of JARs. -->
+            <plugin>
+                <groupId>org.eclipse.tycho</groupId>
+                <artifactId>tycho-packaging-plugin</artifactId>
+
+                <configuration>
+                    <!-- Disable Maven descriptors in JAR bundles. -->
+                    <archive>
+                        <addMavenDescriptor>false</addMavenDescriptor>
+                    </archive>
+                </configuration>
             </plugin>
 
             <plugin>

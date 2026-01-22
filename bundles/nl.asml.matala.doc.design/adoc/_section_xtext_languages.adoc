@@ -1,0 +1,48 @@
+////
+  // Copyright (c) 2024, 2025 TNO-ESI
+  //
+  // See the NOTICE file(s) distributed with this work for additional
+  // information regarding copyright ownership.
+  //
+  // This program and the accompanying materials are made available
+  // under the terms of the MIT License which is available at
+  // https://opensource.org/licenses/MIT
+  //
+  // SPDX-License-Identifier: MIT
+////
+
+include::_initCommon.adoc[]
+
+[[xtext-languages]]
+== Xtext Languages Overview
+
+Figure <<xtext-grammars>> shows a deployment diagram of all Xtext based DSLs and their relations, where:
+
+Package::
+Denotes the bundle containing the Xtext grammar.
+The dashed arrows between the packages denote the bundle dependencies as defined by the `Require-Bundle` in the `MANIFEST.MF` of the bundle.
+
+Artifact::
+Denotes the grammar, which is explained in more detail in section <<matala-meta-models>>.
+The stereotype denotes the file extensions of the DSL.
+The arrows between the artifacts denote either language reuse (i.e. `with` keyword, denoted by an open arrow) or language references (i.e. `import` keyword, denoted by a closed arrow).
+For more information about the reuse of existing grammars, please read the (i.e. https://eclipse.dev/Xtext/documentation/301_grammarlanguage.html#grammar-mixins[Grammar Mixins]) section of the Xtext documentation.
+
+[[xtext-grammars]]
+.Xtext languages and their relations
+[plantuml, images/xtext-grammars, svg]
+....
+@startuml
+
+include::{gendocdir}/xtext-grammars.plantuml[]
+
+artifact nl.esi.comma.types.Types #white/aqua
+artifact nl.asml.matala.product.Product #white/aqua
+artifact nl.esi.comma.abstracttestspecification.AbstractTestspecification #white/aqua
+artifact nl.esi.comma.inputspecification.InputSpecification #white/aqua
+artifact nl.esi.comma.testspecification.Testspecification #white/aqua
+artifact nl.esi.comma.project.standard.StandardProject #white/aqua
+artifact nl.esi.comma.causalgraph.CausalGraph #white/aquamarine
+
+@enduml
+....
