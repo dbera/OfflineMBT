@@ -24,17 +24,17 @@
     <booleanAttribute key="org.eclipse.debug.core.launchGroup.12.adoptIfRunning" value="false"/>
     <booleanAttribute key="org.eclipse.debug.core.launchGroup.12.enabled" value="true"/>
     <stringAttribute key="org.eclipse.debug.core.launchGroup.12.mode" value="inherit"/>
-    <stringAttribute key="org.eclipse.debug.core.launchGroup.12.name" value="Generate Configuration (config) Language Infrastructure"/>
+    <stringAttribute key="org.eclipse.debug.core.launchGroup.12.name" value="Generate Scenarios (scenarios) Language Infrastructure"/>
     <stringAttribute key="org.eclipse.debug.core.launchGroup.13.action" value="WAIT_FOR_TERMINATION"/>
     <booleanAttribute key="org.eclipse.debug.core.launchGroup.13.adoptIfRunning" value="false"/>
     <booleanAttribute key="org.eclipse.debug.core.launchGroup.13.enabled" value="true"/>
     <stringAttribute key="org.eclipse.debug.core.launchGroup.13.mode" value="inherit"/>
-    <stringAttribute key="org.eclipse.debug.core.launchGroup.13.name" value="Generate Step (steps) Language Infrastructure"/>
+    <stringAttribute key="org.eclipse.debug.core.launchGroup.13.name" value="Generate Configuration (config) Language Infrastructure"/>
     <stringAttribute key="org.eclipse.debug.core.launchGroup.14.action" value="WAIT_FOR_TERMINATION"/>
     <booleanAttribute key="org.eclipse.debug.core.launchGroup.14.adoptIfRunning" value="false"/>
     <booleanAttribute key="org.eclipse.debug.core.launchGroup.14.enabled" value="true"/>
     <stringAttribute key="org.eclipse.debug.core.launchGroup.14.mode" value="inherit"/>
-    <stringAttribute key="org.eclipse.debug.core.launchGroup.14.name" value="Generate Scenarios (scn) Language Infrastructure"/>
+    <stringAttribute key="org.eclipse.debug.core.launchGroup.14.name" value="Generate Step (steps) Language Infrastructure"/>
     <stringAttribute key="org.eclipse.debug.core.launchGroup.15.action" value="WAIT_FOR_TERMINATION"/>
     <booleanAttribute key="org.eclipse.debug.core.launchGroup.15.adoptIfRunning" value="false"/>
     <booleanAttribute key="org.eclipse.debug.core.launchGroup.15.enabled" value="true"/>
@@ -54,12 +54,12 @@
     <booleanAttribute key="org.eclipse.debug.core.launchGroup.3.adoptIfRunning" value="false"/>
     <booleanAttribute key="org.eclipse.debug.core.launchGroup.3.enabled" value="true"/>
     <stringAttribute key="org.eclipse.debug.core.launchGroup.3.mode" value="inherit"/>
-    <stringAttribute key="org.eclipse.debug.core.launchGroup.3.name" value="Generate Expression (expr) Language Infrastructure"/>
+    <stringAttribute key="org.eclipse.debug.core.launchGroup.3.name" value="Generate Expression (expression) Language Infrastructure"/>
     <stringAttribute key="org.eclipse.debug.core.launchGroup.4.action" value="WAIT_FOR_TERMINATION"/>
     <booleanAttribute key="org.eclipse.debug.core.launchGroup.4.adoptIfRunning" value="false"/>
     <booleanAttribute key="org.eclipse.debug.core.launchGroup.4.enabled" value="true"/>
     <stringAttribute key="org.eclipse.debug.core.launchGroup.4.mode" value="inherit"/>
-    <stringAttribute key="org.eclipse.debug.core.launchGroup.4.name" value="Generate Actions (act) Language Infrastructure"/>
+    <stringAttribute key="org.eclipse.debug.core.launchGroup.4.name" value="Generate Actions (actions) Language Infrastructure"/>
     <stringAttribute key="org.eclipse.debug.core.launchGroup.5.action" value="WAIT_FOR_TERMINATION"/>
     <booleanAttribute key="org.eclipse.debug.core.launchGroup.5.adoptIfRunning" value="false"/>
     <booleanAttribute key="org.eclipse.debug.core.launchGroup.5.enabled" value="true"/>
@@ -79,7 +79,7 @@
     <booleanAttribute key="org.eclipse.debug.core.launchGroup.8.adoptIfRunning" value="false"/>
     <booleanAttribute key="org.eclipse.debug.core.launchGroup.8.enabled" value="true"/>
     <stringAttribute key="org.eclipse.debug.core.launchGroup.8.mode" value="inherit"/>
-    <stringAttribute key="org.eclipse.debug.core.launchGroup.8.name" value="Generate InputSpecification (params) Language Infrastructure"/>
+    <stringAttribute key="org.eclipse.debug.core.launchGroup.8.name" value="Generate InputSpecification (input) Language Infrastructure"/>
     <stringAttribute key="org.eclipse.debug.core.launchGroup.9.action" value="WAIT_FOR_TERMINATION"/>
     <booleanAttribute key="org.eclipse.debug.core.launchGroup.9.adoptIfRunning" value="false"/>
     <booleanAttribute key="org.eclipse.debug.core.launchGroup.9.enabled" value="true"/>
