@@ -47,9 +47,8 @@ class GenerateGrammarsDiagram {
         grammars += TERMINALS_GRAMMAR
         // Reduce grammar dependencies
         grammars.forEach[
-            val parents = getParentGrammars(grammars)
-            grammarUses.removeAll(parents.map[uri])
-            bundleUses.removeAll(parents.map[bundle])
+            bundleUses.removeAll(getParentGrammar(grammars)?.bundle)
+            grammarUses.removeAll(getParentGrammars(grammars).map[uri])
         ]
         grammars.sortInplace[a, b |
             return switch (a) {
