@@ -127,23 +127,23 @@
                                 <diagramsOutputPath>images</diagramsOutputPath>
                             </config>
                             <inputFiles>
-                                <inputFile>${project.build.directory}/meta-models/nl.esi.xtext.common.lang/model/generated/nl.esi.xtext.common.lang.Base.ecore</inputFile>
-                                <inputFile>${project.build.directory}/meta-models/nl.esi.comma.types/model/generated/nl.esi.comma.types.Types.ecore</inputFile>
-                                <inputFile>${project.build.directory}/meta-models/nl.esi.comma.expressions/model/generated/nl.esi.comma.expressions.Expression.ecore</inputFile>
-                                <inputFile>${project.build.directory}/meta-models/nl.esi.comma.actions/model/generated/nl.esi.comma.actions.Actions.ecore</inputFile>
-                                <inputFile>${project.build.directory}/meta-models/nl.esi.comma.assertthat/model/generated/nl.esi.comma.assertthat.AssertThat.ecore</inputFile>
-                                <inputFile>${project.build.directory}/meta-models/nl.asml.matala.product/model/generated/nl.asml.matala.product.Product.ecore</inputFile>
-                                <inputFile>${project.build.directory}/meta-models/nl.esi.comma.abstracttestspecification/model/generated/nl.esi.comma.abstracttestspecification.AbstractTestspecification.ecore</inputFile>
-                                <inputFile>${project.build.directory}/meta-models/nl.esi.comma.behavior.scl/model/generated/nl.esi.comma.behavior.scl.Scl.ecore</inputFile>
-                                <inputFile>${project.build.directory}/meta-models/nl.esi.comma.causalgraph/model/generated/nl.esi.comma.causalgraph.CausalGraph.ecore</inputFile>
-                                <inputFile>${project.build.directory}/meta-models/nl.esi.comma.constraints/model/generated/nl.esi.comma.constraints.Constraints.ecore</inputFile>
-                                <inputFile>${project.build.directory}/meta-models/nl.esi.comma.inputspecification/model/generated/nl.esi.comma.inputspecification.InputSpecification.ecore</inputFile>
-                                <inputFile>${project.build.directory}/meta-models/nl.esi.comma.project.standard/model/generated/nl.esi.comma.project.standard.StandardProject.ecore</inputFile>
-                                <inputFile>${project.build.directory}/meta-models/nl.esi.comma.scenarios/model/generated/nl.esi.comma.scenarios.Scenarios.ecore</inputFile>
-                                <inputFile>${project.build.directory}/meta-models/nl.esi.comma.signature/model/generated/nl.esi.comma.signature.InterfaceSignature.ecore</inputFile>
-                                <inputFile>${project.build.directory}/meta-models/nl.esi.comma.steps/model/generated/nl.esi.comma.steps.Step.ecore</inputFile>
-                                <inputFile>${project.build.directory}/meta-models/nl.esi.comma.systemconfig/model/generated/nl.esi.comma.systemconfig.Configuration.ecore</inputFile>
-                                <inputFile>${project.build.directory}/meta-models/nl.esi.comma.testspecification/model/generated/nl.esi.comma.testspecification.Testspecification.ecore</inputFile>
+                                <inputFile>${project.build.directory}/meta-models/nl.esi.xtext.common.lang/model/generated/Base.ecore</inputFile>
+                                <inputFile>${project.build.directory}/meta-models/nl.esi.comma.types/model/generated/Types.ecore</inputFile>
+                                <inputFile>${project.build.directory}/meta-models/nl.esi.comma.expressions/model/generated/Expression.ecore</inputFile>
+                                <inputFile>${project.build.directory}/meta-models/nl.esi.comma.actions/model/generated/Actions.ecore</inputFile>
+                                <inputFile>${project.build.directory}/meta-models/nl.esi.comma.assertthat/model/generated/AssertThat.ecore</inputFile>
+                                <inputFile>${project.build.directory}/meta-models/nl.asml.matala.product/model/generated/Product.ecore</inputFile>
+                                <inputFile>${project.build.directory}/meta-models/nl.esi.comma.abstracttestspecification/model/generated/AbstractTestspecification.ecore</inputFile>
+                                <inputFile>${project.build.directory}/meta-models/nl.esi.comma.behavior.scl/model/generated/Scl.ecore</inputFile>
+                                <inputFile>${project.build.directory}/meta-models/nl.esi.comma.causalgraph/model/generated/CausalGraph.ecore</inputFile>
+                                <inputFile>${project.build.directory}/meta-models/nl.esi.comma.constraints/model/generated/Constraints.ecore</inputFile>
+                                <inputFile>${project.build.directory}/meta-models/nl.esi.comma.inputspecification/model/generated/InputSpecification.ecore</inputFile>
+                                <inputFile>${project.build.directory}/meta-models/nl.esi.comma.project.standard/model/generated/StandardProject.ecore</inputFile>
+                                <inputFile>${project.build.directory}/meta-models/nl.esi.comma.scenarios/model/generated/Scenarios.ecore</inputFile>
+                                <inputFile>${project.build.directory}/meta-models/nl.esi.comma.signature/model/generated/InterfaceSignature.ecore</inputFile>
+                                <inputFile>${project.build.directory}/meta-models/nl.esi.comma.steps/model/generated/Step.ecore</inputFile>
+                                <inputFile>${project.build.directory}/meta-models/nl.esi.comma.systemconfig/model/generated/Configuration.ecore</inputFile>
+                                <inputFile>${project.build.directory}/meta-models/nl.esi.comma.testspecification/model/generated/Testspecification.ecore</inputFile>
                             </inputFiles>
                             <outputFile>${project.build.directory}/adoc-gen/ecore-documentation.adoc</outputFile>
                         </configuration>

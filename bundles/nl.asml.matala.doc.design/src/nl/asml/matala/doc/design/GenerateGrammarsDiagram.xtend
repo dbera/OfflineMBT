@@ -61,7 +61,7 @@ class GenerateGrammarsDiagram {
         Files.createDirectories(outputFile.parent)
         Files.write(outputFile, #[grammars.generatePlantUml])
 
-        println(grammars.join('\n')['''<inputFile>${project.build.directory}/meta-models/«bundle»/model/generated/«name».ecore</inputFile>'''])
+        println(grammars.join('\n')['''<inputFile>${project.build.directory}/meta-models/«bundle»/model/generated/«simpleName».ecore</inputFile>'''])
     }
 
     def static String generatePlantUml(Iterable<Grammar> grammars) '''
