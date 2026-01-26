@@ -36,6 +36,10 @@ For more information about the reuse of existing grammars, please read the (i.e.
 
 include::{gendocdir}/xtext-grammars.plantuml[]
 
+nl.esi.comma.steps -[hidden]- nl.esi.comma.scenarios
+nl.esi.comma.steps -[hidden]- nl.esi.comma.behavior.scl
+nl.esi.comma.behavior.scl -[hidden]- nl.esi.comma.scenarios
+
 artifact nl.esi.comma.types.Types #white/aqua
 artifact nl.asml.matala.product.Product #white/aqua
 artifact nl.esi.comma.abstracttestspecification.AbstractTestspecification #white/aqua
