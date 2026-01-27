@@ -19,9 +19,11 @@ import nl.esi.xtext.common.lang.base.BaseModel
 import nl.esi.xtext.common.lang.base.BasePackage
 import nl.esi.xtext.common.lang.base.Import
 import nl.esi.xtext.common.lang.base.NamedElement
+import nl.esi.xtext.common.lang.base.Table
 import nl.esi.xtext.common.lang.utilities.EcoreUtil3
 import org.eclipse.emf.ecore.EClass
 import org.eclipse.emf.ecore.resource.Resource
+import org.eclipse.xtext.nodemodel.util.NodeModelUtils
 import org.eclipse.xtext.validation.Check
 
 /**
@@ -30,7 +32,6 @@ import org.eclipse.xtext.validation.Check
  * See https://www.eclipse.org/Xtext/documentation/303_runtime_concepts.html#validation
  */
 class BaseValidator extends AbstractBaseValidator {
-
     /**
      * Constrains:
      * - imports are valid URIs
@@ -67,6 +68,35 @@ class BaseValidator extends AbstractBaseValidator {
         for (duplicate : duplicates) {
             var errorText = '''Duplicate «elementDescription» name«IF namePrefix !== null»: «namePrefix»«duplicate.name»«ENDIF»'''
             error(errorText, duplicate, BasePackage.Literals.NAMED_ELEMENT__NAME, code, issueData)
+        }
+    }
+
+    @Check
+    protected def checkTableSyntax(Table table) {
+        if (table?.header?.cells.isNullOrEmpty) {
+            return
+        }
+
+        val columns = table.header.cells.size
+        for (row : table.rows.filter[cells.size != columns]) {
+            var invalidRowEnd = false
+
+            val cellNodes = NodeModelUtils.findNodesForFeature(row, BasePackage.Literals.TABLE_ROW__CELLS)
+            for (var index = 0; index < row.cells.size; index++) {
+                if (cellNodes.get(index).nextSibling.text.startsWith(System.lineSeparator)) {
+                    val isTableRowEnd = (index - columns) % (columns + 1) == 0
+                    if (isTableRowEnd && row.cells.get(index).isNullOrEmpty) {
+                        error('Table row end cannot contain trailing spaces', row, BasePackage.Literals.TABLE_ROW__CELLS, index)
+                        invalidRowEnd = true
+                    } else {
+                        error('Table cell cannot contain newlines', row, BasePackage.Literals.TABLE_ROW__CELLS, index)
+                    }
+                }
+            }
+
+            if (!invalidRowEnd) {
+                error('''Invalid number of columns, expected «columns» but got «row.cells.size»''', row, null)
+            }
         }
     }
 }

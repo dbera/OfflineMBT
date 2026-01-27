@@ -53,7 +53,7 @@ Table: {Table}
 ;
 
 TableRow: {TableRow}
-    cells += TABLE_CELL+ TABLE_ROW_END
+    cells += TABLE_CELL+ '|'
 ;
 
 /*
@@ -78,8 +78,4 @@ LONG returns ecore::ELong:
 
 terminal TABLE_CELL returns ecore::EString:
     '|' ('\\' !('\n'|'\r') | !('\\'|'|'|'\n'|'\r') )+
-;
-
-terminal TABLE_ROW_END returns ecore::EString:
-    '|' ('\r'? '\n')?
 ;
