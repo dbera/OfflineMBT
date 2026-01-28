@@ -47,9 +47,8 @@ class GenerateGrammarsDiagram {
         grammars += TERMINALS_GRAMMAR
         // Reduce grammar dependencies
         grammars.forEach[
-            val parents = getParentGrammars(grammars)
-            grammarUses.removeAll(parents.map[uri])
-            bundleUses.removeAll(parents.map[bundle])
+            bundleUses.removeAll(getParentGrammar(grammars)?.bundle)
+            grammarUses.removeAll(getParentGrammars(grammars).map[uri])
         ]
         grammars.sortInplace[a, b |
             return switch (a) {
@@ -61,7 +60,7 @@ class GenerateGrammarsDiagram {
         Files.createDirectories(outputFile.parent)
         Files.write(outputFile, #[grammars.generatePlantUml])
 
-        println(grammars.join('\n')['''<inputFile>${project.build.directory}/meta-models/«bundle»/model/generated/«name».ecore</inputFile>'''])
+        println(grammars.join('\n')['''<inputFile>${project.build.directory}/meta-models/«bundle»/model/generated/«simpleName».ecore</inputFile>'''])
     }
 
     def static String generatePlantUml(Iterable<Grammar> grammars) '''

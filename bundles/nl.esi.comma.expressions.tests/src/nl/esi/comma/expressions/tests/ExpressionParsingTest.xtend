@@ -16,7 +16,7 @@
 package nl.esi.comma.expressions.tests
 
 import com.google.inject.Inject
-import nl.esi.comma.expressions.expression.Expressions
+import nl.esi.comma.expressions.expression.ExpressionModel
 import org.eclipse.xtext.testing.InjectWith
 import org.eclipse.xtext.testing.extensions.InjectionExtension
 import org.eclipse.xtext.testing.util.ParseHelper
@@ -28,7 +28,7 @@ import org.junit.jupiter.api.^extension.ExtendWith
 @InjectWith(ExpressionInjectorProvider)
 class ExpressionParsingTest {
     @Inject
-    ParseHelper<Expressions> parseHelper
+    ParseHelper<ExpressionModel> parseHelper
 
     @Test
     def void loadModel() {

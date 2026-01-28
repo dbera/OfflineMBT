@@ -22,10 +22,10 @@ import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
 import nl.esi.comma.expressions.evaluation.ExpressionEvaluator
 import nl.esi.comma.expressions.expression.ExpressionVariable
 import nl.esi.comma.types.types.RecordFieldKind
-import nl.esi.comma.types.utilities.EcoreUtil3
+import nl.esi.xtext.common.lang.utilities.EcoreUtil3
 
 import static extension nl.esi.comma.assertthat.utilities.AssertThatUtilities.*
-import static extension nl.esi.comma.types.utilities.EcoreUtil3.*
+import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
 import static extension nl.esi.comma.types.utilities.TypeUtilities.*
 import static extension org.eclipse.emf.ecore.util.EcoreUtil.*
 import static extension org.eclipse.lsat.common.xtend.Queries.*

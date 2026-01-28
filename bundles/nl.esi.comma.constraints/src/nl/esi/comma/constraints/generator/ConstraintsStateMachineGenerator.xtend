@@ -132,7 +132,7 @@ class ConstraintsStateMachineGenerator
                     for(r : act.data.head.rows){
                     	var label = act.label
                     	for(var i = 0; i < r.cells.size; i++) {
-                    		label = label.replaceAll("<"+act.data.head.heading.cells.get(i).value.replaceAll("\\|","").replaceAll("\\s+", "")+">", r.cells.get(i).value.replaceAll("\\|","").replaceAll("\\s+", ""))
+                    		label = label.replaceAll("<"+act.data.head.header.cells.get(i)+">", r.cells.get(i))
                     	}
                     	label = label.replaceAll(" ", "_")
                     	dataList.add(label)

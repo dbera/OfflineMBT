@@ -48,21 +48,22 @@ import nl.esi.comma.expressions.expression.ExpressionVector
 import nl.esi.comma.expressions.expression.Field
 import nl.esi.comma.expressions.expression.Pair
 import nl.esi.comma.expressions.expression.Variable
+import nl.esi.comma.expressions.expression.VariableDecl
 import nl.esi.comma.expressions.services.ExpressionGrammarAccess
 import nl.esi.comma.types.formatting2.TypesFormatter
 import org.eclipse.xtext.formatting2.IFormattableDocument
-import nl.esi.comma.expressions.expression.VariableAssignment
 
 class ExpressionFormatter extends TypesFormatter {
 	
 	@Inject extension ExpressionGrammarAccess
 	
-    def dispatch void format(VariableAssignment assignment, extension IFormattableDocument document) {      
-        assignment.variable.prepend(newLine);
+    def dispatch void format(VariableDecl varDecl, extension IFormattableDocument document) {
+        varDecl.regionFor.keyword(variableDeclAccess.equalsSignKeyword_1_0)?.prepend(oneSpace).append(oneSpaceWrap)
+        varDecl.append(newLine);
     }
 
 	def dispatch void format(Variable variable, extension IFormattableDocument document) {		
-		variable.getType.prepend(oneSpace);
+		variable.regionFor.assignment(variableAccess.typeAssignment_0).append(oneSpace)
 	}
 
 	//-----------------------------------   ExpressionLevel1

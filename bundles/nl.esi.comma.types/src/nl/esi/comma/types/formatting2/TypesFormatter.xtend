@@ -27,68 +27,20 @@ import nl.esi.comma.types.types.TypeDecl
 import nl.esi.comma.types.types.TypesModel
 import nl.esi.comma.types.types.VectorTypeConstructor
 import nl.esi.comma.types.types.VectorTypeDecl
+import nl.esi.xtext.common.lang.formatting2.BaseFormatter
 import org.eclipse.emf.common.util.EList
 import org.eclipse.emf.ecore.EObject
 import org.eclipse.xtext.AbstractRule
 import org.eclipse.xtext.Keyword
-import org.eclipse.xtext.formatting2.AbstractFormatter2
 import org.eclipse.xtext.formatting2.IFormattableDocument
-import org.eclipse.xtext.formatting2.IHiddenRegionFormatter
 import org.eclipse.xtext.formatting2.regionaccess.IComment
 import org.eclipse.xtext.formatting2.regionaccess.ISemanticRegion
 import org.eclipse.xtext.formatting2.regionaccess.ISemanticRegionsFinder
-import org.eclipse.xtext.xbase.lib.Procedures.Procedure1
 
-class TypesFormatter extends AbstractFormatter2 {
+class TypesFormatter extends BaseFormatter {
 
 	@Inject extension TypesGrammarAccess	
 	
-	//--------------------------------- Formatting Procedures
-	
-	static public final Procedure1<IHiddenRegionFormatter> oneSpaceWrap = new Procedure1<IHiddenRegionFormatter>() {		
-		override apply(IHiddenRegionFormatter p) {
-			p.oneSpace
-			p.autowrap
-		}
-     };
-     
-     static public final Procedure1<IHiddenRegionFormatter> oneSpace = new Procedure1<IHiddenRegionFormatter>() {		
-		override apply(IHiddenRegionFormatter p) {
-			p.oneSpace			
-		}
-     };
-     
-     static public final Procedure1<IHiddenRegionFormatter> noSpace = new Procedure1<IHiddenRegionFormatter>() {		
-		override apply(IHiddenRegionFormatter p) {
-			p.noSpace			
-		}
-     };
-     
-     static public final Procedure1<IHiddenRegionFormatter> newLine = new Procedure1<IHiddenRegionFormatter>() {		
-		override apply(IHiddenRegionFormatter p) {
-			p.newLine			
-		}
-     };
-     
-     static public final Procedure1<IHiddenRegionFormatter> emptyLine = new Procedure1<IHiddenRegionFormatter>() {		
-		override apply(IHiddenRegionFormatter p) {
-			p.newLines = 2			
-		}
-     };
-     
-     static public final Procedure1<IHiddenRegionFormatter> indent = new Procedure1<IHiddenRegionFormatter>() {		
-		override apply(IHiddenRegionFormatter p) {
-			p.indent			
-		}
-     };
-     
-     static public final Procedure1<IHiddenRegionFormatter> doubleIndent = new Procedure1<IHiddenRegionFormatter>() {		
-		override apply(IHiddenRegionFormatter p) {
-			p.indent
-			p.indent		
-		}
-     };
-     
      //------------------------------------ Types
      
 	def dispatch void format(TypesModel container, extension IFormattableDocument document) {

@@ -127,6 +127,7 @@
                                 <diagramsOutputPath>images</diagramsOutputPath>
                             </config>
                             <inputFiles>
+                                <inputFile>${project.build.directory}/meta-models/nl.esi.xtext.common.lang/model/generated/Base.ecore</inputFile>
                                 <inputFile>${project.build.directory}/meta-models/nl.esi.comma.types/model/generated/Types.ecore</inputFile>
                                 <inputFile>${project.build.directory}/meta-models/nl.esi.comma.expressions/model/generated/Expression.ecore</inputFile>
                                 <inputFile>${project.build.directory}/meta-models/nl.esi.comma.actions/model/generated/Actions.ecore</inputFile>

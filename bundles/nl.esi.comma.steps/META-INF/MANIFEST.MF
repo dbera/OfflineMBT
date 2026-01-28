@@ -6,7 +6,9 @@ Bundle-Vendor: TNO-ESI
 Bundle-Version: 4.2.0.qualifier
 Bundle-SymbolicName: nl.esi.comma.steps; singleton:=true
 Bundle-ActivationPolicy: lazy
-Require-Bundle: org.eclipse.xtext,
+Require-Bundle: nl.esi.xtext.common.lang;visibility:=reexport,
+ nl.esi.comma.systemconfig,
+ org.eclipse.xtext,
  org.eclipse.xtext.xbase,
  org.eclipse.equinox.common;bundle-version="3.5.0",
  org.eclipse.emf.ecore,
@@ -14,8 +16,7 @@ Require-Bundle: org.eclipse.xtext,
  org.eclipse.xtext.util,
  org.eclipse.emf.common,
  org.eclipse.xtend.lib;bundle-version="2.14.0",
- org.antlr.runtime;bundle-version="[3.2.0,3.2.1)",
- nl.esi.comma.systemconfig
+ org.antlr.runtime;bundle-version="[3.2.0,3.2.1)"
 Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: nl.esi.comma.steps.step,
  nl.esi.comma.steps.step.impl,

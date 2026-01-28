@@ -14,30 +14,37 @@ grammar nl.esi.comma.expressions.Expression with nl.esi.comma.types.Types
 
 generate expression "http://www.esi.nl/comma/expressions/Expression"
 
-import "http://www.eclipse.org/emf/2002/Ecore" as ecore
+import "http://www.esi.nl/xtext/common/lang/Base" as base
 import "http://www.esi.nl/comma/types/Types" as types
 import "http://www.esi.nl/comma/signature/InterfaceSignature" as signature
 
-/* Expressions is added as implicit root container for test purposes */
-Expressions: {Expressions}
+ExpressionModel returns base::ModelContainer: {ExpressionModel}
     imports += Import*
-    types += TypeDecl*
-    variables += VariableAssignment*
+    ( types += TypeDecl
+    | variables += VariableDecl
+    | functions += FunctionDecl
+    )*
 ;
 
-VariableAssignment:
+Variable:
+    type = Type name = ID
+;
+
+VariableDecl:
     variable=Variable ('=' expression=Expression)?
 ;
 
-Variable: type = Type name= ID ;
-
 FunctionDecl:
-    returnType = Type name = ID '(' (params += Variable (',' params += Variable)*)? ')'
+    'function' returnType = Type name = ID '(' (params += FunctionParam (',' params += FunctionParam)*)? ')'
+;
+
+FunctionParam:
+    type = Type name = ID
 ;
 
 @Override
-NamedElement returns types::NamedElement:
-	super::NamedElement | Variable | FunctionDecl
+NamedElement returns base::NamedElement:
+	super::NamedElement | Variable | FunctionDecl | FunctionParam
 ;
 
 Expression: ExpressionLevel1;
@@ -138,18 +145,18 @@ ExpressionBracket:
 ;
 
 ExpressionConstantBool:
-	value=BOOL_LITERAL
+	value=BOOL
 ;
 
-ExpressionConstantInt: 
-	value=Long
+ExpressionConstantInt:
+	value=LONG
 ;
 
-ExpressionConstantReal: 
-	value=FLOAT
+ExpressionConstantReal:
+	value=DOUBLE
 ;
 
-ExpressionConstantString: 
+ExpressionConstantString:
 	value = STRING
 ;
 
@@ -268,14 +275,3 @@ MapTypeConstructor:
 fragment InterfaceAwareType:
 	(interface = [signature::Signature|ID] '::')?
 ;
-
-// === Terminals =======
-BOOL_LITERAL returns ecore::EBoolean:
-	'true' | 'false' | 'TRUE' | 'FALSE' | 'True' | 'False'
-;	
-
-FLOAT returns ecore::EDouble:
-	INT (('.' INT) | (('E' | 'e') ('-')? INT) | ('.' INT ('E' | 'e') ('-')? INT))
-;
-
-Long returns ecore::ELong: INT;

@@ -17,8 +17,8 @@ package nl.esi.comma.expressions.tests
 
 import com.google.inject.Inject
 import nl.esi.comma.expressions.evaluation.ExpressionEvaluator
-import nl.esi.comma.expressions.expression.Expressions
-import nl.esi.comma.types.utilities.EcoreUtil3
+import nl.esi.comma.expressions.expression.ExpressionModel
+import nl.esi.xtext.common.lang.utilities.EcoreUtil3
 import org.eclipse.xtext.resource.SaveOptions
 import org.eclipse.xtext.serializer.ISerializer
 import org.eclipse.xtext.testing.InjectWith
@@ -31,7 +31,7 @@ import org.junit.jupiter.api.^extension.ExtendWith
 @InjectWith(ExpressionInjectorProvider)
 abstract class ExpressionEvaluatorTestBase {
     @Inject
-    ParseHelper<Expressions> parser
+    ParseHelper<ExpressionModel> parser
 
     @Inject
     ISerializer serializer

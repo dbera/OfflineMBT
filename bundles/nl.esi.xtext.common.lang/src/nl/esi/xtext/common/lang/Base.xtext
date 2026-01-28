@@ -1,0 +1,81 @@
+/**
+ * Copyright (c) 2024, 2025 TNO-ESI
+ *
+ * See the NOTICE file(s) distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This program and the accompanying materials are made available
+ * under the terms of the MIT License which is available at
+ * https://opensource.org/licenses/MIT
+ *
+ * SPDX-License-Identifier: MIT
+ */
+grammar nl.esi.xtext.common.lang.Base with org.eclipse.xtext.common.Terminals
+
+generate base "http://www.esi.nl/xtext/common/lang/Base"
+
+import "http://www.eclipse.org/emf/2002/Ecore" as ecore
+
+/*
+ * Top level container element that may transitively import zero or more existing base models.
+ */
+BaseModel returns ModelContainer: {BaseModel}
+    imports += Import*
+    elements += BaseNamedElement*
+    tables += BaseTable*
+;
+
+/*
+ * Abstract class for all model containers.
+ * In this grammar, it is extended by the class BaseModel (see above)
+ */
+ModelContainer: {ModelContainer}
+    imports += Import*
+;
+
+Import:
+    'import' importURI = STRING
+;
+
+BaseNamedElement returns NamedElement: {BaseNamedElement}
+    name = ID
+;
+
+BaseTable returns Table: {BaseTable}
+    '+'
+    header = TableRow
+    rows += TableRow*
+;
+
+Table: {Table}
+    header = TableRow
+    rows += TableRow*
+;
+
+TableRow: {TableRow}
+    cells += TABLE_CELL+ '|'
+;
+
+/*
+ * Abstract class for all NamedElements
+ */
+NamedElement: {NamedElement}
+    name = ID
+;
+
+// === Terminals =======
+BOOL returns ecore::EBoolean:
+    'true' | 'false' | 'TRUE' | 'FALSE' | 'True' | 'False'
+;
+
+DOUBLE returns ecore::EDouble:
+    INT (('.' INT) | (('E' | 'e') ('+'|'-')? INT) | ('.' INT ('E' | 'e') ('+'|'-')? INT))
+;
+
+LONG returns ecore::ELong:
+    INT
+;
+
+terminal TABLE_CELL returns ecore::EString:
+    '|' ('\\' !('\n'|'\r') | !('\\'|'|'|'\n'|'\r') )+
+;

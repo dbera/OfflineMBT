@@ -15,37 +15,23 @@
  * It defines the language for type definitions and some generic constructs reused in other 
  * languages (e.g. NamedElement, ModelContainer).
  */
-grammar nl.esi.comma.types.Types with org.eclipse.xtext.common.Terminals
+grammar nl.esi.comma.types.Types with nl.esi.xtext.common.lang.Base
 
 generate types "http://www.esi.nl/comma/types/Types"
 
-import "http://www.eclipse.org/emf/2002/Ecore" as ecore
+import "http://www.esi.nl/xtext/common/lang/Base" as base
 
 /*
  * Top level container element that holds type declarations.
  * In addition, it may transitively import zero or more existing type models.
  */
-TypesModel returns ModelContainer: {TypesModel}
-	imports += Import*
-	types += TypeDecl+
+TypesModel returns base::ModelContainer: {TypesModel}
+    imports += Import*
+    types += TypeDecl+
 ;
 
-/*
- * Abstract class for all ComMA model containers.
- * In this grammar, it is extended by the class TypesModel (see above)
- */
-ModelContainer:
-	{ModelContainer} imports += Import*
-;
-
-Import:
-	'import' importURI = STRING
-;
-
-/*
- * Abstract class extended in the ComMA languages
- */
-NamedElement:
+@Override
+NamedElement returns base::NamedElement:
 	EnumElement | RecordField | TypeDecl
 ;
 
@@ -86,7 +72,7 @@ QualifiedNameWithWildcard: QualifiedName '.*'? ;
  * the type being defined can be treated as a synonym of the base type. Values of the base type
  * can be used as values of the type.
  */
-SimpleTypeDecl :
+SimpleTypeDecl:
 	'type' name = ID ('based' 'on' base = [SimpleTypeDecl])?
 ;
 
@@ -107,7 +93,7 @@ RecordTypeDecl:
 	'{' (fields+=RecordField ((',')? fields+=RecordField)*)? '}'
 ;	
 
-RecordField: 
+RecordField:
 	(kind = RecordFieldKind)? type = Type name = ID
 ;
 

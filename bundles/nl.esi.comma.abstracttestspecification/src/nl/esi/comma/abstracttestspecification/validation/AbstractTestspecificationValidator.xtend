@@ -15,11 +15,8 @@
  */
 package nl.esi.comma.abstracttestspecification.validation
 
-import nl.esi.comma.types.types.Import
-import nl.esi.comma.types.types.TypesPackage
-import org.eclipse.emf.common.util.URI
-import org.eclipse.xtext.EcoreUtil2
-import org.eclipse.xtext.validation.Check
+import nl.asml.matala.product.product.ProductPackage
+import org.eclipse.emf.ecore.EClass
 
 /**
  * This class contains custom validation rules. 
@@ -27,19 +24,7 @@ import org.eclipse.xtext.validation.Check
  * See https://www.eclipse.org/Xtext/documentation/303_runtime_concepts.html#validation
  */
 class AbstractTestspecificationValidator extends AbstractAbstractTestspecificationValidator {
-	
-    @Check
-    override checkImportForValidity(Import imp) {
-        if (!EcoreUtil2.isValidUri(imp, URI.createURI(imp.getImportURI()))) {
-            error("Invalid resource", imp, TypesPackage.Literals.IMPORT__IMPORT_URI);
-        } else {
-            /*val Resource r = EcoreUtil2.getResource(imp.eResource, imp.importURI)
-             * if(! (r.allContents.head instanceof InterfaceDefinition ||
-             *     r.allContents.head instanceof FeatureDefinition
-             * ))
-             *     error("The imported resource is not an interface definition or a feature definition.", imp, TypesPackage.eINSTANCE.import_ImportURI)
-             }*/
-        }
+    override protected isValidImportType(EClass importType) {
+        return ProductPackage.Literals.PRODUCT.isSuperTypeOf(importType)
     }
-	
 }

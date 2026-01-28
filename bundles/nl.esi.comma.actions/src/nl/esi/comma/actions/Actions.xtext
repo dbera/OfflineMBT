@@ -14,8 +14,9 @@ grammar nl.esi.comma.actions.Actions with nl.esi.comma.expressions.Expression
 
 generate actions "http://www.esi.nl/comma/actions/Actions"
 
-import "http://www.esi.nl/comma/expressions/Expression" as expr
+import "http://www.esi.nl/xtext/common/lang/Base" as base
 import "http://www.esi.nl/comma/types/Types" as types
+import "http://www.esi.nl/comma/expressions/Expression" as expr
 import "http://www.esi.nl/comma/signature/InterfaceSignature" as signature
 
 /*
@@ -31,10 +32,10 @@ Action:
 	ForAction |
 	IfAction |
 	RecordFieldAssignmentAction |
-	CommandReply |
-	EventCall |
+	CommandReply |      // TODO: Remove
+	EventCall |         // TODO: Remove
 	FunctionCall |
-	ParallelComposition
+	ParallelComposition // TODO: Remove
 ;
 
 FunctionCall:
@@ -111,7 +112,7 @@ EventCall:
 ;
 
 Multiplicity:
-	'[' lower = Long '-' ((upper = Long) | (upperInf = '*')) ']'
+	'[' lower = LONG '-' ((upper = LONG) | (upperInf = '*')) ']'
 ;
 
 /*
@@ -130,7 +131,7 @@ PCFragmentDefinition:
 ;
 
 @Override 
-NamedElement returns types::NamedElement :
+NamedElement returns base::NamedElement:
 	{PCFragmentDefinition}
 ;
 

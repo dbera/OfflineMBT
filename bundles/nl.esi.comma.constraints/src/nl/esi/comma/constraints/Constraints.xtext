@@ -14,10 +14,10 @@ grammar nl.esi.comma.constraints.Constraints with nl.esi.comma.actions.Actions
 
 generate constraints "http://www.esi.nl/comma/constraints/Constraints"
 
-import "http://www.esi.nl/comma/types/Types" as types
+import "http://www.esi.nl/xtext/common/lang/Base" as base
 import "http://www.esi.nl/comma/steps/Step" as step
 
-Constraints: {Constraints}
+Constraints returns base::ModelContainer: {Constraints}
 	imports += Import*
 	actors += ActorList*
 	actions += Actions*
@@ -31,11 +31,6 @@ Constraints: {Constraints}
 	('for-configurations' commonFeatures += [step::FeatureTag | ID]+ ';')?
 	templates += Templates*
 	useLabels?= 'use-provided-labels'?
-;
-
-@Override
-ModelContainer returns types::ModelContainer:
-    super::ModelContainer | Constraints
 ;
 
 ActorList:{ActorList} 
@@ -69,28 +64,15 @@ ActionParam:
       'init' initActions+=(AssignmentAction | RecordFieldAssignmentAction)+
 ;
 
-
-DataTable:
-	// DATA_HEADING 
-	'with-data' (instances ?= 'instances')?
-	heading = ExampleRow
-	(rows += ExampleRow)*
+@Override
+Table returns base::Table:
+    super::Table | DataTable
 ;
 
-ExampleRow:
-	cells += ExampleCell+ EXAMPLE_ROW_END
-;
-
-ExampleCell:
-	value = EXAMPLE_CELL
-;
-
-// terminal DATA_HEADING: 'with-data' SPACES '\r'? '\n'; // SPACES ':' 
-terminal EXAMPLE_ROW_END: '|' SPACES NL;
-terminal EXAMPLE_CELL: '|' !('\r' | '\n' | '|')+;
-
-terminal fragment SPACES: (' '|'\t')*;
-terminal fragment NL: '\r'? '\n'?;
+DataTable: {DataTable}
+    'with-data' (instances?='instances')?
+    header=TableRow
+    rows+=TableRow*;
 
 enum ActionType:
     Observable = 'Observable' | Trigger = 'Trigger' | PreCondition = 'Pre-condition' | Conjunction = 'And'

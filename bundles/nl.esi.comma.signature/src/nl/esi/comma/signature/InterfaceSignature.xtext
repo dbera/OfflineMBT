@@ -18,19 +18,20 @@ grammar nl.esi.comma.signature.InterfaceSignature with nl.esi.comma.types.Types
 
 generate interfaceSignature "http://www.esi.nl/comma/signature/InterfaceSignature"
 
+import "http://www.esi.nl/xtext/common/lang/Base" as base
 import "http://www.esi.nl/comma/types/Types" as types
 
 /*
  * Signature definitions may optionally and transitively import type models
  */
-InterfaceSignatureDefinition:
-	imports += Import*
+InterfaceSignatureDefinition returns base::ModelContainer: {InterfaceSignatureDefinition}
+    imports += Import*
 	signature = Signature
 ;
 
 @Override
-ModelContainer returns types::ModelContainer:
-	super::ModelContainer | InterfaceSignatureDefinition
+NamedElement returns base::NamedElement:
+    super::NamedElement | Parameter | Signature
 ;
 
 Signature:
@@ -41,19 +42,6 @@ Signature:
 		("notifications" notifications += Notification+) ?
 ;
 
-@Override
-NamedElement returns types::NamedElement :
- super::NamedElement | Parameter | Signature
-;
-
-InterfaceEvent returns types::NamedElement:
-	{InterfaceEvent}
-;
-
-ConcreteInterfaceEvent returns InterfaceEvent:
-	{Command} | {Signal} | {Notification}
-;
-
 Parameter:
 	(direction = DIRECTION)? type = Type name = ID
 ;
@@ -62,6 +50,14 @@ enum DIRECTION :
 	IN = 'in' |
 	OUT = 'out' |
 	INOUT = 'inout'
+;
+
+InterfaceEvent returns base::NamedElement:
+    {InterfaceEvent}
+;
+
+ConcreteInterfaceEvent returns InterfaceEvent:
+    {Command} | {Signal} | {Notification}
 ;
 
 /*

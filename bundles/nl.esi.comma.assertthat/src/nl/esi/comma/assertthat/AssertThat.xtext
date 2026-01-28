@@ -17,10 +17,11 @@ generate assertThat "http://www.esi.nl/comma/assertthat/AssertThat"
 import "http://www.esi.nl/comma/expressions/Expression" as expr
 
 DataAssertions: {DataAssertions}
-    'assertions' name = ID '{' 
+    'assertions' name = ID '{'
         constr += DataAssertionItem+
      '}'
 ;
+
 DataAssertionItem:
     AssertThatBlock | GenericScriptBlock
 ;
@@ -61,7 +62,7 @@ enum MARGIN_TYPE:
     | NONE='none';
 
 MargingItem:
-    type=MARGIN_TYPE '(' (marginVal=FLOAT)? ')';
+    type=MARGIN_TYPE '(' (marginVal=DOUBLE)? ')';
 
 AssertValidation:
     AssertThatValue | AssertThatXPaths | AssertThatXMLFile
@@ -91,7 +92,7 @@ AssertThatValueMatch:
 ;
 
 AssertThatValueSize:
-    'has-size' reference=Long
+    'has-size' reference=LONG
 ;
 
 // Assertion of XPaths outputs

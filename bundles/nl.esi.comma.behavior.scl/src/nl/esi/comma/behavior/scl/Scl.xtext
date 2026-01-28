@@ -14,7 +14,9 @@ grammar nl.esi.comma.behavior.scl.Scl with nl.esi.comma.actions.Actions
 
 generate scl "http://www.esi.nl/comma/behavior/scl/Scl"
 
-Model:
+import "http://www.esi.nl/xtext/common/lang/Base" as base
+
+Model returns base::ModelContainer: {Model}
 	imports += Import*
 	features += Features*
 	actions += Actions+

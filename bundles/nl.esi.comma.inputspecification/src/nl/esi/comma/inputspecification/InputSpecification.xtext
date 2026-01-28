@@ -14,10 +14,11 @@ grammar nl.esi.comma.inputspecification.InputSpecification with nl.esi.comma.act
 
 generate inputSpecification "http://www.esi.nl/comma/inputspecification/InputSpecification"
 
+import "http://www.esi.nl/xtext/common/lang/Base" as base
 import "http://www.esi.nl/comma/types/Types" as types
 import "http://www.esi.nl/comma/expressions/Expression" as expr
 
-Main:
+Main returns base::ModelContainer: {Main}
 	imports += Import*
 	model = ModelType
 ;
@@ -26,6 +27,7 @@ ModelType:
 	APIDefinition | SUTDefinition | TestDefinition
 ;
 
+// TODO: Ask Diego if this is used
 SUTDefinition:
 	('sut-instances' vars+=Variable+)
 	('sut-init' initActions+=(AssignmentAction | RecordFieldAssignmentAction)+)?
@@ -62,6 +64,7 @@ DataImpl:
 ;
 
 
+// TODO: Ask Diego if this is used
 TestDefinition:
 	('global-parameters' gparams+=Variable+)?
 	('sut-parameters' sutparams+=Variable+)?
@@ -85,11 +88,6 @@ Step:
 /*Param:
 	name=ID ':' value += STRING+
 ;*/
-
-@Override
-ModelContainer returns types::ModelContainer:
-	super::ModelContainer | Main
-;
 
 SUT:
 	'suts' '{'

@@ -15,15 +15,8 @@
  */
 package nl.esi.comma.steps.validation
 
-import org.eclipse.xtext.validation.Check
-
-import org.eclipse.emf.common.util.URI
-
-import org.eclipse.xtext.EcoreUtil2
-import org.eclipse.emf.ecore.resource.Resource
-import nl.esi.comma.systemconfig.configuration.FeatureDefinition
-import nl.esi.comma.steps.step.StepPackage
-import nl.esi.comma.steps.step.Import
+import nl.esi.comma.systemconfig.configuration.ConfigurationPackage
+import org.eclipse.emf.ecore.EClass
 
 /**
  * This class contains custom validation rules. 
@@ -31,17 +24,7 @@ import nl.esi.comma.steps.step.Import
  * See https://www.eclipse.org/Xtext/documentation/303_runtime_concepts.html#validation
  */
 class StepValidator extends AbstractStepValidator {
-	
-	@Check
-	def checkImportForValidity(Import imp){
-		if (! EcoreUtil2.isValidUri(imp, URI.createURI(imp.importURI))){
-			error("Invalid resource", imp, StepPackage.eINSTANCE.import_ImportURI)
-		} else {
-			val Resource r = EcoreUtil2.getResource(imp.eResource, imp.importURI)
-			val root = r.allContents.head
-			if (! (root instanceof FeatureDefinition))
-				error("The imported resource is not a system configuration definition.", imp,
-					StepPackage.eINSTANCE.import_ImportURI)
-		}
-	}
+    override protected isValidImportType(EClass importType) {
+        return ConfigurationPackage.Literals.FEATURE_DEFINITION.isSuperTypeOf(importType)
+    }
 }

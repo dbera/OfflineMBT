@@ -35,7 +35,7 @@ import nl.esi.comma.expressions.expression.MapTypeConstructor
 import nl.esi.comma.expressions.expression.Variable
 import nl.esi.comma.types.types.Type
 import nl.esi.comma.types.types.TypeDecl
-import nl.esi.comma.types.types.TypesPackage
+import nl.esi.xtext.common.lang.base.BasePackage
 import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.validation.Check
 
@@ -60,29 +60,29 @@ class CausalGraphValidator extends AbstractCausalGraphValidator {
     def checkUniqueNames(CausalGraph _graph) {
         _graph.requirements.getDuplicatesBy[name].forEach [
             error('Requirement name should be unique', it,
-                TypesPackage.Literals.NAMED_ELEMENT__NAME)
+                BasePackage.Literals.NAMED_ELEMENT__NAME)
         ]
         _graph.scenarios.getDuplicatesBy[name].forEach [
             error('Scenario name should be unique', it,
-                TypesPackage.Literals.NAMED_ELEMENT__NAME)
+                BasePackage.Literals.NAMED_ELEMENT__NAME)
         ]
         _graph.types.getDuplicatesBy[name].forEach [
             error('Type name should be unique', it,
-                TypesPackage.Literals.NAMED_ELEMENT__NAME)
+                BasePackage.Literals.NAMED_ELEMENT__NAME)
         ]
         // TODO: Maybe relax this requirement such that function
         // signature (i.e. incl. parameters) should be unique.
         _graph.functions.getDuplicatesBy[name].forEach [
             error('Function name should be unique', it,
-                TypesPackage.Literals.NAMED_ELEMENT__NAME)
+                BasePackage.Literals.NAMED_ELEMENT__NAME)
         ]
         _graph.variables.getDuplicatesBy[name].forEach [
             error('Variable name should be unique', it,
-                TypesPackage.Literals.NAMED_ELEMENT__NAME)
+                BasePackage.Literals.NAMED_ELEMENT__NAME)
         ]
         _graph.nodes.getDuplicatesBy[name].forEach [
             error('Node name should be unique', it,
-                TypesPackage.Literals.NAMED_ELEMENT__NAME)
+                BasePackage.Literals.NAMED_ELEMENT__NAME)
         ]
     }
 

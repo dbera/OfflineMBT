@@ -57,7 +57,7 @@ import nl.esi.comma.types.types.VectorTypeConstructor
 import org.eclipse.emf.common.util.EList
 import org.eclipse.emf.ecore.util.EcoreUtil
 
-import static extension nl.esi.comma.types.utilities.EcoreUtil3.serialize
+import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.serialize
 import nl.esi.comma.expressions.expression.ExpressionNullLiteral
 import nl.esi.comma.abstracttestspecification.generator.to.concrete.ConcreteExpressionHandler
 import java.util.LinkedHashMap
