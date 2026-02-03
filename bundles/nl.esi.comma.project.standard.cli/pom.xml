@@ -243,7 +243,6 @@
                                 <exclude>**/*.xtext</exclude>
                                 <exclude>**/*.dll</exclude>
                                 <exclude>**/*.so</exclude>
-                                <exclude>**/rotalumis.exe</exclude>
                             </excludes>
                         </filter>
                     </filters>
