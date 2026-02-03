@@ -27,13 +27,10 @@ import nl.asml.matala.product.product.Product
 import nl.asml.matala.product.product.RefConstraint
 import nl.asml.matala.product.product.SymbConstraint
 import nl.asml.matala.product.product.VarRef
-import nl.esi.comma.types.generator.TypesZ3Generator
 import nl.esi.comma.types.types.RecordTypeDecl
 import nl.esi.comma.types.types.SimpleTypeDecl
 import nl.esi.comma.types.types.TypeDecl
-import nl.esi.comma.types.types.TypesModel
 import org.eclipse.emf.ecore.resource.Resource
-import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
@@ -66,18 +63,6 @@ class ProductGenerator extends AbstractGenerator {
 		
 //		val import_list = newArrayList
 		val var_decl_map = newLinkedHashMap
-		
-//		/* Generate Z3 Data Types */
-//		for(imp : prod.imports) {
-//			// Assumption: At most one
-//			val typeResource = EcoreUtil2.getResource(resource, imp.importURI)
-//			var typeInst = typeResource.allContents.head
-//			if(typeInst instanceof TypesModel) {
-//				var txt = (new TypesZ3Generator).generateAllUserDefinedTypes(typeInst) 
-//				fsa.generateFile('CPNServer//' + specName + '//Z3//' + specName + '_z3types.py', txt)
-//			}
-//			import_list.add(imp.importURI)
-//		}
 		
 		for(b : prod.specification.blocks) {
 			val Block block = b.block ?: b.refBlock?.system
