@@ -78,13 +78,7 @@ class AssertThatUtilities {
                     vec.typeAnnotation = createTypeAnnotation => [
                         type = ExpressionsUtilities.asExprType(typeObject.asType)
                     ]
-                    vec.elements += json.values.map[
-                        val element = toExpression(typeObject.elementType, context, filter)
-                        if (element === null) {
-                            println('here')
-                        }
-                        element
-                    ]
+                    vec.elements += json.values.map[toExpression(typeObject.elementType, context, filter)]
                 ]
             default:
                 throw new RuntimeException('''Unsupported value '«json»' for type «typeObject.typeName»''')
