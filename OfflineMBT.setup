@@ -77,7 +77,7 @@
     <requirement
         name="de.jcup.asciidoctoreditor.feature.group"/>
     <requirement
-        name="org.eclipse.eclemma.feature.group"/>
+        name="org.eclipse.eclemma.feature.feature.group"/>
     <repository
         url="https://download.eclipse.org/cbi/updates/tpd/release/latest"/>
     <repository
