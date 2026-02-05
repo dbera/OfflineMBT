@@ -29,6 +29,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.eclipse.xtext.xbase.lib.IterableExtensions;
+
 import nl.asml.matala.bpmn4s.Logging;
 
 
@@ -806,7 +808,7 @@ public class Bpmn4sCompiler{
 		String types = new String("");
 		// UNIT_TYPE is the type for undefined contexts.
 		types += String.format("record %s {\n\tint\tunit\n}\n\n", UNIT_TYPE);
-		for (Bpmn4sDataType dataType: model.dataSchema.values()) {
+		for (Bpmn4sDataType dataType: IterableExtensions.sortBy(model.dataSchema.values(), Bpmn4sDataType::getName)) {
 			if(dataType instanceof RecordType recType) {
 				String type = "record " + recType.getName() + " {\n";
 				String parameters = "";
