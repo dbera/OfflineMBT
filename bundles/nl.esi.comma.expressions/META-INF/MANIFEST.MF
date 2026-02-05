@@ -46,13 +46,7 @@ Export-Package: nl.esi.comma.expressions,
    org.eclipse.xtext.generator,
    org.eclipse.emf.ecore.resource,
    nl.esi.comma.expressions.expression",
- nl.esi.comma.expressions.generator.dezyne;uses:="nl.esi.comma.expressions.expression",
  nl.esi.comma.expressions.generator.plantuml;uses:="nl.esi.comma.types.generator,org.eclipse.xtext.generator,nl.esi.comma.expressions.expression",
- nl.esi.comma.expressions.generator.poosl;
-  uses:="org.eclipse.emf.ecore,
-   nl.esi.comma.types.generator.poosl,
-   org.eclipse.xtext.generator,
-   nl.esi.comma.expressions.expression",
  nl.esi.comma.expressions.parser.antlr;uses:="org.eclipse.xtext.parser.antlr,nl.esi.comma.expressions.parser.antlr.internal,nl.esi.comma.expressions.services",
  nl.esi.comma.expressions.parser.antlr.internal;
   uses:="org.eclipse.emf.ecore,
