@@ -115,10 +115,6 @@ the Department of Electrical Engineering of Eindhoven University of Technology.
          version="0.0.0"/>
 
    <plugin
-         id="nl.esi.comma.signature.ui"
-         version="0.0.0"/>
-
-   <plugin
          id="nl.esi.comma.steps.ui"
          version="0.0.0"/>
 

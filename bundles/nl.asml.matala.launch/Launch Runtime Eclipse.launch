@@ -528,9 +528,6 @@
         <setEntry value="nl.esi.comma.scenarios.tests@default:default"/>
         <setEntry value="nl.esi.comma.scenarios.ui@default:default"/>
         <setEntry value="nl.esi.comma.scenarios@default:default"/>
-        <setEntry value="nl.esi.comma.signature.ide@default:default"/>
-        <setEntry value="nl.esi.comma.signature.ui@default:default"/>
-        <setEntry value="nl.esi.comma.signature@default:default"/>
         <setEntry value="nl.esi.comma.steps.ide@default:default"/>
         <setEntry value="nl.esi.comma.steps.ui@default:default"/>
         <setEntry value="nl.esi.comma.steps@default:default"/>
