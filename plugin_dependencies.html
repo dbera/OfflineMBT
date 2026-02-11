@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Eclipse Plugin Dependencies</title>
+    <style>
+        body { margin: 0; font-family: Arial, sans-serif; }
+        #graph { width: 100%; height: 100vh; }
+        .node { cursor: pointer; }
+        .node:hover { stroke: #000; stroke-width: 1.5px; }
+        .node-label { font-size: 10px; pointer-events: none; }
+        .link { stroke: #999; stroke-opacity: 0.6; }
+        .link.direct { stroke: #ff0000; stroke-opacity: 1; stroke-width: 2px; }
+        .link.indirect { stroke: #ff9900; stroke-opacity: 0.8; stroke-width: 1.5px; }
+        
+        #details {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: white;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            max-width: 300px;
+            max-height: 200px;
+            overflow: auto;
+        }
+        
+        #stats {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        
+        #legend {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 3px;
+            margin-right: 8px;
+        }
+    </style>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+    <div id="graph"></div>
+    <div id="details">
+        <h3>Plugin Details</h3>
+        <p>Click on a node to see details</p>
+    </div>
+    <div id="stats">
+        <h3>Repository Stats</h3>
+        <p>Total plugins: <strong>36</strong></p>
+        <p>Total dependencies: <strong>51</strong></p>
+        <p><em>Note: UI and IDE plugins excluded</em></p>
+    </div>
+    <div id="legend">
+        <h3>Legend</h3>
+        <div class="legend-item">
+            <div class="legend-color" style="background-color: #ff0000;"></div>
+            <div>Direct Dependencies</div>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background-color: #ff9900;"></div>
+            <div>Indirect Dependencies</div>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background-color: #999;"></div>
+            <div>Other Dependencies</div>
+        </div>
+    </div>
+    
+    <script>
+    // Graph data
+    const graph = {"nodes": [{"id": "nl.asml.matala.bpmn4s", "group": 1}, {"id": "nl.asml.matala.bpmn4s.tests", "group": 1}, {"id": "nl.asml.matala.doc.design", "group": 1}, {"id": "nl.asml.matala.generator.fast", "group": 1}, {"id": "nl.asml.matala.product", "group": 1}, {"id": "nl.asml.matala.product.lsp.server", "group": 1}, {"id": "nl.asml.matala.product.tests", "group": 1}, {"id": "nl.esi.comma.abstracttestspecification", "group": 1}, {"id": "nl.esi.comma.abstracttestspecification.tests", "group": 1}, {"id": "nl.esi.comma.actions", "group": 1}, {"id": "nl.esi.comma.assertthat", "group": 1}, {"id": "nl.esi.comma.automata", "group": 1}, {"id": "nl.esi.comma.behavior.scl", "group": 1}, {"id": "nl.esi.comma.causalgraph", "group": 1}, {"id": "nl.esi.comma.causalgraph.tests", "group": 1}, {"id": "nl.esi.comma.constraints", "group": 1}, {"id": "nl.esi.comma.constraints.dashboard", "group": 1}, {"id": "nl.esi.comma.expressions", "group": 1}, {"id": "nl.esi.comma.expressions.tests", "group": 1}, {"id": "nl.esi.comma.inputspecification", "group": 1}, {"id": "nl.esi.comma.project.standard", "group": 1}, {"id": "nl.esi.comma.project.standard.cli", "group": 1}, {"id": "nl.esi.comma.project.standard.tests", "group": 1}, {"id": "nl.esi.comma.scenarios", "group": 1}, {"id": "nl.esi.comma.scenarios.dashboard", "group": 1}, {"id": "nl.esi.comma.scenarios.tests", "group": 1}, {"id": "nl.esi.comma.signature", "group": 1}, {"id": "nl.esi.comma.steps", "group": 1}, {"id": "nl.esi.comma.systemconfig", "group": 1}, {"id": "nl.esi.comma.systemconfig.tests", "group": 1}, {"id": "nl.esi.comma.testspecification", "group": 1}, {"id": "nl.esi.comma.types", "group": 1}, {"id": "nl.esi.xtext.common.lang", "group": 1}, {"id": "nl.esi.xtext.common.lang.tests", "group": 1}, {"id": "nl.esi.xtext.lsp.generator", "group": 1}, {"id": "nl.esi.xtext.lsp.server", "group": 1}], "links": [{"source": 0, "target": 4, "value": 1}, {"source": 1, "target": 0, "value": 1}, {"source": 3, "target": 30, "value": 1}, {"source": 3, "target": 19, "value": 1}, {"source": 3, "target": 20, "value": 1}, {"source": 4, "target": 10, "value": 1}, {"source": 5, "target": 35, "value": 1}, {"source": 6, "target": 4, "value": 1}, {"source": 7, "target": 10, "value": 1}, {"source": 7, "target": 4, "value": 1}, {"source": 7, "target": 0, "value": 1}, {"source": 8, "target": 7, "value": 1}, {"source": 9, "target": 17, "value": 1}, {"source": 10, "target": 9, "value": 1}, {"source": 12, "target": 9, "value": 1}, {"source": 12, "target": 11, "value": 1}, {"source": 13, "target": 9, "value": 1}, {"source": 14, "target": 13, "value": 1}, {"source": 15, "target": 9, "value": 1}, {"source": 15, "target": 27, "value": 1}, {"source": 15, "target": 23, "value": 1}, {"source": 15, "target": 16, "value": 1}, {"source": 15, "target": 11, "value": 1}, {"source": 17, "target": 31, "value": 1}, {"source": 17, "target": 26, "value": 1}, {"source": 18, "target": 17, "value": 1}, {"source": 19, "target": 9, "value": 1}, {"source": 20, "target": 32, "value": 1}, {"source": 20, "target": 0, "value": 1}, {"source": 20, "target": 4, "value": 1}, {"source": 20, "target": 7, "value": 1}, {"source": 20, "target": 30, "value": 1}, {"source": 20, "target": 11, "value": 1}, {"source": 20, "target": 15, "value": 1}, {"source": 20, "target": 23, "value": 1}, {"source": 21, "target": 20, "value": 1}, {"source": 21, "target": 5, "value": 1}, {"source": 22, "target": 20, "value": 1}, {"source": 23, "target": 9, "value": 1}, {"source": 23, "target": 24, "value": 1}, {"source": 25, "target": 23, "value": 1}, {"source": 26, "target": 31, "value": 1}, {"source": 27, "target": 32, "value": 1}, {"source": 27, "target": 28, "value": 1}, {"source": 28, "target": 17, "value": 1}, {"source": 29, "target": 28, "value": 1}, {"source": 29, "target": 31, "value": 1}, {"source": 30, "target": 10, "value": 1}, {"source": 30, "target": 19, "value": 1}, {"source": 31, "target": 32, "value": 1}, {"source": 33, "target": 32, "value": 1}]};
+    
+    // Full dependency graph (plugin ID -> [dependencies])
+    const dependencyGraph = {"nl.asml.matala.bpmn4s": ["nl.asml.matala.product"], "nl.asml.matala.bpmn4s.tests": ["nl.asml.matala.bpmn4s"], "nl.asml.matala.doc.design": [], "nl.asml.matala.generator.fast": ["nl.esi.comma.testspecification", "nl.esi.comma.inputspecification", "nl.esi.comma.project.standard"], "nl.asml.matala.product": ["nl.esi.comma.assertthat"], "nl.asml.matala.product.lsp.server": ["nl.esi.xtext.lsp.server"], "nl.asml.matala.product.tests": ["nl.asml.matala.product"], "nl.esi.comma.abstracttestspecification": ["nl.esi.comma.assertthat", "nl.asml.matala.product", "nl.asml.matala.bpmn4s"], "nl.esi.comma.abstracttestspecification.tests": ["nl.esi.comma.abstracttestspecification"], "nl.esi.comma.actions": ["nl.esi.comma.expressions"], "nl.esi.comma.assertthat": ["nl.esi.comma.actions"], "nl.esi.comma.automata": [], "nl.esi.comma.behavior.scl": ["nl.esi.comma.actions", "nl.esi.comma.automata"], "nl.esi.comma.causalgraph": ["nl.esi.comma.actions"], "nl.esi.comma.causalgraph.tests": ["nl.esi.comma.causalgraph"], "nl.esi.comma.constraints": ["nl.esi.comma.actions", "nl.esi.comma.steps", "nl.esi.comma.scenarios", "nl.esi.comma.constraints.dashboard", "nl.esi.comma.automata"], "nl.esi.comma.constraints.dashboard": [], "nl.esi.comma.expressions": ["nl.esi.comma.types", "nl.esi.comma.signature"], "nl.esi.comma.expressions.tests": ["nl.esi.comma.expressions"], "nl.esi.comma.inputspecification": ["nl.esi.comma.actions"], "nl.esi.comma.project.standard": ["nl.esi.xtext.common.lang", "nl.asml.matala.bpmn4s", "nl.asml.matala.product", "nl.esi.comma.abstracttestspecification", "nl.esi.comma.testspecification", "nl.esi.comma.automata", "nl.esi.comma.constraints", "nl.esi.comma.scenarios"], "nl.esi.comma.project.standard.cli": ["nl.esi.comma.project.standard", "nl.asml.matala.product.lsp.server"], "nl.esi.comma.project.standard.tests": ["nl.esi.comma.project.standard"], "nl.esi.comma.scenarios": ["nl.esi.comma.actions", "nl.esi.comma.scenarios.dashboard"], "nl.esi.comma.scenarios.dashboard": [], "nl.esi.comma.scenarios.tests": ["nl.esi.comma.scenarios"], "nl.esi.comma.signature": ["nl.esi.comma.types"], "nl.esi.comma.steps": ["nl.esi.xtext.common.lang", "nl.esi.comma.systemconfig"], "nl.esi.comma.systemconfig": ["nl.esi.comma.expressions"], "nl.esi.comma.systemconfig.tests": ["nl.esi.comma.systemconfig", "nl.esi.comma.types"], "nl.esi.comma.testspecification": ["nl.esi.comma.assertthat", "nl.esi.comma.inputspecification"], "nl.esi.comma.types": ["nl.esi.xtext.common.lang"], "nl.esi.xtext.common.lang": [], "nl.esi.xtext.common.lang.tests": ["nl.esi.xtext.common.lang"], "nl.esi.xtext.lsp.generator": [], "nl.esi.xtext.lsp.server": []};
+    
+    // Create the force simulation
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    
+    const simulation = d3.forceSimulation(graph.nodes)
+        .force("link", d3.forceLink(graph.links).id(d => d.index))
+        .force("charge", d3.forceManyBody().strength(-100))
+        .force("center", d3.forceCenter(width / 2, height / 2));
+    
+    // Create the SVG container
+    const svg = d3.select("#graph")
+        .append("svg")
+        .attr("viewBox", [0, 0, width, height])
+        .attr("width", width)
+        .attr("height", height);
+    
+    // Add zoom functionality
+    svg.call(d3.zoom()
+        .extent([[0, 0], [width, height]])
+        .scaleExtent([0.1, 8])
+        .on("zoom", (event) => {
+            g.attr("transform", event.transform);
+        }));
+    
+    const g = svg.append("g");
+    
+    // Add links
+    const link = g.append("g")
+        .selectAll("line")
+        .data(graph.links)
+        .join("line")
+        .attr("class", "link")
+        .attr("stroke-width", d => Math.sqrt(d.value));
+    
+    // Add nodes
+    const node = g.append("g")
+        .selectAll("circle")
+        .data(graph.nodes)
+        .join("circle")
+        .attr("class", "node")
+        .attr("r", 5)
+        .attr("fill", "#69b3a2")
+        .call(drag(simulation))
+        .on("click", showDetails);
+    
+    // Add labels
+    const label = g.append("g")
+        .selectAll("text")
+        .data(graph.nodes)
+        .join("text")
+        .attr("class", "node-label")
+        .attr("dx", 8)
+        .attr("dy", ".35em")
+        .text(d => {
+            // Get last 3 segments of the plugin ID
+            const segments = d.id.split('.');
+            if (segments.length <= 3) {
+                return d.id;
+            } else {
+                return segments.slice(-3).join('.');
+            }
+        });
+    
+    // Set up the simulation
+    simulation.on("tick", () => {
+        link
+            .attr("x1", d => d.source.x)
+            .attr("y1", d => d.source.y)
+            .attr("x2", d => d.target.x)
+            .attr("y2", d => d.target.y);
+        
+        node
+            .attr("cx", d => d.x)
+            .attr("cy", d => d.y);
+        
+        label
+            .attr("x", d => d.x)
+            .attr("y", d => d.y);
+    });
+    
+    // Drag functionality
+    function drag(simulation) {
+        function dragstarted(event) {
+            if (!event.active) simulation.alphaTarget(0.3).restart();
+            event.subject.fx = event.subject.x;
+            event.subject.fy = event.subject.y;
+        }
+        
+        function dragged(event) {
+            event.subject.fx = event.x;
+            event.subject.fy = event.y;
+        }
+        
+        function dragended(event) {
+            if (!event.active) simulation.alphaTarget(0);
+            event.subject.fx = null;
+            event.subject.fy = null;
+        }
+        
+        return d3.drag()
+            .on("start", dragstarted)
+            .on("drag", dragged)
+            .on("end", dragended);
+    }
+    
+    // Find all transitive dependencies recursively
+    function findAllDependencies(pluginId) {
+        const directDeps = dependencyGraph[pluginId] || [];
+        const allDeps = new Set(directDeps);
+        const indirectDeps = new Set();
+        
+        function collectDeps(id) {
+            const deps = dependencyGraph[id] || [];
+            for (const dep of deps) {
+                if (!allDeps.has(dep)) {
+                    indirectDeps.add(dep);
+                    allDeps.add(dep);
+                    collectDeps(dep);
+                }
+            }
+        }
+        
+        // Start recursive collection from direct dependencies
+        for (const dep of directDeps) {
+            collectDeps(dep);
+        }
+        
+        return {
+            direct: directDeps,
+            indirect: [...indirectDeps]
+        };
+    }
+    
+    // Show plugin details and highlight dependencies
+    function showDetails(event, d) {
+        const detailsDiv = document.getElementById("details");
+        
+        // Reset all links to default style
+        link.classed("direct", false).classed("indirect", false);
+        
+        // Find all dependencies
+        const allDeps = findAllDependencies(d.id);
+        const directDepIds = allDeps.direct;
+        const indirectDepIds = allDeps.indirect;
+        
+        // Create lookup sets for faster checking
+        const directDepSet = new Set(directDepIds);
+        const indirectDepSet = new Set(indirectDepIds);
+        
+        // Highlight direct dependencies
+        link.each(function(l) {
+            const isDirect = l.source.id === d.id && directDepSet.has(l.target.id);
+            d3.select(this).classed("direct", isDirect);
+        });
+        
+        // Highlight indirect dependencies
+        link.each(function(l) {
+            // An indirect dependency link is one where:
+            // 1. The source is in our direct or indirect dependencies
+            // 2. The target is in our indirect dependencies
+            // 3. It's not already marked as a direct dependency
+            const isIndirect = !d3.select(this).classed("direct") && 
+                             ((directDepSet.has(l.source.id) || indirectDepSet.has(l.source.id)) && 
+                              indirectDepSet.has(l.target.id));
+            
+            d3.select(this).classed("indirect", isIndirect);
+        });
+        
+        // Find dependents (plugins that depend on this one)
+        const dependents = [];
+        for (const [plugin, deps] of Object.entries(dependencyGraph)) {
+            if (deps.includes(d.id)) {
+                dependents.push(plugin);
+            }
+        }
+        
+        let html = `<h3>${d.id}</h3>`;
+        
+        if (directDepIds.length > 0) {
+            html += `<p><strong>Direct Dependencies:</strong></p><ul>`;
+            directDepIds.forEach(dep => {
+                html += `<li>${dep}</li>`;
+            });
+            html += `</ul>`;
+        } else {
+            html += `<p><strong>Direct Dependencies:</strong> None</p>`;
+        }
+        
+        if (indirectDepIds.length > 0) {
+            html += `<p><strong>Indirect Dependencies:</strong></p><ul>`;
+            indirectDepIds.forEach(dep => {
+                html += `<li>${dep}</li>`;
+            });
+            html += `</ul>`;
+        }
+        
+        if (dependents.length > 0) {
+            html += `<p><strong>Used by:</strong></p><ul>`;
+            dependents.forEach(dep => {
+                html += `<li>${dep}</li>`;
+            });
+            html += `</ul>`;
+        } else {
+            html += `<p><strong>Used by:</strong> None</p>`;
+        }
+        
+        detailsDiv.innerHTML = html;
+    }
+    </script>
+</body>
+</html>

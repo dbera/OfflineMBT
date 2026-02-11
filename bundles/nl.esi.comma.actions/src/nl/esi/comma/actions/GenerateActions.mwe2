@@ -39,7 +39,6 @@ Workflow {
 			fileExtensions = "act"
 			
 			referencedResource = "platform:/resource/nl.esi.comma.expressions/model/generated/Expression.genmodel"
-			referencedResource = "platform:/resource/nl.esi.comma.signature/model/generated/InterfaceSignature.genmodel"
 			
 			serializer = {
 				generateStub = false

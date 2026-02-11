@@ -20,13 +20,8 @@ import java.util.HashSet
 import java.util.List
 import nl.esi.comma.actions.actions.ActionsPackage
 import nl.esi.comma.actions.actions.AssignmentAction
-import nl.esi.comma.actions.actions.CommandReply
-import nl.esi.comma.actions.actions.EventCall
-import nl.esi.comma.actions.actions.EventPattern
 import nl.esi.comma.actions.actions.IfAction
-import nl.esi.comma.actions.actions.InterfaceEventInstance
 import nl.esi.comma.actions.actions.Multiplicity
-import nl.esi.comma.actions.actions.PCElement
 import nl.esi.comma.actions.actions.PCFragment
 import nl.esi.comma.actions.actions.PCFragmentDefinition
 import nl.esi.comma.actions.actions.ParameterizedEvent
@@ -36,11 +31,7 @@ import nl.esi.comma.expressions.expression.ExpressionAny
 import nl.esi.comma.expressions.expression.ExpressionRecord
 import nl.esi.comma.expressions.expression.Field
 import nl.esi.comma.expressions.expression.Variable
-import nl.esi.comma.signature.interfaceSignature.Command
-import nl.esi.comma.signature.interfaceSignature.DIRECTION
 import nl.esi.comma.types.BasicTypes
-import nl.esi.comma.types.types.Type
-import nl.esi.comma.types.utilities.TypeUtilities
 import nl.esi.xtext.common.lang.base.BasePackage
 import org.eclipse.emf.ecore.EObject
 import org.eclipse.xtext.validation.Check
@@ -112,54 +103,6 @@ class ActionsValidator extends AbstractActionsValidator {
 	
 	/*
 	 * Constraints:
-	 * - if parameters are given then their number is the same as the number in the event definition
-	 * - if parameters are given then their types conform to the type in the event definition
-	 */
-	@Check
-	def checkEventInstanceParameters(InterfaceEventInstance ev){
-		if( !(ev instanceof EventPattern) || ! ev.parameters.empty){
-			if (ev.parameters.size != ev.event.parameters.size) {
-				error('The number of parameters does not match.', ev,
-					ActionsPackage.Literals.PARAMETERIZED_EVENT__PARAMETERS)
-				return
-			}
-			for(i : 0..< ev.parameters.size()){
-				val t = ev.parameters.get(i).typeOf
-				if(!t.subTypeOf(ev.event.parameters.get(i).type.typeObject)){
-					error('The type of the expression must match the type in the signature.', 
-						ev, ActionsPackage.Literals.PARAMETERIZED_EVENT__PARAMETERS, i)
-				}
-			}
-		}
-	}
-	
-	/*
-	 * Constraints:
-	 * - reply contains the values of inout or out parameters (if any) and the return value (if any)
-	 * - the size and the type of the values must match the definition
-	 */
-	def checkReplyAgainstCommand(Command c, CommandReply r){
-		var expectedTypes = new ArrayList<Type>
-		val outParams = c.parameters.filter(p | p.direction != DIRECTION::IN)
-		for(p : outParams){expectedTypes.add(p.type)}
-		if(!TypeUtilities::isVoid(c.type)) {expectedTypes.add(c.type)}
-		//Check if the number of actual params in reply are equal to the size of expectedTypes
-		if(r.parameters.size() != expectedTypes.size()){
-			error('Wrong number of values in reply.', r,
-					ActionsPackage.Literals.PARAMETERIZED_EVENT__PARAMETERS, REPLY_WRONG_NUMBER_PARAMS, null)
-			return
-		}
-		//Number of values Ok, check the types
-		for(i : 0..< r.parameters.size){
-			val expectedType = expectedTypes.get(i)?.typeObject
-			if (! r.parameters.get(i).typeOf.subTypeOf(expectedType))
-				error('The type of the value must match the return type of the command or inout/out parameter type.', r,
-					ActionsPackage.Literals.PARAMETERIZED_EVENT__PARAMETERS, i, REPLY_INVALID_TYPE, null)
-		}
-	}
-	
-	/*
-	 * Constraints:
 	 * - variable names are unique
 	 */
 	@Check
@@ -211,43 +154,8 @@ class ActionsValidator extends AbstractActionsValidator {
 		if(referencedFragments.contains(fd)){
 			error("Circular reference chain", BasePackage.Literals.NAMED_ELEMENT__NAME)
 		}
-		fd.components.filter(CommandReply).forEach[
+		fd.components.forEach[
 			error("Fragment definition cannot contain replies", ActionsPackage.Literals.PC_FRAGMENT__COMPONENTS, fd.components.indexOf(it))
 		]
-	}
-	
-	/*
-	 * Constraints:
-	 * - after performing flattening, a parallel composition body or a fragment definition:
-	 *   + does not contain overlapping event patterns
-	 *   + contains only one reply (not relevant for fragment definitions)
-	 * 
-	 * Overlapping event patterns: patterns that have a non-empty intersection of the sets with
-	 * matching events. 
-	 * Example: a(1, *) and a(*, 2) both match a(1, 2)
-	 * Rationale: ambiguity in parallel composition is not supported, that is, when a given event
-	 * is matched by more than one pattern in the parallel composition
-	 */
-	@Check
-	def checkParallelComposition(PCFragment pc){
-		val actions = pc.flatten
-		val parent = pc.eContainer
-		val index = (parent.eGet(pc.eContainingFeature) as List<EObject>).indexOf(pc)
-		
-		//Check for overlapping events
-		for(i : 0..< actions.size-1)
-		for(j : (i+1)..< actions.size){
-			val current = actions.get(i)
-			if(current instanceof EventCall){
-				if(current.overlaps(actions.get(j) as PCElement)){
-					error("Parallel composition contains overlapping events", parent, pc.eContainingFeature, index)
-				}
-			}
-		}
-		
-		//Check for single occurrence of reply
-		if(actions.filter(CommandReply).size > 1){
-			error("Parallel composition contains more than one reply", parent, pc.eContainingFeature, index)
-		}
 	}
 }
