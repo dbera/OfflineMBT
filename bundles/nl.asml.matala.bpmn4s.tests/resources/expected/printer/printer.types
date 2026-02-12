@@ -2,8 +2,43 @@ record UNIT {
 	int	unit
 }
 
+enum ColorType { MONOCHROME COLOR }
+
 record CorrectionItem {
     string	data
+}
+
+record CorrectionsReport {
+    mixed map<int,CorrectionItem[]>	correctionsMap
+    int	id
+}
+
+record FactoryCtx {
+    int	id
+    PrintResolution	resolution
+    real	scale
+    ColorType	color
+}
+
+record MeasureRequest {
+    int	id
+    symbolic Report	printJobReport
+}
+
+enum OperationType { PREP PRINT }
+
+record OptimizeRequest {
+    int	id
+}
+
+enum Outcome { OK NOK }
+
+record PrintRequest {
+    int	id
+    PrintResolution	resolution
+    real	scale
+    ColorType	color
+    OperationType	opType
 }
 
 enum PrintResolution { LOW MED HIGH }
@@ -14,42 +49,7 @@ record Report {
     symbolic real	kpi
 }
 
-record OptimizeRequest {
-    int	id
-}
-
-record MeasureRequest {
-    int	id
-    symbolic Report	printJobReport
-}
-
-record FactoryCtx {
-    int	id
-    PrintResolution	resolution
-    real	scale
-    ColorType	color
-}
-
 record Result {
     Outcome	verdict
 }
-
-record PrintRequest {
-    int	id
-    PrintResolution	resolution
-    real	scale
-    ColorType	color
-    OperationType	opType
-}
-
-record CorrectionsReport {
-    mixed map<int,CorrectionItem[]>	correctionsMap
-    int	id
-}
-
-enum Outcome { OK NOK }
-
-enum ColorType { MONOCHROME COLOR }
-
-enum OperationType { PREP PRINT }
 

@@ -2,33 +2,19 @@ record UNIT {
 	int	unit
 }
 
-record Receipt {
-    real	amount
-}
-
-enum Topping { Ketchup Mayo Onions }
-
-record Fries {
-    Size	size
-    Topping[]	style
-}
-
-enum Size { Small Medium Large Undefined }
-
 record ClientContext {
     string	client_id
     Fries	fries
     bool	premium
 }
 
-record FriesOrder {
-    string	client_id
-    Fries	fries
+record DeliveryServiceContext {
+    FriesDelivery	delivery
 }
 
-record SnackbarContext {
-    string	employee_id
-    int	orders
+record Fries {
+    Size	size
+    Topping[]	style
 }
 
 record FriesDelivery {
@@ -36,7 +22,21 @@ record FriesDelivery {
     Receipt	receipt
 }
 
-record DeliveryServiceContext {
-    FriesDelivery	delivery
+record FriesOrder {
+    string	client_id
+    Fries	fries
 }
+
+record Receipt {
+    real	amount
+}
+
+enum Size { Small Medium Large Undefined }
+
+record SnackbarContext {
+    string	employee_id
+    int	orders
+}
+
+enum Topping { Ketchup Mayo Onions }
 
