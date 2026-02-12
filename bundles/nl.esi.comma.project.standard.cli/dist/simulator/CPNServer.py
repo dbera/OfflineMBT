@@ -19,10 +19,12 @@ import json
 import shutil
 import tempfile
 import subprocess
+import threading
 
 import CPNUtils as utils
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
+from flask_sock import Sock
 
 BPMN4S_GEN = os.path.join("bpmn4s-toolchain.jar")
 JAVA_PATH  = os.path.join("jre","bin","java.exe")
@@ -33,6 +35,8 @@ sys.path.append(TEMP_PATH)
 
 # Initiating a Flask application
 app = Flask(__name__)
+sock = Sock(app)
+
 CORS(app)
 
 def build_and_load_model(model_path:str):
@@ -70,6 +74,8 @@ def build_and_load_model(model_path:str):
     # Now load the module
     module = utils.load_module(source=model_name,package=f"src-gen.{taskname}.CPNServer")
     return module, result
+
+
 
 def generate_tests( model_path:str, num_tests:int=1, depth_limit:int=500):
     
@@ -120,6 +126,63 @@ def generate_tests( model_path:str, num_tests:int=1, depth_limit:int=500):
     except Exception as e:
         print(f"An error occurred while deleting generated test: {str(e)}", file=sys.stderr)
     return zip_filename, result
+
+def bridge_lsp_to_websocket(ws, proc):
+    """Streams stdout from the LSP binary directly to the WebSocket client."""
+    try:
+        while True:
+            # Reading byte-by-byte for maximum compatibility with JSON-RPC headers
+            data = proc.stdout.read(1)
+            if not data:
+                break
+            print('out: ' +data)
+            ws.send(data)
+    except Exception as e:
+        print(f"Error reading from LSP: {e}")
+
+@app.route('/')
+def index():
+    return serve_static('index.html')
+
+# This route handles any static files in the root directory
+@app.route('/<path:path>')
+def serve_static(path):
+    if os.path.exists(os.path.join(os.path.join(__file__,'..'), 'static', path)):
+        return send_from_directory('static', path)
+    else:
+        return "File not found", 404
+        
+@sock.route('/lsp')
+def lsp_endpoint(ws):
+    """Spawns a unique LSP process per connected client."""
+    print("Client connected: Spawning isolated LSP instance...")
+    lsp_command = [JAVA_PATH,"-cp",BPMN4S_GEN, "nl.asml.matala.product.lsp.server.ProductServerLauncher", "-stdio"]
+    proc = subprocess.Popen(
+        lsp_command,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        bufsize=0  # Disables buffering for real-time interaction
+    )
+
+    # Start the server -> client thread
+    thread = threading.Thread(target=bridge_lsp_to_websocket, args=(ws, proc))
+    thread.daemon = True
+    thread.start()
+
+    try:
+        while True:
+            message = ws.receive()
+            if message:
+                # Forward client input to LSP stdin
+                print('in: ' +message)
+                proc.stdin.write(message.encode('utf-8') if isinstance(message, str) else message)
+                proc.stdin.flush()
+    except Exception as e:
+        print(f"Connection closed: {e}")
+    finally:
+        print("Terminating LSP process.")
+        proc.terminate()
 
 # The endpoint of our flask app
 @app.route(rule="/BPMNParser", methods=["POST"])
