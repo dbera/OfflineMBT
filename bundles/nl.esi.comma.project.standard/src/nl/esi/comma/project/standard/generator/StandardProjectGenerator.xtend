@@ -19,7 +19,6 @@ import com.google.inject.Inject
 import java.util.HashMap
 import nl.asml.matala.product.generator.ProductGenerator
 import nl.asml.matala.product.product.Product
-import nl.esi.comma.abstracttestspecification.generator.to.bpmn.FromAbstractToBpmn
 import nl.esi.comma.abstracttestspecification.generator.to.concrete.FromAbstractToConcrete
 import nl.esi.comma.project.standard.generator.^extension.IStandardProjectGeneratorExtension
 import nl.esi.comma.project.standard.generator.^extension.StandardProjectGeneratorContext
@@ -112,10 +111,6 @@ class StandardProjectGenerator extends AbstractGenerator {
             absTspecRes.save(null)
             // Validate the generated abstract tspec
             absTspecRes.validate()
-
-            // Generate bpmn for atspec
-//            val fromAbstractToBpmn = new FromAbstractToBpmn()
-//            fromAbstractToBpmn.doGenerate(absTspecRes, absTspecFsa, ctx)
 
             // Generate concrete tspec
             val conTspecFsa = fsa.createFolderAccess('tspec_concrete/' + tspecName)

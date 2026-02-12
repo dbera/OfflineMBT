@@ -10,19 +10,14 @@
  *
  * SPDX-License-Identifier: MIT
  */
-package nl.esi.comma.abstracttestspecification.generator.to.bpmn;
+package nl.asml.matala.generator.bpmn;
 
-import java.util.List;
+import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractStep;
 
-public class ElementDescriptor {
+public class TaskDescriptor extends ElementDescriptor {
+	public AbstractStep step;
 
-	public String id;
-	public String lane;
-
-	public ElementDescriptor(String id, String lane) {
-		super();
-		this.id = id;
-		this.lane = lane;
+	public TaskDescriptor(String id, String lane) {
+		super(id, lane);
 	}
-
 }
