@@ -1,0 +1,26 @@
+import "../../../input/imaging/imaging.types"
+
+record SetTemperature {
+    SetTemperatureInput input
+    SetTemperatureOutput output
+}
+
+record SetTemperatureInput {
+    UNIT Gateway_1qk9wqe
+    TempReq TempCMD
+    EquipmentStatus EqStatus
+    UNIT Event_13ys7sy
+    TempResp TempUpdate
+    TempResp temp_achieved
+    TempReq TempRequest
+}
+
+record SetTemperatureOutput {
+    UNIT Gateway_1qk9wqe
+    TempReq TempCMD
+    EquipmentStatus EqStatus
+    UNIT Event_13ys7sy
+    TempResp TempUpdate
+    TempResp temp_achieved
+    TempReq TempRequest
+}

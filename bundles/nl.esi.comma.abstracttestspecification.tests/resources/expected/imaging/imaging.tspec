@@ -1,0 +1,555 @@
+import "parameters/SupervisonModelSupervisionTemperatureHandler.params"
+import "parameters/SupervisonModelTemperatureController.params"
+import "parameters/SupervisonModelAcquisitionController.params"
+import "parameters/SupervisonModelPumpController.params"
+import "parameters/SupervisonModelSupervisionImaging.params"
+
+Test-Purpose    "The purpose of this test is..."
+Background      "The background of this test is..."
+
+test-sequence from_abstract_to_concrete {
+    test_single_sequence
+}
+
+step-sequence test_single_sequence {
+
+step-id    step_SupervisonModelSupervisionTemperatureHandler_ExecuteSetTemp_default_0
+step-type  SetTemperature
+step-input SupervisonModelSupervisionTemperatureHandlerInput
+ref-to-step-output
+    SupervisonModelSupervisionTemperatureHandlerInput.TempCMD.cmd_type := TempEnum::SET
+    SupervisonModelSupervisionTemperatureHandlerInput.TempCMD.id := 0
+
+assertion-id    step_SupervisonModelTemperatureController_CheckTemp_default_0
+assertion-type  TempCheck
+assertion-input SupervisonModelTemperatureControllerInput
+assertion-items {
+assertions default { 
+    
+                x: assert-that(step_SupervisonModelSupervisionTemperatureHandler_ExecuteSetTemp_default_0.output.temp_achieved.temp_val){equal-to 1}
+ }
+}
+ref-to-step-output
+    SupervisonModelTemperatureControllerInput.temp_achieved.result := ResponseEnum::OK
+    SupervisonModelTemperatureControllerInput.temp_achieved.reqid := 0
+
+step-id    step_SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_0
+step-type  ExecAcquisitionCommand
+step-input SupervisonModelAcquisitionControllerInput
+ref-to-step-output
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.cmd_type := ImageEnum::PREPARE
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.id := 0
+
+step-id    step_SupervisonModelPumpController_startpump_default_0
+step-type  ExecPumpCommand
+step-input SupervisonModelPumpControllerInput
+ref-to-step-output
+    SupervisonModelPumpControllerInput.PumpRequest.cmd_type := VacuumEnum::ON
+    SupervisonModelPumpControllerInput.PumpRequest.id := 0
+
+step-id    step_SupervisonModelAcquisitionController_StartAcquisition_default_0
+step-type  ExecAcquisitionCommand
+step-input SupervisonModelAcquisitionControllerInput
+ref-to-step-output
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.cmd_type := ImageEnum::START
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.id := 1
+
+step-id    step_SupervisonModelAcquisitionController_StopAcquisition_default_0
+step-type  ExecAcquisitionCommand
+step-input SupervisonModelAcquisitionControllerInput
+ref-to-step-output
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.cmd_type := ImageEnum::STOP
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.id := 2
+
+step-id    step_SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_1
+step-type  ExecAcquisitionCommand
+step-input SupervisonModelAcquisitionControllerInput
+ref-to-step-output
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.cmd_type := ImageEnum::UNPREPARE
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.id := 3
+
+step-id    step_SupervisonModelPumpController_stoppump_default_0
+step-type  ExecPumpCommand
+step-input SupervisonModelPumpControllerInput
+ref-to-step-output
+    SupervisonModelPumpControllerInput.PumpRequest.cmd_type := VacuumEnum::OFF
+    SupervisonModelPumpControllerInput.PumpRequest.id := 1
+
+step-id    step_SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_2
+step-type  ExecAcquisitionCommand
+step-input SupervisonModelAcquisitionControllerInput
+ref-to-step-output
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.cmd_type := ImageEnum::PREPARE
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.id := 4
+
+step-id    step_SupervisonModelPumpController_startpump_default_1
+step-type  ExecPumpCommand
+step-input SupervisonModelPumpControllerInput
+ref-to-step-output
+    SupervisonModelPumpControllerInput.PumpRequest.cmd_type := VacuumEnum::ON
+    SupervisonModelPumpControllerInput.PumpRequest.id := 2
+
+assertion-id    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_0
+assertion-type  CheckAcquisitionResult
+assertion-input SupervisonModelSupervisionImagingInput
+assertion-items {
+assertions default { 
+    
+                IQ1 : assert-that (step_SupervisonModelAcquisitionController_StopAcquisition_default_0.output.ImageData.contrast) {
+                close-to 0.5
+                }
+    
+                IQ2 : assert-that (step_SupervisonModelAcquisitionController_StopAcquisition_default_0.output.ImageData.resolution) {
+                close-to 512
+                }
+    
+                IQ3 : assert-that (step_SupervisonModelAcquisitionController_StopAcquisition_default_0.output.ImageData.signal_to_noise_ratio) {
+                close-to 0.55
+                }
+ }
+}
+ref-to-step-output
+    SupervisonModelSupervisionImagingInput.ImageData.id := 2
+
+step-id    step_SupervisonModelAcquisitionController_StartAcquisition_default_1
+step-type  ExecAcquisitionCommand
+step-input SupervisonModelAcquisitionControllerInput
+ref-to-step-output
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.cmd_type := ImageEnum::START
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.id := 5
+
+step-id    step_SupervisonModelAcquisitionController_StopAcquisition_default_1
+step-type  ExecAcquisitionCommand
+step-input SupervisonModelAcquisitionControllerInput
+ref-to-step-output
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.cmd_type := ImageEnum::STOP
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.id := 6
+
+step-id    step_SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_3
+step-type  ExecAcquisitionCommand
+step-input SupervisonModelAcquisitionControllerInput
+ref-to-step-output
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.cmd_type := ImageEnum::UNPREPARE
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.id := 7
+
+step-id    step_SupervisonModelPumpController_stoppump_default_1
+step-type  ExecPumpCommand
+step-input SupervisonModelPumpControllerInput
+ref-to-step-output
+    SupervisonModelPumpControllerInput.PumpRequest.cmd_type := VacuumEnum::OFF
+    SupervisonModelPumpControllerInput.PumpRequest.id := 3
+
+step-id    step_SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_4
+step-type  ExecAcquisitionCommand
+step-input SupervisonModelAcquisitionControllerInput
+ref-to-step-output
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.cmd_type := ImageEnum::PREPARE
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.id := 8
+
+step-id    step_SupervisonModelPumpController_startpump_default_2
+step-type  ExecPumpCommand
+step-input SupervisonModelPumpControllerInput
+ref-to-step-output
+    SupervisonModelPumpControllerInput.PumpRequest.cmd_type := VacuumEnum::ON
+    SupervisonModelPumpControllerInput.PumpRequest.id := 4
+
+assertion-id    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_1
+assertion-type  CheckAcquisitionResult
+assertion-input SupervisonModelSupervisionImagingInput
+assertion-items {
+assertions default { 
+    
+                IQ1 : assert-that (step_SupervisonModelAcquisitionController_StopAcquisition_default_1.output.ImageData.contrast) {
+                close-to 0.5
+                }
+    
+                IQ2 : assert-that (step_SupervisonModelAcquisitionController_StopAcquisition_default_1.output.ImageData.resolution) {
+                close-to 512
+                }
+    
+                IQ3 : assert-that (step_SupervisonModelAcquisitionController_StopAcquisition_default_1.output.ImageData.signal_to_noise_ratio) {
+                close-to 0.55
+                }
+ }
+}
+ref-to-step-output
+    SupervisonModelSupervisionImagingInput.ImageData.id := 6
+
+step-id    step_SupervisonModelAcquisitionController_StartAcquisition_default_2
+step-type  ExecAcquisitionCommand
+step-input SupervisonModelAcquisitionControllerInput
+ref-to-step-output
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.cmd_type := ImageEnum::START
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.id := 9
+
+step-id    step_SupervisonModelAcquisitionController_StopAcquisition_default_2
+step-type  ExecAcquisitionCommand
+step-input SupervisonModelAcquisitionControllerInput
+ref-to-step-output
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.cmd_type := ImageEnum::STOP
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.id := 10
+
+step-id    step_SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_5
+step-type  ExecAcquisitionCommand
+step-input SupervisonModelAcquisitionControllerInput
+ref-to-step-output
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.cmd_type := ImageEnum::UNPREPARE
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.id := 11
+
+step-id    step_SupervisonModelPumpController_stoppump_default_2
+step-type  ExecPumpCommand
+step-input SupervisonModelPumpControllerInput
+ref-to-step-output
+    SupervisonModelPumpControllerInput.PumpRequest.cmd_type := VacuumEnum::OFF
+    SupervisonModelPumpControllerInput.PumpRequest.id := 5
+
+step-id    step_SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_6
+step-type  ExecAcquisitionCommand
+step-input SupervisonModelAcquisitionControllerInput
+ref-to-step-output
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.cmd_type := ImageEnum::PREPARE
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.id := 12
+
+step-id    step_SupervisonModelPumpController_startpump_default_3
+step-type  ExecPumpCommand
+step-input SupervisonModelPumpControllerInput
+ref-to-step-output
+    SupervisonModelPumpControllerInput.PumpRequest.cmd_type := VacuumEnum::ON
+    SupervisonModelPumpControllerInput.PumpRequest.id := 6
+
+assertion-id    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_2
+assertion-type  CheckAcquisitionResult
+assertion-input SupervisonModelSupervisionImagingInput
+assertion-items {
+assertions default { 
+    
+                IQ1 : assert-that (step_SupervisonModelAcquisitionController_StopAcquisition_default_2.output.ImageData.contrast) {
+                close-to 0.5
+                }
+    
+                IQ2 : assert-that (step_SupervisonModelAcquisitionController_StopAcquisition_default_2.output.ImageData.resolution) {
+                close-to 512
+                }
+    
+                IQ3 : assert-that (step_SupervisonModelAcquisitionController_StopAcquisition_default_2.output.ImageData.signal_to_noise_ratio) {
+                close-to 0.55
+                }
+ }
+}
+ref-to-step-output
+    SupervisonModelSupervisionImagingInput.ImageData.id := 10
+
+step-id    step_SupervisonModelAcquisitionController_StartAcquisition_default_3
+step-type  ExecAcquisitionCommand
+step-input SupervisonModelAcquisitionControllerInput
+ref-to-step-output
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.cmd_type := ImageEnum::START
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.id := 13
+
+step-id    step_SupervisonModelAcquisitionController_StopAcquisition_default_3
+step-type  ExecAcquisitionCommand
+step-input SupervisonModelAcquisitionControllerInput
+ref-to-step-output
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.cmd_type := ImageEnum::STOP
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.id := 14
+
+step-id    step_SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_7
+step-type  ExecAcquisitionCommand
+step-input SupervisonModelAcquisitionControllerInput
+ref-to-step-output
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.cmd_type := ImageEnum::UNPREPARE
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.id := 15
+
+step-id    step_SupervisonModelPumpController_stoppump_default_3
+step-type  ExecPumpCommand
+step-input SupervisonModelPumpControllerInput
+ref-to-step-output
+    SupervisonModelPumpControllerInput.PumpRequest.cmd_type := VacuumEnum::OFF
+    SupervisonModelPumpControllerInput.PumpRequest.id := 7
+
+step-id    step_SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_8
+step-type  ExecAcquisitionCommand
+step-input SupervisonModelAcquisitionControllerInput
+ref-to-step-output
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.cmd_type := ImageEnum::PREPARE
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.id := 16
+
+step-id    step_SupervisonModelPumpController_startpump_default_4
+step-type  ExecPumpCommand
+step-input SupervisonModelPumpControllerInput
+ref-to-step-output
+    SupervisonModelPumpControllerInput.PumpRequest.cmd_type := VacuumEnum::ON
+    SupervisonModelPumpControllerInput.PumpRequest.id := 8
+
+assertion-id    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_3
+assertion-type  CheckAcquisitionResult
+assertion-input SupervisonModelSupervisionImagingInput
+assertion-items {
+assertions default { 
+    
+                IQ1 : assert-that (step_SupervisonModelAcquisitionController_StopAcquisition_default_3.output.ImageData.contrast) {
+                close-to 0.5
+                }
+    
+                IQ2 : assert-that (step_SupervisonModelAcquisitionController_StopAcquisition_default_3.output.ImageData.resolution) {
+                close-to 512
+                }
+    
+                IQ3 : assert-that (step_SupervisonModelAcquisitionController_StopAcquisition_default_3.output.ImageData.signal_to_noise_ratio) {
+                close-to 0.55
+                }
+ }
+}
+ref-to-step-output
+    SupervisonModelSupervisionImagingInput.ImageData.id := 14
+
+step-id    step_SupervisonModelAcquisitionController_StartAcquisition_default_4
+step-type  ExecAcquisitionCommand
+step-input SupervisonModelAcquisitionControllerInput
+ref-to-step-output
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.cmd_type := ImageEnum::START
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.id := 17
+
+step-id    step_SupervisonModelAcquisitionController_StopAcquisition_default_4
+step-type  ExecAcquisitionCommand
+step-input SupervisonModelAcquisitionControllerInput
+ref-to-step-output
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.cmd_type := ImageEnum::STOP
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.id := 18
+
+step-id    step_SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_9
+step-type  ExecAcquisitionCommand
+step-input SupervisonModelAcquisitionControllerInput
+ref-to-step-output
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.cmd_type := ImageEnum::UNPREPARE
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.id := 19
+
+step-id    step_SupervisonModelPumpController_stoppump_default_4
+step-type  ExecPumpCommand
+step-input SupervisonModelPumpControllerInput
+ref-to-step-output
+    SupervisonModelPumpControllerInput.PumpRequest.cmd_type := VacuumEnum::OFF
+    SupervisonModelPumpControllerInput.PumpRequest.id := 9
+
+step-id    step_SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_10
+step-type  ExecAcquisitionCommand
+step-input SupervisonModelAcquisitionControllerInput
+ref-to-step-output
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.cmd_type := ImageEnum::PREPARE
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.id := 20
+
+step-id    step_SupervisonModelPumpController_startpump_default_5
+step-type  ExecPumpCommand
+step-input SupervisonModelPumpControllerInput
+ref-to-step-output
+    SupervisonModelPumpControllerInput.PumpRequest.cmd_type := VacuumEnum::ON
+    SupervisonModelPumpControllerInput.PumpRequest.id := 10
+
+assertion-id    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_4
+assertion-type  CheckAcquisitionResult
+assertion-input SupervisonModelSupervisionImagingInput
+assertion-items {
+assertions default { 
+    
+                IQ1 : assert-that (step_SupervisonModelAcquisitionController_StopAcquisition_default_4.output.ImageData.contrast) {
+                close-to 0.5
+                }
+    
+                IQ2 : assert-that (step_SupervisonModelAcquisitionController_StopAcquisition_default_4.output.ImageData.resolution) {
+                close-to 512
+                }
+    
+                IQ3 : assert-that (step_SupervisonModelAcquisitionController_StopAcquisition_default_4.output.ImageData.signal_to_noise_ratio) {
+                close-to 0.55
+                }
+ }
+}
+ref-to-step-output
+    SupervisonModelSupervisionImagingInput.ImageData.id := 18
+
+step-id    step_SupervisonModelAcquisitionController_StartAcquisition_default_5
+step-type  ExecAcquisitionCommand
+step-input SupervisonModelAcquisitionControllerInput
+ref-to-step-output
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.cmd_type := ImageEnum::START
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.id := 21
+
+step-id    step_SupervisonModelAcquisitionController_StopAcquisition_default_5
+step-type  ExecAcquisitionCommand
+step-input SupervisonModelAcquisitionControllerInput
+ref-to-step-output
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.cmd_type := ImageEnum::STOP
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.id := 22
+
+step-id    step_SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_11
+step-type  ExecAcquisitionCommand
+step-input SupervisonModelAcquisitionControllerInput
+ref-to-step-output
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.cmd_type := ImageEnum::UNPREPARE
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.id := 23
+
+step-id    step_SupervisonModelPumpController_stoppump_default_5
+step-type  ExecPumpCommand
+step-input SupervisonModelPumpControllerInput
+ref-to-step-output
+    SupervisonModelPumpControllerInput.PumpRequest.cmd_type := VacuumEnum::OFF
+    SupervisonModelPumpControllerInput.PumpRequest.id := 11
+
+step-id    step_SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_12
+step-type  ExecAcquisitionCommand
+step-input SupervisonModelAcquisitionControllerInput
+ref-to-step-output
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.cmd_type := ImageEnum::PREPARE
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.id := 24
+
+step-id    step_SupervisonModelPumpController_startpump_default_6
+step-type  ExecPumpCommand
+step-input SupervisonModelPumpControllerInput
+ref-to-step-output
+    SupervisonModelPumpControllerInput.PumpRequest.cmd_type := VacuumEnum::ON
+    SupervisonModelPumpControllerInput.PumpRequest.id := 12
+
+assertion-id    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_5
+assertion-type  CheckAcquisitionResult
+assertion-input SupervisonModelSupervisionImagingInput
+assertion-items {
+assertions default { 
+    
+                IQ1 : assert-that (step_SupervisonModelAcquisitionController_StopAcquisition_default_5.output.ImageData.contrast) {
+                close-to 0.5
+                }
+    
+                IQ2 : assert-that (step_SupervisonModelAcquisitionController_StopAcquisition_default_5.output.ImageData.resolution) {
+                close-to 512
+                }
+    
+                IQ3 : assert-that (step_SupervisonModelAcquisitionController_StopAcquisition_default_5.output.ImageData.signal_to_noise_ratio) {
+                close-to 0.55
+                }
+ }
+}
+ref-to-step-output
+    SupervisonModelSupervisionImagingInput.ImageData.id := 22
+
+step-id    step_SupervisonModelAcquisitionController_StartAcquisition_default_6
+step-type  ExecAcquisitionCommand
+step-input SupervisonModelAcquisitionControllerInput
+ref-to-step-output
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.cmd_type := ImageEnum::START
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.id := 25
+
+step-id    step_SupervisonModelAcquisitionController_StopAcquisition_default_6
+step-type  ExecAcquisitionCommand
+step-input SupervisonModelAcquisitionControllerInput
+ref-to-step-output
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.cmd_type := ImageEnum::STOP
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.id := 26
+
+step-id    step_SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_13
+step-type  ExecAcquisitionCommand
+step-input SupervisonModelAcquisitionControllerInput
+ref-to-step-output
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.cmd_type := ImageEnum::UNPREPARE
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.id := 27
+
+step-id    step_SupervisonModelPumpController_stoppump_default_6
+step-type  ExecPumpCommand
+step-input SupervisonModelPumpControllerInput
+ref-to-step-output
+    SupervisonModelPumpControllerInput.PumpRequest.cmd_type := VacuumEnum::OFF
+    SupervisonModelPumpControllerInput.PumpRequest.id := 13
+
+step-id    step_SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_14
+step-type  ExecAcquisitionCommand
+step-input SupervisonModelAcquisitionControllerInput
+ref-to-step-output
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.cmd_type := ImageEnum::PREPARE
+    SupervisonModelAcquisitionControllerInput.AcquisitionReq.id := 28
+
+step-id    step_SupervisonModelPumpController_startpump_default_7
+step-type  ExecPumpCommand
+step-input SupervisonModelPumpControllerInput
+ref-to-step-output
+    SupervisonModelPumpControllerInput.PumpRequest.cmd_type := VacuumEnum::ON
+    SupervisonModelPumpControllerInput.PumpRequest.id := 14
+
+assertion-id    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_6
+assertion-type  CheckAcquisitionResult
+assertion-input SupervisonModelSupervisionImagingInput
+assertion-items {
+assertions default { 
+    
+                IQ1 : assert-that (step_SupervisonModelAcquisitionController_StopAcquisition_default_6.output.ImageData.contrast) {
+                close-to 0.5
+                }
+    
+                IQ2 : assert-that (step_SupervisonModelAcquisitionController_StopAcquisition_default_6.output.ImageData.resolution) {
+                close-to 512
+                }
+    
+                IQ3 : assert-that (step_SupervisonModelAcquisitionController_StopAcquisition_default_6.output.ImageData.signal_to_noise_ratio) {
+                close-to 0.55
+                }
+ }
+}
+ref-to-step-output
+    SupervisonModelSupervisionImagingInput.ImageData.id := 26
+}
+
+generate-file "./dataset/"
+
+step-parameters
+SetTemperature step_SupervisonModelSupervisionTemperatureHandler_ExecuteSetTemp_default_0
+TempCheck step_SupervisonModelTemperatureController_CheckTemp_default_0
+ExecAcquisitionCommand step_SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_0
+ExecPumpCommand step_SupervisonModelPumpController_startpump_default_0
+ExecAcquisitionCommand step_SupervisonModelAcquisitionController_StartAcquisition_default_0
+ExecAcquisitionCommand step_SupervisonModelAcquisitionController_StopAcquisition_default_0
+ExecAcquisitionCommand step_SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_1
+ExecPumpCommand step_SupervisonModelPumpController_stoppump_default_0
+ExecAcquisitionCommand step_SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_2
+ExecPumpCommand step_SupervisonModelPumpController_startpump_default_1
+CheckAcquisitionResult step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_0
+ExecAcquisitionCommand step_SupervisonModelAcquisitionController_StartAcquisition_default_1
+ExecAcquisitionCommand step_SupervisonModelAcquisitionController_StopAcquisition_default_1
+ExecAcquisitionCommand step_SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_3
+ExecPumpCommand step_SupervisonModelPumpController_stoppump_default_1
+ExecAcquisitionCommand step_SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_4
+ExecPumpCommand step_SupervisonModelPumpController_startpump_default_2
+CheckAcquisitionResult step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_1
+ExecAcquisitionCommand step_SupervisonModelAcquisitionController_StartAcquisition_default_2
+ExecAcquisitionCommand step_SupervisonModelAcquisitionController_StopAcquisition_default_2
+ExecAcquisitionCommand step_SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_5
+ExecPumpCommand step_SupervisonModelPumpController_stoppump_default_2
+ExecAcquisitionCommand step_SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_6
+ExecPumpCommand step_SupervisonModelPumpController_startpump_default_3
+CheckAcquisitionResult step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_2
+ExecAcquisitionCommand step_SupervisonModelAcquisitionController_StartAcquisition_default_3
+ExecAcquisitionCommand step_SupervisonModelAcquisitionController_StopAcquisition_default_3
+ExecAcquisitionCommand step_SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_7
+ExecPumpCommand step_SupervisonModelPumpController_stoppump_default_3
+ExecAcquisitionCommand step_SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_8
+ExecPumpCommand step_SupervisonModelPumpController_startpump_default_4
+CheckAcquisitionResult step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_3
+ExecAcquisitionCommand step_SupervisonModelAcquisitionController_StartAcquisition_default_4
+ExecAcquisitionCommand step_SupervisonModelAcquisitionController_StopAcquisition_default_4
+ExecAcquisitionCommand step_SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_9
+ExecPumpCommand step_SupervisonModelPumpController_stoppump_default_4
+ExecAcquisitionCommand step_SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_10
+ExecPumpCommand step_SupervisonModelPumpController_startpump_default_5
+CheckAcquisitionResult step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_4
+ExecAcquisitionCommand step_SupervisonModelAcquisitionController_StartAcquisition_default_5
+ExecAcquisitionCommand step_SupervisonModelAcquisitionController_StopAcquisition_default_5
+ExecAcquisitionCommand step_SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_11
+ExecPumpCommand step_SupervisonModelPumpController_stoppump_default_5
+ExecAcquisitionCommand step_SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_12
+ExecPumpCommand step_SupervisonModelPumpController_startpump_default_6
+CheckAcquisitionResult step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_5
+ExecAcquisitionCommand step_SupervisonModelAcquisitionController_StartAcquisition_default_6
+ExecAcquisitionCommand step_SupervisonModelAcquisitionController_StopAcquisition_default_6
+ExecAcquisitionCommand step_SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_13
+ExecPumpCommand step_SupervisonModelPumpController_stoppump_default_6
+ExecAcquisitionCommand step_SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_14
+ExecPumpCommand step_SupervisonModelPumpController_startpump_default_7
+CheckAcquisitionResult step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_6
+

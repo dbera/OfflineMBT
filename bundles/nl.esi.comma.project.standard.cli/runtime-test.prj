@@ -10,10 +10,15 @@
  *
  * SPDX-License-Identifier: MIT
  */
-Project Printer {
-	Generate Tests {
-		printer {
-			bpmn-file "../nl.asml.matala.bpmn4s.tests/resources/input/printer.bpmn"
-		}
-	} 
+Project RuntimeTest {
+    Generate Tests {
+        printer {
+            bpmn-file "../nl.asml.matala.bpmn4s.tests/resources/input/printer.bpmn"
+        }
+    }
+    Generate Tests {
+        imaging {
+            bpmn-file "../nl.asml.matala.bpmn4s.tests/resources/input/imaging.bpmn"
+        }
+    }
 }
