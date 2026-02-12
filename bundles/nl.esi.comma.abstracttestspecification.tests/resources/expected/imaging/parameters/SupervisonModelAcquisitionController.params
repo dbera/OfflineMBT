@@ -1,0 +1,12 @@
+import "../types/SupervisonModelAcquisitionController.types"
+
+data-instances
+ExecAcquisitionCommandInput SupervisonModelAcquisitionControllerInput
+ExecAcquisitionCommandOutput SupervisonModelAcquisitionControllerOutput
+
+data-implementation
+// Empty
+
+path-prefix "./dataset/"
+var-ref SupervisonModelAcquisitionControllerInput -> file-name "SupervisonModelAcquisitionControllerInput.json"
+var-ref SupervisonModelAcquisitionControllerOutput -> file-name "SupervisonModelAcquisitionControllerOutput.json"

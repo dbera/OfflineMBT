@@ -10,7 +10,7 @@
  *
  * SPDX-License-Identifier: MIT
  */
-package nl.esi.comma.abstracttestspecification.generator.to.bpmn;
+package nl.asml.matala.generator.bpmn;
 
 import java.util.List;
 

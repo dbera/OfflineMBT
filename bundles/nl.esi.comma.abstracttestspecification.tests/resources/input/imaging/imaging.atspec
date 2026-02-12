@@ -1,0 +1,2087 @@
+import "imaging.ps"
+
+using imaging.SupervisonModelSupervisionImagePreparation.ImagingRequest
+using imaging.SupervisonModelSupervisionImagePreparation.AcqUpdate
+using imaging.SupervisonModelSupervisionImagePreparation.EqStatus
+using imaging.SupervisonModelSupervisionImagePreparation.ImagingUpdate
+using imaging.SupervisonModelSupervisionImagePreparation.AcquisitionReq
+using imaging.SupervisonModelSupervisionImagePreparation.Gateway_102q82v
+using imaging.SupervisonModelSupervisionImagePreparation.Flow_0kkvgdv
+using imaging.SupervisonModelSupervisionImagePreparation.Flow_1kpcqqf
+using imaging.SupervisonModelPumpController.PumpRequest
+using imaging.SupervisonModelPumpController.PumpUpdate
+using imaging.SupervisonModelPumpController.Gateway_0td58pc
+using imaging.SupervisonModelPumpController.Flow_0x0gs9b
+using imaging.SupervisonModelPumpController.Flow_104f6k4
+using imaging.SupervisonModelImagingController.Gateway_0i3nw09
+using imaging.SupervisonModelImagingController.Gateway_0gu94f4
+using imaging.SupervisonModelImagingController.Gateway_0kvhy0o
+using imaging.SupervisonModelImagingController.Gateway_08l0os0
+using imaging.SupervisonModelImagingController.Gateway_0xpxevh
+using imaging.SupervisonModelImagingController.Flow_1k04xzh
+using imaging.SupervisonModelImagingController.Flow_029nrs5
+using imaging.SupervisonModelImagingController.Flow_0ncxpgd
+using imaging.SupervisonModelImagingController.Flow_05szwsj
+using imaging.SupervisonModelSupervisionPressureHandler.VacuumRequest
+using imaging.SupervisonModelSupervisionPressureHandler.VacuumUpdate
+using imaging.SupervisonModelSupervisionPressureHandler.Gateway_1i0qy9g
+using imaging.SupervisonModelSupervisionPressureHandler.Gateway_1j81da5
+using imaging.SupervisonModelSupervisionPressureHandler.Flow_1wguswc
+using imaging.SupervisonModelSupervisionPressureHandler.Flow_0balrow
+using imaging.SupervisonModelSupervisionPressureHandler.Flow_0cjhiik
+using imaging.SupervisonModelTemperatureController.TempUpdate
+using imaging.SupervisonModelTemperatureController.temp_achieved
+using imaging.SupervisonModelTemperatureController.TempRequest
+using imaging.SupervisonModelTemperatureController.Gateway_1sv33t8
+using imaging.SupervisonModelTemperatureController.Gateway_12yhscn
+using imaging.SupervisonModelTemperatureController.Event_1r2zvr6
+using imaging.SupervisonModelTemperatureController.Flow_0estwso
+using imaging.SupervisonModelTemperatureController.Flow_0ay6jpo
+using imaging.SupervisonModelTemperatureController.Flow_01g3o4k
+using imaging.SupervisonModelVacuumController.Gateway_0mqr7c2
+using imaging.SupervisonModelVacuumController.Gateway_07w0e8f
+using imaging.SupervisonModelVacuumController.Flow_1phqrfh
+using imaging.SupervisonModelVacuumController.Flow_1erv6vq
+using imaging.SupervisonModelVacuumController.Flow_1dvvja5
+using imaging.SupervisonModelAcquisitionController.ImageData
+using imaging.SupervisonModelAcquisitionController.Gateway_0h81kts
+using imaging.SupervisonModelAcquisitionController.Flow_084nmm6
+using imaging.SupervisonModelAcquisitionController.Flow_1rusz82
+using imaging.SupervisonModelAcquisitionController.Flow_1w9tlf4
+using imaging.SupervisonModelSupervisionImaging.LastAcqReq
+using imaging.SupervisonModelSupervisionImaging.Gateway_16m9e4j
+using imaging.SupervisonModelSupervisionImaging.Gateway_0qg69ul
+using imaging.SupervisonModelSupervisionImaging.Flow_0678bm1
+using imaging.SupervisonModelSupervisionImaging.Flow_1bajtwc
+using imaging.SupervisonModelSupervisionTemperatureHandler.TempCMD
+using imaging.SupervisonModelSupervisionTemperatureHandler.Gateway_1qk9wqe
+using imaging.SupervisonModelSupervisionTemperatureHandler.Event_13ys7sy
+
+abstract-test-definition
+
+Test-Scenario: S1
+
+compose-step-name: SupervisonModelSupervisionTemperatureHandler_CreateSetTempMessage_default_0
+action-case: imaging.SupervisonModelSupervisionTemperatureHandler.CreateSetTempMessage.default
+input-binding:
+TempRequest : {
+    "cmd_type": "TempEnum::SET",
+    "id": 0
+}
+output-data:
+Gateway_1qk9wqe : {
+    "unit": 0
+}
+TempCMD : {
+    "cmd_type": "TempEnum::SET",
+    "id": 0
+}
+suppress(Gateway_1qk9wqe)
+
+run-step-name: SupervisonModelSupervisionTemperatureHandler_ExecuteSetTemp_default_0 step-type: "SetTemperature"
+action-case: imaging.SupervisonModelSupervisionTemperatureHandler.ExecuteSetTemp.default
+consumes-from-step: SupervisonModelSupervisionTemperatureHandler_CreateSetTempMessage_default_0 { TempCMD  }
+input-binding:
+Gateway_1qk9wqe : {
+    "unit": 0
+}
+TempCMD : {
+    "cmd_type": "TempEnum::SET",
+    "id": 0
+}
+EqStatus : {
+    "acq_status": "Status::OFF",
+    "pump_status": "Status::OFF",
+    "temp_status": "Status::OFF"
+}
+output-data:
+Event_13ys7sy : {
+    "unit": 0
+}
+TempUpdate : {
+    "reqid": 0,
+    "result": "ResponseEnum::OK"
+}
+temp_achieved : {
+    "reqid": 0,
+    "result": "ResponseEnum::OK"
+}
+EqStatus : {
+    "acq_status": "Status::OFF",
+    "pump_status": "Status::OFF",
+    "temp_status": "Status::ON"
+}
+suppress(Event_13ys7sy)
+
+compose-step-name: SupervisonModelSupervisionImagePreparation_Prepare_default_0
+action-case: imaging.SupervisonModelSupervisionImagePreparation.Prepare.default
+consumes-from-step: SupervisonModelSupervisionTemperatureHandler_ExecuteSetTemp_default_0 { EqStatus  }
+input-binding:
+ImagingRequest : {
+    "cmd_type": "ImageEnum::PREPARE",
+    "id": 0,
+    "image_quality": "ImageQuality::NA"
+}
+EqStatus : {
+    "acq_status": "Status::OFF",
+    "pump_status": "Status::OFF",
+    "temp_status": "Status::ON"
+}
+output-data:
+Flow_0kkvgdv : {
+    "unit": 0
+}
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::PREPARE",
+    "id": 0
+}
+EqStatus : {
+    "acq_status": "Status::OFF",
+    "pump_status": "Status::OFF",
+    "temp_status": "Status::ON"
+}
+suppress(Flow_0kkvgdv, EqStatus)
+
+assert-step-name: SupervisonModelTemperatureController_CheckTemp_default_0 assert-type: "TempCheck"
+action-case: imaging.SupervisonModelTemperatureController.CheckTemp.default
+consumes-from-step: SupervisonModelSupervisionTemperatureHandler_ExecuteSetTemp_default_0 { temp_achieved  }
+input-binding:
+Gateway_1sv33t8 : {
+    "id": 1
+}
+temp_achieved : {
+    "reqid": 0,
+    "result": "ResponseEnum::OK"
+}
+output-data:
+Flow_01g3o4k : {
+    "id": 1
+}
+output-assertion: SupervisonModelSupervisionTemperatureHandler_ExecuteSetTemp_default_0
+imaging.SupervisonModelTemperatureController.CheckTemp.default.default
+
+run-step-name: SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_0 step-type: "ExecAcquisitionCommand"
+action-case: imaging.SupervisonModelAcquisitionController.Execacquisitioninitandteardown.default
+consumes-from-step: SupervisonModelSupervisionImagePreparation_Prepare_default_0 { AcquisitionReq  }
+input-binding:
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::PREPARE",
+    "id": 0
+}
+output-data:
+Flow_084nmm6 : {
+    "id": 0
+}
+
+compose-step-name: SupervisonModelSupervisionPressureHandler_StartPump_default_0
+action-case: imaging.SupervisonModelSupervisionPressureHandler.StartPump.default
+input-binding:
+Gateway_1j81da5 : {
+    "id": 0
+}
+VacuumRequest : {
+    "cmd_type": "VacuumEnum::ON",
+    "id": 0
+}
+EqStatus : {
+    "acq_status": "Status::PREPARING",
+    "pump_status": "Status::OFF",
+    "temp_status": "Status::ON"
+}
+output-data:
+Flow_0balrow : {
+    "id": 0
+}
+PumpRequest : {
+    "cmd_type": "VacuumEnum::ON",
+    "id": 0
+}
+EqStatus : {
+    "acq_status": "Status::PREPARING",
+    "pump_status": "Status::OFF",
+    "temp_status": "Status::ON"
+}
+suppress(EqStatus)
+
+run-step-name: SupervisonModelPumpController_startpump_default_0 step-type: "ExecPumpCommand"
+action-case: imaging.SupervisonModelPumpController.startpump.default
+consumes-from-step: SupervisonModelSupervisionPressureHandler_StartPump_default_0 { PumpRequest  }
+input-binding:
+PumpRequest : {
+    "cmd_type": "VacuumEnum::ON",
+    "id": 0
+}
+output-data:
+Flow_0x0gs9b : {
+    "id": 0
+}
+
+compose-step-name: SupervisonModelSupervisionImaging_StartAcquisition_default_0
+action-case: imaging.SupervisonModelSupervisionImaging.StartAcquisition.default
+input-binding:
+ImagingRequest : {
+    "cmd_type": "ImageEnum::START",
+    "id": 1,
+    "image_quality": "ImageQuality::LOW"
+}
+EqStatus : {
+    "acq_status": "Status::PREPARING",
+    "pump_status": "Status::ON",
+    "temp_status": "Status::ON"
+}
+output-data:
+Flow_1bajtwc : {
+    "unit": 0
+}
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::START",
+    "id": 1
+}
+LastAcqReq : {
+    "cmd_type": "ImageEnum::START",
+    "id": 1,
+    "image_quality": "ImageQuality::LOW"
+}
+EqStatus : {
+    "acq_status": "Status::PREPARING",
+    "pump_status": "Status::ON",
+    "temp_status": "Status::ON"
+}
+suppress(Flow_1bajtwc, EqStatus)
+
+run-step-name: SupervisonModelAcquisitionController_StartAcquisition_default_0 step-type: "ExecAcquisitionCommand"
+action-case: imaging.SupervisonModelAcquisitionController.StartAcquisition.default
+consumes-from-step: SupervisonModelSupervisionImaging_StartAcquisition_default_0 { AcquisitionReq  }
+input-binding:
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::START",
+    "id": 1
+}
+output-data:
+Flow_1rusz82 : {
+    "id": 1
+}
+
+compose-step-name: SupervisonModelSupervisionImaging_StopAcquisition_default_0
+action-case: imaging.SupervisonModelSupervisionImaging.StopAcquisition.default
+input-binding:
+ImagingRequest : {
+    "cmd_type": "ImageEnum::STOP",
+    "id": 2,
+    "image_quality": "ImageQuality::NA"
+}
+output-data:
+Flow_0678bm1 : {
+    "unit": 0
+}
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::STOP",
+    "id": 2
+}
+suppress(Flow_0678bm1)
+
+run-step-name: SupervisonModelAcquisitionController_StopAcquisition_default_0 step-type: "ExecAcquisitionCommand"
+action-case: imaging.SupervisonModelAcquisitionController.StopAcquisition.default
+consumes-from-step: SupervisonModelSupervisionImaging_StopAcquisition_default_0 { AcquisitionReq  }
+input-binding:
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::STOP",
+    "id": 2
+}
+output-data:
+Flow_1w9tlf4 : {
+    "id": 2
+}
+ImageData : {
+    "id": 2
+}
+
+compose-step-name: SupervisonModelSupervisionImagePreparation_Unprepare_default_0
+action-case: imaging.SupervisonModelSupervisionImagePreparation.Unprepare.default
+input-binding:
+ImagingRequest : {
+    "cmd_type": "ImageEnum::UNPREPARE",
+    "id": 3,
+    "image_quality": "ImageQuality::NA"
+}
+output-data:
+Flow_1kpcqqf : {
+    "unit": 0
+}
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::UNPREPARE",
+    "id": 3
+}
+suppress(Flow_1kpcqqf)
+
+run-step-name: SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_1 step-type: "ExecAcquisitionCommand"
+action-case: imaging.SupervisonModelAcquisitionController.Execacquisitioninitandteardown.default
+consumes-from-step: SupervisonModelSupervisionImagePreparation_Unprepare_default_0 { AcquisitionReq  }
+input-binding:
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::UNPREPARE",
+    "id": 3
+}
+output-data:
+Flow_084nmm6 : {
+    "id": 3
+}
+
+compose-step-name: SupervisonModelSupervisionImagePreparation_Prepare_default_1
+action-case: imaging.SupervisonModelSupervisionImagePreparation.Prepare.default
+input-binding:
+ImagingRequest : {
+    "cmd_type": "ImageEnum::PREPARE",
+    "id": 4,
+    "image_quality": "ImageQuality::NA"
+}
+EqStatus : {
+    "acq_status": "Status::UNPREPARING",
+    "pump_status": "Status::ON",
+    "temp_status": "Status::ON"
+}
+output-data:
+Flow_0kkvgdv : {
+    "unit": 0
+}
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::PREPARE",
+    "id": 4
+}
+EqStatus : {
+    "acq_status": "Status::UNPREPARING",
+    "pump_status": "Status::ON",
+    "temp_status": "Status::ON"
+}
+suppress(Flow_0kkvgdv, EqStatus)
+
+compose-step-name: SupervisonModelSupervisionPressureHandler_TurnOffPump_default_0
+action-case: imaging.SupervisonModelSupervisionPressureHandler.TurnOffPump.default
+input-binding:
+Flow_1wguswc : {
+    "id": 0
+}
+VacuumRequest : {
+    "cmd_type": "VacuumEnum::OFF",
+    "id": 1
+}
+EqStatus : {
+    "acq_status": "Status::UNPREPARING",
+    "pump_status": "Status::ON",
+    "temp_status": "Status::ON"
+}
+output-data:
+Flow_0cjhiik : {
+    "id": 0
+}
+PumpRequest : {
+    "cmd_type": "VacuumEnum::OFF",
+    "id": 1
+}
+EqStatus : {
+    "acq_status": "Status::UNPREPARING",
+    "pump_status": "Status::ON",
+    "temp_status": "Status::ON"
+}
+suppress(EqStatus)
+
+run-step-name: SupervisonModelPumpController_stoppump_default_0 step-type: "ExecPumpCommand"
+action-case: imaging.SupervisonModelPumpController.stoppump.default
+consumes-from-step: SupervisonModelSupervisionPressureHandler_TurnOffPump_default_0 { PumpRequest  }
+input-binding:
+PumpRequest : {
+    "cmd_type": "VacuumEnum::OFF",
+    "id": 1
+}
+output-data:
+Flow_104f6k4 : {
+    "id": 1
+}
+
+run-step-name: SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_2 step-type: "ExecAcquisitionCommand"
+action-case: imaging.SupervisonModelAcquisitionController.Execacquisitioninitandteardown.default
+consumes-from-step: SupervisonModelSupervisionImagePreparation_Prepare_default_1 { AcquisitionReq  }
+input-binding:
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::PREPARE",
+    "id": 4
+}
+output-data:
+Flow_084nmm6 : {
+    "id": 4
+}
+
+compose-step-name: SupervisonModelSupervisionPressureHandler_StartPump_default_1
+action-case: imaging.SupervisonModelSupervisionPressureHandler.StartPump.default
+input-binding:
+Gateway_1j81da5 : {
+    "id": 0
+}
+VacuumRequest : {
+    "cmd_type": "VacuumEnum::ON",
+    "id": 2
+}
+EqStatus : {
+    "acq_status": "Status::PREPARING",
+    "pump_status": "Status::OFF",
+    "temp_status": "Status::ON"
+}
+output-data:
+Flow_0balrow : {
+    "id": 0
+}
+PumpRequest : {
+    "cmd_type": "VacuumEnum::ON",
+    "id": 2
+}
+EqStatus : {
+    "acq_status": "Status::PREPARING",
+    "pump_status": "Status::OFF",
+    "temp_status": "Status::ON"
+}
+suppress(EqStatus)
+
+run-step-name: SupervisonModelPumpController_startpump_default_1 step-type: "ExecPumpCommand"
+action-case: imaging.SupervisonModelPumpController.startpump.default
+consumes-from-step: SupervisonModelSupervisionPressureHandler_StartPump_default_1 { PumpRequest  }
+input-binding:
+PumpRequest : {
+    "cmd_type": "VacuumEnum::ON",
+    "id": 2
+}
+output-data:
+Flow_0x0gs9b : {
+    "id": 2
+}
+
+assert-step-name: SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_0 assert-type: "CheckAcquisitionResult"
+action-case: imaging.SupervisonModelSupervisionImaging.CheckLowResImageQuality.default
+consumes-from-step: SupervisonModelSupervisionImaging_StartAcquisition_default_0 { LastAcqReq  }
+consumes-from-step: SupervisonModelAcquisitionController_StopAcquisition_default_0 { ImageData  }
+input-binding:
+Gateway_16m9e4j : {
+    "unit": 0
+}
+ImageData : {
+    "id": 2
+}
+LastAcqReq : {
+    "cmd_type": "ImageEnum::START",
+    "id": 1,
+    "image_quality": "ImageQuality::LOW"
+}
+output-data:
+Gateway_0qg69ul : {
+    "unit": 0
+}
+suppress(Gateway_0qg69ul)
+output-assertion: SupervisonModelAcquisitionController_StopAcquisition_default_0
+imaging.SupervisonModelSupervisionImaging.CheckLowResImageQuality.default.default
+
+compose-step-name: SupervisonModelSupervisionImaging_StartAcquisition_default_1
+action-case: imaging.SupervisonModelSupervisionImaging.StartAcquisition.default
+input-binding:
+ImagingRequest : {
+    "cmd_type": "ImageEnum::START",
+    "id": 5,
+    "image_quality": "ImageQuality::LOW"
+}
+EqStatus : {
+    "acq_status": "Status::PREPARING",
+    "pump_status": "Status::ON",
+    "temp_status": "Status::ON"
+}
+output-data:
+Flow_1bajtwc : {
+    "unit": 0
+}
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::START",
+    "id": 5
+}
+LastAcqReq : {
+    "cmd_type": "ImageEnum::START",
+    "id": 5,
+    "image_quality": "ImageQuality::LOW"
+}
+EqStatus : {
+    "acq_status": "Status::PREPARING",
+    "pump_status": "Status::ON",
+    "temp_status": "Status::ON"
+}
+suppress(Flow_1bajtwc, EqStatus)
+
+run-step-name: SupervisonModelAcquisitionController_StartAcquisition_default_1 step-type: "ExecAcquisitionCommand"
+action-case: imaging.SupervisonModelAcquisitionController.StartAcquisition.default
+consumes-from-step: SupervisonModelSupervisionImaging_StartAcquisition_default_1 { AcquisitionReq  }
+input-binding:
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::START",
+    "id": 5
+}
+output-data:
+Flow_1rusz82 : {
+    "id": 5
+}
+
+compose-step-name: SupervisonModelSupervisionImaging_StopAcquisition_default_1
+action-case: imaging.SupervisonModelSupervisionImaging.StopAcquisition.default
+input-binding:
+ImagingRequest : {
+    "cmd_type": "ImageEnum::STOP",
+    "id": 6,
+    "image_quality": "ImageQuality::NA"
+}
+output-data:
+Flow_0678bm1 : {
+    "unit": 0
+}
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::STOP",
+    "id": 6
+}
+suppress(Flow_0678bm1)
+
+run-step-name: SupervisonModelAcquisitionController_StopAcquisition_default_1 step-type: "ExecAcquisitionCommand"
+action-case: imaging.SupervisonModelAcquisitionController.StopAcquisition.default
+consumes-from-step: SupervisonModelSupervisionImaging_StopAcquisition_default_1 { AcquisitionReq  }
+input-binding:
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::STOP",
+    "id": 6
+}
+output-data:
+Flow_1w9tlf4 : {
+    "id": 6
+}
+ImageData : {
+    "id": 6
+}
+
+compose-step-name: SupervisonModelSupervisionImagePreparation_Unprepare_default_1
+action-case: imaging.SupervisonModelSupervisionImagePreparation.Unprepare.default
+input-binding:
+ImagingRequest : {
+    "cmd_type": "ImageEnum::UNPREPARE",
+    "id": 7,
+    "image_quality": "ImageQuality::NA"
+}
+output-data:
+Flow_1kpcqqf : {
+    "unit": 0
+}
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::UNPREPARE",
+    "id": 7
+}
+suppress(Flow_1kpcqqf)
+
+run-step-name: SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_3 step-type: "ExecAcquisitionCommand"
+action-case: imaging.SupervisonModelAcquisitionController.Execacquisitioninitandteardown.default
+consumes-from-step: SupervisonModelSupervisionImagePreparation_Unprepare_default_1 { AcquisitionReq  }
+input-binding:
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::UNPREPARE",
+    "id": 7
+}
+output-data:
+Flow_084nmm6 : {
+    "id": 7
+}
+
+compose-step-name: SupervisonModelSupervisionImagePreparation_Prepare_default_2
+action-case: imaging.SupervisonModelSupervisionImagePreparation.Prepare.default
+input-binding:
+ImagingRequest : {
+    "cmd_type": "ImageEnum::PREPARE",
+    "id": 8,
+    "image_quality": "ImageQuality::NA"
+}
+EqStatus : {
+    "acq_status": "Status::UNPREPARING",
+    "pump_status": "Status::ON",
+    "temp_status": "Status::ON"
+}
+output-data:
+Flow_0kkvgdv : {
+    "unit": 0
+}
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::PREPARE",
+    "id": 8
+}
+EqStatus : {
+    "acq_status": "Status::UNPREPARING",
+    "pump_status": "Status::ON",
+    "temp_status": "Status::ON"
+}
+suppress(Flow_0kkvgdv, EqStatus)
+
+compose-step-name: SupervisonModelSupervisionPressureHandler_TurnOffPump_default_1
+action-case: imaging.SupervisonModelSupervisionPressureHandler.TurnOffPump.default
+input-binding:
+Flow_1wguswc : {
+    "id": 0
+}
+VacuumRequest : {
+    "cmd_type": "VacuumEnum::OFF",
+    "id": 3
+}
+EqStatus : {
+    "acq_status": "Status::UNPREPARING",
+    "pump_status": "Status::ON",
+    "temp_status": "Status::ON"
+}
+output-data:
+Flow_0cjhiik : {
+    "id": 0
+}
+PumpRequest : {
+    "cmd_type": "VacuumEnum::OFF",
+    "id": 3
+}
+EqStatus : {
+    "acq_status": "Status::UNPREPARING",
+    "pump_status": "Status::ON",
+    "temp_status": "Status::ON"
+}
+suppress(EqStatus)
+
+run-step-name: SupervisonModelPumpController_stoppump_default_1 step-type: "ExecPumpCommand"
+action-case: imaging.SupervisonModelPumpController.stoppump.default
+consumes-from-step: SupervisonModelSupervisionPressureHandler_TurnOffPump_default_1 { PumpRequest  }
+input-binding:
+PumpRequest : {
+    "cmd_type": "VacuumEnum::OFF",
+    "id": 3
+}
+output-data:
+Flow_104f6k4 : {
+    "id": 3
+}
+
+run-step-name: SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_4 step-type: "ExecAcquisitionCommand"
+action-case: imaging.SupervisonModelAcquisitionController.Execacquisitioninitandteardown.default
+consumes-from-step: SupervisonModelSupervisionImagePreparation_Prepare_default_2 { AcquisitionReq  }
+input-binding:
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::PREPARE",
+    "id": 8
+}
+output-data:
+Flow_084nmm6 : {
+    "id": 8
+}
+
+compose-step-name: SupervisonModelSupervisionPressureHandler_StartPump_default_2
+action-case: imaging.SupervisonModelSupervisionPressureHandler.StartPump.default
+input-binding:
+Gateway_1j81da5 : {
+    "id": 0
+}
+VacuumRequest : {
+    "cmd_type": "VacuumEnum::ON",
+    "id": 4
+}
+EqStatus : {
+    "acq_status": "Status::PREPARING",
+    "pump_status": "Status::OFF",
+    "temp_status": "Status::ON"
+}
+output-data:
+Flow_0balrow : {
+    "id": 0
+}
+PumpRequest : {
+    "cmd_type": "VacuumEnum::ON",
+    "id": 4
+}
+EqStatus : {
+    "acq_status": "Status::PREPARING",
+    "pump_status": "Status::OFF",
+    "temp_status": "Status::ON"
+}
+suppress(EqStatus)
+
+run-step-name: SupervisonModelPumpController_startpump_default_2 step-type: "ExecPumpCommand"
+action-case: imaging.SupervisonModelPumpController.startpump.default
+consumes-from-step: SupervisonModelSupervisionPressureHandler_StartPump_default_2 { PumpRequest  }
+input-binding:
+PumpRequest : {
+    "cmd_type": "VacuumEnum::ON",
+    "id": 4
+}
+output-data:
+Flow_0x0gs9b : {
+    "id": 4
+}
+
+assert-step-name: SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_1 assert-type: "CheckAcquisitionResult"
+action-case: imaging.SupervisonModelSupervisionImaging.CheckLowResImageQuality.default
+consumes-from-step: SupervisonModelSupervisionImaging_StartAcquisition_default_1 { LastAcqReq  }
+consumes-from-step: SupervisonModelAcquisitionController_StopAcquisition_default_1 { ImageData  }
+input-binding:
+Gateway_16m9e4j : {
+    "unit": 0
+}
+ImageData : {
+    "id": 6
+}
+LastAcqReq : {
+    "cmd_type": "ImageEnum::START",
+    "id": 5,
+    "image_quality": "ImageQuality::LOW"
+}
+output-data:
+Gateway_0qg69ul : {
+    "unit": 0
+}
+suppress(Gateway_0qg69ul)
+output-assertion: SupervisonModelAcquisitionController_StopAcquisition_default_1
+imaging.SupervisonModelSupervisionImaging.CheckLowResImageQuality.default.default
+
+compose-step-name: SupervisonModelSupervisionImaging_StartAcquisition_default_2
+action-case: imaging.SupervisonModelSupervisionImaging.StartAcquisition.default
+input-binding:
+ImagingRequest : {
+    "cmd_type": "ImageEnum::START",
+    "id": 9,
+    "image_quality": "ImageQuality::LOW"
+}
+EqStatus : {
+    "acq_status": "Status::PREPARING",
+    "pump_status": "Status::ON",
+    "temp_status": "Status::ON"
+}
+output-data:
+Flow_1bajtwc : {
+    "unit": 0
+}
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::START",
+    "id": 9
+}
+LastAcqReq : {
+    "cmd_type": "ImageEnum::START",
+    "id": 9,
+    "image_quality": "ImageQuality::LOW"
+}
+EqStatus : {
+    "acq_status": "Status::PREPARING",
+    "pump_status": "Status::ON",
+    "temp_status": "Status::ON"
+}
+suppress(Flow_1bajtwc, EqStatus)
+
+run-step-name: SupervisonModelAcquisitionController_StartAcquisition_default_2 step-type: "ExecAcquisitionCommand"
+action-case: imaging.SupervisonModelAcquisitionController.StartAcquisition.default
+consumes-from-step: SupervisonModelSupervisionImaging_StartAcquisition_default_2 { AcquisitionReq  }
+input-binding:
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::START",
+    "id": 9
+}
+output-data:
+Flow_1rusz82 : {
+    "id": 9
+}
+
+compose-step-name: SupervisonModelSupervisionImaging_StopAcquisition_default_2
+action-case: imaging.SupervisonModelSupervisionImaging.StopAcquisition.default
+input-binding:
+ImagingRequest : {
+    "cmd_type": "ImageEnum::STOP",
+    "id": 10,
+    "image_quality": "ImageQuality::NA"
+}
+output-data:
+Flow_0678bm1 : {
+    "unit": 0
+}
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::STOP",
+    "id": 10
+}
+suppress(Flow_0678bm1)
+
+run-step-name: SupervisonModelAcquisitionController_StopAcquisition_default_2 step-type: "ExecAcquisitionCommand"
+action-case: imaging.SupervisonModelAcquisitionController.StopAcquisition.default
+consumes-from-step: SupervisonModelSupervisionImaging_StopAcquisition_default_2 { AcquisitionReq  }
+input-binding:
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::STOP",
+    "id": 10
+}
+output-data:
+Flow_1w9tlf4 : {
+    "id": 10
+}
+ImageData : {
+    "id": 10
+}
+
+compose-step-name: SupervisonModelSupervisionImagePreparation_Unprepare_default_2
+action-case: imaging.SupervisonModelSupervisionImagePreparation.Unprepare.default
+input-binding:
+ImagingRequest : {
+    "cmd_type": "ImageEnum::UNPREPARE",
+    "id": 11,
+    "image_quality": "ImageQuality::NA"
+}
+output-data:
+Flow_1kpcqqf : {
+    "unit": 0
+}
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::UNPREPARE",
+    "id": 11
+}
+suppress(Flow_1kpcqqf)
+
+run-step-name: SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_5 step-type: "ExecAcquisitionCommand"
+action-case: imaging.SupervisonModelAcquisitionController.Execacquisitioninitandteardown.default
+consumes-from-step: SupervisonModelSupervisionImagePreparation_Unprepare_default_2 { AcquisitionReq  }
+input-binding:
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::UNPREPARE",
+    "id": 11
+}
+output-data:
+Flow_084nmm6 : {
+    "id": 11
+}
+
+compose-step-name: SupervisonModelSupervisionImagePreparation_Prepare_default_3
+action-case: imaging.SupervisonModelSupervisionImagePreparation.Prepare.default
+input-binding:
+ImagingRequest : {
+    "cmd_type": "ImageEnum::PREPARE",
+    "id": 12,
+    "image_quality": "ImageQuality::NA"
+}
+EqStatus : {
+    "acq_status": "Status::UNPREPARING",
+    "pump_status": "Status::ON",
+    "temp_status": "Status::ON"
+}
+output-data:
+Flow_0kkvgdv : {
+    "unit": 0
+}
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::PREPARE",
+    "id": 12
+}
+EqStatus : {
+    "acq_status": "Status::UNPREPARING",
+    "pump_status": "Status::ON",
+    "temp_status": "Status::ON"
+}
+suppress(Flow_0kkvgdv, EqStatus)
+
+compose-step-name: SupervisonModelSupervisionPressureHandler_TurnOffPump_default_2
+action-case: imaging.SupervisonModelSupervisionPressureHandler.TurnOffPump.default
+input-binding:
+Flow_1wguswc : {
+    "id": 0
+}
+VacuumRequest : {
+    "cmd_type": "VacuumEnum::OFF",
+    "id": 5
+}
+EqStatus : {
+    "acq_status": "Status::UNPREPARING",
+    "pump_status": "Status::ON",
+    "temp_status": "Status::ON"
+}
+output-data:
+Flow_0cjhiik : {
+    "id": 0
+}
+PumpRequest : {
+    "cmd_type": "VacuumEnum::OFF",
+    "id": 5
+}
+EqStatus : {
+    "acq_status": "Status::UNPREPARING",
+    "pump_status": "Status::ON",
+    "temp_status": "Status::ON"
+}
+suppress(EqStatus)
+
+run-step-name: SupervisonModelPumpController_stoppump_default_2 step-type: "ExecPumpCommand"
+action-case: imaging.SupervisonModelPumpController.stoppump.default
+consumes-from-step: SupervisonModelSupervisionPressureHandler_TurnOffPump_default_2 { PumpRequest  }
+input-binding:
+PumpRequest : {
+    "cmd_type": "VacuumEnum::OFF",
+    "id": 5
+}
+output-data:
+Flow_104f6k4 : {
+    "id": 5
+}
+
+run-step-name: SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_6 step-type: "ExecAcquisitionCommand"
+action-case: imaging.SupervisonModelAcquisitionController.Execacquisitioninitandteardown.default
+consumes-from-step: SupervisonModelSupervisionImagePreparation_Prepare_default_3 { AcquisitionReq  }
+input-binding:
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::PREPARE",
+    "id": 12
+}
+output-data:
+Flow_084nmm6 : {
+    "id": 12
+}
+
+compose-step-name: SupervisonModelSupervisionPressureHandler_StartPump_default_3
+action-case: imaging.SupervisonModelSupervisionPressureHandler.StartPump.default
+input-binding:
+Gateway_1j81da5 : {
+    "id": 0
+}
+VacuumRequest : {
+    "cmd_type": "VacuumEnum::ON",
+    "id": 6
+}
+EqStatus : {
+    "acq_status": "Status::PREPARING",
+    "pump_status": "Status::OFF",
+    "temp_status": "Status::ON"
+}
+output-data:
+Flow_0balrow : {
+    "id": 0
+}
+PumpRequest : {
+    "cmd_type": "VacuumEnum::ON",
+    "id": 6
+}
+EqStatus : {
+    "acq_status": "Status::PREPARING",
+    "pump_status": "Status::OFF",
+    "temp_status": "Status::ON"
+}
+suppress(EqStatus)
+
+run-step-name: SupervisonModelPumpController_startpump_default_3 step-type: "ExecPumpCommand"
+action-case: imaging.SupervisonModelPumpController.startpump.default
+consumes-from-step: SupervisonModelSupervisionPressureHandler_StartPump_default_3 { PumpRequest  }
+input-binding:
+PumpRequest : {
+    "cmd_type": "VacuumEnum::ON",
+    "id": 6
+}
+output-data:
+Flow_0x0gs9b : {
+    "id": 6
+}
+
+assert-step-name: SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_2 assert-type: "CheckAcquisitionResult"
+action-case: imaging.SupervisonModelSupervisionImaging.CheckLowResImageQuality.default
+consumes-from-step: SupervisonModelSupervisionImaging_StartAcquisition_default_2 { LastAcqReq  }
+consumes-from-step: SupervisonModelAcquisitionController_StopAcquisition_default_2 { ImageData  }
+input-binding:
+Gateway_16m9e4j : {
+    "unit": 0
+}
+ImageData : {
+    "id": 10
+}
+LastAcqReq : {
+    "cmd_type": "ImageEnum::START",
+    "id": 9,
+    "image_quality": "ImageQuality::LOW"
+}
+output-data:
+Gateway_0qg69ul : {
+    "unit": 0
+}
+suppress(Gateway_0qg69ul)
+output-assertion: SupervisonModelAcquisitionController_StopAcquisition_default_2
+imaging.SupervisonModelSupervisionImaging.CheckLowResImageQuality.default.default
+
+compose-step-name: SupervisonModelSupervisionImaging_StartAcquisition_default_3
+action-case: imaging.SupervisonModelSupervisionImaging.StartAcquisition.default
+input-binding:
+ImagingRequest : {
+    "cmd_type": "ImageEnum::START",
+    "id": 13,
+    "image_quality": "ImageQuality::LOW"
+}
+EqStatus : {
+    "acq_status": "Status::PREPARING",
+    "pump_status": "Status::ON",
+    "temp_status": "Status::ON"
+}
+output-data:
+Flow_1bajtwc : {
+    "unit": 0
+}
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::START",
+    "id": 13
+}
+LastAcqReq : {
+    "cmd_type": "ImageEnum::START",
+    "id": 13,
+    "image_quality": "ImageQuality::LOW"
+}
+EqStatus : {
+    "acq_status": "Status::PREPARING",
+    "pump_status": "Status::ON",
+    "temp_status": "Status::ON"
+}
+suppress(Flow_1bajtwc, EqStatus)
+
+run-step-name: SupervisonModelAcquisitionController_StartAcquisition_default_3 step-type: "ExecAcquisitionCommand"
+action-case: imaging.SupervisonModelAcquisitionController.StartAcquisition.default
+consumes-from-step: SupervisonModelSupervisionImaging_StartAcquisition_default_3 { AcquisitionReq  }
+input-binding:
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::START",
+    "id": 13
+}
+output-data:
+Flow_1rusz82 : {
+    "id": 13
+}
+
+compose-step-name: SupervisonModelSupervisionImaging_StopAcquisition_default_3
+action-case: imaging.SupervisonModelSupervisionImaging.StopAcquisition.default
+input-binding:
+ImagingRequest : {
+    "cmd_type": "ImageEnum::STOP",
+    "id": 14,
+    "image_quality": "ImageQuality::NA"
+}
+output-data:
+Flow_0678bm1 : {
+    "unit": 0
+}
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::STOP",
+    "id": 14
+}
+suppress(Flow_0678bm1)
+
+run-step-name: SupervisonModelAcquisitionController_StopAcquisition_default_3 step-type: "ExecAcquisitionCommand"
+action-case: imaging.SupervisonModelAcquisitionController.StopAcquisition.default
+consumes-from-step: SupervisonModelSupervisionImaging_StopAcquisition_default_3 { AcquisitionReq  }
+input-binding:
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::STOP",
+    "id": 14
+}
+output-data:
+Flow_1w9tlf4 : {
+    "id": 14
+}
+ImageData : {
+    "id": 14
+}
+
+compose-step-name: SupervisonModelSupervisionImagePreparation_Unprepare_default_3
+action-case: imaging.SupervisonModelSupervisionImagePreparation.Unprepare.default
+input-binding:
+ImagingRequest : {
+    "cmd_type": "ImageEnum::UNPREPARE",
+    "id": 15,
+    "image_quality": "ImageQuality::NA"
+}
+output-data:
+Flow_1kpcqqf : {
+    "unit": 0
+}
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::UNPREPARE",
+    "id": 15
+}
+suppress(Flow_1kpcqqf)
+
+run-step-name: SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_7 step-type: "ExecAcquisitionCommand"
+action-case: imaging.SupervisonModelAcquisitionController.Execacquisitioninitandteardown.default
+consumes-from-step: SupervisonModelSupervisionImagePreparation_Unprepare_default_3 { AcquisitionReq  }
+input-binding:
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::UNPREPARE",
+    "id": 15
+}
+output-data:
+Flow_084nmm6 : {
+    "id": 15
+}
+
+compose-step-name: SupervisonModelSupervisionImagePreparation_Prepare_default_4
+action-case: imaging.SupervisonModelSupervisionImagePreparation.Prepare.default
+input-binding:
+ImagingRequest : {
+    "cmd_type": "ImageEnum::PREPARE",
+    "id": 16,
+    "image_quality": "ImageQuality::NA"
+}
+EqStatus : {
+    "acq_status": "Status::UNPREPARING",
+    "pump_status": "Status::ON",
+    "temp_status": "Status::ON"
+}
+output-data:
+Flow_0kkvgdv : {
+    "unit": 0
+}
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::PREPARE",
+    "id": 16
+}
+EqStatus : {
+    "acq_status": "Status::UNPREPARING",
+    "pump_status": "Status::ON",
+    "temp_status": "Status::ON"
+}
+suppress(Flow_0kkvgdv, EqStatus)
+
+compose-step-name: SupervisonModelSupervisionPressureHandler_TurnOffPump_default_3
+action-case: imaging.SupervisonModelSupervisionPressureHandler.TurnOffPump.default
+input-binding:
+Flow_1wguswc : {
+    "id": 0
+}
+VacuumRequest : {
+    "cmd_type": "VacuumEnum::OFF",
+    "id": 7
+}
+EqStatus : {
+    "acq_status": "Status::UNPREPARING",
+    "pump_status": "Status::ON",
+    "temp_status": "Status::ON"
+}
+output-data:
+Flow_0cjhiik : {
+    "id": 0
+}
+PumpRequest : {
+    "cmd_type": "VacuumEnum::OFF",
+    "id": 7
+}
+EqStatus : {
+    "acq_status": "Status::UNPREPARING",
+    "pump_status": "Status::ON",
+    "temp_status": "Status::ON"
+}
+suppress(EqStatus)
+
+run-step-name: SupervisonModelPumpController_stoppump_default_3 step-type: "ExecPumpCommand"
+action-case: imaging.SupervisonModelPumpController.stoppump.default
+consumes-from-step: SupervisonModelSupervisionPressureHandler_TurnOffPump_default_3 { PumpRequest  }
+input-binding:
+PumpRequest : {
+    "cmd_type": "VacuumEnum::OFF",
+    "id": 7
+}
+output-data:
+Flow_104f6k4 : {
+    "id": 7
+}
+
+run-step-name: SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_8 step-type: "ExecAcquisitionCommand"
+action-case: imaging.SupervisonModelAcquisitionController.Execacquisitioninitandteardown.default
+consumes-from-step: SupervisonModelSupervisionImagePreparation_Prepare_default_4 { AcquisitionReq  }
+input-binding:
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::PREPARE",
+    "id": 16
+}
+output-data:
+Flow_084nmm6 : {
+    "id": 16
+}
+
+compose-step-name: SupervisonModelSupervisionPressureHandler_StartPump_default_4
+action-case: imaging.SupervisonModelSupervisionPressureHandler.StartPump.default
+input-binding:
+Gateway_1j81da5 : {
+    "id": 0
+}
+VacuumRequest : {
+    "cmd_type": "VacuumEnum::ON",
+    "id": 8
+}
+EqStatus : {
+    "acq_status": "Status::PREPARING",
+    "pump_status": "Status::OFF",
+    "temp_status": "Status::ON"
+}
+output-data:
+Flow_0balrow : {
+    "id": 0
+}
+PumpRequest : {
+    "cmd_type": "VacuumEnum::ON",
+    "id": 8
+}
+EqStatus : {
+    "acq_status": "Status::PREPARING",
+    "pump_status": "Status::OFF",
+    "temp_status": "Status::ON"
+}
+suppress(EqStatus)
+
+run-step-name: SupervisonModelPumpController_startpump_default_4 step-type: "ExecPumpCommand"
+action-case: imaging.SupervisonModelPumpController.startpump.default
+consumes-from-step: SupervisonModelSupervisionPressureHandler_StartPump_default_4 { PumpRequest  }
+input-binding:
+PumpRequest : {
+    "cmd_type": "VacuumEnum::ON",
+    "id": 8
+}
+output-data:
+Flow_0x0gs9b : {
+    "id": 8
+}
+
+assert-step-name: SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_3 assert-type: "CheckAcquisitionResult"
+action-case: imaging.SupervisonModelSupervisionImaging.CheckLowResImageQuality.default
+consumes-from-step: SupervisonModelSupervisionImaging_StartAcquisition_default_3 { LastAcqReq  }
+consumes-from-step: SupervisonModelAcquisitionController_StopAcquisition_default_3 { ImageData  }
+input-binding:
+Gateway_16m9e4j : {
+    "unit": 0
+}
+ImageData : {
+    "id": 14
+}
+LastAcqReq : {
+    "cmd_type": "ImageEnum::START",
+    "id": 13,
+    "image_quality": "ImageQuality::LOW"
+}
+output-data:
+Gateway_0qg69ul : {
+    "unit": 0
+}
+suppress(Gateway_0qg69ul)
+output-assertion: SupervisonModelAcquisitionController_StopAcquisition_default_3
+imaging.SupervisonModelSupervisionImaging.CheckLowResImageQuality.default.default
+
+compose-step-name: SupervisonModelSupervisionImaging_StartAcquisition_default_4
+action-case: imaging.SupervisonModelSupervisionImaging.StartAcquisition.default
+input-binding:
+ImagingRequest : {
+    "cmd_type": "ImageEnum::START",
+    "id": 17,
+    "image_quality": "ImageQuality::LOW"
+}
+EqStatus : {
+    "acq_status": "Status::PREPARING",
+    "pump_status": "Status::ON",
+    "temp_status": "Status::ON"
+}
+output-data:
+Flow_1bajtwc : {
+    "unit": 0
+}
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::START",
+    "id": 17
+}
+LastAcqReq : {
+    "cmd_type": "ImageEnum::START",
+    "id": 17,
+    "image_quality": "ImageQuality::LOW"
+}
+EqStatus : {
+    "acq_status": "Status::PREPARING",
+    "pump_status": "Status::ON",
+    "temp_status": "Status::ON"
+}
+suppress(Flow_1bajtwc, EqStatus)
+
+run-step-name: SupervisonModelAcquisitionController_StartAcquisition_default_4 step-type: "ExecAcquisitionCommand"
+action-case: imaging.SupervisonModelAcquisitionController.StartAcquisition.default
+consumes-from-step: SupervisonModelSupervisionImaging_StartAcquisition_default_4 { AcquisitionReq  }
+input-binding:
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::START",
+    "id": 17
+}
+output-data:
+Flow_1rusz82 : {
+    "id": 17
+}
+
+compose-step-name: SupervisonModelSupervisionImaging_StopAcquisition_default_4
+action-case: imaging.SupervisonModelSupervisionImaging.StopAcquisition.default
+input-binding:
+ImagingRequest : {
+    "cmd_type": "ImageEnum::STOP",
+    "id": 18,
+    "image_quality": "ImageQuality::NA"
+}
+output-data:
+Flow_0678bm1 : {
+    "unit": 0
+}
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::STOP",
+    "id": 18
+}
+suppress(Flow_0678bm1)
+
+run-step-name: SupervisonModelAcquisitionController_StopAcquisition_default_4 step-type: "ExecAcquisitionCommand"
+action-case: imaging.SupervisonModelAcquisitionController.StopAcquisition.default
+consumes-from-step: SupervisonModelSupervisionImaging_StopAcquisition_default_4 { AcquisitionReq  }
+input-binding:
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::STOP",
+    "id": 18
+}
+output-data:
+Flow_1w9tlf4 : {
+    "id": 18
+}
+ImageData : {
+    "id": 18
+}
+
+compose-step-name: SupervisonModelSupervisionImagePreparation_Unprepare_default_4
+action-case: imaging.SupervisonModelSupervisionImagePreparation.Unprepare.default
+input-binding:
+ImagingRequest : {
+    "cmd_type": "ImageEnum::UNPREPARE",
+    "id": 19,
+    "image_quality": "ImageQuality::NA"
+}
+output-data:
+Flow_1kpcqqf : {
+    "unit": 0
+}
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::UNPREPARE",
+    "id": 19
+}
+suppress(Flow_1kpcqqf)
+
+run-step-name: SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_9 step-type: "ExecAcquisitionCommand"
+action-case: imaging.SupervisonModelAcquisitionController.Execacquisitioninitandteardown.default
+consumes-from-step: SupervisonModelSupervisionImagePreparation_Unprepare_default_4 { AcquisitionReq  }
+input-binding:
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::UNPREPARE",
+    "id": 19
+}
+output-data:
+Flow_084nmm6 : {
+    "id": 19
+}
+
+compose-step-name: SupervisonModelSupervisionImagePreparation_Prepare_default_5
+action-case: imaging.SupervisonModelSupervisionImagePreparation.Prepare.default
+input-binding:
+ImagingRequest : {
+    "cmd_type": "ImageEnum::PREPARE",
+    "id": 20,
+    "image_quality": "ImageQuality::NA"
+}
+EqStatus : {
+    "acq_status": "Status::UNPREPARING",
+    "pump_status": "Status::ON",
+    "temp_status": "Status::ON"
+}
+output-data:
+Flow_0kkvgdv : {
+    "unit": 0
+}
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::PREPARE",
+    "id": 20
+}
+EqStatus : {
+    "acq_status": "Status::UNPREPARING",
+    "pump_status": "Status::ON",
+    "temp_status": "Status::ON"
+}
+suppress(Flow_0kkvgdv, EqStatus)
+
+compose-step-name: SupervisonModelSupervisionPressureHandler_TurnOffPump_default_4
+action-case: imaging.SupervisonModelSupervisionPressureHandler.TurnOffPump.default
+input-binding:
+Flow_1wguswc : {
+    "id": 0
+}
+VacuumRequest : {
+    "cmd_type": "VacuumEnum::OFF",
+    "id": 9
+}
+EqStatus : {
+    "acq_status": "Status::UNPREPARING",
+    "pump_status": "Status::ON",
+    "temp_status": "Status::ON"
+}
+output-data:
+Flow_0cjhiik : {
+    "id": 0
+}
+PumpRequest : {
+    "cmd_type": "VacuumEnum::OFF",
+    "id": 9
+}
+EqStatus : {
+    "acq_status": "Status::UNPREPARING",
+    "pump_status": "Status::ON",
+    "temp_status": "Status::ON"
+}
+suppress(EqStatus)
+
+run-step-name: SupervisonModelPumpController_stoppump_default_4 step-type: "ExecPumpCommand"
+action-case: imaging.SupervisonModelPumpController.stoppump.default
+consumes-from-step: SupervisonModelSupervisionPressureHandler_TurnOffPump_default_4 { PumpRequest  }
+input-binding:
+PumpRequest : {
+    "cmd_type": "VacuumEnum::OFF",
+    "id": 9
+}
+output-data:
+Flow_104f6k4 : {
+    "id": 9
+}
+
+run-step-name: SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_10 step-type: "ExecAcquisitionCommand"
+action-case: imaging.SupervisonModelAcquisitionController.Execacquisitioninitandteardown.default
+consumes-from-step: SupervisonModelSupervisionImagePreparation_Prepare_default_5 { AcquisitionReq  }
+input-binding:
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::PREPARE",
+    "id": 20
+}
+output-data:
+Flow_084nmm6 : {
+    "id": 20
+}
+
+compose-step-name: SupervisonModelSupervisionPressureHandler_StartPump_default_5
+action-case: imaging.SupervisonModelSupervisionPressureHandler.StartPump.default
+input-binding:
+Gateway_1j81da5 : {
+    "id": 0
+}
+VacuumRequest : {
+    "cmd_type": "VacuumEnum::ON",
+    "id": 10
+}
+EqStatus : {
+    "acq_status": "Status::PREPARING",
+    "pump_status": "Status::OFF",
+    "temp_status": "Status::ON"
+}
+output-data:
+Flow_0balrow : {
+    "id": 0
+}
+PumpRequest : {
+    "cmd_type": "VacuumEnum::ON",
+    "id": 10
+}
+EqStatus : {
+    "acq_status": "Status::PREPARING",
+    "pump_status": "Status::OFF",
+    "temp_status": "Status::ON"
+}
+suppress(EqStatus)
+
+run-step-name: SupervisonModelPumpController_startpump_default_5 step-type: "ExecPumpCommand"
+action-case: imaging.SupervisonModelPumpController.startpump.default
+consumes-from-step: SupervisonModelSupervisionPressureHandler_StartPump_default_5 { PumpRequest  }
+input-binding:
+PumpRequest : {
+    "cmd_type": "VacuumEnum::ON",
+    "id": 10
+}
+output-data:
+Flow_0x0gs9b : {
+    "id": 10
+}
+
+assert-step-name: SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_4 assert-type: "CheckAcquisitionResult"
+action-case: imaging.SupervisonModelSupervisionImaging.CheckLowResImageQuality.default
+consumes-from-step: SupervisonModelSupervisionImaging_StartAcquisition_default_4 { LastAcqReq  }
+consumes-from-step: SupervisonModelAcquisitionController_StopAcquisition_default_4 { ImageData  }
+input-binding:
+Gateway_16m9e4j : {
+    "unit": 0
+}
+ImageData : {
+    "id": 18
+}
+LastAcqReq : {
+    "cmd_type": "ImageEnum::START",
+    "id": 17,
+    "image_quality": "ImageQuality::LOW"
+}
+output-data:
+Gateway_0qg69ul : {
+    "unit": 0
+}
+suppress(Gateway_0qg69ul)
+output-assertion: SupervisonModelAcquisitionController_StopAcquisition_default_4
+imaging.SupervisonModelSupervisionImaging.CheckLowResImageQuality.default.default
+
+compose-step-name: SupervisonModelSupervisionImaging_StartAcquisition_default_5
+action-case: imaging.SupervisonModelSupervisionImaging.StartAcquisition.default
+input-binding:
+ImagingRequest : {
+    "cmd_type": "ImageEnum::START",
+    "id": 21,
+    "image_quality": "ImageQuality::LOW"
+}
+EqStatus : {
+    "acq_status": "Status::PREPARING",
+    "pump_status": "Status::ON",
+    "temp_status": "Status::ON"
+}
+output-data:
+Flow_1bajtwc : {
+    "unit": 0
+}
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::START",
+    "id": 21
+}
+LastAcqReq : {
+    "cmd_type": "ImageEnum::START",
+    "id": 21,
+    "image_quality": "ImageQuality::LOW"
+}
+EqStatus : {
+    "acq_status": "Status::PREPARING",
+    "pump_status": "Status::ON",
+    "temp_status": "Status::ON"
+}
+suppress(Flow_1bajtwc, EqStatus)
+
+run-step-name: SupervisonModelAcquisitionController_StartAcquisition_default_5 step-type: "ExecAcquisitionCommand"
+action-case: imaging.SupervisonModelAcquisitionController.StartAcquisition.default
+consumes-from-step: SupervisonModelSupervisionImaging_StartAcquisition_default_5 { AcquisitionReq  }
+input-binding:
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::START",
+    "id": 21
+}
+output-data:
+Flow_1rusz82 : {
+    "id": 21
+}
+
+compose-step-name: SupervisonModelSupervisionImaging_StopAcquisition_default_5
+action-case: imaging.SupervisonModelSupervisionImaging.StopAcquisition.default
+input-binding:
+ImagingRequest : {
+    "cmd_type": "ImageEnum::STOP",
+    "id": 22,
+    "image_quality": "ImageQuality::NA"
+}
+output-data:
+Flow_0678bm1 : {
+    "unit": 0
+}
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::STOP",
+    "id": 22
+}
+suppress(Flow_0678bm1)
+
+run-step-name: SupervisonModelAcquisitionController_StopAcquisition_default_5 step-type: "ExecAcquisitionCommand"
+action-case: imaging.SupervisonModelAcquisitionController.StopAcquisition.default
+consumes-from-step: SupervisonModelSupervisionImaging_StopAcquisition_default_5 { AcquisitionReq  }
+input-binding:
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::STOP",
+    "id": 22
+}
+output-data:
+Flow_1w9tlf4 : {
+    "id": 22
+}
+ImageData : {
+    "id": 22
+}
+
+compose-step-name: SupervisonModelSupervisionImagePreparation_Unprepare_default_5
+action-case: imaging.SupervisonModelSupervisionImagePreparation.Unprepare.default
+input-binding:
+ImagingRequest : {
+    "cmd_type": "ImageEnum::UNPREPARE",
+    "id": 23,
+    "image_quality": "ImageQuality::NA"
+}
+output-data:
+Flow_1kpcqqf : {
+    "unit": 0
+}
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::UNPREPARE",
+    "id": 23
+}
+suppress(Flow_1kpcqqf)
+
+run-step-name: SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_11 step-type: "ExecAcquisitionCommand"
+action-case: imaging.SupervisonModelAcquisitionController.Execacquisitioninitandteardown.default
+consumes-from-step: SupervisonModelSupervisionImagePreparation_Unprepare_default_5 { AcquisitionReq  }
+input-binding:
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::UNPREPARE",
+    "id": 23
+}
+output-data:
+Flow_084nmm6 : {
+    "id": 23
+}
+
+compose-step-name: SupervisonModelSupervisionImagePreparation_Prepare_default_6
+action-case: imaging.SupervisonModelSupervisionImagePreparation.Prepare.default
+input-binding:
+ImagingRequest : {
+    "cmd_type": "ImageEnum::PREPARE",
+    "id": 24,
+    "image_quality": "ImageQuality::NA"
+}
+EqStatus : {
+    "acq_status": "Status::UNPREPARING",
+    "pump_status": "Status::ON",
+    "temp_status": "Status::ON"
+}
+output-data:
+Flow_0kkvgdv : {
+    "unit": 0
+}
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::PREPARE",
+    "id": 24
+}
+EqStatus : {
+    "acq_status": "Status::UNPREPARING",
+    "pump_status": "Status::ON",
+    "temp_status": "Status::ON"
+}
+suppress(Flow_0kkvgdv, EqStatus)
+
+compose-step-name: SupervisonModelSupervisionPressureHandler_TurnOffPump_default_5
+action-case: imaging.SupervisonModelSupervisionPressureHandler.TurnOffPump.default
+input-binding:
+Flow_1wguswc : {
+    "id": 0
+}
+VacuumRequest : {
+    "cmd_type": "VacuumEnum::OFF",
+    "id": 11
+}
+EqStatus : {
+    "acq_status": "Status::UNPREPARING",
+    "pump_status": "Status::ON",
+    "temp_status": "Status::ON"
+}
+output-data:
+Flow_0cjhiik : {
+    "id": 0
+}
+PumpRequest : {
+    "cmd_type": "VacuumEnum::OFF",
+    "id": 11
+}
+EqStatus : {
+    "acq_status": "Status::UNPREPARING",
+    "pump_status": "Status::ON",
+    "temp_status": "Status::ON"
+}
+suppress(EqStatus)
+
+run-step-name: SupervisonModelPumpController_stoppump_default_5 step-type: "ExecPumpCommand"
+action-case: imaging.SupervisonModelPumpController.stoppump.default
+consumes-from-step: SupervisonModelSupervisionPressureHandler_TurnOffPump_default_5 { PumpRequest  }
+input-binding:
+PumpRequest : {
+    "cmd_type": "VacuumEnum::OFF",
+    "id": 11
+}
+output-data:
+Flow_104f6k4 : {
+    "id": 11
+}
+
+run-step-name: SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_12 step-type: "ExecAcquisitionCommand"
+action-case: imaging.SupervisonModelAcquisitionController.Execacquisitioninitandteardown.default
+consumes-from-step: SupervisonModelSupervisionImagePreparation_Prepare_default_6 { AcquisitionReq  }
+input-binding:
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::PREPARE",
+    "id": 24
+}
+output-data:
+Flow_084nmm6 : {
+    "id": 24
+}
+
+compose-step-name: SupervisonModelSupervisionPressureHandler_StartPump_default_6
+action-case: imaging.SupervisonModelSupervisionPressureHandler.StartPump.default
+input-binding:
+Gateway_1j81da5 : {
+    "id": 0
+}
+VacuumRequest : {
+    "cmd_type": "VacuumEnum::ON",
+    "id": 12
+}
+EqStatus : {
+    "acq_status": "Status::PREPARING",
+    "pump_status": "Status::OFF",
+    "temp_status": "Status::ON"
+}
+output-data:
+Flow_0balrow : {
+    "id": 0
+}
+PumpRequest : {
+    "cmd_type": "VacuumEnum::ON",
+    "id": 12
+}
+EqStatus : {
+    "acq_status": "Status::PREPARING",
+    "pump_status": "Status::OFF",
+    "temp_status": "Status::ON"
+}
+suppress(EqStatus)
+
+run-step-name: SupervisonModelPumpController_startpump_default_6 step-type: "ExecPumpCommand"
+action-case: imaging.SupervisonModelPumpController.startpump.default
+consumes-from-step: SupervisonModelSupervisionPressureHandler_StartPump_default_6 { PumpRequest  }
+input-binding:
+PumpRequest : {
+    "cmd_type": "VacuumEnum::ON",
+    "id": 12
+}
+output-data:
+Flow_0x0gs9b : {
+    "id": 12
+}
+
+assert-step-name: SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_5 assert-type: "CheckAcquisitionResult"
+action-case: imaging.SupervisonModelSupervisionImaging.CheckLowResImageQuality.default
+consumes-from-step: SupervisonModelSupervisionImaging_StartAcquisition_default_5 { LastAcqReq  }
+consumes-from-step: SupervisonModelAcquisitionController_StopAcquisition_default_5 { ImageData  }
+input-binding:
+Gateway_16m9e4j : {
+    "unit": 0
+}
+ImageData : {
+    "id": 22
+}
+LastAcqReq : {
+    "cmd_type": "ImageEnum::START",
+    "id": 21,
+    "image_quality": "ImageQuality::LOW"
+}
+output-data:
+Gateway_0qg69ul : {
+    "unit": 0
+}
+suppress(Gateway_0qg69ul)
+output-assertion: SupervisonModelAcquisitionController_StopAcquisition_default_5
+imaging.SupervisonModelSupervisionImaging.CheckLowResImageQuality.default.default
+
+compose-step-name: SupervisonModelSupervisionImaging_StartAcquisition_default_6
+action-case: imaging.SupervisonModelSupervisionImaging.StartAcquisition.default
+input-binding:
+ImagingRequest : {
+    "cmd_type": "ImageEnum::START",
+    "id": 25,
+    "image_quality": "ImageQuality::LOW"
+}
+EqStatus : {
+    "acq_status": "Status::PREPARING",
+    "pump_status": "Status::ON",
+    "temp_status": "Status::ON"
+}
+output-data:
+Flow_1bajtwc : {
+    "unit": 0
+}
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::START",
+    "id": 25
+}
+LastAcqReq : {
+    "cmd_type": "ImageEnum::START",
+    "id": 25,
+    "image_quality": "ImageQuality::LOW"
+}
+EqStatus : {
+    "acq_status": "Status::PREPARING",
+    "pump_status": "Status::ON",
+    "temp_status": "Status::ON"
+}
+suppress(Flow_1bajtwc, EqStatus)
+
+run-step-name: SupervisonModelAcquisitionController_StartAcquisition_default_6 step-type: "ExecAcquisitionCommand"
+action-case: imaging.SupervisonModelAcquisitionController.StartAcquisition.default
+consumes-from-step: SupervisonModelSupervisionImaging_StartAcquisition_default_6 { AcquisitionReq  }
+input-binding:
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::START",
+    "id": 25
+}
+output-data:
+Flow_1rusz82 : {
+    "id": 25
+}
+
+compose-step-name: SupervisonModelSupervisionImaging_StopAcquisition_default_6
+action-case: imaging.SupervisonModelSupervisionImaging.StopAcquisition.default
+input-binding:
+ImagingRequest : {
+    "cmd_type": "ImageEnum::STOP",
+    "id": 26,
+    "image_quality": "ImageQuality::NA"
+}
+output-data:
+Flow_0678bm1 : {
+    "unit": 0
+}
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::STOP",
+    "id": 26
+}
+suppress(Flow_0678bm1)
+
+run-step-name: SupervisonModelAcquisitionController_StopAcquisition_default_6 step-type: "ExecAcquisitionCommand"
+action-case: imaging.SupervisonModelAcquisitionController.StopAcquisition.default
+consumes-from-step: SupervisonModelSupervisionImaging_StopAcquisition_default_6 { AcquisitionReq  }
+input-binding:
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::STOP",
+    "id": 26
+}
+output-data:
+Flow_1w9tlf4 : {
+    "id": 26
+}
+ImageData : {
+    "id": 26
+}
+
+compose-step-name: SupervisonModelSupervisionImagePreparation_Unprepare_default_6
+action-case: imaging.SupervisonModelSupervisionImagePreparation.Unprepare.default
+input-binding:
+ImagingRequest : {
+    "cmd_type": "ImageEnum::UNPREPARE",
+    "id": 27,
+    "image_quality": "ImageQuality::NA"
+}
+output-data:
+Flow_1kpcqqf : {
+    "unit": 0
+}
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::UNPREPARE",
+    "id": 27
+}
+suppress(Flow_1kpcqqf)
+
+run-step-name: SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_13 step-type: "ExecAcquisitionCommand"
+action-case: imaging.SupervisonModelAcquisitionController.Execacquisitioninitandteardown.default
+consumes-from-step: SupervisonModelSupervisionImagePreparation_Unprepare_default_6 { AcquisitionReq  }
+input-binding:
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::UNPREPARE",
+    "id": 27
+}
+output-data:
+Flow_084nmm6 : {
+    "id": 27
+}
+
+compose-step-name: SupervisonModelSupervisionImagePreparation_Prepare_default_7
+action-case: imaging.SupervisonModelSupervisionImagePreparation.Prepare.default
+input-binding:
+ImagingRequest : {
+    "cmd_type": "ImageEnum::PREPARE",
+    "id": 28,
+    "image_quality": "ImageQuality::NA"
+}
+EqStatus : {
+    "acq_status": "Status::UNPREPARING",
+    "pump_status": "Status::ON",
+    "temp_status": "Status::ON"
+}
+output-data:
+Flow_0kkvgdv : {
+    "unit": 0
+}
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::PREPARE",
+    "id": 28
+}
+EqStatus : {
+    "acq_status": "Status::UNPREPARING",
+    "pump_status": "Status::ON",
+    "temp_status": "Status::ON"
+}
+suppress(Flow_0kkvgdv, EqStatus)
+
+compose-step-name: SupervisonModelSupervisionPressureHandler_TurnOffPump_default_6
+action-case: imaging.SupervisonModelSupervisionPressureHandler.TurnOffPump.default
+input-binding:
+Flow_1wguswc : {
+    "id": 0
+}
+VacuumRequest : {
+    "cmd_type": "VacuumEnum::OFF",
+    "id": 13
+}
+EqStatus : {
+    "acq_status": "Status::UNPREPARING",
+    "pump_status": "Status::ON",
+    "temp_status": "Status::ON"
+}
+output-data:
+Flow_0cjhiik : {
+    "id": 0
+}
+PumpRequest : {
+    "cmd_type": "VacuumEnum::OFF",
+    "id": 13
+}
+EqStatus : {
+    "acq_status": "Status::UNPREPARING",
+    "pump_status": "Status::ON",
+    "temp_status": "Status::ON"
+}
+suppress(EqStatus)
+
+run-step-name: SupervisonModelPumpController_stoppump_default_6 step-type: "ExecPumpCommand"
+action-case: imaging.SupervisonModelPumpController.stoppump.default
+consumes-from-step: SupervisonModelSupervisionPressureHandler_TurnOffPump_default_6 { PumpRequest  }
+input-binding:
+PumpRequest : {
+    "cmd_type": "VacuumEnum::OFF",
+    "id": 13
+}
+output-data:
+Flow_104f6k4 : {
+    "id": 13
+}
+
+run-step-name: SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_14 step-type: "ExecAcquisitionCommand"
+action-case: imaging.SupervisonModelAcquisitionController.Execacquisitioninitandteardown.default
+consumes-from-step: SupervisonModelSupervisionImagePreparation_Prepare_default_7 { AcquisitionReq  }
+input-binding:
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::PREPARE",
+    "id": 28
+}
+output-data:
+Flow_084nmm6 : {
+    "id": 28
+}
+
+compose-step-name: SupervisonModelSupervisionPressureHandler_StartPump_default_7
+action-case: imaging.SupervisonModelSupervisionPressureHandler.StartPump.default
+input-binding:
+Gateway_1j81da5 : {
+    "id": 0
+}
+VacuumRequest : {
+    "cmd_type": "VacuumEnum::ON",
+    "id": 14
+}
+EqStatus : {
+    "acq_status": "Status::PREPARING",
+    "pump_status": "Status::OFF",
+    "temp_status": "Status::ON"
+}
+output-data:
+Flow_0balrow : {
+    "id": 0
+}
+PumpRequest : {
+    "cmd_type": "VacuumEnum::ON",
+    "id": 14
+}
+EqStatus : {
+    "acq_status": "Status::PREPARING",
+    "pump_status": "Status::OFF",
+    "temp_status": "Status::ON"
+}
+suppress(EqStatus)
+
+run-step-name: SupervisonModelPumpController_startpump_default_7 step-type: "ExecPumpCommand"
+action-case: imaging.SupervisonModelPumpController.startpump.default
+consumes-from-step: SupervisonModelSupervisionPressureHandler_StartPump_default_7 { PumpRequest  }
+input-binding:
+PumpRequest : {
+    "cmd_type": "VacuumEnum::ON",
+    "id": 14
+}
+output-data:
+Flow_0x0gs9b : {
+    "id": 14
+}
+
+assert-step-name: SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_6 assert-type: "CheckAcquisitionResult"
+action-case: imaging.SupervisonModelSupervisionImaging.CheckLowResImageQuality.default
+consumes-from-step: SupervisonModelSupervisionImaging_StartAcquisition_default_6 { LastAcqReq  }
+consumes-from-step: SupervisonModelAcquisitionController_StopAcquisition_default_6 { ImageData  }
+input-binding:
+Gateway_16m9e4j : {
+    "unit": 0
+}
+ImageData : {
+    "id": 26
+}
+LastAcqReq : {
+    "cmd_type": "ImageEnum::START",
+    "id": 25,
+    "image_quality": "ImageQuality::LOW"
+}
+output-data:
+Gateway_0qg69ul : {
+    "unit": 0
+}
+suppress(Gateway_0qg69ul)
+output-assertion: SupervisonModelAcquisitionController_StopAcquisition_default_6
+imaging.SupervisonModelSupervisionImaging.CheckLowResImageQuality.default.default
+
+compose-step-name: SupervisonModelSupervisionImaging_StartAcquisition_default_7
+action-case: imaging.SupervisonModelSupervisionImaging.StartAcquisition.default
+input-binding:
+ImagingRequest : {
+    "cmd_type": "ImageEnum::START",
+    "id": 29,
+    "image_quality": "ImageQuality::LOW"
+}
+EqStatus : {
+    "acq_status": "Status::PREPARING",
+    "pump_status": "Status::ON",
+    "temp_status": "Status::ON"
+}
+output-data:
+Flow_1bajtwc : {
+    "unit": 0
+}
+AcquisitionReq : {
+    "cmd_type": "ImageEnum::START",
+    "id": 29
+}
+LastAcqReq : {
+    "cmd_type": "ImageEnum::START",
+    "id": 29,
+    "image_quality": "ImageQuality::LOW"
+}
+EqStatus : {
+    "acq_status": "Status::PREPARING",
+    "pump_status": "Status::ON",
+    "temp_status": "Status::ON"
+}
+suppress(Flow_1bajtwc, EqStatus)
+
+generate-file "./dataset/"
+

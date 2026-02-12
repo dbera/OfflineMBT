@@ -21,17 +21,16 @@ Require-Bundle: nl.esi.comma.assertthat;visibility:=reexport,
  org.eclipse.xtext.xbase.lib;bundle-version="2.36.0",
  org.eclipse.lsat.common.xtend;bundle-version="0.4.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-21
-Export-Package: nl.esi.comma.abstracttestspecification.validation,
- nl.esi.comma.abstracttestspecification.parser.antlr.internal,
- nl.esi.comma.abstracttestspecification,
- nl.esi.comma.abstracttestspecification.generator.to.bpmn,
- nl.esi.comma.abstracttestspecification.generator.to.concrete,
- nl.esi.comma.abstracttestspecification.generator.utils,
- nl.esi.comma.abstracttestspecification.services,
+Export-Package: nl.esi.comma.abstracttestspecification,
  nl.esi.comma.abstracttestspecification.abstractTestspecification,
  nl.esi.comma.abstracttestspecification.abstractTestspecification.impl,
- nl.esi.comma.abstracttestspecification.parser.antlr,
- nl.esi.comma.abstracttestspecification.scoping,
  nl.esi.comma.abstracttestspecification.abstractTestspecification.util,
- nl.esi.comma.abstracttestspecification.serializer
+ nl.esi.comma.abstracttestspecification.generator.to.concrete,
+ nl.esi.comma.abstracttestspecification.generator.utils,
+ nl.esi.comma.abstracttestspecification.parser.antlr,
+ nl.esi.comma.abstracttestspecification.parser.antlr.internal,
+ nl.esi.comma.abstracttestspecification.scoping,
+ nl.esi.comma.abstracttestspecification.serializer,
+ nl.esi.comma.abstracttestspecification.services,
+ nl.esi.comma.abstracttestspecification.validation
 Import-Package: org.apache.log4j

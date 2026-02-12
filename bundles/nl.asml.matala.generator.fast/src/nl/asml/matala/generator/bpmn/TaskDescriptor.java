@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) 2024, 2025 TNO-ESI
  *
  * See the NOTICE file(s) distributed with this work for additional
@@ -10,10 +10,14 @@
  *
  * SPDX-License-Identifier: MIT
  */
-Project Printer {
-	Generate Tests {
-		printer {
-			bpmn-file "../nl.asml.matala.bpmn4s.tests/resources/input/printer.bpmn"
-		}
-	} 
+package nl.asml.matala.generator.bpmn;
+
+import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractStep;
+
+public class TaskDescriptor extends ElementDescriptor {
+	public AbstractStep step;
+
+	public TaskDescriptor(String id, String lane) {
+		super(id, lane);
+	}
 }

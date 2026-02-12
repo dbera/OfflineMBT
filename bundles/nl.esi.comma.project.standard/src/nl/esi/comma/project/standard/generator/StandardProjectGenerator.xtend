@@ -19,7 +19,6 @@ import com.google.inject.Inject
 import java.util.HashMap
 import nl.asml.matala.product.generator.ProductGenerator
 import nl.asml.matala.product.product.Product
-import nl.esi.comma.abstracttestspecification.generator.to.bpmn.FromAbstractToBpmn
 import nl.esi.comma.abstracttestspecification.generator.to.concrete.FromAbstractToConcrete
 import nl.esi.comma.project.standard.generator.^extension.IStandardProjectGeneratorExtension
 import nl.esi.comma.project.standard.generator.^extension.StandardProjectGeneratorContext
@@ -35,6 +34,7 @@ import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
 
+import static nl.esi.comma.project.standard.generator.^extension.IStandardProjectGeneratorExtension.*;
 import static extension nl.esi.xtext.common.lang.generator.FileSystemAccessUtil.*
 import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
 import static extension org.eclipse.emf.ecore.util.EcoreUtil.*
@@ -69,7 +69,7 @@ class StandardProjectGenerator extends AbstractGenerator {
                 val simulator = (task.target == OfflineGenerationTarget::SIMULATOR)
                 val numTests = task.numTests <= 0 ? 1 : task.numTests
                 val depthLimit = task.depthLimit <= 0 ? 300 : task.depthLimit
-                val pspecFsa = fsa.createFolderAccess('pspec')
+                val pspecFsa = fsa.createFolderAccess(FOLDER_PSPEC)
 
                 (new Bpmn4sToPspecGenerator(simulator, numTests, depthLimit)).doGenerate(rst, bpmnUri, pspecFsa, ctx)
 
@@ -96,8 +96,8 @@ class StandardProjectGenerator extends AbstractGenerator {
 
         // Generate abstract tspec from petri-net
         val specName = product.specification.name
-        val petriNetURI = fsa.getURI('''CPNServer/«specName»/«specName».py''')
-        val absTspecFsa = fsa.createFolderAccess('tspec_abstract')
+        val petriNetURI = fsa.getURI('''«FOLDER_CPN_SERVER»/«specName»/«specName».py''')
+        val absTspecFsa = fsa.createFolderAccess(FOLDER_ABSTRACT_TSPEC)
         (new PetriNetToAbstractTspecGenerator(task.pythonExe)).doGenerate(rst, petriNetURI, absTspecFsa, ctx)
 
         for (absTspecFileName : absTspecFsa.list(ROOT_PATH).filter[endsWith('.atspec')]) {
@@ -113,12 +113,8 @@ class StandardProjectGenerator extends AbstractGenerator {
             // Validate the generated abstract tspec
             absTspecRes.validate()
 
-            // Generate bpmn for atspec
-            val fromAbstractToBpmn = new FromAbstractToBpmn()
-            fromAbstractToBpmn.doGenerate(absTspecRes, absTspecFsa, ctx)
-
             // Generate concrete tspec
-            val conTspecFsa = fsa.createFolderAccess('tspec_concrete/' + tspecName)
+            val conTspecFsa = fsa.createFolderAccess(FOLDER_CONCRETE_TSPEC + '/' + tspecName)
             val fromAbstractToConcreteGen = new FromAbstractToConcrete()
             fromAbstractToConcreteGen.doGenerate(absTspecRes, conTspecFsa, ctx)
 

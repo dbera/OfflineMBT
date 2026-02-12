@@ -1,0 +1,24 @@
+import "../../../input/imaging/imaging.types"
+
+record CheckAcquisitionResult {
+    CheckAcquisitionResultInput input
+    CheckAcquisitionResultOutput output
+}
+
+record CheckAcquisitionResultInput {
+    UNIT Gateway_16m9e4j
+    AcqData ImageData
+    ImgReq LastAcqReq
+    UNIT Gateway_0qg69ul
+    AcqReq AcquisitionReq
+    CTX Flow_1w9tlf4
+}
+
+record CheckAcquisitionResultOutput {
+    UNIT Gateway_16m9e4j
+    AcqData ImageData
+    ImgReq LastAcqReq
+    UNIT Gateway_0qg69ul
+    AcqReq AcquisitionReq
+    CTX Flow_1w9tlf4
+}

@@ -3,7 +3,8 @@ Bundle-ManifestVersion: 2
 Bundle-Name: FAST Generators
 Bundle-SymbolicName: nl.asml.matala.generator.fast;singleton:=true
 Bundle-Version: 4.2.0.qualifier
-Export-Package: nl.asml.matala.generator.docgen,
+Export-Package: nl.asml.matala.generator.bpmn,
+ nl.asml.matala.generator.docgen,
  nl.asml.matala.generator.fast
 Bundle-Vendor: ASML
 Automatic-Module-Name: nl.asml.matala.generator.fast
@@ -17,4 +18,9 @@ Require-Bundle: org.eclipse.xtext,
  org.eclipse.xtend.lib;bundle-version="2.36.0",
  nl.esi.comma.testspecification,
  nl.esi.comma.inputspecification,
- nl.esi.comma.project.standard
+ nl.esi.comma.project.standard,
+ org.camunda.bpm.model.bpmn;bundle-version="7.22.0",
+ org.camunda.bpm.model.xml;bundle-version="7.22.0",
+ nl.asml.matala.bpmn4s,
+ nl.asml.matala.product,
+ nl.esi.comma.abstracttestspecification

@@ -1,0 +1,82 @@
+record UNIT {
+	int	unit
+}
+
+enum Status { ON OFF PREPARING UNPREPARING }
+
+enum ImageQuality { HIGH LOW NA }
+
+record EquipmentStatus {
+    Status	temp_status
+    Status	pump_status
+    Status	acq_status
+}
+
+record VacReq {
+    VacuumEnum	cmd_type
+    int	id
+}
+
+record AcqData {
+    int	id
+    symbolic real	contrast
+    symbolic real	resolution
+    symbolic real	signal_to_noise_ratio
+}
+
+record CTX {
+    int	id
+}
+
+record ImgResp {
+    ResponseEnum	result
+}
+
+record TempResp {
+    ResponseEnum	result
+    symbolic int	temp_val
+    int	reqid
+}
+
+enum ResponseEnum { OK NOK }
+
+enum ImageEnum { PREPARE START STOP UNPREPARE }
+
+record PumpResp {
+    ResponseEnum	result
+}
+
+record TempReq {
+    TempEnum	cmd_type
+    int	id
+}
+
+enum TempEnum { SET RESET }
+
+enum VacuumEnum { ON OFF }
+
+record ImgReq {
+    ImageEnum	cmd_type
+    int	id
+    ImageQuality	image_quality
+}
+
+record AcqResp {
+    ResponseEnum	result
+    int	id
+}
+
+record PumpReq {
+    VacuumEnum	cmd_type
+    int	id
+}
+
+record AcqReq {
+    ImageEnum	cmd_type
+    int	id
+}
+
+record VacResp {
+    ResponseEnum	result
+}
+
