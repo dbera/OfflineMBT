@@ -145,7 +145,6 @@ Config:
 Scenario:
 	attributes += Attribute*
 	'Scenario' name= ID 
-//    events += (EventPattern | InfoResult | InfoArg)+
     events += (InfoResult | InfoArg)+
 ;
 InfoResult:
