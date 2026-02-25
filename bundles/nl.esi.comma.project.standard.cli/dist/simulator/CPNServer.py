@@ -20,11 +20,22 @@ import shutil
 import tempfile
 import subprocess
 import threading
+import socket
+import logging
+import time
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 import CPNUtils as utils
+from LSPProxy import LSPProxy
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
-from flask_sock import Sock
+from flask_sock import Server, Sock
 
 BPMN4S_GEN = os.path.join("bpmn4s-toolchain.jar")
 JAVA_PATH  = os.path.join("jre","bin","java.exe")
@@ -38,6 +49,9 @@ app = Flask(__name__)
 sock = Sock(app)
 
 CORS(app)
+
+# LSP subprocess port - will be set at runtime
+LSP_PORT = None
 
 def build_and_load_model(model_path:str):
 
@@ -127,19 +141,6 @@ def generate_tests( model_path:str, num_tests:int=1, depth_limit:int=500):
         print(f"An error occurred while deleting generated test: {str(e)}", file=sys.stderr)
     return zip_filename, result
 
-def bridge_lsp_to_websocket(ws, proc):
-    """Streams stdout from the LSP binary directly to the WebSocket client."""
-    try:
-        while True:
-            # Reading byte-by-byte for maximum compatibility with JSON-RPC headers
-            data = proc.stdout.read(1)
-            if not data:
-                break
-            print('out: ' +data)
-            ws.send(data)
-    except Exception as e:
-        print(f"Error reading from LSP: {e}")
-
 @app.route('/')
 def index():
     return serve_static('index.html')
@@ -153,36 +154,96 @@ def serve_static(path):
         return "File not found", 404
         
 @sock.route('/lsp')
-def lsp_endpoint(ws):
-    """Spawns a unique LSP process per connected client."""
-    print("Client connected: Spawning isolated LSP instance...")
-    lsp_command = [JAVA_PATH,"-cp",BPMN4S_GEN, "nl.asml.matala.product.lsp.server.ProductServerLauncher", "-stdio"]
-    proc = subprocess.Popen(
-        lsp_command,
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        bufsize=0  # Disables buffering for real-time interaction
-    )
-
-    # Start the server -> client thread
-    thread = threading.Thread(target=bridge_lsp_to_websocket, args=(ws, proc))
-    thread.daemon = True
-    thread.start()
-
+def lsp_endpoint(ws: Server) -> None:
+    """WebSocket endpoint that proxies messages to LSP subprocess."""
+    print("Client connected to LSP endpoint...")
+    
+    if LSP_PORT is None:
+        print("Error: LSP subprocess port not set")
+        try:
+            ws.send(json.dumps({"jsonrpc": "2.0", "error": {"code": -32603, "message": "LSP server not available"}}))
+        except Exception:
+            pass
+        ws.close()
+        return
+    
+    # Create proxy to LSP subprocess
+    proxy = LSPProxy(LSP_PORT)
+    if not proxy.connect():
+        print("Failed to connect to LSP subprocess")
+        try:
+            ws.send(json.dumps({"jsonrpc": "2.0", "error": {"code": -32603, "message": "Failed to connect to LSP server"}}))
+        except Exception:
+            pass
+        ws.close()
+        return
+    
+    print(f"Connected to LSP subprocess on port {LSP_PORT}")
+    
+    # Shutdown event for clean termination
+    shutdown_event = threading.Event()
+    
+    # Thread to forward responses from LSP to WebSocket client
+    def forward_lsp_responses():
+        try:
+            while not shutdown_event.is_set() and proxy.connected:
+                try:
+                    message = proxy.receive_message()
+                    if message is not None:  # Distinguish None (error/disconnect) from empty string
+                        print(f'out: {message[:100]}...' if len(message) > 100 else f'out: {message}')
+                        try:
+                            ws.send(message)
+                        except Exception as e:
+                            logger.error(f"Error sending to client: {e}")
+                            shutdown_event.set()
+                            break
+                    else:
+                        # LSP connection closed or error
+                        logger.warning("LSP connection closed by server")
+                        break
+                except socket.timeout:
+                    # Timeout is normal, continue
+                    continue
+                except Exception as e:
+                    logger.error(f"Error receiving from LSP: {e}")
+                    break
+        except Exception as e:
+            logger.error(f"Forward thread error: {e}")
+        finally:
+            logger.info("Response forwarding thread stopping")
+            shutdown_event.set()
+    
+    response_thread = threading.Thread(target=forward_lsp_responses)
+    response_thread.daemon = False  # Not a daemon thread - we wait for it to finish
+    response_thread.start()
+    
     try:
-        while True:
-            message = ws.receive()
-            if message:
-                # Forward client input to LSP stdin
-                print('in: ' +message)
-                proc.stdin.write(message.encode('utf-8') if isinstance(message, str) else message)
-                proc.stdin.flush()
+        while not shutdown_event.is_set():
+            try:
+                message = ws.receive()  # No timeout - flask-sock doesn't support it
+                if message is not None:  # Distinguish None (disconnect) from empty string
+                    print(f'in: {message[:100]}...' if len(message) > 100 else f'in: {message}')
+                    if not proxy.send_message(message):
+                        print("Failed to send message to LSP")
+                        break
+                # If message is None, connection was closed by client
+                else:
+                    print("Client disconnected")
+                    break
+            except Exception as e:
+                logger.error(f"Error receiving from client: {e}")
+                break
     except Exception as e:
-        print(f"Connection closed: {e}")
+        logger.error(f"Connection error: {e}")
     finally:
-        print("Terminating LSP process.")
-        proc.terminate()
+        print("Cleaning up LSP connection...")
+        shutdown_event.set()
+        proxy.disconnect()
+        response_thread.join(timeout=5)  # Wait up to 5s for thread to finish
+        logger.info("LSP endpoint cleanup complete")
+        proxy.disconnect()
+        response_thread.join(timeout=1.0)
+        print("Client disconnected from LSP endpoint")
 
 # The endpoint of our flask app
 @app.route(rule="/BPMNParser", methods=["POST"])
@@ -390,8 +451,68 @@ def handle_markings_goto(uuid: str):
 
 # Running the API
 if __name__ == "__main__":
+    
     print(f'# Using temporary directory:  "{TEMP_PATH}"')
-    # Setting host = "0.0.0.0" runs it on localhost
-    app.run(host="0.0.0.0", debug=False)
-
-    TEMP_FILE.cleanup()
+    
+    # Find a free port for LSP subprocess
+    def find_free_port(start=5008, end=5018):
+        for port in range(start, end + 1):
+            try:
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                s.bind(('127.0.0.1', port))
+                s.close()
+                return port
+            except OSError:
+                continue
+        return None
+    
+    lsp_port = find_free_port()
+    if lsp_port is None:
+        print("Error: No free ports available for LSP subprocess")
+        sys.exit(1)
+    
+    # Set global LSP_PORT for lsp_endpoint to use
+    LSP_PORT = lsp_port
+    logger.info(f"LSP subprocess will use port {LSP_PORT}")
+    
+    print(f"Starting LSP subprocess on port {LSP_PORT}...")
+    
+    # Start LSP subprocess directly
+    lsp_command = [
+        JAVA_PATH,
+        "-cp",
+        BPMN4S_GEN,
+        "nl.asml.matala.product.lsp.server.ProductServerLauncher",
+        "-socket",
+        "-port",
+        str(LSP_PORT)
+    ]
+    
+    logger.info(f"LSP command: {' '.join(lsp_command)}")
+    
+    lsp_proc = subprocess.Popen(
+        lsp_command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE
+    )
+    
+    # Give LSP subprocess time to start and listen on socket
+    logger.info("Waiting for LSP subprocess to initialize...")
+    time.sleep(2)
+    
+    print("Starting CPN Server on port 5000...")
+    try:
+        app.run(host="0.0.0.0", debug=False, port=5000)
+    finally:
+        logger.info("Shutting down CPN Server...")
+        if lsp_proc.poll() is None:
+            logger.info("Terminating LSP subprocess...")
+            lsp_proc.terminate()
+            try:
+                lsp_proc.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                logger.warning("LSP subprocess did not terminate, killing...")
+                lsp_proc.kill()
+                lsp_proc.wait()
+        TEMP_FILE.cleanup()
+        logger.info("CPN Server shutdown complete")
