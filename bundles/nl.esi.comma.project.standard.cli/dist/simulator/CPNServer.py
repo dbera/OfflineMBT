@@ -23,6 +23,7 @@ import threading
 import socket
 import logging
 import time
+import webbrowser
 
 # Configure logging
 logging.basicConfig(
@@ -238,12 +239,13 @@ def lsp_endpoint(ws: Server) -> None:
     finally:
         print("Cleaning up LSP connection...")
         shutdown_event.set()
+        response_thread.join(timeout=5)  # Wait for response thread to finish before closing ws
         proxy.disconnect()
-        response_thread.join(timeout=5)  # Wait up to 5s for thread to finish
+        try:
+            ws.close()
+        except Exception as e:
+            logger.error(f"Error closing WebSocket: {e}")
         logger.info("LSP endpoint cleanup complete")
-        proxy.disconnect()
-        response_thread.join(timeout=1.0)
-        print("Client disconnected from LSP endpoint")
 
 # The endpoint of our flask app
 @app.route(rule="/BPMNParser", methods=["POST"])
@@ -455,20 +457,21 @@ if __name__ == "__main__":
     print(f'# Using temporary directory:  "{TEMP_PATH}"')
     
     # Find a free port for LSP subprocess
-    def find_free_port(start=5008, end=5018):
-        for port in range(start, end + 1):
-            try:
-                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                s.bind(('127.0.0.1', port))
-                s.close()
-                return port
-            except OSError:
-                continue
-        return None
+    def find_free_port():
+        """Find a free port by letting the OS assign one, then return it."""
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.bind(('127.0.0.1', 0))  # 0 = let OS choose a free port
+            port = s.getsockname()[1]
+            s.close()
+            return port
+        except OSError as e:
+            logger.error(f"Failed to find free port: {e}")
+            return None
     
     lsp_port = find_free_port()
     if lsp_port is None:
-        print("Error: No free ports available for LSP subprocess")
+        print("Error: Failed to find free port for LSP subprocess")
         sys.exit(1)
     
     # Set global LSP_PORT for lsp_endpoint to use
@@ -501,6 +504,14 @@ if __name__ == "__main__":
     time.sleep(2)
     
     print("Starting CPN Server on port 5000...")
+    
+    # Open browser to the server
+    try:
+        webbrowser.open('http://localhost:5000/', new=0)  # Reuse existing window if possible
+        logger.info("Browser opened to http://localhost:5000/")
+    except Exception as e:
+        logger.warning(f"Failed to open browser: {e}")
+    
     try:
         app.run(host="0.0.0.0", debug=False, port=5000)
     finally:
