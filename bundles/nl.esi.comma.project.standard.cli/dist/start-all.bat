@@ -34,6 +34,12 @@ IF /I "%~1"=="--clean" (
     CALL :log "No virtual environments found to clean"
   )
   CALL :log "Continuing with regular execution..."
+) ELSE (
+  ECHO.
+  ECHO Tip: If you encounter errors during execution, run the script with --clean flag:
+  ECHO   start-all.bat --clean
+  ECHO This will remove corrupted virtual environments and create fresh ones.
+  ECHO.
 )
 
 :: Check for Python environment
@@ -95,6 +101,11 @@ IF "!IS_VENV!"=="True" (
   IF NOT EXIST "!TEMP_ENV!" (
     CALL :log "Setting up virtual environment..."
     
+    :: Create parent directories if needed
+    IF NOT EXIST "!TEMP!\cpn\!python_version!" (
+      MKDIR "!TEMP!\cpn\!python_version!" >NUL 2>&1
+    )
+    
     :: Check internet connectivity
     PING -n 1 pypi.org >NUL 2>&1
     IF %ERRORLEVEL% NEQ 0 (
@@ -131,9 +142,29 @@ IF "!IS_VENV!"=="True" (
     
     IF NOT "!NEW_HASH!"=="!OLD_HASH!" (
       CALL :log "Requirements have changed, updating packages..."
+      
+      :: Verify venv integrity before updating
+      IF NOT EXIST "!TEMP_ENV!\pyvenv.cfg" (
+        CALL :log "Warning: Virtual environment appears corrupted, recreating..."
+        RMDIR /S /Q "!TEMP_ENV!" >NUL 2>&1
+        "%BPMN4S_PYTHON%" -m venv "!TEMP_ENV!"
+        IF %ERRORLEVEL% NEQ 0 (
+          CALL :log "Error: Failed to recreate virtual environment"
+          EXIT /B 1
+        )
+        "!VENV_PYTHON!" -m pip install --upgrade pip >NUL 2>&1
+      )
+      
       "!VENV_PYTHON!" -m pip install --timeout 60 -r "%~dp0requirements.txt"
+      IF %ERRORLEVEL% NEQ 0 (
+        CALL :log "Error: Failed to update requirements"
+        EXIT /B 1
+      )
       ECHO !NEW_HASH! > "!TEMP_ENV!\req_hash.txt"
     )
+    
+    :: Cleanup temporary hash file
+    DEL "%TEMP%\req_hash.txt" >NUL 2>&1
   )
 )
 
