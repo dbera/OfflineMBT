@@ -1,3 +1,11 @@
+"""LSP Socket Proxy
+
+Implements a socket-based proxy that communicates with the Java LSP subprocess
+using the Language Server Protocol (LSP) with proper Content-Length message framing.
+Forwards JSON-RPC messages between LSP server and client, handling socket timeouts
+and connection lifecycle management.
+"""
+
 import logging
 import socket
 import threading

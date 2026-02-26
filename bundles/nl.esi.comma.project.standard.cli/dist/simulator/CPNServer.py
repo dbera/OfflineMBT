@@ -12,6 +12,13 @@
 # SPDX-License-Identifier: MIT
 #
 
+"""CPN Server - LSP-based BPMN Model Simulator
+
+Flask web server providing REST API endpoints for BPMN model simulation and
+test generation. Manages LSP subprocess on a dynamically allocated socket port,
+forwarding WebSocket messages between clients and the Language Server Protocol
+backend. Supports scenario loading, state management, and transition firing.
+"""
 
 import os
 import sys
