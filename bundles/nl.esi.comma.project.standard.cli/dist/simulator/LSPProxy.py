@@ -2,6 +2,7 @@ import logging
 import socket
 import threading
 import json
+from typing import Optional, Dict
 
 logger = logging.getLogger(__name__)
 
@@ -11,13 +12,13 @@ SOCKET_TIMEOUT = 30.0
 class LSPProxy:
     """Proxy that forwards WebSocket messages to LSP subprocess over socket with proper LSP framing."""
     
-    def __init__(self, lsp_port):
-        self.lsp_port = lsp_port
-        self.lsp_socket = None
-        self.connected = False
-        self.lock = threading.Lock()
+    def __init__(self, lsp_port: int) -> None:
+        self.lsp_port: int = lsp_port
+        self.lsp_socket: Optional[socket.socket] = None
+        self.connected: bool = False
+        self.lock: threading.Lock = threading.Lock()
     
-    def connect(self):
+    def connect(self) -> bool:
         """Connect to the LSP subprocess on the specified port."""
         try:
             self.lsp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -31,7 +32,7 @@ class LSPProxy:
             self.connected = False
             return False
     
-    def disconnect(self):
+    def disconnect(self) -> None:
         """Disconnect from the LSP subprocess."""
         try:
             self.connected = False
@@ -41,7 +42,7 @@ class LSPProxy:
         except Exception as e:
             logger.error(f"Error disconnecting: {e}")
     
-    def send_message(self, message):
+    def send_message(self, message: str) -> bool:
         """Send a message to LSP subprocess with proper LSP framing (Content-Length header)."""
         if not self.connected:
             logger.error("Not connected to LSP subprocess")
@@ -75,14 +76,14 @@ class LSPProxy:
             self.connected = False
             return False
     
-    def receive_message(self):
+    def receive_message(self) -> Optional[str]:
         """Receive a message from LSP subprocess, parsing LSP headers."""
         if not self.connected:
             return None
         
         try:
             # Read headers line by line
-            headers = {}
+            headers: Dict[str, str] = {}
             while True:
                 line = self._read_line()
                 if line is None:
@@ -102,8 +103,8 @@ class LSPProxy:
                 return None
             
             # Read content
-            content_length = int(headers['Content-Length'])
-            content = b''
+            content_length: int = int(headers['Content-Length'])
+            content: bytes = b''
             while len(content) < content_length:
                 chunk = self.lsp_socket.recv(content_length - len(content))
                 if not chunk:
@@ -123,12 +124,12 @@ class LSPProxy:
             self.connected = False
             return None
     
-    def _read_line(self):
+    def _read_line(self) -> Optional[str]:
         """Read a line from socket until CRLF."""
-        line = b''
+        line: bytes = b''
         while True:
             try:
-                char = self.lsp_socket.recv(1)
+                char: bytes = self.lsp_socket.recv(1)
                 if not char:
                     return None
                 line += char

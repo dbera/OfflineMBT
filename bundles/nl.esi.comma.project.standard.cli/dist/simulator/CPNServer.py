@@ -24,6 +24,7 @@ import socket
 import logging
 import time
 import webbrowser
+from typing import Optional, Tuple, Any
 
 # Configure logging
 logging.basicConfig(
@@ -52,9 +53,9 @@ sock = Sock(app)
 CORS(app)
 
 # LSP subprocess port - will be set at runtime
-LSP_PORT = None
+LSP_PORT: Optional[int] = None
 
-def build_and_load_model(model_path:str):
+def build_and_load_model(model_path: str) -> Tuple[Any, subprocess.CompletedProcess]:
 
     model_dir, model_name = os.path.split(model_path)
     model_name, model_ext = os.path.splitext(model_name)
@@ -92,7 +93,7 @@ def build_and_load_model(model_path:str):
 
 
 
-def generate_tests( model_path:str, num_tests:int=1, depth_limit:int=500):
+def generate_tests(model_path: str, num_tests: int = 1, depth_limit: int = 500) -> Tuple[str, subprocess.CompletedProcess]:
     
     model_dir, model_name = os.path.split(model_path)
     model_name, model_ext = os.path.splitext(model_name)
@@ -143,12 +144,12 @@ def generate_tests( model_path:str, num_tests:int=1, depth_limit:int=500):
     return zip_filename, result
 
 @app.route('/')
-def index():
+def index() -> str:
     return serve_static('index.html')
 
 # This route handles any static files in the root directory
 @app.route('/<path:path>')
-def serve_static(path):
+def serve_static(path: str) -> Tuple[str, int]:
     if os.path.exists(os.path.join(os.path.join(__file__,'..'), 'static', path)):
         return send_from_directory('static', path)
     else:
@@ -169,7 +170,7 @@ def lsp_endpoint(ws: Server) -> None:
         return
     
     # Create proxy to LSP subprocess
-    proxy = LSPProxy(LSP_PORT)
+    proxy: LSPProxy = LSPProxy(LSP_PORT)
     if not proxy.connect():
         print("Failed to connect to LSP subprocess")
         try:
@@ -182,10 +183,10 @@ def lsp_endpoint(ws: Server) -> None:
     print(f"Connected to LSP subprocess on port {LSP_PORT}")
     
     # Shutdown event for clean termination
-    shutdown_event = threading.Event()
+    shutdown_event: threading.Event = threading.Event()
     
     # Thread to forward responses from LSP to WebSocket client
-    def forward_lsp_responses():
+    def forward_lsp_responses() -> None:
         try:
             while not shutdown_event.is_set() and proxy.connected:
                 try:
@@ -214,7 +215,7 @@ def lsp_endpoint(ws: Server) -> None:
             logger.info("Response forwarding thread stopping")
             shutdown_event.set()
     
-    response_thread = threading.Thread(target=forward_lsp_responses)
+    response_thread: threading.Thread = threading.Thread(target=forward_lsp_responses)
     response_thread.daemon = False  # Not a daemon thread - we wait for it to finish
     response_thread.start()
     
@@ -249,7 +250,7 @@ def lsp_endpoint(ws: Server) -> None:
 
 # The endpoint of our flask app
 @app.route(rule="/BPMNParser", methods=["POST"])
-def handle_bpmn():
+def handle_bpmn() -> Tuple[Any, int]:
     _bpmn = request.files['bpmn-file']
     fname = _bpmn.filename
     filename = fname + utils.gensym(prefix="_",timestamp=True)
@@ -289,7 +290,7 @@ def handle_bpmn():
 
 
 @app.route(rule="/TestGenerator", methods=["POST"])
-def test_generator():
+def test_generator() -> Tuple[Any, int]:
     _bpmn = request.files['bpmn-file']
     _args = json.loads(request.form['prj-params']) if 'prj-params' in request.form else {}
 
@@ -324,7 +325,7 @@ def test_generator():
 
 # The endpoint of our flask app
 @app.route(rule="/BPMNParser/<uuid>", methods=["DELETE"])
-def handle_delete_bpmn(uuid):
+def handle_delete_bpmn(uuid: str) -> Any:
     response = {'response': f'Error (un)loading Package {uuid}'}
     with utils.lock_handle_bpmn(): 
         if utils.get_cpn(uuid) is not None:
@@ -338,7 +339,7 @@ def handle_delete_bpmn(uuid):
 
 # The endpoints of our flask app
 @app.route(rule="/CPNServer/<uuid>", methods=["GET"])
-def handle_request(uuid: str):
+def handle_request(uuid: str) -> Any:
     print(f'Received Request [{uuid}]: request_cpn')
 
     response = {}
@@ -352,7 +353,7 @@ def handle_request(uuid: str):
 
 
 @app.route(rule="/CPNServer/<uuid>/scenario/load", methods=["POST"])
-def handle_scenario_load(uuid: str):
+def handle_scenario_load(uuid: str) -> Tuple[Any, int]:
     print(f'Received Request [{uuid}]: load_scenario')
     pn = utils.get_cpn(uuid)
 
@@ -373,7 +374,7 @@ def handle_scenario_load(uuid: str):
 
 
 @app.route(rule="/CPNServer/<uuid>/markings", methods=["GET"])
-def handle_markings(uuid: str):
+def handle_markings(uuid: str) -> Any:
     print(f'Received Request [{uuid}]: get_marking')
     pn = utils.get_cpn(uuid)
     json_data = {}
@@ -385,7 +386,7 @@ def handle_markings(uuid: str):
 
 
 @app.route(rule="/CPNServer/<uuid>/transitions/enabled", methods=["GET"])
-def handle_transitions_enabled(uuid: str):
+def handle_transitions_enabled(uuid: str) -> Tuple[Any, int]:
     print(f'Received Request [{uuid}]: get_enabled_transitions')
     pn = utils.get_cpn(uuid)
     status_code = 200
@@ -407,7 +408,7 @@ def handle_transitions_enabled(uuid: str):
 
 
 @app.route(rule="/CPNServer/<uuid>/transition/fire", methods=["POST"])
-def handle_transition_fire(uuid: str):
+def handle_transition_fire(uuid: str) -> Any:
     print(f'Received Request [{uuid}]: fire_transition')
     pn = utils.get_cpn(uuid)
     payload = request.get_json()
@@ -425,7 +426,7 @@ def handle_transition_fire(uuid: str):
 
 
 @app.route(rule="/CPNServer/<uuid>/markings/save", methods=["POST"])
-def handle_markings_save(uuid: str):
+def handle_markings_save(uuid: str) -> Any:
     print(f'Received Request [{uuid}]: save_marking')
     pn = utils.get_cpn(uuid)
     pn.saveMarking()
@@ -434,7 +435,7 @@ def handle_markings_save(uuid: str):
 
 
 @app.route(rule="/CPNServer/<uuid>/markings/restore", methods=["POST"])
-def handle_markings_reload(uuid: str):
+def handle_markings_reload(uuid: str) -> Any:
     print(f'Received Request [{uuid}]: set_marking')
     pn = utils.get_cpn(uuid)
     pn.gotoSavedMarking()
@@ -442,7 +443,7 @@ def handle_markings_reload(uuid: str):
     return jsonify(response)
 
 @app.route(rule="/CPNServer/<uuid>/markings/goto", methods=["POST"])
-def handle_markings_goto(uuid: str):
+def handle_markings_goto(uuid: str) -> Any:
     print(f'Received Request [{uuid}]: goto_marking')
     pn = utils.get_cpn(uuid)
     payload = request.get_json()
@@ -457,7 +458,7 @@ if __name__ == "__main__":
     print(f'# Using temporary directory:  "{TEMP_PATH}"')
     
     # Find a free port for LSP subprocess
-    def find_free_port():
+    def find_free_port() -> Optional[int]:
         """Find a free port by letting the OS assign one, then return it."""
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -493,7 +494,7 @@ if __name__ == "__main__":
     
     logger.info(f"LSP command: {' '.join(lsp_command)}")
     
-    lsp_proc = subprocess.Popen(
+    lsp_proc: subprocess.Popen = subprocess.Popen(
         lsp_command,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE
