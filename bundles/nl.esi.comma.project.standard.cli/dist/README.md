@@ -11,39 +11,40 @@ To migrate your model, use the following command (the original bpmn file will be
 sed -e 's/__uuid__\s*=\s*uuid()\s*,\(&#10;\|\s\)*//g' -e '/<bpmn4s:field name="__uuid__" typeRef="String"/d' -i.orig <bpmn_file.bpmn>
 ```
 
-## Starting the LSP server
+## Pre-requisites
 
-To get data expression editing support, the data expression language server needs to be started before loading a bpmn model.
-To start the data expression language server, simply execute the `start-lsp-server.bat` file by double clicking it.
-This will open a console, and if correct, the console will state: `... Started server socket at /0.0.0.0:9090`
-Please keep this console open during your BPMN4S modeling sessions, and just close it when you are done.
+To run BPMN4S, you need ``python v3.10 (or greater)`` installed on your system.
 
-## Starting the simulation server
+By default, the `start-all.bat` script will create a temporary Python virtual environment in the system's temp directory. This environment will be cleaned up automatically if you use the `--clean` flag.
 
-### Pre-requisites for running the simulation environment (One time only!)
-To run the simulation server, you need ``python v3.10 (or greater)`` and the following modules:
+If you want to use your own Python installation (e.g., from an existing virtual environment), you can define an environment variable named ``BPMN4S_PYTHON`` pointing to the desired ``python.exe``.
+The script will detect if it's already a virtual environment and use it directly.
 
+**Package management:** Python packages are installed automatically by the `start-all.bat` script. If the `requirements.txt` file changes, the script will automatically detect this and reinstall/update the required packages on the next run. Manual pip installation is not needed.
+
+## Starting the language servers
+
+To get data expression editing support and simulation capabilities, the language servers (LSP and CPN) need to be started.
+Both servers are started automatically when you run the `start-all.bat` script. Simply execute the `start-all.bat` file by double clicking it.
+
+This will:
+1. Start the data expression language server (LSP) on a dynamically allocated socket port
+2. Start the CPN simulation server on `http://127.0.0.1:5000`
+3. Open the BPMN4S editor in your default browser
+
+Please keep the console open during your BPMN4S modeling sessions, and just close it when you are done.
+
+If you encounter any errors during startup, try running the script with the `--clean` flag to reset the Python environment:
 ```
-pip install snakes
-pip install requests
-pip install flask flask_cors
+start-all.bat --clean
 ```
-
-Next, you can define a environment variable named ``BPMN4S_PYTHON`` pointing to an alternative ``python.exe``.
-This environment variable will be used to start the simulation server.
-If ``BPMN4S_PYTHON`` is not defined, the standard ``python.exe`` will be used.
-
-
-### Running the simulation server
-
-To get simulation capabilities enabled, the CPNServer needs to be started before starting a token simulation.
-To start the CPN server, simply execute the `start-simulator.bat` file by double clicking it.
-This will open a console, and if correct, the console will state: `... Running on http://127.0.0.1:5000`
-Please keep this console open during your BPMN4S modeling sessions, and just close it when you are done.
 
 ## Starting the BPMN4S editor
 
-Now you are ready to start modeling, just open the `index.html` in your browser.
+The BPMN4S editor will open automatically in your default browser when you run the `start-all.bat` script.
+The editor will be accessible at `http://localhost:5000`.
+
+If the browser does not open automatically, you can manually navigate to `http://localhost:5000` in your browser.
 To get editing support for data expressions, just click on the `fx` button near the data expression field.
 Please click the `fx` button again when done editing.
 
