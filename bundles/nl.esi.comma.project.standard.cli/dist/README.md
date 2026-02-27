@@ -34,6 +34,16 @@ This will:
 
 Please keep the console open during your BPMN4S modeling sessions, and just close it when you are done.
 
+### Custom static files directory
+
+By default, the BPMN4S editor serves static files (HTML, CSS, JavaScript) from the `static` directory. If you need to use a different directory for static files, you can specify it using the `--static-path` parameter:
+
+```
+start-all.bat --static-path "C:\path\to\custom\static"
+```
+
+The specified directory path will be used for serving all static web content.
+
 If you encounter any errors during startup, try running the script with the `--clean` flag to reset the Python environment:
 ```
 start-all.bat --clean

@@ -31,6 +31,7 @@ import socket
 import logging
 import time
 import webbrowser
+import argparse
 from typing import Optional, Tuple, Any
 
 import CPNUtils as utils
@@ -58,6 +59,9 @@ CORS(app)
 
 # LSP subprocess port - will be set at runtime
 LSP_PORT: Optional[int] = None
+
+# Static files path - will be set from command-line arguments
+STATIC_PATH = os.path.join(os.path.dirname(__file__), '..', 'static')
 
 def build_and_load_model(model_path:str):
 
@@ -357,9 +361,9 @@ def index() -> str:
 # This route handles any static files in the root directory
 @app.route("/<path:path>")
 def serve_static(path: str) -> Tuple[str, int]:
-    static_path = os.path.join(os.path.join(__file__, ".."), "static", path)
-    if os.path.exists(static_path):
-        return send_from_directory("static", path)
+    static_file = os.path.join(STATIC_PATH, path)
+    if os.path.exists(static_file):
+        return send_from_directory(STATIC_PATH, path)
     else:
         return "File not found", 404
 
@@ -521,6 +525,14 @@ if __name__ == "__main__":
     # Give LSP subprocess time to start and listen on socket
     logger.info("Waiting for LSP subprocess to initialize...")
     time.sleep(2)
+
+    # Parse command-line arguments
+    default_static_path = os.path.join(os.path.dirname(__file__), '..', 'static')
+    parser = argparse.ArgumentParser(description='BPMN4S CPN Server')
+    parser.add_argument('--static-path', type=str, default=default_static_path, help='Path to static files directory')
+    args = parser.parse_args()
+    STATIC_PATH = args.static_path
+    logger.info(f"Using static path: {STATIC_PATH}")
 
     port = 5000
 

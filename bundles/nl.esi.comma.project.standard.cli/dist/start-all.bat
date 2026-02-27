@@ -177,7 +177,7 @@ ECHO * Press Ctrl+C to exit the simulator      *
 ECHO *-----------------------------------------*
 ECHO.
 
-"!VENV_PYTHON!" "!simulator_file!"
+"!VENV_PYTHON!" "!simulator_file!" %*
 SET EXIT_CODE=%ERRORLEVEL%
 
 IF %EXIT_CODE% NEQ 0 (
