@@ -293,7 +293,7 @@ class ProductGenerator extends AbstractGenerator {
 							var place = new String
 							if(isActionsPresent)
 								place = parseOutVariablesWithActions(block, map_output_input, 
-										v, tr, pnet, f.name+"_"+update.name, input_var_list)
+										v, tr, pnet, '''«block.name»_«f.name»_«update.name»''', input_var_list)
 							else
 								place = parseOutputVariables(block, map_output_input, v, tr, pnet)
 							
@@ -302,7 +302,7 @@ class ProductGenerator extends AbstractGenerator {
 							var methodDef = 
 							'''
 								@staticmethod
-								def execute_«f.name»_«update.name»_«place»(«FOR elm : input_var_list.keySet SEPARATOR ','»«elm»«ENDFOR»):
+								def execute_«block.name»_«f.name»_«update.name»_«place»(«FOR elm : input_var_list.keySet SEPARATOR ','»«elm»«ENDFOR»):
 									«actTxt»
 									«IF v.ref.type.type instanceof RecordTypeDecl»
 										return json.dumps(«v.ref.name»)
