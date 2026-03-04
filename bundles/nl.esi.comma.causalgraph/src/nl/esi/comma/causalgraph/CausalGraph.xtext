@@ -83,7 +83,8 @@ AliasTypeDecl:
 
 Node:
     'node' name=ID ':'
-    'step-name' ':' (function?='function')? stepName = STRING
+    'step-name' ':' stepName = STRING
+    ('step-signature' ':' (function?='function')? stepSignature = STRING)?
     ('step-type' ':' stepType = StepType)?
     ('step-parameters' ':' stepParameters += Variable+)?
     ('step-body' ':' stepBody = StepBody)?
