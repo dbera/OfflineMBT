@@ -16,7 +16,6 @@ generate expression "http://www.esi.nl/comma/expressions/Expression"
 
 import "http://www.esi.nl/xtext/common/lang/Base" as base
 import "http://www.esi.nl/comma/types/Types" as types
-import "http://www.esi.nl/comma/signature/InterfaceSignature" as signature
 
 ExpressionModel returns base::ModelContainer: {ExpressionModel}
     imports += Import*
@@ -161,7 +160,7 @@ ExpressionConstantString:
 ;
 
 ExpressionEnumLiteral: 
-	(interface = [signature::Signature|ID] '::')? type = [types::EnumTypeDecl] "::" literal = [types::EnumElement] 
+	type = [types::EnumTypeDecl] "::" literal = [types::EnumElement] 
 ;
 
 ExpressionNullLiteral:
@@ -174,7 +173,7 @@ ExpressionVariable:
 ;
 
 ExpressionRecord: 
-	(interface = [signature::Signature|ID] '::')? type = [types::RecordTypeDecl] '{' fields+=Field (',' fields+=Field)* '}'
+	type = [types::RecordTypeDecl] '{' fields+=Field (',' fields+=Field)* '}'
 ;
 
 Field:
@@ -260,18 +259,14 @@ ConcreteExpressionUnary returns ExpressionUnary:
 //Extensions to the Types language
 
 @Override 
-TypeReference: InterfaceAwareType type = [types::TypeDecl] ;
+TypeReference: type = [types::TypeDecl] ;
 
 @Override 
 VectorTypeConstructor:
-	InterfaceAwareType type = [types::TypeDecl] (dimensions += Dimension)+
+	type = [types::TypeDecl] (dimensions += Dimension)+
 ;
 
 @Override 
 MapTypeConstructor: 
-	'map' '<' InterfaceAwareType type = [types::TypeDecl] ',' valueType = Type '>'
-;
-
-fragment InterfaceAwareType:
-	(interface = [signature::Signature|ID] '::')?
+	'map' '<' type = [types::TypeDecl] ',' valueType = Type '>'
 ;

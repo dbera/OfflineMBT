@@ -15,26 +15,12 @@
  */
 package nl.esi.comma.actions.scoping
 
-import java.util.ArrayList
-import java.util.Collection
-import java.util.List
 import nl.esi.comma.actions.actions.ActionsPackage
 import nl.esi.comma.actions.actions.AssignmentAction
-import nl.esi.comma.actions.actions.CommandEvent
-import nl.esi.comma.actions.actions.InterfaceEventInstance
-import nl.esi.comma.actions.actions.NotificationEvent
 import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
-import nl.esi.comma.actions.actions.SignalEvent
 import nl.esi.comma.expressions.expression.ExpressionRecordAccess
-import nl.esi.comma.signature.interfaceSignature.InterfaceEvent
-import nl.esi.comma.signature.interfaceSignature.InterfaceSignaturePackage
-import nl.esi.comma.signature.interfaceSignature.Signature
-import nl.esi.comma.signature.utilities.InterfaceUtilities
 import org.eclipse.emf.ecore.EObject
-import org.eclipse.emf.ecore.EReference
 import org.eclipse.emf.ecore.EStructuralFeature
-
-import static org.eclipse.xtext.scoping.Scopes.*
 
 /**
  * This class contains custom scoping description.
@@ -43,16 +29,6 @@ import static org.eclipse.xtext.scoping.Scopes.*
  * on how and when to use it.
  */
 class ActionsScopeProvider extends AbstractActionsScopeProvider {
-
-    override getScope(EObject context, EReference reference) {
-        return switch (context) {
-            InterfaceEventInstance case reference == ActionsPackage.Literals.INTERFACE_EVENT_INSTANCE__EVENT: {
-                scope_InterfaceEventInstance_event(context as InterfaceEventInstance)
-            }
-            default:
-                super.getScope(context, reference)
-        }
-    }
 
     override getContextType(EObject context, EStructuralFeature reference) {
         val type = switch (context) {
@@ -67,28 +43,4 @@ class ActionsScopeProvider extends AbstractActionsScopeProvider {
         return type ?: super.getContextType(context, reference)
     }
 
-    def scope_InterfaceEventInstance_event(InterfaceEventInstance context) {
-        var List<Signature> sigs = findVisibleInterfaces(context)
-        var result = new ArrayList<InterfaceEvent>
-
-        var EReference filter = null
-
-        if (context instanceof CommandEvent) {
-            filter = InterfaceSignaturePackage.Literals.SIGNATURE__COMMANDS
-        } else if (context instanceof SignalEvent) {
-            filter = InterfaceSignaturePackage.Literals.SIGNATURE__SIGNALS
-        } else if (context instanceof NotificationEvent) {
-            filter = InterfaceSignaturePackage.Literals.SIGNATURE__NOTIFICATIONS
-        }
-
-        for (sig : sigs) {
-            if (filter === null) {
-                result.addAll(InterfaceUtilities::getAllInterfaceEvents(sig))
-            } else {
-                result.addAll(sig.eGet(filter) as Collection<InterfaceEvent>)
-            }
-        }
-
-        return scopeFor(result)
-    }
 }

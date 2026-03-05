@@ -54,16 +54,12 @@ import nl.esi.comma.expressions.expression.ExpressionRecordAccess
 import nl.esi.comma.expressions.expression.ExpressionSubtraction
 import nl.esi.comma.expressions.expression.ExpressionVariable
 import nl.esi.comma.expressions.expression.ExpressionVector
-import nl.esi.comma.expressions.expression.InterfaceAwareType
 import nl.esi.comma.expressions.expression.QUANTIFIER
-import nl.esi.comma.signature.interfaceSignature.Signature
 import nl.esi.comma.types.BasicTypes
 import nl.esi.comma.types.types.Dimension
-import nl.esi.comma.types.types.Type
 import nl.esi.comma.types.types.TypeDecl
 import nl.esi.comma.types.types.TypeObject
 import nl.esi.comma.types.types.TypesFactory
-import nl.esi.comma.types.types.TypesPackage
 import nl.esi.comma.types.types.VectorTypeConstructor
 import nl.esi.comma.types.types.VectorTypeDecl
 import org.eclipse.emf.ecore.EObject
@@ -421,29 +417,14 @@ class ExpressionValidator extends AbstractExpressionValidator {
 	//For now this is not implemented
 	@Check
 	def checkDuplicatedEnumTypes(ExpressionEnumLiteral lit){
-		if(lit.interface === null){
-			if(isAmbigousType(lit, lit.type.name, ExpressionPackage.Literals.EXPRESSION_ENUM_LITERAL__TYPE))
-				error('Several enum types with this name exist. Use an explicit interface name.', ExpressionPackage.Literals.EXPRESSION_ENUM_LITERAL__TYPE)
-		}
+		if(isAmbigousType(lit, lit.type.name, ExpressionPackage.Literals.EXPRESSION_ENUM_LITERAL__TYPE))
+			error('Several enum types with this name exist. Use an explicit interface name.', ExpressionPackage.Literals.EXPRESSION_ENUM_LITERAL__TYPE)
 	}
 	
 	@Check
 	def checkDuplicatedRecordTypes(ExpressionRecord er){
-		if(er.interface === null){
-			if(isAmbigousType(er, er.type.name, ExpressionPackage.Literals.EXPRESSION_RECORD__TYPE))
-				error('Several record types with this name exist. Use an explicit interface name.', ExpressionPackage.Literals.EXPRESSION_RECORD__TYPE)
-		}
+		if(isAmbigousType(er, er.type.name, ExpressionPackage.Literals.EXPRESSION_RECORD__TYPE))
+			error('Several record types with this name exist. Use an explicit interface name.', ExpressionPackage.Literals.EXPRESSION_RECORD__TYPE)
 	}
 	
-	@Check
-	def checkDuplicatedTypeInTypeReference(InterfaceAwareType type){
-		var String name = (type as Type).type.name
-		var EReference ref = TypesPackage.Literals.TYPE__TYPE
-		var Signature i = (type as InterfaceAwareType).interface
-		
-		if(i === null){
-			if(isAmbigousType(type, name, ref))
-				error('Several types with this name exist. Use an explicit interface name.', ref)
-		}
-	}	
 }
