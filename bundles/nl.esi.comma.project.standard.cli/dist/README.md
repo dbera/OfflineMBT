@@ -15,43 +15,23 @@ sed -e 's/__uuid__\s*=\s*uuid()\s*,\(&#10;\|\s\)*//g' -e '/<bpmn4s:field name="_
 
 To run BPMN4S, you need ``python v3.10 (or greater)`` installed on your system.
 
-By default, the `start-all.bat` script will create a temporary Python virtual environment in the system's temp directory. This environment will be cleaned up automatically if you use the `--clean` flag.
-
-If you want to use your own Python installation (e.g., from an existing virtual environment), you can define an environment variable named ``BPMN4S_PYTHON`` pointing to the desired ``python.exe``.
-The script will detect if it's already a virtual environment and use it directly.
-
-**Package management:** Python packages are installed automatically by the `start-all.bat` script. If the `requirements.txt` file changes, the script will automatically detect this and reinstall/update the required packages on the next run. Manual pip installation is not needed.
-
 ## Starting the language servers
 
 To get data expression editing support and simulation capabilities, the language servers (LSP and CPN) need to be started.
-Both servers are started automatically when you run the `start-all.bat` script. Simply execute the `start-all.bat` file by double clicking it.
+Both servers are started automatically when you run the `start-server.bat` script. Simply execute the `start-server.bat` file by double clicking it.
 
 This will:
 1. Start the data expression language server (LSP) on a dynamically allocated socket port
-2. Start the CPN simulation server on `http://127.0.0.1:5000`
+2. Start the CPN simulation server on `http://127.0.0.1:5000` or a higher port if the port is not available
 3. Open the BPMN4S editor in your default browser
 
 Please keep the console open during your BPMN4S modeling sessions, and just close it when you are done.
 
-### Custom static files directory
-
-By default, the BPMN4S editor serves static files (HTML, CSS, JavaScript) from the `static` directory. If you need to use a different directory for static files, you can specify it using the `--static-path` parameter:
-
-```
-start-all.bat --static-path "C:\path\to\custom\static"
-```
-
-The specified directory path will be used for serving all static web content.
-
-If you encounter any errors during startup, try running the script with the `--clean` flag to reset the Python environment:
-```
-start-all.bat --clean
-```
+If you encounter any errors during startup, you can try running the script with the `--clean` flag to reset the Python environment.
 
 ## Starting the BPMN4S editor
 
-The BPMN4S editor will open automatically in your default browser when you run the `start-all.bat` script.
+The BPMN4S editor will open automatically in your default browser when you run the `start-server.bat` script.
 The editor will be accessible at `http://localhost:5000`.
 
 If the browser does not open automatically, you can manually navigate to `http://localhost:5000` in your browser.
@@ -59,7 +39,7 @@ To get editing support for data expressions, just click on the `fx` button near 
 Please click the `fx` button again when done editing.
 
 NOTE: The following error message indicates that the LSP server is not running:
-      `WebSocket connection to 'ws://localhost:9090' failed.`
+      `WebSocket connection to 'ws://localhost:5000/lsp' failed.`
 
 To simulate your model, please click the `Token Simulation` button at the top left of your browser window.
 This will change the palette at the top left, and now you can click the play button at the top to start simulation.

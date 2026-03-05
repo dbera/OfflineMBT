@@ -61,14 +61,14 @@ CORS(app)
 LSP_PORT: Optional[int] = None
 
 # Static files path - will be set from command-line arguments
-STATIC_PATH = os.path.join(os.path.dirname(__file__), '..', 'static')
+WEB_PATH = os.path.join(os.path.dirname(__file__), '..', 'web')
 
 def build_and_load_model(model_path:str):
 
     model_dir, model_name = os.path.split(model_path)
     model_name, model_ext = os.path.splitext(model_name)
     model_name = utils.to_valid_variable_name(model_name)
-    taskname:str = f"simulator"
+    taskname:str = f"server"
     prj_template:str = """Project project {{
     Generate Simulator {{
         {0} {{
@@ -353,19 +353,19 @@ def handle_markings_goto(uuid: str):
     response = {'response': 'The net has been restored to the marking'}
     return jsonify(response)
 
-# The root will serve index.html from static
+# The root will serve index.html from ../web
 @app.route("/")
 def index() -> str:
-    return serve_static("index.html")
+    return serve_web("index.html")
 
 # This route handles any static files in the root directory
 @app.route("/<path:path>")
-def serve_static(path: str) -> Tuple[str, int]:
-    static_file = os.path.join(STATIC_PATH, path)
-    if os.path.exists(static_file):
-        return send_from_directory(STATIC_PATH, path)
+def serve_web(path: str) -> Tuple[str, int]:
+    web_file = os.path.join(WEB_PATH, path)
+    if os.path.exists(web_file):
+        return send_from_directory(WEB_PATH, path)
     else:
-        return "File not found", 404
+        return f"File not found {path}", 404
 
 # A Proxy to the java lsp server 
 @sock.route("/lsp")
@@ -531,21 +531,44 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='BPMN4S CPN Server')
     parser.add_argument('--static-path', type=str, default=default_static_path, help='Path to static files directory')
     args = parser.parse_args()
-    STATIC_PATH = args.static_path
-    logger.info(f"Using static path: {STATIC_PATH}")
+    WEB_PATH = args.static_path
+    logger.info(f"Using static path: {WEB_PATH}")
 
-    port = 5000
+    # Find a free port for the CPN server (between 5000 and 5009)
+    def find_free_server_port(start_port: int = 5000, end_port: int = 5009) -> int:
+        """Find a free port in the specified range.
 
-    print("Starting CPN Server on port 5000...")
+        Uses SO_REUSEADDR so that Flask can immediately bind to the same port
+        after we close the probe socket, eliminating the race window where
+        another process could claim the port.
+        """
+        for port in range(start_port, end_port + 1):
+            try:
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                s.bind(("0.0.0.0", port))
+                s.close()
+                return port
+            except OSError:
+                continue
+        logger.error(f"No free port available in range {start_port}-{end_port}")
+        sys.exit(1)
+
+    port = find_free_server_port()
+
+    print(f"Starting CPN Server on port {port}...")
     url = f"http://localhost:{port}/"
-    # Open browser to the server
-    try:
-        reuse_window = 0  # Reuse existing window if possible
+    # Open browser after a short delay to ensure Flask is ready
+    def open_browser(url: str, delay: float = 1.5) -> None:
+        time.sleep(delay)
+        try:
+            webbrowser.open_new_tab(url)
+            logger.info(f"Browser opened to {url}")
+        except Exception as e:
+            logger.warning(f"Failed to open browser: {e}")
 
-        webbrowser.open(url, new=reuse_window)
-        logger.info(f"Browser opened to {url}")
-    except Exception as e:
-        logger.warning(f"Failed to open browser: {e}")
+    browser_thread = threading.Thread(target=open_browser, args=(url,), daemon=True)
+    browser_thread.start()
 
     try:
        # Setting host = "0.0.0.0" runs it on localhost

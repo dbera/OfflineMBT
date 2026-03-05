@@ -1,3 +1,4 @@
+@REM
 @REM Copyright (c) 2024, 2025 TNO-ESI
 @REM
 @REM See the NOTICE file(s) distributed with this work for additional
@@ -37,7 +38,7 @@ IF /I "%~1"=="--clean" (
 ) ELSE (
   ECHO.
   ECHO Tip: If you encounter errors during execution, run the script with --clean flag:
-  ECHO   start-all.bat --clean
+  ECHO   start-server.bat --clean
   ECHO This will remove corrupted virtual environments and create fresh ones.
   ECHO.
 )
@@ -120,18 +121,18 @@ IF "!IS_VENV!"=="True" (
     
     CALL :log "Installing packages..."
     "!VENV_PYTHON!" -m pip install --upgrade pip
-    "!VENV_PYTHON!" -m pip install --timeout 60 -r "%~dp0requirements.txt"
+    "!VENV_PYTHON!" -m pip install --timeout 60 -r "%~dp0server\requirements.txt"
     IF %ERRORLEVEL% NEQ 0 (
       CALL :log "Error: Failed to install requirements"
       EXIT /B 1
     )
     
     :: Save requirements hash for future comparison
-    CERTUTIL -hashfile "%~dp0requirements.txt" MD5 | FINDSTR /V ":" > "!TEMP_ENV!\req_hash.txt"
+    CERTUTIL -hashfile "%~dp0server\requirements.txt" MD5 | FINDSTR /V ":" > "!TEMP_ENV!\req_hash.txt"
   ) ELSE (
     :: Check if requirements have changed
     CALL :log "Checking if requirements have changed..."
-    CERTUTIL -hashfile "%~dp0requirements.txt" MD5 | FINDSTR /V ":" > "%TEMP%\req_hash.txt"
+    CERTUTIL -hashfile "%~dp0server\requirements.txt" MD5 | FINDSTR /V ":" > "%TEMP%\req_hash.txt"
     SET /p NEW_HASH=<"%TEMP%\req_hash.txt"
     
     IF EXIST "!TEMP_ENV!\req_hash.txt" (
@@ -155,7 +156,7 @@ IF "!IS_VENV!"=="True" (
         "!VENV_PYTHON!" -m pip install --upgrade pip >NUL 2>&1
       )
       
-      "!VENV_PYTHON!" -m pip install --timeout 60 -r "%~dp0requirements.txt"
+      "!VENV_PYTHON!" -m pip install --timeout 60 -r "%~dp0server\requirements.txt"
       IF %ERRORLEVEL% NEQ 0 (
         CALL :log "Error: Failed to update requirements"
         EXIT /B 1
@@ -168,7 +169,7 @@ IF "!IS_VENV!"=="True" (
   )
 )
 
-SET simulator_file=%~dp0simulator\CPNServer.py
+SET simulator_file=%~dp0server\CPNServer.py
 CALL :log "Starting simulator: '!simulator_file!'"
 ECHO.
 ECHO *-----------------------------------------*

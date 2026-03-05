@@ -1,11 +1,15 @@
-"""LSP Socket Proxy
-
-Implements a socket-based proxy that communicates with the Java LSP
-subprocess using the Language Server Protocol (LSP) with proper
-Content-Length message framing. Forwards JSON-RPC messages between LSP
-server and client, handling socket timeouts and connection lifecycle
-management.
-"""
+#
+# Copyright (c) 2024, 2025 TNO-ESI
+#
+# See the NOTICE file(s) distributed with this work for additional
+# information regarding copyright ownership.
+#
+# This program and the accompanying materials are made available
+# under the terms of the MIT License which is available at
+# https://opensource.org/licenses/MIT
+#
+# SPDX-License-Identifier: MIT
+#
 
 import logging
 import socket
@@ -20,7 +24,14 @@ SOCKET_TIMEOUT = 30.0
 
 
 class LSPProxy:
-    """Proxy that forwards WebSocket messages to LSP subprocess."""
+    """LSP Socket Proxy
+
+    Implements a socket-based proxy that communicates with the Java LSP
+    subprocess using the Language Server Protocol (LSP) with proper
+    Content-Length message framing. Forwards JSON-RPC messages between LSP
+    server and client, handling socket timeouts and connection lifecycle
+    management.
+    """
     def __init__(self, lsp_port: int) -> None:
         self.lsp_port: int = lsp_port
         self.lsp_socket: Optional[socket.socket] = None
