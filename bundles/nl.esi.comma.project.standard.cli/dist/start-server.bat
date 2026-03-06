@@ -156,44 +156,58 @@ IF "!IS_VENV!"=="True" (
     )
     
     :: Save requirements hash for future comparison
-    CERTUTIL -hashfile "!SCRIPT_DIR!server\requirements.txt" MD5 | FINDSTR /V ":" > "!TEMP_ENV!\req_hash.txt"
+    FOR /F %%H IN ('CERTUTIL -hashfile "!SCRIPT_DIR!server\requirements.txt" MD5 ^| FINDSTR /V ":"') DO (
+      SET "INITIAL_HASH=%%H"
+      ECHO %%H > "!TEMP_ENV!\req_hash.txt"
+    )
+    CALL :log "Requirements hash saved: !INITIAL_HASH!"
   ) ELSE (
     :: Check if requirements have changed
     CALL :log "Checking if requirements have changed..."
-    CERTUTIL -hashfile "!SCRIPT_DIR!server\requirements.txt" MD5 | FINDSTR /V ":" > "%TEMP%\req_hash.txt"
-    SET /p NEW_HASH=<"%TEMP%\req_hash.txt"
+    FOR /F %%H IN ('CERTUTIL -hashfile "!SCRIPT_DIR!server\requirements.txt" MD5 ^| FINDSTR /V ":"') DO (
+      SET "NEW_HASH=%%H"
+    )
+    
+    CALL :log "Current requirements hash: !NEW_HASH!"
     
     IF EXIST "!TEMP_ENV!\req_hash.txt" (
       SET /p OLD_HASH=<"!TEMP_ENV!\req_hash.txt"
-    ) ELSE (
-      SET "OLD_HASH="
-    )
-    
-    IF NOT "!NEW_HASH!"=="!OLD_HASH!" (
-      CALL :log "Requirements have changed, updating packages..."
+      CALL :log "Cached requirements hash: !OLD_HASH!"
       
-      :: Verify venv integrity before updating
-      IF NOT EXIST "!TEMP_ENV!\pyvenv.cfg" (
-        CALL :log "Warning: Virtual environment appears corrupted, recreating..."
-        RMDIR /S /Q "!TEMP_ENV!" >NUL 2>&1
-        "%BPMN4S_PYTHON%" -m venv "!TEMP_ENV!"
+      :: Compare hashes using FC (file compare) as a workaround for batch string comparison issues
+      ECHO !NEW_HASH! > "%TEMP%\new_hash.txt"
+      FC "%TEMP%\new_hash.txt" "!TEMP_ENV!\req_hash.txt" >NUL 2>&1
+      
+      IF %ERRORLEVEL% EQU 0 (
+        CALL :log "Requirements unchanged"
+      ) ELSE (
+        CALL :log "Requirements have changed, updating packages..."
+        
+        :: Verify venv integrity before updating
+        IF NOT EXIST "!TEMP_ENV!\pyvenv.cfg" (
+          CALL :log "Warning: Virtual environment appears corrupted, recreating..."
+          RMDIR /S /Q "!TEMP_ENV!" >NUL 2>&1
+          "%BPMN4S_PYTHON%" -m venv "!TEMP_ENV!"
+          IF %ERRORLEVEL% NEQ 0 (
+            CALL :log "Error: Failed to recreate virtual environment"
+            EXIT /B 1
+          )
+          "!VENV_PYTHON!" -m pip install --upgrade pip >NUL 2>&1
+        )
+        
+        "!VENV_PYTHON!" -m pip install --timeout 60 -r "!SCRIPT_DIR!server\requirements.txt"
         IF %ERRORLEVEL% NEQ 0 (
-          CALL :log "Error: Failed to recreate virtual environment"
+          CALL :log "Error: Failed to update requirements"
           EXIT /B 1
         )
-        "!VENV_PYTHON!" -m pip install --upgrade pip >NUL 2>&1
+        ECHO !NEW_HASH! > "!TEMP_ENV!\req_hash.txt"
+        CALL :log "Requirements hash updated to: !NEW_HASH!"
       )
-      
-      "!VENV_PYTHON!" -m pip install --timeout 60 -r "!SCRIPT_DIR!server\requirements.txt"
-      IF %ERRORLEVEL% NEQ 0 (
-        CALL :log "Error: Failed to update requirements"
-        EXIT /B 1
-      )
-      ECHO !NEW_HASH! > "!TEMP_ENV!\req_hash.txt"
+    ) ELSE (
+      CALL :log "No cached requirements found, skipping update check"
     )
     
-    :: Cleanup temporary hash file
-    DEL "%TEMP%\req_hash.txt" >NUL 2>&1
+    DEL "%TEMP%\new_hash.txt" >NUL 2>&1
   )
 )
 
