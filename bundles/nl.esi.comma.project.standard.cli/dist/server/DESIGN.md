@@ -96,9 +96,49 @@ This mode:
 - Allows regression tests to be run independently with the same infrastructure
 - Does not display the `PAUSE` prompt when complete (for automated test execution)
 
-### Socket Timeout
+### CPNRegressionTest.py Arguments
 
-A 30-second socket timeout (`SOCKET_TIMEOUT = 30.0`) is configured for all LSP socket communications to prevent indefinite hangs on unresponsive connections.
+CPNRegressionTest.py supports two modes with the following argument structure:
+
+**Global Arguments** (apply to both modes):
+- `--base-url URL`: Server URL (default: http://127.0.0.1:5000)
+- `--timeout N`: HTTP timeout in seconds (default: 60)
+- `--verbose`: Enable detailed per-step logs
+
+**Mode 1: regression-test** (default if no subcommand specified)
+```
+CPNRegressionTest.py [global-args] [regression-test] <model.bpmn> <scenario1.json> [scenario2.json ...] [--keep-loaded]
+```
+- `<model.bpmn>`: Path to BPMN model
+- `<scenario1.json> ...`: One or more test scenario JSON files
+- `--keep-loaded`: Keep the BPMN model loaded after testing (optional)
+
+Note: The `regression-test` subcommand is optional. If omitted, it's automatically inserted before the first non-flag argument.
+
+**Mode 2: testgen**
+```
+CPNRegressionTest.py [global-args] testgen <model.bpmn> [--num-tests N] [--depth-limit N] [--out path.zip]
+```
+- `<model.bpmn>`: Path to BPMN model
+- `--num-tests N`: Number of test cases to generate (default: 1)
+- `--depth-limit N`: Search depth limit (default: 1000)
+- `--out path.zip`: Custom output path for generated ZIP file (optional)
+
+**Examples**:
+```
+# Regression test (explicit)
+CPNRegressionTest.py regression-test model.bpmn scenario1.json scenario2.json
+
+# Regression test (implicit - regression-test auto-inserted)
+CPNRegressionTest.py model.bpmn scenario1.json
+
+# Test generation
+CPNRegressionTest.py testgen model.bpmn --num-tests 5 --out tests.zip
+
+# With global flags
+CPNRegressionTest.py --verbose --base-url http://localhost:5001 model.bpmn scenario.json
+CPNRegressionTest.py --verbose testgen model.bpmn --num-tests 3
+```
 
 ## Development Details
 

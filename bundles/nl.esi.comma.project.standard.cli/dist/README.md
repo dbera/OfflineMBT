@@ -59,14 +59,27 @@ On successful test generation a zip file will be downloaded, which contains the 
 
 ## Running a regression test
 
-NOTE: Running a regression test requires a running simulation server.
+**IMPORTANT**: The regression test requires a running simulation server on port 5000.
+Start the server first by running `start-server.bat` in a separate terminal before running regression tests.
 
 Regression tests can be used to validate if previously generated test scenarios can still be replayed on a new version of your BPMN model.
-To start a regression test, please execute the `regression-test.bat` file from the command line.
-The command takes the BPMN file as its first input, followed by a list of json files (i.e. test scenario traces, also see previous section).
+To start a regression test, execute the `regression-test.bat` file from the command line with your BPMN file and scenario files:
 
-The regression test command-line utility will replay all provided test scenarios against the provided BPMN model and report if this succeeded or failed.
-If one ore more scenarios could not be replayed the process will exit with an exit code 1.
+```
+regression-test.bat <model.bpmn> <scenario1.json> [scenario2.json ...]
+```
 
-NOTE: The following error message indicates that the simulation server is not running:
-      `Failed to connect to simulation server: Failed to fetch`
+The regression test command-line utility will replay all provided test scenarios against the running server's BPMN model and report if this succeeded or failed.
+If one or more scenarios could not be replayed, the process will exit with exit code 1.
+
+**Optional flags**:
+- `--verbose`: Enable detailed per-step logs
+- `--timeout N`: HTTP timeout in seconds (default: 60)
+
+Example:
+```
+regression-test.bat models\printer.bpmn scenarios\scenario1.json scenarios\scenario2.json
+```
+
+If you see the error `Failed to connect to simulation server: Failed to fetch`, it means the simulation server is not running on port 5000.
+Start it with `start-server.bat` first.
