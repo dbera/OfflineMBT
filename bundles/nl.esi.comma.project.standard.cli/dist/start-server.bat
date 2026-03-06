@@ -14,6 +14,9 @@
 @ECHO OFF
 SETLOCAL EnableDelayedExpansion
 
+:: Save script directory before any CALL statements (important when called from another batch)
+SET "SCRIPT_DIR=%~dp0"
+
 :: Main script execution starts here
 GOTO :main
 
@@ -25,8 +28,29 @@ EXIT /B 0
 :main
 CALL :log "Starting script execution"
 
-:: Check for --clean argument
-IF /I "%~1"=="--clean" (
+:: Check for --clean and --regression-test arguments anywhere in parameters and consume them
+SET CLEAN_FLAG=0
+SET REGRESSION_TEST_FLAG=0
+SET "ARGS="
+:parse_args
+IF NOT "%~1"=="" (
+  IF /I "%~1"=="--clean" (
+    SET CLEAN_FLAG=1
+  ) ELSE IF /I "%~1"=="--regression-test" (
+    SET REGRESSION_TEST_FLAG=1
+  ) ELSE (
+    :: Preserve other arguments with quotes if they contain spaces
+    IF DEFINED ARGS (
+      SET "ARGS=!ARGS! %~1"
+    ) ELSE (
+      SET "ARGS=%~1"
+    )
+  )
+  SHIFT
+  GOTO parse_args
+)
+
+IF %CLEAN_FLAG%==1 (
   CALL :log "Cleaning up virtual environments..."
   IF EXIST "%TEMP%\cpn" (
     RMDIR /S /Q "%TEMP%\cpn"
@@ -44,9 +68,13 @@ IF /I "%~1"=="--clean" (
 )
 
 :: Check for Python environment
-IF NOT DEFINED BPMN4S_PYTHON (
+IF DEFINED BPMN4S_PYTHON (
   ECHO *-----------------------------------------* >&2
-  ECHO * BPMN4S_PYTHON variable is NOT defined!  * >&2
+  ECHO * BPMN4S_PYTHON variable is used          * >&2
+  ECHO *-----------------------------------------* >&2
+  ECHO:
+) ELSE (
+  ECHO *-----------------------------------------* >&2
   ECHO * Standard python.exe will be used.       * >&2
   ECHO *-----------------------------------------* >&2
   ECHO:
@@ -121,18 +149,18 @@ IF "!IS_VENV!"=="True" (
     
     CALL :log "Installing packages..."
     "!VENV_PYTHON!" -m pip install --upgrade pip
-    "!VENV_PYTHON!" -m pip install --timeout 60 -r "%~dp0server\requirements.txt"
+    "!VENV_PYTHON!" -m pip install --timeout 60 -r "!SCRIPT_DIR!server\requirements.txt"
     IF %ERRORLEVEL% NEQ 0 (
       CALL :log "Error: Failed to install requirements"
       EXIT /B 1
     )
     
     :: Save requirements hash for future comparison
-    CERTUTIL -hashfile "%~dp0server\requirements.txt" MD5 | FINDSTR /V ":" > "!TEMP_ENV!\req_hash.txt"
+    CERTUTIL -hashfile "!SCRIPT_DIR!server\requirements.txt" MD5 | FINDSTR /V ":" > "!TEMP_ENV!\req_hash.txt"
   ) ELSE (
     :: Check if requirements have changed
     CALL :log "Checking if requirements have changed..."
-    CERTUTIL -hashfile "%~dp0server\requirements.txt" MD5 | FINDSTR /V ":" > "%TEMP%\req_hash.txt"
+    CERTUTIL -hashfile "!SCRIPT_DIR!server\requirements.txt" MD5 | FINDSTR /V ":" > "%TEMP%\req_hash.txt"
     SET /p NEW_HASH=<"%TEMP%\req_hash.txt"
     
     IF EXIST "!TEMP_ENV!\req_hash.txt" (
@@ -156,7 +184,7 @@ IF "!IS_VENV!"=="True" (
         "!VENV_PYTHON!" -m pip install --upgrade pip >NUL 2>&1
       )
       
-      "!VENV_PYTHON!" -m pip install --timeout 60 -r "%~dp0server\requirements.txt"
+      "!VENV_PYTHON!" -m pip install --timeout 60 -r "!SCRIPT_DIR!server\requirements.txt"
       IF %ERRORLEVEL% NEQ 0 (
         CALL :log "Error: Failed to update requirements"
         EXIT /B 1
@@ -169,21 +197,43 @@ IF "!IS_VENV!"=="True" (
   )
 )
 
-SET simulator_file=%~dp0server\CPNServer.py
-CALL :log "Starting simulator: '!simulator_file!'"
+IF %REGRESSION_TEST_FLAG%==1 (
+  SET python_file=!SCRIPT_DIR!server\CPNRegressionTest.py
+  CALL :log "Running regression tests: '!python_file!'"
+) ELSE (
+  SET python_file=!SCRIPT_DIR!server\CPNServer.py
+  CALL :log "Starting simulator: '!python_file!'"
+)
+
+:: Set PATH to prioritize venv Python
+SET "PATH=!TEMP_ENV!\Scripts;!PATH!"
+CALL :log "PATH updated to prioritize venv Python: '!TEMP_ENV!\Scripts'"
+
 ECHO.
-ECHO *-----------------------------------------*
-ECHO * Simulator is now running...             *
-ECHO * Press Ctrl+C to exit the simulator      *
-ECHO *-----------------------------------------*
+IF %REGRESSION_TEST_FLAG%==1 (
+  ECHO *-----------------------------------------*
+  ECHO * Running regression tests...             *
+  ECHO *-----------------------------------------*
+) ELSE (
+  ECHO *-----------------------------------------*
+  ECHO * Simulator is now running...             *
+  ECHO * Press Ctrl+C to exit the simulator      *
+  ECHO *-----------------------------------------*
+)
 ECHO.
 
-"!VENV_PYTHON!" "!simulator_file!" %*
+"!VENV_PYTHON!" "!python_file!" !ARGS!
 SET EXIT_CODE=%ERRORLEVEL%
 
 IF %EXIT_CODE% NEQ 0 (
-  CALL :log "Error: Simulator exited with code %EXIT_CODE%"
+  IF %REGRESSION_TEST_FLAG%==1 (
+    CALL :log "Error: Regression tests exited with code %EXIT_CODE%"
+  ) ELSE (
+    CALL :log "Error: Simulator exited with code %EXIT_CODE%"
+  )
 )
 
-PAUSE
+IF NOT %REGRESSION_TEST_FLAG%==1 (
+  PAUSE
+)
 EXIT /B %EXIT_CODE%

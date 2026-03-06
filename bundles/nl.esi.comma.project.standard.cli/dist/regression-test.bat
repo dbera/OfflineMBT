@@ -12,25 +12,9 @@
 @REM
 
 @ECHO OFF
-SETLOCAL
 
-IF not defined BPMN4S_PYTHON (
-  ECHO *-----------------------------------------* >&2
-  ECHO * BPMN4S_PYTHON variable is NOT defined!  * >&2
-  ECHO * Standard python.exe will be used.       * >&2
-  ECHO *-----------------------------------------* >&2
-  ECHO:
-  set BPMN4S_PYTHON=python.exe
-)
- 
-ECHO # Using python environment: "%BPMN4S_PYTHON%"
-
-FOR /F "delims=" %%i IN ("%~dp0") DO (
-  set script_drive=%%~di
-  set script_path=%%~pi
-)
-set python_file=%script_drive%%script_path%simulator\CPNRegressionTest.py
-
-%BPMN4S_PYTHON% "%python_file%" %*
+:: Delegate to start-server.bat with --regression-test flag to reuse venv setup
+:: Use absolute path to ensure correct directory resolution regardless of CWD
+CALL "%~dp0start-server.bat" --regression-test %*
 
 ENDLOCAL

@@ -21,26 +21,27 @@ The `LSPProxy` class is a socket-based proxy that acts as a bridge between WebSo
 - **Message Framing**: Implements proper Content-Length message framing according to the Language Server Protocol (LSP) specification
 - **Socket Management**: Manages socket timeouts and handles socket-level communication with a 30-second receive timeout
 
-This class replaces the functionality that was previously implemented in the Java `WebSocketLspConnection` class.
-
 ### CPNServer (CPNServer.py)
 
 The main Flask-based server that:
 
 - Serves the web application (BPMN4S editor UI)
-- Routes LSP-related requests to the proxy
+- Automatically detects and binds to an available port (5000-5009 range)
+- Routes LSP-related requests to the LSPProxy
 - Manages static file serving with configurable paths
-- Handles port allocation and server lifecycle
+- Launches the Java LSP subprocess on a dynamically allocated socket port (OS-assigned)
+- Opens the browser automatically to the correct URL
+- Handles server lifecycle and graceful shutdown
 
 ## Key Design Decisions
 
-### Static File Path Configuration
+### Web Path Configuration
 
-The `--static-path` command-line argument allows users to specify a custom directory for serving static web files. By default, the BPMN4S editor serves static files (HTML, CSS, JavaScript) from the `web` directory.
+The `--web-path` command-line argument allows users to specify a custom directory for serving static web files. By default, the BPMN4S editor serves static files (HTML, CSS, JavaScript) from the `web` directory.
 
 Usage:
 ```
-start-server.bat --static-path "C:\path\to\custom\static"
+start-server.bat --web-path "C:\path\to\custom\web"
 ```
 
 This enables:
@@ -48,11 +49,52 @@ This enables:
 - **Development Flexibility**: Developers can point to the public folder of an alternative webapp implementation during testing
 - **Customization**: Users can serve custom static content without modifying the codebase
 
+### Debug Logging
+
+The `--debug` flag enables debug-level logging to help troubleshoot issues:
+
+```
+start-server.bat --debug
+```
+
+When enabled, debug messages will show:
+- WebSocket message exchanges (in/out)
+- Detailed connection information
+- Internal processing steps
+
+Debug logging is useful for:
+- Troubleshooting LSP communication issues
+- Understanding message flow during development
+- Diagnosing connection problems
+
 ### Port Configuration
 
-- **Default Port**: The server runs on port 5000 by default
-- **Command-line Override**: The port can be specified via command-line arguments
-- **Future Enhancement**: Auto-detection of free ports (starting from 5000) is a planned feature to allow multiple instances to run simultaneously
+- **Automatic Port Detection**: The server automatically finds a free port in the range 5000-5009
+- **Windows Support**: On Windows, uses `SO_EXCLUSIVEADDRUSE` to ensure the port is truly available
+- **Unix Support**: On Unix/Linux systems, uses `SO_REUSEADDR` for port reuse
+- **Error Handling**: If no free ports are available in the range, the server exits with an error message
+- **URL Display**: The server logs the actual URL on startup (e.g., `http://localhost:5000/` or `http://localhost:5001/` depending on port availability)
+
+The server uses the first available port it finds, allowing multiple instances to run simultaneously on the same machine.
+
+### Regression Testing
+
+The `--regression-test` flag (invoked via `regression-test.bat`) switches the server to run CPNRegressionTest.py instead of CPNServer.py:
+
+```
+regression-test.bat
+```
+
+Or from the command line:
+```
+start-server.bat --regression-test
+```
+
+This mode:
+- Reuses the same virtual environment setup and codebase
+- Avoids code duplication between server startup and regression testing
+- Allows regression tests to be run independently with the same infrastructure
+- Does not display the `PAUSE` prompt when complete (for automated test execution)
 
 ### Socket Timeout
 
@@ -60,7 +102,26 @@ A 30-second socket timeout (`SOCKET_TIMEOUT = 30.0`) is configured for all LSP s
 
 ## Development Details
 
-### Python Environment
+### Batch Script vs Python Arguments
+
+The startup infrastructure separates batch script-level flags from Python application flags:
+
+**Batch Script Flags** (consumed by `start-server.bat`, not passed to Python):
+- `--clean`: Removes the temporary Python virtual environment from `%TEMP%\cpn\<version>\.venv`
+- `--regression-test`: Switches the application to run regression tests instead of the server
+
+**Python Application Flags** (passed to CPNServer.py):
+- `--web-path`: Specifies a custom directory for serving static files
+- `--debug`: Enables debug-level logging for troubleshooting
+
+Example usage:
+```
+start-server.bat --clean --debug
+start-server.bat --regression-test
+start-server.bat --web-path "C:\custom\web"
+```
+
+The batch script parses and consumes its own flags (--clean, --regression-test) before passing remaining arguments to the Python application.
 
 The server uses a Python virtual environment for dependency isolation. By default, the environment is created in the system's temp directory and can be cleaned up with the `--clean` flag.
 
@@ -79,10 +140,4 @@ This flag will:
 
 ### Custom Python Installation
 
-Users can specify a custom Python interpreter via the `BPMN4S_PYTHON` environment variable. The startup script will detect if the specified Python path is already a virtual environment and use it directly.
-
-## Future Enhancements
-
-1. **Auto Port Detection**: Implement automatic free port detection starting from port 5000, allowing multiple BPMN4S instances to run concurrently
-2. **Webapp Restructuring**: Consider moving webapp files to a dedicated subfolder (e.g., `webapp/`) to maintain cleaner directory organization
-3. **Directory Structure**: The `server` directory contains all server-side components, reflecting its expanded responsibilities beyond pure simulation
+Users can specify a custom Python interpreter via the `BPMN4S_PYTHON` environment variable. The startup script will detect if the specified Python path is already a virtual environment and in that case use it directly.
