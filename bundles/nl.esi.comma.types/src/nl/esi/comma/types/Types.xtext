@@ -58,7 +58,7 @@ QualifiedNameWithWildcard: QualifiedName '.*'? ;
  * Simple types denote sets of values that are considered atomic.
  * User-defined simple types has no interpretation by default. An interpretation can be given
  * by providing a mapping to a type available in a target language (e.g. C++).
- * ComMA provides a set of built-in simple types: int, bool, string, real, void, any, bulkdata.
+ * ComMA provides a set of built-in simple types: int, bool, string, real, void, any.
  * These types are defined in the library types.types that is implicitly imported in all ComMA models.
  * int, bool, string and real have the traditional meaning.
  * void can only be used as a return type of synchronous calls.
@@ -66,8 +66,6 @@ QualifiedNameWithWildcard: QualifiedName '.*'? ;
  * to express non-determinism in parameter values. any type cannot be used directly 
  * (e.g. in event declarations, variable and other type definitions). It is used, 
  * however, in the ComMA type checker.
- * bulkdata denotes uninterpreted byte arrays. The only operation on bulkdata values is
- * obtaining their size.
  * User-defined simple types can optionally be based on a built-in type. In this case
  * the type being defined can be treated as a synonym of the base type. Values of the base type
  * can be used as values of the type.

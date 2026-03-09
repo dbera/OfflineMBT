@@ -186,7 +186,6 @@ class TypeUtilities {
 			    typeName.equals('string') ||
 			    typeName.equals('void') ||
 			    typeName.equals('any')) ||
-			    typeName.equals('bulkdata') ||
 			    typeName.equals('id')
 	}
 	
