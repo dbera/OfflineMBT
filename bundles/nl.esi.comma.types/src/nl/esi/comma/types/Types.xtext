@@ -79,12 +79,9 @@ EnumTypeDecl:
 ;
 
 EnumElement:
-	name = ID ('=' value = IntExp)?
+	name = ID ('=' value = INT)?
 ;
 
-IntExp:
-	value = INT
-;
 
 RecordTypeDecl:
 	'record' name = ID ('extends' parent = [RecordTypeDecl])? 

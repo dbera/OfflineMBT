@@ -256,11 +256,11 @@ class TypeUtilities {
 	def static EnumElement getEnumElementByValue(EnumTypeDecl enumType, int value){
 		var currentValue = -1
 		for(l : enumType.literals){
-			if(l.value === null){
+			if(l === null){
 				currentValue++
 			}
 			else{
-				currentValue = l.value.value
+				currentValue = l.value
 			}
 			if(currentValue == value) return l
 		}

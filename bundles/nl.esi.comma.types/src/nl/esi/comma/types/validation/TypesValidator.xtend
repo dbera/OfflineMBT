@@ -15,7 +15,6 @@
  */
 package nl.esi.comma.types.validation
 
-import com.google.common.collect.HashMultimap
 import com.google.inject.Inject
 import java.util.Set
 import nl.esi.comma.types.BasicTypes
@@ -159,16 +158,16 @@ class TypesValidator extends AbstractTypesValidator {
 	def checkEnumLiteralValues(EnumTypeDecl type){
 		var currentValue = -1
 		for(l : type.literals){
-			if(l.value === null){
+			if(l === null){
 				currentValue++
 			}
 			else{
-				if(l.value.value <= currentValue){
+				if(l.value <= currentValue){
 					error("Enum value has to be greater than the previous value", l, BasePackage.Literals.NAMED_ELEMENT__NAME);
 					return
 				}
 				else {
-					currentValue = l.value.value
+					currentValue = l.value
 				}
 			}
 		}
