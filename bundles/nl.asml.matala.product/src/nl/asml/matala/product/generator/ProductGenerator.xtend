@@ -219,7 +219,7 @@ class ProductGenerator extends AbstractGenerator {
 				System.out.println("  > case: " + update.name)
 				var tname = f.name + "_" + update.name + "@" + update.stepType + "@" + update.actionType + "@"
 				var qname = new Utils().printConstraint(update)
-				var tr = new Transition(block.name, block.name+"_"+tname, qname)
+				var tr = new Transition(block.name, block.name+"_"+tname, qname, update.priority)
 				pnet.transitions.add(tr)
 				var input_var_list = new HashMap<String,TypeDecl> // ArrayList<String>
 				for(v : update.fnInp) 

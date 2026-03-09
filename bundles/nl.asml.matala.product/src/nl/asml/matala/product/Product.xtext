@@ -80,7 +80,7 @@ Function:
 ;
 
 Update:
-	'case' name = ID 
+	'case' name = ID ('priority' priority = INT)?
 	('step-type' stepType = STRING 'action-type' actionType = ActionType)?
 	('with-inputs' fnInp += VarRef (',' fnInp+=VarRef)*)?
 	('with-guard' guard=Expression?)?
