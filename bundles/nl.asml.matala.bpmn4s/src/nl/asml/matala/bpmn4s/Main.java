@@ -420,6 +420,7 @@ public class Main {
 			node.setComponent(getParentComponents(elem));
 			node.setGuard(elem.getAttributeValueNs("http://bpmn4s", "guard"));
 			node.setStepType(elem.getAttributeValueNs("http://bpmn4s", "stepType"));
+			node.setPriority(elem.getAttributeValueNs("http://bpmn4s", "priority"));
 		}
 		String contextName = elem.getAttributeValueNs("http://bpmn4s", "ctxName");
 		String contextInit = elem.getAttributeValueNs("http://bpmn4s", "ctxInit");
