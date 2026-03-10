@@ -85,11 +85,10 @@ Regression testing is run via a separate `regression-test.bat` script:
 regression-test.bat model.bpmn scenario.json
 ```
 
-This mode:
+This file:
 - Reuses the same virtual environment setup and codebase as the server
 - Avoids code duplication between server startup and regression testing
 - Allows regression tests to be run independently with the same infrastructure
-- Does not display the `PAUSE` prompt when complete (for automated test execution)
 
 ### CPNRegressionTest.py Arguments
 
