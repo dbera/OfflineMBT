@@ -49,6 +49,7 @@ Require-Bundle: org.eclipse.xtext,
  io.projectreactor.reactor-core
 Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: nl.esi.comma.causalgraph,
+ nl.esi.comma.causalgraph.agents,
  nl.esi.comma.causalgraph.causalGraph,
  nl.esi.comma.causalgraph.causalGraph.impl,
  nl.esi.comma.causalgraph.causalGraph.util,
