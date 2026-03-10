@@ -79,19 +79,14 @@ The server uses the first available port it finds, allowing multiple instances t
 
 ### Regression Testing
 
-The `--regression-test` flag (invoked via `regression-test.bat`) switches the server to run CPNRegressionTest.py instead of CPNServer.py:
+Regression testing is run via a separate `regression-test.bat` script:
 
 ```
-regression-test.bat
-```
-
-Or from the command line:
-```
-start-server.bat --regression-test
+regression-test.bat model.bpmn scenario.json
 ```
 
 This mode:
-- Reuses the same virtual environment setup and codebase
+- Reuses the same virtual environment setup and codebase as the server
 - Avoids code duplication between server startup and regression testing
 - Allows regression tests to be run independently with the same infrastructure
 - Does not display the `PAUSE` prompt when complete (for automated test execution)
@@ -107,11 +102,10 @@ CPNRegressionTest.py supports two modes with the following argument structure:
 
 **Mode 1: regression-test** (default if no subcommand specified)
 ```
-CPNRegressionTest.py [global-args] [regression-test] <model.bpmn> <scenario1.json> [scenario2.json ...] [--keep-loaded]
+CPNRegressionTest.py [global-args] [regression-test] <model.bpmn> <scenario1.json> [scenario2.json ...]
 ```
 - `<model.bpmn>`: Path to BPMN model
 - `<scenario1.json> ...`: One or more test scenario JSON files
-- `--keep-loaded`: Keep the BPMN model loaded after testing (optional)
 
 Note: The `regression-test` subcommand is optional. If omitted, it's automatically inserted before the first non-flag argument.
 
@@ -132,6 +126,9 @@ CPNRegressionTest.py regression-test model.bpmn scenario1.json scenario2.json
 # Regression test (implicit - regression-test auto-inserted)
 CPNRegressionTest.py model.bpmn scenario1.json
 
+# Regression test with global flags
+CPNRegressionTest.py --verbose --base-url http://localhost:5001 model.bpmn scenario.json
+
 # Test generation
 CPNRegressionTest.py testgen model.bpmn --num-tests 5 --out tests.zip
 
@@ -142,41 +139,45 @@ CPNRegressionTest.py --verbose testgen model.bpmn --num-tests 3
 
 ## Development Details
 
-### Batch Script vs Python Arguments
+### Startup Infrastructure
 
-The startup infrastructure separates batch script-level flags from Python application flags:
+The startup infrastructure has been refactored into separate, focused batch scripts:
 
-**Batch Script Flags** (consumed by `start-server.bat`, not passed to Python):
+**setup-python.bat** (server/setup-python.bat):
+- Handles Python virtual environment creation and management
+- Checks/installs dependencies from requirements.txt
+- Supports `--clean` flag to reset the environment
+- Exports `VENV_PYTHON` and `TEMP_ENV` variables for callers
+
+**start-server.bat**:
+- Calls setup-python.bat to prepare the Python environment
+- Starts CPNServer.py
+- Passes all command-line arguments to CPNServer.py
+
+**regression-test.bat**:
+- Calls setup-python.bat to prepare the Python environment  
+- Starts CPNRegressionTest.py
+- Passes all command-line arguments to CPNRegressionTest.py
+
+### Batch Script Flags
+
+**Flags consumed by setup-python.bat** (not passed to Python):
 - `--clean`: Removes the temporary Python virtual environment from `%TEMP%\cpn\<version>\.venv`
-- `--regression-test`: Switches the application to run regression tests instead of the server
 
-**Python Application Flags** (passed to CPNServer.py):
-- `--web-path`: Specifies a custom directory for serving static files
-- `--debug`: Enables debug-level logging for troubleshooting
+**Python Application Flags** (passed to the Python application):
+- `--web-path`: Specifies a custom directory for serving static files (CPNServer.py only)
+- `--debug`: Enables debug-level logging for troubleshooting (CPNServer.py only)
+- `--base-url`: Server URL for regression testing (CPNRegressionTest.py only)
+- `--timeout`: HTTP timeout in seconds (CPNRegressionTest.py only)
+- `--verbose`: Enable detailed per-step logs (CPNRegressionTest.py only)
 
 Example usage:
 ```
 start-server.bat --clean --debug
-start-server.bat --regression-test
 start-server.bat --web-path "C:\custom\web"
+regression-test.bat model.bpmn scenario.json
+regression-test.bat --clean --base-url http://localhost:5001 model.bpmn scenario.json
 ```
-
-The batch script parses and consumes its own flags (--clean, --regression-test) before passing remaining arguments to the Python application.
-
-The server uses a Python virtual environment for dependency isolation. By default, the environment is created in the system's temp directory and can be cleaned up with the `--clean` flag.
-
-#### Clean Flag
-
-The `--clean` flag can be used to reset the Python environment:
-
-```
-start-server.bat --clean
-```
-
-This flag will:
-- Remove the temporary Python virtual environment from the system's temp directory
-- Force a fresh installation of all Python dependencies on the next run
-- Useful for troubleshooting environment-related issues or when dependencies have been updated
 
 ### Custom Python Installation
 

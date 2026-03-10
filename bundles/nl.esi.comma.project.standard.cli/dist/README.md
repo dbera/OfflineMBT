@@ -18,16 +18,21 @@ To run BPMN4S, you need ``python v3.10 (or greater)`` installed on your system.
 ## Starting the language servers
 
 To get data expression editing support and simulation capabilities, the language servers (LSP and CPN) need to be started.
-Both servers are started automatically when you run the `start-server.bat` script. Simply execute the `start-server.bat` file by double clicking it.
+The CPN simulation server is started automatically when you run the `start-server.bat` script. Simply execute the `start-server.bat` file by double clicking it.
 
 This will:
-1. Start the data expression language server (LSP) on a dynamically allocated socket port
-2. Start the CPN simulation server on `http://127.0.0.1:5000` or a higher port if the port is not available
-3. Open the BPMN4S editor in your default browser
+1. Set up the Python virtual environment (downloading dependencies if needed)
+2. Start the data expression language server (LSP) on a dynamically allocated socket port
+3. Start the CPN simulation server on `http://127.0.0.1:5000` or a higher port if the port is not available
+4. Open the BPMN4S editor in your default browser
 
 Please keep the console open during your BPMN4S modeling sessions, and just close it when you are done.
 
-If you encounter any errors during startup, you can try running the script with the `--clean` flag to reset the Python environment.
+If you encounter any errors during startup, you can try running the script with the `--clean` flag to reset the Python environment:
+
+```
+start-server.bat --clean
+```
 
 ## Starting the BPMN4S editor
 
@@ -75,6 +80,8 @@ If one or more scenarios could not be replayed, the process will exit with exit 
 **Optional flags**:
 - `--verbose`: Enable detailed per-step logs
 - `--timeout N`: HTTP timeout in seconds (default: 60)
+
+For a complete list of regression-test CLI options, see [DESIGN.md](server/DESIGN.md#running-the-regression-test).
 
 Example:
 ```

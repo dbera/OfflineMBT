@@ -158,14 +158,13 @@ def cmd_regression_test(args: argparse.Namespace) -> int:
             print(f"Scenario failed: {e}")
             failed_count += 1
 
-    # Unload unless requested to keep
-    if not args.keep_loaded:
-        try:
-            client.unload_bpmn(uuid)
-            if args.verbose:
-                print(f"\nUnloaded BPMN UUID={uuid}.")
-        except Exception as e:
-            print(f"Warning: failed to unload BPMN: {e}")
+    # Unload BPMN
+    try:
+        client.unload_bpmn(uuid)
+        if args.verbose:
+            print(f"\nUnloaded BPMN UUID={uuid}.")
+    except Exception as e:
+        print(f"Warning: failed to unload BPMN: {e}")
 
     total_scenarios = len(args.scenarios)
     print(f"\nReport: total={total_scenarios}, passed={passed_count}, failed={failed_count}")
@@ -215,7 +214,6 @@ def build_parser() -> argparse.ArgumentParser:
     p_reg = subparsers.add_parser("regression-test", help="Run scenarios against a BPMN model")
     p_reg.add_argument("bpmn", help="Path to a BPMN file")
     p_reg.add_argument("scenarios", nargs="+", help="One or more scenario JSON files")
-    p_reg.add_argument("--keep-loaded", action="store_true", help="Keep the BPMN loaded")
     p_reg.set_defaults(func=cmd_regression_test)
 
     # testgen subcommand
