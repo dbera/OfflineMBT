@@ -38,10 +38,7 @@ class ScenariosParsingTest {
 		
 		    
 		Scenario StartupSystemOn
-		
-		signal SystemOn
-		periodic notification SystemOnLed_Blink 
-		notification SystemOnLed_On
+		## "str1" "str2"  ##
 		''')
 		Assert.assertNotNull(result)
 		Assert.assertTrue(result.eResource.errors.isEmpty)

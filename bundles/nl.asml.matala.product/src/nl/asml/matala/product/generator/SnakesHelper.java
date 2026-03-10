@@ -18,8 +18,6 @@ import java.util.stream.Collectors;
 
 import nl.esi.comma.actions.actions.Action;
 import nl.esi.comma.actions.actions.AssignmentAction;
-import nl.esi.comma.actions.actions.CommandReply;
-import nl.esi.comma.actions.actions.EventCall;
 import nl.esi.comma.actions.actions.ForAction;
 import nl.esi.comma.actions.actions.IfAction;
 import nl.esi.comma.actions.actions.RecordFieldAssignmentAction;
@@ -292,14 +290,6 @@ class SnakesHelper {
 	}
 	
 	static List<String> parameters(Object event, Function<String, String> variablePrefix) {
-		if (event instanceof CommandReply) {
-			CommandReply r = (CommandReply) event;
-			return r.getParameters().stream().map(p -> expression(p, variablePrefix)).collect(Collectors.toList());
-		} else if (event instanceof EventCall) {
-			EventCall e = (EventCall) event;
-			return e.getParameters().stream().map(p -> expression(p, variablePrefix)).collect(Collectors.toList());
-		}
-		 
 		throw new RuntimeException("Not supported");
 	}
 

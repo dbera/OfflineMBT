@@ -6,7 +6,6 @@ Bundle-Version: 4.2.0.qualifier
 Bundle-SymbolicName: nl.esi.comma.expressions; singleton:=true
 Bundle-ActivationPolicy: lazy
 Require-Bundle: nl.esi.comma.types;visibility:=reexport,
- nl.esi.comma.signature;visibility:=reexport,
  org.eclipse.xtext,
  org.eclipse.xtext.xbase,
  org.eclipse.equinox.common;bundle-version="3.5.0",
@@ -22,14 +21,12 @@ Export-Package: nl.esi.comma.expressions,
  nl.esi.comma.expressions.expression;
   uses:="org.eclipse.emf.ecore,
    org.eclipse.emf.common.util,
-   nl.esi.comma.signature.interfaceSignature,
    nl.esi.comma.types.types",
  nl.esi.comma.expressions.expression.impl;
   uses:="org.eclipse.emf.ecore,
    org.eclipse.emf.ecore.impl,
    org.eclipse.emf.common.util,
    org.eclipse.emf.common.notify,
-   nl.esi.comma.signature.interfaceSignature,
    nl.esi.comma.types.types,
    nl.esi.comma.types.types.impl,
    nl.esi.comma.expressions.expression",
@@ -57,7 +54,6 @@ Export-Package: nl.esi.comma.expressions,
  nl.esi.comma.expressions.scoping;
   uses:="org.eclipse.emf.ecore,
    org.eclipse.xtext.scoping,
-   nl.esi.comma.signature.interfaceSignature,
    nl.esi.comma.expressions.expression",
  nl.esi.comma.expressions.serializer;
   uses:="org.eclipse.emf.ecore,

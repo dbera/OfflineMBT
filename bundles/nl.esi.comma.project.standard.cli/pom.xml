@@ -204,7 +204,6 @@
                             <exclude>*:${project.artifactId}-nl.esi.comma.scenarios-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.scenarios.dashboard-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.scenarios.ide-*</exclude>
-                            <exclude>*:${project.artifactId}-nl.esi.comma.signature-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.steps-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.systemconfig-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.testspecification-*</exclude>

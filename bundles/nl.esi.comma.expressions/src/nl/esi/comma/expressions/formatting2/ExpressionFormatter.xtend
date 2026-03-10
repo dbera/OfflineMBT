@@ -211,16 +211,16 @@ class ExpressionFormatter extends TypesFormatter {
 	def dispatch void format(ExpressionRecord expr, extension IFormattableDocument document) {	
 		val rFinder = expr.regionFor	
 		
-		rFinder.keyword(expressionRecordAccess.colonColonKeyword_0_1)?.surround(noSpace)
+//		rFinder.keyword(expressionRecordAccess.colonColonKeyword_0_1)?.surround(noSpace)
 		
 		expr.type.append(oneSpace)				
 		
-		rFinder.keyword(expressionRecordAccess.leftCurlyBracketKeyword_2).prepend(oneSpace).append(noSpace)
-		rFinder.keyword(expressionRecordAccess.rightCurlyBracketKeyword_5).prepend(noSpace).append(oneSpace)
+		rFinder.keyword(expressionRecordAccess.leftCurlyBracketKeyword_1).prepend(oneSpace).append(noSpace)
+		rFinder.keyword(expressionRecordAccess.rightCurlyBracketKeyword_4).prepend(noSpace).append(oneSpace)
 		
 		expr.fields.forEach[format]
 		
-		rFinder.keyword(expressionRecordAccess.commaKeyword_4_0)?.prepend(noSpace).append(oneSpace)
+		rFinder.keyword(expressionRecordAccess.commaKeyword_3_0)?.prepend(noSpace).append(oneSpace)
 		expr.fields.last.prepend(oneSpace)
 	}
 	
@@ -296,7 +296,7 @@ class ExpressionFormatter extends TypesFormatter {
 	
 	def dispatch void format(ExpressionEnumLiteral expressionEnumLiteral, extension IFormattableDocument document) {
 		val regionFor = expressionEnumLiteral.regionFor
-		regionFor.keyword(expressionEnumLiteralAccess.colonColonKeyword_0_1)?.surround(noSpace)
-		regionFor.keyword(expressionEnumLiteralAccess.colonColonKeyword_2).surround(noSpace)
+		regionFor.keyword(expressionEnumLiteralAccess.colonColonKeyword_1)?.surround(noSpace)
+//		regionFor.keyword(expressionEnumLiteralAccess.colonColonKeyword_2).surround(noSpace)
 	}
 }
