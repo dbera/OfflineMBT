@@ -215,7 +215,7 @@ public class StepDefinitionAgent {
             stepInfo.scenarioId = step.getScenario().getName();
             stepInfo.stepNumber = String.valueOf(step.getStepNumber());
             stepInfo.stepType = node.getStepType().toString();
-            
+            stepInfo.existingStepName = node.getStepName();
             stepInfo.stepBody = step.getStepBody() != null ? extractStepBodyContent(step.getStepBody()) : 
                                (node.getStepBody() != null ? extractStepBodyContent(node.getStepBody()) : "");
             scenarioSteps.add(stepInfo);
@@ -506,11 +506,16 @@ public class StepDefinitionAgent {
         List<SystemMessages.Scenario> scenarios = scenarioSteps.stream()
             .map(step -> new SystemMessages.Scenario(step.scenarioId, step.stepNumber, step.stepBody))
             .collect(Collectors.toList());
-
-        String stepNamePrompt = SystemMessages.generateStepNamePrompt(scenarios);
+        List<String> existingStepNames = scenarioSteps.stream()
+        	    .map(s -> s.existingStepName)
+        	    .filter(name -> name != null && !name.isBlank())
+        	    .distinct()
+        	    .collect(Collectors.toList());
+        
+        String stepNamePrompt = SystemMessages.generateStepNamePrompt(scenarios, existingStepNames);
         String stepNameResponse = this.llm.chat(stepNamePrompt);
         String stepName = stepNameResponse.trim();
-
+        System.out.println(String.format("Generated step name: %s", stepName));
         if (scenarios.size() == 1) {
             // Single scenario - simple case no parameterization needed
             stepDef.stepName = stepName;
@@ -542,8 +547,9 @@ public class StepDefinitionAgent {
                 }
 
                 // Include source code in the prompt for better step definition generation
+                // TODO Maybe stepName is not needed as an input here
                 String stepDefinitionPrompt = SystemMessages.generateStepDefinitionPrompt(
-                    scenarios, variables, variableInitialValues, sourceCode, prevStepsConverted);
+                    scenarios, variables, variableInitialValues, sourceCode, prevStepsConverted, stepName);
 
                 System.out.println("Generating step definition with source code context:");
                 System.out.println(String.format("Available source files: %s", sourceCode.keySet()));
@@ -846,6 +852,7 @@ public class StepDefinitionAgent {
         String stepNumber;
         String stepType;
         String stepBody;
+        String existingStepName;
     }
 
     /**

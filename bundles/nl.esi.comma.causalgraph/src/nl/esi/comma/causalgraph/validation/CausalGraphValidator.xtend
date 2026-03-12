@@ -163,10 +163,10 @@ class CausalGraphValidator extends AbstractCausalGraphValidator {
             return;
         }
 
-        val duplicates = _graph.nodes.groupBy[stepType -> stepName].values.filter[size > 1].flatten
+        val duplicates = _graph.nodes.groupBy[stepType -> stepSignature].values.filter[size > 1].flatten
         duplicates.forEach [ node |
-            error('The combination of step-name and step-type should be unique', node,
-                CausalGraphPackage.Literals.NODE__STEP_NAME)
+            error('The combination of step-signature and step-type should be unique', node,
+                CausalGraphPackage.Literals.NODE__STEP_SIGNATURE)
         ]
     }
 

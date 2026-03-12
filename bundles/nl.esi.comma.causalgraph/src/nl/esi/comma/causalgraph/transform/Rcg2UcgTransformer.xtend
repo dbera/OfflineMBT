@@ -123,18 +123,33 @@ class Rcg2UcgTransformer {
     }
 
     def protected List<NodeGroup> groupNodes(CausalGraph... rcgs) {
-        val nodeGroupsMap = rcgs.flatMap[nodes].groupBy[NodeAttributes.valueOf(it)]
-        // The asserts that are not functions should not be matched by their step-name,
+        // Group nodes by their merge key (based on step-signature, not step-name)
+        val allNodes = rcgs.flatMap[nodes].toList
+        val nodesByMergeKey = allNodes.groupBy[NodeAttributes.valueOf(it).mergeKey]
+        
+        // The asserts that are not functions should not be matched by their step-signature,
         // we need to look at their incoming data dependencies to find possible matches.
-        val nonFunctionAsserts = nodeGroupsMap.filter[k, v |!k.function && k.stepType == StepType::THEN].values.flatten.toList
-        nonFunctionAsserts.forEach[assertNode | nodeGroupsMap.remove(NodeAttributes.valueOf(assertNode))]
+        val nonFunctionAsserts = nodesByMergeKey.filter[k, v |!k.function && k.stepType == StepType::THEN].values.flatten.toList
+        nonFunctionAsserts.forEach[assertNode | 
+            val key = NodeAttributes.valueOf(assertNode).mergeKey
+            nodesByMergeKey.remove(key)
+        ]
 
-        val nodeGroups = nodeGroupsMap.entrySet.map[new NodeGroup(key, value)].toList
+        // Create node groups from the merged nodes, joining step names
+        val nodeGroups = nodesByMergeKey.entrySet.map[entry |
+            val nodes = entry.value
+            val stepNames = nodes.map[stepName].toSet.join('; ')
+            val stepSignature = nodes.head.stepSignature
+            val groupKey = new NodeAttributes(entry.key.function, stepNames, stepSignature, entry.key.stepType)
+            new NodeGroup(groupKey, nodes)
+        ].toList
 
+        // Handle non-function asserts separately
         val assertGroups = nonFunctionAsserts.groupBy[assertGroupKey].values.sortedBy[size]
         for (assertGroup : assertGroups) {
-            val stepName = assertGroup.map[stepName].toSet.join(', ')
-            var groupKey = new NodeAttributes(false, stepName, StepType::THEN)
+            val stepName = assertGroup.map[stepName].toSet.join('; ')
+            val stepSignature = assertGroup.map[stepSignature].toSet.join('; ')
+            var groupKey = new NodeAttributes(false, stepName, stepSignature, StepType::THEN)
             nodeGroups += new NodeGroup(groupKey, assertGroup)
         }
 
@@ -237,6 +252,7 @@ class Rcg2UcgTransformer {
             outputNode = CausalGraphFactory::eINSTANCE.createNode => [ node |
                 node.function = _key.function
                 node.stepName = _key.stepName
+                node.stepSignature = _key.stepSignature
                 node.stepType = _key.stepType
             ]
         }

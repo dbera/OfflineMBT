@@ -430,40 +430,56 @@ WRONG EXAMPLE - DO NOT DO THIS (Using variable names/expressions instead of conc
     /**
      * Prompt to generate only the step name for merging scenarios.
      *
-     * @param scenarios List of scenarios to be merged into a single step definition.
+     * @param scenarios         List of scenarios to be merged into a single step definition.
+     * @param existingStepNames Existing step name(s) already on the node, used as naming context.
      * @return String formatted prompt for the LLM to generate only the step name.
      */
-    public static String generateStepNamePrompt(List<Scenario> scenarios) {
+    public static String generateStepNamePrompt(List<Scenario> scenarios, List<String> existingStepNames) {
         if (scenarios == null || scenarios.isEmpty()) {
             throw new IllegalArgumentException("Scenarios list cannot be null or empty");
         }
 
         StringBuilder prompt = new StringBuilder("""
-You should generate ONLY a step name (descriptive identifier) for the following scenarios.
-The step name should be a clear, descriptive identifier that captures the main action or purpose of the scenarios.
+    You should generate ONLY a step name (descriptive identifier) for the following scenarios.
+    The step name should be a clear, descriptive identifier that captures the main action or purpose of the scenarios.
 
-STEP NAME RULES:
-1. Write the step-name in PascalCase
-2. Base the step-name on the provided scenarios
-3. Make it descriptive but concise
-4. Focus on the main action/purpose, not implementation details
-5. If the step is setting a variable, be clear that it is setting a variable e.g. set x variable to value
-6. If multiple scenarios, find the common purpose that unifies them
-7. Avoid technical jargon when possible
+    STEP NAME RULES:
+    1. Write the step-name in PascalCase
+    2. Base the step-name on the provided scenarios AND the existing step names (if any)
+    3. Make it descriptive but concise
+    4. Focus on the main action/purpose, not implementation details
+    5. If the step is setting a variable, be clear that it is setting a variable e.g. set x variable to value
+    6. If multiple scenarios or existing names, find the common purpose that unifies them
+    7. Avoid technical jargon when possible
 
-Return ONLY the step name as a plain string. No JSON, no explanations, no additional text.
+    Return ONLY the step name as a plain string. No JSON, no explanations, no additional text.
+    """);
 
-SCENARIOS TO NAME:
-""");
+        // Inject existing step names as high-value context
+        if (existingStepNames != null && !existingStepNames.isEmpty()) {
+            prompt.append("\nEXISTING STEP NAMES (use these as primary context for naming):\n");
+            for (String name : existingStepNames) {
+                // A single node name may be a comma-separated list of per-scenario names
+                for (String part : name.split(";")) {
+                    String trimmed = part.trim();
+                    if (!trimmed.isEmpty()) {
+                        prompt.append(String.format("- %s\n", trimmed));
+                    }
+                }
+            }
+            prompt.append("\n");
+        }
+
+        prompt.append("SCENARIOS TO NAME:\n");
 
         for (int i = 0; i < scenarios.size(); i++) {
             Scenario scenario = scenarios.get(i);
             prompt.append(String.format("""
-scenario %d:
-scenario %s step %s:
-    %s
+    scenario %d:
+    scenario %s step %s:
+        %s
 
-""", i, scenario.getScenarioId(), scenario.getStepNumber(), scenario.getStepBody()));
+    """, i, scenario.getScenarioId(), scenario.getStepNumber(), scenario.getStepBody()));
         }
 
         prompt.append("\nReturn only the step name as a plain string:");
@@ -485,7 +501,8 @@ scenario %s step %s:
             Map<String, String> variables,
             Map<String, Object> variableInitialValues,
             Map<String, String> sourceCode,
-            Map<String, List<Scenario>> previousCGSteps) {
+            Map<String, List<Scenario>> previousCGSteps,
+            String stepName) {
         
         if (scenarios == null || scenarios.isEmpty()) {
             throw new IllegalArgumentException("Scenarios list cannot be null or empty");
@@ -544,6 +561,12 @@ RULES:
    - *Very important*: For complex types (NOT int, real, string, bool) do not use in functions, use string modes with conditionals for example when you have Level::HIGH it becomes: if(_mode == "HIGH") { level = Level::HIGH; } or you should be able to infer the value of the enum from the source code or previous steps
 """);
 
+        if (stepName != null && !stepName.isBlank()) {
+            prompt.append(String.format("""
+    The step name has already been determined as: "%s"
+    Use this name to guide your understanding of the step's purpose when generating the body and parameters.
+
+    """, stepName));}
 //        prompt.append(RULES_ARITHMETIC_MULTIPLE_STEPS);
         prompt.append(EXAMPLE_MULTIPLE_SCENARIOS_COMPLEX_DATA_TYPE_IF_ELSE);
 //        prompt.append(EXAMPLE_MULTIPLE_SCENARIOS_VARIABLE_DEPENDENCIES);

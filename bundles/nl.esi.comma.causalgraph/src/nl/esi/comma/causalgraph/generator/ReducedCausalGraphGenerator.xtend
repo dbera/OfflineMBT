@@ -38,6 +38,9 @@ class ReducedCausalGraphGenerator {
     static String stepName
 
     @IntermediateProperty(ScenarioStep)
+    static String stepSignature
+
+    @IntermediateProperty(ScenarioStep)
     static StepType stepType = StepType.THEN
 
     def static void main(String[] args) {
@@ -115,7 +118,7 @@ class ReducedCausalGraphGenerator {
             ]
         )
 
-        val graph = CausalGraphRefinements.createCausalGraph(steps, [new NodeAttributes(function, stepName, stepType)])
+        val graph = CausalGraphRefinements.createCausalGraph(steps, [new NodeAttributes(function, stepName, stepSignature, stepType)])
         graph.name = 'Example'
         graph.language = 'CPP'
 

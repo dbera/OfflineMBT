@@ -41,6 +41,7 @@ class CausalGraphPlantUML {
             «FOR n : cg.nodes»
                 class «n.name» { 
                 step-name: «n.stepName»
+                step-signature: «n.stepSignature»
                 step-type: «n.stepType»
                 «IF !n.stepParameters.isEmpty»
                     step-params: «n.stepParameters.map[p|p.getType().getType().getName() + " " + p.name].join(", ")»
