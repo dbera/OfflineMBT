@@ -15,13 +15,13 @@
  */
 package nl.esi.comma.testspecification
 
-import nl.esi.comma.types.scoping.TypesImportUriGlobalScopeProvider
+import nl.esi.comma.expressions.scoping.ExpressionsImportUriGlobalScopeProvider
 
 /**
  * Use this class to register components to be used at runtime / without the Equinox extension registry.
  */
 class TestspecificationRuntimeModule extends AbstractTestspecificationRuntimeModule {
     override bindIGlobalScopeProvider() {
-        TypesImportUriGlobalScopeProvider
+        ExpressionsImportUriGlobalScopeProvider
     }
 }

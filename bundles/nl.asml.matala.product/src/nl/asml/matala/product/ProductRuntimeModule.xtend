@@ -15,13 +15,13 @@
  */
 package nl.asml.matala.product
 
-import nl.esi.comma.types.scoping.TypesImportUriGlobalScopeProvider
+import nl.esi.comma.expressions.scoping.ExpressionsImportUriGlobalScopeProvider
 
 /**
  * Use this class to register components to be used at runtime / without the Equinox extension registry.
  */
 class ProductRuntimeModule extends AbstractProductRuntimeModule {
     override bindIGlobalScopeProvider() {
-        return TypesImportUriGlobalScopeProvider
+        return ExpressionsImportUriGlobalScopeProvider
     }
 }

@@ -44,7 +44,6 @@ import nl.esi.comma.expressions.expression.ExpressionOr
 import nl.esi.comma.expressions.expression.ExpressionPackage
 import nl.esi.comma.expressions.expression.ExpressionPlus
 import nl.esi.comma.expressions.expression.ExpressionPower
-import nl.esi.comma.expressions.expression.ExpressionQuantifier
 import nl.esi.comma.expressions.expression.ExpressionRecord
 import nl.esi.comma.expressions.expression.ExpressionRecordAccess
 import nl.esi.comma.expressions.expression.ExpressionSubtraction
@@ -55,9 +54,14 @@ import org.eclipse.emf.common.util.EList
 import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.EReference
 import org.eclipse.emf.ecore.util.EcoreUtil
+import nl.esi.comma.expressions.functions.ExpressionFunctionsRegistry
+import com.google.inject.Inject
 
 class ExpressionEvaluator {
     static extension val ExpressionFactory m_exp = ExpressionFactory.eINSTANCE
+
+    @Inject
+    ExpressionFunctionsRegistry functionsRegistry
 
     def Expression evaluate(Expression expression, IEvaluationContext context) {
         if (expression === null || context === null) {
@@ -162,11 +166,7 @@ class ExpressionEvaluator {
     }
 
     protected dispatch def Expression doEvaluate(ExpressionFnCall expression, IEvaluationContext context) {
-        throw new UnsupportedOperationException('Not supported: ' + expression.function.name)
-    }
-
-    protected dispatch def Expression doEvaluate(ExpressionQuantifier expression, IEvaluationContext context) {
-        throw new UnsupportedOperationException('Not supported: ' + expression.quantifier.literal)
+        return functionsRegistry.invokeFunction(expression, context);
     }
 
     // Binary
@@ -279,7 +279,6 @@ class ExpressionEvaluator {
             ExpressionAny,
             ExpressionFnCall,
             ExpressionFunctionCall,
-            ExpressionQuantifier,
             ExpressionVector,
             ExpressionMap,
             ExpressionBracket: expression.sub

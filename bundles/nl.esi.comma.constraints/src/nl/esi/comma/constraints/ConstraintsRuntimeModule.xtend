@@ -15,14 +15,14 @@
  */
 package nl.esi.comma.constraints
 
+import nl.esi.comma.expressions.scoping.ExpressionsImportUriGlobalScopeProvider
 import org.eclipse.xtext.scoping.IGlobalScopeProvider
-import nl.esi.comma.types.scoping.TypesImportUriGlobalScopeProvider
 
 /**
  * Use this class to register components to be used at runtime / without the Equinox extension registry.
  */
 class ConstraintsRuntimeModule extends AbstractConstraintsRuntimeModule {
 	override Class<? extends IGlobalScopeProvider> bindIGlobalScopeProvider() {
-		return TypesImportUriGlobalScopeProvider
+		return ExpressionsImportUriGlobalScopeProvider
 	}
 }

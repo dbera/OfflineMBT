@@ -45,7 +45,6 @@ import nl.esi.comma.expressions.expression.ExpressionNullLiteral
 import nl.esi.comma.expressions.expression.ExpressionOr
 import nl.esi.comma.expressions.expression.ExpressionPlus
 import nl.esi.comma.expressions.expression.ExpressionPower
-import nl.esi.comma.expressions.expression.ExpressionQuantifier
 import nl.esi.comma.expressions.expression.ExpressionRecord
 import nl.esi.comma.expressions.expression.ExpressionRecordAccess
 import nl.esi.comma.expressions.expression.ExpressionSubtraction
@@ -243,23 +242,6 @@ class ExpressionsParser {
     		return '''UNSUPPORTED FUNCTION NAME: «expr.functionName»'''
     }
     
-	/*    
-    '''
-    «IF expr.functionName.equals('size')»(«generateExpression(expr.args.get(0), ref)».length)«ENDIF»
-    «IF expr.functionName.equals('remove')»smVarContainer.remove(«generateExpression(expr.args.get(0), ref)», «generateExpression(expr.args.get(1), ref)»)«ENDIF»
-    «IF expr.functionName.equals('isEmpty')»(«generateExpression(expr.args.get(0), ref)».length == 0)«ENDIF»
-    «IF expr.functionName.equals('contains')»smVarContainer.contains(«generateExpression(expr.args.get(0), ref)», «generateExpression(expr.args.get(1), ref)»)«ENDIF»
-    «IF expr.functionName.equals('add')»smVarContainer.add(«generateExpression(expr.args.get(0), ref)», «generateExpression(expr.args.get(1), ref)»)«ENDIF»
-    «IF expr.functionName.equals('asReal')»(double)(«generateExpression(expr.args.get(0), ref)»)«ENDIF»
-    «IF expr.functionName.equals('abs')»Math.abs(«generateExpression(expr.args.get(0), ref)»)«ENDIF»
-    '''
-    */
-    
-    def static dispatch CharSequence generateExpression(ExpressionQuantifier expr, CharSequence ref)
-    '''
-		USE_REMOVE_INSTEAD
-	'''
-	
 	def static CharSequence generateDim(ExpressionVector vec) {
 		var dimTxt = ''''''
 		if(vec.typeAnnotation.type instanceof VectorTypeConstructor) {

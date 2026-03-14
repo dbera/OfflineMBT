@@ -15,8 +15,8 @@
  */
 package nl.esi.comma.scenarios
 
-import nl.esi.comma.types.scoping.TypesImportUriGlobalScopeProvider
 import org.eclipse.xtext.scoping.IGlobalScopeProvider
+import nl.esi.comma.expressions.scoping.ExpressionsImportUriGlobalScopeProvider
 
 /**
  * Use this class to register components to be used at runtime / without the Equinox extension registry.
@@ -25,7 +25,7 @@ class ScenariosRuntimeModule extends AbstractScenariosRuntimeModule {
 	
 	override Class<? extends IGlobalScopeProvider> bindIGlobalScopeProvider() {
 		
-		return TypesImportUriGlobalScopeProvider;
+		return ExpressionsImportUriGlobalScopeProvider;
 	}
 }
 

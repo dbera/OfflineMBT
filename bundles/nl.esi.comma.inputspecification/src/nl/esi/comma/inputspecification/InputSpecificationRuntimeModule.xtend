@@ -16,7 +16,7 @@
 package nl.esi.comma.inputspecification
 
 import org.eclipse.xtext.scoping.IGlobalScopeProvider
-import nl.esi.comma.types.scoping.TypesImportUriGlobalScopeProvider
+import nl.esi.comma.expressions.scoping.ExpressionsImportUriGlobalScopeProvider
 
 /**
  * Use this class to register components to be used at runtime / without the Equinox extension registry.
@@ -24,6 +24,6 @@ import nl.esi.comma.types.scoping.TypesImportUriGlobalScopeProvider
 class InputSpecificationRuntimeModule extends AbstractInputSpecificationRuntimeModule {
 	override Class<? extends IGlobalScopeProvider> bindIGlobalScopeProvider() {
 		
-		return TypesImportUriGlobalScopeProvider;
+		return ExpressionsImportUriGlobalScopeProvider;
 	}
 }

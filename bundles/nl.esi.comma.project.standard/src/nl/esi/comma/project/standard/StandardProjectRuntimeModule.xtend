@@ -15,8 +15,8 @@
  */
 package nl.esi.comma.project.standard
 
-import nl.esi.comma.types.scoping.TypesImportUriGlobalScopeProvider
 import org.eclipse.xtext.scoping.IGlobalScopeProvider
+import nl.esi.comma.expressions.scoping.ExpressionsImportUriGlobalScopeProvider
 
 /**
  * Use this class to register components to be used at runtime / without the Equinox extension registry.
@@ -24,6 +24,6 @@ import org.eclipse.xtext.scoping.IGlobalScopeProvider
 class StandardProjectRuntimeModule extends AbstractStandardProjectRuntimeModule {
 
 	override Class<? extends IGlobalScopeProvider> bindIGlobalScopeProvider() {
-		return TypesImportUriGlobalScopeProvider
+		return ExpressionsImportUriGlobalScopeProvider
 	}
 }

@@ -17,7 +17,7 @@ package nl.esi.comma.causalgraph
 
 import nl.esi.comma.causalgraph.conversion.CausalGraphValueConverterService
 import nl.esi.comma.causalgraph.formatting.CausalGraphFormatter
-import nl.esi.comma.types.scoping.TypesImportUriGlobalScopeProvider
+import nl.esi.comma.expressions.scoping.ExpressionsImportUriGlobalScopeProvider
 import org.eclipse.xtext.conversion.IValueConverterService
 import org.eclipse.xtext.formatting.IFormatter
 
@@ -26,7 +26,7 @@ import org.eclipse.xtext.formatting.IFormatter
  */
 class CausalGraphRuntimeModule extends AbstractCausalGraphRuntimeModule {
     override bindIGlobalScopeProvider() {
-        return TypesImportUriGlobalScopeProvider
+        return ExpressionsImportUriGlobalScopeProvider
     }
 
     override Class<? extends IValueConverterService> bindIValueConverterService() {

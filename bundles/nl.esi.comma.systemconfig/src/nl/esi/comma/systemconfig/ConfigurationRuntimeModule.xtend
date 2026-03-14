@@ -16,13 +16,13 @@
 package nl.esi.comma.systemconfig
 
 import org.eclipse.xtext.scoping.IGlobalScopeProvider
-import nl.esi.comma.types.scoping.TypesImportUriGlobalScopeProvider
+import nl.esi.comma.expressions.scoping.ExpressionsImportUriGlobalScopeProvider
 
 /**
  * Use this class to register components to be used at runtime / without the Equinox extension registry.
  */
 class ConfigurationRuntimeModule extends AbstractConfigurationRuntimeModule {
 	override Class<? extends IGlobalScopeProvider> bindIGlobalScopeProvider() {
-		return TypesImportUriGlobalScopeProvider;
+		return ExpressionsImportUriGlobalScopeProvider;
 	}
 }

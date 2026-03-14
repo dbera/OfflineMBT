@@ -15,7 +15,13 @@
  */
 package nl.esi.comma.expressions
 
-import nl.esi.comma.types.scoping.TypesImportUriGlobalScopeProvider
+import com.google.inject.Binder
+import com.google.inject.Scopes
+import nl.esi.comma.expressions.conversion.DefaultExpressionConverterFactory
+import nl.esi.comma.expressions.conversion.IExpressionConverterFactory
+import nl.esi.comma.expressions.functions.ExpressionFunctionsRegistry
+import nl.esi.comma.expressions.functions.InMemoryExprResourceRegistry
+import nl.esi.comma.expressions.scoping.ExpressionsImportUriGlobalScopeProvider
 import org.eclipse.xtext.scoping.IGlobalScopeProvider
 
 /**
@@ -23,7 +29,30 @@ import org.eclipse.xtext.scoping.IGlobalScopeProvider
  */
 class ExpressionRuntimeModule extends AbstractExpressionRuntimeModule {
 	
+	
 	override Class<? extends IGlobalScopeProvider> bindIGlobalScopeProvider() {
-		return TypesImportUriGlobalScopeProvider
+		return ExpressionsImportUriGlobalScopeProvider
+	}
+	
+	/**
+	 * Binds the expression converter factory.
+	 * 
+	 * The factory is responsible for creating all available expression converters
+	 * that handle type conversion from expression language types to Java types.
+	 */
+	def Class<? extends IExpressionConverterFactory> bindIExpressionConverterFactory() {
+		return DefaultExpressionConverterFactory
+	}
+	
+	/**
+	 * Configures FunctionsRegistry and InMemoryExprResourceRegistry to be a singleton.
+	 * 
+	 * Ensures only one instance of these registries exists throughout the
+	 * application lifecycle, making it safe to inject into multiple components.
+	 */
+	override void configure(Binder binder) {
+		super.configure(binder)
+		binder.bind(ExpressionFunctionsRegistry).in(Scopes.SINGLETON)
+		binder.bind(InMemoryExprResourceRegistry).in(Scopes.SINGLETON)
 	}
 }

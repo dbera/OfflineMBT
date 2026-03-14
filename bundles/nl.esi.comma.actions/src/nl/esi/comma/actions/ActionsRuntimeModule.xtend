@@ -15,7 +15,7 @@
  */
 package nl.esi.comma.actions
 
-import nl.esi.comma.types.scoping.TypesImportUriGlobalScopeProvider
+import nl.esi.comma.expressions.scoping.ExpressionsImportUriGlobalScopeProvider
 import org.eclipse.xtext.scoping.IGlobalScopeProvider
 
 /**
@@ -24,6 +24,6 @@ import org.eclipse.xtext.scoping.IGlobalScopeProvider
 class ActionsRuntimeModule extends AbstractActionsRuntimeModule {
 	
 	override Class<? extends IGlobalScopeProvider> bindIGlobalScopeProvider() {
-		return TypesImportUriGlobalScopeProvider
+		return ExpressionsImportUriGlobalScopeProvider
 	}
 }

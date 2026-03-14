@@ -37,4 +37,8 @@ include::_section_xtext_languages.adoc[]
 
 <<<
 
+include::_section_expression_function_libraries.adoc[]
+
+<<<
+
 include::{gendocdir}/ecore-documentation.adoc[leveloffset=1]
