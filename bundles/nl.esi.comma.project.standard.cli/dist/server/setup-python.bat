@@ -48,7 +48,7 @@ IF %CLEAN_FLAG%==1 (
   )
 ) ELSE (
   ECHO.
-  ECHO Tip: If you encounter errors during execution, run with --clean flag (as the first parameter!):
+  ECHO Tip: If you encounter errors during execution, run with --clean flag ^(as the first parameter^^!^)
   ECHO This will remove corrupted virtual environments and create fresh ones.
   ECHO.
 )
@@ -58,12 +58,12 @@ IF DEFINED BPMN4S_PYTHON (
   ECHO *-----------------------------------------* >&2
   ECHO * BPMN4S_PYTHON variable is used.         * >&2
   ECHO *-----------------------------------------* >&2
-  ECHO:
+  ECHO.
 ) ELSE (
   ECHO *-----------------------------------------* >&2
   ECHO * Standard python.exe will be used.       * >&2
   ECHO *-----------------------------------------* >&2
-  ECHO:
+  ECHO.
   SET BPMN4S_PYTHON=python.exe
 )
 
@@ -161,7 +161,7 @@ IF "!IS_VENV!"=="True" (
       CALL :log "Cached requirements hash: !OLD_HASH!"
       
       :: Compare hashes using FC (file compare) as a workaround for batch string comparison issues
-      ECHO !NEW_HASH! > "%TEMP%\new_hash.txt"
+      ECHO ^^!NEW_HASH^^! > "%TEMP%\new_hash.txt"
       FC "%TEMP%\new_hash.txt" "!TEMP_ENV!\req_hash.txt" >NUL 2>&1
       
       IF %ERRORLEVEL% EQU 0 (
@@ -186,7 +186,7 @@ IF "!IS_VENV!"=="True" (
           CALL :log "Error: Failed to update requirements"
           EXIT /B 1
         )
-        ECHO !NEW_HASH! > "!TEMP_ENV!\req_hash.txt"
+        ECHO ^^!NEW_HASH^^! > "!TEMP_ENV!\req_hash.txt"
         CALL :log "Requirements hash updated to: !NEW_HASH!"
       )
     ) ELSE (
