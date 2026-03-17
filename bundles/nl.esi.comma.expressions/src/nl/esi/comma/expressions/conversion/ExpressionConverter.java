@@ -19,11 +19,11 @@ import nl.esi.comma.types.types.Type;
 public interface ExpressionConverter {
 	/**
 	 * Converts an Expression to a Java Object of the specified type.
-	 * This is a placeholder for the actual implementation which would depend on the structure of Expression and the types supported.
-	 * @param context 
 	 */
 	Object toObject(Expression expression, Class<?> targetType, IEvaluationContext context);
-
+	/**
+	 * Converts a Java Object to an Expression of the specified type.
+	 */
 	Expression toExpression(Object object, Type type, IEvaluationContext context);
 
 	boolean isConvertible(Expression expression, Class<?> targetType, IEvaluationContext context);

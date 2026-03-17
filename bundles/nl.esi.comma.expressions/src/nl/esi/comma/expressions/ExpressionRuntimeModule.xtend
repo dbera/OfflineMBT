@@ -17,8 +17,6 @@ package nl.esi.comma.expressions
 
 import com.google.inject.Binder
 import com.google.inject.Scopes
-import nl.esi.comma.expressions.conversion.DefaultExpressionConverterFactory
-import nl.esi.comma.expressions.conversion.IExpressionConverterFactory
 import nl.esi.comma.expressions.functions.ExpressionFunctionsRegistry
 import nl.esi.comma.expressions.functions.InMemoryExprResourceRegistry
 import nl.esi.comma.expressions.scoping.ExpressionsImportUriGlobalScopeProvider
@@ -32,16 +30,6 @@ class ExpressionRuntimeModule extends AbstractExpressionRuntimeModule {
 	
 	override Class<? extends IGlobalScopeProvider> bindIGlobalScopeProvider() {
 		return ExpressionsImportUriGlobalScopeProvider
-	}
-	
-	/**
-	 * Binds the expression converter factory.
-	 * 
-	 * The factory is responsible for creating all available expression converters
-	 * that handle type conversion from expression language types to Java types.
-	 */
-	def Class<? extends IExpressionConverterFactory> bindIExpressionConverterFactory() {
-		return DefaultExpressionConverterFactory
 	}
 	
 	/**

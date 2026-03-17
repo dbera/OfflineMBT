@@ -351,22 +351,32 @@ class ExpressionValidator extends AbstractExpressionValidator {
 			    }
 			}
             ExpressionFnCall: {
-                try {
-                    registry.validateFunction(e, evaluationContext)
+                // use the registry for validation if the function was registered
+                if( registry.hasFunction(e.function.name)){
+                    try {
+                        registry.validateFunction(e, evaluationContext)
+                    }
+                    catch (UnsupportedOperationException exc) {
+                        error('''Function not specified «e.function.name».''',
+                            ExpressionPackage.Literals.EXPRESSION_FN_CALL__FUNCTION)
+                    }
+                    catch (IllegalArgumentException exc) {
+                        error('''No matching overload found for «e.function.name».''',
+                            ExpressionPackage.Literals.EXPRESSION_FN_CALL__FUNCTION)
+                    }
                 }
-                catch (Exception exc) {
-                    error('''Function «e.function.name»   «exc.message».''',
-                        ExpressionPackage.Literals.EXPRESSION_FN_CALL__FUNCTION)
-                }
-                if (e.args.size != e.function.params.size) {
-                    error('''Function «e.function.name» expects «e.function.params.size» arguments.''', null)
-                } else {
-                    for (var i = 0; i < e.args.size; i++) {
-                        val paramType = e.function.params.get(i).type.typeObject
-                        val argType = typeOf(e.args.get(i))
-                        if (!subTypeOf(argType, paramType)) {
-                            error('''Function «e.function.name» expects argument «i + 1» to be of type «paramType.typeName».''',
-                                ExpressionPackage.Literals.EXPRESSION_FN_CALL__ARGS, i)
+                else {
+                    // use the declared Function
+                    if (e.args.size != e.function.params.size) {
+                        error('''Function «e.function.name» expects «e.function.params.size» arguments.''', null)
+                    } else {
+                        for (var i = 0; i < e.args.size; i++) {
+                            val paramType = e.function.params.get(i).type.typeObject
+                            val argType = typeOf(e.args.get(i))
+                            if (!subTypeOf(argType, paramType)) {
+                                error('''Function «e.function.name» expects argument «i + 1» to be of type «paramType.typeName».''',
+                                    ExpressionPackage.Literals.EXPRESSION_FN_CALL__ARGS, i)
+                            }
                         }
                     }
                 }

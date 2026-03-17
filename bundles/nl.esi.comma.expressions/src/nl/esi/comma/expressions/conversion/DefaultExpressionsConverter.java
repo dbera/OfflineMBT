@@ -24,7 +24,9 @@ import nl.esi.comma.expressions.evaluation.IEvaluationContext;
 import nl.esi.comma.expressions.expression.Expression;
 import nl.esi.comma.expressions.expression.ExpressionMap;
 import nl.esi.comma.expressions.expression.ExpressionRecord;
+import nl.esi.comma.expressions.expression.ExpressionVariable;
 import nl.esi.comma.expressions.expression.ExpressionVector;
+import nl.esi.comma.expressions.expression.VariableDecl;
 import nl.esi.comma.types.types.Type;
 
 /**
@@ -51,6 +53,16 @@ public final class DefaultExpressionsConverter implements ExpressionConverter {
 		if (targetType.isInstance(expression)) {
 			return expression;
 		}
+		
+		if(expression instanceof ExpressionVariable expressionVariable) {
+			expression = context.getExpression(expressionVariable.getVariable());
+			 if (expression == null) {
+				 return false;
+			 }
+			 // recursively check the resolved expression against the target type
+			 return toObject(expression, targetType, context);
+		}
+
 		// Vector → List
 		if (expression instanceof ExpressionVector vector) {
 			return convertVector(vector,context);
@@ -94,6 +106,14 @@ public final class DefaultExpressionsConverter implements ExpressionConverter {
 		// allow returning the raw Expression if the target type is Expression or a supertype
 		if (targetType.isInstance(expression)) {
 			return true;
+		}
+		
+		if(expression instanceof ExpressionVariable expressionVariable) {
+			var variable = expressionVariable.getVariable();
+			var parent = variable.eContainer();
+			 if (parent instanceof VariableDecl decl) {
+				 return isConvertible(decl.getExpression(), targetType, context);
+			 }
 		}
 
 		if (expression instanceof ExpressionVector) {

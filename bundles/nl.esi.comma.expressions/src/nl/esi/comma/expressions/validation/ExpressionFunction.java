@@ -508,7 +508,8 @@ public enum ExpressionFunction {
 			BigInteger step = intArgs.size() > 2 ? intArgs.get(2) : BigInteger.ONE;
 			ExpressionVector vector = (ExpressionVector) ExpressionsUtilities.createDefaultValue(
 					TypeUtilities.vectorOf(BasicTypes.getIntType(args.get(0))));
-			for (BigInteger value = start; value.compareTo(stop) < 0; value = value.add(step)) {
+			java.util.function.BiFunction<BigInteger, BigInteger, Boolean> comp = step.signum() > 0 ? (v1, v2) -> v1.compareTo(v2) < 0 : (v1, v2) -> v1.compareTo(v2) > 0;
+			for (BigInteger value = start; comp.apply(value,stop); value = value.add(step)) {
 				vector.getElements().add(context.toIntExpr(value));
 			}
 			return vector;

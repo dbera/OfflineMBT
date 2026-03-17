@@ -21,8 +21,8 @@ import java.util.Map;
 
 import com.google.inject.Inject;
 
+import nl.esi.comma.expressions.conversion.DefaultExpressionsConverter;
 import nl.esi.comma.expressions.conversion.ExpressionConverter;
-import nl.esi.comma.expressions.conversion.IExpressionConverterFactory;
 import nl.esi.comma.expressions.evaluation.IEvaluationContext;
 import nl.esi.comma.expressions.expression.Expression;
 import nl.esi.comma.expressions.expression.ExpressionFnCall;
@@ -58,7 +58,7 @@ public class ExpressionFunctionsRegistry {
 	private static final int METHOD_CACHE_SIZE = 64;
 	
 	private final Map<String, List<Method>> functions = new LinkedHashMap<>();
-	private final List<ExpressionConverter> converters;
+	private final List<ExpressionConverter> converters = new ArrayList<>();
 	private final InMemoryExprResourceRegistry inMemoryRegistry;
 	private final Map<Integer, Method> methodCache = new LinkedHashMap<>(METHOD_CACHE_SIZE, 0.75f, true) {
 		private static final long serialVersionUID = 1L;
@@ -69,11 +69,15 @@ public class ExpressionFunctionsRegistry {
 	};
 
 	@Inject
-	public ExpressionFunctionsRegistry(IExpressionConverterFactory converterFactory,
-	                                    InMemoryExprResourceRegistry inMemoryRegistry) {
-		this.converters = converterFactory.createConverters();
+	public ExpressionFunctionsRegistry(InMemoryExprResourceRegistry inMemoryRegistry) {
 		this.inMemoryRegistry = inMemoryRegistry;
+		addConverter(new DefaultExpressionsConverter());
 		addLibraryFunctions(DefaultExpressionFunctions.class);
+		
+	}
+	
+	public void addConverter(ExpressionConverter converter) {
+		this.converters.add(converter);
 	}
 
 	/** Registers all public methods of {@code libraryClass} as expression functions. */
@@ -99,11 +103,15 @@ public class ExpressionFunctionsRegistry {
 		if (!isPublic(method)) throw new IllegalArgumentException("Function must be public");
 		functions.computeIfAbsent(name, k -> new ArrayList<>()).add(method);
 	}
+	
+	public boolean hasFunction(String name) {
+		return functions.containsKey(name);
+	}
 
-	public void validateFunction(ExpressionFnCall functionCall, IEvaluationContext context) {
+	public void validateFunction(ExpressionFnCall functionCall, IEvaluationContext context) throws UnsupportedOperationException, IllegalArgumentException {
 		String funcName = functionCall.getFunction().getName();
 		if (!functions.containsKey(funcName))
-			throw new IllegalArgumentException("Unknown function: " + funcName);
+			throw new UnsupportedOperationException("Unknown function: " + funcName);
 		if (findMatchingMethod(functionCall, context) == null)
 			throw new IllegalArgumentException("No matching overload found for function " + funcName
 				+ " with " + functionCall.getArgs().size() + " arguments");

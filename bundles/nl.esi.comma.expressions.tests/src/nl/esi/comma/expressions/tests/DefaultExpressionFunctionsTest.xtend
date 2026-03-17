@@ -37,7 +37,7 @@ import org.junit.jupiter.api.Test
  *   3. A model parsed with 'call functionName(...)' resolves to the FunctionDecl
  *      declared in the in-memory resource and evaluates correctly.
  */
-class DefaultExpressionFunctionsInMemoryTest extends ExpressionEvaluatorTestBase {
+class DefaultExpressionFunctionsTest extends ExpressionEvaluatorTestBase {
 
     @Inject InMemoryExprResourceRegistry inMemoryRegistry
     @Inject XtextResourceSet resourceSet
@@ -405,4 +405,11 @@ class DefaultExpressionFunctionsInMemoryTest extends ExpressionEvaluatorTestBase
             map<int, string> result = call deleteKey(t.ti2s, 1)
         ''')
     }
+    
+        override assertEval(String expected, String input) {
+        val newInput = input.replaceAll("call\\s+(\\w+\\s*\\()", "$1")
+        super.assertEval(expected, newInput)
+        
+    }
+    
 }
