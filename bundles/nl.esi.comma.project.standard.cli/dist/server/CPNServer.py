@@ -60,6 +60,7 @@ handler = logging.StreamHandler()
 handler.setFormatter(PrefixedFormatter("%(asctime)s - %(message)s"))
 logging.basicConfig(level=logging.INFO, handlers=[handler])
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)  # Default to INFO, can be set to DEBUG with command-line flag
 
 BPMN4S_GEN = os.path.join(os.path.dirname(__file__),"bpmn4s-toolchain.jar")
 JAVA_PATH = os.path.join(os.path.dirname(__file__),"jre", "bin", "java.exe")
@@ -73,6 +74,10 @@ app = Flask(__name__)
 sock = Sock(app)
 
 CORS(app)
+
+# Ensure Flask and Werkzeug loggers use INFO level so request logging is consistent
+logging.getLogger('werkzeug').setLevel(logging.INFO)
+app.logger.setLevel(logging.INFO)
 
 # LSP subprocess port - will be set at runtime
 LSP_PORT: Optional[int] = None
@@ -163,7 +168,7 @@ def generate_tests( model_path:str, num_tests:int=1, depth_limit:int=500):
         # remove generated tests 
         shutil.rmtree(output_dir, ignore_errors=True)
     except Exception as e:
-        print(f"An error occurred while deleting generated test: {str(e)}", file=sys.stderr)
+        logger.error(f"An error occurred while deleting generated test: {str(e)}", file=sys.stderr)
     return zip_filename, result
 
 # The endpoint of our flask app
@@ -258,7 +263,7 @@ def handle_delete_bpmn(uuid):
 # The endpoints of our flask app
 @app.route(rule="/CPNServer/<uuid>", methods=["GET"])
 def handle_request(uuid: str):
-    print(f'Received Request [{uuid}]: request_cpn')
+    logger.debug(f'Received Request [{uuid}]: request_cpn')
 
     response = {}
     pn = utils.get_cpn(uuid)
@@ -272,7 +277,7 @@ def handle_request(uuid: str):
 
 @app.route(rule="/CPNServer/<uuid>/scenario/load", methods=["POST"])
 def handle_scenario_load(uuid: str):
-    print(f'Received Request [{uuid}]: load_scenario')
+    logger.debug(f'Received Request [{uuid}]: load_scenario')
     pn = utils.get_cpn(uuid)
 
     status_code = 200
@@ -293,7 +298,7 @@ def handle_scenario_load(uuid: str):
 
 @app.route(rule="/CPNServer/<uuid>/markings", methods=["GET"])
 def handle_markings(uuid: str):
-    print(f'Received Request [{uuid}]: get_marking')
+    logger.debug(f'Received Request [{uuid}]: get_marking')
     pn = utils.get_cpn(uuid)
     json_data = {}
     current_marking = pn.getCurrentMarking()
@@ -305,7 +310,7 @@ def handle_markings(uuid: str):
 
 @app.route(rule="/CPNServer/<uuid>/transitions/enabled", methods=["GET"])
 def handle_transitions_enabled(uuid: str):
-    print(f'Received Request [{uuid}]: get_enabled_transitions')
+    logger.debug(f'Received Request [{uuid}]: get_enabled_transitions')
     pn = utils.get_cpn(uuid)
     status_code = 200
     response = {'id_mode_dict': {},
@@ -327,7 +332,7 @@ def handle_transitions_enabled(uuid: str):
 
 @app.route(rule="/CPNServer/<uuid>/transition/fire", methods=["POST"])
 def handle_transition_fire(uuid: str):
-    print(f'Received Request [{uuid}]: fire_transition')
+    logger.debug(f'Received Request [{uuid}]: fire_transition')
     pn = utils.get_cpn(uuid)
     payload = request.get_json()
     choice = payload['choice']
@@ -345,7 +350,7 @@ def handle_transition_fire(uuid: str):
 
 @app.route(rule="/CPNServer/<uuid>/markings/save", methods=["POST"])
 def handle_markings_save(uuid: str):
-    print(f'Received Request [{uuid}]: save_marking')
+    logger.debug(f'Received Request [{uuid}]: save_marking')
     pn = utils.get_cpn(uuid)
     pn.saveMarking()
     response = {'response': 'The marking has been saved'}
@@ -354,7 +359,7 @@ def handle_markings_save(uuid: str):
 
 @app.route(rule="/CPNServer/<uuid>/markings/restore", methods=["POST"])
 def handle_markings_reload(uuid: str):
-    print(f'Received Request [{uuid}]: set_marking')
+    logger.debug(f'Received Request [{uuid}]: set_marking')
     pn = utils.get_cpn(uuid)
     pn.gotoSavedMarking()
     response = {'response': 'The net has been restored to saved state'}
@@ -362,7 +367,7 @@ def handle_markings_reload(uuid: str):
 
 @app.route(rule="/CPNServer/<uuid>/markings/goto", methods=["POST"])
 def handle_markings_goto(uuid: str):
-    print(f'Received Request [{uuid}]: goto_marking')
+    logger.debug(f'Received Request [{uuid}]: goto_marking')
     pn = utils.get_cpn(uuid)
     payload = request.get_json()
     index = payload['index']
@@ -498,7 +503,7 @@ def lsp_endpoint(ws: Server) -> None:
 
 # Running the API
 if __name__ == "__main__":
-    print(f'# Using temporary directory:  "{TEMP_PATH}"')
+    logger.info(f'# Using temporary directory:  "{TEMP_PATH}"')
 
     # Find a free port for LSP subprocess
     def find_free_port() -> Optional[int]:
@@ -576,8 +581,8 @@ if __name__ == "__main__":
 
     port = find_free_server_port()
 
-    logger.info(f"Starting BPMN4S server on http://localhost:{port}/")
-    url = f"http://localhost:{port}/"
+    logger.info(f"Starting BPMN4S server on http://127.0.0.1:{port}/")
+    url = f"http://127.0.0.1:{port}/"
     # Open browser after a short delay to ensure Flask is ready
     def open_browser(url: str, delay: float = 1.5) -> None:
         time.sleep(delay)
