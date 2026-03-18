@@ -68,10 +68,14 @@ IF DEFINED BPMN4S_PYTHON (
 )
 
 :: Check if Python exists
-WHERE "%BPMN4S_PYTHON%" >NUL 2>&1
-IF %ERRORLEVEL% NEQ 0 (
-  CALL :log "Error: Python executable not found at '%BPMN4S_PYTHON%'"
-  EXIT /B 1
+IF EXIST "%BPMN4S_PYTHON%" (
+  REM Full path exists, OK
+) ELSE (
+  WHERE "%BPMN4S_PYTHON%" >NUL 2>&1
+  IF !ERRORLEVEL! NEQ 0 (
+    CALL :log "Error: Python executable not found at '%BPMN4S_PYTHON%'"
+    EXIT /B 1
+  )
 )
 
 :: Get Python version
@@ -161,7 +165,7 @@ IF "!IS_VENV!"=="True" (
       CALL :log "Cached requirements hash: !OLD_HASH!"
       
       :: Compare hashes using FC (file compare) as a workaround for batch string comparison issues
-      ECHO ^^!NEW_HASH^^! > "%TEMP%\new_hash.txt"
+      ECHO !NEW_HASH! > "%TEMP%\new_hash.txt"
       FC "%TEMP%\new_hash.txt" "!TEMP_ENV!\req_hash.txt" >NUL 2>&1
       
       IF %ERRORLEVEL% EQU 0 (
@@ -186,7 +190,7 @@ IF "!IS_VENV!"=="True" (
           CALL :log "Error: Failed to update requirements"
           EXIT /B 1
         )
-        ECHO ^^!NEW_HASH^^! > "!TEMP_ENV!\req_hash.txt"
+        ECHO !NEW_HASH! > "!TEMP_ENV!\req_hash.txt"
         CALL :log "Requirements hash updated to: !NEW_HASH!"
       )
     ) ELSE (
