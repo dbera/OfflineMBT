@@ -80,12 +80,21 @@ Function:
 ;
 
 Update:
-	'case' name = ID ('priority' priority = INT)?
+	'case' name = ID
+	('priority' priority = ExpressionPriority)?
 	('step-type' stepType = STRING 'action-type' actionType = ActionType)?
 	('with-inputs' fnInp += VarRef (',' fnInp+=VarRef)*)?
-	('with-guard' guard=Expression?)?
-	(dataAssertions = DataAssertions)? 
+	('with-guard' guard=Expression)?
+	(dataAssertions = DataAssertions)?
 	updateOutputVar += UpdateOutVar*
+;
+
+ExpressionPriority returns expr::Expression:
+    ExpressionConstantNegInt | ExpressionConstantInt
+;
+
+ExpressionConstantNegInt returns expr::ExpressionMinus:
+    "-" sub=ExpressionConstantInt
 ;
 
 enum ActionType:

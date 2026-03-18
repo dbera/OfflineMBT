@@ -15,6 +15,7 @@
  */
 package nl.asml.matala.product.generator
 
+import java.math.BigInteger
 import java.util.ArrayList
 import java.util.HashMap
 import java.util.LinkedHashMap
@@ -27,6 +28,8 @@ import nl.asml.matala.product.product.Product
 import nl.asml.matala.product.product.RefConstraint
 import nl.asml.matala.product.product.SymbConstraint
 import nl.asml.matala.product.product.VarRef
+import nl.esi.comma.expressions.evaluation.ExpressionEvaluator
+import nl.esi.comma.expressions.evaluation.IEvaluationContext
 import nl.esi.comma.types.types.RecordTypeDecl
 import nl.esi.comma.types.types.SimpleTypeDecl
 import nl.esi.comma.types.types.TypeDecl
@@ -219,7 +222,13 @@ class ProductGenerator extends AbstractGenerator {
 				System.out.println("  > case: " + update.name)
 				var tname = f.name + "_" + update.name + "@" + update.stepType + "@" + update.actionType + "@"
 				var qname = new Utils().printConstraint(update)
-				var tr = new Transition(block.name, block.name+"_"+tname, qname, update.priority)
+				var BigInteger priority = BigInteger.ZERO
+				if (update.priority !== null) {
+				    val evalCtx = IEvaluationContext.EMPTY
+				    val prioExp = new ExpressionEvaluator().evaluate(update.priority, evalCtx)
+				    priority = evalCtx.asInt(prioExp) ?: BigInteger.ZERO
+				}
+				var tr = new Transition(block.name, block.name+"_"+tname, qname, priority.intValue)
 				pnet.transitions.add(tr)
 				var input_var_list = new HashMap<String,TypeDecl> // ArrayList<String>
 				for(v : update.fnInp) 
