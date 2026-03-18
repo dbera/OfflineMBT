@@ -53,6 +53,14 @@ IF %CLEAN_FLAG%==1 (
   ECHO.
 )
 
+:: Build PYTHON_ARGS with --clean consumed (stripped out)
+SET "PYTHON_ARGS="
+FOR %%A IN (%*) DO (
+  IF /I NOT "%%~A"=="--clean" (
+    SET "PYTHON_ARGS=!PYTHON_ARGS! %%A"
+  )
+)
+
 :: Check for Python environment
 IF DEFINED BPMN4S_PYTHON (
   ECHO *-----------------------------------------* >&2
@@ -202,5 +210,5 @@ IF "!IS_VENV!"=="True" (
 )
 
 :: Export variables for caller to use
-ENDLOCAL & SET "VENV_PYTHON=%VENV_PYTHON%" & SET "TEMP_ENV=%TEMP_ENV%"
+ENDLOCAL & SET "VENV_PYTHON=%VENV_PYTHON%" & SET "TEMP_ENV=%TEMP_ENV%" & SET "PYTHON_ARGS=%PYTHON_ARGS%"
 EXIT /B 0
