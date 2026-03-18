@@ -158,7 +158,7 @@ class TypesValidator extends AbstractTypesValidator {
 	def checkEnumLiteralValues(EnumTypeDecl type){
 		var currentValue = -1
 		for(l : type.literals){
-			if(l === null){
+			if(l.value === null){
 				currentValue++
 			}
 			else{

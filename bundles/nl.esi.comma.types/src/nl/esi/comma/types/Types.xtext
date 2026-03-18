@@ -20,6 +20,7 @@ grammar nl.esi.comma.types.Types with nl.esi.xtext.common.lang.Base
 generate types "http://www.esi.nl/comma/types/Types"
 
 import "http://www.esi.nl/xtext/common/lang/Base" as base
+import "http://www.eclipse.org/emf/2002/Ecore" as ecore
 
 /*
  * Top level container element that holds type declarations.
@@ -78,10 +79,13 @@ EnumTypeDecl:
 	'enum' name = ID '{' literals+=EnumElement* '}'
 ;
 
+/** using integer object because it is important to see the difference
+ *  between 0 (explicit 0) and null (increment + 1 from the previous value)
+ */
+EIntegerObject returns ecore::EIntegerObject: INT;
 EnumElement:
-	name = ID ('=' value = INT)?
+	name = ID ('=' value = EIntegerObject)?
 ;
-
 
 RecordTypeDecl:
 	'record' name = ID ('extends' parent = [RecordTypeDecl])? 
