@@ -49,7 +49,7 @@ ECHO * Press Ctrl+C to exit the server         *
 ECHO *-----------------------------------------*
 ECHO.
 
-"!VENV_PYTHON!" "!python_file!" %*
+"!VENV_PYTHON!" "!python_file!" %PYTHON_ARGS%
 SET EXIT_CODE=%ERRORLEVEL%
 
 IF %EXIT_CODE% NEQ 0 (

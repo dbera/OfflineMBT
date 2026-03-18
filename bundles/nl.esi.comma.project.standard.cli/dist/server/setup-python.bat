@@ -48,9 +48,17 @@ IF %CLEAN_FLAG%==1 (
   )
 ) ELSE (
   ECHO.
-  ECHO Tip: If you encounter errors during execution, run with --clean flag (as the first parameter!):
+  ECHO Tip: If you encounter errors during execution, run with --clean flag ^(as the first parameter^^!^)
   ECHO This will remove corrupted virtual environments and create fresh ones.
   ECHO.
+)
+
+:: Build PYTHON_ARGS with --clean consumed (stripped out)
+SET "PYTHON_ARGS="
+FOR %%A IN (%*) DO (
+  IF /I NOT "%%~A"=="--clean" (
+    SET "PYTHON_ARGS=!PYTHON_ARGS! %%A"
+  )
 )
 
 :: Check for Python environment
@@ -58,20 +66,24 @@ IF DEFINED BPMN4S_PYTHON (
   ECHO *-----------------------------------------* >&2
   ECHO * BPMN4S_PYTHON variable is used.         * >&2
   ECHO *-----------------------------------------* >&2
-  ECHO:
+  ECHO.
 ) ELSE (
   ECHO *-----------------------------------------* >&2
   ECHO * Standard python.exe will be used.       * >&2
   ECHO *-----------------------------------------* >&2
-  ECHO:
+  ECHO.
   SET BPMN4S_PYTHON=python.exe
 )
 
 :: Check if Python exists
-WHERE "%BPMN4S_PYTHON%" >NUL 2>&1
-IF %ERRORLEVEL% NEQ 0 (
-  CALL :log "Error: Python executable not found at '%BPMN4S_PYTHON%'"
-  EXIT /B 1
+IF EXIST "%BPMN4S_PYTHON%" (
+  REM Full path exists, OK
+) ELSE (
+  WHERE "%BPMN4S_PYTHON%" >NUL 2>&1
+  IF !ERRORLEVEL! NEQ 0 (
+    CALL :log "Error: Python executable not found at '%BPMN4S_PYTHON%'"
+    EXIT /B 1
+  )
 )
 
 :: Get Python version
@@ -198,5 +210,5 @@ IF "!IS_VENV!"=="True" (
 )
 
 :: Export variables for caller to use
-ENDLOCAL & SET "VENV_PYTHON=%VENV_PYTHON%" & SET "TEMP_ENV=%TEMP_ENV%"
+ENDLOCAL & SET "VENV_PYTHON=%VENV_PYTHON%" & SET "TEMP_ENV=%TEMP_ENV%" & SET "PYTHON_ARGS=%PYTHON_ARGS%"
 EXIT /B 0
