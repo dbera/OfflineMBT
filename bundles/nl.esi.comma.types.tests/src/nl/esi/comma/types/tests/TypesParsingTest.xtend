@@ -15,8 +15,11 @@
  */
 package nl.esi.comma.types.tests
 
+import com.google.inject.Binder
 import com.google.inject.Inject
+import com.google.inject.Module
 import nl.esi.xtext.common.lang.base.ModelContainer
+import nl.esi.xtext.common.lang.utilities.EcoreUtil3
 import org.eclipse.xtext.testing.InjectWith
 import org.eclipse.xtext.testing.extensions.InjectionExtension
 import org.eclipse.xtext.testing.util.ParseHelper
@@ -40,5 +43,19 @@ class TypesParsingTest {
 		Assertions.assertNotNull(result)
 		val errors = result.eResource.errors
 		Assertions.assertTrue(errors.isEmpty, '''Unexpected errors: «errors.join(", ")»''')
+	}
+
+	@Test
+	def void serializeModel() {
+		val model = parseHelper.parse('''
+			type foo
+			enum FOO_BAR { FOO BAR }
+		''')
+		Assertions.assertNotNull(model)
+		// Serialize with formatting enabled using the Module varargs overload
+		val text = EcoreUtil3.serialize(model)
+		Assertions.assertNotNull(text)
+		Assertions.assertFalse(text.isEmpty, 'Serialized model should not be empty')
+		println(text)
 	}
 }
