@@ -43,7 +43,6 @@
                         </goals>
                         <configuration>
                             <includes>adoc/*.adoc</includes>
-                            <useSubDirectoryPerArtifact>false</useSubDirectoryPerArtifact>
                             <outputDirectory>
                                 ${project.build.directory}/adoc-gen/extracted</outputDirectory>
                         </configuration>
@@ -212,7 +211,7 @@
                         <!-- path to the extracted adoc folder (where dependency
                         unpack wrote adoc files) -->
                         <gendocdir-extracted>
-                            ${project.build.directory}/adoc-gen/extracted</gendocdir-extracted>
+                            ${project.build.directory}/adoc-gen/extracted/adoc</gendocdir-extracted>
 
                     </attributes>
                 </configuration>

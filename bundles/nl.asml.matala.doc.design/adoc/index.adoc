@@ -31,11 +31,9 @@ A good book to read as reference is https://www.google.com/search?q=ISBN+13%3A+9
 
 image::{imgsdir}/under_construction.png[width=5464,height=704]
 
-:toc: macro
 :toc-title: Table of contents
 :toclevels: 3
 
-// explicit, inline TOC (macro ensures placement regardless of theme)
 toc::[]
 
 <<<
