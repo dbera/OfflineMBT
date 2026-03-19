@@ -13,8 +13,6 @@
 
 include::_initCommon.adoc[]
 
-:numbered!:
-
 [appendix]
 
 == Developer how-to[[developer-howto]]

@@ -15,6 +15,10 @@ include::../_initCommon.adoc[]
 
 === Add or change documentation in a bundle
 
+This chapter provides a step-by-step guide on how to add or modify documentation within a bundle.
+It ensures that the documentation is properly structured and included in the build process,
+making it accessible as part of the binary dependencies.
+
 [start=1]
 1. Add an `adoc/` folder to the root of your bundle (if not already present).
 
