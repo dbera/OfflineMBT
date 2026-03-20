@@ -20,7 +20,6 @@ import nl.esi.comma.expressions.expression.ExpressionAnd
 import nl.esi.comma.expressions.expression.ExpressionAny
 import nl.esi.comma.expressions.expression.ExpressionBinary
 import nl.esi.comma.expressions.expression.ExpressionBracket
-import nl.esi.comma.expressions.expression.ExpressionBulkData
 import nl.esi.comma.expressions.expression.ExpressionConstantBool
 import nl.esi.comma.expressions.expression.ExpressionConstantInt
 import nl.esi.comma.expressions.expression.ExpressionConstantReal
@@ -119,7 +118,6 @@ class ExpressionValidator extends AbstractExpressionValidator {
             ExpressionNullLiteral : BasicTypes.getAnyType(e)
 			ExpressionRecord : e.type
 			ExpressionRecordAccess : e.field?.type?.typeObject
-			ExpressionBulkData : BasicTypes.getBulkDataType(e)
 			ExpressionAny : BasicTypes.getAnyType(e)
 			ExpressionFnCall : e.function.returnType.type
 			ExpressionFunctionCall : ExpressionFunction.valueOf(e)?.inferType(e.args, ExpressionFunction.RETURN_ARG)

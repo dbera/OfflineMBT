@@ -17,7 +17,6 @@ import nl.esi.comma.expressions.expression.ExpressionAddition
 import nl.esi.comma.expressions.expression.ExpressionAnd
 import nl.esi.comma.expressions.expression.ExpressionAny
 import nl.esi.comma.expressions.expression.ExpressionBracket
-import nl.esi.comma.expressions.expression.ExpressionBulkData
 import nl.esi.comma.expressions.expression.ExpressionConstantBool
 import nl.esi.comma.expressions.expression.ExpressionConstantInt
 import nl.esi.comma.expressions.expression.ExpressionConstantReal
@@ -278,7 +277,6 @@ class ExpressionEvaluator {
             ExpressionVariable,
             ExpressionRecord,
             ExpressionAny,
-            ExpressionBulkData,
             ExpressionFnCall,
             ExpressionFunctionCall,
             ExpressionQuantifier,

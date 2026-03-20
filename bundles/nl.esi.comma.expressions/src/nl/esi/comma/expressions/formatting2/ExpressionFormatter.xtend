@@ -20,7 +20,6 @@ import nl.esi.comma.expressions.expression.Expression
 import nl.esi.comma.expressions.expression.ExpressionAddition
 import nl.esi.comma.expressions.expression.ExpressionAnd
 import nl.esi.comma.expressions.expression.ExpressionBracket
-import nl.esi.comma.expressions.expression.ExpressionBulkData
 import nl.esi.comma.expressions.expression.ExpressionDivision
 import nl.esi.comma.expressions.expression.ExpressionEnumLiteral
 import nl.esi.comma.expressions.expression.ExpressionEqual
@@ -260,13 +259,6 @@ class ExpressionFormatter extends TypesFormatter {
 		//rFinder.assignment(pairAccess.valueAssignment_2).prepend(noSpace)
 		pair.key.format
 		pair.value.format
-	}
-	
-	def dispatch void format(ExpressionBulkData expressionBulkData, extension IFormattableDocument document) {
-		val regionFor = expressionBulkData.regionFor
-		regionFor.keyword(expressionBulkDataAccess.bulkdataKeyword_1).append(noSpace)
-		regionFor.keyword(expressionBulkDataAccess.lessThanSignKeyword_2).append(noSpace)
-		regionFor.keyword(expressionBulkDataAccess.greaterThanSignKeyword_4).prepend(noSpace)
 	}
 	
 	def dispatch void format(ExpressionFunctionCall expr, extension IFormattableDocument document) {		

@@ -186,7 +186,6 @@ class TypeUtilities {
 			    typeName.equals('string') ||
 			    typeName.equals('void') ||
 			    typeName.equals('any')) ||
-			    typeName.equals('bulkdata') ||
 			    typeName.equals('id')
 	}
 	
@@ -261,7 +260,7 @@ class TypeUtilities {
 				currentValue++
 			}
 			else{
-				currentValue = l.value.value
+				currentValue = l.value
 			}
 			if(currentValue == value) return l
 		}

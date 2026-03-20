@@ -25,7 +25,6 @@ import nl.esi.comma.expressions.expression.ExpressionAddition;
 import nl.esi.comma.expressions.expression.ExpressionAnd;
 import nl.esi.comma.expressions.expression.ExpressionAny;
 import nl.esi.comma.expressions.expression.ExpressionBracket;
-import nl.esi.comma.expressions.expression.ExpressionBulkData;
 import nl.esi.comma.expressions.expression.ExpressionConstantBool;
 import nl.esi.comma.expressions.expression.ExpressionConstantInt;
 import nl.esi.comma.expressions.expression.ExpressionConstantReal;
@@ -309,9 +308,7 @@ public class ProposalHelper {
 			ExpressionRecordAccess e = (ExpressionRecordAccess) expression;
 			String map = expression(e.getRecord(), variablePrefix);
 			return String.format("%s[\"%s\"]", map, e.getField().getName());
-		} else if (expression instanceof ExpressionBulkData) {
-			return "[]";
-		} 
+		}
 		
 		throw new RuntimeException("Not supported");
 	}

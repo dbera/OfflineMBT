@@ -1,0 +1,22 @@
+////
+  // Copyright (c) 2024, 2025 TNO-ESI
+  //
+  // See the NOTICE file(s) distributed with this work for additional
+  // information regarding copyright ownership.
+  //
+  // This program and the accompanying materials are made available
+  // under the terms of the MIT License which is available at
+  // https://opensource.org/licenses/MIT
+  //
+  // SPDX-License-Identifier: MIT
+////
+
+[[design-decisions]]
+== Design decisions
+
+This section describes design decisions and their rationale.
+
+// add your includes here make thus the includes start with level 1 =
+// please note that the include may also come from a plugin
+// as described here:
+include::decisions/store_adoc_in_plugin.adoc[levelOffset=1]
