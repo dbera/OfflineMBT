@@ -11,13 +11,12 @@
   // SPDX-License-Identifier: MIT
 ////
 
-include::_initCommon.adoc[]
-== Defined Languages and examples
+[[design-decisions]]
+== Design decisions
 
-ifdef::gendocdir-extracted[]
-include::{gendocdir-extracted}/nl.esi.comma.types.adoc[]
+This section describes design decisions and their rationale.
 
-endif::[] 
-ifndef::gendocdir-extracted[]
-include::{pluginsdir}/nl.esi.comma.types/adoc/nl.esi.comma.types.adoc[]
-endif::[] 
+// add your includes here make thus the includes start with level 1 =
+// please note that the include may also come from a plugin
+// as described here:
+include::decisions/store_adoc_in_plugin.adoc[levelOffset=1]

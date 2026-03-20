@@ -31,11 +31,6 @@ A good book to read as reference is https://www.google.com/search?q=ISBN+13%3A+9
 
 image::{imgsdir}/under_construction.png[width=5464,height=704]
 
-:toc-title: Table of contents
-:toclevels: 3
-
-toc::[]
-
 <<<
 
 include::_section_xtext_languages_info.adoc[]
@@ -51,6 +46,11 @@ include::developer-howto.adoc[]
 include::_section_xtext_languages.adoc[]
 
 <<<
+
 [appendix]
 include::{gendocdir}/ecore-documentation.adoc[leveloffset=1]
 
+<<<
+
+[appendix]
+include::design-decisions.adoc[]
