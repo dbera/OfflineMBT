@@ -63,7 +63,7 @@ public class AssertionsHelper {
 			return Double.toString(e.getValue());
 		} else if (expression instanceof ExpressionEnumLiteral e) {
 			EnumElement e_lite = e.getLiteral();
-			if (e.getLiteral() != null) {
+			if (e.getLiteral().getValue() != null) {
 				return Integer.toString(e_lite.getValue());
 	        }
 			EnumTypeDecl e_type = e.getType();

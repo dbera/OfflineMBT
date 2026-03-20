@@ -1,0 +1,53 @@
+////
+  // Copyright (c) 2024, 2025 TNO-ESI
+  //
+  // See the NOTICE file(s) distributed with this work for additional
+  // information regarding copyright ownership.
+  //
+  // This program and the accompanying materials are made available
+  // under the terms of the MIT License which is available at
+  // https://opensource.org/licenses/MIT
+  //
+  // SPDX-License-Identifier: MIT
+////
+
+[[add-or-change-documentation-in-bundle]]
+=== Add or change documentation in a bundle
+
+[start=1]
+1. Add an `adoc/` folder to the root of your bundle (if not already present).
+
+.Source tree (minimal)
+----
+    my.bundle/
+      src/
+      adoc/
+        nl.my.bundle.adoc
+        images/
+----
+[start=2]
+1. Ensure the folder is exported in the bundle build (include it in `build.properties`).
+  This way the adoc can be included when the bundle is used as a binary dependency.
+----
+    bin.includes = META-INF/,\
+                   .,\
+                   adoc/
+----
+[start=3]
+1. Add developer documentation files (`*.adoc`) in this `adoc/` folder.
+
+[start=4]
+1. Add a reference to a 'main' index file for example `_section_xtext_languages_info.adoc` (conditional include).
+
+----
+     ifdef::gendocdir-extracted[]
+     include::{gendocdir-extracted}/nl.esi.comma.types.adoc[]
+     endif::[]
+     ifndef::gendocdir-extracted[]
+     include::{pluginsdir}/nl.esi.comma.types/adoc/nl.esi.comma.types.adoc[]
+     endif::[]
+----
+   ** _NOTE_: in a maven build the adoc files are read via the binary dependencies.
+
+[start=5]
+1. Add your plugin as a dependency in the nl.asml.matala.design bundle.

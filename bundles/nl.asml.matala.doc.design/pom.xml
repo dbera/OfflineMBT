@@ -13,7 +13,9 @@
     SPDX-License-Identifier: MIT
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -30,6 +32,24 @@
     <build>
         <plugins>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>unpack-adoc-resources</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>unpack-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <includes>adoc/*.adoc</includes>
+                            <outputDirectory>
+                                ${project.build.directory}/adoc-gen/extracted</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.5.0</version>
@@ -40,17 +60,20 @@
                             <goal>java</goal>
                         </goals>
                         <configuration>
-                            <mainClass>nl.asml.matala.doc.design.GenerateGrammarsDiagram</mainClass>
+                            <mainClass>
+                                nl.asml.matala.doc.design.GenerateGrammarsDiagram</mainClass>
                             <includePluginDependencies>true</includePluginDependencies>
                             <arguments>
                                 <argument>${project.basedir}/..</argument>
-                                <argument>${project.build.directory}/adoc-gen/xtext-grammars.plantuml</argument>
+                                <argument>
+                                    ${project.build.directory}/adoc-gen/xtext-grammars.plantuml</argument>
                             </arguments>
                         </configuration>
                     </execution>
                 </executions>
                 <dependencies>
-                    <!-- Don't know why this dependency is not picked up from the MANIFEST.MF -->
+                    <!-- Don't know why this dependency is not picked up from
+                    the MANIFEST.MF -->
                     <dependency>
                         <groupId>org.eclipse.xtend</groupId>
                         <artifactId>org.eclipse.xtend.lib</artifactId>
@@ -60,8 +83,10 @@
             </plugin>
 
             <!-- Start: Preparing EcoreDoc -->
-            <!-- EcoreDoc cannot handle ecore references based on platform:/resource/ uris yet -->
-            <!-- Workaround: Copy all generated ecore models and change uris to relative uris -->
+            <!-- EcoreDoc cannot handle ecore references based on
+            platform:/resource/ uris yet -->
+            <!-- Workaround: Copy all generated ecore models and change uris to
+            relative uris -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
@@ -80,7 +105,8 @@
                                     </includes>
                                 </resource>
                             </resources>
-                            <outputDirectory>${project.build.directory}/meta-models</outputDirectory>
+                            <outputDirectory>
+                                ${project.build.directory}/meta-models</outputDirectory>
                         </configuration>
                     </execution>
                 </executions>
@@ -93,7 +119,8 @@
                         <phase>prepare-package</phase>
                         <configuration>
                             <target>
-                                <replace token="platform:/resource/" value="../../../"
+                                <replace token="platform:/resource/"
+                                    value="../../../"
                                     dir="${project.build.directory}/meta-models">
                                     <include name="**/*.ecore" />
                                 </replace>
@@ -127,25 +154,41 @@
                                 <diagramsOutputPath>images</diagramsOutputPath>
                             </config>
                             <inputFiles>
-                                <inputFile>${project.build.directory}/meta-models/nl.esi.xtext.common.lang/model/generated/Base.ecore</inputFile>
-                                <inputFile>${project.build.directory}/meta-models/nl.esi.comma.types/model/generated/Types.ecore</inputFile>
-                                <inputFile>${project.build.directory}/meta-models/nl.esi.comma.expressions/model/generated/Expression.ecore</inputFile>
-                                <inputFile>${project.build.directory}/meta-models/nl.esi.comma.actions/model/generated/Actions.ecore</inputFile>
-                                <inputFile>${project.build.directory}/meta-models/nl.esi.comma.assertthat/model/generated/AssertThat.ecore</inputFile>
-                                <inputFile>${project.build.directory}/meta-models/nl.asml.matala.product/model/generated/Product.ecore</inputFile>
-                                <inputFile>${project.build.directory}/meta-models/nl.esi.comma.abstracttestspecification/model/generated/AbstractTestspecification.ecore</inputFile>
-                                <inputFile>${project.build.directory}/meta-models/nl.esi.comma.behavior.scl/model/generated/Scl.ecore</inputFile>
-                                <inputFile>${project.build.directory}/meta-models/nl.esi.comma.causalgraph/model/generated/CausalGraph.ecore</inputFile>
-                                <inputFile>${project.build.directory}/meta-models/nl.esi.comma.constraints/model/generated/Constraints.ecore</inputFile>
-                                <inputFile>${project.build.directory}/meta-models/nl.esi.comma.inputspecification/model/generated/InputSpecification.ecore</inputFile>
-                                <inputFile>${project.build.directory}/meta-models/nl.esi.comma.project.standard/model/generated/StandardProject.ecore</inputFile>
-                                <inputFile>${project.build.directory}/meta-models/nl.esi.comma.scenarios/model/generated/Scenarios.ecore</inputFile>
-                                <inputFile>${project.build.directory}/meta-models/nl.esi.comma.signature/model/generated/InterfaceSignature.ecore</inputFile>
-                                <inputFile>${project.build.directory}/meta-models/nl.esi.comma.steps/model/generated/Step.ecore</inputFile>
-                                <inputFile>${project.build.directory}/meta-models/nl.esi.comma.systemconfig/model/generated/Configuration.ecore</inputFile>
-                                <inputFile>${project.build.directory}/meta-models/nl.esi.comma.testspecification/model/generated/Testspecification.ecore</inputFile>
+                                <inputFile>
+                                    ${project.build.directory}/meta-models/nl.esi.xtext.common.lang/model/generated/Base.ecore</inputFile>
+                                <inputFile>
+                                    ${project.build.directory}/meta-models/nl.esi.comma.types/model/generated/Types.ecore</inputFile>
+                                <inputFile>
+                                    ${project.build.directory}/meta-models/nl.esi.comma.expressions/model/generated/Expression.ecore</inputFile>
+                                <inputFile>
+                                    ${project.build.directory}/meta-models/nl.esi.comma.actions/model/generated/Actions.ecore</inputFile>
+                                <inputFile>
+                                    ${project.build.directory}/meta-models/nl.esi.comma.assertthat/model/generated/AssertThat.ecore</inputFile>
+                                <inputFile>
+                                    ${project.build.directory}/meta-models/nl.asml.matala.product/model/generated/Product.ecore</inputFile>
+                                <inputFile>
+                                    ${project.build.directory}/meta-models/nl.esi.comma.abstracttestspecification/model/generated/AbstractTestspecification.ecore</inputFile>
+                                <inputFile>
+                                    ${project.build.directory}/meta-models/nl.esi.comma.behavior.scl/model/generated/Scl.ecore</inputFile>
+                                <inputFile>
+                                    ${project.build.directory}/meta-models/nl.esi.comma.causalgraph/model/generated/CausalGraph.ecore</inputFile>
+                                <inputFile>
+                                    ${project.build.directory}/meta-models/nl.esi.comma.constraints/model/generated/Constraints.ecore</inputFile>
+                                <inputFile>
+                                    ${project.build.directory}/meta-models/nl.esi.comma.inputspecification/model/generated/InputSpecification.ecore</inputFile>
+                                <inputFile>
+                                    ${project.build.directory}/meta-models/nl.esi.comma.project.standard/model/generated/StandardProject.ecore</inputFile>
+                                <inputFile>
+                                    ${project.build.directory}/meta-models/nl.esi.comma.scenarios/model/generated/Scenarios.ecore</inputFile>
+                                <inputFile>
+                                    ${project.build.directory}/meta-models/nl.esi.comma.steps/model/generated/Step.ecore</inputFile>
+                                <inputFile>
+                                    ${project.build.directory}/meta-models/nl.esi.comma.systemconfig/model/generated/Configuration.ecore</inputFile>
+                                <inputFile>
+                                    ${project.build.directory}/meta-models/nl.esi.comma.testspecification/model/generated/Testspecification.ecore</inputFile>
                             </inputFiles>
-                            <outputFile>${project.build.directory}/adoc-gen/ecore-documentation.adoc</outputFile>
+                            <outputFile>
+                                ${project.build.directory}/adoc-gen/ecore-documentation.adoc</outputFile>
                         </configuration>
                     </execution>
                 </executions>
@@ -163,7 +206,13 @@
                         <toclevels>4</toclevels>
                         <doctype>book</doctype>
                         <icons>font</icons>
-                        <eclipse-help-location>https://help.eclipse.org/2024-09/topic</eclipse-help-location>
+                        <eclipse-help-location>
+                            https://help.eclipse.org/2024-09/topic</eclipse-help-location>
+                        <!-- path to the extracted adoc folder (where dependency
+                        unpack wrote adoc files) -->
+                        <gendocdir-extracted>
+                            ${project.build.directory}/adoc-gen/extracted/adoc</gendocdir-extracted>
+
                     </attributes>
                 </configuration>
 
@@ -176,12 +225,14 @@
                             <goal>process-asciidoc</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>${project.build.directory}/eclipse-help</outputDirectory>
+                            <outputDirectory>
+                                ${project.build.directory}/eclipse-help</outputDirectory>
                             <backend>html5</backend>
                             <attributes>
                                 <imagesdir />
                                 <imgsdir>../../images</imgsdir>
-                                <!-- Using a cleaner skin, see https://github.com/darshandsoni/asciidoctor-skins#usage -->
+                                <!-- Using a cleaner skin, see
+                                https://github.com/darshandsoni/asciidoctor-skins#usage -->
                                 <stylesdir>${project.basedir}/css</stylesdir>
                                 <stylesheet>adoc-foundation.css</stylesheet>
                                 <output-html />
@@ -228,7 +279,8 @@
                         </goals>
                         <configuration>
                             <sourceDocumentName>index.adoc</sourceDocumentName>
-                            <outputFile>${project.build.directory}/website/matala-design.pdf</outputFile>
+                            <outputFile>
+                                ${project.build.directory}/website/matala-design.pdf</outputFile>
                             <backend>pdf</backend>
                             <attributes>
                                 <imagesdir />
@@ -255,7 +307,8 @@
                             <goal>geneclipsetoc</goal>
                         </goals>
                         <configuration>
-                            <outputTocFile>${project.build.directory}/eclipse-help/toc.xml</outputTocFile>
+                            <outputTocFile>
+                                ${project.build.directory}/eclipse-help/toc.xml</outputTocFile>
                             <sourceFolder>${basedir}</sourceFolder>
                             <pages>
                                 <page>target/eclipse-help/index.html</page>
@@ -272,7 +325,9 @@
                 <configuration>
                     <additionalFileSets>
                         <fileSet>
-                            <!-- Putting it in the same dir within the jar ensures us that doc will work in runtime instance and RCP -->
+                            <!-- Putting it in the same dir within the jar
+                            ensures us that doc will work in runtime instance
+                            and RCP -->
                             <prefix>target/eclipse-help/</prefix>
                             <directory>${project.build.directory}/eclipse-help/</directory>
                             <includes>

@@ -38,11 +38,10 @@ class TypesScopeProvider extends AbstractTypesScopeProvider {
     /* The types as defined in types.types are bool, void, int, real, string, any and id 
      * * bool becomes a keyword in the language (see nl.esi.xtext.common.lang.Base)
      * * void has no reference
-     * * any becomse a star (*) in nl.esi...exrpessions.xtext#ExpressionAny
+     * * any becomes a star (*) in nl.esi...exrpessions.xtext#ExpressionAny
      * * the others are handled via SIMPLE_TYPES_BASE below
      * */
-    static val SIMPLE_TYPES_BASE = #{'int', 'real', 'string'}  //TODO should we add 'id' here?
-
+    static val SIMPLE_TYPES_BASE = #{'int', 'real', 'string'}
     override getScope(EObject context, EReference reference) {
         val contextType = context.getContextType(reference)
         return switch (reference) {
