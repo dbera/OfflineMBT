@@ -41,7 +41,7 @@ import nl.esi.comma.types.types.Type;
  * - bool expressions → Boolean
  * - string expressions → String
  */
-public final class DefaultExpressionsConverter implements ExpressionConverter {
+public final class DefaultExpressionsConverter implements IExpressionConverter {
 
 	@Override
 	public Object toObject(Expression expression, Class<?> targetType, IEvaluationContext context) {
@@ -55,12 +55,12 @@ public final class DefaultExpressionsConverter implements ExpressionConverter {
 		}
 		
 		if(expression instanceof ExpressionVariable expressionVariable) {
-			expression = context.getExpression(expressionVariable.getVariable());
-			 if (expression == null) {
-				 return false;
+			var variable = expressionVariable.getVariable();
+			var parent = variable.eContainer();
+			 if (parent instanceof VariableDecl decl) {
+				 return toObject(decl.getExpression(), targetType, context);
 			 }
-			 // recursively check the resolved expression against the target type
-			 return toObject(expression, targetType, context);
+			 return null;
 		}
 
 		// Vector → List

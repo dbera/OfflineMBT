@@ -43,7 +43,7 @@ import nl.esi.comma.expressions.generator.LibraryToExprGenerator;
  * so that every Xtext resource set automatically sees the function declarations
  * without the developer having to add an explicit {@code import} statement.
  *
- * <p>A custom {@link URIHandler} is provided via {@link #createURIHandler()} so
+ * <p>A custom {@link URIHandler} is provided via {@link #getURIHandler()} so
  * that Xtext's {@code ResourceSet} can load these in-memory URIs without any
  * file-system access.
  */
@@ -56,6 +56,8 @@ public final class InMemoryExprResourceRegistry {
     private static final String PATH_PREFIX = "/expr/";
 
     private final Map<URI, String> registry = new LinkedHashMap<>();
+
+    private final URIHandlerImpl uriHandler = new InMemoryURIHandler(this);
 
     // -------------------------------------------------------------------------
     // Public API
@@ -70,7 +72,7 @@ public final class InMemoryExprResourceRegistry {
      * @param libraryClass the Java class to register
      * @return the URI under which the content was registered
      */
-    public URI addLibrary(Class<?> libraryClass) {
+ 	public URI addLibrary(Class<?> libraryClass) {
         URI uri = uriFor(libraryClass);
         registry.computeIfAbsent(uri, k -> LibraryToExprGenerator.generate(libraryClass));
         return uri;
@@ -81,7 +83,7 @@ public final class InMemoryExprResourceRegistry {
      *
      * @return set of URIs (insertion order preserved)
      */
-    public Set<URI> getRegisteredURIs() {
+	public Set<URI> getRegisteredURIs() {
         return Collections.unmodifiableSet(registry.keySet());
     }
 
@@ -92,7 +94,7 @@ public final class InMemoryExprResourceRegistry {
      * @param uri the in-memory URI
      * @return the expr content string, or {@code null}
      */
-    public String getContent(URI uri) {
+	public String getContent(URI uri) {
         return registry.get(uri);
     }
 
@@ -102,22 +104,22 @@ public final class InMemoryExprResourceRegistry {
      * @param uri the URI to check
      * @return {@code true} if the URI scheme is {@value #SCHEME}
      */
-    public boolean handles(URI uri) {
+	public boolean handles(URI uri) {
         return SCHEME.equals(uri.scheme());
     }
 
     /**
-     * Creates a new {@link URIHandler} that delegates reads for
+     * Returns the shared {@link URIHandler} that delegates reads for
      * {@value #SCHEME} URIs to this registry. Register it in a
      * {@code ResourceSet} via:
      * <pre>{@code
-     *   resourceSet.getURIConverter().getURIHandlers().add(0, registry.createURIHandler());
+     *   resourceSet.getURIConverter().getURIHandlers().add(0, registry.getURIHandler());
      * }</pre>
      *
      * @return a URI handler backed by this registry
      */
-    public URIHandlerImpl createURIHandler() {
-        return new InMemoryURIHandler(this);
+	public URIHandlerImpl getURIHandler() {
+        return uriHandler;
     }
 
     // -------------------------------------------------------------------------

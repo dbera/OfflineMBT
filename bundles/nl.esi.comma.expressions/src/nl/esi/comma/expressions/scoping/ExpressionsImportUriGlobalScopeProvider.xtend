@@ -17,28 +17,31 @@ import nl.esi.comma.expressions.functions.InMemoryExprResourceRegistry
 import nl.esi.comma.types.scoping.TypesImportUriGlobalScopeProvider
 import org.eclipse.emf.ecore.resource.Resource
 
+/**
+ * Global scope provider for expression language that integrates dynamically registered function libraries.
+ * 
+ * <p>This class extends {@link TypesImportUriGlobalScopeProvider} to add support for in-memory function
+ * libraries that are registered at runtime via {@link ExpressionFunctionsRegistry}.
+ * 
+ */
 class ExpressionsImportUriGlobalScopeProvider extends TypesImportUriGlobalScopeProvider {
 
-    @Inject InMemoryExprResourceRegistry inMemoryRegistry
+	@Inject InMemoryExprResourceRegistry inMemoryRegistry
 
-    override getImportedUris(Resource resource) {
-        val importedURIs = super.getImportedUris(resource)
+	/**
+	 * Extends the list of imported URIs with all dynamically registered function library URIs.
+	 * 
+	 * <p>Calls the parent implementation first to get types and other standard URIs, then adds
+	 * all URIs managed by {@link InMemoryExprResourceRegistry} (which contains generated function grammars).
+	 * 
+	 */
+	override getImportedUris(Resource resource) {
+		val importedURIs = super.getImportedUris(resource)
+		// Make all registered function library URIs available in expression scope
+		importedURIs += inMemoryRegistry.registeredURIs
 
-        // Ensure the ResourceSet can load inmemory:/ URIs by installing the handler
-        // once (installing the same handler twice is harmless because canHandle is
-        // checked before each read, but we guard against duplicates for clarity).
-        val uriConverter = resource.resourceSet?.URIConverter
-        if (uriConverter !== null) {
-            val alreadyInstalled = uriConverter.URIHandlers.exists[it instanceof InMemoryExprResourceRegistry.InMemoryURIHandler]
-            if (!alreadyInstalled) {
-                uriConverter.URIHandlers.add(0, inMemoryRegistry.createURIHandler)
-            }
-        }
-
-        // Add every URI that was registered via ExpressionFunctionsRegistry.addLibraryFunctions
-        importedURIs += inMemoryRegistry.registeredURIs
-
-        return importedURIs
-    }
+		return importedURIs
+	}
 }
+
 

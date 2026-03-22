@@ -39,9 +39,9 @@ class ExpressionFunctionsValidation {
         assertDoesNotThrow [EcoreUtil3.validate(result)]
     }
 
-    // Second validate on the same ExpressionFnCall identity hits the methodCache.
+    // Second validate on the same model verifies repeated validation is stable.
     @Test
-    def void registeredFunction_validCall_cacheHit_noValidationError() {
+    def void registeredFunction_validCall_revalidate_noValidationError() {
         val result = parse('''
             int[] xs = <int[]>[]
             bool r = call isEmpty(xs)
@@ -57,7 +57,7 @@ class ExpressionFunctionsValidation {
             int r = call size()
         ''')
         val ex = assertThrows(ValidationException) [EcoreUtil3.validate(result)]
-        assertTrue(ex.message.contains('No matching overload found for size.'),
+        assertTrue(ex.message.contains('No matching overload found for function size'),
             '''Expected "No matching overload found for size." but got: «ex.message»''')
     }
 
@@ -69,7 +69,7 @@ class ExpressionFunctionsValidation {
             bool r = call isEmpty(true)
         ''')
         val ex = assertThrows(ValidationException) [EcoreUtil3.validate(result)]
-        assertTrue(ex.message.contains('No matching overload found for isEmpty.'),
+        assertTrue(ex.message.contains('No matching overload found for function isEmpty'),
             '''Expected "No matching overload found for isEmpty." but got: «ex.message»''')
     }
 

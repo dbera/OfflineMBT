@@ -16,7 +16,7 @@ import nl.esi.comma.expressions.evaluation.IEvaluationContext;
 import nl.esi.comma.expressions.expression.Expression;
 import nl.esi.comma.types.types.Type;
 
-public interface ExpressionConverter {
+public interface IExpressionConverter {
 	/**
 	 * Converts an Expression to a Java Object of the specified type.
 	 */

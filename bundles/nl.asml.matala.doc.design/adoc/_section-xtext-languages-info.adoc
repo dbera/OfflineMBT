@@ -16,8 +16,12 @@ include::_initCommon.adoc[]
 
 ifdef::gendocdir-extracted[]
 include::{gendocdir-extracted}/nl.esi.comma.types.adoc[]
+include::{gendocdir-extracted}/nl.esi.comma.expressions.adoc[]
+include::{gendocdir-extracted}/expression-functions-framework-design.adoc[]
 
 endif::[] 
 ifndef::gendocdir-extracted[]
 include::{pluginsdir}/nl.esi.comma.types/adoc/nl.esi.comma.types.adoc[]
+include::{pluginsdir}/nl.esi.comma.expressions/adoc/nl.esi.comma.expressions.adoc[]
+include::{pluginsdir}/nl.esi.comma.expressions/adoc/expression-functions-framework-design.adoc[]
 endif::[] 

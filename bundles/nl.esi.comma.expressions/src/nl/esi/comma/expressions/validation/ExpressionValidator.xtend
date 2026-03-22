@@ -361,7 +361,7 @@ class ExpressionValidator extends AbstractExpressionValidator {
                             ExpressionPackage.Literals.EXPRESSION_FN_CALL__FUNCTION)
                     }
                     catch (IllegalArgumentException exc) {
-                        error('''No matching overload found for «e.function.name».''',
+                        error('''Function «e.function.name» «exc.getMessage()»''',
                             ExpressionPackage.Literals.EXPRESSION_FN_CALL__FUNCTION)
                     }
                 }

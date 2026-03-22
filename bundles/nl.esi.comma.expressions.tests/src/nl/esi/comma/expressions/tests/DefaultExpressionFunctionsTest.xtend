@@ -18,7 +18,6 @@ import nl.esi.comma.expressions.functions.DefaultExpressionFunctions
 import nl.esi.comma.expressions.functions.InMemoryExprResourceRegistry
 import org.eclipse.xtext.resource.XtextResourceSet
 import org.junit.jupiter.api.Assertions
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 /**
@@ -32,8 +31,8 @@ import org.junit.jupiter.api.Test
  *      → calls InMemoryExprResourceRegistry.addLibrary(DefaultExpressionFunctions)
  *      → LibraryToExprGenerator produces the .expr content
  *      → stored at inmemory:/expr/nl.esi.comma.expressions.functions.DefaultExpressionFunctions.expr
- *   2. ExpressionsImportUriGlobalScopeProvider.getImportedUris installs the
- *      InMemoryURIHandler and adds the URI to the resource set's scope.
+ *   2. The ExpressionRuntimeModule automatically installs the InMemoryURIHandler
+ *      into the injected XtextResourceSet via InMemoryAwareResourceSetProvider.
  *   3. A model parsed with 'call functionName(...)' resolves to the FunctionDecl
  *      declared in the in-memory resource and evaluates correctly.
  */
@@ -41,27 +40,6 @@ class DefaultExpressionFunctionsTest extends ExpressionEvaluatorTestBase {
 
     @Inject InMemoryExprResourceRegistry inMemoryRegistry
     @Inject XtextResourceSet resourceSet
-
-    // -------------------------------------------------------------------------
-    // Setup
-    // -------------------------------------------------------------------------
-
-    @BeforeEach
-    def void setup() {
-        // Install the URI handler so the resource set can load inmemory:/ URIs.
-        // ExpressionsImportUriGlobalScopeProvider also does this lazily, but we
-        // do it eagerly here so the resource set used by ParseHelper is ready.
-        val alreadyInstalled = resourceSet.URIConverter.URIHandlers.exists[
-            it instanceof InMemoryExprResourceRegistry.InMemoryURIHandler
-        ]
-        if (!alreadyInstalled) {
-            resourceSet.URIConverter.URIHandlers.add(0, inMemoryRegistry.createURIHandler)
-        }
-    }
-
-    // -------------------------------------------------------------------------
-    // Registry content tests — verify the in-memory resource was generated
-    // -------------------------------------------------------------------------
 
     @Test
     def void defaultFunctions_registeredInMemory_uriExists() {
@@ -91,10 +69,10 @@ class DefaultExpressionFunctionsTest extends ExpressionEvaluatorTestBase {
     @Test
     def void defaultFunctions_uriHandler_canReadContent() {
         val uri = InMemoryExprResourceRegistry.uriFor(DefaultExpressionFunctions)
-        Assertions.assertTrue(inMemoryRegistry.createURIHandler.exists(uri, emptyMap),
+        Assertions.assertTrue(inMemoryRegistry.getURIHandler.exists(uri, emptyMap),
             "URIHandler should report the in-memory URI as existing")
 
-        val stream = inMemoryRegistry.createURIHandler.createInputStream(uri, emptyMap)
+        val stream = inMemoryRegistry.getURIHandler.createInputStream(uri, emptyMap)
         val bytes  = stream.readAllBytes
         Assertions.assertTrue(bytes.length > 0, "InputStream should produce non-empty content")
     }
@@ -404,12 +382,6 @@ class DefaultExpressionFunctionsTest extends ExpressionEvaluatorTestBase {
             T t = T { ti2s = <map<int, string>> { 1 -> "one", 2 -> "two" } }
             map<int, string> result = call deleteKey(t.ti2s, 1)
         ''')
-    }
-    
-        override assertEval(String expected, String input) {
-        val newInput = input.replaceAll("call\\s+(\\w+\\s*\\()", "$1")
-        super.assertEval(expected, newInput)
-        
     }
     
 }
