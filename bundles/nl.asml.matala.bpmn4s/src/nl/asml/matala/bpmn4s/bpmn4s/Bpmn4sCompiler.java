@@ -235,6 +235,7 @@ public class Bpmn4sCompiler{
 		}
 		result.append(String.format("\tSUT-blocks %s\n", String.join(" ", listSUTcomponents()))); 
 		result.append(String.format("\tdepth-limits %s\r\n", model.getDepthLimit()));
+		result.append(String.format("\tstate-limits %s\r\n", model.getStateLimit()));
 		result.append(String.format("\tnum-tests %s\n}\r\n", model.getNumOfTests()));
 		return result.toString();
 	}
@@ -889,7 +890,7 @@ public class Bpmn4sCompiler{
 		Element element = model.getElementById(id);
 		if (element == null) {
 			return 0;
-		} else if (element.getPriority() != null && element.getPriority() != 0) {
+		} else if (element.getPriority() != null) {
 			return element.getPriority();
 		} else if (element.getParent() != null) {
 			return getPriority(element.getParent());

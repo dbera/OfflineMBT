@@ -82,6 +82,7 @@ public class Main {
 		boolean simulation = false;
 		String output = "";
 		int depthLimit = 300;
+		int stateLimit = 1000;
 		int numOfTests = 1;
 		
 		if(args.length < 1) {
@@ -102,17 +103,21 @@ public class Main {
 		if(args.length > 4) {
 			numOfTests = Integer.parseInt(args[4]);
 		}
-		compile(inputModel, simulation, output, depthLimit, numOfTests);
+		if(args.length > 5) {
+			stateLimit = Integer.parseInt(args[5]);
+		}
+		compile(inputModel, simulation, output, depthLimit, stateLimit, numOfTests);
 	}
 	
 	static final int DEFAULT_DEPTH_LIMIT = 300;
+	static final int DEFAULT_STATE_LIMIT = 1000;
 	static final int DEFAULT_NUM_OF_TESTS = 1;
 	
 	public static void compile(String inputModel, boolean simulation, String outputFolder) {
-		compile(inputModel, simulation, outputFolder, DEFAULT_DEPTH_LIMIT, DEFAULT_NUM_OF_TESTS);
+		compile(inputModel, simulation, outputFolder, DEFAULT_DEPTH_LIMIT, DEFAULT_STATE_LIMIT, DEFAULT_NUM_OF_TESTS);
 	}
 	
-	public static void compile(String inputModel, boolean simulation, String outputFolder, int depthLimit, int numOfTests) {
+	public static void compile(String inputModel, boolean simulation, String outputFolder, int depthLimit, int stateLimit, int numOfTests) {
         BpmnModelInstance modelInst;
         try {
         	registerModelExtensionTypes();
@@ -124,6 +129,7 @@ public class Main {
         	model = new Bpmn4s();
         	model.setName(fileName);
         	model.setDepthLimit(depthLimit);
+        	model.setStateLimit(stateLimit);
         	model.setNumOfTests(numOfTests);
         	parseBPMN(modelInst);
         	Bpmn4sCompiler compiler = new Bpmn4sCompiler();

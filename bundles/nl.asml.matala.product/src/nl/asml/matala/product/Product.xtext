@@ -42,8 +42,9 @@ Specification:
 	'specification' name = ID '{'
 		blocks += Blocks+
 		('SUT-blocks' envBlock += [Block|QualifiedName]*)?
-		'depth-limits' limit = INT
-		('num-tests' numTests = INT)?
+		'depth-limits' depthLimits = ExpressionConstantInt
+        ('state-limits' stateLimits = ExpressionConstantInt)?
+		('num-tests' numTests = ExpressionConstantInt)?
 	'}'
 ;
 

@@ -27,15 +27,17 @@ class Bpmn4sToPspecGenerator extends AbstractGenerator {
     val boolean simulation
     val int numTests
     val int depthLimit
+    val int stateLimit
 
     new() {
-        this(false, 1, 300)
+        this(false, 1, 300, 1000)
     }
 
-    new(boolean simulation, int numTests, int depthLimit) {
+    new(boolean simulation, int numTests, int depthLimit, int stateLimit) {
         this.simulation = simulation
         this.numTests = numTests
         this.depthLimit = depthLimit
+        this.stateLimit = stateLimit
     }
 
     override doGenerate(Resource res, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
@@ -53,7 +55,7 @@ class Bpmn4sToPspecGenerator extends AbstractGenerator {
         fsa.generateFile(typesPath, '// TODO: Generate content')
 
         // Generate the pspec file from the bpmn file
-        Main.compile(uri.toPath, simulation, fsa.rootURI.toPath, depthLimit, numTests)
+        Main.compile(uri.toPath, simulation, fsa.rootURI.toPath, depthLimit, stateLimit, numTests)
 
         // Refresh the files-system to detect the generated files
         fsa.refresh

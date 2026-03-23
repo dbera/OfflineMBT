@@ -343,6 +343,7 @@ class PetriNet {
         List<String> inout_places,
         List<String> init_places,
         int depth_limit,
+        int state_limit,
         int num_tests,
         Map<String, ? extends Set<String>> sutTransitionMap
     ) '''
@@ -415,7 +416,7 @@ class PetriNet {
                 «outputArcsTxt»
                 self.stepsList.append(self.n.get_marking())
             
-            «print_SCNGen(num_tests, depth_limit)»
+            «print_SCNGen(num_tests, depth_limit, state_limit)»
             
             def initializeTestGeneration(self):
                 self.sutVarTransitionMap = {«FOR entry : sutTransitionMap.entrySet SEPARATOR ','»'«entry.key»': [«FOR v : entry.value SEPARATOR ','»'«v»'«ENDFOR»]«ENDFOR»}
@@ -665,7 +666,7 @@ class PetriNet {
             print("[INFO] Exiting..")
     '''
 
-    def print_SCNGen(int num_tests, int depth_limit) '''
+    def print_SCNGen(int num_tests, int depth_limit, int state_limit) '''
         def loadScenario(self, scenario):
             self.map_transition_filter = scenario
             print('[INFO] Loaded scenario with ' + str(len(self.map_transition_filter)) + ' steps.')
@@ -779,7 +780,7 @@ class PetriNet {
             elif level > «depth_limit»:
                 print(' [RG-INFO] Depth limit reached! Terminating path.')
                 return nrOfDependencies
-            elif len(state_space) > «depth_limit * 4»:
+            elif len(state_space) > «state_limit»:
                 print(' [RG-INFO] State-space limit reached! Terminating path.')
                 return nrOfDependencies
 
