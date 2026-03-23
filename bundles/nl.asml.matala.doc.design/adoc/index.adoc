@@ -33,7 +33,7 @@ image::{imgsdir}/under_construction.png[width=5464,height=704]
 
 <<<
 
-include::_section_xtext_languages_info.adoc[]
+include::_section-xtext-languages-info.adoc[]
 
 <<<
 
@@ -43,7 +43,7 @@ include::developer-howto.adoc[]
 <<<
 
 [appendix]
-include::_section_xtext_languages.adoc[]
+include::_section-xtext-languages.adoc[]
 
 <<<
 

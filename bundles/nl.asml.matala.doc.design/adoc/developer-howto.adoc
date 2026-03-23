@@ -12,6 +12,7 @@
 ////
 
 [appendix]
+include::_initCommon.adoc[]
 
 == Developer how-to[[developer-howto]]
 
@@ -21,3 +22,11 @@ This section describes useful information for a developer.
 // please note that the include may also come from a plugin
 // as described here:
 include::how-to/add-documentation-from-plugin.adoc[levelOffset=1]
+
+ifdef::gendocdir-extracted[]
+include::{gendocdir-extracted}/how-to-add-a-function-library.adoc[]
+
+endif::[] 
+ifndef::gendocdir-extracted[]
+include::{pluginsdir}/nl.esi.comma.expressions/adoc/how-to-add-a-function-library.adoc[]
+endif::[] 

@@ -1,8 +1,24 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <?pde?>
 <!-- generated with https://github.com/eclipse-cbi/targetplatform-dsl -->
-<target name="OfflineMBT - Maven Dependencies" sequenceNumber="1758098992">
+<target name="OfflineMBT - Maven Dependencies" sequenceNumber="1774096597">
   <locations>
+    <location includeDependencyDepth="direct" includeDependencyScopes="compile" includeSource="true" missingManifest="generate" type="Maven" label="MavenCentral">
+      <dependencies>
+        <dependency>
+          <groupId>jakarta.validation</groupId>
+          <artifactId>jakarta.validation-api</artifactId>
+          <version>3.1.1</version>
+          <type>jar</type>
+        </dependency>
+        <dependency>
+          <groupId>commons-validator</groupId>
+          <artifactId>commons-validator</artifactId>
+          <version>1.10.1</version>
+          <type>jar</type>
+        </dependency>
+      </dependencies>
+    </location>
     <location includeDependencyDepth="none" includeDependencyScopes="compile" includeSource="true" missingManifest="generate" type="Maven" label="MavenCentral">
       <dependencies>
         <dependency>

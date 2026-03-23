@@ -14,6 +14,10 @@ package nl.esi.comma.expressions.evaluation;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.function.BiFunction;
 
 import org.eclipse.emf.common.util.TreeIterator;
@@ -26,16 +30,33 @@ import nl.esi.comma.expressions.expression.ExpressionConstantInt;
 import nl.esi.comma.expressions.expression.ExpressionConstantReal;
 import nl.esi.comma.expressions.expression.ExpressionConstantString;
 import nl.esi.comma.expressions.expression.ExpressionFactory;
+import nl.esi.comma.expressions.expression.ExpressionMap;
 import nl.esi.comma.expressions.expression.ExpressionMinus;
 import nl.esi.comma.expressions.expression.ExpressionVariable;
+import nl.esi.comma.expressions.expression.ExpressionVector;
+import nl.esi.comma.expressions.expression.Pair;
 import nl.esi.comma.expressions.expression.Variable;
+import nl.esi.comma.expressions.utilities.ExpressionsUtilities;
 import nl.esi.comma.expressions.validation.ExpressionValidator;
+import nl.esi.comma.types.types.SimpleTypeDecl;
 import nl.esi.comma.types.types.TypeObject;
+import nl.esi.comma.types.utilities.TypeUtilities;
 
 public interface IEvaluationContext {
 	static final IEvaluationContext EMPTY = variable -> null;
 
 	Expression getExpression(Variable variable);
+	
+	/**
+	 * Returns a list of library function objects that are available in this context.
+	 * These can be used for function resolution and invocation during expression evaluation.
+	 * By default, this returns an empty list, but implementations can override it to provide
+	 * actual library functions. 
+	 * The objects should be assignable from the classes that the {@link ExpressionFunctionsRegistry} supports for library functions.
+	 */
+	default List<Object> getLibraryFunctionObjects(){
+		return Collections.emptyList();
+	}
 
 	/**
 	 * Returns {@code true} if an only if the {@code expression} resolves to a full
@@ -141,6 +162,10 @@ public interface IEvaluationContext {
 			return toRealExpr(r);
 		} else if (value instanceof Float r) {
 			return toRealExpr(r);
+		} else if (value instanceof Collection<?> coll) {
+			return toVectorExpr(coll);
+		} else if (value instanceof Map<?, ?> map) {
+			return toMapExpr(map);
 		} else {
 			return null;
 		}
@@ -244,6 +269,77 @@ public interface IEvaluationContext {
 			return minusExpression;
 		}
 		return null;
+	}
+
+	/**
+	 * Converts a Java {@link Collection} to an {@link ExpressionVector}.
+	 * Each element is recursively converted via {@link #toExpression(Object)}.
+	 * A {@link nl.esi.comma.expressions.expression.TypeAnnotation TypeAnnotation}
+	 * is inferred from the first element's Java type so the output serializes as
+	 * e.g. {@code <int[]> [1, 2, 3]}.
+	 *
+	 * @param collection the Java collection (typically a {@code List})
+	 * @return an {@code ExpressionVector} containing the converted elements,
+	 *         or {@code null} if the collection is {@code null}
+	 */
+	default ExpressionVector toVectorExpr(Collection<?> collection) {
+		if (collection == null) {
+			return null;
+		}
+		// Infer element type and create a typed vector shell (with TypeAnnotation)
+		SimpleTypeDecl elementTypeDecl = TypeUtilities.inferElementType(collection);
+		ExpressionVector vector = (ExpressionVector) ExpressionsUtilities.createDefaultValue(
+				TypeUtilities.vectorOf(elementTypeDecl));
+
+		for (Object element : collection) {
+			Expression converted = toExpression(element);
+			if (converted != null) {
+				vector.getElements().add(converted);
+			}
+		}
+		return vector;
+	}
+
+	/**
+	 * Converts a Java {@link Map} to an {@link ExpressionMap}.
+	 * Each key and value is recursively converted via {@link #toExpression(Object)}.
+	 * A {@link nl.esi.comma.expressions.expression.TypeAnnotation TypeAnnotation}
+	 * is inferred from the first entry's key/value Java types so the output
+	 * serializes as e.g. {@code <map<int, string>> { 1 -> "a" }}.
+	 *
+	 * @param map the Java map
+	 * @return an {@code ExpressionMap} containing the converted key-value pairs,
+	 *         or {@code null} if the map is {@code null}
+	 */
+	default ExpressionMap toMapExpr(Map<?, ?> map) {
+		if (map == null) {
+			return null;
+		}
+
+		// Infer key/value types from the first entry and create a typed map shell
+		ExpressionMap exprMap;
+		if (!map.isEmpty()) {
+			Map.Entry<?, ?> firstEntry = map.entrySet().iterator().next();
+			SimpleTypeDecl keyTypeDecl = TypeUtilities.resolveBasicType(firstEntry.getKey());
+			SimpleTypeDecl valTypeDecl = TypeUtilities.resolveBasicType(firstEntry.getValue());
+			exprMap = (ExpressionMap) ExpressionsUtilities.createDefaultValue(
+					TypeUtilities.mapOf(keyTypeDecl, valTypeDecl));
+		} else {
+			exprMap = ExpressionFactory.eINSTANCE.createExpressionMap();
+		}
+
+		for (Map.Entry<?, ?> entry : map.entrySet()) {
+			Expression keyExpr = toExpression(entry.getKey());
+			Expression valExpr = toExpression(entry.getValue());
+			if (keyExpr != null && valExpr != null) {
+				Pair pair = ExpressionFactory.eINSTANCE.createPair();
+				pair.setKey(keyExpr);
+				pair.setValue(valExpr);
+				exprMap.getPairs().add(pair);
+			}
+		}
+
+		return exprMap;
 	}
 
 	default TypeObject typeOf(Expression expression) {

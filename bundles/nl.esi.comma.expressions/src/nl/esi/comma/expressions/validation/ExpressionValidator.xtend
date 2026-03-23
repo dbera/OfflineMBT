@@ -14,6 +14,7 @@ package nl.esi.comma.expressions.validation
 
 import com.google.inject.Inject
 import java.util.List
+import nl.esi.comma.expressions.evaluation.IEvaluationContext
 import nl.esi.comma.expressions.expression.Expression
 import nl.esi.comma.expressions.expression.ExpressionAddition
 import nl.esi.comma.expressions.expression.ExpressionAnd
@@ -47,13 +48,13 @@ import nl.esi.comma.expressions.expression.ExpressionOr
 import nl.esi.comma.expressions.expression.ExpressionPackage
 import nl.esi.comma.expressions.expression.ExpressionPlus
 import nl.esi.comma.expressions.expression.ExpressionPower
-import nl.esi.comma.expressions.expression.ExpressionQuantifier
 import nl.esi.comma.expressions.expression.ExpressionRecord
 import nl.esi.comma.expressions.expression.ExpressionRecordAccess
 import nl.esi.comma.expressions.expression.ExpressionSubtraction
 import nl.esi.comma.expressions.expression.ExpressionVariable
 import nl.esi.comma.expressions.expression.ExpressionVector
-import nl.esi.comma.expressions.expression.QUANTIFIER
+import nl.esi.comma.expressions.expression.Variable
+import nl.esi.comma.expressions.functions.ExpressionFunctionsRegistry
 import nl.esi.comma.types.BasicTypes
 import nl.esi.comma.types.types.Dimension
 import nl.esi.comma.types.types.TypeDecl
@@ -74,6 +75,14 @@ import static extension nl.esi.comma.types.utilities.TypeUtilities.*
  */
 class ExpressionValidator extends AbstractExpressionValidator {
 	@Inject protected IScopeProvider scopeProvider
+	@Inject ExpressionFunctionsRegistry registry
+	IEvaluationContext evaluationContext = new IEvaluationContext(){
+    
+    override getExpression(Variable variable) {
+        throw new UnsupportedOperationException("TODO: auto-generated method stub")
+    }
+	    
+	}
 	
     static def boolean numeric(TypeObject t) {
         return t.subTypeOf(BasicTypes.getIntType(t)) || t.subTypeOf(BasicTypes.getRealType(t))
@@ -122,12 +131,6 @@ class ExpressionValidator extends AbstractExpressionValidator {
 			ExpressionFnCall : e.function.returnType.type
 			ExpressionFunctionCall : ExpressionFunction.valueOf(e)?.inferType(e.args, ExpressionFunction.RETURN_ARG)
 			ExpressionVector : e.typeAnnotation?.type?.typeObject
-			ExpressionQuantifier : {
-				if(e.quantifier == QUANTIFIER::DELETE)
-					e.collection.typeOf
-				else
-					BasicTypes.getBoolType(e)
-			}
 			ExpressionMap : e.typeAnnotation?.type?.typeObject
 			ExpressionMapRW : {
 				val t = e.map.typeOf
@@ -348,30 +351,36 @@ class ExpressionValidator extends AbstractExpressionValidator {
 			    }
 			}
             ExpressionFnCall: {
-                if (e.args.size != e.function.params.size) {
-                    error('''Function «e.function.name» expects «e.function.params.size» arguments.''', null)
-                } else {
-                    for (var i = 0; i < e.args.size; i++) {
-                        val paramType = e.function.params.get(i).type.typeObject
-                        val argType = typeOf(e.args.get(i))
-                        if (!subTypeOf(argType, paramType)) {
-                            error('''Function «e.function.name» expects argument «i + 1» to be of type «paramType.typeName».''',
-                                ExpressionPackage.Literals.EXPRESSION_FN_CALL__ARGS, i)
+                // use the registry for validation if the function was registered
+                if( registry.hasFunction(e.function.name)){
+                    try {
+                        registry.validateFunction(e, evaluationContext)
+                    }
+                    catch (UnsupportedOperationException exc) {
+                        error('''Function not specified «e.function.name».''',
+                            ExpressionPackage.Literals.EXPRESSION_FN_CALL__FUNCTION)
+                    }
+                    catch (IllegalArgumentException exc) {
+                        error('''Function «e.function.name» «exc.getMessage()»''',
+                            ExpressionPackage.Literals.EXPRESSION_FN_CALL__FUNCTION)
+                    }
+                }
+                else {
+                    // use the declared Function
+                    if (e.args.size != e.function.params.size) {
+                        error('''Function «e.function.name» expects «e.function.params.size» arguments.''', null)
+                    } else {
+                        for (var i = 0; i < e.args.size; i++) {
+                            val paramType = e.function.params.get(i).type.typeObject
+                            val argType = typeOf(e.args.get(i))
+                            if (!subTypeOf(argType, paramType)) {
+                                error('''Function «e.function.name» expects argument «i + 1» to be of type «paramType.typeName».''',
+                                    ExpressionPackage.Literals.EXPRESSION_FN_CALL__ARGS, i)
+                            }
                         }
                     }
                 }
             }
-			//TODO consider adding a new check if the type of the iterator is compatible with the type of
-			//the vector elements
-			ExpressionQuantifier: {
-				val collectionType = e.collection.typeOf
-				if(collectionType !== null && !isVectorType(collectionType))
-					error("Expression must be of type vector", ExpressionPackage.Literals.EXPRESSION_QUANTIFIER__COLLECTION)
-				val condType = e.condition.typeOf
-				if(condType !== null && !condType.subTypeOf(BasicTypes.getBoolType(e)))
-					error("Condition expression must be of type boolean", ExpressionPackage.Literals.EXPRESSION_QUANTIFIER__CONDITION)
-	
-			}
 		}
 	}
 	
