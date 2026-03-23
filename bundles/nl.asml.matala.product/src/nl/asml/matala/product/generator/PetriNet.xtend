@@ -778,9 +778,11 @@ class PetriNet {
                 writer.write('@startuml\n')
                 state_space = [self.n.get_marking()]
             elif level > «depth_limit»:
+                writer.write('(%s) #red\n' % (currIndex,))
                 print(' [RG-INFO] Depth limit reached! Terminating path.')
                 return nrOfDependencies
             elif len(state_space) > «state_limit»:
+                writer.write('(%s) #red\n' % (currIndex,))
                 print(' [RG-INFO] State-space limit reached! Terminating path.')
                 return nrOfDependencies
 
