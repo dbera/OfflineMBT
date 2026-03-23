@@ -71,13 +71,15 @@ public class Main {
 	static final String SUBTYPE_COMPOSETASK = "ComposeTask";
 	static final String SUBTYPE_ASSERTTASK = "AssertTask";
 	
+	/**
+	 * arg0 is path to input model.<br/>
+	 * arg1 is true for simulation tailored compilation, else for test generation.<br/>
+	 * arg2 is output folder for generated ps and types files.<br/>
+	 * arg3 is depth limit for test generation.<br/>
+	 * arg4 is number of test cases for test generation.<br/>
+	 * arg5 is state-space limit for test generation.<br/>
+	 */
 	public static void main(String[] args) {
-		/*
-		 * arg0 is path to input model. 
-		 * arg1 is true for simulation tailored compilation, else for test generation. 
-		 * arg2 is output folder for generated ps and types files.
-		 * arg3 is depth limit for test generation.
-		 */
 		String inputModel = "";
 		boolean simulation = false;
 		String output = "";
