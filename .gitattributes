@@ -40,3 +40,5 @@
 *.pptx binary
 *.xls  binary
 *.xlsx binary
+# OfflineMBT
+*.ps text=auto
