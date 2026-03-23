@@ -62,7 +62,7 @@
         </bpmn4s:dataType>
       </bpmn4s:dataTypes>
     </bpmn2:extensionElements>
-    <bpmn2:subProcess bpmn4s:subType="Component" id="Activity_1lazkw7" name="A 3D Printer">
+    <bpmn2:subProcess bpmn4s:priority="10" bpmn4s:subType="Component" id="Activity_1lazkw7" name="A 3D Printer">
       <bpmn2:property id="Property_1snd29x" name="__targetRef_placeholder"/>
       <bpmn2:dataInputAssociation id="DataInputAssociation_069fsrj">
         <bpmn2:sourceRef>DataObjectReference_0dobbvk</bpmn2:sourceRef>
@@ -317,7 +317,7 @@
       <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_3mm73l2" bpmn4s:originDataReference="DataStoreReference_0wnjztj" id="DataStoreReference_0auqxs9" name="printRequests"/>
       <bpmn2:sequenceFlow id="Flow_1dcdx0e" sourceRef="Activity_1fczbkv" targetRef="Gateway_1j3rupx"/>
     </bpmn2:subProcess>
-    <bpmn2:subProcess bpmn4s:subType="Component" id="Activity_14x2mh4" name="Inspection">
+    <bpmn2:subProcess bpmn4s:priority="20" bpmn4s:subType="Component" id="Activity_14x2mh4" name="Inspection">
       <bpmn2:property id="Property_1rk1rll" name="__targetRef_placeholder"/>
       <bpmn2:dataInputAssociation bpmn4s:persistentRead="true" id="DataInputAssociation_04w08i1">
         <bpmn2:sourceRef>DataStoreReference_0zb46u3</bpmn2:sourceRef>
@@ -383,7 +383,7 @@
       </bpmn2:textAnnotation>
       <bpmn2:association associationDirection="None" id="Association_0dsyvac" sourceRef="Activity_08rviuu" targetRef="TextAnnotation_1hg1mma"/>
     </bpmn2:subProcess>
-    <bpmn2:subProcess bpmn4s:subType="Component" id="Activity_1kfty5c" name="Optimization">
+    <bpmn2:subProcess bpmn4s:priority="30" bpmn4s:subType="Component" id="Activity_1kfty5c" name="Optimization">
       <bpmn2:property id="Property_0bh8zr0" name="__targetRef_placeholder"/>
       <bpmn2:dataInputAssociation id="DataInputAssociation_1xoefzs">
         <bpmn2:sourceRef>DataObjectReference_0gm0nb7</bpmn2:sourceRef>
@@ -470,7 +470,7 @@
     <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_37032q4" bpmn4s:linkedDataReferences="DataStoreReference_1p9xemy DataStoreReference_10kmv51 DataStoreReference_16tennj" id="DataStoreReference_1r5xmmd" name="inspectionReport"/>
     <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_2qhm379" bpmn4s:init="corrections := CorrectionsReport { &#10;                   id = 1,&#10;                   correctionsMap = &lt;map&lt;int,CorrectionItem[]&gt;&gt; { &#10;                            0 -&gt; &lt;CorrectionItem[]&gt; [ &#10;                                      CorrectionItem { data = &quot;X&quot; },&#10;                                      CorrectionItem { data = &quot;Y&quot; } &#10;                                 ],&#10;                            1 -&gt; &lt;CorrectionItem[]&gt; [ &#10;                                      CorrectionItem { data = &quot;A&quot; },&#10;                                      CorrectionItem { data = &quot;B&quot; } &#10;                                 ] &#10;                   } &#10;               }" bpmn4s:linkedDataReferences="DataStoreReference_0zn554c DataStoreReference_1iu4tht" id="DataStoreReference_18mx7a8" name="corrections"/>
     <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_3mm73l2" bpmn4s:init="printRequests := PrintRequest {&#10; id = 1,&#10; resolution = PrintResolution::LOW,&#10; scale = 50.0,&#10; color = ColorType::MONOCHROME,&#10;    opType = OperationType::PRINT&#10;}&#10;&#10;printRequests := PrintRequest {&#10; id = 2,&#10; resolution = PrintResolution::MED,&#10; scale = 75.0,&#10; color = ColorType::COLOR,&#10;    opType = OperationType::PRINT&#10;}&#10;&#10;printRequests := PrintRequest {&#10; id = 3,&#10; resolution = PrintResolution::HIGH,&#10; scale = 75.0,&#10; color = ColorType::COLOR,&#10;    opType = OperationType::PRINT&#10;}" bpmn4s:linkedDataReferences="DataStoreReference_0auqxs9" id="DataStoreReference_0wnjztj" name="printRequests"/>
-    <bpmn2:subProcess bpmn4s:ctxName="ctx" bpmn4s:ctxTypeRef="DataType_1ag1efq" bpmn4s:priority="10" bpmn4s:subType="Component" id="Activity_1v8oyy2" name="Assertions">
+    <bpmn2:subProcess bpmn4s:ctxName="ctx" bpmn4s:ctxTypeRef="DataType_1ag1efq" bpmn4s:priority="100" bpmn4s:subType="Component" id="Activity_1v8oyy2" name="Assertions">
       <bpmn2:property id="Property_1gm30em" name="__targetRef_placeholder"/>
       <bpmn2:dataInputAssociation bpmn4s:persistentRead="true" id="DataInputAssociation_0z61xa6">
         <bpmn2:sourceRef>DataStoreReference_1r5xmmd</bpmn2:sourceRef>
