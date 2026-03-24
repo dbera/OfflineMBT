@@ -1,5 +1,5 @@
 # OfflineMBT
-Systems Modeling and Test Generation
+Systems Modeling and Test Generation (test)
 
 ### Development environment setup
 
