@@ -92,6 +92,8 @@ public class Element {
 	String dataType = null;
 	// Task elements have guards
 	String guard = null;
+	// Components, sub-processes, Tasks and parallel gates have a priority (optional)
+	Integer priority = null;
 	
 	/* Id of the original data node this Element refers to. In BPMN4S
 	 *  shadow data nodes are created inside subprocess or by using 
@@ -323,6 +325,18 @@ public class Element {
 	
 	public String getGuard() {
 		return this.guard;
+	}
+	
+	public void setPriority(String priority) {
+		try {
+			this.priority = Integer.parseInt(priority);
+		} catch (NullPointerException|NumberFormatException e) {
+			this.priority = null;
+		}
+	}
+
+	public Integer getPriority() {
+		return priority;
 	}
 
 	public boolean isReferenceData() {

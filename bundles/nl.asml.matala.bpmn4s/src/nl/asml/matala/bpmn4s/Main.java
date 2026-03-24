@@ -71,17 +71,20 @@ public class Main {
 	static final String SUBTYPE_COMPOSETASK = "ComposeTask";
 	static final String SUBTYPE_ASSERTTASK = "AssertTask";
 	
+	/**
+	 * arg0 is path to input model.<br/>
+	 * arg1 is true for simulation tailored compilation, else for test generation.<br/>
+	 * arg2 is output folder for generated ps and types files.<br/>
+	 * arg3 is depth limit for test generation.<br/>
+	 * arg4 is number of test cases for test generation.<br/>
+	 * arg5 is state-space limit for test generation.<br/>
+	 */
 	public static void main(String[] args) {
-		/*
-		 * arg0 is path to input model. 
-		 * arg1 is true for simulation tailored compilation, else for test generation. 
-		 * arg2 is output folder for generated ps and types files.
-		 * arg3 is depth limit for test generation.
-		 */
 		String inputModel = "";
 		boolean simulation = false;
 		String output = "";
 		int depthLimit = 300;
+		int stateLimit = 1000;
 		int numOfTests = 1;
 		
 		if(args.length < 1) {
@@ -102,17 +105,21 @@ public class Main {
 		if(args.length > 4) {
 			numOfTests = Integer.parseInt(args[4]);
 		}
-		compile(inputModel, simulation, output, depthLimit, numOfTests);
+		if(args.length > 5) {
+			stateLimit = Integer.parseInt(args[5]);
+		}
+		compile(inputModel, simulation, output, depthLimit, stateLimit, numOfTests);
 	}
 	
 	static final int DEFAULT_DEPTH_LIMIT = 300;
+	static final int DEFAULT_STATE_LIMIT = 1000;
 	static final int DEFAULT_NUM_OF_TESTS = 1;
 	
 	public static void compile(String inputModel, boolean simulation, String outputFolder) {
-		compile(inputModel, simulation, outputFolder, DEFAULT_DEPTH_LIMIT, DEFAULT_NUM_OF_TESTS);
+		compile(inputModel, simulation, outputFolder, DEFAULT_DEPTH_LIMIT, DEFAULT_STATE_LIMIT, DEFAULT_NUM_OF_TESTS);
 	}
 	
-	public static void compile(String inputModel, boolean simulation, String outputFolder, int depthLimit, int numOfTests) {
+	public static void compile(String inputModel, boolean simulation, String outputFolder, int depthLimit, int stateLimit, int numOfTests) {
         BpmnModelInstance modelInst;
         try {
         	registerModelExtensionTypes();
@@ -124,6 +131,7 @@ public class Main {
         	model = new Bpmn4s();
         	model.setName(fileName);
         	model.setDepthLimit(depthLimit);
+        	model.setStateLimit(stateLimit);
         	model.setNumOfTests(numOfTests);
         	parseBPMN(modelInst);
         	Bpmn4sCompiler compiler = new Bpmn4sCompiler();
@@ -420,6 +428,7 @@ public class Main {
 			node.setComponent(getParentComponents(elem));
 			node.setGuard(elem.getAttributeValueNs("http://bpmn4s", "guard"));
 			node.setStepType(elem.getAttributeValueNs("http://bpmn4s", "stepType"));
+			node.setPriority(elem.getAttributeValueNs("http://bpmn4s", "priority"));
 		}
 		String contextName = elem.getAttributeValueNs("http://bpmn4s", "ctxName");
 		String contextInit = elem.getAttributeValueNs("http://bpmn4s", "ctxInit");

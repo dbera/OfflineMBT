@@ -29,6 +29,7 @@ OfflineGenerationBlock:
             (('bpmn-file' bpmn = STRING) | ('product-file' product = STRING))
             ('num-tests' numTests = INT)?
             ('depth-limit' depthLimit = INT)?
+            ('state-limit' stateLimit = INT)?
             ('path-to-python-exe' pythonExe = STRING)?
             ('using-settings' '{'
                 ('generator-params' generatorParams = TargetConfig) ?

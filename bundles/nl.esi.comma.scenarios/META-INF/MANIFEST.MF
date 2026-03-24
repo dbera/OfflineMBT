@@ -22,7 +22,7 @@ Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: nl.esi.comma.scenarios,
  nl.esi.comma.scenarios.generator,
  nl.esi.comma.scenarios.generator.causalgraph,
- nl.esi.comma.scenarios.generator.plantuml,
+ nl.esi.comma.scenarios.generator.impactanalysis,
  nl.esi.comma.scenarios.generator.specflow,
  nl.esi.comma.scenarios.generator.traces,
  nl.esi.comma.scenarios.parser.antlr,

@@ -9,3 +9,4 @@ Require-Bundle: nl.esi.xtext.lsp.server,
  slf4j.reload4j
 Automatic-Module-Name: nl.asml.matala.product.lsp.server
 Bundle-RequiredExecutionEnvironment: JavaSE-21
+Export-Package: nl.asml.matala.product.lsp.server

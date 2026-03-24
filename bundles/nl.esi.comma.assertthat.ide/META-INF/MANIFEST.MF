@@ -12,6 +12,7 @@ Require-Bundle: nl.esi.comma.assertthat,
  org.eclipse.xtext.xbase.ide,
  org.antlr.runtime;bundle-version="[3.2.0,3.2.1)"
 Bundle-RequiredExecutionEnvironment: JavaSE-21
-Export-Package: nl.esi.comma.assertthat.ide.contentassist.antlr,
- nl.esi.comma.assertthat.ide.contentassist.antlr.internal,
- nl.esi.comma.assertthat.ide.contentassist
+Export-Package: nl.esi.comma.assertthat.ide,
+ nl.esi.comma.assertthat.ide.contentassist,
+ nl.esi.comma.assertthat.ide.contentassist.antlr,
+ nl.esi.comma.assertthat.ide.contentassist.antlr.internal

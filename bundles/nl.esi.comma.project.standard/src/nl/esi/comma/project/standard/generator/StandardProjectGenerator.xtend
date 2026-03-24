@@ -69,9 +69,10 @@ class StandardProjectGenerator extends AbstractGenerator {
                 val simulator = (task.target == OfflineGenerationTarget::SIMULATOR)
                 val numTests = task.numTests <= 0 ? 1 : task.numTests
                 val depthLimit = task.depthLimit <= 0 ? 300 : task.depthLimit
+                val stateLimit = task.stateLimit <= 0 ? 1000 : task.stateLimit
                 val pspecFsa = fsa.createFolderAccess(FOLDER_PSPEC)
 
-                (new Bpmn4sToPspecGenerator(simulator, numTests, depthLimit)).doGenerate(rst, bpmnUri, pspecFsa, ctx)
+                (new Bpmn4sToPspecGenerator(simulator, numTests, depthLimit, stateLimit)).doGenerate(rst, bpmnUri, pspecFsa, ctx)
 
                 pspecFsa.getURI(bpmnUri.trimFileExtension.appendFileExtension('ps').lastSegment)
             }

@@ -11,7 +11,8 @@ Require-Bundle: nl.esi.comma.scenarios,
  org.eclipse.xtext.xbase.testing,
  org.eclipse.xtext.xbase.lib;bundle-version="2.15.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-21
-Export-Package: nl.esi.comma.scenarios.tests;x-internal=true
+Export-Package: nl.esi.comma.scenarios.tests;x-internal=true,
+ nl.esi.comma.scenarios.tests.causalgraph
 Import-Package: org.hamcrest.core,
  org.junit;version="4.5.0",
  org.junit.runners.model;version="4.5.0",

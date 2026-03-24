@@ -5,7 +5,11 @@ Bundle-SymbolicName: nl.esi.comma.causalgraph.ui;singleton:=true
 Bundle-Version: 4.2.0.qualifier
 Bundle-Activator: nl.esi.comma.causalgraph.ui.internal.CausalgraphActivator
 Bundle-Vendor: TNO-ESI
-Export-Package: nl.esi.comma.causalgraph.ui.internal,
+Export-Package: nl.esi.comma.causalgraph.ui,
+ nl.esi.comma.causalgraph.ui.handlers,
+ nl.esi.comma.causalgraph.ui.internal,
+ nl.esi.comma.causalgraph.ui.labeling,
+ nl.esi.comma.causalgraph.ui.outline,
  nl.esi.comma.causalgraph.ui.quickfix
 Require-Bundle: nl.esi.comma.causalgraph,
  nl.esi.comma.causalgraph.ide,
