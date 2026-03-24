@@ -14,10 +14,11 @@
 
 """CPN Server - LSP-based BPMN Model Simulator
 
-Flask web server providing REST API endpoints for BPMN model simulation and
-test generation. Manages LSP subprocess on a dynamically allocated socket port,
-forwarding WebSocket messages between clients and the Language Server Protocol
-backend. Supports scenario loading, state management, and transition firing.
+FastAPI web server providing REST API endpoints for BPMN model simulation and
+test generation. Manages LSP subprocess on a dynamically allocated WebSocket
+port, forwarding WebSocket messages between clients and the Language Server
+Protocol backend. Supports scenario loading, state management, and transition
+firing.
 """
 
 import os
@@ -27,18 +28,22 @@ import shutil
 import tempfile
 import subprocess
 import threading
+import asyncio
 import socket
 import logging
 import time
 import webbrowser
 import argparse
-from typing import Optional, Tuple, Any
+from typing import Optional
+from contextlib import asynccontextmanager
 
-import CPNUtils as utils
-from LSPProxy import LSPProxy
-from flask import Flask, request, jsonify, send_from_directory
-from flask_cors import CORS
-from flask_sock import Server, Sock
+from . import CPNUtils as utils
+
+from fastapi import FastAPI, UploadFile, File, Form, WebSocket, WebSocketDisconnect
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi.middleware.cors import CORSMiddleware
+
+import websockets
 
 # Configure logging with colored errors and warnings
 class PrefixedFormatter(logging.Formatter):
@@ -62,28 +67,52 @@ logging.basicConfig(level=logging.INFO, handlers=[handler])
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)  # Default to INFO, can be set to DEBUG with command-line flag
 
-BPMN4S_GEN = os.path.join(os.path.dirname(__file__),"bpmn4s-toolchain.jar")
-JAVA_PATH = os.path.join(os.path.dirname(__file__),"jre", "bin", "java.exe")
+SERVER_PATH = os.path.join(os.path.dirname(__file__), os.pardir)
+                           
+BPMN4S_GEN = os.path.join(SERVER_PATH,"bpmn4s-toolchain.jar")
+JAVA_PATH = os.path.join(SERVER_PATH,"jre", "bin", "java.exe")
 
 TEMP_FILE   = tempfile.TemporaryDirectory(prefix=f'{utils.gensym(prefix="cpnserver_",timestamp=True)}_', ignore_cleanup_errors=True)
 TEMP_PATH = os.path.abspath(TEMP_FILE.name)
 sys.path.append(TEMP_PATH)
-
-# Initiating a Flask application
-app = Flask(__name__)
-sock = Sock(app)
-
-CORS(app)
-
-# Ensure Flask and Werkzeug loggers use INFO level so request logging is consistent
-logging.getLogger('werkzeug').setLevel(logging.INFO)
-app.logger.setLevel(logging.INFO)
 
 # LSP subprocess port - will be set at runtime
 LSP_PORT: Optional[int] = None
 
 # Static files path - will be set from command-line arguments
 WEB_PATH = os.path.join(os.path.dirname(__file__), '..', 'web')
+
+# LSP subprocess handle - set in __main__, used by lifespan for cleanup
+lsp_proc: Optional[subprocess.Popen] = None
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Startup / shutdown hooks replacing Flask's try/finally pattern."""
+    yield
+    # Shutdown
+    logger.info("Shutting down server...")
+    if lsp_proc is not None and lsp_proc.poll() is None:
+        logger.debug("Terminating LSP subprocess...")
+        lsp_proc.terminate()
+        try:
+            lsp_proc.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            logger.debug("LSP subprocess did not respond, force terminating...")
+            lsp_proc.kill()
+            lsp_proc.wait()
+    TEMP_FILE.cleanup()
+    logger.info("Server shutdown complete")
+
+# Initiating a FastAPI application
+app = FastAPI(lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 def build_and_load_model(model_path:str):
 
@@ -171,14 +200,16 @@ def generate_tests( model_path:str, num_tests:int=1, depth_limit:int=500):
         logger.error(f"An error occurred while deleting generated test: {str(e)}", file=sys.stderr)
     return zip_filename, result
 
-# The endpoint of our flask app
-@app.route(rule="/BPMNParser", methods=["POST"])
-def handle_bpmn():
-    _bpmn = request.files['bpmn-file']
-    fname = _bpmn.filename
+# The endpoint of our FastAPI app
+@app.post("/BPMNParser")
+async def handle_bpmn(bpmn_file: UploadFile = File(alias="bpmn-file")):
+    fname = bpmn_file.filename
     filename = fname + utils.gensym(prefix="_",timestamp=True)
     bpmn_path = os.path.join(TEMP_PATH,f"{filename}.bpmn")
-    _bpmn.save(bpmn_path)
+
+    contents = await bpmn_file.read()
+    with open(bpmn_path, "wb") as f:
+        f.write(contents)
 
     status_code = 200
     response = {'response': {'uuid': filename}}
@@ -209,28 +240,33 @@ def handle_bpmn():
         failed['exception'] = str(e)
 
     # return the response as JSON
-    return jsonify(response), status_code
+    return JSONResponse(response, status_code=status_code)
 
 
-@app.route(rule="/TestGenerator", methods=["POST"])
-def test_generator():
-    _bpmn = request.files['bpmn-file']
-    _args = json.loads(request.form['prj-params']) if 'prj-params' in request.form else {}
+@app.post("/TestGenerator")
+async def test_generator(
+    bpmn_file: UploadFile = File(alias="bpmn-file"),
+    prj_params: Optional[str] = Form(None, alias="prj-params"),
+):
+    _args = json.loads(prj_params) if prj_params else {}
 
     numTests = _args.get('num-tests',1)
     depthLimit = _args.get('depth-limit',1000)
 
-    fname = _bpmn.filename
+    fname = bpmn_file.filename
     filename = fname + utils.gensym(prefix="_",timestamp=True)
     model_path = os.path.join(TEMP_PATH,f"{filename}.bpmn")
-    _bpmn.save(model_path)
+
+    contents = await bpmn_file.read()
+    with open(model_path, "wb") as f:
+        f.write(contents)
 
     status_code = 200
     response = {'response': {'uuid': filename}}
     try:
         zip_fname, result = generate_tests(model_path, num_tests=numTests, depth_limit=depthLimit)
         zip_dir, zip_path = os.path.split(zip_fname)
-        return send_from_directory(zip_dir, zip_path, mimetype='application/zip', as_attachment=True), status_code
+        return FileResponse(os.path.join(zip_dir, zip_path), media_type='application/zip', filename=zip_path)
     except utils.BPMN4SException as e:
         status_code = 400
         failed = response['response']
@@ -244,11 +280,11 @@ def test_generator():
         failed = response['response']
         failed['exception'] = str(e)
 
-    return jsonify(response), status_code
+    return JSONResponse(response, status_code=status_code)
 
-# The endpoint of our flask app
-@app.route(rule="/BPMNParser/<uuid>", methods=["DELETE"])
-def handle_delete_bpmn(uuid):
+# The endpoint of our FastAPI app
+@app.delete("/BPMNParser/{uuid}")
+async def handle_delete_bpmn(uuid: str):
     response = {'response': f'Error (un)loading Package {uuid}'}
     with utils.lock_handle_bpmn(): 
         if utils.get_cpn(uuid) is not None:
@@ -257,12 +293,12 @@ def handle_delete_bpmn(uuid):
         else:
             response['response'] = f'Package {uuid} does not exist'
     # return the response as JSON
-    return jsonify(response)
+    return JSONResponse(response)
 
 
-# The endpoints of our flask app
-@app.route(rule="/CPNServer/<uuid>", methods=["GET"])
-def handle_request(uuid: str):
+# The endpoints of our FastAPI app
+@app.get("/CPNServer/{uuid}")
+async def handle_request(uuid: str):
     logger.debug(f'Received Request [{uuid}]: request_cpn')
 
     response = {}
@@ -272,19 +308,19 @@ def handle_request(uuid: str):
     else:
         response['error'] = f'CPN "{uuid}" not loaded.'
 
-    return jsonify(response)
+    return JSONResponse(response)
 
 
-@app.route(rule="/CPNServer/<uuid>/scenario/load", methods=["POST"])
-def handle_scenario_load(uuid: str):
+@app.post("/CPNServer/{uuid}/scenario/load")
+async def handle_scenario_load(uuid: str, scenario_file: UploadFile = File(alias="scenario-file")):
     logger.debug(f'Received Request [{uuid}]: load_scenario')
     pn = utils.get_cpn(uuid)
 
     status_code = 200
     response = {}
     try:
-        scenarioFile = request.files['scenario-file']
-        scenarioJson = json.load(scenarioFile)
+        contents = await scenario_file.read()
+        scenarioJson = json.loads(contents)
         pn.loadScenario(scenarioJson)
         response['message'] = 'The scenario has been loaded'
         response['steps'] = len(scenarioJson)
@@ -293,11 +329,11 @@ def handle_scenario_load(uuid: str):
         status_code = 400
         response['exception'] = str(e)
 
-    return jsonify(response), status_code
+    return JSONResponse(response, status_code=status_code)
 
 
-@app.route(rule="/CPNServer/<uuid>/markings", methods=["GET"])
-def handle_markings(uuid: str):
+@app.get("/CPNServer/{uuid}/markings")
+async def handle_markings(uuid: str):
     logger.debug(f'Received Request [{uuid}]: get_marking')
     pn = utils.get_cpn(uuid)
     json_data = {}
@@ -305,11 +341,11 @@ def handle_markings(uuid: str):
     for k in current_marking:
         json_data[k] = current_marking[k].items()  # convert multi-set to list with items()
     response = {'response': json_data}
-    return jsonify(response)
+    return JSONResponse(response)
 
 
-@app.route(rule="/CPNServer/<uuid>/transitions/enabled", methods=["GET"])
-def handle_transitions_enabled(uuid: str):
+@app.get("/CPNServer/{uuid}/transitions/enabled")
+async def handle_transitions_enabled(uuid: str):
     logger.debug(f'Received Request [{uuid}]: get_enabled_transitions')
     pn = utils.get_cpn(uuid)
     status_code = 200
@@ -327,14 +363,13 @@ def handle_transitions_enabled(uuid: str):
         status_code = 400
         response['exception'] = str(e)
 
-    return jsonify(response), status_code
+    return JSONResponse(response, status_code=status_code)
 
 
-@app.route(rule="/CPNServer/<uuid>/transition/fire", methods=["POST"])
-def handle_transition_fire(uuid: str):
+@app.post("/CPNServer/{uuid}/transition/fire")
+async def handle_transition_fire(uuid: str, payload: dict):
     logger.debug(f'Received Request [{uuid}]: fire_transition')
     pn = utils.get_cpn(uuid)
-    payload = request.get_json()
     choice = payload['choice']
     enabled_t = pn.getEnabledTransitions()
     _r = pn.fireEnabledTransition(enabled_t, choice)
@@ -345,54 +380,57 @@ def handle_transition_fire(uuid: str):
         for k in item:
             marks_data[idx][k] = item[k].items()  # convert multi-set to list with items()
     response = {'response': {'executed_transition_idx': choice, 'markings_consumed': marks_data[0],'markings_produced': marks_data[1]}}
-    return jsonify(response)
+    return JSONResponse(response)
 
 
-@app.route(rule="/CPNServer/<uuid>/markings/save", methods=["POST"])
-def handle_markings_save(uuid: str):
+@app.post("/CPNServer/{uuid}/markings/save")
+async def handle_markings_save(uuid: str):
     logger.debug(f'Received Request [{uuid}]: save_marking')
     pn = utils.get_cpn(uuid)
     pn.saveMarking()
     response = {'response': 'The marking has been saved'}
-    return jsonify(response)
+    return JSONResponse(response)
 
 
-@app.route(rule="/CPNServer/<uuid>/markings/restore", methods=["POST"])
-def handle_markings_reload(uuid: str):
+@app.post("/CPNServer/{uuid}/markings/restore")
+async def handle_markings_reload(uuid: str):
     logger.debug(f'Received Request [{uuid}]: set_marking')
     pn = utils.get_cpn(uuid)
     pn.gotoSavedMarking()
     response = {'response': 'The net has been restored to saved state'}
-    return jsonify(response)
+    return JSONResponse(response)
 
-@app.route(rule="/CPNServer/<uuid>/markings/goto", methods=["POST"])
-def handle_markings_goto(uuid: str):
+@app.post("/CPNServer/{uuid}/markings/goto")
+async def handle_markings_goto(uuid: str, payload: dict):
     logger.debug(f'Received Request [{uuid}]: goto_marking')
     pn = utils.get_cpn(uuid)
-    payload = request.get_json()
     index = payload['index']
     pn.gotoMarking(index)
     response = {'response': 'The net has been restored to the marking'}
-    return jsonify(response)
+    return JSONResponse(response)
 
 # The root will serve index.html from ../web
-@app.route("/")
-def index() -> str:
+@app.get("/")
+async def index():
     return serve_web("index.html")
 
 # This route handles any web files in the root directory
-@app.route("/<path:path>")
-def serve_web(path: str) -> Tuple[str, int]:
+@app.get("/{path:path}")
+async def get(path: str):
+    return serve_web(path)
+
+def serve_web(path: str):
     web_file = os.path.join(WEB_PATH, path)
     if os.path.exists(web_file):
-        return send_from_directory(WEB_PATH, path)
+        return FileResponse(web_file)
     else:
-        return f"File not found {path}", 404
+        return JSONResponse({"error": f"File not found {path}"}, status_code=404)
 
-# A Proxy to the java lsp server 
-@sock.route("/lsp")
-def lsp_endpoint(ws: Server) -> None:
+# A Proxy to the java lsp server via WebSocket
+@app.websocket("/lsp")
+async def lsp_endpoint(ws: WebSocket):
     """WebSocket endpoint that proxies messages to LSP subprocess."""
+    await ws.accept()
     logger.info("Client connected to LSP endpoint...")
 
     if LSP_PORT is None:
@@ -402,108 +440,82 @@ def lsp_endpoint(ws: Server) -> None:
                 "jsonrpc": "2.0",
                 "error": {"code": -32603, "message": "LSP server not available"},
             }
-            ws.send(json.dumps(error_msg))
+            await ws.send_text(json.dumps(error_msg))
         except Exception:
             pass
-        ws.close()
+        await ws.close()
         return
 
-    # Create proxy to LSP subprocess
-    proxy: LSPProxy = LSPProxy(LSP_PORT)
-    if not proxy.connect():
-        logger.error("Failed to connect to LSP subprocess")
-        try:
-            error_msg = {
-                "jsonrpc": "2.0",
-                "error": {"code": -32603, "message": "Failed to connect to LSP server"},
-            }
-            ws.send(json.dumps(error_msg))
-        except Exception:
-            pass
-        ws.close()
-        return
-
-    logger.info(f"Connected to LSP subprocess on port {LSP_PORT}")
-
-    # Shutdown event for clean termination
-    shutdown_event: threading.Event = threading.Event()
-
-    # Thread to forward responses from LSP to WebSocket client
-    def forward_lsp_responses() -> None:
-        try:
-            while not shutdown_event.is_set() and proxy.connected:
-                try:
-                    message = proxy.receive_message()
-                    # Distinguish None (error/disconnect) from empty string
-                    if message is not None:
-                        if len(message) > 100:
-                            logger.debug(f"out: {message[:100]}...")
-                        else:
-                            logger.debug(f"out: {message}")
-                        try:
-                            ws.send(message)
-                        except Exception as e:
-                            logger.error(f"Error sending to client: {e}")
-                            shutdown_event.set()
-                            break
-                    else:
-                        # LSP connection closed or error
-                        logger.info("LSP connection closed")
-                        break
-                except socket.timeout:
-                    # Timeout is normal, continue
-                    continue
-                except Exception as e:
-                    logger.error(f"Error receiving from LSP: {e}")
-                    break
-        except Exception as e:
-            logger.error(f"Forward thread error: {e}")
-        finally:
-            logger.info("Response forwarding thread stopping")
-            shutdown_event.set()
-
-    response_thread: threading.Thread = threading.Thread(target=forward_lsp_responses)
-    response_thread.daemon = False  # Not a daemon thread
-    response_thread.start()
-
+    backend_url = f"ws://127.0.0.1:{LSP_PORT}"
     try:
-        while not shutdown_event.is_set():
-            try:
-                # No timeout - flask-sock doesn't support it
-                message = ws.receive()
-                # Distinguish None (disconnect) from empty string
-                if message is not None:
-                    if len(message) > 100:
-                        logger.debug(f"in: {message[:100]}...")
-                    else:
-                        logger.debug(f"in: {message}")
-                    if not proxy.send_message(message):
-                        logger.debug("Failed to send message to LSP")
-                        break
-                # If message is None, connection was closed by client
-                else:
-                    logger.info("LSP Client disconnected")
-                    break
-            except Exception as e:
-                logger.info(f"Message from client: {e}")
-                break
+        async with websockets.connect(backend_url) as lsp_ws:
+            logger.info(f"Connected to LSP subprocess on port {LSP_PORT}")
+
+            async def client_to_backend():
+                """Forward messages from browser client -> LSP backend."""
+                try:
+                    while True:
+                        data = await ws.receive_text()
+                        await lsp_ws.send(data)
+                except WebSocketDisconnect:
+                    logger.info("LSP client disconnected")
+                except Exception as e:
+                    logger.debug(f"client_to_backend ended: {e}")
+
+            async def backend_to_client():
+                """Forward messages from LSP backend -> browser client."""
+                try:
+                    async for message in lsp_ws:
+                        if isinstance(message, str):
+                            await ws.send_text(message)
+                        elif isinstance(message, bytes):
+                            await ws.send_bytes(message)
+                except websockets.exceptions.ConnectionClosed:
+                    logger.info("LSP backend connection closed")
+                except Exception as e:
+                    logger.debug(f"backend_to_client ended: {e}")
+
+            # Run both directions concurrently; first to finish cancels the other
+            done, pending = await asyncio.wait(
+                [
+                    asyncio.create_task(client_to_backend()),
+                    asyncio.create_task(backend_to_client()),
+                ],
+                return_when=asyncio.FIRST_COMPLETED,
+            )
+            for task in pending:
+                task.cancel()
+
     except Exception as e:
-        logger.error(f"Connection error: {e}")
+        logger.error(f"LSP proxy error: {e}")
     finally:
-        logger.info("Cleaning up LSP connection...")
-        shutdown_event.set()
-        # Wait for response thread to finish before closing ws
-        response_thread.join(timeout=5)
-        proxy.disconnect()
         try:
-            ws.close()
-        except Exception as e:
-            pass # at this point the connection is likely already closed, so we can ignore errors here
+            await ws.close()
+        except Exception:
+            pass
         logger.info("LSP endpoint cleanup complete")
 
 # Running the API
 if __name__ == "__main__":
+    import uvicorn
+
     logger.info(f'# Using temporary directory:  "{TEMP_PATH}"')
+
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser(description='BPMN4S CPN Server')
+    parser.add_argument('--web-path', type=str, default=WEB_PATH, help='Path to static files directory')
+    parser.add_argument('--server-path', type=str, default=SERVER_PATH, help='Path to static server directory')
+    parser.add_argument('--debug', action='store_true', help='Enable debug logging')
+    args = parser.parse_args()
+    WEB_PATH = args.web_path
+    SERVER_PATH = args.server_path
+    BPMN4S_GEN = os.path.join(SERVER_PATH,"bpmn4s-toolchain.jar")
+    JAVA_PATH = os.path.join(SERVER_PATH,"jre", "bin", "java.exe")
+
+    # Set logging level based on debug flag
+    if args.debug:
+        logging.getLogger().setLevel(logging.DEBUG)
+
 
     # Find a free port for LSP subprocess
     def find_free_port() -> Optional[int]:
@@ -533,7 +545,7 @@ if __name__ == "__main__":
         "-cp",
         BPMN4S_GEN,
         "nl.asml.matala.product.lsp.server.ProductServerLauncher",
-        "-socket",
+        "-ws",
         "-port",
         str(LSP_PORT),
     ]
@@ -541,22 +553,11 @@ if __name__ == "__main__":
     logger.debug(f"LSP command: {' '.join(lsp_command)}")
     logger.debug(f"Using JAVA_PATH: {JAVA_PATH}")
 
-    lsp_proc: subprocess.Popen = subprocess.Popen(lsp_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    lsp_proc = subprocess.Popen(lsp_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     # Give LSP subprocess time to start and listen on socket
     logger.info("Initializing server...")
     time.sleep(2)
-
-    # Parse command-line arguments
-    parser = argparse.ArgumentParser(description='BPMN4S CPN Server')
-    parser.add_argument('--web-path', type=str, default=WEB_PATH, help='Path to static files directory')
-    parser.add_argument('--debug', action='store_true', help='Enable debug logging')
-    args = parser.parse_args()
-    WEB_PATH = args.web_path
-    
-    # Set logging level based on debug flag
-    if args.debug:
-        logging.getLogger().setLevel(logging.DEBUG)
 
     # Find a free port for the CPN server (between 5000 and 5009)
     def find_free_server_port(start_port: int = 5000, end_port: int = 5009) -> int:
@@ -583,7 +584,7 @@ if __name__ == "__main__":
 
     logger.info(f"Starting BPMN4S server on http://127.0.0.1:{port}/")
     url = f"http://127.0.0.1:{port}/"
-    # Open browser after a short delay to ensure Flask is ready
+    # Open browser after a short delay to ensure server is ready
     def open_browser(url: str, delay: float = 1.5) -> None:
         time.sleep(delay)
         try:
@@ -595,19 +596,5 @@ if __name__ == "__main__":
     browser_thread = threading.Thread(target=open_browser, args=(url,), daemon=True)
     browser_thread.start()
 
-    try:
-       # Setting host = "0.0.0.0" runs it on localhost
-       app.run(host="0.0.0.0", debug=False, port=port)
-    finally:
-        logger.info("Shutting down server...")
-        if lsp_proc.poll() is None:
-            logger.debug("Terminating LSP subprocess...")
-            lsp_proc.terminate()
-            try:
-                lsp_proc.wait(timeout=5)
-            except subprocess.TimeoutExpired:
-                logger.debug("LSP subprocess did not respond, force terminating...")
-                lsp_proc.kill()
-                lsp_proc.wait()
-        TEMP_FILE.cleanup()
-        logger.info("Server shutdown complete")
+    # Setting host = "0.0.0.0" runs it on localhost
+    uvicorn.run(app, host="0.0.0.0", port=port, log_level="debug" if args.debug else "info")

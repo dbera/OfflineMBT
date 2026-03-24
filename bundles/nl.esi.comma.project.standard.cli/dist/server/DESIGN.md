@@ -6,32 +6,33 @@ This document describes the design decisions and architecture of the BPMN4S serv
 
 ## Architecture
 
-### One Server Approach
+### One Server Approach (FastAPI + ASGI)
 
-The server uses a unified architecture that serves both the Language Server Protocol (LSP) and the web application from a single Flask server. This consolidation simplifies deployment and eliminates the need for multiple server processes.
+The server uses a unified architecture that serves both the Language Server Protocol (LSP) and the web application from a single FastAPI server (via uvicorn, an ASGI server). This consolidation simplifies deployment and eliminates the need for multiple server processes. Both HTTP and WebSocket endpoints are served on the same port.
 
 ## Components
 
-### LSPProxy (LSPProxy.py)
+### WebSocket LSP Proxy (in CPNServer.py)
 
-The `LSPProxy` class is a socket-based proxy that acts as a bridge between WebSocket messages and the Java LSP subprocess. It performs the following functions:
+The `/lsp` WebSocket endpoint acts as an async bidirectional bridge between browser clients and the Java LSP subprocess. It performs the following functions:
 
-- **Protocol Translation**: Converts WebSocket messages into plain socket messages for communication with the Java LSP subprocess, and vice-versa
-- **Connection Management**: Handles the lifecycle of connections to the LSP subprocess
-- **Message Framing**: Implements proper Content-Length message framing according to the Language Server Protocol (LSP) specification
-- **Socket Management**: Manages socket timeouts and handles socket-level communication with a 30-second receive timeout
+- **Async Protocol Translation**: Converts WebSocket messages to/from the Java LSP subprocess via the `websockets` library
+- **Connection Management**: Handles the lifecycle of connections to both the browser client and the LSP subprocess
+- **Concurrent Message Forwarding**: Uses `asyncio.wait()` to run client→backend and backend→client message streams concurrently, with automatic cleanup when either direction closes
+- **Error Handling**: Gracefully handles WebSocket disconnects and LSP backend failures without blocking the server
 
 ### CPNServer (CPNServer.py)
 
-The main Flask-based server that:
+The main FastAPI-based server that:
 
-- Serves the web application (BPMN4S editor UI)
+- Serves the web application (BPMN4S editor UI) via `StaticFiles` middleware
 - Automatically detects and binds to an available port (5000-5009 range)
-- Routes LSP-related requests to the LSPProxy
+- Proxies LSP connections via the `/lsp` WebSocket endpoint
 - Manages static file serving with configurable paths
-- Launches the Java LSP subprocess on a dynamically allocated socket port (OS-assigned)
+- Launches the Java LSP subprocess on a dynamically allocated WebSocket port (OS-assigned)
 - Opens the browser automatically to the correct URL
-- Handles server lifecycle and graceful shutdown
+- Handles server lifecycle and graceful shutdown via the `lifespan` async context manager
+- All endpoints run asynchronously on uvicorn (ASGI)
 
 ## Key Design Decisions
 
@@ -43,6 +44,20 @@ Usage:
 ```
 start-server.bat --web-path "C:\path\to\custom\web"
 ```
+
+### Server Path Configuration
+
+The `--server-path` command-line argument allows users to specify a custom directory for the server resources, including the Java LSP executable and the BPMN4S toolchain JAR. By default, the server resources are located relative to the server directory.
+
+Usage:
+```
+start-server.bat --server-path "C:\path\to\server"
+```
+
+This enables:
+
+- **Custom Deployments**: Users can deploy server resources to alternative locations outside the default installation directory
+- **Isolation**: Separates web content (`--web-path`) from server infrastructure (`--server-path`)
 
 This enables:
 
@@ -165,6 +180,7 @@ The startup infrastructure has been refactored into separate, focused batch scri
 
 **Python Application Flags** (passed to the Python application):
 - `--web-path`: Specifies a custom directory for serving static files (CPNServer.py only)
+- `--server-path`: Specifies a custom directory for server resources including Java LSP and toolchain JAR (CPNServer.py only)
 - `--debug`: Enables debug-level logging for troubleshooting (CPNServer.py only)
 - `--base-url`: Server URL for regression testing (CPNRegressionTest.py only)
 - `--timeout`: HTTP timeout in seconds (CPNRegressionTest.py only)

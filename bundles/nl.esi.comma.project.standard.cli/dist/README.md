@@ -22,7 +22,7 @@ The CPN simulation server is started automatically when you run the `start-serve
 
 This will:
 1. Set up the Python virtual environment (downloading dependencies if needed)
-2. Start the data expression language server (LSP) on a dynamically allocated socket port
+2. Start the data expression language server (LSP) on a dynamically allocated WebSocket port
 3. Start the CPN simulation server on `http://127.0.0.1:5000` or a higher port if the port is not available
 4. Open the BPMN4S editor in your default browser
 
