@@ -11,7 +11,8 @@ Require-Bundle: nl.esi.comma.scenarios;visibility:=reexport,
  org.eclipse.xtext.xbase.ide,
  org.antlr.runtime;bundle-version="[3.2.0,3.2.1)"
 Bundle-RequiredExecutionEnvironment: JavaSE-21
-Export-Package: nl.esi.comma.scenarios.ide.contentassist.antlr.internal,
+Export-Package: nl.esi.comma.scenarios.ide,
+ nl.esi.comma.scenarios.ide.contentassist,
  nl.esi.comma.scenarios.ide.contentassist.antlr,
- nl.esi.comma.scenarios.ide.contentassist
+ nl.esi.comma.scenarios.ide.contentassist.antlr.internal
 Automatic-Module-Name: nl.esi.comma.scenarios.ide

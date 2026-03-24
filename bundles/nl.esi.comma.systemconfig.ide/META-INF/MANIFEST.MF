@@ -12,6 +12,7 @@ Require-Bundle: nl.esi.comma.systemconfig;visibility:=reexport,
  org.eclipse.xtext.xbase.ide,
  org.antlr.runtime;bundle-version="[3.2.0,3.2.1)"
 Bundle-RequiredExecutionEnvironment: JavaSE-21
-Export-Package: nl.esi.comma.systemconfig.ide.contentassist.antlr,
- nl.esi.comma.systemconfig.ide.contentassist.antlr.internal,
- nl.esi.comma.systemconfig.ide.contentassist
+Export-Package: nl.esi.comma.systemconfig.ide,
+ nl.esi.comma.systemconfig.ide.contentassist,
+ nl.esi.comma.systemconfig.ide.contentassist.antlr,
+ nl.esi.comma.systemconfig.ide.contentassist.antlr.internal

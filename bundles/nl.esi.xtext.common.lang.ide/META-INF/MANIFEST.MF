@@ -11,6 +11,7 @@ Require-Bundle: nl.esi.xtext.common.lang,
  org.eclipse.xtext.xbase.ide,
  org.antlr.runtime;bundle-version="[3.2.0,3.2.1)"
 Bundle-RequiredExecutionEnvironment: JavaSE-21
-Export-Package: nl.esi.xtext.common.lang.ide.contentassist.antlr.internal,
+Export-Package: nl.esi.xtext.common.lang.ide,
+ nl.esi.xtext.common.lang.ide.contentassist,
  nl.esi.xtext.common.lang.ide.contentassist.antlr,
- nl.esi.xtext.common.lang.ide.contentassist
+ nl.esi.xtext.common.lang.ide.contentassist.antlr.internal

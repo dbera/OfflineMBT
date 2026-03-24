@@ -150,7 +150,7 @@ def build_and_load_model(model_path:str):
     module = utils.load_module(source=model_name,package=f"src-gen.{taskname}.CPNServer")
     return module, result
 
-def generate_tests( model_path:str, num_tests:int=1, depth_limit:int=500):
+def generate_tests( model_path:str, num_tests:int=1, depth_limit:int=500, state_limit:int=1000):
     
     model_dir, model_name = os.path.split(model_path)
     model_name, model_ext = os.path.splitext(model_name)
@@ -162,6 +162,7 @@ def generate_tests( model_path:str, num_tests:int=1, depth_limit:int=500):
           bpmn-file "{1}.bpmn"
           num-tests {2}
           depth-limit {3}
+          state-limit {4}
         }}
       }}
     }}
@@ -169,7 +170,7 @@ def generate_tests( model_path:str, num_tests:int=1, depth_limit:int=500):
     
     prj_filename:str = os.path.join(model_dir,f'{model_name}.prj')
     with open(prj_filename, "w") as file1:
-        prj_content = prj_template.format(taskname,model_name,num_tests,depth_limit)
+        prj_content = prj_template.format(taskname,model_name,num_tests,depth_limit,state_limit)
         file1.write(prj_content)
     result = subprocess.run([JAVA_PATH,"-jar",BPMN4S_GEN,"-l", prj_filename],shell=True, capture_output=True)
     if result.returncode != 0: 
@@ -177,7 +178,8 @@ def generate_tests( model_path:str, num_tests:int=1, depth_limit:int=500):
             cliargs={
                 'bpmn-file': model_name,
                 'num-tests': num_tests,
-                'depth-limit': depth_limit
+                'depth-limit': depth_limit,
+                'state-limit': state_limit
             }, 
             result=result
             )
@@ -252,6 +254,7 @@ async def test_generator(
 
     numTests = _args.get('num-tests',1)
     depthLimit = _args.get('depth-limit',1000)
+    stateLimit = _args.get('state-limit',1000)
 
     fname = bpmn_file.filename
     filename = fname + utils.gensym(prefix="_",timestamp=True)
@@ -264,7 +267,7 @@ async def test_generator(
     status_code = 200
     response = {'response': {'uuid': filename}}
     try:
-        zip_fname, result = generate_tests(model_path, num_tests=numTests, depth_limit=depthLimit)
+        zip_fname, result = generate_tests(model_path, num_tests=numTests, depth_limit=depthLimit, state_limit=stateLimit)
         zip_dir, zip_path = os.path.split(zip_fname)
         return FileResponse(os.path.join(zip_dir, zip_path), media_type='application/zip', filename=zip_path)
     except utils.BPMN4SException as e:
