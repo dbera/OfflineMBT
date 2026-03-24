@@ -549,7 +549,7 @@
 		        label="MBT Project Generation"
 		        modes="run,debug">
 		     <configurationType
-		           id="nl.esi.poosl.rotalumisclient.PooslLaunchConfiguration">
+		           id="nl.esi.comma.project.standard.ui.launchshortcut">
 		     </configurationType>
 		     <contextualLaunch>
 		        <contextLabel
@@ -579,48 +579,6 @@
 		        </enablement></contextualLaunch>
 		  </shortcut>
 	  </extension>
-	  
-	  <!--
-	   <extension
-	     point="org.eclipse.debug.ui.launchShortcuts">
-		  <shortcut
-		        class="nl.esi.comma.project.standard.ui.StandardProjectExecutableExtensionFactory:nl.esi.comma.project.ui.handler.SimulatorLaunchShortcut"
-		        icon="icons/comma_poosl_simulation.png"
-		        id="nl.esi.comma.launchShortcut.simulator"
-		        label="ComMA Generation and POOSL Simulation"
-		        modes="run,debug">
-		     <configurationType
-		           id="nl.esi.poosl.rotalumisclient.PooslLaunchConfiguration">
-		     </configurationType>
-		     <contextualLaunch>
-		        <contextLabel
-		              label="ComMA Generation and POOSL Simulation"
-		              mode="run">
-		        </contextLabel>
-		        <contextLabel
-		              label="ComMA Generation and POOSL Simulation"
-		              mode="debug">
-		        </contextLabel>
-		        <enablement>
-		           <with
-		                 variable="selection">
-		           </with>
-		           <count
-		                 value="1">
-		           </count>
-		           <iterate>
-		              <adapt
-		                    type="org.eclipse.core.resources.IResource">
-		                 <test
-		                       property="org.eclipse.core.resources.name"
-		                       value="*prj">
-		                 </test>
-		              </adapt>
-		           </iterate>
-		        </enablement></contextualLaunch>
-		  </shortcut>
-	  </extension>
-	  -->
 	  
 	  <extension
        point="org.eclipse.ui.menus">

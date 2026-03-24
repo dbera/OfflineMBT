@@ -318,6 +318,7 @@
                                 <exclude>**/*.xmi</exclude>
                                 <exclude>**/*.sln</exclude>
                                 <exclude>**/*.vcxproj*</exclude>
+                                <exclude>**/*.pyc</exclude>
                                 <exclude>**/.checkstyle</exclude>
                                 <exclude>**/.env</exclude>
                                 <exclude>**/.babelrc</exclude>

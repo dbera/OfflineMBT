@@ -57,7 +57,7 @@ QualifiedNameWithWildcard: QualifiedName '.*'? ;
 /*
  * Simple types denote sets of values that are considered atomic.
  * User-defined simple types has no interpretation by default. An interpretation can be given
- * by providing a mapping to a type available in a target language (e.g. C++, POOSL).
+ * by providing a mapping to a type available in a target language (e.g. C++).
  * ComMA provides a set of built-in simple types: int, bool, string, real, void, any, bulkdata.
  * These types are defined in the library types.types that is implicitly imported in all ComMA models.
  * int, bool, string and real have the traditional meaning.

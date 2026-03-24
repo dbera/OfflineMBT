@@ -15,8 +15,6 @@
  */
 package nl.esi.comma.expressions.scoping
 
-import java.util.ArrayList
-import java.util.List
 import nl.esi.comma.expressions.expression.ExpressionBinary
 import nl.esi.comma.expressions.expression.ExpressionEnumLiteral
 import nl.esi.comma.expressions.expression.ExpressionFunctionCall
@@ -27,12 +25,9 @@ import nl.esi.comma.expressions.expression.ExpressionVector
 import nl.esi.comma.expressions.expression.Field
 import nl.esi.comma.expressions.validation.ExpressionFunction
 import nl.esi.comma.expressions.validation.ExpressionValidator
-import nl.esi.comma.signature.interfaceSignature.Signature
 import nl.esi.comma.types.types.EnumTypeDecl
 import nl.esi.comma.types.types.RecordTypeDecl
-import nl.esi.comma.types.types.TypeDecl
 import nl.esi.comma.types.types.TypeObject
-import nl.esi.comma.types.utilities.CommaUtilities
 import nl.esi.comma.types.utilities.TypeUtilities
 import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.EReference
@@ -66,13 +61,6 @@ class ExpressionScopeProvider extends AbstractExpressionScopeProvider {
             Field case reference == ExpressionPackage.Literals.FIELD__RECORD_FIELD: {
                 val rec = context.eContainer
                 return rec instanceof ExpressionRecord ? scopeFor(TypeUtilities::getAllFields(rec.type)) : IScope.NULLSCOPE
-            }
-            case reference.name == 'type': {
-                val interfaces = context.eClass.EAllReferences.filter[name == 'interface']
-                if (!interfaces.empty) {
-                    val Signature i = context.eGet(interfaces.head) as Signature
-                    return scope_forType(context, i, reference)
-                }
             }
         }
 
@@ -113,18 +101,4 @@ class ExpressionScopeProvider extends AbstractExpressionScopeProvider {
         }
     }
 
-    def scope_forType(EObject context, Signature i, EReference ref) {
-        if(i !== null) return scopeFor(i.types)
-        var List<TypeDecl> types = new ArrayList<TypeDecl>
-
-        for (i1 : findVisibleInterfaces(context)) {
-            types.addAll(i1.types);
-        }
-        return scopeFor(types, super.getScope(context, ref))
-    }
-
-    def List<Signature> findVisibleInterfaces(EObject context) {
-        CommaUtilities::resolveProxy(context,
-            getScope(context, ExpressionPackage.Literals.INTERFACE_AWARE_TYPE__INTERFACE).allElements)
-    }
 }

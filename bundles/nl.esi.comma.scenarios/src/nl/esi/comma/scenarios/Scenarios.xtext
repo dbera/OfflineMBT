@@ -145,7 +145,7 @@ Config:
 Scenario:
 	attributes += Attribute*
 	'Scenario' name= ID 
-	events += (EventPattern | InfoResult | InfoArg)+
+    events += (InfoResult | InfoArg)+
 ;
 InfoResult:
 	'##' (elm += STRING)+ '##'
@@ -158,11 +158,6 @@ InfoArg:
 @Override 
 NamedElement returns base::NamedElement :
 	{Scenario}
-;
-
-@Override 
-NotificationEvent:
-	periodic?= 'periodic'?  'notification' InterfaceEventInstance
 ;
 
 Attribute:

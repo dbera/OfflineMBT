@@ -1,0 +1,12 @@
+import "../types/SupervisonModelTemperatureController.types"
+
+data-instances
+TempCheckInput SupervisonModelTemperatureControllerInput
+TempCheckOutput SupervisonModelTemperatureControllerOutput
+
+data-implementation
+// Empty
+
+path-prefix "./dataset/"
+var-ref SupervisonModelTemperatureControllerInput -> file-name "SupervisonModelTemperatureControllerInput.json"
+var-ref SupervisonModelTemperatureControllerOutput -> file-name "SupervisonModelTemperatureControllerOutput.json"

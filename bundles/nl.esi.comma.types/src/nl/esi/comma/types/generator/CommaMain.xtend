@@ -14,42 +14,27 @@ package nl.esi.comma.types.generator
 
 import com.google.inject.Inject
 import com.google.inject.Provider
-import java.io.BufferedInputStream
-import java.io.BufferedOutputStream
-import java.io.BufferedReader
 import java.io.File
-import java.io.FileOutputStream
 import java.io.FilenameFilter
-import java.io.InputStream
-import java.io.InputStreamReader
-import java.io.OutputStream
 import java.nio.file.Files
 import java.nio.file.LinkOption
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.text.MessageFormat
-import java.util.ArrayList
-import java.util.List
-// import net.sourceforge.plantuml.SourceFileReader // Commented DB: 23.03.2025
-import org.apache.commons.cli.DefaultParser
+import java.util.Comparator
 import org.apache.commons.cli.CommandLine
+import org.apache.commons.cli.DefaultParser
 import org.apache.commons.cli.HelpFormatter
 import org.apache.commons.cli.Options
-import org.apache.commons.lang.SystemUtils
-import org.eclipse.core.runtime.CoreException
-import org.eclipse.core.runtime.Status
 import org.eclipse.emf.common.util.URI
 import org.eclipse.emf.ecore.resource.ResourceSet
 import org.eclipse.xtext.diagnostics.Severity
 import org.eclipse.xtext.generator.GeneratorDelegate
 import org.eclipse.xtext.generator.JavaIoFileSystemAccess
 import org.eclipse.xtext.util.CancelIndicator
+import org.eclipse.xtext.util.StringInputStream
 import org.eclipse.xtext.validation.CheckMode
 import org.eclipse.xtext.validation.IResourceValidator
-import java.io.PrintStream
-import java.util.Comparator
-import org.eclipse.xtext.util.StringInputStream
-import java.io.FileInputStream
 
 class CommaMain {
 	/*
@@ -58,12 +43,6 @@ class CommaMain {
 	static final String ERR_LOCATION_MISSING = 'Location is not provided as argument'
 	static final String ERR_LOCATION_WRONG = 'Location could not be found. '
 	
-	final static String MON_ROTALUMIS = "rotalumis.exe"
-	final static String MON_GEN_POOSL = "poosl" + File.separator
-	final static String MON_SCENARIOPLAYER = "ScenarioPlayer.poosl"
-	final static String MON_WORKING_DIR ="simulator"
-	final static String MON_COMMAND = " --quiet --poosl "
-
 	static final String INFO_GENERATION_FINISHED = 'Code generation finished.'
 	static final String INFO_COMMA_FINISHED = 'All ComMA Tasks are finished.'
 	static final String INFO_SEARCHING = 'Searching for {0} ({1}) files in {2}'
@@ -102,8 +81,6 @@ class CommaMain {
 	static final String OPT_TESTSPECIFICATION_DESCRIPTION = 'Location of Test Specification'
 	
 	static final String OPT_TESTSPECIFICATIONOUTPUT = 'TestspecOutput'
-	static final String OPT_TESTSPECIFICATIONOUTPUT_C = 'tsOutput'
-	static final String OPT_TESTSPECIFICATIONOUTPUT_DESCRIPTION = 'Output location of the Test Specification Product'
 	
 	static final String OPT_STEPSFILES = 'StepsFiles'
 	static final String OPT_STEPSFILES_C = 'sl'
@@ -360,8 +337,6 @@ class CommaMain {
 			runGeneration(locationPath.toString, outputdir.toString, validation)
 		}
 		System.out.println(INFO_GENERATION_FINISHED)
-		runMonitoring(outputdir)
-		
 		System.out.println("")
 		System.out.println(INFO_COMMA_FINISHED)	
 	}
@@ -586,180 +561,6 @@ class CommaMain {
 	def getCommaGen() {
 		val commaGen = fileAccess.outputConfigurations.get(CommaFileSystemAccess.COMMA_OUTPUT_ID)		
 		commaGen.outputDirectory
-	}
-	
-	/**
-	 * Runs the monitoring for the provided tasks.
-	 */
-	def runMonitoring(Path outputPath) {
-		val pooslPath = outputPath.resolve(MON_GEN_POOSL)
-		val tasks = pooslPath.toFile.listFiles
-		//In order to run monitoring at least 1 task dir and 1 api dir has to be present.
-		if(tasks !== null && tasks.size >= 2) {
-			println("Monitoring tasks found.")
-			val rotalumisPath = getJarDir + File.separator + MON_ROTALUMIS
-			extractingRotalumis(rotalumisPath)		
-			runRotalumis(rotalumisPath, pooslPath)
-			convertPlantUml()
-		}
-	}
-	
-	def convertPlantUml() {
-		val plantumlFiles = new ArrayList<File>
-		findPlantUmlFiles(new File(getCommaGen()), plantumlFiles)
-		if (!plantumlFiles.isEmpty) {
-			println("Monitoring errors found, converting plantuml files to images.")
-
-			for (plantFile : plantumlFiles) {
-				println("--> " + plantFile.name)
-					
-//				val reader = new SourceFileReader(plantFile);
-//				if (!reader.generatedImages.isEmpty) {
-//					reader.getGeneratedImages().get(0);
-//				}
-			}
-		}
-	}
-	
-	def void findPlantUmlFiles(File dir, List<File> plantuml) {
-		for (file : dir.listFiles) {
-			if(file.name.endsWith(".plantuml")) {
-				plantuml.add(file)
-			}
-			if(file.isDirectory) {
-				findPlantUmlFiles(file, plantuml)
-			}
-		}
-	}
-	
-	/**
-	 * Running rotalumis with the scenarioplayer located in the generated task folder
-	 * Example commandline "C:\rotalumis.exe --poosl C:\src-gen\poosl\task\ScenerioPlayer.poosl" 
-	 */    
-	
-	def runRotalumis(String rotalumisPath, Path pooslPath) {
-		
-		
-		try {
-			println("--> Monitoring started")
-			val scenarioPlayer = pooslPath.resolve(MON_SCENARIOPLAYER)
-			println("--> " + scenarioPlayer)
-			if (scenarioPlayer.toFile.exists) {
-				var scenarioPlayerStr = scenarioPlayer.toString
-				if(scenarioPlayerStr.contains(" ")){
-					scenarioPlayerStr = "\"" + scenarioPlayerStr + "\""
-				}
-				val cmd = rotalumisPath + MON_COMMAND + scenarioPlayerStr;
-				println("cmd: " + cmd)
-				
-				val workingDir = pooslPath.resolve(MON_WORKING_DIR).toFile
-				workingDir.mkdirs
-
-				val rt = Runtime.runtime				
-				println("With working dir: " + workingDir.path)
-				val process = rt.exec(cmd, #[], workingDir);
-
-				var String line = null
-				val reader = new BufferedReader(new InputStreamReader(process.inputStream), 1);
-				while ((line = reader.readLine) !== null) {
-					System.out.println(line);
-				}
-				
-				val error = process.getErrorStream();
-				if(error.available() > 0){
-					System.out.println;
-					System.out.println("Errors during the execution of the monitoring program.")
-					System.out.println("Rotalumis error report:")
-					val errorReader = new BufferedReader(new InputStreamReader(error), 1);
-					while ((line = errorReader.readLine) !== null) {
-						System.out.println(line);
-					}
-				}
-				
-				val outputStream = process.getOutputStream();
-				val printStream = new PrintStream(outputStream);
-				printStream.println();
-				printStream.flush();
-				printStream.close();				
-				
-				reader.close();
-				process.waitFor
-				println("Monitoring finished")
-			} else {
-				println("!! Monitoring Failed to run. " + scenarioPlayer + " could not be found.")
-			}
-		} catch (Exception e) {
-			System.out.println(e.message)
-			System.out.println(e)
-		}
-	}
-
-	/**
-	 * Extracting 32 or 64 bit Rotalumis
-	 */
-	def extractingRotalumis(String path) {
-		val extracted = new File(path)
-		if (extracted.exists) {
-			if(!extracted.delete){
-				println("The existing rotalumis.exe could not be deleted, no new file could be created. " + extracted.absolutePath)
-				return null
-			}
-		}
-
-		if (!extracted.createNewFile) {
-			println("Rotalumis could not be extracted, no new file could be created. " + extracted.absolutePath)
-			return null
-		}
-
-		var InputStream is = null
-		var OutputStream os = null
-		try {
-			is = new BufferedInputStream(CommaMain.getResourceAsStream(platformVersion)); // rotalumisVersion
-			os = new BufferedOutputStream(new FileOutputStream(extracted))
-			 
-			System.out.println("Extracting Rotalumis to " + extracted.absolutePath);
-			var bytesRead = 0
-			val buf = newByteArrayOfSize(1024);
-
-			while ((bytesRead = is.read(buf)) > 0) {
-				System.out.print("-");
-				os.write(buf, 0, bytesRead);
-			}
-			System.out.println("Done");
-			extracted.setExecutable(true, false)			
-		} catch(Exception e) {
-			System.out.println(e.message)
-			System.out.println(e)
-		} finally {
-			is?.close
-			os?.close
-		}
-	}
-
-	def getPlatformVersion() {
-
-		val stringBuilder = new StringBuilder();
-		if (SystemUtils.IS_OS_WINDOWS) {
-			stringBuilder.append("/windows/");
-		} else {
-			val status = new Status(Status.ERROR, "",
-				"There is no support for your operating system. " + SystemUtils.OS_NAME, null);
-			throw new CoreException(status);
-		}
-		if (SystemUtils.OS_ARCH.equals("x86") || "i386".equals(SystemUtils.OS_ARCH)) {
-			stringBuilder.append("32bit/");
-		} else if (SystemUtils.OS_ARCH.equals("x86_64")) {
-			stringBuilder.append("64bit/");
-		} else if ("amd64".equals(SystemUtils.OS_ARCH)) {
-			// For some reason the constant for Platform.ARCH_amd64 is
-			// deprecated
-			stringBuilder.append("64bit/");
-		} else {
-			val status = new Status(Status.ERROR, "",
-				"There is no support for your architecture. (" + SystemUtils.OS_ARCH + ")", null);
-			throw new CoreException(status);
-		}
-		stringBuilder.append(MON_ROTALUMIS).toString
 	}
 
 	def getJarDir() {		

@@ -1,0 +1,28 @@
+import "../../../input/imaging/imaging.types"
+
+record TempCheck {
+    TempCheckInput input
+    TempCheckOutput output
+}
+
+record TempCheckInput {
+    CTX Gateway_1sv33t8
+    TempResp temp_achieved
+    CTX Flow_01g3o4k
+    UNIT Gateway_1qk9wqe
+    TempReq TempCMD
+    EquipmentStatus EqStatus
+    UNIT Event_13ys7sy
+    TempResp TempUpdate
+}
+
+record TempCheckOutput {
+    CTX Gateway_1sv33t8
+    TempResp temp_achieved
+    CTX Flow_01g3o4k
+    UNIT Gateway_1qk9wqe
+    TempReq TempCMD
+    EquipmentStatus EqStatus
+    UNIT Event_13ys7sy
+    TempResp TempUpdate
+}

@@ -21,6 +21,6 @@
     <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="nl.esi.comma.project.standard.cli.Main"/>
     <listAttribute key="org.eclipse.jdt.launching.MODULEPATH"/>
     <stringAttribute key="org.eclipse.jdt.launching.MODULE_NAME" value="nl.esi.comma.project.standard.cli"/>
-    <stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="-l printer.prj -o target/runtime-test"/>
+    <stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="-l runtime-test.prj -o target/runtime-test"/>
     <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="nl.esi.comma.project.standard.cli"/>
 </launchConfiguration>

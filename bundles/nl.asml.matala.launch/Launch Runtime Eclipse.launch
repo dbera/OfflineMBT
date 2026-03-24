@@ -66,7 +66,6 @@
         <setEntry value="jakarta.annotation-api@default:default"/>
         <setEntry value="jakarta.inject.jakarta.inject-api@default:default"/>
         <setEntry value="jakarta.xml.bind-api@default:default"/>
-        <setEntry value="javax.annotation@default:default"/>
         <setEntry value="junit-jupiter-api@default:default"/>
         <setEntry value="junit-jupiter-engine@default:default"/>
         <setEntry value="junit-jupiter-migrationsupport@default:default"/>
@@ -529,9 +528,6 @@
         <setEntry value="nl.esi.comma.scenarios.tests@default:default"/>
         <setEntry value="nl.esi.comma.scenarios.ui@default:default"/>
         <setEntry value="nl.esi.comma.scenarios@default:default"/>
-        <setEntry value="nl.esi.comma.signature.ide@default:default"/>
-        <setEntry value="nl.esi.comma.signature.ui@default:default"/>
-        <setEntry value="nl.esi.comma.signature@default:default"/>
         <setEntry value="nl.esi.comma.steps.ide@default:default"/>
         <setEntry value="nl.esi.comma.steps.ui@default:default"/>
         <setEntry value="nl.esi.comma.steps@default:default"/>

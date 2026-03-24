@@ -1,0 +1,36 @@
+import "../../../input/imaging/imaging.types"
+
+record ExecAcquisitionCommand {
+    ExecAcquisitionCommandInput input
+    ExecAcquisitionCommandOutput output
+}
+
+record ExecAcquisitionCommandInput {
+    AcqReq AcquisitionReq
+    CTX Flow_084nmm6
+    ImgReq ImagingRequest
+    EquipmentStatus EqStatus
+    UNIT Flow_0kkvgdv
+    CTX Flow_1rusz82
+    UNIT Flow_1bajtwc
+    ImgReq LastAcqReq
+    CTX Flow_1w9tlf4
+    AcqData ImageData
+    UNIT Flow_0678bm1
+    UNIT Flow_1kpcqqf
+}
+
+record ExecAcquisitionCommandOutput {
+    AcqReq AcquisitionReq
+    CTX Flow_084nmm6
+    ImgReq ImagingRequest
+    EquipmentStatus EqStatus
+    UNIT Flow_0kkvgdv
+    CTX Flow_1rusz82
+    UNIT Flow_1bajtwc
+    ImgReq LastAcqReq
+    CTX Flow_1w9tlf4
+    AcqData ImageData
+    UNIT Flow_0678bm1
+    UNIT Flow_1kpcqqf
+}
