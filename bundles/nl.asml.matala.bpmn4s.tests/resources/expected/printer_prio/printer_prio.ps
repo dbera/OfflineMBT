@@ -96,14 +96,12 @@ specification printer_prio
         Report		inspectionReport
     
         local
-        AssertionsCtx	Gateway_0ukmclk
+        AssertionsHistory	history
         
-        
+        UNIT	Event_1bxlea2
     
         init
-        Gateway_0ukmclk := AssertionsCtx {
-          inspectionReports = <int[]>[] 
-        }
+        history := AssertionsHistory { inspectionReports = <int[]>[] }
     
     
         desc "PrintFactoryAssertions_Model"
@@ -111,17 +109,19 @@ specification printer_prio
         action			AssertVisualInspection
         element-label	"Assert Visual Inspection"
         case			default priority 100 step-type "Assertions" action-type ASSERT
-        with-inputs		Gateway_0ukmclk, inspectionReport
-        with-guard		not contains(Gateway_0ukmclk.inspectionReports, inspectionReport.id)
+        with-inputs		inspectionReport, history
+        with-guard		not contains(history.inspectionReports, inspectionReport.id)
         assertions default {
             assert_kpi: assert-that (inspectionReport.kpi) {
               equal-to 9.0 within-margin relative (1.0)
             }
         }
-        produces-outputs	Gateway_0ukmclk
+        produces-outputs	Event_1bxlea2 suppress
+        produces-outputs	history symbolic-link
         updates:
-            Gateway_0ukmclk := Gateway_0ukmclk
-            Gateway_0ukmclk.inspectionReports := add(Gateway_0ukmclk.inspectionReports, inspectionReport.id)
+            history := AssertionsHistory {
+              inspectionReports = add(history.inspectionReports, inspectionReport.id)
+            }
         produces-outputs	inspectionReport symbolic-link
         updates:
             inspectionReport := inspectionReport

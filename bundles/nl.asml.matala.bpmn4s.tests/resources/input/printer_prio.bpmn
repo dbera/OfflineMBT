@@ -16,7 +16,7 @@
           <bpmn4s:literal name="MED"/>
           <bpmn4s:literal name="HIGH"/>
         </bpmn4s:dataType>
-        <bpmn4s:dataType id="DataType_1ag1efq" name="AssertionsCtx" type="Context">
+        <bpmn4s:dataType id="DataType_1ag1efq" name="AssertionsHistory" type="Record">
           <bpmn4s:field name="inspectionReports" typeRef="DataType_0ubij56"/>
         </bpmn4s:dataType>
         <bpmn4s:dataType id="DataType_1eduiqa" keyTypeRef="Int" name="CorrectionsMap" type="Map" valueTypeRef="DataType_10oh63l"/>
@@ -470,33 +470,33 @@
     <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_37032q4" bpmn4s:linkedDataReferences="DataStoreReference_1p9xemy DataStoreReference_10kmv51 DataStoreReference_16tennj" id="DataStoreReference_1r5xmmd" name="inspectionReport"/>
     <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_2qhm379" bpmn4s:init="corrections := CorrectionsReport { &#10;                   id = 1,&#10;                   correctionsMap = &lt;map&lt;int,CorrectionItem[]&gt;&gt; { &#10;                            0 -&gt; &lt;CorrectionItem[]&gt; [ &#10;                                      CorrectionItem { data = &quot;X&quot; },&#10;                                      CorrectionItem { data = &quot;Y&quot; } &#10;                                 ],&#10;                            1 -&gt; &lt;CorrectionItem[]&gt; [ &#10;                                      CorrectionItem { data = &quot;A&quot; },&#10;                                      CorrectionItem { data = &quot;B&quot; } &#10;                                 ] &#10;                   } &#10;               }" bpmn4s:linkedDataReferences="DataStoreReference_0zn554c DataStoreReference_1iu4tht" id="DataStoreReference_18mx7a8" name="corrections"/>
     <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_3mm73l2" bpmn4s:init="printRequests := PrintRequest {&#10; id = 1,&#10; resolution = PrintResolution::LOW,&#10; scale = 50.0,&#10; color = ColorType::MONOCHROME,&#10;    opType = OperationType::PRINT&#10;}&#10;&#10;printRequests := PrintRequest {&#10; id = 2,&#10; resolution = PrintResolution::MED,&#10; scale = 75.0,&#10; color = ColorType::COLOR,&#10;    opType = OperationType::PRINT&#10;}&#10;&#10;printRequests := PrintRequest {&#10; id = 3,&#10; resolution = PrintResolution::HIGH,&#10; scale = 75.0,&#10; color = ColorType::COLOR,&#10;    opType = OperationType::PRINT&#10;}" bpmn4s:linkedDataReferences="DataStoreReference_0auqxs9" id="DataStoreReference_0wnjztj" name="printRequests"/>
-    <bpmn2:subProcess bpmn4s:ctxName="ctx" bpmn4s:ctxTypeRef="DataType_1ag1efq" bpmn4s:priority="100" bpmn4s:subType="Component" id="Activity_1v8oyy2" name="Assertions">
+    <bpmn2:subProcess bpmn4s:priority="100" bpmn4s:subType="Component" id="Activity_1v8oyy2" name="Assertions">
       <bpmn2:property id="Property_1gm30em" name="__targetRef_placeholder"/>
       <bpmn2:dataInputAssociation bpmn4s:persistentRead="true" id="DataInputAssociation_0z61xa6">
         <bpmn2:sourceRef>DataStoreReference_1r5xmmd</bpmn2:sourceRef>
         <bpmn2:targetRef>Property_1gm30em</bpmn2:targetRef>
       </bpmn2:dataInputAssociation>
       <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_37032q4" bpmn4s:originDataReference="DataStoreReference_1r5xmmd" id="DataStoreReference_16tennj" name="inspectionReport"/>
-      <bpmn2:startEvent bpmn4s:ctxInit="ctx := AssertionsCtx {&#10;  inspectionReports = &lt;int[]&gt;[] &#10;}" id="Event_0xclnzz">
-        <bpmn2:outgoing>Flow_11teqcq</bpmn2:outgoing>
-      </bpmn2:startEvent>
-      <bpmn2:exclusiveGateway id="Gateway_0ukmclk">
-        <bpmn2:incoming>Flow_11teqcq</bpmn2:incoming>
-        <bpmn2:incoming>Flow_0529bw5</bpmn2:incoming>
-        <bpmn2:outgoing>Flow_1vbdnmu</bpmn2:outgoing>
-      </bpmn2:exclusiveGateway>
-      <bpmn2:sequenceFlow id="Flow_11teqcq" sourceRef="Event_0xclnzz" targetRef="Gateway_0ukmclk"/>
-      <bpmn2:sequenceFlow id="Flow_1vbdnmu" sourceRef="Gateway_0ukmclk" targetRef="Activity_022s6i4"/>
-      <bpmn2:sequenceFlow id="Flow_0529bw5" sourceRef="Activity_022s6i4" targetRef="Gateway_0ukmclk"/>
-      <bpmn2:task bpmn4s:assertions="assert_kpi: assert-that (inspectionReport.kpi) {&#10;  equal-to 9.0 within-margin relative (1.0)&#10;}" bpmn4s:ctxUpdate="ctx.inspectionReports := add(ctx.inspectionReports, inspectionReport.id)" bpmn4s:guard="not contains(ctx.inspectionReports, inspectionReport.id)" bpmn4s:stepType="Assertions" bpmn4s:subType="AssertTask" id="Activity_022s6i4" name="Assert Visual Inspection">
-        <bpmn2:incoming>Flow_1vbdnmu</bpmn2:incoming>
-        <bpmn2:outgoing>Flow_0529bw5</bpmn2:outgoing>
+      <bpmn2:task bpmn4s:assertions="assert_kpi: assert-that (inspectionReport.kpi) {&#10;  equal-to 9.0 within-margin relative (1.0)&#10;}" bpmn4s:guard="not contains(history.inspectionReports, inspectionReport.id)" bpmn4s:stepType="Assertions" bpmn4s:subType="AssertTask" id="Activity_022s6i4" name="Assert Visual Inspection">
+        <bpmn2:outgoing>Flow_15gqvjr</bpmn2:outgoing>
         <bpmn2:property id="Property_0fplz1m" name="__targetRef_placeholder"/>
         <bpmn2:dataInputAssociation bpmn4s:persistentRead="true" id="DataInputAssociation_1dg7ghh">
           <bpmn2:sourceRef>DataStoreReference_16tennj</bpmn2:sourceRef>
           <bpmn2:targetRef>Property_0fplz1m</bpmn2:targetRef>
         </bpmn2:dataInputAssociation>
+        <bpmn2:dataInputAssociation id="DataInputAssociation_1v4yl1d">
+          <bpmn2:sourceRef>DataStoreReference_1ee2f4c</bpmn2:sourceRef>
+          <bpmn2:targetRef>Property_0fplz1m</bpmn2:targetRef>
+        </bpmn2:dataInputAssociation>
+        <bpmn2:dataOutputAssociation bpmn4s:update="history := AssertionsHistory {&#10;  inspectionReports = add(history.inspectionReports, inspectionReport.id)&#10;}" id="DataOutputAssociation_04my1z7">
+          <bpmn2:targetRef>DataStoreReference_1ee2f4c</bpmn2:targetRef>
+        </bpmn2:dataOutputAssociation>
       </bpmn2:task>
+      <bpmn2:endEvent id="Event_1bxlea2">
+        <bpmn2:incoming>Flow_15gqvjr</bpmn2:incoming>
+      </bpmn2:endEvent>
+      <bpmn2:sequenceFlow id="Flow_15gqvjr" sourceRef="Activity_022s6i4" targetRef="Event_1bxlea2"/>
+      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_1ag1efq" bpmn4s:init="history := AssertionsHistory { inspectionReports = &lt;int[]&gt;[] }" id="DataStoreReference_1ee2f4c" name="history"/>
     </bpmn2:subProcess>
   </bpmn2:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
@@ -914,8 +914,8 @@
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge bpmnElement="DataInputAssociation_1ptnyma" id="DataInputAssociation_1ptnyma_di">
         <di:waypoint x="288" y="-90"/>
-        <di:waypoint x="1100" y="-90"/>
-        <di:waypoint x="982" y="21"/>
+        <di:waypoint x="940" y="-90"/>
+        <di:waypoint x="940" y="20"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge bpmnElement="DataInputAssociation_1snjcsq" id="DataInputAssociation_1snjcsq_di">
         <di:waypoint x="-9" y="75"/>
@@ -1206,35 +1206,35 @@
         <bpmndi:BPMNLabel/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape bpmnElement="DataStoreReference_16tennj" id="DataStoreReference_16tennj_di">
-        <dc:Bounds height="50" width="50" x="405" y="295"/>
+        <dc:Bounds height="50" width="50" x="255" y="165"/>
         <bpmndi:BPMNLabel>
-          <dc:Bounds height="14" width="84" x="388" y="352"/>
+          <dc:Bounds height="14" width="84" x="238" y="222"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape bpmnElement="Event_0xclnzz" id="Event_0xclnzz_di">
-        <dc:Bounds height="36" width="36" x="172" y="172"/>
+      <bpmndi:BPMNShape bpmnElement="DataStoreReference_1ee2f4c" id="DataStoreReference_1ee2f4c_di">
+        <dc:Bounds height="50" width="50" x="405" y="295"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="14" width="33" x="414" y="352"/>
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape bpmnElement="Gateway_0ukmclk" id="Gateway_0ukmclk_di" isMarkerVisible="true">
-        <dc:Bounds height="50" width="50" x="265" y="165"/>
+      <bpmndi:BPMNShape bpmnElement="Event_1bxlea2" id="Event_1bxlea2_di">
+        <dc:Bounds height="36" width="36" x="532" y="172"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge bpmnElement="DataInputAssociation_1dg7ghh" id="DataInputAssociation_1dg7ghh_di">
-        <di:waypoint x="430" y="295"/>
-        <di:waypoint x="430" y="230"/>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge bpmnElement="Flow_0529bw5" id="Flow_0529bw5_di">
-        <di:waypoint x="480" y="190"/>
-        <di:waypoint x="530" y="190"/>
-        <di:waypoint x="530" y="110"/>
-        <di:waypoint x="290" y="110"/>
-        <di:waypoint x="290" y="165"/>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge bpmnElement="Flow_11teqcq" id="Flow_11teqcq_di">
-        <di:waypoint x="208" y="190"/>
-        <di:waypoint x="265" y="190"/>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge bpmnElement="Flow_1vbdnmu" id="Flow_1vbdnmu_di">
-        <di:waypoint x="315" y="190"/>
+        <di:waypoint x="305" y="190"/>
         <di:waypoint x="380" y="190"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="DataInputAssociation_1v4yl1d" id="DataInputAssociation_1v4yl1d_di">
+        <di:waypoint x="410" y="295"/>
+        <di:waypoint x="410" y="230"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="DataOutputAssociation_04my1z7" id="DataOutputAssociation_04my1z7_di">
+        <di:waypoint x="448" y="230"/>
+        <di:waypoint x="446" y="295"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="Flow_15gqvjr" id="Flow_15gqvjr_di">
+        <di:waypoint x="480" y="190"/>
+        <di:waypoint x="532" y="190"/>
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>

@@ -2,7 +2,7 @@ record UNIT {
 	int	unit
 }
 
-record AssertionsCtx {
+record AssertionsHistory {
     int[]	inspectionReports
 }
 
