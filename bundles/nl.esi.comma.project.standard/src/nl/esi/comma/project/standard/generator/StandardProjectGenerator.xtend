@@ -113,9 +113,9 @@ class StandardProjectGenerator extends AbstractGenerator {
             // Validate the generated abstract tspec
             absTspecRes.validate()
 
-            // Generate bpmn for atspec
-            val fromAbstractToBpmn = new FromAbstractToBpmn()
-            fromAbstractToBpmn.doGenerate(absTspecRes, absTspecFsa, ctx)
+            //// Generate bpmn for atspec
+            //val fromAbstractToBpmn = new FromAbstractToBpmn()
+            //fromAbstractToBpmn.doGenerate(absTspecRes, absTspecFsa, ctx)
 
             // Generate concrete tspec
             val conTspecFsa = fsa.createFolderAccess('tspec_concrete/' + tspecName)
