@@ -17,9 +17,11 @@ class Transition {
 	public var bname = new String
 	public var name = new String
 	public var qname = new String
-	new (String b, String n, String q) {
+	public var priority = 0
+	new (String b, String n, String q, int p) {
 		bname = b
 		name = n
 		qname = q
+		priority = p
 	}
 }

@@ -76,6 +76,8 @@
         name="org.eclipse.cbi.targetplatform.feature.feature.group"/>
     <requirement
         name="de.jcup.asciidoctoreditor.feature.group"/>
+    <requirement
+        name="org.eclipse.eclemma.feature.feature.group"/>
     <repository
         url="https://download.eclipse.org/cbi/updates/tpd/release/latest"/>
     <repository
@@ -132,6 +134,14 @@
           xsi:type="setup:PreferenceTask"
           key="/instance/org.eclipse.oomph.setup.ui/showToolBarContributions"
           value="true"/>
+    </setupTask>
+    <setupTask
+        xsi:type="setup:CompoundTask"
+        name="org.eclipse.pde">
+      <setupTask
+          xsi:type="setup:PreferenceTask"
+          key="/instance/org.eclipse.pde/compilers.p.missing-packages"
+          value="0"/>
     </setupTask>
     <setupTask
         xsi:type="setup:CompoundTask"
@@ -370,7 +380,7 @@
         <repository
             url="https://download.eclipse.org/justj/jres/21/updates/release/latest"/>
         <repository
-            url="https://download.itemis.com/updates/releases/2.1.1/"/>
+            url="https://artifacts.itemis.cloud/repository/p2/xtext-updates/releases/2.1.1/"/>
         <repository
             url="https://www.pydev.org/updates/"/>
         <repository

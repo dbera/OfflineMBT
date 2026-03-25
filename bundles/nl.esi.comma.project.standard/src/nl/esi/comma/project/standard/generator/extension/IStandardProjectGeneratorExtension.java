@@ -19,6 +19,11 @@ import org.eclipse.xtext.generator.IGenerator2;
 import com.google.inject.ProvidedBy;
 
 public interface IStandardProjectGeneratorExtension extends IGenerator2 {
+	static String FOLDER_PSPEC = "pspec";
+	static String FOLDER_CPN_SERVER = "CPNServer";
+	static String FOLDER_ABSTRACT_TSPEC = "tspec_abstract";
+	static String FOLDER_CONCRETE_TSPEC = "tspec_concrete";
+	
 	@ProvidedBy(Registry.RegistryProvider.class)
 	interface Registry extends List<IStandardProjectGeneratorExtension> {
 		final static Registry INSTANCE = new StandardProjectGeneratorExtensionRegistryImpl();

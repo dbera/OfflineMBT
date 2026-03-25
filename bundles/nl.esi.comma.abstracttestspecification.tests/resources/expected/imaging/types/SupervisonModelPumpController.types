@@ -1,0 +1,30 @@
+import "../../../input/imaging/imaging.types"
+
+record ExecPumpCommand {
+    ExecPumpCommandInput input
+    ExecPumpCommandOutput output
+}
+
+record ExecPumpCommandInput {
+    PumpReq PumpRequest
+    CTX Flow_0x0gs9b
+    CTX Gateway_1j81da5
+    VacReq VacuumRequest
+    EquipmentStatus EqStatus
+    CTX Flow_0balrow
+    CTX Flow_104f6k4
+    CTX Flow_1wguswc
+    CTX Flow_0cjhiik
+}
+
+record ExecPumpCommandOutput {
+    PumpReq PumpRequest
+    CTX Flow_0x0gs9b
+    CTX Gateway_1j81da5
+    VacReq VacuumRequest
+    EquipmentStatus EqStatus
+    CTX Flow_0balrow
+    CTX Flow_104f6k4
+    CTX Flow_1wguswc
+    CTX Flow_0cjhiik
+}

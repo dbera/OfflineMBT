@@ -1,0 +1,869 @@
+import "imaging.types"
+specification imaging
+{
+    system SupervisonModelSupervisionImagePreparation
+    {
+        inputs
+        ImgReq	ImagingRequest
+        AcqResp	AcqUpdate
+        EquipmentStatus	EqStatus
+        
+        outputs
+        ImgResp		ImagingUpdate
+        AcqReq		AcquisitionReq
+        EquipmentStatus		EqStatus
+    
+        local
+        UNIT	Gateway_102q82v
+        
+        
+        UNIT	Flow_0kkvgdv
+        UNIT	Flow_1kpcqqf
+    
+        init
+        EqStatus := EquipmentStatus {
+         temp_status = Status::OFF,
+         pump_status = Status::OFF,
+         acq_status = Status::OFF
+        }
+    
+    
+        desc "SupervisonModelSupervisionImage Preparation_Model"
+        
+        action			Unprepare
+        element-label	"Unprepare"
+        case			default step-type "null" action-type COMPOSE
+        with-inputs		ImagingRequest
+        with-guard		ImagingRequest.cmd_type == ImageEnum::UNPREPARE
+        produces-outputs	Flow_1kpcqqf suppress
+        produces-outputs	AcquisitionReq symbolic-link
+        updates:
+            AcquisitionReq := AcqReq {
+             cmd_type = ImagingRequest.cmd_type,
+             id = ImagingRequest.id
+            }
+        
+        action			Prepare
+        element-label	"Prepare"
+        case			default step-type "null" action-type COMPOSE
+        with-inputs		ImagingRequest, EqStatus
+        with-guard		ImagingRequest.cmd_type == ImageEnum::PREPARE AND EqStatus.temp_status == Status::ON
+        produces-outputs	Flow_0kkvgdv suppress
+        produces-outputs	AcquisitionReq symbolic-link
+        updates:
+            AcquisitionReq := AcqReq {
+             cmd_type = ImagingRequest.cmd_type,
+             id = ImagingRequest.id
+            }
+        produces-outputs	EqStatus symbolic-link suppress
+        updates:
+            EqStatus := EqStatus
+        
+        action			Waitforprepare
+        element-label	"Wait for prepare"
+        case			default
+        with-inputs		Flow_0kkvgdv, AcqUpdate, EqStatus
+        produces-outputs	Gateway_102q82v suppress
+        updates:
+            Gateway_102q82v := Flow_0kkvgdv
+        produces-outputs	ImagingUpdate
+        produces-outputs	EqStatus
+        updates:
+            EqStatus:=EquipmentStatus {
+             temp_status = EqStatus.temp_status,
+             pump_status = EqStatus.pump_status,
+             acq_status = Status::PREPARING
+            }
+        
+        action			WaitforUnprepare
+        element-label	"Wait for Unprepare"
+        case			default
+        with-inputs		Flow_1kpcqqf, AcqUpdate, EqStatus
+        produces-outputs	Gateway_102q82v suppress
+        updates:
+            Gateway_102q82v := Flow_1kpcqqf
+        produces-outputs	ImagingUpdate
+        produces-outputs	EqStatus
+        updates:
+            EqStatus:=EquipmentStatus {
+             temp_status = EqStatus.temp_status,
+             pump_status = EqStatus.pump_status,
+             acq_status = Status::UNPREPARING
+            }
+    
+        element-labels ["SupervisonModel", "Supervision", "Image Preparation"]
+    }
+    
+    system SupervisonModelPumpController
+    {
+        inputs
+        PumpReq	PumpRequest
+        
+        outputs
+        PumpResp		PumpUpdate
+    
+        local
+        CTX	Gateway_0td58pc
+        
+        
+        CTX	Flow_0x0gs9b
+        CTX	Flow_104f6k4
+    
+        // init
+    
+    
+        desc "SupervisonModelPump Controller_Model"
+        
+        action			done
+        element-label	"done"
+        case			default
+        with-inputs		Flow_0x0gs9b
+        produces-outputs	Gateway_0td58pc
+        updates:
+            Gateway_0td58pc := Flow_0x0gs9b
+        produces-outputs	PumpUpdate
+        updates:
+            PumpUpdate := PumpResp { result = ResponseEnum::OK }
+        
+        action			startpump
+        element-label	"start pump"
+        case			default step-type "ExecPumpCommand" action-type RUN
+        with-inputs		PumpRequest
+        with-guard		PumpRequest.cmd_type == VacuumEnum::ON
+        produces-outputs	Flow_0x0gs9b
+        updates:
+            Flow_0x0gs9b := CTX { id = PumpRequest.id }
+        
+        action			stoppump
+        element-label	"stop pump"
+        case			default step-type "ExecPumpCommand" action-type RUN
+        with-inputs		PumpRequest
+        with-guard		PumpRequest.cmd_type == VacuumEnum::OFF
+        produces-outputs	Flow_104f6k4
+        updates:
+            Flow_104f6k4 := CTX { id = PumpRequest.id }
+        
+        action			pumpstopped
+        element-label	"pump stopped"
+        case			default
+        with-inputs		Flow_104f6k4
+        produces-outputs	Gateway_0td58pc
+        updates:
+            Gateway_0td58pc := Flow_104f6k4
+        produces-outputs	PumpUpdate
+        updates:
+            PumpUpdate := PumpResp { result = ResponseEnum::OK }
+    
+        element-labels ["SupervisonModel", "Pump Controller"]
+    }
+    
+    system SupervisonModelImagingController
+    {
+        inputs
+        ImgResp	ImagingUpdate
+        
+        outputs
+        ImgReq		ImagingRequest
+    
+        local
+        CTX	Gateway_0i3nw09
+        CTX	Gateway_0gu94f4
+        CTX	Gateway_0kvhy0o
+        CTX	Gateway_08l0os0
+        CTX	Gateway_0xpxevh
+        
+        
+        CTX	Flow_1k04xzh
+        CTX	Flow_029nrs5
+        CTX	Flow_0ncxpgd
+        CTX	Flow_05szwsj
+    
+        init
+        Gateway_0xpxevh := CTX { id = 0 }
+    
+    
+        desc "SupervisonModelImaging Controller_Model"
+        
+        action			WaitforUnprepareImaging
+        element-label	"Wait for Unprepare Imaging"
+        case			default
+        with-inputs		Flow_05szwsj, ImagingUpdate
+        produces-outputs	Gateway_0gu94f4
+        updates:
+            Gateway_0gu94f4 := Flow_05szwsj
+        
+        action			returntoprep
+        element-label	"return to prep"
+        case			default
+        with-inputs		Gateway_0gu94f4
+        produces-outputs	Gateway_0xpxevh
+        updates:
+            Gateway_0xpxevh := Gateway_0gu94f4
+        
+        action			UnprepareImaging
+        element-label	"Unprepare Imaging"
+        case			default
+        with-inputs		Gateway_0i3nw09
+        produces-outputs	Flow_05szwsj
+        updates:
+            Flow_05szwsj := Gateway_0i3nw09
+            Flow_05szwsj.id := Flow_05szwsj.id+1
+        produces-outputs	ImagingRequest
+        updates:
+            ImagingRequest:= ImgReq { cmd_type = ImageEnum::UNPREPARE, id = Gateway_0i3nw09.id, image_quality = ImageQuality::NA }
+        
+        action			WaitforImagingStopped
+        element-label	"Wait for Imaging Stopped"
+        case			default
+        with-inputs		Flow_0ncxpgd, ImagingUpdate
+        produces-outputs	Gateway_0i3nw09
+        updates:
+            Gateway_0i3nw09 := Flow_0ncxpgd
+        
+        action			StartLowResImaging
+        element-label	"Start Low Res Imaging"
+        case			default
+        with-inputs		Gateway_0kvhy0o
+        produces-outputs	Gateway_08l0os0
+        updates:
+            Gateway_08l0os0 := Gateway_0kvhy0o
+            Gateway_08l0os0.id := Gateway_08l0os0.id+1
+        produces-outputs	ImagingRequest
+        updates:
+            ImagingRequest := ImgReq { cmd_type = ImageEnum::START, id = Gateway_0kvhy0o.id, image_quality = ImageQuality::LOW }
+        
+        action			nextimage
+        element-label	"next image"
+        case			default
+        with-inputs		Gateway_0i3nw09
+        produces-outputs	Gateway_0kvhy0o
+        updates:
+            Gateway_0kvhy0o := Gateway_0i3nw09
+        
+        action			StartHighResImaging
+        element-label	"Start High Res Imaging"
+        case			default
+        with-inputs		Gateway_0kvhy0o
+        produces-outputs	Gateway_08l0os0
+        updates:
+            Gateway_08l0os0 := Gateway_0kvhy0o
+            Gateway_08l0os0.id := Gateway_08l0os0.id+1
+        produces-outputs	ImagingRequest
+        updates:
+            ImagingRequest := ImgReq { cmd_type = ImageEnum::START, id = Gateway_0kvhy0o.id, image_quality = ImageQuality::HIGH }
+        
+        action			Stopimaging
+        element-label	"Stop imaging"
+        case			default
+        with-inputs		Flow_1k04xzh
+        produces-outputs	Flow_0ncxpgd
+        updates:
+            Flow_0ncxpgd := Flow_1k04xzh
+            Flow_0ncxpgd.id := Flow_0ncxpgd.id+1
+        produces-outputs	ImagingRequest
+        updates:
+            ImagingRequest := ImgReq { cmd_type = ImageEnum::STOP, id = Flow_1k04xzh.id, image_quality = ImageQuality::NA }
+        
+        action			WaitforPrepared
+        element-label	"Wait for Prepared"
+        case			default
+        with-inputs		Flow_029nrs5, ImagingUpdate
+        produces-outputs	Gateway_0kvhy0o
+        updates:
+            Gateway_0kvhy0o := Flow_029nrs5
+        
+        action			PrepareImaging
+        element-label	"Prepare Imaging"
+        case			default
+        with-inputs		Gateway_0xpxevh
+        produces-outputs	Flow_029nrs5
+        updates:
+            Flow_029nrs5 := Gateway_0xpxevh
+            Flow_029nrs5.id := Flow_029nrs5.id+1
+        produces-outputs	ImagingRequest
+        updates:
+            ImagingRequest := ImgReq { cmd_type = ImageEnum::PREPARE, id = Gateway_0xpxevh.id, image_quality = ImageQuality::NA }
+        
+        action			ImagingFinished
+        element-label	"Imaging Finished"
+        case			default
+        with-inputs		Gateway_08l0os0, ImagingUpdate
+        produces-outputs	Flow_1k04xzh
+        updates:
+            Flow_1k04xzh := Gateway_08l0os0
+    
+        element-labels ["SupervisonModel", "Imaging Controller"]
+    }
+    
+    system SupervisonModelSupervisionPressureHandler
+    {
+        inputs
+        VacReq	VacuumRequest
+        PumpResp	PumpUpdate
+        EquipmentStatus	EqStatus
+        
+        outputs
+        PumpReq		PumpRequest
+        VacResp		VacuumUpdate
+        EquipmentStatus		EqStatus
+    
+        local
+        CTX	Gateway_1i0qy9g
+        CTX	Gateway_1j81da5
+        
+        
+        CTX	Flow_1wguswc
+        CTX	Flow_0balrow
+        CTX	Flow_0cjhiik
+    
+        init
+        Gateway_1j81da5 := CTX { id = 0 }
+    
+    
+        desc "SupervisonModelSupervisionPressure Handler_Model"
+        
+        action			StartPump
+        element-label	"Start Pump"
+        case			default step-type "null" action-type COMPOSE
+        with-inputs		Gateway_1j81da5, VacuumRequest, EqStatus
+        with-guard		EqStatus.acq_status == Status::PREPARING
+        produces-outputs	Flow_0balrow
+        updates:
+            Flow_0balrow := Gateway_1j81da5
+        produces-outputs	PumpRequest symbolic-link
+        updates:
+            PumpRequest := PumpReq {
+             cmd_type = VacuumEnum::ON,
+             id = VacuumRequest.id
+            }
+        produces-outputs	EqStatus symbolic-link suppress
+        updates:
+            EqStatus := EqStatus
+        
+        action			WaitforPumpOff
+        element-label	"Wait for Pump Off"
+        case			default
+        with-inputs		Flow_0cjhiik, PumpUpdate, EqStatus
+        produces-outputs	Gateway_1i0qy9g
+        updates:
+            Gateway_1i0qy9g := Flow_0cjhiik
+        produces-outputs	VacuumUpdate
+        produces-outputs	EqStatus
+        updates:
+            EqStatus := EquipmentStatus {
+             temp_status = EqStatus.temp_status,
+             pump_status = Status::OFF,
+             acq_status = EqStatus.acq_status
+            }
+        
+        action			Restart
+        element-label	"Restart"
+        case			default
+        with-inputs		Gateway_1i0qy9g
+        produces-outputs	Gateway_1j81da5
+        updates:
+            Gateway_1j81da5 := Gateway_1i0qy9g
+        
+        action			TurnOffPump
+        element-label	"Turn Off Pump"
+        case			default step-type "null" action-type COMPOSE
+        with-inputs		Flow_1wguswc, VacuumRequest, EqStatus
+        with-guard		EqStatus.acq_status == Status::UNPREPARING
+        produces-outputs	Flow_0cjhiik
+        updates:
+            Flow_0cjhiik := Flow_1wguswc
+        produces-outputs	PumpRequest symbolic-link
+        updates:
+            PumpRequest := PumpReq {
+             cmd_type = VacuumEnum::OFF,
+             id = VacuumRequest.id
+            }
+        produces-outputs	EqStatus symbolic-link suppress
+        updates:
+            EqStatus := EqStatus
+        
+        action			WaitforPumpStated
+        element-label	"Wait for Pump Stated"
+        case			default
+        with-inputs		Flow_0balrow, PumpUpdate, EqStatus
+        produces-outputs	Flow_1wguswc
+        updates:
+            Flow_1wguswc := Flow_0balrow
+        produces-outputs	VacuumUpdate
+        produces-outputs	EqStatus
+        updates:
+            EqStatus := EquipmentStatus {
+             temp_status = EqStatus.temp_status,
+             pump_status = Status::ON,
+             acq_status = EqStatus.acq_status
+            }
+    
+        element-labels ["SupervisonModel", "Supervision", "Pressure Handler"]
+    }
+    
+    system SupervisonModelTemperatureController
+    {
+        inputs
+        TempResp	TempUpdate
+        TempResp	temp_achieved
+        
+        outputs
+        TempReq		TempRequest
+    
+        local
+        CTX	Gateway_1sv33t8
+        CTX	Gateway_12yhscn
+        CTX	Event_1r2zvr6
+        
+        CTX	Flow_0estwso
+        CTX	Flow_0ay6jpo
+        CTX	Flow_01g3o4k
+    
+        init
+        Event_1r2zvr6 := CTX { id = 0 }
+    
+    
+        desc "SupervisonModelTemperature Controller_Model"
+        
+        action			return
+        element-label	"return"
+        case			default
+        with-inputs		Gateway_12yhscn
+        produces-outputs	Gateway_1sv33t8
+        updates:
+            Gateway_1sv33t8 := Gateway_12yhscn
+            Gateway_1sv33t8.id := Gateway_1sv33t8.id
+        
+        action			CheckTemp
+        element-label	"CheckTemp"
+        case			default step-type "TempCheck" action-type ASSERT
+        with-inputs		Gateway_1sv33t8, temp_achieved
+        assertions default {
+            x: assert-that(temp_achieved.temp_val){equal-to 1}
+        }
+        produces-outputs	Flow_01g3o4k
+        updates:
+            Flow_01g3o4k := Gateway_1sv33t8
+        
+        action			SetTemperature
+        element-label	"Set Temperature"
+        case			default
+        with-inputs		Event_1r2zvr6
+        produces-outputs	Flow_0estwso
+        updates:
+            Flow_0estwso := Event_1r2zvr6
+            Flow_0estwso.id := Flow_0estwso.id + 1
+        produces-outputs	TempRequest
+        updates:
+            TempRequest := TempReq {
+             cmd_type = TempEnum::SET,
+             id = Event_1r2zvr6.id
+            }
+        
+        action			ResetTemperature
+        element-label	"Reset Temperature"
+        case			default
+        with-inputs		Flow_01g3o4k
+        produces-outputs	Flow_0ay6jpo
+        updates:
+            Flow_0ay6jpo := Flow_01g3o4k
+            Flow_0ay6jpo.id := Flow_0ay6jpo.id + 1
+        produces-outputs	TempRequest
+        updates:
+            TempRequest := TempReq {
+             cmd_type = TempEnum::RESET,
+             id = Flow_01g3o4k.id
+            }
+        
+        action			WaitforReset
+        element-label	"Wait for Reset"
+        case			default
+        with-inputs		Flow_0ay6jpo, TempUpdate
+        produces-outputs	Gateway_12yhscn
+        updates:
+            Gateway_12yhscn := Flow_0ay6jpo
+        
+        action			WaitforTempSet
+        element-label	"Wait for Temp Set"
+        case			default
+        with-inputs		Flow_0estwso, TempUpdate
+        produces-outputs	Gateway_1sv33t8
+        updates:
+            Gateway_1sv33t8 := Flow_0estwso
+    
+        element-labels ["SupervisonModel", "Temperature Controller"]
+    }
+    
+    system SupervisonModelVacuumController
+    {
+        inputs
+        VacResp	VacuumUpdate
+        
+        outputs
+        VacReq		VacuumRequest
+    
+        local
+        CTX	Gateway_0mqr7c2
+        CTX	Gateway_07w0e8f
+        
+        
+        CTX	Flow_1phqrfh
+        CTX	Flow_1erv6vq
+        CTX	Flow_1dvvja5
+    
+        init
+        Gateway_0mqr7c2 := CTX { id = 0 }
+    
+    
+        desc "SupervisonModelVacuum Controller_Model"
+        
+        action			TurnOff
+        element-label	"Turn Off"
+        case			default
+        with-inputs		Flow_1erv6vq
+        produces-outputs	Flow_1dvvja5
+        updates:
+            Flow_1dvvja5 := Flow_1erv6vq
+            Flow_1dvvja5.id := Flow_1dvvja5.id + 1
+        produces-outputs	VacuumRequest
+        updates:
+            VacuumRequest := VacReq { cmd_type = VacuumEnum::OFF, id = Flow_1erv6vq.id }
+        
+        action			SetVacuum
+        element-label	"Set Vacuum"
+        case			default
+        with-inputs		Gateway_0mqr7c2
+        produces-outputs	Flow_1phqrfh
+        updates:
+            Flow_1phqrfh := Gateway_0mqr7c2
+            Flow_1phqrfh.id := Flow_1phqrfh.id + 1
+        produces-outputs	VacuumRequest
+        updates:
+            VacuumRequest := VacReq { cmd_type = VacuumEnum::ON, id = Gateway_0mqr7c2.id }
+        
+        action			return
+        element-label	"return"
+        case			default
+        with-inputs		Gateway_07w0e8f
+        produces-outputs	Gateway_0mqr7c2
+        updates:
+            Gateway_0mqr7c2 := Gateway_07w0e8f
+        
+        action			WaitforOff
+        element-label	"Wait for Off"
+        case			default
+        with-inputs		Flow_1dvvja5, VacuumUpdate
+        produces-outputs	Gateway_07w0e8f
+        updates:
+            Gateway_07w0e8f := Flow_1dvvja5
+        
+        action			WaitforVacuumSet
+        element-label	"Wait for Vacuum Set"
+        case			default
+        with-inputs		Flow_1phqrfh, VacuumUpdate
+        produces-outputs	Flow_1erv6vq
+        updates:
+            Flow_1erv6vq := Flow_1phqrfh
+    
+        element-labels ["SupervisonModel", "Vacuum Controller"]
+    }
+    
+    system SupervisonModelAcquisitionController
+    {
+        inputs
+        AcqReq	AcquisitionReq
+        
+        outputs
+        AcqResp		AcqUpdate
+        AcqData		ImageData
+    
+        local
+        CTX	Gateway_0h81kts
+        
+        
+        CTX	Flow_084nmm6
+        CTX	Flow_1rusz82
+        CTX	Flow_1w9tlf4
+    
+        // init
+    
+    
+        desc "SupervisonModelAcquisition Controller_Model"
+        
+        action			AcquisitionStopped
+        element-label	"Acquisition Stopped"
+        case			default
+        with-inputs		Flow_1w9tlf4
+        produces-outputs	Gateway_0h81kts
+        updates:
+            Gateway_0h81kts := Flow_1w9tlf4
+        produces-outputs	AcqUpdate
+        updates:
+            AcqUpdate := AcqResp { result = ResponseEnum::OK, id = Flow_1w9tlf4.id }
+        
+        action			Execacquisitioninitandteardown
+        element-label	"Exec acquisition init and tear down"
+        case			default step-type "ExecAcquisitionCommand" action-type RUN
+        with-inputs		AcquisitionReq
+        with-guard		AcquisitionReq.cmd_type == ImageEnum::PREPARE OR AcquisitionReq.cmd_type == ImageEnum::UNPREPARE
+        produces-outputs	Flow_084nmm6
+        updates:
+            Flow_084nmm6 := CTX { id = AcquisitionReq.id }
+        
+        action			StartAcquisition
+        element-label	"Start Acquisition"
+        case			default step-type "ExecAcquisitionCommand" action-type RUN
+        with-inputs		AcquisitionReq
+        with-guard		AcquisitionReq.cmd_type == ImageEnum::START
+        produces-outputs	Flow_1rusz82
+        updates:
+            Flow_1rusz82 := CTX { id = AcquisitionReq.id }
+        
+        action			Acquisitionexecdone
+        element-label	"Acquisition exec done"
+        case			default
+        with-inputs		Flow_084nmm6
+        produces-outputs	Gateway_0h81kts
+        updates:
+            Gateway_0h81kts := Flow_084nmm6
+        produces-outputs	AcqUpdate
+        updates:
+            AcqUpdate := AcqResp { result = ResponseEnum::OK, id = Flow_084nmm6.id }
+        
+        action			StopAcquisition
+        element-label	"Stop Acquisition"
+        case			default step-type "ExecAcquisitionCommand" action-type RUN
+        with-inputs		AcquisitionReq
+        with-guard		AcquisitionReq.cmd_type == ImageEnum::STOP
+        produces-outputs	Flow_1w9tlf4
+        updates:
+            Flow_1w9tlf4 := CTX { id = AcquisitionReq.id }
+        produces-outputs	ImageData symbolic-link
+        updates:
+            ImageData := AcqData { id = AcquisitionReq.id }
+        
+        action			AcquisitionStarted
+        element-label	"Acquisition Started"
+        case			default
+        with-inputs		Flow_1rusz82
+        produces-outputs	Gateway_0h81kts
+        updates:
+            Gateway_0h81kts := Flow_1rusz82
+        produces-outputs	AcqUpdate
+        updates:
+            AcqUpdate := AcqResp { result = ResponseEnum::OK, id = Flow_1rusz82.id }
+    
+        element-labels ["SupervisonModel", "Acquisition Controller"]
+    }
+    
+    system SupervisonModelSupervisionImaging
+    {
+        inputs
+        ImgReq	ImagingRequest
+        AcqResp	AcqUpdate
+        EquipmentStatus	EqStatus
+        AcqData	ImageData
+        
+        outputs
+        ImgResp		ImagingUpdate
+        AcqReq		AcquisitionReq
+        EquipmentStatus		EqStatus
+    
+        local
+        ImgReq	LastAcqReq
+        UNIT	Gateway_16m9e4j
+        UNIT	Gateway_0qg69ul
+        
+        
+        UNIT	Flow_0678bm1
+        UNIT	Flow_1bajtwc
+    
+        // init
+    
+    
+        desc "SupervisonModelSupervisionImaging_Model"
+        
+        action			WaitforStopAcquisition
+        element-label	"Wait for Stop Acquisition"
+        case			default
+        with-inputs		Flow_0678bm1, AcqUpdate, EqStatus
+        with-guard		AcqUpdate.result == ResponseEnum::OK
+        produces-outputs	Gateway_16m9e4j suppress
+        updates:
+            Gateway_16m9e4j := Flow_0678bm1
+        produces-outputs	ImagingUpdate
+        produces-outputs	EqStatus
+        updates:
+            EqStatus := EquipmentStatus {
+             temp_status = EqStatus.temp_status,
+             pump_status = EqStatus.pump_status,
+             acq_status = Status::OFF
+            }
+        
+        action			CheckLowResImageQuality
+        element-label	"Check Low Res Image Quality"
+        case			default step-type "CheckAcquisitionResult" action-type ASSERT
+        with-inputs		Gateway_16m9e4j, ImageData, LastAcqReq
+        with-guard		LastAcqReq.image_quality == ImageQuality::LOW
+        assertions default {
+            IQ1 : assert-that (ImageData.contrast) {
+            close-to 0.5
+            }
+            IQ2 : assert-that (ImageData.resolution) {
+            close-to 512
+            }
+            IQ3 : assert-that (ImageData.signal_to_noise_ratio) {
+            close-to 0.55
+            }
+        }
+        produces-outputs	Gateway_0qg69ul suppress
+        updates:
+            Gateway_0qg69ul := Gateway_16m9e4j
+        
+        action			WaitforStartAcquisition
+        element-label	"Wait for Start Acquisition"
+        case			default
+        with-inputs		Flow_1bajtwc, AcqUpdate, EqStatus
+        with-guard		AcqUpdate.result == ResponseEnum::OK
+        produces-outputs	Gateway_0qg69ul suppress
+        updates:
+            Gateway_0qg69ul := Flow_1bajtwc
+        produces-outputs	ImagingUpdate
+        produces-outputs	EqStatus
+        updates:
+            EqStatus := EquipmentStatus {
+             temp_status = EqStatus.temp_status,
+             pump_status = EqStatus.pump_status,
+             acq_status = Status::ON
+            }
+        
+        action			StopAcquisition
+        element-label	"Stop Acquisition"
+        case			default step-type "null" action-type COMPOSE
+        with-inputs		ImagingRequest
+        with-guard		ImagingRequest.cmd_type==ImageEnum::STOP
+        produces-outputs	Flow_0678bm1 suppress
+        produces-outputs	AcquisitionReq symbolic-link
+        updates:
+            AcquisitionReq := AcqReq {
+             cmd_type = ImagingRequest.cmd_type,
+             id = ImagingRequest.id
+            }
+        
+        action			StartAcquisition
+        element-label	"Start Acquisition"
+        case			default step-type "null" action-type COMPOSE
+        with-inputs		ImagingRequest, EqStatus
+        with-guard		ImagingRequest.cmd_type == ImageEnum::START AND EqStatus.temp_status == Status::ON AND EqStatus.pump_status == Status::ON
+        produces-outputs	Flow_1bajtwc suppress
+        produces-outputs	AcquisitionReq symbolic-link
+        updates:
+            AcquisitionReq := AcqReq {
+             cmd_type = ImagingRequest.cmd_type,
+             id = ImagingRequest.id
+            }
+        produces-outputs	LastAcqReq symbolic-link
+        updates:
+            LastAcqReq:=ImagingRequest
+        produces-outputs	EqStatus symbolic-link suppress
+        updates:
+            EqStatus := EqStatus
+        
+        action			CheckHighResImageQuality
+        element-label	"Check High Res Image Quality"
+        case			default step-type "CheckAcquisitionResult" action-type ASSERT
+        with-inputs		Gateway_16m9e4j, ImageData, LastAcqReq
+        with-guard		LastAcqReq.image_quality == ImageQuality::HIGH
+        assertions default {
+            IQ1 : assert-that (ImageData.contrast) {
+            close-to 0.8
+            }
+            IQ2 : assert-that (ImageData.resolution) {
+            close-to 1024
+            }
+            IQ3 : assert-that (ImageData.signal_to_noise_ratio) {
+            close-to 0.95
+            }
+        }
+        produces-outputs	Gateway_0qg69ul suppress
+        updates:
+            Gateway_0qg69ul := Gateway_16m9e4j
+    
+        element-labels ["SupervisonModel", "Supervision", "Imaging"]
+    }
+    
+    system SupervisonModelSupervisionTemperatureHandler
+    {
+        inputs
+        TempReq	TempRequest
+        EquipmentStatus	EqStatus
+        
+        outputs
+        TempResp		TempUpdate
+        TempResp		temp_achieved
+        EquipmentStatus		EqStatus
+    
+        local
+        TempReq	TempCMD
+        UNIT	Gateway_1qk9wqe
+        
+        UNIT	Event_13ys7sy
+    
+        // init
+    
+    
+        desc "SupervisonModelSupervisionTemperature Handler_Model"
+        
+        action			CreateResetTempMessage
+        element-label	"Create Reset Temp Message"
+        case			default step-type "null" action-type COMPOSE
+        with-inputs		TempRequest, EqStatus
+        with-guard		TempRequest.cmd_type == TempEnum::RESET AND EqStatus.acq_status == Status::UNPREPARING
+        produces-outputs	Gateway_1qk9wqe suppress
+        produces-outputs	TempCMD symbolic-link
+        updates:
+            TempCMD := TempRequest
+        produces-outputs	EqStatus symbolic-link suppress
+        updates:
+            EqStatus := EqStatus
+        
+        action			ExecuteSetTemp
+        element-label	"Execute Set Temp"
+        case			default step-type "SetTemperature" action-type RUN
+        with-inputs		Gateway_1qk9wqe, TempCMD, EqStatus
+        produces-outputs	Event_13ys7sy suppress
+        updates:
+            Event_13ys7sy := Gateway_1qk9wqe
+        produces-outputs	TempUpdate
+        produces-outputs	temp_achieved symbolic-link
+        updates:
+            temp_achieved := TempResp {
+             result = ResponseEnum::OK,
+             reqid = TempCMD.id
+            }
+        produces-outputs	EqStatus symbolic-link
+        updates:
+            EqStatus := EquipmentStatus {
+             temp_status = Status::ON,
+             pump_status = EqStatus.pump_status,
+             acq_status = EqStatus.acq_status
+            }
+        
+        action			CreateSetTempMessage
+        element-label	"Create Set Temp Message"
+        case			default step-type "null" action-type COMPOSE
+        with-inputs		TempRequest
+        with-guard		TempRequest.cmd_type == TempEnum::SET
+        produces-outputs	Gateway_1qk9wqe suppress
+        produces-outputs	TempCMD symbolic-link
+        updates:
+            TempCMD := TempRequest
+    
+        element-labels ["SupervisonModel", "Supervision", "Temperature Handler"]
+    }
+    
+	SUT-blocks SupervisonModelPumpController SupervisonModelAcquisitionController SupervisonModelAcquisitionController SupervisonModelSupervisionTemperatureHandler SupervisonModelPumpController SupervisonModelAcquisitionController
+	depth-limits 300
+	state-limits 1000
+	num-tests 1
+}

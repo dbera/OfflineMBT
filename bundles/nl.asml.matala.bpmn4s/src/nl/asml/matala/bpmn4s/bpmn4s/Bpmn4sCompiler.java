@@ -157,8 +157,6 @@ public class Bpmn4sCompiler{
 		for(String el: removeElements) {
 			model.elements.remove(el);
 		}
-		// remove activities TODO: update Elements parents.
-		model.elements.entrySet().removeIf(e -> model.isActivity(e.getKey()));
 	}
 	
 	/**
@@ -237,6 +235,7 @@ public class Bpmn4sCompiler{
 		}
 		result.append(String.format("\tSUT-blocks %s\n", String.join(" ", listSUTcomponents()))); 
 		result.append(String.format("\tdepth-limits %s\r\n", model.getDepthLimit()));
+		result.append(String.format("\tstate-limits %s\r\n", model.getStateLimit()));
 		result.append(String.format("\tnum-tests %s\n}\r\n", model.getNumOfTests()));
 		return result.toString();
 	}
@@ -521,16 +520,23 @@ public class Bpmn4sCompiler{
 					String compCtxName = model.getElementById(cId).getContextName();
 					task += "action\t\t\t" + sanitize(repr(node)) + "\n";
 					task += "element-label\t"  + '"' + repr(node) + '"' + "\n";
-					// STEP TYPE
-					String stepConf = "";
-					if (model.isComposeTask(node.getId())) {
-						stepConf = String.format(" step-type \"%s\" action-type COMPOSE", node.getStepType());
-					} else if(model.isAssertTask(node.getId())) {
-						stepConf = String.format(" step-type \"%s\" action-type ASSERT", node.getStepType());
-					} else if(model.isRunTask(node.getId())) {
-						stepConf = String.format(" step-type \"%s\" action-type RUN", node.getStepType());
+					
+					task += "case\t\t\tdefault";
+					// PRIORITY
+					int priority = getPriority(node.getId());
+					if (priority != 0) {
+						task += " priority " + priority;
 					}
-					task += "case\t\t\t" + "default" + stepConf + "\n";
+					// STEP TYPE
+					if (model.isComposeTask(node.getId())) {
+						task += String.format(" step-type \"%s\" action-type COMPOSE", node.getStepType());
+					} else if(model.isAssertTask(node.getId())) {
+						task += String.format(" step-type \"%s\" action-type ASSERT", node.getStepType());
+					} else if(model.isRunTask(node.getId())) {
+						task += String.format(" step-type \"%s\" action-type RUN", node.getStepType());
+					}
+					task += "\n";
+
 					/* 
 					 * Updates, guards, assertions and initializations from the bpmn4s are parsed into Strings. 
 					 * In these strings, data stores, queues, and context are identified by their user-defined names.
@@ -880,6 +886,18 @@ public class Bpmn4sCompiler{
 	//
 	// Helper functions
 	//
+	int getPriority(String id) {
+		Element element = model.getElementById(id);
+		if (element == null) {
+			return 0;
+		} else if (element.getPriority() != null) {
+			return element.getPriority();
+		} else if (element.getParent() != null) {
+			return getPriority(element.getParent());
+		}
+		return 0;
+	}
+	
 	protected Boolean isAPlace (String id) {
 		Element elem = model.getElementById(id);
 		ElementType t = elem.getType();

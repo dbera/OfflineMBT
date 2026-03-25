@@ -84,4 +84,14 @@ class Bpmn4sCompilerTest {
     def void testPrinter() {
         testCompilation('printer', 'printer', true);
     }
+
+    @Test
+    def void testPrinterWithPriorities() {
+        testCompilation('printer_prio', 'printer_prio', true);
+    }
+
+    @Test
+    def void testImaging() {
+        testCompilation('imaging', 'imaging', true);
+    }
 }

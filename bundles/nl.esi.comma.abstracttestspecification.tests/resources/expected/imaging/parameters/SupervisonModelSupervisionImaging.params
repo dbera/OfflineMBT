@@ -1,0 +1,12 @@
+import "../types/SupervisonModelSupervisionImaging.types"
+
+data-instances
+CheckAcquisitionResultInput SupervisonModelSupervisionImagingInput
+CheckAcquisitionResultOutput SupervisonModelSupervisionImagingOutput
+
+data-implementation
+// Empty
+
+path-prefix "./dataset/"
+var-ref SupervisonModelSupervisionImagingInput -> file-name "SupervisonModelSupervisionImagingInput.json"
+var-ref SupervisonModelSupervisionImagingOutput -> file-name "SupervisonModelSupervisionImagingOutput.json"

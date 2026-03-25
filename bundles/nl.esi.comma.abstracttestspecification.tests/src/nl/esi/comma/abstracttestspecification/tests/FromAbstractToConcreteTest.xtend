@@ -100,6 +100,11 @@ class FromAbstractToConcreteTest {
     }
 
     @Test
+    def void testImaging() {
+        testGenerator('imaging');
+    }
+
+    @Test
     def void testIssue249() {
         testGenerator('issue249');
     }

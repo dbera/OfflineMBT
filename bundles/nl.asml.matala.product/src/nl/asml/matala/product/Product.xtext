@@ -42,8 +42,9 @@ Specification:
 	'specification' name = ID '{'
 		blocks += Blocks+
 		('SUT-blocks' envBlock += [Block|QualifiedName]*)?
-		'depth-limits' limit = INT
-		('num-tests' numTests = INT)?
+		'depth-limits' depthLimits = ExpressionConstantInt
+        ('state-limits' stateLimits = ExpressionConstantInt)?
+		('num-tests' numTests = ExpressionConstantInt)?
 	'}'
 ;
 
@@ -80,12 +81,21 @@ Function:
 ;
 
 Update:
-	'case' name = ID 
+	'case' name = ID
+	('priority' priority = ExpressionPriority)?
 	('step-type' stepType = STRING 'action-type' actionType = ActionType)?
 	('with-inputs' fnInp += VarRef (',' fnInp+=VarRef)*)?
-	('with-guard' guard=Expression?)?
-	(dataAssertions = DataAssertions)? 
+	('with-guard' guard=Expression)?
+	(dataAssertions = DataAssertions)?
 	updateOutputVar += UpdateOutVar*
+;
+
+ExpressionPriority returns expr::Expression:
+    ExpressionConstantNegInt | ExpressionConstantInt
+;
+
+ExpressionConstantNegInt returns expr::ExpressionMinus:
+    "-" sub=ExpressionConstantInt
 ;
 
 enum ActionType:

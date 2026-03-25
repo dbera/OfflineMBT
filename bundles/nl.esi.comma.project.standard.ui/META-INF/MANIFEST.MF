@@ -21,7 +21,11 @@ Require-Bundle: nl.esi.comma.project.standard;visibility:=reexport,
  org.eclipse.debug.ui
 Import-Package: org.apache.log4j
 Bundle-RequiredExecutionEnvironment: JavaSE-21
-Export-Package: nl.esi.comma.project.standard.ui.internal,
+Export-Package: nl.esi.comma.project.standard.ui,
+ nl.esi.comma.project.standard.ui.handler,
+ nl.esi.comma.project.standard.ui.internal,
+ nl.esi.comma.project.standard.ui.labeling,
+ nl.esi.comma.project.standard.ui.outline,
  nl.esi.comma.project.standard.ui.quickfix
 Bundle-Activator: nl.esi.comma.project.standard.ui.internal.StandardActivator
 Automatic-Module-Name: nl.esi.comma.project.standard.ui

@@ -12,25 +12,47 @@
 @REM
 
 @ECHO OFF
-SETLOCAL
+SETLOCAL EnableDelayedExpansion
 
-IF not defined BPMN4S_PYTHON (
-  ECHO *-----------------------------------------* >&2
-  ECHO * BPMN4S_PYTHON variable is NOT defined!  * >&2
-  ECHO * Standard python.exe will be used.       * >&2
-  ECHO *-----------------------------------------* >&2
-  ECHO:
-  set BPMN4S_PYTHON=python.exe
+:: Save script directory before any CALL statements
+SET "SCRIPT_DIR=%~dp0"
+
+:: Main script execution starts here
+GOTO :main
+
+:: Function for logging with timestamps
+:log
+ECHO [%date% %time%] %~1
+EXIT /B 0
+
+:main
+CALL :log "Starting regression test execution"
+
+:: Call setup-python.bat to handle Python environment setup, passing all arguments
+CALL "!SCRIPT_DIR!server\setup-python.bat" %*
+IF %ERRORLEVEL% NEQ 0 (
+  CALL :log "Error: Python setup failed"
+  EXIT /B 1
 )
- 
-ECHO # Using python environment: "%BPMN4S_PYTHON%"
 
-FOR /F "delims=" %%i IN ("%~dp0") DO (
-  set script_drive=%%~di
-  set script_path=%%~pi
+SET python_file=!SCRIPT_DIR!server\CPNRegressionTest.py
+CALL :log "Running regression tests: '!python_file!'"
+
+:: Set PATH to prioritize venv Python
+SET "PATH=!TEMP_ENV!\Scripts;!PATH!"
+CALL :log "PATH updated to prioritize venv Python: '!TEMP_ENV!\Scripts'"
+
+ECHO.
+ECHO *-----------------------------------------*
+ECHO * Running regression tests...             *
+ECHO *-----------------------------------------*
+ECHO.
+
+"!VENV_PYTHON!" "!python_file!" %PYTHON_ARGS%
+SET EXIT_CODE=%ERRORLEVEL%
+
+IF %EXIT_CODE% NEQ 0 (
+  CALL :log "Error: Regression tests exited with code %EXIT_CODE%"
 )
-set python_file=%script_drive%%script_path%simulator\CPNRegressionTest.py
 
-%BPMN4S_PYTHON% "%python_file%" %*
-
-ENDLOCAL
+EXIT /B %EXIT_CODE%

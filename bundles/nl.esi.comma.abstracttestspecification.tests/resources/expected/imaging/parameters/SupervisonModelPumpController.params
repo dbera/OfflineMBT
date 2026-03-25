@@ -1,0 +1,12 @@
+import "../types/SupervisonModelPumpController.types"
+
+data-instances
+ExecPumpCommandInput SupervisonModelPumpControllerInput
+ExecPumpCommandOutput SupervisonModelPumpControllerOutput
+
+data-implementation
+// Empty
+
+path-prefix "./dataset/"
+var-ref SupervisonModelPumpControllerInput -> file-name "SupervisonModelPumpControllerInput.json"
+var-ref SupervisonModelPumpControllerOutput -> file-name "SupervisonModelPumpControllerOutput.json"

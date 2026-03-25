@@ -74,7 +74,7 @@
                             <goal>unpack-dependencies</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>${project.build.directory}/dist</outputDirectory>
+                            <outputDirectory>${project.build.directory}/dist/server</outputDirectory>
                             <includeArtifactIds>org.eclipse.justj.openjdk.hotspot.jre.minimal.stripped.win32.x86_64</includeArtifactIds>
                             <includes>jre/**/*</includes>
                         </configuration>
@@ -114,7 +114,7 @@
                                     <version>${project.version}</version>
                                     <type>jar</type>
                                     <overWrite>true</overWrite>
-                                    <outputDirectory>${project.build.directory}/dist</outputDirectory>
+                                    <outputDirectory>${project.build.directory}/dist/server</outputDirectory>
                                     <destFileName>bpmn4s-extensions.jar</destFileName>
                                 </artifact>
                             </artifactItems>
@@ -204,7 +204,6 @@
                             <exclude>*:${project.artifactId}-nl.esi.comma.scenarios-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.scenarios.dashboard-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.scenarios.ide-*</exclude>
-                            <exclude>*:${project.artifactId}-nl.esi.comma.signature-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.steps-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.systemconfig-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.testspecification-*</exclude>
@@ -243,7 +242,6 @@
                                 <exclude>**/*.xtext</exclude>
                                 <exclude>**/*.dll</exclude>
                                 <exclude>**/*.so</exclude>
-                                <exclude>**/rotalumis.exe</exclude>
                             </excludes>
                         </filter>
                     </filters>
@@ -251,7 +249,7 @@
                     <shadedClassifierName>uber</shadedClassifierName>
                     <minimizeJar>false</minimizeJar>
                     <finalName>bpmn4s-toolchain</finalName>
-                    <outputDirectory>${project.build.directory}/dist</outputDirectory>
+                    <outputDirectory>${project.build.directory}/dist/server</outputDirectory>
                 </configuration>
                 <executions>
                     <execution>

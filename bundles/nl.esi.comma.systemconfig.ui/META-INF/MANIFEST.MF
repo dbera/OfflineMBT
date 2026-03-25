@@ -21,6 +21,10 @@ Require-Bundle: nl.esi.comma.systemconfig;visibility:=reexport,
  org.eclipse.xtend.lib;bundle-version="2.14.0";resolution:=optional
 Import-Package: org.apache.log4j
 Bundle-RequiredExecutionEnvironment: JavaSE-21
-Export-Package: nl.esi.comma.systemconfig.ui.internal,
- nl.esi.comma.systemconfig.ui.quickfix
+Export-Package: nl.esi.comma.systemconfig.ui,
+ nl.esi.comma.systemconfig.ui.internal,
+ nl.esi.comma.systemconfig.ui.labeling,
+ nl.esi.comma.systemconfig.ui.outline,
+ nl.esi.comma.systemconfig.ui.quickfix,
+ nl.esi.comma.systemconfig.validation
 Bundle-Activator: nl.esi.comma.systemconfig.ui.internal.SystemconfigActivator
