@@ -14,11 +14,11 @@ The server uses a unified architecture that serves both the Language Server Prot
 
 ### WebSocket LSP Proxy (in CPNServer.py)
 
-The `/lsp` WebSocket endpoint acts as an async bidirectional bridge between browser clients and the Java LSP subprocess. It performs the following functions:
+The `/lsp` WebSocket endpoint acts as an async bidirectional bridge between browser clients and the Java LSP subprocess. Each browser WebSocket connection gets its own dedicated upstream connection to the Java LSP backend. It performs the following functions:
 
 - **Async Protocol Translation**: Converts WebSocket messages to/from the Java LSP subprocess via the `websockets` library
 - **Connection Management**: Handles the lifecycle of connections to both the browser client and the LSP subprocess
-- **Concurrent Message Forwarding**: Uses `asyncio.wait()` to run client→backend and backend→client message streams concurrently, with automatic cleanup when either direction closes
+- **Concurrent Forwarding**: Uses `asyncio.wait()` to run client→backend and backend→client message streams concurrently, with automatic cleanup when either direction closes
 - **Error Handling**: Gracefully handles WebSocket disconnects and LSP backend failures without blocking the server
 
 ### CPNServer (CPNServer.py)
@@ -33,6 +33,15 @@ The main FastAPI-based server that:
 - Opens the browser automatically to the correct URL
 - Handles server lifecycle and graceful shutdown via the `lifespan` async context manager
 - All endpoints run asynchronously on uvicorn (ASGI)
+
+### Subprocess Output Logging
+
+All Java subprocess output (stdout/stderr) is forwarded to the Python logger:
+
+- **LSP subprocess** (long-running `Popen`): Two background daemon threads continuously drain `stdout` and `stderr`, logging each line at `DEBUG` level with `LSP stdout:` / `LSP stderr:` prefixes. This prevents the OS pipe buffers (~4 KB on Windows) from filling up, which would otherwise **deadlock the Java process** — the root cause of the "Request timeout 30000ms" LSP hangs.
+- **Build/test subprocesses** (short-lived `subprocess.run`): Output from `build_and_load_model` and `generate_tests` is logged at `DEBUG` level after completion (`build_and_load_model stdout:`, `generate_tests stderr:`, etc.).
+
+All subprocess output is visible when running with `--debug`.
 
 ## Key Design Decisions
 
@@ -194,6 +203,39 @@ regression-test.bat model.bpmn scenario.json
 regression-test.bat --clean --base-url http://localhost:5001 model.bpmn scenario.json
 ```
 
+### Dual-Mode Import (Script vs Package)
+
+CPNServer.py supports running both as a standalone script and as a Python package module:
+
+```python
+try:
+    from . import CPNUtils as utils   # when run as package (-m server.CPNServer)
+except ImportError:
+    import CPNUtils as utils          # when run directly (python server/CPNServer.py)
+```
+
+This is needed because:
+- `start-server.bat` runs `python server/CPNServer.py` (script mode, `server/` is on `sys.path`)
+- The `CPNServer_cov` VS Code launch config runs via `coverage run server/CPNServer.py` 
+- A `server/__init__.py` file (empty) is present to allow Python to treat `server/` as a package when needed
+
+### Code Coverage
+
+The `CPNServer_cov` launch configuration runs the server under `coverage`:
+
+```
+coverage run --source=server server/CPNServer.py [args...]
+```
+
+Note: It uses `coverage run server/CPNServer.py` (not `coverage run -m server.CPNServer`), because the `-m` form sets `__name__` to `"server.CPNServer"` instead of `"__main__"`, which would skip the entire startup block.
+
+After a coverage run, generate the HTML report with:
+```
+python -m coverage html
+start htmlcov\index.html
+```
+
 ### Custom Python Installation
 
 Users can specify a custom Python interpreter via the `BPMN4S_PYTHON` environment variable. The startup script will detect if the specified Python path is already a virtual environment and in that case use it directly.
+

@@ -37,7 +37,10 @@ import argparse
 from typing import Optional
 from contextlib import asynccontextmanager
 
-from . import CPNUtils as utils
+try:
+    from . import CPNUtils as utils   # when run as package (-m server.CPNServer)
+except ImportError:
+    import CPNUtils as utils          # when run directly (python server/CPNServer.py)
 
 from fastapi import FastAPI, UploadFile, File, Form, WebSocket, WebSocketDisconnect
 from fastapi.responses import JSONResponse, FileResponse
@@ -67,10 +70,12 @@ logging.basicConfig(level=logging.INFO, handlers=[handler])
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)  # Default to INFO, can be set to DEBUG with command-line flag
 
-SERVER_PATH = os.path.join(os.path.dirname(__file__), os.pardir)
+SERVER_PATH = os.path.dirname(os.path.abspath(__file__))
                            
-BPMN4S_GEN = os.path.join(SERVER_PATH,"bpmn4s-toolchain.jar")
-JAVA_PATH = os.path.join(SERVER_PATH,"jre", "bin", "java.exe")
+BPMN4S_JAR_NAME = "bpmn4s-toolchain.jar"
+BPMN4S_GEN = os.path.join(SERVER_PATH, BPMN4S_JAR_NAME)
+JAVA_REL_PATH = ("jre", "bin", "java.exe")
+JAVA_PATH = os.path.join(SERVER_PATH, *JAVA_REL_PATH)
 
 TEMP_FILE   = tempfile.TemporaryDirectory(prefix=f'{utils.gensym(prefix="cpnserver_",timestamp=True)}_', ignore_cleanup_errors=True)
 TEMP_PATH = os.path.abspath(TEMP_FILE.name)
@@ -134,6 +139,10 @@ def build_and_load_model(model_path:str):
         prj_content = prj_template.format(taskname,model_name)
         file1.write(prj_content)
     result = subprocess.run([JAVA_PATH,"-jar",BPMN4S_GEN,"-l", prj_filename],shell=True, capture_output=True)
+    if result.stdout:
+        logger.debug("build_and_load_model stdout: %s", result.stdout.decode('utf-8', errors='replace').rstrip())
+    if result.stderr:
+        logger.debug("build_and_load_model stderr: %s", result.stderr.decode('utf-8', errors='replace').rstrip())
     if result.returncode != 0: 
         raise utils.BPMN4SException(
             cliargs={
@@ -172,6 +181,10 @@ def generate_tests( model_path:str, num_tests:int=1, depth_limit:int=500):
         prj_content = prj_template.format(taskname,model_name,num_tests,depth_limit)
         file1.write(prj_content)
     result = subprocess.run([JAVA_PATH,"-jar",BPMN4S_GEN,"-l", prj_filename],shell=True, capture_output=True)
+    if result.stdout:
+        logger.debug("generate_tests stdout: %s", result.stdout.decode('utf-8', errors='replace').rstrip())
+    if result.stderr:
+        logger.debug("generate_tests stderr: %s", result.stderr.decode('utf-8', errors='replace').rstrip())
     if result.returncode != 0: 
         raise utils.BPMN4SException(
             cliargs={
@@ -509,12 +522,12 @@ if __name__ == "__main__":
     args = parser.parse_args()
     WEB_PATH = args.web_path
     SERVER_PATH = args.server_path
-    BPMN4S_GEN = os.path.join(SERVER_PATH,"bpmn4s-toolchain.jar")
-    JAVA_PATH = os.path.join(SERVER_PATH,"jre", "bin", "java.exe")
+    BPMN4S_GEN = os.path.join(SERVER_PATH, BPMN4S_JAR_NAME)
+    JAVA_PATH = os.path.join(SERVER_PATH, *JAVA_REL_PATH)
 
     # Set logging level based on debug flag
     if args.debug:
-        logging.getLogger().setLevel(logging.DEBUG)
+        logger.setLevel(logging.DEBUG)
 
 
     # Find a free port for LSP subprocess
@@ -553,7 +566,36 @@ if __name__ == "__main__":
     logger.debug(f"LSP command: {' '.join(lsp_command)}")
     logger.debug(f"Using JAVA_PATH: {JAVA_PATH}")
 
-    lsp_proc = subprocess.Popen(lsp_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    lsp_proc = subprocess.Popen(
+        lsp_command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+    )
+
+    # Forward LSP subprocess stdout/stderr to our logger in background threads
+    def _pipe_reader(pipe, level, prefix):
+        """Read lines from a subprocess pipe and log them."""
+        try:
+            for line in pipe:
+                line = line.rstrip("\n\r")
+                if line:
+                    logger.log(level, "%s: %s", prefix, line)
+        except Exception:
+            pass
+
+    threading.Thread(
+        target=_pipe_reader,
+        args=(lsp_proc.stdout, logging.DEBUG, "LSP stdout"),
+        daemon=True,
+    ).start()
+    threading.Thread(
+        target=_pipe_reader,
+        args=(lsp_proc.stderr, logging.DEBUG, "LSP stderr"),
+        daemon=True,
+    ).start()
 
     # Give LSP subprocess time to start and listen on socket
     logger.info("Initializing server...")
@@ -592,9 +634,13 @@ if __name__ == "__main__":
             logger.debug(f"Opened browser to {url}")
         except Exception as e:
             logger.warning(f"Could not open browser automatically: {e}")
-
-    browser_thread = threading.Thread(target=open_browser, args=(url,), daemon=True)
-    browser_thread.start()
+    # only that the browser if index.html exists in the web path, otherwise it will just open a blank page which is not ideal
+    
+    if os.path.exists(os.path.join(WEB_PATH, "index.html")):
+        browser_thread = threading.Thread(target=open_browser, args=(url,), daemon=True)
+        browser_thread.start()
+    else:
+        logger.warning(f"index.html not found in {WEB_PATH}, skipping automatic browser launch.")
 
     # Setting host = "0.0.0.0" runs it on localhost
     uvicorn.run(app, host="0.0.0.0", port=port, log_level="debug" if args.debug else "info")
