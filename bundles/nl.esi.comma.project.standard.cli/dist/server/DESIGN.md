@@ -214,27 +214,6 @@ except ImportError:
     import CPNUtils as utils          # when run directly (python server/CPNServer.py)
 ```
 
-This is needed because:
-- `start-server.bat` runs `python server/CPNServer.py` (script mode, `server/` is on `sys.path`)
-- The `CPNServer_cov` VS Code launch config runs via `coverage run server/CPNServer.py` 
-- A `server/__init__.py` file (empty) is present to allow Python to treat `server/` as a package when needed
-
-### Code Coverage
-
-The `CPNServer_cov` launch configuration runs the server under `coverage`:
-
-```
-coverage run --source=server server/CPNServer.py [args...]
-```
-
-Note: It uses `coverage run server/CPNServer.py` (not `coverage run -m server.CPNServer`), because the `-m` form sets `__name__` to `"server.CPNServer"` instead of `"__main__"`, which would skip the entire startup block.
-
-After a coverage run, generate the HTML report with:
-```
-python -m coverage html
-start htmlcov\index.html
-```
-
 ### Custom Python Installation
 
 Users can specify a custom Python interpreter via the `BPMN4S_PYTHON` environment variable. The startup script will detect if the specified Python path is already a virtual environment and in that case use it directly.
