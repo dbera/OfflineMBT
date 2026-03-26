@@ -125,6 +125,12 @@ IF "!IS_VENV!"=="True" (
   CALL :log "Using virtual environment: '!TEMP_ENV!'"
   SET VENV_PYTHON=!TEMP_ENV!\Scripts\python.exe
   
+  :: Detect incomplete venv (directory exists but python.exe is missing)
+  IF EXIST "!TEMP_ENV!" IF NOT EXIST "!VENV_PYTHON!" (
+    CALL :log "Warning: Virtual environment is incomplete, recreating..."
+    RMDIR /S /Q "!TEMP_ENV!" >NUL 2>&1
+  )
+  
   IF NOT EXIST "!TEMP_ENV!" (
     CALL :log "Setting up virtual environment..."
     
