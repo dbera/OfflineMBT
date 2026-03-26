@@ -21,6 +21,9 @@ Require-Bundle: nl.esi.comma.behavior.scl;visibility:=reexport,
  org.eclipse.xtend.lib;bundle-version="2.36.0";resolution:=optional
 Import-Package: org.apache.log4j
 Bundle-RequiredExecutionEnvironment: JavaSE-21
-Export-Package: nl.esi.comma.behavior.scl.ui.internal,
+Export-Package: nl.esi.comma.behavior.scl.ui,
+ nl.esi.comma.behavior.scl.ui.internal,
+ nl.esi.comma.behavior.scl.ui.labeling,
+ nl.esi.comma.behavior.scl.ui.outline,
  nl.esi.comma.behavior.scl.ui.quickfix
 Bundle-Activator: nl.esi.comma.behavior.scl.ui.internal.SclActivator

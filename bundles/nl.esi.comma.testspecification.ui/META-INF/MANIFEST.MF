@@ -23,6 +23,10 @@ Require-Bundle: nl.esi.comma.testspecification;visibility:=reexport,
  org.eclipse.xtend.lib;bundle-version="2.36.0";resolution:=optional
 Import-Package: org.apache.log4j
 Bundle-RequiredExecutionEnvironment: JavaSE-21
-Export-Package: nl.esi.comma.testspecification.ui.internal,
- nl.esi.comma.testspecification.ui.quickfix
+Export-Package: nl.esi.comma.testspecification.ui,
+ nl.esi.comma.testspecification.ui.internal,
+ nl.esi.comma.testspecification.ui.labeling,
+ nl.esi.comma.testspecification.ui.outline,
+ nl.esi.comma.testspecification.ui.quickfix,
+ nl.esi.comma.testspecification.validation
 Bundle-Activator: nl.esi.comma.testspecification.ui.internal.TestspecificationActivator
