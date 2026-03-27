@@ -646,4 +646,4 @@ if __name__ == "__main__":
         logger.warning(f"index.html not found in {WEB_PATH}, skipping automatic browser launch.")
 
     # Setting host = "0.0.0.0" runs it on localhost
-    uvicorn.run(app, host="0.0.0.0", port=port, log_level="debug" if args.debug else "info")
+    uvicorn.run(app, host="0.0.0.0", port=port, log_level="debug" if args.debug else "warning")
