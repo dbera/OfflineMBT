@@ -39,8 +39,9 @@ SET python_file=!SCRIPT_DIR!server\CPNServer.py
 CALL :log "Starting server: '!python_file!'"
 
 :: Set PATH to prioritize venv Python
-SET "PATH=!TEMP_ENV!\Scripts;!PATH!"
-CALL :log "PATH updated to prioritize venv Python: '!TEMP_ENV!\Scripts'"
+FOR %%F IN ("!VENV_PYTHON!") DO SET "VENV_SCRIPTS=%%~dpF"
+SET "PATH=!VENV_SCRIPTS!;!PATH!"
+CALL :log "PATH updated to prioritize venv Python: '!VENV_SCRIPTS!'"
 
 ECHO.
 ECHO *-----------------------------------------*
