@@ -125,96 +125,42 @@ IF "!IS_VENV!"=="True" (
   CALL :log "Using virtual environment: '!TEMP_ENV!'"
   SET VENV_PYTHON=!TEMP_ENV!\Scripts\python.exe
   
-  :: Detect incomplete venv (directory exists but python.exe is missing)
+  :: Ensure virtual environment exists and is healthy
   IF EXIST "!TEMP_ENV!" IF NOT EXIST "!VENV_PYTHON!" (
     CALL :log "Warning: Virtual environment is incomplete, recreating..."
     RMDIR /S /Q "!TEMP_ENV!" >NUL 2>&1
   )
+  IF EXIST "!TEMP_ENV!" IF NOT EXIST "!TEMP_ENV!\pyvenv.cfg" (
+    CALL :log "Warning: Virtual environment appears corrupted, recreating..."
+    RMDIR /S /Q "!TEMP_ENV!" >NUL 2>&1
+  )
   
   IF NOT EXIST "!TEMP_ENV!" (
-    CALL :log "Setting up virtual environment..."
+    CALL :log "Creating virtual environment..."
     
     :: Create parent directories if needed
     IF NOT EXIST "!TEMP!\cpn\!python_version!" (
       MKDIR "!TEMP!\cpn\!python_version!" >NUL 2>&1
     )
     
-    :: Check internet connectivity
-    PING -n 1 pypi.org >NUL 2>&1
-    IF %ERRORLEVEL% NEQ 0 (
-      CALL :log "Warning: Cannot reach pypi.org. Package installation may fail."
-    )
-    
     "%BPMN4S_PYTHON%" -m venv "!TEMP_ENV!"
-    IF %ERRORLEVEL% NEQ 0 (
+    IF !ERRORLEVEL! NEQ 0 (
       CALL :log "Error: Failed to create virtual environment"
       EXIT /B 1
     )
     
-    CALL :log "Installing packages..."
-    "!VENV_PYTHON!" -m pip install --upgrade pip
-    "!VENV_PYTHON!" -m pip install --timeout 60 -r "!SCRIPT_DIR!requirements.txt"
-    IF %ERRORLEVEL% NEQ 0 (
-      CALL :log "Error: Failed to install requirements"
-      EXIT /B 1
-    )
-    
-    :: Save requirements hash for future comparison
-    FOR /F %%H IN ('CERTUTIL -hashfile "!SCRIPT_DIR!requirements.txt" MD5 ^| FINDSTR /V ":"') DO (
-      SET "INITIAL_HASH=%%H"
-      ECHO %%H > "!TEMP_ENV!\req_hash.txt"
-    )
-    CALL :log "Requirements hash saved: !INITIAL_HASH!"
-  ) ELSE (
-    :: Check if requirements have changed
-    CALL :log "Checking if requirements have changed..."
-    FOR /F %%H IN ('CERTUTIL -hashfile "!SCRIPT_DIR!requirements.txt" MD5 ^| FINDSTR /V ":"') DO (
-      SET "NEW_HASH=%%H"
-    )
-    
-    CALL :log "Current requirements hash: !NEW_HASH!"
-    
-    IF EXIST "!TEMP_ENV!\req_hash.txt" (
-      SET /p OLD_HASH=<"!TEMP_ENV!\req_hash.txt"
-      CALL :log "Cached requirements hash: !OLD_HASH!"
-      
-      :: Compare hashes using FC (file compare) as a workaround for batch string comparison issues
-      ECHO !NEW_HASH! > "%TEMP%\new_hash.txt"
-      FC "%TEMP%\new_hash.txt" "!TEMP_ENV!\req_hash.txt" >NUL 2>&1
-      
-      IF %ERRORLEVEL% EQU 0 (
-        CALL :log "Requirements unchanged"
-      ) ELSE (
-        CALL :log "Requirements have changed, updating packages..."
-        
-        :: Verify venv integrity before updating
-        IF NOT EXIST "!TEMP_ENV!\pyvenv.cfg" (
-          CALL :log "Warning: Virtual environment appears corrupted, recreating..."
-          RMDIR /S /Q "!TEMP_ENV!" >NUL 2>&1
-          "%BPMN4S_PYTHON%" -m venv "!TEMP_ENV!"
-          IF %ERRORLEVEL% NEQ 0 (
-            CALL :log "Error: Failed to recreate virtual environment"
-            EXIT /B 1
-          )
-          "!VENV_PYTHON!" -m pip install --upgrade pip >NUL 2>&1
-        )
-        
-        "!VENV_PYTHON!" -m pip install --timeout 60 -r "!SCRIPT_DIR!requirements.txt"
-        IF %ERRORLEVEL% NEQ 0 (
-          CALL :log "Error: Failed to update requirements"
-          EXIT /B 1
-        )
-        ECHO !NEW_HASH! > "!TEMP_ENV!\req_hash.txt"
-        CALL :log "Requirements hash updated to: !NEW_HASH!"
-      )
-    ) ELSE (
-      CALL :log "No cached requirements found, skipping update check"
-    )
-    
-    DEL "%TEMP%\new_hash.txt" >NUL 2>&1
+    "!VENV_PYTHON!" -m pip install --upgrade pip >NUL 2>&1
   )
 )
 
+:: Install/update packages from requirements.txt
+CALL :log "Ensuring required packages are installed..."
+"!VENV_PYTHON!" -m pip install --quiet --timeout 60 -r "!SCRIPT_DIR!requirements.txt"
+IF !ERRORLEVEL! NEQ 0 (
+  CALL :log "Error: Failed to install requirements"
+  EXIT /B 1
+)
+
 :: Export variables for caller to use
-ENDLOCAL & SET "VENV_PYTHON=%VENV_PYTHON%" & SET "TEMP_ENV=%TEMP_ENV%" & SET "PYTHON_ARGS=%PYTHON_ARGS%"
+ENDLOCAL & SET "VENV_PYTHON=%VENV_PYTHON%" & SET "PYTHON_ARGS=%PYTHON_ARGS%"
 EXIT /B 0
