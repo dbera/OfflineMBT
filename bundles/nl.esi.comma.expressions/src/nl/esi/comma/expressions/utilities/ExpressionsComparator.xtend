@@ -29,7 +29,6 @@ import nl.esi.comma.expressions.expression.ExpressionRecordAccess
 import nl.esi.comma.expressions.expression.ExpressionUnary
 import nl.esi.comma.expressions.expression.ExpressionVariable
 import nl.esi.comma.expressions.expression.ExpressionVector
-import nl.esi.comma.expressions.expression.Pair
 import nl.esi.comma.expressions.expression.Variable
 import nl.esi.comma.types.utilities.TypesComparator
 
@@ -94,7 +93,7 @@ class ExpressionsComparator extends TypesComparator {
 		exp1.pairs.compareLists(exp2.pairs) 
 	}
 	
-	def dispatch boolean compare(Pair exp1, Pair exp2){
+	def dispatch boolean compare(nl.esi.comma.expressions.expression.Pair exp1, nl.esi.comma.expressions.expression.Pair exp2){
 		exp1.key.sameAs(exp2.key) &&
 		exp1.value.sameAs(exp2.value)
 	}

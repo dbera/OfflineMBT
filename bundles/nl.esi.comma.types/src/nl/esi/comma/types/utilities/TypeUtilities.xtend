@@ -185,8 +185,7 @@ class TypeUtilities {
 			    typeName.equals('bool') ||
 			    typeName.equals('string') ||
 			    typeName.equals('void') ||
-			    typeName.equals('any')) ||
-			    typeName.equals('id')
+			    typeName.equals('any'))
 	}
 	
 	/*
