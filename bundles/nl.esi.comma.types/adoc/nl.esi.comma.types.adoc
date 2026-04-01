@@ -118,7 +118,8 @@ m := Mode::working // The value is formed by prefixing the literal with the type
 
 [maroon]#*Vector Types*#
 
-Vector types are constructed by giving a base type and a number of dimensions. For each dimension, an optional size can be given.
+Vector types are constructed by giving a base type and a number of dimensions.
+For each dimension, an optional size can be given.
 The type constructed this way can be used inline in a declaration or can be given a name.
 
 Examples of named vector types:
@@ -210,8 +211,7 @@ m2 := <map<int, int>>{1 -> 0, 2 -> 0}
 
 ==== Default Values
 
-Every type has a default value. It is usually used to automatically initialize variables that are not explicitly given a value.
-Below are the default values for each type.
+Every type has a default value. It is usually used to automatically initialize variables that are not explicitly given a value. Below are the default values for each type.
 
 _Default values:_
 

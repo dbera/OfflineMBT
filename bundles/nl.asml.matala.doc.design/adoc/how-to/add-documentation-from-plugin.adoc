@@ -26,8 +26,7 @@
         images/
 ----
 [start=2]
-1. Ensure the folder is exported in the bundle build (include it in `build.properties`).
-  This way the adoc can be included when the bundle is used as a binary dependency.
+1. Ensure the folder is exported in the bundle build (include it in `build.properties`). This way the adoc can be included when the bundle is used as a binary dependency.
 ----
     bin.includes = META-INF/,\
                    .,\
