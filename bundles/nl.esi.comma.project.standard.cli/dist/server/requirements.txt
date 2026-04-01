@@ -4,4 +4,3 @@ fastapi
 uvicorn[standard]
 websockets
 python-multipart
-jpype1
