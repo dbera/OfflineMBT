@@ -28,6 +28,8 @@ import nl.esi.comma.expressions.expression.ExpressionGeq
 import nl.esi.comma.expressions.expression.ExpressionGreater
 import nl.esi.comma.expressions.expression.ExpressionLeq
 import nl.esi.comma.expressions.expression.ExpressionLess
+import nl.esi.comma.expressions.expression.ExpressionMap
+import nl.esi.comma.expressions.expression.ExpressionMapRW
 import nl.esi.comma.expressions.expression.ExpressionMaximum
 import nl.esi.comma.expressions.expression.ExpressionMinimum
 import nl.esi.comma.expressions.expression.ExpressionMinus
@@ -46,9 +48,6 @@ import nl.esi.comma.expressions.expression.ExpressionVariable
 import nl.esi.comma.expressions.expression.ExpressionVector
 import nl.esi.comma.types.generator.CommaGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess
-import nl.esi.comma.expressions.expression.ExpressionBulkData
-import nl.esi.comma.expressions.expression.ExpressionMap
-import nl.esi.comma.expressions.expression.ExpressionMapRW
 
 class ExpressionsUmlGenerator extends CommaGenerator{	
 	
@@ -80,9 +79,6 @@ class ExpressionsUmlGenerator extends CommaGenerator{
      def dispatch CharSequence generateExpression(ExpressionAny expr) 
     '''*'''
     
-    def dispatch CharSequence generateExpression(ExpressionBulkData expr)
-    '''bulkdata'''
-
 	def dispatch CharSequence generateExpression(ExpressionDivision expr) 
     '''«generateExpression(expr.left)» / «generateExpression(expr.right)»'''
 

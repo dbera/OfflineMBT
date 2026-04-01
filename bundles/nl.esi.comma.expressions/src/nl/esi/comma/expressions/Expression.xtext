@@ -128,7 +128,6 @@ ExpressionLevel9 returns Expression:
 	ExpressionVariable |
 	ExpressionRecord |
 	ExpressionAny |
-//	ExpressionBulkData |
     ExpressionFnCall |
 	ExpressionFunctionCall |
 	ExpressionQuantifier |
@@ -178,10 +177,6 @@ ExpressionRecord:
 
 Field:
 	recordField = [types::RecordField | ID] '=' exp = Expression
-;
-
-ExpressionBulkData : {ExpressionBulkData}
-	'Bulkdata' '<' (size = INT)? '>'
 ;
 
 ExpressionAny :
