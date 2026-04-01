@@ -1,0 +1,34 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+
+        {
+            "name": "CPNServer",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "server/CPNServer.py",
+            "console": "integratedTerminal",
+            "args": ["--web-path", "/bpmn4s-editor/bpmn4s-editor/public", "--server-path", "${workspaceFolder}/../target/dist/server", "--debug"],
+            "cwd": "${workspaceFolder}"
+        }
+        ,
+        {
+            "name": "CPNServer_cov",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "coverage",
+            "console": "integratedTerminal",
+            "args": [
+                "run",
+                "--source=server",
+                "server/CPNServer.py",
+                "--web-path",
+                "/bpmn4s-editor/bpmn4s-editor/public",
+                "--server-path",
+                "${workspaceFolder}/../target/dist/server",
+                "--debug"
+            ],
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}

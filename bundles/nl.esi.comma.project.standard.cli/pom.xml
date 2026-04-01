@@ -42,6 +42,10 @@
                             <resources>
                                 <resource>
                                     <directory>${basedir}/dist</directory>
+                                    <includes>
+                                        <include>server/**</include>
+                                        <include>*</include>
+                                    </includes>
                                 </resource>
                             </resources>
                         </configuration>

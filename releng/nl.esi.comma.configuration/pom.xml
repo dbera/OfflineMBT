@@ -340,6 +340,9 @@
                                 <exclude>plugin.xml_gen</exclude>
                                 <exclude>pom.tycho</exclude>
                                 <exclude>nl.asml.matala.bpmn4s.editor/dist/**</exclude>
+                                <exclude>**/.venv/**</exclude>
+                                <exclude>**/htmlcov/**</exclude>
+                                <exclude>**/.coverage</exclude>
                             </excludes>
                         </licenseSet>
                     </licenseSets>

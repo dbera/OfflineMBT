@@ -15,6 +15,7 @@
  */
 package nl.asml.matala.product.generator
 
+import java.math.BigInteger
 import java.util.ArrayList
 import java.util.HashMap
 import java.util.LinkedHashMap
@@ -27,6 +28,8 @@ import nl.asml.matala.product.product.Product
 import nl.asml.matala.product.product.RefConstraint
 import nl.asml.matala.product.product.SymbConstraint
 import nl.asml.matala.product.product.VarRef
+import nl.esi.comma.expressions.evaluation.ExpressionEvaluator
+import nl.esi.comma.expressions.evaluation.IEvaluationContext
 import nl.esi.comma.types.types.RecordTypeDecl
 import nl.esi.comma.types.types.SimpleTypeDecl
 import nl.esi.comma.types.types.TypeDecl
@@ -36,6 +39,7 @@ import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
 
 import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.serialize
+import nl.esi.comma.expressions.expression.ExpressionConstantInt
 
 /**
  * Generates code from your *.ps model files on save.
@@ -57,9 +61,11 @@ class ProductGenerator extends AbstractGenerator {
 		val inout_places = newArrayList
 		val init_places = newArrayList
 		
-		val depth_limit = prod.specification.limit 
+		val depth_limit = prod.specification.depthLimits.intValue
 		
-		val num_tests = prod.specification.numTests
+		val state_limit = prod.specification.stateLimits.intValue ?: 1000;
+		
+		val num_tests = prod.specification.numTests.intValue ?: 1
 		
 //		val import_list = newArrayList
 		val var_decl_map = newLinkedHashMap
@@ -164,7 +170,7 @@ class ProductGenerator extends AbstractGenerator {
 			fsa.generateFile('CPNServer//' + specName + '//' + specName + '.py', pnet.toSnakes(
 			    specName, specName, listOfEnvBlocks, listOfAssertTransitions,
 			     mapOfTransitionQnames, mapOfSuppressTransitionVars, inout_places, 
-			    init_places, depth_limit, num_tests, sutTransitionMap
+			    init_places, depth_limit, state_limit, num_tests, sutTransitionMap
 			))
 			fsa.generateFile('CPNServer//' + specName + '//' + specName + '_Simulation.py', pnet.toSnakesSimulation)
 
@@ -219,7 +225,13 @@ class ProductGenerator extends AbstractGenerator {
 				System.out.println("  > case: " + update.name)
 				var tname = f.name + "_" + update.name + "@" + update.stepType + "@" + update.actionType + "@"
 				var qname = new Utils().printConstraint(update)
-				var tr = new Transition(block.name, block.name+"_"+tname, qname)
+				var BigInteger priority = BigInteger.ZERO
+				if (update.priority !== null) {
+				    val evalCtx = IEvaluationContext.EMPTY
+				    val prioExp = new ExpressionEvaluator().evaluate(update.priority, evalCtx)
+				    priority = evalCtx.asInt(prioExp) ?: BigInteger.ZERO
+				}
+				var tr = new Transition(block.name, block.name+"_"+tname, qname, priority.intValue)
 				pnet.transitions.add(tr)
 				var input_var_list = new HashMap<String,TypeDecl> // ArrayList<String>
 				for(v : update.fnInp) 
@@ -463,5 +475,9 @@ class ProductGenerator extends AbstractGenerator {
 	def generateOnlineMBTController(Product envModel, Product sutModel, 
         IFileSystemAccess2 fsa, IGeneratorContext context) {
 	    (new Utils()).generateOnlineMBTController(envModel, sutModel, fsa, context)
+	}
+	
+	static def Integer intValue(ExpressionConstantInt expr) {
+	    return expr === null ? null : expr.value.intValue
 	}
 }

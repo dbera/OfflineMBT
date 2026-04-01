@@ -12,6 +12,7 @@ Require-Bundle: nl.esi.comma.behavior.scl;visibility:=reexport,
  org.eclipse.xtext.xbase.ide,
  org.antlr.runtime;bundle-version="[3.2.0,3.2.1)"
 Bundle-RequiredExecutionEnvironment: JavaSE-21
-Export-Package: nl.esi.comma.behavior.scl.ide.contentassist.antlr,
- nl.esi.comma.behavior.scl.ide.contentassist.antlr.internal,
- nl.esi.comma.behavior.scl.ide.contentassist
+Export-Package: nl.esi.comma.behavior.scl.ide,
+ nl.esi.comma.behavior.scl.ide.contentassist,
+ nl.esi.comma.behavior.scl.ide.contentassist.antlr,
+ nl.esi.comma.behavior.scl.ide.contentassist.antlr.internal

@@ -39,8 +39,9 @@ SET python_file=!SCRIPT_DIR!server\CPNRegressionTest.py
 CALL :log "Running regression tests: '!python_file!'"
 
 :: Set PATH to prioritize venv Python
-SET "PATH=!TEMP_ENV!\Scripts;!PATH!"
-CALL :log "PATH updated to prioritize venv Python: '!TEMP_ENV!\Scripts'"
+FOR %%F IN ("!VENV_PYTHON!") DO SET "VENV_SCRIPTS=%%~dpF"
+SET "PATH=!VENV_SCRIPTS!;!PATH!"
+CALL :log "PATH updated to prioritize venv Python: '!VENV_SCRIPTS!'"
 
 ECHO.
 ECHO *-----------------------------------------*
@@ -48,7 +49,7 @@ ECHO * Running regression tests...             *
 ECHO *-----------------------------------------*
 ECHO.
 
-"!VENV_PYTHON!" "!python_file!" %*
+"!VENV_PYTHON!" "!python_file!" %PYTHON_ARGS%
 SET EXIT_CODE=%ERRORLEVEL%
 
 IF %EXIT_CODE% NEQ 0 (

@@ -14,5 +14,5 @@ Import-Package: org.junit.jupiter.api;version="[5.1.0,6.0.0)",
  org.junit.jupiter.api.extension;version="[5.1.0,6.0.0)",
  org.junit.jupiter.api.function;version="[5.1.0,6.0.0)"
 Bundle-RequiredExecutionEnvironment: JavaSE-21
-Export-Package: nl.esi.comma.types.tests;x-internal=true,
- nl.esi.comma.types.tests;x-internal=true
+Export-Package: nl.esi.comma.types.tests;x-internal=true
+
