@@ -25,5 +25,8 @@ Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: nl.esi.comma.constraints.ui,
  nl.esi.comma.constraints.ui.contentassist,
  nl.esi.comma.constraints.ui.internal,
- nl.esi.comma.constraints.ui.quickfix
+ nl.esi.comma.constraints.ui.labeling,
+ nl.esi.comma.constraints.ui.outline,
+ nl.esi.comma.constraints.ui.quickfix,
+ nl.esi.comma.constraints.ui.syntaxcoloring
 Bundle-Activator: nl.esi.comma.constraints.ui.internal.ConstraintsActivator

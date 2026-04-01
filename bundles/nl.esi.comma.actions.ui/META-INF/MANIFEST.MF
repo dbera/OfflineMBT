@@ -20,7 +20,10 @@ Require-Bundle: nl.esi.comma.actions;visibility:=reexport,
  org.eclipse.xtext.xbase.lib;bundle-version="2.15.0"
 Import-Package: org.apache.log4j
 Bundle-RequiredExecutionEnvironment: JavaSE-21
-Export-Package: nl.esi.comma.actions.ui.internal,
+Export-Package: nl.esi.comma.actions.ui,
+ nl.esi.comma.actions.ui.internal,
+ nl.esi.comma.actions.ui.labeling,
+ nl.esi.comma.actions.ui.outline,
  nl.esi.comma.actions.ui.quickfix
 Bundle-Activator: nl.esi.comma.actions.ui.internal.ActionsActivator
 Automatic-Module-Name: nl.esi.comma.actions.ui

@@ -20,7 +20,10 @@ Require-Bundle: nl.esi.comma.expressions;visibility:=reexport,
  org.eclipse.xtext.xbase.lib;bundle-version="2.15.0"
 Import-Package: org.apache.log4j
 Bundle-RequiredExecutionEnvironment: JavaSE-21
-Export-Package: nl.esi.comma.expressions.ui.internal;uses:="org.osgi.framework,com.google.inject,org.eclipse.ui.plugin",
+Export-Package: nl.esi.comma.expressions.ui,
+ nl.esi.comma.expressions.ui.internal;uses:="org.osgi.framework,com.google.inject,org.eclipse.ui.plugin",
+ nl.esi.comma.expressions.ui.labeling,
+ nl.esi.comma.expressions.ui.outline,
  nl.esi.comma.expressions.ui.quickfix;uses:="nl.esi.comma.types.ui.quickfix"
 Bundle-Activator: nl.esi.comma.expressions.ui.internal.ExpressionsActivator
 Automatic-Module-Name: nl.esi.comma.expressions.ui

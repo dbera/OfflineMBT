@@ -1,6 +1,7 @@
 snakes
 requests
-flask
-flask_cors
-flask-sock
+fastapi
+uvicorn[standard]
+websockets
+python-multipart
 jpype1

@@ -1,5 +1,5 @@
-import "printer.types"
-specification printer
+import "printer_prio.types"
+specification printer_prio
 {
     system PrintFactoryA3DPrinter
     {
@@ -39,7 +39,7 @@ specification printer
         
         action			RunPrintJob
         element-label	"Run Print Job"
-        case			default step-type "ExecutePrinter" action-type RUN
+        case			default priority 10 step-type "ExecutePrinter" action-type RUN
         with-inputs		Flow_1u2qmtt, request
         produces-outputs	Event_0jcg6zx suppress
         updates:
@@ -55,7 +55,7 @@ specification printer
         
         action			ComposePrintJob
         element-label	"Compose Print Job"
-        case			default step-type "null" action-type COMPOSE
+        case			default priority 10 step-type "null" action-type COMPOSE
         with-inputs		printJob, corrections
         with-guard		corrections.id == printJob.id and printJob.opType == OperationType::PRINT
         produces-outputs	Flow_1u2qmtt suppress
@@ -65,7 +65,7 @@ specification printer
         
         action			ComposePrepareJob
         element-label	"Compose Prepare Job"
-        case			default step-type "null" action-type COMPOSE
+        case			default priority 10 step-type "null" action-type COMPOSE
         with-inputs		printJob
         with-guard		printJob.opType == OperationType::PREP
         produces-outputs	Flow_0iaelzn suppress
@@ -75,7 +75,7 @@ specification printer
         
         action			RunPrepareJob
         element-label	"Run Prepare Job"
-        case			default step-type "ExecutePrinter" action-type RUN
+        case			default priority 10 step-type "ExecutePrinter" action-type RUN
         with-inputs		Flow_0iaelzn, request
         produces-outputs	Event_0mxx05p suppress
         updates:
@@ -85,6 +85,48 @@ specification printer
             printResult := Result { verdict = Outcome::OK }
     
         element-labels ["PrintFactory", "A 3D Printer"]
+    }
+    
+    system PrintFactoryAssertions
+    {
+        inputs
+        Report	inspectionReport
+        
+        outputs
+        Report		inspectionReport
+    
+        local
+        AssertionsHistory	history
+        
+        UNIT	Event_1bxlea2
+    
+        init
+        history := AssertionsHistory { inspectionReports = <int[]>[] }
+    
+    
+        desc "PrintFactoryAssertions_Model"
+        
+        action			AssertVisualInspection
+        element-label	"Assert Visual Inspection"
+        case			default priority 100 step-type "Assertions" action-type ASSERT
+        with-inputs		inspectionReport, history
+        with-guard		not contains(history.inspectionReports, inspectionReport.id)
+        assertions default {
+            assert_kpi: assert-that (inspectionReport.kpi) {
+              equal-to 9.0 within-margin relative (1.0)
+            }
+        }
+        produces-outputs	Event_1bxlea2 suppress
+        produces-outputs	history symbolic-link
+        updates:
+            history := AssertionsHistory {
+              inspectionReports = add(history.inspectionReports, inspectionReport.id)
+            }
+        produces-outputs	inspectionReport symbolic-link
+        updates:
+            inspectionReport := inspectionReport
+    
+        element-labels ["PrintFactory", "Assertions"]
     }
     
     system PrintFactoryInspection
@@ -111,7 +153,7 @@ specification printer
         
         action			RunVisualinspection
         element-label	"Run Visual inspection"
-        case			default step-type "ExecuteInspection" action-type RUN
+        case			default priority 20 step-type "ExecuteInspection" action-type RUN
         with-inputs		Flow_07l0yyj, measureRequest
         produces-outputs	inspectionReport symbolic-link
         updates:
@@ -124,7 +166,7 @@ specification printer
         
         action			ComposeVisualInspectionJob
         element-label	"Compose Visual Inspection Job"
-        case			default step-type "null" action-type COMPOSE
+        case			default priority 20 step-type "null" action-type COMPOSE
         with-inputs		inspectionJob, printReport
         with-guard		printReport.id == inspectionJob.id
         produces-outputs	Flow_07l0yyj suppress
@@ -165,7 +207,7 @@ specification printer
         
         action			ComposeOptimizationJob
         element-label	"Compose Optimization Job"
-        case			default step-type "null" action-type COMPOSE
+        case			default priority 30 step-type "null" action-type COMPOSE
         with-inputs		optJob, inspectionReport
         with-guard		inspectionReport.id == optJob.id
         produces-outputs	Flow_0y8u5pd suppress
@@ -178,7 +220,7 @@ specification printer
         
         action			RunOptimizationJob
         element-label	"Run Optimization Job"
-        case			default step-type "ExecuteOptimizer" action-type RUN
+        case			default priority 30 step-type "ExecuteOptimizer" action-type RUN
         with-inputs		Flow_0y8u5pd, optimizeJob
         produces-outputs	Event_1oozdnw suppress
         updates:
@@ -200,13 +242,11 @@ specification printer
         Result	inspectionResult
         Result	optResult
         PrintRequest	printRequests
-        Report	inspectionReport
         
         outputs
         PrintRequest		printJob
         MeasureRequest		inspectionJob
         OptimizeRequest		optJob
-        Report		inspectionReport
     
         local
         FactoryCtx	Gateway_0p2uo9v
@@ -221,7 +261,6 @@ specification printer
         FactoryCtx	Flow_09b0flo
         FactoryCtx	Flow_1rkhqnd
         FactoryCtx	Flow_1vq9t2p
-        FactoryCtx	Flow_0fe8hce
         FactoryCtx	Flow_1y4bjf4
         FactoryCtx	Flow_1f74bn4
     
@@ -328,13 +367,13 @@ specification printer
         action			SendOptimizationJob
         element-label	"Send Optimization Job"
         case			default
-        with-inputs		Flow_0fe8hce
+        with-inputs		Flow_0kbycuh
         produces-outputs	Flow_01m2s0h
         updates:
-            Flow_01m2s0h := Flow_0fe8hce
+            Flow_01m2s0h := Flow_0kbycuh
         produces-outputs	optJob
         updates:
-            optJob := OptimizeRequest { id = Flow_0fe8hce.id }
+            optJob := OptimizeRequest { id = Flow_0kbycuh.id }
         
         action			PreparePrinter
         element-label	"Prepare Printer"
@@ -352,22 +391,6 @@ specification printer
              color = Flow_1f74bn4.color,
              opType = OperationType::PREP
             }
-        
-        action			AssertVisualInspection
-        element-label	"Assert Visual Inspection"
-        case			default step-type "Assert_Visual_Inspection" action-type ASSERT
-        with-inputs		Flow_0kbycuh, inspectionReport
-        assertions default {
-            assert_kpi: assert-that (inspectionReport.kpi) {
-              equal-to 9.0 within-margin relative (1.0)
-            }
-        }
-        produces-outputs	Flow_0fe8hce
-        updates:
-            Flow_0fe8hce := Flow_0kbycuh
-        produces-outputs	inspectionReport symbolic-link
-        updates:
-            inspectionReport := inspectionReport
         
         action			SendVisualInspectionJob
         element-label	"Send Visual Inspection Job"
