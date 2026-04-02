@@ -190,16 +190,3 @@ maven MavenCentral scope=compile dependencyDepth=none missingManifest=generate i
         version="3.6.10"
     }
 }
-
-maven MavenCentral scope=compile dependencyDepth=direct missingManifest=generate includeSources {
-    dependency {
-        groupId="jakarta.validation"
-        artifactId="jakarta.validation-api"
-        version="3.1.1"
-    }
-    dependency {
-        groupId="commons-validator"
-        artifactId="commons-validator"
-        version="1.10.1"
-    }
-}

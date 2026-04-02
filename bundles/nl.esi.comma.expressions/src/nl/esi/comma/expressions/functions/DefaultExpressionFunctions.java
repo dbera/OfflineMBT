@@ -18,7 +18,6 @@ import java.util.List;
 
 import org.eclipse.emf.ecore.util.EcoreUtil;
 
-import jakarta.validation.constraints.PositiveOrZero;
 import nl.esi.comma.expressions.expression.Expression;
 import nl.esi.comma.expressions.expression.ExpressionMap;
 import nl.esi.comma.expressions.expression.ExpressionVector;
@@ -112,7 +111,7 @@ public class DefaultExpressionFunctions {
 //	}
 
 	/** Returns the element at {@code index}, or {@code null} if out of bounds. */
-	public static Expression get(ExpressionVector vector, @PositiveOrZero long index) {
+	public static Expression get(ExpressionVector vector, long index) {
 		if (index >= 0 && index < vector.getElements().size()) {
 			return vector.getElements().get((int) index);
 		}

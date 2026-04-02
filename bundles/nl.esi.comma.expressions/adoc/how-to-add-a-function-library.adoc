@@ -14,8 +14,7 @@
 [[how-to-add-an-expression-function-library]]
 == How to Add an Expression Function Library
 
-A library is a plain Java class whose `public` methods (static or instance) are automatically exposed as callable functions in `.expr` models via the `call` keyword.
-This guide describes how to add custom function libraries and converters to the Expression Functions Framework.
+A library is a plain Java class whose `public` methods (static or instance) are automatically exposed as callable functions in `.expr` models via the `call` keyword. This guide describes how to add custom function libraries and converters to the Expression Functions Framework.
 
 === Workflow: Registration to Usage
 
@@ -107,8 +106,7 @@ IEvaluationContext ctx = new IEvaluationContext() {
 };
 ----
 
-At invocation time, `ExpressionFunctionsRegistry` searches the list for the first object whose class is assignable to the method's declaring class and uses it as the receiver.
-If no matching instance is found for a non-static method, an `IllegalStateException` is thrown.
+At invocation time, `ExpressionFunctionsRegistry` searches the list for the first object whose class is assignable to the method's declaring class and uses it as the receiver. If no matching instance is found for a non-static method, an `IllegalStateException` is thrown.
 
 === Library class constraints
 
@@ -157,50 +155,16 @@ Supported parameter and return types::
 |===
 
 +
-TIP: Using EMF model types (`ExpressionVector`, `ExpressionMap`, `Expression`) directly as parameter or return types avoids conversion overhead.
-The framework passes the raw EMF objects without converting to/from Java collections.
-This is the preferred approach when the function operates on expression structures rather than plain Java values — see `DefaultExpressionFunctions` for examples.
+TIP: Using EMF model types (`ExpressionVector`, `ExpressionMap`, `Expression`) directly as parameter or return types avoids conversion overhead. The framework passes the raw EMF objects without converting to/from Java collections. This is the preferred approach when the function operates on expression structures rather than plain Java values — see `DefaultExpressionFunctions` for examples.
 
 Overloaded methods are supported::
-  Multiple methods with the same name but different parameter types or counts are allowed (e.g. `abs(long)` and `abs(BigDecimal)`).
-  Overload resolution is based on the expression argument types at the call site.
+  Multiple methods with the same name but different parameter types or counts are allowed (e.g. `abs(long)` and `abs(BigDecimal)`). Overload resolution is based on the expression argument types at the call site.
 
 Avoid generics with unchecked casts::
-  Prefer concrete overloads over a single generic `<T>` method.
-  For example, split `abs` into `abs(long)` and `abs(BigDecimal)` instead of using `<T> T abs(T value)`.
+  Prefer concrete overloads over a single generic `<T>` method. For example, split `abs` into `abs(long)` and `abs(BigDecimal)` instead of using `<T> T abs(T value)`.
 
 Parameter names::
-  If the library is compiled with the `-parameters` flag (configured in both `pom.xml` and the Eclipse setup), the real parameter names appear in the generated `.expr` declarations.
-  Otherwise, synthetic names (`p0`, `p1`, …) are used.
-
-=== Using Jakarta Validation annotations
-
-Parameters and return values can be annotated with Jakarta Validation constraints.
-The framework validates arguments before invocation and the return value after invocation.
-
-[source,java]
-----
-public class MathFunctions {
-    @Positive
-    public static double sqrt(@Positive double value) {
-        return Math.sqrt(value);
-    }
-
-    @Min(0)
-    @Max(100)
-    public static int percentage(@Min(0) @Max(1000) int value) {
-        return (value * 100) / 1000;
-    }
-
-    @NotNull
-    @Email
-    public static String validateEmail(@NotNull @Email String email) {
-        return email.toLowerCase();
-    }
-}
-----
-
-Supported annotations: `@NotNull`, `@NotEmpty`, `@NotBlank`, `@Email`, `@Min`, `@Max`, `@Positive`, `@PositiveOrZero`, `@Negative`, `@NegativeOrZero`, `@Size`, `@Pattern`, `@DecimalMin`, `@DecimalMax`.
+  If the library is compiled with the `-parameters` flag (configured in both `pom.xml` and the Eclipse setup), the real parameter names appear in the generated `.expr` declarations. Otherwise, synthetic names (`p0`, `p1`, …) are used.
 
 === Adding custom converters
 

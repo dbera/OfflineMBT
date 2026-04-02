@@ -24,12 +24,11 @@ import java.util.Set;
 
 import com.google.inject.Inject;
 
-import nl.esi.comma.expressions.conversion.IExpressionConvertersProvider;
 import nl.esi.comma.expressions.conversion.IExpressionConverter;
+import nl.esi.comma.expressions.conversion.IExpressionConvertersProvider;
 import nl.esi.comma.expressions.evaluation.IEvaluationContext;
 import nl.esi.comma.expressions.expression.Expression;
 import nl.esi.comma.expressions.expression.ExpressionFnCall;
-import nl.esi.comma.expressions.functions.SimpleJakartaValidator.ValidationResult;
 import nl.esi.comma.types.types.Type;
 
 /**
@@ -44,8 +43,6 @@ public class ExpressionFunctionsRegistry {
 	private final Set<IExpressionConverter> converters;
 
 	private final InMemoryExprResourceRegistry inMemoryRegistry;
-
-	private final SimpleJakartaValidator validator = new SimpleJakartaValidator();
 
 	@Inject
 	public ExpressionFunctionsRegistry(InMemoryExprResourceRegistry inMemoryRegistry,
@@ -95,7 +92,6 @@ public class ExpressionFunctionsRegistry {
 
 		try {
 			var result = method.invoke(receiver, args);
-			validateReturnValue(method, result);
 			return toExpression(result, functionCall.getFunction().getReturnType(), context);
 		} catch (Exception e) {
 			throw new RuntimeException("Error invoking function " + funcName + " with args " + Arrays.toString(args),
@@ -136,35 +132,15 @@ public class ExpressionFunctionsRegistry {
 	 */
 	private void validateFunctionArguments(ExpressionFnCall functionCall, IEvaluationContext context)
 			throws IllegalArgumentException {
-		if (validator == null) {
-			return; // Skip validation if validator is not available
-		}
 
 		Method method = findMatchingMethod(functionCall, context);
 		if (method == null) {
 			return;
 		}
-		Object[] args;
 		try {
-			args = convertArguments(functionCall, method.getParameterTypes(), context);
+			convertArguments(functionCall, method.getParameterTypes(), context);
 		} catch (Exception e) {
 			return; // Skip validation if argument conversion fails (e.g. type mismatch)
-		}
-		ValidationResult violations = validator.validate(method, args);
-		if (!violations.isValid()) {
-			throw new IllegalArgumentException(violations.getErrorMessage());
-		}
-	}
-
-	/** Validates return value against jakarta.validation constraints on the return type. */
-	private void validateReturnValue(Method method, Object returnValue) throws IllegalArgumentException {
-		if (validator == null) {
-			return; // Skip validation if validator is not available
-		}
-
-		var violations = validator.validateReturnValue(method, returnValue);
-		if (!violations.isValid()) {
-			throw new IllegalArgumentException(violations.getErrorMessage());
 		}
 	}
 
