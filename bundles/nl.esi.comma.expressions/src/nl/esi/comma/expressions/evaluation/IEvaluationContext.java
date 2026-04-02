@@ -14,8 +14,8 @@ package nl.esi.comma.expressions.evaluation;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
@@ -36,6 +36,7 @@ import nl.esi.comma.expressions.expression.ExpressionVariable;
 import nl.esi.comma.expressions.expression.ExpressionVector;
 import nl.esi.comma.expressions.expression.Pair;
 import nl.esi.comma.expressions.expression.Variable;
+import nl.esi.comma.expressions.functions.ExpressionFunctionsRegistry;
 import nl.esi.comma.expressions.utilities.ExpressionsUtilities;
 import nl.esi.comma.expressions.validation.ExpressionValidator;
 import nl.esi.comma.types.types.SimpleTypeDecl;
@@ -44,18 +45,18 @@ import nl.esi.comma.types.utilities.TypeUtilities;
 
 public interface IEvaluationContext {
 	static final IEvaluationContext EMPTY = variable -> null;
+	final List<Object> libraryFunctionObjects = new ArrayList<Object>();
 
 	Expression getExpression(Variable variable);
 	
 	/**
-	 * Returns a list of library function objects that are available in this context.
-	 * These can be used for function resolution and invocation during expression evaluation.
-	 * By default, this returns an empty list, but implementations can override it to provide
-	 * actual library functions. 
+	 * Returns a mutable list of library function objects that are available in this context.
+	 * These are used for function resolution and invocation during expression evaluation.
+	 * By default, this returns an empty list, but clients can add instances of their libraries to it. 
 	 * The objects should be assignable from the classes that the {@link ExpressionFunctionsRegistry} supports for library functions.
 	 */
 	default List<Object> getLibraryFunctionObjects(){
-		return Collections.emptyList();
+		return libraryFunctionObjects;
 	}
 
 	/**

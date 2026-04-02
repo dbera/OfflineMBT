@@ -51,4 +51,5 @@ class ExpressionParsingTest {
         val txt = EcoreUtil3.serialize(result);
         println(txt)
     }
+    
 }
