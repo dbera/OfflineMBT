@@ -1,0 +1,156 @@
+////
+  // Copyright (c) 2024, 2025 TNO-ESI
+  //
+  // See the NOTICE file(s) distributed with this work for additional
+  // information regarding copyright ownership.
+  //
+  // This program and the accompanying materials are made available
+  // under the terms of the MIT License which is available at
+  // https://opensource.org/licenses/MIT
+  //
+  // SPDX-License-Identifier: MIT
+////
+
+[[nl.esi.comma.expressions]]
+=== Expressions
+:lang: en
+
+[.normal]
+
+==== Expression Language Overview
+
+Expressions are used to compute values, make decisions, and define conditions in models. The language supports a variety of operators, function calls, and value types, and is designed to be familiar to users of modern programming and modeling languages.
+
+*Supported value types:* bool, int, real, string, enum, record, vector, map, null.
+
+Users can add their own types. See <<nl.esi.comma.types>> for details.
+
+
+==== Literals
+
+* Boolean: `true`, `false`
+* Integer: `42`, `-7`
+* Real: `3.14`, `2.0e-5`
+* String: `"hello"`, `"John Smith"`
+* Null: `null`
+* Enum: `TypeName::literal`
+* Vector: `<int[]>[1, 2, 3]`
+* Record: `TypeName{field1 = value1, field2 = value2}`
+* Map: `<map<int, string>>{1 -> "a", 2 -> "b"}`
+* Wildcard: `*` (matches any value)
+
+==== Variables
+
+Variables are declared with a type and a name, with optional initialization. Their values can be used in expressions:
+
+....
+int i
+string s = "hello"
+real x
+bool flag = true
+....
+
+==== Operators
+
+* Logical: `and`, `or`, `not` (case-insensitive: `AND`/`and`, `OR`/`or`, `NOT`/`not`)
+* Comparison: `==`, `!=`, `<`, `<=`, `>`, `>=`
+* Arithmetic: `+`, `-`, `*`, `/`, `mod`, `^`, `max`, `min`
+* Postfix: record field access `record.field`, map access `map[key]`, map write `map[key -> value]`
+
+==== Function Calls
+
+Functions can be called in two ways:
+
+* `call function_name(args)` - calls a function declared in the model, using the `call` keyword
+* `function_name(args)` - calls a registered function available in the environment (e.g., from function libraries)
+
+....
+call sum(v)           // calls function declared in the model
+range(1, 10, 2)       // calls a registered function
+....
+
+==== Parentheses
+
+Parentheses can be used to group expressions and control evaluation order:
+
+....
+(1 + 2) * 3
+....
+
+==== Type Annotation for Vectors and Maps
+
+Vectors and maps can be constructed with explicit type annotation. The type is specified in angle brackets before the value:
+
+....
+<int[]>[1, 2, 3]
+<map<int, string>>{1 -> "a", 2 -> "b"}
+....
+
+==== Wildcard Expression
+
+The wildcard  *  can be used as a standalone expression to match any value. It is useful in pattern matching or as a placeholder. Note: this is different from `*` used as a multiplication operator in arithmetic expressions.
+
+Example of wildcard usage:
+
+....
+bool result = (someValue == *)
+....
+
+==== Examples
+
+....
+int x = 5 + 3 * 2           // multiplication operator
+bool b = (x > 10) and not false
+string s = "Hello, " + "world!"
+....
+
+==== Vectors and Records
+
+Vectors and records can be constructed and accessed as follows:
+
+....
+int[] numbers = <int[]>[1, 2, 3]
+Person p = Person{name = "Alice", age = 30}
+int n = call get(numbers, 0)
+string name = p.name
+....
+
+==== Maps
+
+Maps associate keys with values. Example:
+
+....
+map<int, string> m = <map<int, string>>{1 -> "a", 2 -> "b"}
+string v = m[1]
+string v2 = m[2 -> "c"]
+....
+
+==== Null Value
+
+The `null` literal represents the absence of a value. It can be used with any type.
+
+==== Operator Precedence
+
+Operators are evaluated in the following order (highest to lowest):
+
+. Parentheses and literals
+. Postfix: record field access `record.field`, map access `map[key]`, map write `map[key -> value]`
+. Unary: `not`, unary `+`, unary `-`
+. Power: `^` (right-associative)
+. Multiplicative: `*`, `/`, `mod`, `max`, `min` (left-associative)
+. Additive: `+`, `-` (left-associative)
+. Comparison: `<`, `<=`, `>`, `>=` (left-associative)
+. Equality: `==`, `!=` (left-associative)
+. Logical: `and`, `or` (left-associative, lowest precedence)
+
+==== Notes
+
+* All expressions are side-effect free.
+* Type checking is performed at model validation time.
+* Functions and operators may be overloaded for different types.
+* The wildcard `*` can be used as a placeholder or to match any value.
+* Map write access uses the syntax `map[key -> value]`.
+* Type annotation is required for vector and map construction.
+* Logical operators `and`, `or`, and `not` are case-insensitive and accept both lowercase and uppercase forms (e.g., `AND`, `and`, `OR`, `or`, `NOT`, `not`).
+* Operator associativity: most operators are left-associative; the power operator `^` is right-associative.
+* Variables can be declared with optional initialization: `Type name = expression` or just `Type name`.

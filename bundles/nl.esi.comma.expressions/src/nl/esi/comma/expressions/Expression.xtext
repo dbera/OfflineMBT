@@ -130,7 +130,6 @@ ExpressionLevel9 returns Expression:
 	ExpressionAny |
     ExpressionFnCall |
 	ExpressionFunctionCall |
-	ExpressionQuantifier |
 	ExpressionTypeAnnotated
 ;
 
@@ -189,11 +188,10 @@ ExpressionAny :
 ExpressionFunctionCall: 
 	functionName = ID '(' (args += Expression (',' args += Expression)*)? ')'
 ;
+//ExpressionFnCall: 
+//    'call' function = [FunctionDecl|ID] '(' (args += Expression (',' args += Expression)*)? ')'
+//;
 
-//TODO rename to iterator? after adding 'delete' the expression is not a pure quantifier any more
-ExpressionQuantifier: 
-	quantifier = QUANTIFIER '(' iterator = Variable 'in' collection = Expression ':' condition = Expression ')'
-;
 
 ExpressionTypeAnnotated returns Expression:
 	TypeAnnotation( ({ExpressionVector.typeAnnotation = current} '[' (elements += Expression (',' elements += Expression)*)? ']') |

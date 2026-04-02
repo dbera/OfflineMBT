@@ -39,7 +39,6 @@ import nl.esi.comma.expressions.expression.ExpressionNot
 import nl.esi.comma.expressions.expression.ExpressionOr
 import nl.esi.comma.expressions.expression.ExpressionPlus
 import nl.esi.comma.expressions.expression.ExpressionPower
-import nl.esi.comma.expressions.expression.ExpressionQuantifier
 import nl.esi.comma.expressions.expression.ExpressionRecord
 import nl.esi.comma.expressions.expression.ExpressionRecordAccess
 import nl.esi.comma.expressions.expression.ExpressionSubtraction
@@ -271,19 +270,6 @@ class ExpressionFormatter extends TypesFormatter {
 		for(Expression sub : expr.args) {
 			sub.format
 		}
-	}
-	
-	def dispatch void format(ExpressionQuantifier expr, extension IFormattableDocument document) {		
-		val rFinder = expr.regionFor
-		
-		rFinder.keyword(expressionQuantifierAccess.leftParenthesisKeyword_1).prepend(oneSpace).append(noSpace)
-		rFinder.keyword(expressionQuantifierAccess.inKeyword_3).surround(oneSpace)
-		rFinder.keyword(expressionQuantifierAccess.colonKeyword_5).surround(oneSpace)
-		rFinder.keyword(expressionQuantifierAccess.rightParenthesisKeyword_7).prepend(noSpace)
-		
-		expr.iterator.format
-		expr.collection.format
-		expr.condition.format
 	}
 	
 	def dispatch void format(ExpressionEnumLiteral expressionEnumLiteral, extension IFormattableDocument document) {

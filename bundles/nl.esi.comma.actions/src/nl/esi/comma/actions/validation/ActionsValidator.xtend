@@ -17,12 +17,10 @@ package nl.esi.comma.actions.validation
 
 import java.util.ArrayList
 import java.util.HashSet
-import java.util.List
 import nl.esi.comma.actions.actions.ActionsPackage
 import nl.esi.comma.actions.actions.AssignmentAction
 import nl.esi.comma.actions.actions.IfAction
 import nl.esi.comma.actions.actions.Multiplicity
-import nl.esi.comma.actions.actions.PCFragment
 import nl.esi.comma.actions.actions.PCFragmentDefinition
 import nl.esi.comma.actions.actions.ParameterizedEvent
 import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
@@ -33,7 +31,6 @@ import nl.esi.comma.expressions.expression.Field
 import nl.esi.comma.expressions.expression.Variable
 import nl.esi.comma.types.BasicTypes
 import nl.esi.xtext.common.lang.base.BasePackage
-import org.eclipse.emf.ecore.EObject
 import org.eclipse.xtext.validation.Check
 
 import static extension nl.esi.comma.actions.utilities.ActionsUtilities.*

@@ -23,6 +23,7 @@ import nl.esi.comma.expressions.expression.ExpressionConstantString
 import nl.esi.comma.expressions.expression.ExpressionDivision
 import nl.esi.comma.expressions.expression.ExpressionEnumLiteral
 import nl.esi.comma.expressions.expression.ExpressionEqual
+import nl.esi.comma.expressions.expression.ExpressionFnCall
 import nl.esi.comma.expressions.expression.ExpressionFunctionCall
 import nl.esi.comma.expressions.expression.ExpressionGeq
 import nl.esi.comma.expressions.expression.ExpressionGreater
@@ -40,7 +41,6 @@ import nl.esi.comma.expressions.expression.ExpressionNot
 import nl.esi.comma.expressions.expression.ExpressionOr
 import nl.esi.comma.expressions.expression.ExpressionPlus
 import nl.esi.comma.expressions.expression.ExpressionPower
-import nl.esi.comma.expressions.expression.ExpressionQuantifier
 import nl.esi.comma.expressions.expression.ExpressionRecord
 import nl.esi.comma.expressions.expression.ExpressionRecordAccess
 import nl.esi.comma.expressions.expression.ExpressionSubtraction
@@ -153,7 +153,8 @@ class ExpressionsUmlGenerator extends CommaGenerator{
     
     def dispatch CharSequence generateExpression(ExpressionFunctionCall expr)
     '''«expr.functionName»(«FOR a : expr.args SEPARATOR ', '»«generateExpression(a)»«ENDFOR»)'''
+
+    def dispatch CharSequence generateExpression(ExpressionFnCall expr)
+    '''call «expr.function.name»(«FOR a : expr.args SEPARATOR ', '»«generateExpression(a)»«ENDFOR»)'''
     
-    def dispatch CharSequence generateExpression(ExpressionQuantifier expr)
-    '''«expr.quantifier»(«expr.iterator.name» in «generateExpression(expr.collection)» : «generateExpression(expr.condition)»)'''
 }

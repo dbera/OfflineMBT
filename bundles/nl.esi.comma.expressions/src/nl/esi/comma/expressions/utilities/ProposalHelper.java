@@ -50,13 +50,11 @@ import nl.esi.comma.expressions.expression.ExpressionNullLiteral;
 import nl.esi.comma.expressions.expression.ExpressionOr;
 import nl.esi.comma.expressions.expression.ExpressionPlus;
 import nl.esi.comma.expressions.expression.ExpressionPower;
-import nl.esi.comma.expressions.expression.ExpressionQuantifier;
 import nl.esi.comma.expressions.expression.ExpressionRecord;
 import nl.esi.comma.expressions.expression.ExpressionRecordAccess;
 import nl.esi.comma.expressions.expression.ExpressionSubtraction;
 import nl.esi.comma.expressions.expression.ExpressionVariable;
 import nl.esi.comma.expressions.expression.ExpressionVector;
-import nl.esi.comma.expressions.expression.QUANTIFIER;
 import nl.esi.comma.expressions.expression.TypeAnnotation;
 import nl.esi.comma.types.types.EnumTypeDecl;
 import nl.esi.comma.types.types.MapTypeConstructor;
@@ -268,18 +266,6 @@ public class ProposalHelper {
 				String key = expression(e.getArgs().get(1), variablePrefix);
 				return String.format("{_k: _v for _k, _v in %s.items() if _k != %s}", map, key);
 		    }
-		} else if (expression instanceof ExpressionQuantifier) {
-			ExpressionQuantifier e = (ExpressionQuantifier) expression;
-			String collection = expression(e.getCollection(), variablePrefix);
-			String it = e.getIterator().getName();
-			String condition = expression(e.getCondition(), (String variable) -> "");
-			if (e.getQuantifier() == QUANTIFIER.EXISTS) {
-				return String.format("len([%s for %s in %s if %s]) != 0", it, it, collection, condition);
-			} else if (e.getQuantifier() == QUANTIFIER.DELETE) {
-				return String.format("[%s for %s in %s if not (%s)]", it, it, collection, condition);
-			} else if (e.getQuantifier() == QUANTIFIER.FORALL) {
-				return String.format("len([%s for %s in %s if %s]) == len(%s)", it, it, collection, condition, collection);
-			}
 		} else if (expression instanceof ExpressionMap) {
 			ExpressionMap e = (ExpressionMap) expression;
 			return String.format("{%s}", e.getPairs().stream().map(p -> {

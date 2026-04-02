@@ -1,13 +1,13 @@
 /**
  * Copyright (c) 2024, 2025 TNO-ESI
- *
+ * 
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
- *
+ * 
  * This program and the accompanying materials are made available
  * under the terms of the MIT License which is available at
  * https://opensource.org/licenses/MIT
- *
+ * 
  * SPDX-License-Identifier: MIT
  */
 /*
@@ -15,15 +15,33 @@
  */
 package nl.esi.comma.inputspecification
 
+import nl.esi.comma.expressions.conversion.ExpressionConvertersProvider
+import nl.esi.comma.expressions.conversion.IExpressionConvertersProvider
+import nl.esi.comma.expressions.functions.ExpressionFunctionLibrariesProvider
+import nl.esi.comma.expressions.functions.IExpressionFunctionLibrariesProvider
+import nl.esi.comma.expressions.runtime.InMemoryAwareResourceSet
+import nl.esi.comma.expressions.scoping.ExpressionsImportUriGlobalScopeProvider
+import org.eclipse.xtext.resource.XtextResourceSet
 import org.eclipse.xtext.scoping.IGlobalScopeProvider
-import nl.esi.comma.types.scoping.TypesImportUriGlobalScopeProvider
 
 /**
  * Use this class to register components to be used at runtime / without the Equinox extension registry.
  */
 class InputSpecificationRuntimeModule extends AbstractInputSpecificationRuntimeModule {
-	override Class<? extends IGlobalScopeProvider> bindIGlobalScopeProvider() {
-		
-		return TypesImportUriGlobalScopeProvider;
-	}
+    override Class<? extends IGlobalScopeProvider> bindIGlobalScopeProvider() {
+        return ExpressionsImportUriGlobalScopeProvider;
+    }
+
+    override Class<? extends XtextResourceSet> bindXtextResourceSet() {
+        return InMemoryAwareResourceSet
+    }
+
+    def Class<? extends IExpressionFunctionLibrariesProvider> bindIExpressionFunctionLibrariesProvider() {
+        return ExpressionFunctionLibrariesProvider
+    }
+
+    def Class<? extends IExpressionConvertersProvider> bindIExpressionConvertersProvider() {
+        return ExpressionConvertersProvider
+    }
+
 }

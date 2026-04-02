@@ -15,13 +15,32 @@
  */
 package nl.esi.comma.testspecification
 
-import nl.esi.comma.types.scoping.TypesImportUriGlobalScopeProvider
+import nl.esi.comma.expressions.conversion.ExpressionConvertersProvider
+import nl.esi.comma.expressions.conversion.IExpressionConvertersProvider
+import nl.esi.comma.expressions.functions.ExpressionFunctionLibrariesProvider
+import nl.esi.comma.expressions.functions.IExpressionFunctionLibrariesProvider
+import nl.esi.comma.expressions.runtime.InMemoryAwareResourceSet
+import nl.esi.comma.expressions.scoping.ExpressionsImportUriGlobalScopeProvider
+import org.eclipse.xtext.resource.XtextResourceSet
+import org.eclipse.xtext.scoping.IGlobalScopeProvider
 
 /**
  * Use this class to register components to be used at runtime / without the Equinox extension registry.
  */
 class TestspecificationRuntimeModule extends AbstractTestspecificationRuntimeModule {
-    override bindIGlobalScopeProvider() {
-        TypesImportUriGlobalScopeProvider
+    override Class<? extends IGlobalScopeProvider> bindIGlobalScopeProvider() {
+        return ExpressionsImportUriGlobalScopeProvider
+    }
+
+    override Class<? extends XtextResourceSet> bindXtextResourceSet() {
+        return InMemoryAwareResourceSet
+    }
+
+    def Class<? extends IExpressionFunctionLibrariesProvider> bindIExpressionFunctionLibrariesProvider() {
+        return ExpressionFunctionLibrariesProvider
+    }
+
+    def Class<? extends IExpressionConvertersProvider> bindIExpressionConvertersProvider() {
+        return ExpressionConvertersProvider
     }
 }
