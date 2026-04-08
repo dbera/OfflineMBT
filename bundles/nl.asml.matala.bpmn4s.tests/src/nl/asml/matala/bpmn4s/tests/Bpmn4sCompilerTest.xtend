@@ -24,23 +24,25 @@ import static org.junit.jupiter.api.Assertions.*
 import static extension java.nio.file.Files.*
 
 class Bpmn4sCompilerTest {
-    def void testCompilation(String inputFileName, String expectedFileName, boolean simulation) {
+    def void testCompilation(String fileName) {
         val resourcesDir = Path.of('resources').toRealPath
         assertTrue(resourcesDir.isDirectory)
         println("Test-resources directory: " + resourcesDir)
 
-        val inputFile = resourcesDir.resolve('''input/«inputFileName».bpmn''')
-        assertTrue(inputFile.isReadable, '''Input for «inputFileName» does not exist or cannot be read.''')
+        val inputFile = resourcesDir.resolve('''input/«fileName».bpmn''')
+        assertTrue(inputFile.isReadable, '''Input for «fileName» does not exist or cannot be read.''')
 
-        val actualDir = resourcesDir.resolve('''actual/«expectedFileName»''')
+        val actualDir = resourcesDir.resolve('''actual/«fileName»''')
         if (actualDir.exists) {
             FileUtils.deleteDirectory(actualDir.toFile)
         }
         actualDir.createDirectories
 
-        Main.compile(inputFile.toString, simulation, actualDir.toString)
+        val startTime = System.currentTimeMillis
+        Main.compile(inputFile.toString, actualDir.toString)
+        println('''Compilation of «fileName».bpmn took «(System.currentTimeMillis - startTime) / 1000.0» seconds.''')
 
-        val expectedDir = resourcesDir.resolve('''expected/«expectedFileName»''')
+        val expectedDir = resourcesDir.resolve('''expected/«fileName»''')
         assertTrue(expectedDir.isDirectory,
             '''Expected output does not exist, please inspect the actual output at «actualDir».''')
 
@@ -67,31 +69,31 @@ class Bpmn4sCompilerTest {
 
     @Test
     def void testFriesFlat() {
-        testCompilation('fries_flat', 'fries_flat', true);
+        testCompilation('fries_flat');
     }
 
     @Test
     def void testFriesSub() {
-        testCompilation('fries_sub', 'fries_sub', true);
+        testCompilation('fries_sub');
     }
 
     @Test
     def void testFriesComp() {
-        testCompilation('fries_comp', 'fries_comp', true);
+        testCompilation('fries_comp');
     }
 
     @Test
     def void testPrinter() {
-        testCompilation('printer', 'printer', true);
+        testCompilation('printer');
     }
 
     @Test
     def void testPrinterWithPriorities() {
-        testCompilation('printer_prio', 'printer_prio', true);
+        testCompilation('printer_prio');
     }
 
     @Test
     def void testImaging() {
-        testCompilation('imaging', 'imaging', true);
+        testCompilation('imaging');
     }
 }
