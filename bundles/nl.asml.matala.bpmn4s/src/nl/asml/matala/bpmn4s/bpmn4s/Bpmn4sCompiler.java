@@ -69,7 +69,7 @@ public class Bpmn4sCompiler{
 	/**
 	 * Throw when a non valid bpmn4s model is detected.
 	 */
-	public class InvalidModel extends Exception {
+	public class InvalidModel extends RuntimeException {
 		private static final long serialVersionUID = 1L;
 		public InvalidModel (String mssg) {
 			super(mssg);

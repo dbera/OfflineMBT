@@ -16,6 +16,9 @@ import org.camunda.bpm.model.bpmn.instance.BpmnModelElementInstance;
 
 public interface DataType extends BpmnModelElementInstance {
 //	Extensions 	getExtensions();
+	String		getId();
 	String 		getType();
 	String 		getName();
+	String 		getKeyTypeRef();
+	String 		getValueTypeRef();
 }

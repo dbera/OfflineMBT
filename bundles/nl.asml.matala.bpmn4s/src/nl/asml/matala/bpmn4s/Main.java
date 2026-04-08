@@ -11,11 +11,15 @@
  * SPDX-License-Identifier: MIT
  */
 package nl.asml.matala.bpmn4s;
+
+import static org.eclipse.lsat.common.queries.QueryableIterable.from;
+
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Map;
 
 import org.camunda.bpm.model.bpmn.Bpmn;
 import org.camunda.bpm.model.bpmn.BpmnModelInstance;
@@ -36,6 +40,7 @@ import org.camunda.bpm.model.bpmn.instance.SequenceFlow;
 import org.camunda.bpm.model.bpmn.instance.StartEvent;
 import org.camunda.bpm.model.bpmn.instance.SubProcess;
 import org.camunda.bpm.model.bpmn.instance.Task;
+import org.camunda.bpm.model.xml.ModelBuilder;
 import org.camunda.bpm.model.xml.instance.ModelElementInstance;
 
 import nl.asml.matala.bpmn4s.bpmn4s.BaseType;
@@ -73,15 +78,13 @@ public class Main {
 	
 	/**
 	 * arg0 is path to input model.<br/>
-	 * arg1 is true for simulation tailored compilation, else for test generation.<br/>
-	 * arg2 is output folder for generated ps and types files.<br/>
-	 * arg3 is depth limit for test generation.<br/>
-	 * arg4 is number of test cases for test generation.<br/>
-	 * arg5 is state-space limit for test generation.<br/>
+	 * arg1 is output folder for generated ps and types files.<br/>
+	 * arg2 is depth limit for test generation.<br/>
+	 * arg3 is number of test cases for test generation.<br/>
+	 * arg4 is state-space limit for test generation.<br/>
 	 */
 	public static void main(String[] args) {
 		String inputModel = "";
-		boolean simulation = false;
 		String output = "";
 		int depthLimit = 300;
 		int stateLimit = 1000;
@@ -94,60 +97,60 @@ public class Main {
 			inputModel = args[0];
 		}
 		if(args.length > 1) {
-			simulation = Boolean.parseBoolean(args[1]);
+			output = args[1];
 		}
 		if(args.length > 2) {
-			output = args[2];
+			depthLimit = Integer.parseInt(args[2]);
 		}
 		if(args.length > 3) {
-			depthLimit = Integer.parseInt(args[3]);
+			numOfTests = Integer.parseInt(args[3]);
 		}
 		if(args.length > 4) {
-			numOfTests = Integer.parseInt(args[4]);
+			stateLimit = Integer.parseInt(args[4]);
 		}
-		if(args.length > 5) {
-			stateLimit = Integer.parseInt(args[5]);
+		try {
+			compile(inputModel, output, depthLimit, stateLimit, numOfTests);
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.exit(1);
 		}
-		compile(inputModel, simulation, output, depthLimit, stateLimit, numOfTests);
 	}
 	
 	static final int DEFAULT_DEPTH_LIMIT = 300;
 	static final int DEFAULT_STATE_LIMIT = 1000;
 	static final int DEFAULT_NUM_OF_TESTS = 1;
 	
-	public static void compile(String inputModel, boolean simulation, String outputFolder) {
-		compile(inputModel, simulation, outputFolder, DEFAULT_DEPTH_LIMIT, DEFAULT_STATE_LIMIT, DEFAULT_NUM_OF_TESTS);
+	public static void compile(String inputModel, String outputFolder) {
+		compile(inputModel, outputFolder, DEFAULT_DEPTH_LIMIT, DEFAULT_STATE_LIMIT, DEFAULT_NUM_OF_TESTS);
 	}
 	
-	public static void compile(String inputModel, boolean simulation, String outputFolder, int depthLimit, int stateLimit, int numOfTests) {
-        BpmnModelInstance modelInst;
-        try {
-        	registerModelExtensionTypes();
-        	Path path = Paths.get(inputModel);
-        	String fileName = path.getFileName().toString();
-        	fileName = fileName.substring(0, fileName.lastIndexOf('.')); // remove file extension (.pbmn)
-        	File file = path.toFile();
-        	modelInst = Bpmn.readModelFromFile(file);
-        	model = new Bpmn4s();
-        	model.setName(fileName);
-        	model.setDepthLimit(depthLimit);
-        	model.setStateLimit(stateLimit);
-        	model.setNumOfTests(numOfTests);
-        	parseBPMN(modelInst);
-        	Bpmn4sCompiler compiler = new Bpmn4sCompiler();
-        	compiler.compile(model);
-        	compiler.writeModelToFiles(outputFolder);
-        } catch (Exception e) { e.printStackTrace(); }
+	public static void compile(String inputModel, String outputFolder, int depthLimit, int stateLimit, int numOfTests) {
+        registerModelExtensionTypes();
+    	Path path = Paths.get(inputModel);
+    	String fileName = path.getFileName().toString();
+    	fileName = fileName.substring(0, fileName.lastIndexOf('.')); // remove file extension (.bpmn)
+    	File file = path.toFile();
+    	BpmnModelInstance modelInst = Bpmn.readModelFromFile(file);
+    	model = new Bpmn4s();
+    	model.setName(fileName);
+    	model.setDepthLimit(depthLimit);
+    	model.setStateLimit(stateLimit);
+    	model.setNumOfTests(numOfTests);
+    	parseBPMN(modelInst);
+    	Bpmn4sCompiler compiler = new Bpmn4sCompiler();
+    	compiler.compile(model);
+    	compiler.writeModelToFiles(outputFolder);
 	}
 	
 
 
 	private static void registerModelExtensionTypes() {
-		DataTypeImpl.registerType(Bpmn.INSTANCE.getBpmnModelBuilder());
-		DataTypesImpl.registerType(Bpmn.INSTANCE.getBpmnModelBuilder());
-		FieldImpl.registerType(Bpmn.INSTANCE.getBpmnModelBuilder());
-		LiteralImpl.registerType(Bpmn.INSTANCE.getBpmnModelBuilder());
-		TargetDataRefImpl.registerType(Bpmn.INSTANCE.getBpmnModelBuilder());
+		ModelBuilder modelBuilder = Bpmn.INSTANCE.getBpmnModelBuilder();
+		DataTypeImpl.registerType(modelBuilder);
+		DataTypesImpl.registerType(modelBuilder);
+		FieldImpl.registerType(modelBuilder);
+		LiteralImpl.registerType(modelBuilder);
+		TargetDataRefImpl.registerType(modelBuilder);
 	}
 	
 	/*
@@ -156,45 +159,45 @@ public class Main {
 	 */
 	public static void parseBPMN(BpmnModelInstance modelInst) {
 			
-		Collection<DataType> datatypes = modelInst.getModelElementsByType(DataType.class);
-		for (DataType dt: datatypes) { 
-			parseDataType(modelInst, dt); 
+		Map<String, DataType> datatypes = from(modelInst.getModelElementsByType(DataType.class)).toMap(DataType::getId);
+		for (DataType dt: datatypes.values()) {
+			parseDataType(dt, datatypes);
 		}
 		
 		Collection<DataStoreReference> dataStores = modelInst.getModelElementsByType(DataStoreReference.class);
 		for (DataStoreReference ds: dataStores) {
-			makeDataNode(modelInst, ds, ElementType.DATASTORE); 
+			makeDataNode(ds, ElementType.DATASTORE, datatypes); 
 		}
 		
 		Collection<DataObjectReference> dataObjects = modelInst.getModelElementsByType(DataObjectReference.class);
 		// In BPMN4S these are message queues
 		for (DataObjectReference dor: dataObjects) {
-			if (! model.elements.containsKey(dor.getAttributeValue("name"))) {
-				makeDataNode(modelInst, dor, ElementType.MSGQUEUE); 
+			if (!model.elements.containsKey(dor.getName())) {
+				makeDataNode(dor, ElementType.MSGQUEUE, datatypes); 
 			}
 		}
 		
 		// Activities and Components
 		Collection<Process> process = modelInst.getModelElementsByType(Process.class);
-		for (Process sp: process) {	parseProcess(modelInst, sp); }
+		for (Process sp: process) {	parseProcess(sp, datatypes); }
 		
 		Collection<SubProcess> subprocesses = modelInst.getModelElementsByType(SubProcess.class);
-		for (SubProcess sp: subprocesses) {	parseSubprocess(modelInst, sp); }
+		for (SubProcess sp: subprocesses) {	parseSubprocess(sp, datatypes); }
 		
 		Collection<Task> tasks = modelInst.getModelElementsByType(Task.class);
-		for (Task task: tasks) { parseTask(modelInst, task); }
+		for (Task task: tasks) { parseTask(task, datatypes); }
 		
 		Collection<StartEvent> sevents = modelInst.getModelElementsByType(StartEvent.class);
-		for (StartEvent ev: sevents) { parseEvent(modelInst, ev, ElementType.START_EVENT); };
+		for (StartEvent ev: sevents) { parseEvent(ev, ElementType.START_EVENT, datatypes); };
 		
 		Collection<EndEvent> eevents = modelInst.getModelElementsByType(EndEvent.class);
-		for (EndEvent ev: eevents) { parseEvent(modelInst, ev, ElementType.END_EVENT); }; 
+		for (EndEvent ev: eevents) { parseEvent(ev, ElementType.END_EVENT, datatypes); }; 
 		
 		Collection<ExclusiveGateway> xor = modelInst.getModelElementsByType(ExclusiveGateway.class);
-		for (ExclusiveGateway ev: xor) {makeActionNode(modelInst, ev, ElementType.XOR_GATE); }
+		for (ExclusiveGateway ev: xor) {makeActionNode(ev, ElementType.XOR_GATE, datatypes); }
 		
 		Collection<ParallelGateway> and = modelInst.getModelElementsByType(ParallelGateway.class);
-		for (ParallelGateway ev: and) { makeActionNode(modelInst, ev, ElementType.AND_GATE); }
+		for (ParallelGateway ev: and) { makeActionNode(ev, ElementType.AND_GATE, datatypes); }
 		
 		// relate nodes to edges
 		for (Edge e: model.edges) {
@@ -213,7 +216,7 @@ public class Main {
 	/*
 	 * Parse and add DataStores and MessageQueues.
 	 */
-	static void makeDataNode(BpmnModelInstance modelInst, ItemAwareElement elem, ElementType type) {
+	static void makeDataNode(ItemAwareElement elem, ElementType type, Map<String, DataType> datatypes) {
 		String name = NameResolver.getName(elem);
 		String id = elem.getId();
 		Element node = new Element(type, name, id);
@@ -223,8 +226,7 @@ public class Main {
 		node.setParent(getParentId(elem));
 		node.setComponent(getParentComponents(elem));
 		String datatyperef = elem.getAttributeValueNs("http://bpmn4s", "dataTypeRef");
-		DataType dt = getExtensionElementById(modelInst, DataType.class, datatyperef);
-		String dtname = dt != null? dt.getAttributeValue("name"): datatyperef;
+		String dtname = resolveTypeRef(datatyperef, datatypes);
 		node.setDataType(dtname);
 		String init = elem.getAttributeValueNs("http://bpmn4s", "init");
 		node.setInit(init);
@@ -246,7 +248,7 @@ public class Main {
 		return value == null ? new String[0] : value.split("\\s+");
 	}
 	
-	public static void parseTask(BpmnModelInstance modelInst, Task t) {
+	public static void parseTask(Task t, Map<String, DataType> datatypes) {
 		String subTypeString = t.getAttributeValueNs("http://bpmn4s", "subType");
 		ElementType taskType = ElementType.NONE;;
 		if(subTypeString != null) {
@@ -258,22 +260,22 @@ public class Main {
 				taskType = ElementType.ASSERT_TASK;
 			}
 		}
-		makeActionNode(modelInst, t, ElementType.TASK, taskType);
+		makeActionNode(t, ElementType.TASK, taskType, datatypes);
 		parseDataAssociations(t);
 	}
 
-	static void parseEvent(BpmnModelInstance modelInst, Event ev, ElementType type) {
-		makeActionNode(modelInst, ev, type);
+	static void parseEvent(Event ev, ElementType type, Map<String, DataType> datatypes) {
+		makeActionNode(ev, type, datatypes);
 	}
 
-	public static void parseDataType(BpmnModelInstance modelInst, DataType dt) {
-		String type = dt.getAttributeValue("type");
+	public static void parseDataType(DataType dt, Map<String, DataType> datatypes) {
+		String type = dt.getType();
 		Bpmn4sDataType datatype = switch (type) {
 			case Bpmn4sDataType.RECORD_TYPE,
-			     Bpmn4sDataType.CONTEXT_TYPE -> parseRecord(modelInst, dt);
-			case Bpmn4sDataType.LIST_TYPE -> parseList(modelInst, dt);
-			case Bpmn4sDataType.SET_TYPE -> parseSet(modelInst, dt);
-			case Bpmn4sDataType.MAP_TYPE -> parseMap(modelInst, dt);
+			     Bpmn4sDataType.CONTEXT_TYPE -> parseRecord(dt, datatypes);
+			case Bpmn4sDataType.LIST_TYPE -> parseList(dt, datatypes);
+			case Bpmn4sDataType.SET_TYPE -> parseSet(dt, datatypes);
+			case Bpmn4sDataType.MAP_TYPE -> parseMap(dt, datatypes);
 			case Bpmn4sDataType.ENUM_TYPE -> parseEnum(dt);
 			case Bpmn4sDataType.STRING_TYPE,
 			     Bpmn4sDataType.INT_TYPE,
@@ -289,38 +291,28 @@ public class Main {
 	}
 	
 	public static BaseType parseBase(DataType dt) {
-		return new BaseType(dt.getAttributeValue("name"),
-				dt.getAttributeValue("type"));
+		return new BaseType(dt.getName(), dt.getType());
 	}
 
 	public static EnumerationType parseEnum(DataType dt) {
-		EnumerationType result = new EnumerationType(dt.getAttributeValue("name"));
+		EnumerationType result = new EnumerationType(dt.getName());
 		for(Literal lit: dt.getChildElementsByType(Literal.class)) {
-			String name = lit.getAttributeValue("name");
-			String value = lit.getAttributeValue("value");
+			String name = lit.getName();
+			String value = lit.getValue();
 			result.addLiteral(name, value);
 		}
 		return result;
 	}
 	
-	public static RecordType parseRecord(BpmnModelInstance modelInst, DataType dt) {
-		String name = dt.getAttributeValue("name");
+	public static RecordType parseRecord(DataType dt, Map<String, DataType> datatypes) {
+		String name = dt.getName();
 		RecordType rec = new RecordType(name);
 		for(Field f: dt.getChildElementsByType(Field.class)) {
-			String fname = f.getAttributeValue("name");
-			String tref = f.getAttributeValue("typeRef");
+			String fname = f.getName();
 			// tref is either a string representing a basic type (such as int or string) or
 			// an id referencing a user defined data type. We assume the later and fall back 
 			// on the former case.
-			Collection<DataType> datatypes = modelInst.getModelElementsByType(DataType.class);
-			String ftype = "";
-			for (DataType t: datatypes) {
-				if (tref.equals(t.getAttributeValue("id"))) {
-					ftype = t.getAttributeValue("name");
-					break;
-				}
-			}
-			ftype = ftype.equals("") ? tref : ftype;
+			String ftype = resolveTypeRef(f.getTypeRef(), datatypes);
 			RecordFieldKind fKind = RecordFieldKind.parse(f.getAttributeValueNs("http://bpmn4s", "kind"));
 			Boolean fSuppress = "true".equalsIgnoreCase(f.getAttributeValueNs("http://bpmn4s", "suppressUpdate"));
 			rec.addField(fname, ftype, fKind, fSuppress);
@@ -328,43 +320,33 @@ public class Main {
 		return rec;
 	}
 	
-	public static String getInnerType(BpmnModelInstance modelInst, DataType dt) {
-		String tref = dt.getAttributeValue("valueTypeRef");
-		DataType datatype = getExtensionElementById(modelInst, DataType.class, tref);
-		String vtype = datatype != null ? datatype.getAttributeValue("name") : tref;
-		return vtype;
+	public static String resolveTypeRef(String typeRef, Map<String, DataType> datatypes) {
+		return datatypes.containsKey(typeRef) ? datatypes.get(typeRef).getName() : typeRef;
 	}
 	
-	public static ListType parseList (BpmnModelInstance modelInst, DataType dt) {
-		String name = dt.getAttributeValue("name");
-		ListType list = new ListType(name, getInnerType(modelInst, dt));
-		return list;
+	public static ListType parseList (DataType dt, Map<String, DataType> datatypes) {
+		return new ListType(dt.getName(), resolveTypeRef(dt.getValueTypeRef(), datatypes));
 	}
 	
-	public static SetType parseSet (BpmnModelInstance modelInst, DataType dt) {
-		String name = dt.getAttributeValue("name");
-		SetType set = new SetType(name, getInnerType(modelInst, dt));
-		return set;
+	public static SetType parseSet (DataType dt, Map<String, DataType> datatypes) {
+		return new SetType(dt.getName(), resolveTypeRef(dt.getValueTypeRef(), datatypes));
 	}
 	
-	public static MapType parseMap (BpmnModelInstance modelInst, DataType dt) {
-		String ktype = dt.getAttributeValue("keyTypeRef");
-		String name = dt.getAttributeValue("name");
-		MapType map = new MapType(name, ktype, getInnerType(modelInst, dt));
-		return map;
+	public static MapType parseMap (DataType dt, Map<String, DataType> datatypes) {
+		return new MapType(dt.getName(), dt.getKeyTypeRef(), resolveTypeRef(dt.getValueTypeRef(), datatypes));
 	}
 
-	public static void parseProcess(BpmnModelInstance modelInst, Process p) {
-		makeActionNode(modelInst, p, ElementType.COMPONENT);
+	public static void parseProcess(Process p, Map<String, DataType> datatypes) {
+		makeActionNode(p, ElementType.COMPONENT, datatypes);
 	}	
 	
-	public static void parseSubprocess(BpmnModelInstance modelInst, SubProcess sp) {
+	public static void parseSubprocess(SubProcess sp, Map<String, DataType> datatypes) {
 		String subtype = sp.getAttributeValueNs("http://bpmn4s", "subType");
 		if (subtype != null && subtype.equals(SUBTYPE_COMPONENT)) {
-			makeActionNode(modelInst, sp, ElementType.COMPONENT);
+			makeActionNode(sp, ElementType.COMPONENT, datatypes);
 			parseDataAssociations(sp);
 		} else {
-			makeActionNode(modelInst, sp, ElementType.ACTIVITY);
+			makeActionNode(sp, ElementType.ACTIVITY, datatypes);
 			parseDataAssociations(sp);
 		}
 	}	
@@ -409,8 +391,8 @@ public class Main {
 		
 	}
 	
-	public static void makeActionNode(BpmnModelInstance modelInst, BaseElement elem, ElementType type) {
-		makeActionNode(modelInst, elem, type, ElementType.NONE);
+	public static void makeActionNode(BaseElement elem, ElementType type, Map<String, DataType> datatypes) {
+		makeActionNode(elem, type, ElementType.NONE, datatypes);
 	}
 	
 	/**
@@ -418,8 +400,8 @@ public class Main {
 	 * Task elements may have a taskType such as COMPOSE or RUN, to indicate 
 	 * they are part of generated tests.
 	 */
-	public static void makeActionNode(BpmnModelInstance modelInst, BaseElement elem, ElementType type, ElementType taskType) {
-		String name = getName(elem);
+	public static void makeActionNode(BaseElement elem, ElementType type, ElementType taskType, Map<String, DataType> datatypes) {
+		String name = elem.getAttributeValue("name");
 		String id = elem.getId();
 		Element node = new Element(type, taskType, name);
 		node.setId(id);
@@ -435,12 +417,7 @@ public class Main {
 		String contextTypeId = elem.getAttributeValueNs("http://bpmn4s", "ctxTypeRef");
 		String contextTypeName = "";
 		if (contextTypeId != null) {
-			DataType contextType = getExtensionElementById(modelInst, DataType.class, contextTypeId);
-			if (contextType != null) { 
-				contextTypeName = contextType.getAttributeValue("name"); 
-			} else {
-				contextTypeName = contextTypeId;
-			}
+			contextTypeName = resolveTypeRef(contextTypeId, datatypes);
 		}
 		if(contextInit != null && contextInit.startsWith("=")) {
 			contextInit = contextInit.substring(1); // FIXME due to issues with bpmn4s editor lsp integration
@@ -480,10 +457,6 @@ public class Main {
 		return "subProcess".equals(isSubprocess) && SUBTYPE_COMPONENT.equals(isComponent);
 	}
 	
-	static String getName(ModelElementInstance elem) {
-		return elem.getAttributeValue("name");
-	}
-
 	/* 
 	 * Return a list with the parent elements which are components, 
 	 * ordered from top parent to bottom parent.
@@ -509,23 +482,4 @@ public class Main {
 		}
 		return parent.getAttributeValue("id");
 	}
-	
-	/*
-	 * FIXME I don't know how to getElementById when the element is an
-	 * extension element. So I made this function to help me.
-	 */
-	static <T extends ModelElementInstance> T getExtensionElementById (
-			BpmnModelInstance modelInst, 
-			Class<T> elementClass, 
-			String id) 
-	{
-		Collection<T> elements = (Collection<T>) modelInst.getModelElementsByType(elementClass);
-		for (T elem: elements) {
-			if (elem.getAttributeValue("id").equals(id)) {
-				return elem;
-			}
-		}
-		return null;
-	}
-
 }
