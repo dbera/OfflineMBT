@@ -245,29 +245,6 @@ public enum ExpressionFunction {
 			return String.format("<T int|real> %s(T): T", name());
 		}
 	},
-// Disabled support for bulkdata
-//	length {
-//		@Override
-//		public TypeObject inferType(List<Expression> args) {
-//			return intType;
-//		}
-//
-//		@Override
-//		public Pair<Integer, String> validate(List<Expression> args) {
-//			if (args.size() != 1) {
-//				return Pair.of(-1, "Function length expects one argument");
-//			}
-//			if (!subTypeOf(typeOf(args.get(0)), bulkdataType)) {
-//				return Pair.of(0, "Function length expects an argument of type bulkdata");
-//			}
-//			return null;
-//		}
-//
-//		@Override
-//		public String getDocumentation() {
-//			return String.format("%s(bulkdata): int", name());
-//		}
-//	},
 	hasKey {
 		@Override
 		public TypeObject inferType(List<Expression> args, int argIndex) {

@@ -1,0 +1,226 @@
+////
+  // Copyright (c) 2024, 2025 TNO-ESI
+  //
+  // See the NOTICE file(s) distributed with this work for additional
+  // information regarding copyright ownership.
+  //
+  // This program and the accompanying materials are made available
+  // under the terms of the MIT License which is available at
+  // https://opensource.org/licenses/MIT
+  //
+  // SPDX-License-Identifier: MIT
+////
+
+=== Types [[nl.esi.comma.types]]
+:lang: en
+
+[.normal]
+
+==== Type Definitions
+
+Users can define types in type models stored in files with extension '.types'.
+
+A type model may import other type models by the following file import statement:
+
+....
+import "myTypes.types"
+....
+
+This file import mechanism works transitively: when a type model is imported, the models imported by it are also imported.
+
+It is also possible to import namespaces:
+
+....
+import myproject.types.*
+....
+
+File imports and namespace imports cannot be used together (see the Help page on namespaces).
+
+There are a number of aspects in using types: the _definition_ of a type, _using_ a type in a declaration (e.g. by name or inline constructor), and the _syntax of the values_ of a type.
+In the following explanations these aspects are addressed.
+
+*Predefined basic types:* bool, int, real, string, void.
+
+_bool_, _int_, _real_, and _string_ are commonly found in many programming and modeling languages.
+
+_void_ can only be used as a return type and indicates that no result is produced.
+
+The following example shows the usage of these types in variable declarations and the syntax of their values.
+
+
+....
+...
+variables
+
+int i
+bool b
+real f
+string s
+
+init
+
+i := 23
+b := true
+s := "John Smith"
+f := 3.2
+f := 2.0e-5 // values of type real can also use the exponential notation with 'e'.
+....
+
+
+[maroon]#*User-defined basic types.*# Users can define their own basic types:
+....
+   type unit
+   type uint
+   type wstring
+   type Pixel
+   type Time
+   type Command
+....
+
+User-defined basic types are uninterpreted, their set of values is unknown. It is possible to relate a basic type to one of the predefined types _int_, _string_, and _real_. In this way values of the predefined type can be used for the basic type:
+
+
+`[maroon]#type# unit [maroon]#based on# int`
+
+[maroon]#*Enumeration types.*# An example of enumeration type definition:
+
+....
+enum Mode {
+    updating
+    working
+    sleeping
+}
+....
+
+Optionally, enumeration literals may be assigned with non-negative integers:
+
+....
+enum Mode {
+    updating = 1 //if not explicitly given, the first literal assumes value 0
+    working  //if not given, the value will increment the previous one, i.e. 2
+    sleeping = 4 //user may give a value greater than the increment of the previous value 
+}
+....
+
+Once defined, the type can be referred to by its name in the models, for example, in variable declarations.
+The values of an enumeration type are the literals it contains.
+
+Example usage of enumeration type and its values:
+
+....
+variables
+Mode m
+
+init
+m := Mode::working // The value is formed by prefixing the literal with the type name
+
+....
+
+[maroon]#*Vector Types*#
+
+Vector types are constructed by giving a base type and a number of dimensions.
+For each dimension, an optional size can be given.
+The type constructed this way can be used inline in a declaration or can be given a name.
+
+Examples of named vector types:
+
+....
+vector Image = Pixel [ 10 ] [ 20 ]
+vector Requests = Command [] // vector without an explicit size
+vector Matrix = int[2][2]
+....
+
+Example use of vector types in declarations:
+
+....
+variables
+
+Image img // vector type referred to by name
+string[][3] quarters // vector type constructed and used inline
+....
+
+Literal values of vector types have the syntax: <VectorType>[element1, element2, ...]. For example:
+
+....
+variables
+int[] numbers
+Matrix m
+string[][3] quarters
+
+init
+numbers := <int[]>[] // example of empty vector of integers
+numbers := <int[]>[1, 2] // vector with two elements
+
+m := <Matrix>[<int[2]>[1, 2], <int[2]>[3, 4]]
+
+quarters := <string[][3]>[<string[3]>["Jan", "Feb", "Mar"]]
+....
+
+[maroon]#*Record Types*#
+
+An example definition of record type:
+....
+record Status {
+    Image image1
+    Pixel [10 ] [ 20 ] image2
+    Time time
+}
+....
+
+It is also possible for one record type to extend another:
+
+....
+record Person {
+    string name
+    string address
+}
+
+record Student extends Person{
+    string university
+}
+....
+
+Instances of record types have the syntax: TypeName{field1 = value1, field2 = value2, ...}. For example:
+
+....
+Person p
+...
+p := Person{name = "John", age = 25}
+....
+
+[maroon]#*Map Types*#
+
+Map types are constructed by giving the types of the keys and values of the map. The key type must be a basic type or enumeration.
+
+....
+MapInt2Int = map<int, int>
+....
+
+Map types can also be used inline (without giving a name).
+
+Values of map types have the syntax: <type>{key1 -> value1, key2 -> value2, ...}. For example:
+
+....
+MapInt2Int m1 // map type referred by name
+map<int, int> m2 // map type constructed inline
+...
+
+m1 := <MapInt2Int>{} // example of an empty map
+m2 := <map<int, int>>{1 -> 0, 2 -> 0}
+....
+
+==== Default Values
+
+Every type has a default value. It is usually used to automatically initialize variables that are not explicitly given a value. Below are the default values for each type.
+
+_Default values:_
+
+* int: 0
+* real: 0.0
+* bool: true
+* string: ""
+* enums: the first enumeration literal
+* records: a record with the default values for the field types
+* vector: an empty vector
+* map: an empty map
+

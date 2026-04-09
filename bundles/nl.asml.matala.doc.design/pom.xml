@@ -30,6 +30,24 @@
     <build>
         <plugins>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>unpack-adoc-resources</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>unpack-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <includes>adoc/*.adoc</includes>
+                            <outputDirectory>
+                                ${project.build.directory}/adoc-gen/extracted</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.5.0</version>
@@ -140,7 +158,6 @@
                                 <inputFile>${project.build.directory}/meta-models/nl.esi.comma.inputspecification/model/generated/InputSpecification.ecore</inputFile>
                                 <inputFile>${project.build.directory}/meta-models/nl.esi.comma.project.standard/model/generated/StandardProject.ecore</inputFile>
                                 <inputFile>${project.build.directory}/meta-models/nl.esi.comma.scenarios/model/generated/Scenarios.ecore</inputFile>
-                                <inputFile>${project.build.directory}/meta-models/nl.esi.comma.signature/model/generated/InterfaceSignature.ecore</inputFile>
                                 <inputFile>${project.build.directory}/meta-models/nl.esi.comma.steps/model/generated/Step.ecore</inputFile>
                                 <inputFile>${project.build.directory}/meta-models/nl.esi.comma.systemconfig/model/generated/Configuration.ecore</inputFile>
                                 <inputFile>${project.build.directory}/meta-models/nl.esi.comma.testspecification/model/generated/Testspecification.ecore</inputFile>
