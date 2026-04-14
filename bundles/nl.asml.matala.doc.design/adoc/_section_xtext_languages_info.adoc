@@ -16,7 +16,6 @@ include::_initCommon.adoc[]
 
 ifdef::gendocdir-extracted[]
 include::{gendocdir-extracted}/nl.esi.comma.types.adoc[]
-
 endif::[] 
 ifndef::gendocdir-extracted[]
 include::{pluginsdir}/nl.esi.comma.types/adoc/nl.esi.comma.types.adoc[]
