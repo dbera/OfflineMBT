@@ -15,13 +15,14 @@ package nl.esi.comma.expressions.utilities
 import nl.esi.comma.expressions.expression.ExpressionAny
 import nl.esi.comma.expressions.expression.ExpressionBinary
 import nl.esi.comma.expressions.expression.ExpressionBracket
-import nl.esi.comma.expressions.expression.ExpressionBulkData
 import nl.esi.comma.expressions.expression.ExpressionConstantBool
 import nl.esi.comma.expressions.expression.ExpressionConstantInt
 import nl.esi.comma.expressions.expression.ExpressionConstantReal
 import nl.esi.comma.expressions.expression.ExpressionConstantString
 import nl.esi.comma.expressions.expression.ExpressionEnumLiteral
 import nl.esi.comma.expressions.expression.ExpressionFunctionCall
+import nl.esi.comma.expressions.expression.ExpressionMap
+import nl.esi.comma.expressions.expression.ExpressionMapRW
 import nl.esi.comma.expressions.expression.ExpressionQuantifier
 import nl.esi.comma.expressions.expression.ExpressionRecord
 import nl.esi.comma.expressions.expression.ExpressionRecordAccess
@@ -30,8 +31,6 @@ import nl.esi.comma.expressions.expression.ExpressionVariable
 import nl.esi.comma.expressions.expression.ExpressionVector
 import nl.esi.comma.expressions.expression.Variable
 import nl.esi.comma.types.utilities.TypesComparator
-import nl.esi.comma.expressions.expression.ExpressionMap
-import nl.esi.comma.expressions.expression.ExpressionMapRW
 
 class ExpressionsComparator extends TypesComparator {
 	
@@ -103,10 +102,6 @@ class ExpressionsComparator extends TypesComparator {
 		exp1.map.sameAs(exp2.map) &&
 		exp1.key.sameAs(exp2.key) &&
 		exp1.value.sameAs(exp2.value)
-	}
-	
-	def dispatch boolean compare(ExpressionBulkData exp1, ExpressionBulkData exp2){
-		exp1.size == exp2.size
 	}
 	
 	def dispatch boolean compare(ExpressionAny exp1, ExpressionAny exp2){

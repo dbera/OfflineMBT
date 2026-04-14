@@ -115,12 +115,4 @@ class BasicTypes {
     static def SimpleTypeDecl getIdType(EObject anchor) {
         return getBasicType(anchor, 'id')
     }
-
-    static def SimpleTypeDecl getBulkDataType() {
-        return getBulkDataType(null)
-    }
-
-    static def SimpleTypeDecl getBulkDataType(EObject anchor) {
-        return getBasicType(anchor, 'bulkdata')
-    }
 }

@@ -18,7 +18,6 @@ import java.util.LinkedHashSet
 import java.util.Set
 import nl.asml.matala.product.product.Block
 import nl.asml.matala.product.product.Blocks
-import nl.esi.comma.assertthat.assertThat.DataAssertions
 import nl.asml.matala.product.product.DataConstraints
 import nl.asml.matala.product.product.DataReferences
 import nl.asml.matala.product.product.Function
@@ -31,10 +30,10 @@ import nl.asml.matala.product.product.UpdateOutVar
 import nl.asml.matala.product.product.VarRef
 import nl.esi.comma.actions.actions.AssignmentAction
 import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
+import nl.esi.comma.assertthat.assertThat.DataAssertions
 import nl.esi.comma.expressions.expression.ExpressionAddition
 import nl.esi.comma.expressions.expression.ExpressionAnd
 import nl.esi.comma.expressions.expression.ExpressionAny
-import nl.esi.comma.expressions.expression.ExpressionBulkData
 import nl.esi.comma.expressions.expression.ExpressionConstantBool
 import nl.esi.comma.expressions.expression.ExpressionConstantInt
 import nl.esi.comma.expressions.expression.ExpressionConstantReal
@@ -160,10 +159,6 @@ class Utils
     }
 
     def dispatch ArrayList<String> findVariableAssignments(ExpressionAny e) {
-        return new ArrayList<String>()
-    }
-
-    def dispatch ArrayList<String> findVariableAssignments(ExpressionBulkData b) {
         return new ArrayList<String>()
     }
 
