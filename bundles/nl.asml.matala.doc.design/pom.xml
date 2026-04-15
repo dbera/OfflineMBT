@@ -41,7 +41,7 @@
                         </goals>
                         <configuration>
                             <includes>adoc/**</includes>
-                            <outputDirectory>${project.build.directory}/adoc-extracted</outputDirectory>
+                            <outputDirectory>${project.build.directory}/adoc-ext</outputDirectory>
                         </configuration>
                     </execution>
                 </executions>
@@ -137,7 +137,7 @@
                         <configuration>
                             <resolve>true</resolve>
                             <config>
-                                <documentTitle>Matala meta-models</documentTitle>
+                                <documentTitle>Language meta-models</documentTitle>
                                 <renderDefaults>false</renderDefaults>
                                 <repeatInherited>false</repeatInherited>
                                 <renderDiagrams>true</renderDiagrams>
@@ -183,7 +183,6 @@
                         <imagesdir />
                         <imgsdir>images</imgsdir>
                         <eclipse-help-location>https://help.eclipse.org/2024-09/topic</eclipse-help-location>
-                        <gendocdir-extracted>${project.build.directory}/adoc-extracted/adoc</gendocdir-extracted>
                     </attributes>
                     <resources>
                         <resource>
@@ -191,7 +190,7 @@
                             <targetPath>images</targetPath>
                         </resource>
                         <resource>
-                            <directory>${project.build.directory}/adoc-extracted/adoc</directory>
+                            <directory>${project.build.directory}/adoc-ext/adoc</directory>
                             <excludes>
                                 <exclude>**/*.adoc</exclude>
                             </excludes>

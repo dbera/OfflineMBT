@@ -12,12 +12,12 @@
 ////
 
 [[nl.esi.comma.types]]
-=== Types
+= Types
 :lang: en
 
 [.normal]
 
-==== Type Definitions
+== Type Definitions
 
 Users can define types in type models stored in files with extension '.types'.
 
@@ -210,7 +210,7 @@ m1 := <MapInt2Int>{} // example of an empty map
 m2 := <map<int, int>>{1 -> 0, 2 -> 0}
 ....
 
-==== Default Values
+== Default Values
 
 Every type has a default value. It is usually used to automatically initialize variables that are not explicitly given a value. Below are the default values for each type.
 

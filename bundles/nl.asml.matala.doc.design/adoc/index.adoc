@@ -33,24 +33,19 @@ image::{imgsdir}/under_construction.png[width=5464,height=704]
 
 <<<
 
-include::_section_xtext_languages_info.adoc[]
-
-<<<
-
-[appendix]
-include::developer-howto.adoc[]
-
-<<<
-
-[appendix]
 include::_section_xtext_languages.adoc[]
 
 <<<
 
 [appendix]
-include::{gendocdir}/ecore-documentation.adoc[leveloffset=1]
+include::_section_developer_howto.adoc[]
 
 <<<
 
 [appendix]
-include::design-decisions.adoc[]
+include::_section_design_decisions.adoc[]
+
+<<<
+
+[appendix]
+include::{gendocdir}/ecore-documentation.adoc[leveloffset=1]
