@@ -16,14 +16,12 @@
 package nl.esi.comma.expressions.formatting2
 
 import com.google.inject.Inject
-import nl.esi.comma.expressions.expression.Expression
 import nl.esi.comma.expressions.expression.ExpressionAddition
 import nl.esi.comma.expressions.expression.ExpressionAnd
 import nl.esi.comma.expressions.expression.ExpressionBracket
 import nl.esi.comma.expressions.expression.ExpressionDivision
 import nl.esi.comma.expressions.expression.ExpressionEnumLiteral
 import nl.esi.comma.expressions.expression.ExpressionEqual
-import nl.esi.comma.expressions.expression.ExpressionFunctionCall
 import nl.esi.comma.expressions.expression.ExpressionGeq
 import nl.esi.comma.expressions.expression.ExpressionGreater
 import nl.esi.comma.expressions.expression.ExpressionLeq
@@ -258,18 +256,6 @@ class ExpressionFormatter extends TypesFormatter {
 		//rFinder.assignment(pairAccess.valueAssignment_2).prepend(noSpace)
 		pair.key.format
 		pair.value.format
-	}
-	
-	def dispatch void format(ExpressionFunctionCall expr, extension IFormattableDocument document) {		
-		val rFinder = expr.regionFor
-		
-		rFinder.keyword(expressionFunctionCallAccess.leftParenthesisKeyword_1).prepend(oneSpace).append(noSpace)
-		rFinder.keyword(expressionFunctionCallAccess.rightParenthesisKeyword_3).prepend(oneSpace)
-		formatSimpleCommas(rFinder.keywords(expressionFunctionCallAccess.commaKeyword_2_1_0), document)
-		
-		for(Expression sub : expr.args) {
-			sub.format
-		}
 	}
 	
 	def dispatch void format(ExpressionEnumLiteral expressionEnumLiteral, extension IFormattableDocument document) {

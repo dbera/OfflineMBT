@@ -110,12 +110,14 @@ public class DefaultExpressionFunctions {
 //		return map;
 //	}
 
-	/** Returns the element at {@code index}, or {@code null} if out of bounds. */
-	public static Expression get(ExpressionVector vector, long index) {
-		if (index >= 0 && index < vector.getElements().size()) {
-			return vector.getElements().get((int) index);
-		}
-		return null;
+	/** Returns the element at {@code index}, or @link {@link IndexOutOfBoundsException} */
+	public static Expression get(ExpressionMap map, long index) throws IndexOutOfBoundsException {
+		return map.getPairs().get((int) index).getValue();
+	}
+	
+	/** Returns the element at {@code index}, or Index out of bounds */
+	public static Expression get(ExpressionVector vector, long index) throws IndexOutOfBoundsException {
+		return vector.getElements().get((int) index);
 	}
 //	public static Object get(List<Object> list, long index) {
 //		if (index >= 0 && index < list.size()) {
@@ -124,11 +126,9 @@ public class DefaultExpressionFunctions {
 //		return null;
 //	}
 
-	/** Returns the vector with the element at {@code index} replaced by {@code value}. */
-	public static ExpressionVector at(ExpressionVector vector, long index, Expression value) {
-		if (index >= 0 && index < vector.getElements().size()) {
-			vector.getElements().set((int) index, value);
-		}
+	/** Returns the vector with the element at or {@link IndexOutOfBoundsException}. */
+	public static ExpressionVector at(ExpressionVector vector, long index, Expression value) throws IndexOutOfBoundsException {
+		vector.getElements().set((int) index, value);
 		return vector;
 	}
 //	public static List<Object> at(List<Object> list, long index, Object value) {

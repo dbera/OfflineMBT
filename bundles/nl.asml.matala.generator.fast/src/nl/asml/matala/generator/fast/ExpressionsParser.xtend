@@ -28,7 +28,7 @@ import nl.esi.comma.expressions.expression.ExpressionConstantString
 import nl.esi.comma.expressions.expression.ExpressionDivision
 import nl.esi.comma.expressions.expression.ExpressionEnumLiteral
 import nl.esi.comma.expressions.expression.ExpressionEqual
-import nl.esi.comma.expressions.expression.ExpressionFunctionCall
+import nl.esi.comma.expressions.expression.ExpressionFnCall
 import nl.esi.comma.expressions.expression.ExpressionGeq
 import nl.esi.comma.expressions.expression.ExpressionGreater
 import nl.esi.comma.expressions.expression.ExpressionLeq
@@ -55,7 +55,6 @@ import nl.esi.comma.expressions.expression.Field
 import nl.esi.comma.expressions.expression.VectorTypeConstructor
 import nl.esi.comma.types.types.SimpleTypeDecl
 import nl.esi.comma.types.types.TypeDecl
-import nl.esi.comma.expressions.expression.ExpressionFnCall
 
 class ExpressionsParser {
 	
@@ -220,10 +219,6 @@ class ExpressionsParser {
 	def static dispatch CharSequence generateExpression(ExpressionConstantInt expr, CharSequence ref)      
 	'''«expr.value»'''	
 
-
-    def static dispatch CharSequence generateExpression(ExpressionFunctionCall expr, CharSequence ref)   {
-        return generateExpression(expr.functionName, expr.args, ref);
-    }
 
     def static dispatch CharSequence generateExpression(ExpressionFnCall expr, CharSequence ref)   {
         return generateExpression(expr.function.name, expr.args, ref);

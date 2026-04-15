@@ -53,24 +53,22 @@ class ExpressionFunctionsValidation {
     @Test
     def void registeredFunction_wrongArgCount_validationError() {
         val result = parse('''
-            function int size()
             int r = call size()
         ''')
         val ex = assertThrows(ValidationException) [EcoreUtil3.validate(result)]
-        assertTrue(ex.message.contains('No matching overload found for function size'),
-            '''Expected "No matching overload found for size." but got: «ex.message»''')
+        assertTrue(ex.message.contains('No Function size declared with 0 arguments'),
+            '''Expected "No Function size declared with 0 arguments" but got: «ex.message»''')
     }
 
     @Test
     def void registeredFunction_incompatibleArgType_validationError() {
         // 'isEmpty' expects a vector; bool has no converter to ExpressionVector.
         val result = parse('''
-            function bool isEmpty(bool v)
             bool r = call isEmpty(true)
         ''')
         val ex = assertThrows(ValidationException) [EcoreUtil3.validate(result)]
-        assertTrue(ex.message.contains('No matching overload found for function isEmpty'),
-            '''Expected "No matching overload found for isEmpty." but got: «ex.message»''')
+        assertTrue(ex.message.contains('Function isEmpty expects argument 1 to be of type any[]'),
+            '''Expected "Function isEmpty expects 1 arguments to be of any[]" but got: «ex.message»''')
     }
 
     @Test
@@ -89,8 +87,8 @@ class ExpressionFunctionsValidation {
             bool r = call myFn()
         ''')
         val ex = assertThrows(ValidationException) [EcoreUtil3.validate(result)]
-        assertTrue(ex.message.contains('Function myFn expects 1 arguments.'),
-            '''Expected "Function myFn expects 1 arguments." but got: «ex.message»''')
+        assertTrue(ex.message.contains('No Function myFn declared with 0 arguments'),
+            '''Expected "No Function myFn declared with 0 arguments : «ex.message»''')
     }
 
     @Test
@@ -102,6 +100,123 @@ class ExpressionFunctionsValidation {
         val ex = assertThrows(ValidationException) [EcoreUtil3.validate(result)]
         assertTrue(ex.message.contains('Function myFn expects argument 1 to be of type int.'),
             '''Expected "Function myFn expects argument 1 to be of type int." but got: «ex.message»''')
+    }
+
+    // ========================================================================
+    // Function overload tests - by number of arguments
+    // ========================================================================
+
+    @Test
+    def void functionOverload_zeroArgs_noValidationError() {
+        val result = parse('''
+            function int overloaded()
+            function int overloaded(int x)
+            function int overloaded(int x, int y)
+            int r = call overloaded()
+        ''')
+        assertDoesNotThrow [EcoreUtil3.validate(result)]
+    }
+
+    @Test
+    def void functionOverload_oneArg_noValidationError() {
+        val result = parse('''
+            function int overloaded()
+            function int overloaded(int x)
+            function int overloaded(int x, int y)
+            int r = call overloaded(5)
+        ''')
+        assertDoesNotThrow [EcoreUtil3.validate(result)]
+    }
+
+    @Test
+    def void functionOverload_twoArgs_noValidationError() {
+        val result = parse('''
+            function int overloaded()
+            function int overloaded(int x)
+            function int overloaded(int x, int y)
+            int r = call overloaded(5, 10)
+        ''')
+        assertDoesNotThrow [EcoreUtil3.validate(result)]
+    }
+
+    @Test
+    def void functionOverload_threeArgs_notDeclared_validationError() {
+        val result = parse('''
+            function int overloaded()
+            function int overloaded(int x)
+            function int overloaded(int x, int y)
+            int r = call overloaded(5, 10, 15)
+        ''')
+        val ex = assertThrows(ValidationException) [EcoreUtil3.validate(result)]
+        assertTrue(ex.message.contains('No Function overloaded declared with 3 arguments'),
+            '''Expected "No Function overloaded declared with 3 arguments" but got: «ex.message»''')
+    }
+
+    @Test
+    def void functionOverload_multipleOverloads_differentTypes_noValidationError() {
+        val result = parse('''
+            function int compute(int x)
+            function bool compute(bool x)
+            function string compute(string x)
+            int r1 = call compute(5)
+            bool r2 = call compute(true)
+            string r3 = call compute("test")
+        ''')
+        assertDoesNotThrow [EcoreUtil3.validate(result)]
+    }
+
+    @Test
+    def void functionOverload_mixedArgCounts_allValid_noValidationError() {
+        val result = parse('''
+            function int calc()
+            function int calc(int a)
+            function int calc(int a, int b)
+            function int calc(int a, int b, int c)
+            int r0 = call calc()
+            int r1 = call calc(1)
+            int r2 = call calc(1, 2)
+            int r3 = call calc(1, 2, 3)
+        ''')
+        assertDoesNotThrow [EcoreUtil3.validate(result)]
+    }
+
+    @Test
+    def void functionOverload_wrongArgCount_betweenOverloads_validationError() {
+        // Function has 1-arg and 3-arg overloads, but not 2-arg
+        val result = parse('''
+            function int process(int x)
+            function int process(int x, int y, int z)
+            int r = call process(1, 2)
+        ''')
+        val ex = assertThrows(ValidationException) [EcoreUtil3.validate(result)]
+        assertTrue(ex.message.contains('No Function process declared with 2 arguments'),
+            '''Expected "No Function process declared with 2 arguments" but got: «ex.message»''')
+    }
+
+    @Test
+    def void functionOverload_sameArgCount_differentTypes_wrongType_validationError() {
+        val result = parse('''
+            function int transform(int x)
+            function bool transform(bool x)
+            int r = call transform(true)
+        ''')
+        val ex = assertThrows(ValidationException) [EcoreUtil3.validate(result)]
+        assertTrue(ex.message.contains('''Type mismatch: declared type 'int' does not match the expected type 'bool' '''),
+            '''Expected "Type mismatch: declared type 'int' does not match the expected type 'bool'" but got: «ex.message»''')
+    }
+
+    @Test
+    def void functionOverload_variadicStyle_sequentialArgCounts_noValidationError() {
+        // Simulates variadic behavior by declaring overloads for 0, 1, 2, 3, 4 args
+        val result = parse('''
+            function int sum()
+            function int sum(int a)
+            function int sum(int a, int b)
+            function int sum(int a, int b, int c)
+            function int sum(int a, int b, int c, int d)
+            int r = call sum(1, 2, 3)
+        ''')
+        assertDoesNotThrow [EcoreUtil3.validate(result)]
     }
     
     private def ExpressionModel parse(String model) {

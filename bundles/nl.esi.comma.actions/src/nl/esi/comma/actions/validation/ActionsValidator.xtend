@@ -35,6 +35,7 @@ import org.eclipse.xtext.validation.Check
 
 import static extension nl.esi.comma.actions.utilities.ActionsUtilities.*
 import static extension nl.esi.comma.types.utilities.TypeUtilities.*
+import static extension nl.esi.comma.expressions.utilities.ExpressionsUtilities.*
 
 class ActionsValidator extends AbstractActionsValidator {
 	public static final String REPLY_WRONG_NUMBER_PARAMS = "trigger_remove_param"

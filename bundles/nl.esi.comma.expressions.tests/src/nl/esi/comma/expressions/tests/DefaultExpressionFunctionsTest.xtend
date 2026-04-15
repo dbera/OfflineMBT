@@ -17,8 +17,10 @@ import nl.esi.comma.expressions.expression.ExpressionModel
 import nl.esi.comma.expressions.functions.DefaultExpressionFunctions
 import nl.esi.comma.expressions.functions.InMemoryExprResourceRegistry
 import org.eclipse.xtext.resource.XtextResourceSet
+import org.eclipse.xtext.scoping.IGlobalScopeProvider
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.BeforeEach
 
 /**
  * Tests that DefaultExpressionFunctions is correctly registered in-memory via
@@ -40,6 +42,15 @@ class DefaultExpressionFunctionsTest extends ExpressionEvaluatorTestBase {
 
     @Inject InMemoryExprResourceRegistry inMemoryRegistry
     @Inject XtextResourceSet resourceSet
+    
+    @BeforeEach 
+    def void setImports(){
+        var handler = inMemoryRegistry.getURIHandler();
+        resourceSet.URIConverter?.URIHandlers?.add(0, handler);
+    }
+    
+    
+    
 
     @Test
     def void defaultFunctions_registeredInMemory_uriExists() {

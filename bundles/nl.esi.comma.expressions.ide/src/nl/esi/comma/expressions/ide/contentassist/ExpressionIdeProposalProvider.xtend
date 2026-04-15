@@ -25,7 +25,6 @@ import nl.esi.comma.expressions.expression.TypeAnnotation
 import nl.esi.comma.expressions.services.ExpressionGrammarAccess
 import nl.esi.comma.expressions.utilities.ProposalHelper
 import nl.esi.comma.expressions.utilities.UnsupportedTypeException
-import nl.esi.comma.expressions.validation.ExpressionFunction
 import nl.esi.comma.types.types.EnumTypeDecl
 import nl.esi.comma.types.types.Type
 import nl.esi.comma.types.types.TypeReference
@@ -36,7 +35,6 @@ import org.eclipse.xtext.RuleCall
 import org.eclipse.xtext.ide.editor.contentassist.ContentAssistContext
 import org.eclipse.xtext.ide.editor.contentassist.ContentAssistEntry
 import org.eclipse.xtext.ide.editor.contentassist.IIdeContentProposalAcceptor
-import org.eclipse.xtext.util.TextRegion
 
 import static extension org.eclipse.xtext.EcoreUtil2.getContainerOfType
 
@@ -70,21 +68,22 @@ class ExpressionIdeProposalProvider extends AbstractExpressionIdeProposalProvide
                     createDefaultValue(mapType.valueType, null, context, acceptor)
                 }
             }
-            case feature == 'functionName': {
-                for (func : ExpressionFunction.values) {
-                    val proposal = proposalCreator.createProposal(func.name + '()', context, [ entry |
-                        entry.kind = ContentAssistEntry.KIND_FUNCTION
-                        entry.label = func.name
-                        entry.description = 'Function'
-                        entry.documentation = func.documentation
-                        entry.editPositions +=
-                            new TextRegion(context.offset + func.name.length + 1, entry.proposal.length - 2)
-                    ])
-                    if (proposal !== null) {
-                        acceptor.accept(proposal, proposalPriorities.getDefaultPriority(proposal))
-                    }
-                }
-            }
+//TODO Check and remove
+//            case feature == 'functionName': {
+//                for (func : ExpressionFunction.values) {
+//                    val proposal = proposalCreator.createProposal(func.name + '()', context, [ entry |
+//                        entry.kind = ContentAssistEntry.KIND_FUNCTION
+//                        entry.label = func.name
+//                        entry.description = 'Function'
+//                        entry.documentation = func.documentation
+//                        entry.editPositions +=
+//                            new TextRegion(context.offset + func.name.length + 1, entry.proposal.length - 2)
+//                    ])
+//                    if (proposal !== null) {
+//                        acceptor.accept(proposal, proposalPriorities.getDefaultPriority(proposal))
+//                    }
+//                }
+//            }
         }
     }
 
@@ -93,8 +92,7 @@ class ExpressionIdeProposalProvider extends AbstractExpressionIdeProposalProvide
             case grammarAccess.expressionConstantBoolRule,
             case grammarAccess.expressionConstantIntRule,
             case grammarAccess.expressionConstantRealRule,
-            case grammarAccess.expressionConstantStringRule,
-            case grammarAccess.expressionFunctionCallRule: {
+            case grammarAccess.expressionConstantStringRule: {
                 return
             }
         }

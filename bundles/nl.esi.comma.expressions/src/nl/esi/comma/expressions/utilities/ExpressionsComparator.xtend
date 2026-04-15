@@ -21,7 +21,6 @@ import nl.esi.comma.expressions.expression.ExpressionConstantReal
 import nl.esi.comma.expressions.expression.ExpressionConstantString
 import nl.esi.comma.expressions.expression.ExpressionEnumLiteral
 import nl.esi.comma.expressions.expression.ExpressionFnCall
-import nl.esi.comma.expressions.expression.ExpressionFunctionCall
 import nl.esi.comma.expressions.expression.ExpressionMap
 import nl.esi.comma.expressions.expression.ExpressionMapRW
 import nl.esi.comma.expressions.expression.ExpressionRecord
@@ -108,11 +107,6 @@ class ExpressionsComparator extends TypesComparator {
 		true
 	}
 	
-	def dispatch boolean compare(ExpressionFunctionCall exp1, ExpressionFunctionCall exp2){
-		if(exp1.functionName != exp2.functionName) return false
-		compareLists(exp1.args, exp2.args)
-	}
-
     def dispatch boolean compare(ExpressionFnCall exp1, ExpressionFnCall exp2){
         if(exp1.function.name != exp2.function.name) return false
         compareLists(exp1.args, exp2.args)

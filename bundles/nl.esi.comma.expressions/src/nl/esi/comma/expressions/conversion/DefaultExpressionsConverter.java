@@ -24,9 +24,7 @@ import nl.esi.comma.expressions.evaluation.IEvaluationContext;
 import nl.esi.comma.expressions.expression.Expression;
 import nl.esi.comma.expressions.expression.ExpressionMap;
 import nl.esi.comma.expressions.expression.ExpressionRecord;
-import nl.esi.comma.expressions.expression.ExpressionVariable;
 import nl.esi.comma.expressions.expression.ExpressionVector;
-import nl.esi.comma.expressions.expression.VariableDecl;
 import nl.esi.comma.types.types.Type;
 
 /**
@@ -45,6 +43,7 @@ public final class DefaultExpressionsConverter implements IExpressionConverter {
 
 	@Override
 	public Object toObject(Expression expression, Class<?> targetType, IEvaluationContext context) {
+
 		if (expression == null) {
 			return null;
 		}
@@ -53,43 +52,34 @@ public final class DefaultExpressionsConverter implements IExpressionConverter {
 		if (targetType.isInstance(expression)) {
 			return expression;
 		}
-		
-		if(expression instanceof ExpressionVariable expressionVariable) {
-			var variable = expressionVariable.getVariable();
-			var parent = variable.eContainer();
-			 if (parent instanceof VariableDecl decl) {
-				 return toObject(decl.getExpression(), targetType, context);
-			 }
-			 return null;
-		}
 
 		// Vector → List
 		if (expression instanceof ExpressionVector vector) {
-			return convertVector(vector,context);
+			return convertVector(vector, context);
 		}
 
 		// Map → Map
 		if (expression instanceof ExpressionMap map) {
-			return convertMap(map,context);
+			return convertMap(map, context);
 		}
 
 		// Record → custom Java object
 		if (expression instanceof ExpressionRecord record) {
-			return convertRecord(record, targetType,context);
+			return convertRecord(record, targetType, context);
 		}
 
 		// Scalar conversions
-		return convertScalar(expression, targetType,context);
+		return convertScalar(expression, targetType, context);
 	}
 
 	// ---- Type annotation resolution ----
-	
+
 	@Override
 	public Expression toExpression(Object object, Type type, IEvaluationContext context) {
 		if (type.getType().getName().equals("void")) {
 			if (object != null) {
 				throw new IllegalArgumentException("Cannot convert non-null value to void type.");
-		}
+			}
 			return null;
 		}
 		if (object instanceof Expression expr) {
@@ -103,17 +93,10 @@ public final class DefaultExpressionsConverter implements IExpressionConverter {
 		if (expression == null) {
 			return false;
 		}
+
 		// allow returning the raw Expression if the target type is Expression or a supertype
 		if (targetType.isInstance(expression)) {
 			return true;
-		}
-		
-		if(expression instanceof ExpressionVariable expressionVariable) {
-			var variable = expressionVariable.getVariable();
-			var parent = variable.eContainer();
-			 if (parent instanceof VariableDecl decl) {
-				 return isConvertible(decl.getExpression(), targetType, context);
-			 }
 		}
 
 		if (expression instanceof ExpressionVector) {
@@ -130,19 +113,16 @@ public final class DefaultExpressionsConverter implements IExpressionConverter {
 
 		// Scalar: check what the expression resolves to, then verify target accepts it
 		if (context.asInt(expression) != null) {
-			return targetType == long.class || targetType == int.class
-				|| targetType == short.class || targetType == byte.class
-				|| targetType.isAssignableFrom(Long.class)
-				|| targetType.isAssignableFrom(Number.class);
+			return targetType == long.class || targetType == int.class || targetType == short.class
+					|| targetType == byte.class || targetType.isAssignableFrom(Long.class)
+					|| targetType.isAssignableFrom(Number.class);
 		}
 		if (context.asReal(expression) != null) {
 			return targetType == double.class || targetType == float.class
-				|| targetType.isAssignableFrom(BigDecimal.class)
-				|| targetType.isAssignableFrom(Number.class);
+					|| targetType.isAssignableFrom(BigDecimal.class) || targetType.isAssignableFrom(Number.class);
 		}
 		if (context.asBool(expression) != null) {
-			return targetType == boolean.class
-				|| targetType.isAssignableFrom(Boolean.class);
+			return targetType == boolean.class || targetType.isAssignableFrom(Boolean.class);
 		}
 		if (context.asString(expression) != null) {
 			return targetType.isAssignableFrom(String.class);
@@ -153,14 +133,14 @@ public final class DefaultExpressionsConverter implements IExpressionConverter {
 	// ---- Vector conversion ----
 
 	private List<?> convertVector(ExpressionVector vector, IEvaluationContext context) {
-		//TODO validate against type annotation if present
+		// TODO validate against type annotation if present
 		List<Object> result = new ArrayList<>();
 		for (Expression element : vector.getElements()) {
 			Object converted = convert(element, context);
 			if (converted == null) {
-				//throw illegal argument exception
+				// throw illegal argument exception
 				throw new IllegalArgumentException(
-					"Vector element conversion failed: expected an Object but got null.");
+						"Vector element conversion failed: expected an Object but got null.");
 			}
 
 			result.add(converted);
@@ -175,30 +155,28 @@ public final class DefaultExpressionsConverter implements IExpressionConverter {
 
 	// ---- Map conversion ----
 
-	private  Map<?,?> convertMap(ExpressionMap map,IEvaluationContext context) {
-		Map<Object,Object> result = new LinkedHashMap<>();
+	private Map<?, ?> convertMap(ExpressionMap map, IEvaluationContext context) {
+		Map<Object, Object> result = new LinkedHashMap<>();
 		for (var pair : map.getPairs()) {
 			Object key = convert(pair.getKey(), context);
 			if (key == null) {
-				throw new IllegalArgumentException(
-					String.format("Map key conversion from %s failed: expected an Object but got null.", pair.getKey()));
+				throw new IllegalArgumentException(String
+						.format("Map key conversion from %s failed: expected an Object but got null.", pair.getKey()));
 			}
 			Object value = convert(pair.getValue(), context);
 			if (value == null) {
-				throw new IllegalArgumentException(
-					String.format("Map value conversion from %s failed: expected an Object but got null.", pair.getValue()));
+				throw new IllegalArgumentException(String.format(
+						"Map value conversion from %s failed: expected an Object but got null.", pair.getValue()));
 			}
 			result.put(key, value);
 		}
-		// return a new map the has generic types of the first element using streaming, if possible
+		// return a new map the has generic types of the first element using streaming,
+		// if possible
 		if (!result.isEmpty()) {
 			Class<?> keyType = result.keySet().iterator().next().getClass();
 			Class<?> valueType = result.values().iterator().next().getClass();
-			return result.entrySet().stream()
-				.collect(Collectors.toMap(
-					entry -> keyType.cast(entry.getKey()),
-					entry -> valueType.cast(entry.getValue())
-				));
+			return result.entrySet().stream().collect(
+					Collectors.toMap(entry -> keyType.cast(entry.getKey()), entry -> valueType.cast(entry.getValue())));
 		}
 		return result;
 	}
@@ -208,14 +186,13 @@ public final class DefaultExpressionsConverter implements IExpressionConverter {
 	/**
 	 * Converts an ExpressionRecord to a Java object via reflection.
 	 * 
-	 * The record type name must match the target class simple name.
-	 * The target class must have a no-arg constructor.
-	 * Record field names must match Java field names.
+	 * The record type name must match the target class simple name. The target
+	 * class must have a no-arg constructor. Record field names must match Java
+	 * field names.
 	 */
 	private <T> T convertRecord(ExpressionRecord record, Class<T> targetType, IEvaluationContext context) {
 		if (!record.getType().getName().equals(targetType.getSimpleName())) {
-			throw new IllegalArgumentException(
-				String.format("Type mismatch: record '%s' cannot convert to class '%s'.",
+			throw new IllegalArgumentException(String.format("Type mismatch: record '%s' cannot convert to class '%s'.",
 					record.getType().getName(), targetType.getSimpleName()));
 		}
 
@@ -235,19 +212,20 @@ public final class DefaultExpressionsConverter implements IExpressionConverter {
 
 				var javaField = targetType.getDeclaredField(recordField.getName());
 				javaField.setAccessible(true);
-				javaField.set(instance, toObject(expr, javaField.getType(), context) );
+				javaField.set(instance, toObject(expr, javaField.getType(), context));
 			}
 
 			return instance;
 		} catch (NoSuchMethodException e) {
 			throw new IllegalArgumentException(
-				String.format("'%s' must have a no-arg constructor.", targetType.getSimpleName()), e);
+					String.format("'%s' must have a no-arg constructor.", targetType.getSimpleName()), e);
 		} catch (NoSuchFieldException e) {
 			throw new IllegalArgumentException(
-				String.format("Field '%s' not found in '%s'.", e.getMessage(), targetType.getSimpleName()), e);
+					String.format("Field '%s' not found in '%s'.", e.getMessage(), targetType.getSimpleName()), e);
 		} catch (ReflectiveOperationException e) {
 			throw new IllegalArgumentException(
-				String.format("Failed to convert record to '%s': %s", targetType.getSimpleName(), e.getMessage()), e);
+					String.format("Failed to convert record to '%s': %s", targetType.getSimpleName(), e.getMessage()),
+					e);
 		}
 	}
 
@@ -278,9 +256,9 @@ public final class DefaultExpressionsConverter implements IExpressionConverter {
 	// ---- Scalar conversion ----
 
 	/**
-	 * Converts a scalar expression to the requested Java type.
-	 * Lets the context resolve the expression to its natural Java type first,
-	 * then checks if that result is assignable to the target type.
+	 * Converts a scalar expression to the requested Java type. Lets the context
+	 * resolve the expression to its natural Java type first, then checks if that
+	 * result is assignable to the target type.
 	 */
 	private Object convertScalar(Expression expression, Class<?> targetType, IEvaluationContext context) {
 		Object value = convert(expression, context);
@@ -303,32 +281,50 @@ public final class DefaultExpressionsConverter implements IExpressionConverter {
 	}
 
 	private Object convertNumericFrom(Long value, Class<?> targetType) {
-		if (targetType == long.class || targetType == Long.class) return value;
-		if (targetType == int.class || targetType == Integer.class) return value.intValue();
-		if (targetType == short.class || targetType == Short.class) return value.shortValue();
-		if (targetType == byte.class || targetType == Byte.class) return value.byteValue();
-		if (targetType == double.class || targetType == Double.class) return value.doubleValue();
-		if (targetType == float.class || targetType == Float.class) return value.floatValue();
-		if (targetType.isAssignableFrom(BigDecimal.class)) return new BigDecimal(value);
-		if (targetType.isAssignableFrom(Number.class)) return value;
+		if (targetType == long.class || targetType == Long.class)
+			return value;
+		if (targetType == int.class || targetType == Integer.class)
+			return value.intValue();
+		if (targetType == short.class || targetType == Short.class)
+			return value.shortValue();
+		if (targetType == byte.class || targetType == Byte.class)
+			return value.byteValue();
+		if (targetType == double.class || targetType == Double.class)
+			return value.doubleValue();
+		if (targetType == float.class || targetType == Float.class)
+			return value.floatValue();
+		if (targetType.isAssignableFrom(BigDecimal.class))
+			return new BigDecimal(value);
+		if (targetType.isAssignableFrom(Number.class))
+			return value;
 		return value;
 	}
 
 	private Object convertNumericFrom(BigDecimal value, Class<?> targetType) {
-		if (targetType == double.class || targetType == Double.class) return value.doubleValue();
-		if (targetType == float.class || targetType == Float.class) return value.floatValue();
-		if (targetType.isAssignableFrom(Number.class)) return value;
+		if (targetType == double.class || targetType == Double.class)
+			return value.doubleValue();
+		if (targetType == float.class || targetType == Float.class)
+			return value.floatValue();
+		if (targetType.isAssignableFrom(Number.class))
+			return value;
 		return value;
 	}
 
 	private Object defaultPrimitive(Class<?> type) {
-		if (type == boolean.class) return false;
-		if (type == long.class) return 0L;
-		if (type == int.class) return 0;
-		if (type == short.class) return (short) 0;
-		if (type == byte.class) return (byte) 0;
-		if (type == double.class) return 0.0;
-		if (type == float.class) return 0.0f;
+		if (type == boolean.class)
+			return false;
+		if (type == long.class)
+			return 0L;
+		if (type == int.class)
+			return 0;
+		if (type == short.class)
+			return (short) 0;
+		if (type == byte.class)
+			return (byte) 0;
+		if (type == double.class)
+			return 0.0;
+		if (type == float.class)
+			return 0.0f;
 		return null;
 	}
 
@@ -338,17 +334,18 @@ public final class DefaultExpressionsConverter implements IExpressionConverter {
 	 */
 	private Object convert(Expression expression, IEvaluationContext context) {
 		var intValue = context.asInt(expression);
-		if (intValue != null) return intValue.longValue();
+		if (intValue != null)
+			return intValue.longValue();
 
 		var realValue = context.asReal(expression);
-		if (realValue != null) return realValue;
+		if (realValue != null)
+			return realValue;
 
 		var boolValue = context.asBool(expression);
-		if (boolValue != null) return boolValue;
+		if (boolValue != null)
+			return boolValue;
 
 		return context.asString(expression);
 	}
-
-	// ---- Type annotation resolution ----
 
 }

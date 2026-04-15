@@ -35,7 +35,6 @@ import nl.esi.comma.expressions.expression.ExpressionDivision;
 import nl.esi.comma.expressions.expression.ExpressionEnumLiteral;
 import nl.esi.comma.expressions.expression.ExpressionEqual;
 import nl.esi.comma.expressions.expression.ExpressionFnCall;
-import nl.esi.comma.expressions.expression.ExpressionFunctionCall;
 import nl.esi.comma.expressions.expression.ExpressionGeq;
 import nl.esi.comma.expressions.expression.ExpressionGreater;
 import nl.esi.comma.expressions.expression.ExpressionLeq;
@@ -182,43 +181,32 @@ class CSharpHelper {
 		} else if (expression instanceof ExpressionFnCall) {
 			ExpressionFnCall e = (ExpressionFnCall) expression;
 			String str = new String();
-			for(Expression arg : e.getArgs()) {
-				if(!str.isEmpty()) str += ", ";
-				str += expression(arg, variablePrefix);
-			}
 			String fnName = e.getFunction().getName();
-			fnName = fnName.replaceAll("_DOT_", ".");
-			fnName = fnName.replaceAll("_PTR_", ".");
-			fnName = fnName.replaceAll("_SCOPE_", "::");
-			fnName = fnName.replaceAll("_REF_", "->");
-			return fnName + "(" + str + ")";
-		} else if (expression instanceof ExpressionFunctionCall) {
-			ExpressionFunctionCall e = (ExpressionFunctionCall) expression;
-			if (e.getFunctionName().equals("add")) {
+			if (fnName.equals("add")) {
 				return String.format("%s + [%s]", expression(e.getArgs().get(0), variablePrefix), expression(e.getArgs().get(1), variablePrefix));
-			} else if (e.getFunctionName().equals("size")) {
+			} else if (fnName.equals("size")) {
 				return String.format("len(%s)", expression(e.getArgs().get(0), variablePrefix));
-			} else if (e.getFunctionName().equals("isEmpty")) {
+			} else if (fnName.equals("isEmpty")) {
 				return String.format("len(%s) == 0", expression(e.getArgs().get(0), variablePrefix));
-			} else if (e.getFunctionName().equals("contains")) {
+			} else if (fnName.equals("contains")) {
 				return String.format("%s in %s", expression(e.getArgs().get(1), variablePrefix), expression(e.getArgs().get(0), variablePrefix));
-			} else if (e.getFunctionName().equals("abs")) {
+			} else if (fnName.equals("abs")) {
 				return String.format("abs(%s)", expression(e.getArgs().get(0), variablePrefix));
-			} else if (e.getFunctionName().equals("asReal")) {
+			} else if (fnName.equals("asReal")) {
 				return String.format("float(%s)", expression(e.getArgs().get(0), variablePrefix));
-			} else if (e.getFunctionName().equals("hasKey")) {
+			} else if (fnName.equals("hasKey")) {
 				String map = expression(e.getArgs().get(0), variablePrefix);
 				String key = expression(e.getArgs().get(1), variablePrefix);
 				return String.format("(%s in %s)", key, map);
-			} else if (e.getFunctionName().equals("get")) { // added 18.08.2024
+			} else if (fnName.equals("get")) { // added 18.08.2024
 				String lst = expression(e.getArgs().get(0), variablePrefix);
 				String idx = expression(e.getArgs().get(1), variablePrefix);
 				return String.format("%s[%s]", lst, idx);
-			} else if (e.getFunctionName().equals("deleteKey")) {
+			} else if (fnName.equals("deleteKey")) {
 				String map = expression(e.getArgs().get(0), variablePrefix);
 				String key = expression(e.getArgs().get(1), variablePrefix);
 				return String.format("{_k: _v for _k, _v in %s.items() if _k != %s}", map, key);
-			} else if (e.getFunctionName().equals("range")) {
+			} else if (fnName.equals("range")) {
 		        if (e.getArgs().size() == 1) {
 		            return String.format("Enumerable.Range(0, %s).ToList()", expression(e.getArgs().get(0), variablePrefix));
 		        } else if (e.getArgs().size() == 2) {
@@ -233,11 +221,21 @@ class CSharpHelper {
 		            return String.format("Enumerable.Range(0, ((%s) - (%s) + (%s) - 1) / (%s)).Select(i => (%s) + i * (%s)).ToList()", 
 		                stop, start, step, step, start, step);
 		        }
-		    } else if (e.getFunctionName().equals("toString")) {
+		    } else if (fnName.equals("toString")) {
 		        return String.format("(%s).ToString()", expression(e.getArgs().get(0), variablePrefix));
-		    } else if (e.getFunctionName().equals("concat")) {
+		    } else if (fnName.equals("concat")) {
 		        return String.format("%s.Concat(%s).ToList()", expression(e.getArgs().get(0), variablePrefix), expression(e.getArgs().get(1), variablePrefix));
-		    } 
+		    } else {
+		    	for(Expression arg : e.getArgs()) {
+		    		if(!str.isEmpty()) str += ", ";
+		    		str += expression(arg, variablePrefix);
+		    	}
+		    	fnName = fnName.replaceAll("_DOT_", ".");
+		    	fnName = fnName.replaceAll("_PTR_", ".");
+		    	fnName = fnName.replaceAll("_SCOPE_", "::");
+		    	fnName = fnName.replaceAll("_REF_", "->");
+		    	return fnName + "(" + str + ")";
+		    }
 		} else if (expression instanceof ExpressionMap) {
 			ExpressionMap e = (ExpressionMap) expression;
 			return String.format("{%s}", e.getPairs().stream().map(p -> {

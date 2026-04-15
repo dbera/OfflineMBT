@@ -129,12 +129,11 @@ ExpressionLevel9 returns Expression:
 	ExpressionRecord |
 	ExpressionAny |
     ExpressionFnCall |
-	ExpressionFunctionCall |
 	ExpressionTypeAnnotated
 ;
 
 ExpressionFnCall: 
-    'call' function = [FunctionDecl|ID] '(' (args += Expression (',' args += Expression)*)? ')'
+    ('call')? function = [FunctionDecl|ID] '(' (args += Expression (',' args += Expression)*)? ')'
 ;
 
 ExpressionBracket:
@@ -181,17 +180,6 @@ Field:
 ExpressionAny :
 	{ExpressionAny} "*"
 ;
-
-// We assume a library of functions. They can be provided in a separate model.
-// At the moment we have just a check of the function name and then a dedicated check for the types of the arguments
-// TODO: consider an expression (or function) Expression in Interval
-ExpressionFunctionCall: 
-	functionName = ID '(' (args += Expression (',' args += Expression)*)? ')'
-;
-//ExpressionFnCall: 
-//    'call' function = [FunctionDecl|ID] '(' (args += Expression (',' args += Expression)*)? ')'
-//;
-
 
 ExpressionTypeAnnotated returns Expression:
 	TypeAnnotation( ({ExpressionVector.typeAnnotation = current} '[' (elements += Expression (',' elements += Expression)*)? ']') |

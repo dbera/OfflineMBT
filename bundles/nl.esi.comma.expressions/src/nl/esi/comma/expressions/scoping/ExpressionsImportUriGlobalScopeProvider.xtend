@@ -26,22 +26,24 @@ import org.eclipse.emf.ecore.resource.Resource
  */
 class ExpressionsImportUriGlobalScopeProvider extends TypesImportUriGlobalScopeProvider {
 
-	@Inject InMemoryExprResourceRegistry inMemoryRegistry
+    @Inject InMemoryExprResourceRegistry inMemoryRegistry
 
-	/**
-	 * Extends the list of imported URIs with all dynamically registered function library URIs.
-	 * 
-	 * <p>Calls the parent implementation first to get types and other standard URIs, then adds
-	 * all URIs managed by {@link InMemoryExprResourceRegistry} (which contains generated function grammars).
-	 * 
-	 */
-	override getImportedUris(Resource resource) {
-		val importedURIs = super.getImportedUris(resource)
-		// Make all registered function library URIs available in expression scope
-		importedURIs += inMemoryRegistry.registeredURIs
+    /**
+     * Extends the list of imported URIs with all dynamically registered function library URIs.
+     * 
+     * <p>Calls the parent implementation first to get types and other standard URIs, then adds
+     * all URIs managed by {@link InMemoryExprResourceRegistry} (which contains generated function grammars).
+     * 
+     */
+    override getImportedUris(Resource resource) {
+        var handler = inMemoryRegistry.getURIHandler();
+        if (!resource.resourceSet?.URIConverter?.URIHandlers.contains(handler)) {
+            resource.resourceSet?.URIConverter?.URIHandlers?.add(0, handler);
+        }
+        val importedURIs = super.getImportedUris(resource)
+        // Make all registered function library URIs available in expression scope
+        importedURIs += inMemoryRegistry.registeredURIs
 
-		return importedURIs
-	}
+        return importedURIs
+    }
 }
-
-

@@ -25,6 +25,8 @@ import java.util.Set;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.resource.impl.URIHandlerImpl;
 
+import com.google.inject.Singleton;
+
 import nl.esi.comma.expressions.generator.LibraryToExprGenerator;
 
 /**
@@ -35,7 +37,7 @@ import nl.esi.comma.expressions.generator.LibraryToExprGenerator;
  * {@link LibraryToExprGenerator} to generate the {@code .expr} content for the
  * given library class and stores it under a synthetic URI of the form:
  * <pre>
- *   inmemory:/expr/&lt;fully.qualified.ClassName&gt;.expr
+ *   imr:/expr/&lt;fully.qualified.ClassName&gt;.expr
  * </pre>
  *
  * <p>The registered URIs are consumed by
@@ -47,10 +49,11 @@ import nl.esi.comma.expressions.generator.LibraryToExprGenerator;
  * that Xtext's {@code ResourceSet} can load these in-memory URIs without any
  * file-system access.
  */
+@Singleton
 public final class InMemoryExprResourceRegistry {
 
     /** Scheme used for all in-memory expr URIs. */
-    public static final String SCHEME = "inmemory";
+    public static final String SCHEME = "imr";
 
     /** Path prefix used for all in-memory expr URIs. */
     private static final String PATH_PREFIX = "/expr/";
@@ -64,7 +67,7 @@ public final class InMemoryExprResourceRegistry {
     // -------------------------------------------------------------------------
 
     /**
-     * Generates the {@code .expr} content for all public static methods of
+     * Generates the {@code .e} content for all public static methods of
      * {@code libraryClass} and stores it under a synthetic in-memory URI.
      *
      * <p>Calling this method multiple times with the same class is idempotent.
@@ -130,7 +133,7 @@ public final class InMemoryExprResourceRegistry {
      * Returns the canonical in-memory URI for a library class.
      *
      * @param libraryClass the library class
-     * @return the URI, e.g. {@code inmemory:/expr/com.example.MyFunctions.expr}
+     * @return the URI, e.g. {@code inmemory:/expr/com.example.MyFunctions.e}
      */
     public static URI uriFor(Class<?> libraryClass) {
         return URI.createURI(SCHEME + ":" + PATH_PREFIX + libraryClass.getName() + ".expr");

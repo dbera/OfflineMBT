@@ -23,7 +23,7 @@ import nl.esi.comma.expressions.expression.ExpressionConstantString
 import nl.esi.comma.expressions.expression.ExpressionDivision
 import nl.esi.comma.expressions.expression.ExpressionEnumLiteral
 import nl.esi.comma.expressions.expression.ExpressionEqual
-import nl.esi.comma.expressions.expression.ExpressionFunctionCall
+import nl.esi.comma.expressions.expression.ExpressionFnCall
 import nl.esi.comma.expressions.expression.ExpressionGeq
 import nl.esi.comma.expressions.expression.ExpressionGreater
 import nl.esi.comma.expressions.expression.ExpressionLeq
@@ -164,24 +164,25 @@ class StateMachineExpressions
 	'''«expr.value»'''	
 
 
-    def static dispatch CharSequence generateExpression(ExpressionFunctionCall expr, CharSequence ref)
+    def static dispatch CharSequence generateExpression(ExpressionFnCall expr, CharSequence ref)
     {
-    	if(expr.functionName.equals('size')) 
+        val fnName = expr.function.name
+    	if(fnName.equals('size')) 
     		return '''(«generateExpression(expr.args.get(0), ref)».length)'''
-    	else if(expr.functionName.equals('remove')) 
+    	else if(fnName.equals('remove')) 
     		return '''smVarContainer.remove(«generateExpression(expr.args.get(0), ref)», «generateExpression(expr.args.get(1), ref)»)'''
-    	else if(expr.functionName.equals('isEmpty')) 
+    	else if(fnName.equals('isEmpty')) 
     		return '''(«generateExpression(expr.args.get(0), ref)».length == 0)'''
-    	else if(expr.functionName.equals('contains')) 
+    	else if(fnName.equals('contains')) 
     		return '''smVarContainer.contains(«generateExpression(expr.args.get(0), ref)», «generateExpression(expr.args.get(1), ref)»)'''
-    	else if(expr.functionName.equals('add')) 
+    	else if(fnName.equals('add')) 
     		return '''smVarContainer.add(«generateExpression(expr.args.get(0), ref)», «generateExpression(expr.args.get(1), ref)»)'''
-    	else if(expr.functionName.equals('asReal')) 
+    	else if(fnName.equals('asReal')) 
     		return '''(double)(«generateExpression(expr.args.get(0), ref)»)'''
-    	else if(expr.functionName.equals('abs')) 
+    	else if(fnName.equals('abs')) 
     		return '''Math.abs(«generateExpression(expr.args.get(0), ref)»)'''
     	else 
-    		return '''UNSUPPORTED FUNCTION NAME: «expr.functionName»'''
+    		return '''UNSUPPORTED FUNCTION NAME: «fnName»'''
     }
     
 /*

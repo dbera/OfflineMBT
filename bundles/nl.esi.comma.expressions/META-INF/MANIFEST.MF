@@ -21,7 +21,6 @@ Export-Package: nl.esi.comma.expressions,
  nl.esi.comma.expressions.conversion,
  nl.esi.comma.expressions.evaluation,
  nl.esi.comma.expressions.functions,
- nl.esi.comma.expressions.runtime,
  nl.esi.comma.expressions.expression;
   uses:="org.eclipse.emf.ecore,
    org.eclipse.emf.common.util,

@@ -12,6 +12,7 @@
  */
 package nl.esi.comma.expressions.functions;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -23,6 +24,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import nl.esi.comma.expressions.conversion.IExpressionConverter;
 import nl.esi.comma.expressions.conversion.IExpressionConvertersProvider;
@@ -36,13 +38,23 @@ import nl.esi.comma.types.types.Type;
  * Maintains a mapping of function names to methods and provides type conversion
  * of arguments and return values using registered converters.
  */
+@Singleton
 public class ExpressionFunctionsRegistry {
+	
+	public static class NoMatchingFunctionFoundException extends RuntimeException {
+		private static final long serialVersionUID = 1L;
+
+		public NoMatchingFunctionFoundException(String message) {
+			super(message);
+		}
+	}
 
 	private final Map<String, List<Method>> functions = new LinkedHashMap<>();
 
 	private final Set<IExpressionConverter> converters;
 
 	private final InMemoryExprResourceRegistry inMemoryRegistry;
+
 
 	@Inject
 	public ExpressionFunctionsRegistry(InMemoryExprResourceRegistry inMemoryRegistry,
@@ -62,38 +74,38 @@ public class ExpressionFunctionsRegistry {
 		return functions.containsKey(name);
 	}
 
-	/** Validates function call and arguments against constraints. */
-	public void validateFunction(ExpressionFnCall functionCall, IEvaluationContext context)
+	/** Can optimize if exists and all overloads are static */
+	public boolean canOptimize(ExpressionFnCall functionCall)
 			throws UnsupportedOperationException, IllegalArgumentException {
 		var funcName = functionCall.getFunction().getName();
-		if (!functions.containsKey(funcName))
-			throw new UnsupportedOperationException("Unknown function: " + funcName);
-		if (findMatchingMethod(functionCall, context) == null)
-			throw new IllegalArgumentException("No matching overload found for function " + funcName + " with "
-					+ functionCall.getArgs().size() + " arguments");
-
-		// Validate function arguments against jakarta.validation constraints
-		validateFunctionArguments(functionCall, context);
+		var methods = functions.get(funcName);
+		return methods != null && methods.stream().allMatch(m -> isStatic(m));
 	}
-
+	
 	/**
 	 * Invokes the matching function and returns the result as an Expression. For
 	 * instance methods, uses the first object from context assignable to the
 	 * declaring class.
 	 */
-	public Expression invokeFunction(ExpressionFnCall functionCall, IEvaluationContext context) {
+	public Expression invokeFunction(ExpressionFnCall functionCall, IEvaluationContext context) throws NoMatchingFunctionFoundException {
 		var funcName = functionCall.getFunction().getName();
 		var method = findMatchingMethod(functionCall, context);
 		if (method == null) {
-			throw new IllegalArgumentException("No matching overload found for function " + funcName);
+			throw new NoMatchingFunctionFoundException("No matching overload found for function " + funcName);
 		}
 		var args = convertArguments(functionCall, method.getParameterTypes(), context);
 		var receiver = getClassInstanceFromContext(context, method);
 
 		try {
-			var result = method.invoke(receiver, args);
-			return toExpression(result, functionCall.getFunction().getReturnType(), context);
-		} catch (Exception e) {
+			try {
+				var result = method.invoke(receiver, args);
+				return toExpression(result, functionCall.getFunction().getReturnType(), context);
+			} catch (InvocationTargetException e) {
+				throw e.getTargetException();
+			}// Rethrow runtime exceptions without wrapping
+		} catch (RuntimeException e) {
+			throw e; // Rethrow runtime exceptions without wrapping
+		} catch (Throwable e) {
 			throw new RuntimeException("Error invoking function " + funcName + " with args " + Arrays.toString(args),
 					e);
 		}
@@ -123,25 +135,6 @@ public class ExpressionFunctionsRegistry {
 		if (!isPublic(method))
 			throw new IllegalArgumentException("Function must be public");
 		functions.computeIfAbsent(name, k -> new ArrayList<>()).add(method);
-	}
-
-	/**
-	 * Validates function arguments against jakarta.validation constraints. Converts
-	 * each argument to its Java object representation and validates it against any
-	 * constraint annotations on the corresponding method parameter.
-	 */
-	private void validateFunctionArguments(ExpressionFnCall functionCall, IEvaluationContext context)
-			throws IllegalArgumentException {
-
-		Method method = findMatchingMethod(functionCall, context);
-		if (method == null) {
-			return;
-		}
-		try {
-			convertArguments(functionCall, method.getParameterTypes(), context);
-		} catch (Exception e) {
-			return; // Skip validation if argument conversion fails (e.g. type mismatch)
-		}
 	}
 
 	/**
@@ -232,9 +225,10 @@ public class ExpressionFunctionsRegistry {
 	}
 
 	/** Checks if an Expression can be converted to the given Java type. */
-	private boolean isValidArgumentType(Expression type, Class<?> paramType, IEvaluationContext context) {
+	private boolean isValidArgumentType(Expression expression, Class<?> paramType, IEvaluationContext context) {
+
 		for (IExpressionConverter converter : converters) {
-			if (converter.isConvertible(type, paramType, context)) {
+			if (converter.isConvertible(expression, paramType, context)) {
 				return true;
 			}
 		}

@@ -21,11 +21,9 @@ import nl.esi.comma.expressions.conversion.ExpressionConvertersProvider
 import nl.esi.comma.expressions.conversion.IExpressionConvertersProvider
 import nl.esi.comma.expressions.functions.ExpressionFunctionLibrariesProvider
 import nl.esi.comma.expressions.functions.IExpressionFunctionLibrariesProvider
-import nl.esi.comma.expressions.runtime.InMemoryAwareResourceSet
 import nl.esi.comma.expressions.scoping.ExpressionsImportUriGlobalScopeProvider
 import org.eclipse.xtext.conversion.IValueConverterService
 import org.eclipse.xtext.formatting.IFormatter
-import org.eclipse.xtext.resource.XtextResourceSet
 
 /**
  * Use this class to register components to be used at runtime / without the Equinox extension registry.
@@ -34,10 +32,6 @@ class CausalGraphRuntimeModule extends AbstractCausalGraphRuntimeModule {
 
     override bindIGlobalScopeProvider() {
         return ExpressionsImportUriGlobalScopeProvider
-    }
-
-    override Class<? extends XtextResourceSet> bindXtextResourceSet() {
-        return InMemoryAwareResourceSet
     }
 
     override Class<? extends IValueConverterService> bindIValueConverterService() {

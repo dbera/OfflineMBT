@@ -25,13 +25,13 @@ import nl.esi.comma.types.types.RecordFieldKind
 import nl.esi.xtext.common.lang.utilities.EcoreUtil3
 
 import static extension nl.esi.comma.assertthat.utilities.AssertThatUtilities.*
-import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
 import static extension nl.esi.comma.types.utilities.TypeUtilities.*
+import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
 import static extension org.eclipse.emf.ecore.util.EcoreUtil.*
 import static extension org.eclipse.lsat.common.xtend.Queries.*
 
 class ReferenceExpressionHandler {
-
+    
     def resolveStepReferenceExpressions(RunStep rstep) {
         debug(" [INFO] Resolving references for Run Step: " + rstep.name)
         val Map<String, List<String>> mapLHStoRHS = newLinkedHashMap
@@ -71,6 +71,8 @@ class ReferenceExpressionHandler {
     }
 
     private def void evaluateReferenceConstrains(ComposeStep cstep, String fieldPrefix, Map<String, List<String>> mapLHStoRHS) {
+         val expressionEvaluator = EcoreUtil3.getService(cstep, ExpressionEvaluator)
+
         // Iterate all record field assignments of all constraints
         for (action : cstep.refs.flatMap[ce].flatMap[act.actions.filter(RecordFieldAssignmentAction)]) {
             // Run block input data structure = Concrete TSpec step input data structure
@@ -81,7 +83,7 @@ class ReferenceExpressionHandler {
             // So, we store the original expression, before copying and evaluating it. Then we serialize
             // the evaluated expression and restore the original expression.
             val orgExp = action.exp
-            action.exp = new ExpressionEvaluator().evaluate(action.exp.copy) [ variable |
+            action.exp = expressionEvaluator.evaluate(action.exp.copy) [ variable |
                 cstep.input.findFirst[name == variable]?.jsonvals.toExpression(variable.type.typeObject, self) [
                     // Only consider concrete values as we're evaluating symbolic expressions here
                     kind == RecordFieldKind::CONCRETE

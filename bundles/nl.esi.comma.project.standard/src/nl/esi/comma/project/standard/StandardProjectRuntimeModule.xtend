@@ -19,9 +19,7 @@ import nl.esi.comma.expressions.conversion.ExpressionConvertersProvider
 import nl.esi.comma.expressions.conversion.IExpressionConvertersProvider
 import nl.esi.comma.expressions.functions.ExpressionFunctionLibrariesProvider
 import nl.esi.comma.expressions.functions.IExpressionFunctionLibrariesProvider
-import nl.esi.comma.expressions.runtime.InMemoryAwareResourceSet
 import nl.esi.comma.expressions.scoping.ExpressionsImportUriGlobalScopeProvider
-import org.eclipse.xtext.resource.XtextResourceSet
 import org.eclipse.xtext.scoping.IGlobalScopeProvider
 
 /**
@@ -31,10 +29,6 @@ class StandardProjectRuntimeModule extends AbstractStandardProjectRuntimeModule 
 
     override Class<? extends IGlobalScopeProvider> bindIGlobalScopeProvider() {
         return ExpressionsImportUriGlobalScopeProvider
-    }
-
-    override Class<? extends XtextResourceSet> bindXtextResourceSet() {
-        return InMemoryAwareResourceSet
     }
 
     def Class<? extends IExpressionFunctionLibrariesProvider> bindIExpressionFunctionLibrariesProvider() {

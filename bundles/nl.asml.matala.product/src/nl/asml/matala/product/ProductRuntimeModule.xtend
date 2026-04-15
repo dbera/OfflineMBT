@@ -19,9 +19,7 @@ import nl.esi.comma.expressions.conversion.ExpressionConvertersProvider
 import nl.esi.comma.expressions.conversion.IExpressionConvertersProvider
 import nl.esi.comma.expressions.functions.ExpressionFunctionLibrariesProvider
 import nl.esi.comma.expressions.functions.IExpressionFunctionLibrariesProvider
-import nl.esi.comma.expressions.runtime.InMemoryAwareResourceSet
 import nl.esi.comma.expressions.scoping.ExpressionsImportUriGlobalScopeProvider
-import org.eclipse.xtext.resource.XtextResourceSet
 
 /**
  * Use this class to register components to be used at runtime / without the Equinox extension registry.
@@ -29,10 +27,6 @@ import org.eclipse.xtext.resource.XtextResourceSet
 class ProductRuntimeModule extends AbstractProductRuntimeModule {
     override bindIGlobalScopeProvider() {
         return ExpressionsImportUriGlobalScopeProvider
-    }
-
-    override Class<? extends XtextResourceSet> bindXtextResourceSet() {
-        return InMemoryAwareResourceSet
     }
 
     def Class<? extends IExpressionFunctionLibrariesProvider> bindIExpressionFunctionLibrariesProvider() {

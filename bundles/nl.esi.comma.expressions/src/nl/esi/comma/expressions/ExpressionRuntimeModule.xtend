@@ -19,13 +19,12 @@ import com.google.inject.Binder
 import com.google.inject.Scopes
 import nl.esi.comma.expressions.conversion.ExpressionConvertersProvider
 import nl.esi.comma.expressions.conversion.IExpressionConvertersProvider
+import nl.esi.comma.expressions.evaluation.ExpressionEvaluator
 import nl.esi.comma.expressions.functions.ExpressionFunctionLibrariesProvider
 import nl.esi.comma.expressions.functions.ExpressionFunctionsRegistry
 import nl.esi.comma.expressions.functions.IExpressionFunctionLibrariesProvider
 import nl.esi.comma.expressions.functions.InMemoryExprResourceRegistry
-import nl.esi.comma.expressions.runtime.InMemoryAwareResourceSet
 import nl.esi.comma.expressions.scoping.ExpressionsImportUriGlobalScopeProvider
-import org.eclipse.xtext.resource.XtextResourceSet
 import org.eclipse.xtext.scoping.IGlobalScopeProvider
 
 /**
@@ -35,10 +34,6 @@ class ExpressionRuntimeModule extends AbstractExpressionRuntimeModule {
 
     override Class<? extends IGlobalScopeProvider> bindIGlobalScopeProvider() {
         return ExpressionsImportUriGlobalScopeProvider
-    }
-
-    override Class<? extends XtextResourceSet> bindXtextResourceSet() {
-        return InMemoryAwareResourceSet
     }
 
     def Class<? extends IExpressionFunctionLibrariesProvider> bindIExpressionFunctionLibrariesProvider() {
@@ -56,5 +51,6 @@ class ExpressionRuntimeModule extends AbstractExpressionRuntimeModule {
         super.configure(binder)
         binder.bind(InMemoryExprResourceRegistry).in(Scopes.SINGLETON)
         binder.bind(ExpressionFunctionsRegistry).in(Scopes.SINGLETON)
+        binder.bind(ExpressionEvaluator).in(Scopes.SINGLETON)
     }
 }

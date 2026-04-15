@@ -38,7 +38,6 @@ import nl.esi.comma.expressions.expression.Pair;
 import nl.esi.comma.expressions.expression.Variable;
 import nl.esi.comma.expressions.functions.ExpressionFunctionsRegistry;
 import nl.esi.comma.expressions.utilities.ExpressionsUtilities;
-import nl.esi.comma.expressions.validation.ExpressionValidator;
 import nl.esi.comma.types.types.SimpleTypeDecl;
 import nl.esi.comma.types.types.TypeObject;
 import nl.esi.comma.types.utilities.TypeUtilities;
@@ -344,6 +343,6 @@ public interface IEvaluationContext {
 	}
 
 	default TypeObject typeOf(Expression expression) {
-		return ExpressionValidator.typeOf(expression);
+		return ExpressionsUtilities.typeOf(expression);
 	}
 }
