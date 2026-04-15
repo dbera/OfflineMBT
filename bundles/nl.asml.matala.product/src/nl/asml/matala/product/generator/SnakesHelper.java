@@ -115,90 +115,66 @@ class SnakesHelper {
 	}
 
 	static String expression(Expression expression, Function<String, String> variablePrefix) {
-		if (expression instanceof ExpressionConstantInt) {
-			return Long.toString(((ExpressionConstantInt) expression).getValue());
-		} else if (expression instanceof ExpressionConstantString) {
-			return String.format("\"%s\"", ((ExpressionConstantString) expression).getValue());
-		} else if (expression instanceof ExpressionNot) {
-			return String.format("not (%s)", expression(((ExpressionNot) expression).getSub(), variablePrefix));
-		} else if (expression instanceof ExpressionConstantReal) {
-			return Double.toString(((ExpressionConstantReal) expression).getValue());
-		} else if (expression instanceof ExpressionConstantBool) {
-			return ((ExpressionConstantBool) expression).isValue() ? "True" : "False";
+		if (expression instanceof ExpressionConstantInt e) {
+			return Long.toString(e.getValue());
+		} else if (expression instanceof ExpressionConstantString e) {
+			String value = e.getValue();
+			return String.format("\"%s\"", value == null ? "" : value.replace("\"", "\\\""));
+		} else if (expression instanceof ExpressionNot e) {
+			return String.format("not (%s)", expression(e.getSub(), variablePrefix));
+		} else if (expression instanceof ExpressionConstantReal e) {
+			return Double.toString(e.getValue());
+		} else if (expression instanceof ExpressionConstantBool e) {
+			return e.isValue() ? "True" : "False";
 		} else if (expression instanceof ExpressionAny) {
 			return "\"*\"";
-		} else if (expression instanceof ExpressionAddition) {
-			ExpressionAddition e = (ExpressionAddition) expression;
+		} else if (expression instanceof ExpressionAddition e) {
 			return String.format("%s + %s", expression(e.getLeft(), variablePrefix), expression(e.getRight(), variablePrefix));
-		} else if (expression instanceof ExpressionSubtraction) {
-			ExpressionSubtraction e = (ExpressionSubtraction) expression;
+		} else if (expression instanceof ExpressionSubtraction e) {
 			return String.format("%s - %s", expression(e.getLeft(), variablePrefix), expression(e.getRight(), variablePrefix));
-		} else if (expression instanceof ExpressionMultiply) {
-			ExpressionMultiply e = (ExpressionMultiply) expression;
+		} else if (expression instanceof ExpressionMultiply e) {
 			return String.format("%s * %s", expression(e.getLeft(), variablePrefix), expression(e.getRight(), variablePrefix));
-		} else if (expression instanceof ExpressionDivision) {
-			ExpressionDivision e = (ExpressionDivision) expression;
+		} else if (expression instanceof ExpressionDivision e) {
 			return String.format("%s / %s", expression(e.getLeft(), variablePrefix), expression(e.getRight(), variablePrefix));
-		} else if (expression instanceof ExpressionModulo) {
-			ExpressionModulo e = (ExpressionModulo) expression;
+		} else if (expression instanceof ExpressionModulo e) {
 			return String.format("%s %% %s", expression(e.getLeft(), variablePrefix), expression(e.getRight(), variablePrefix));
-		} else if (expression instanceof ExpressionMinimum) {
-			ExpressionMinimum e = (ExpressionMinimum) expression;
+		} else if (expression instanceof ExpressionMinimum e) {
 			return String.format("min(%s, %s)", expression(e.getLeft(), variablePrefix), expression(e.getRight(), variablePrefix));
-		} else if (expression instanceof ExpressionMaximum) {
-			ExpressionMaximum e = (ExpressionMaximum) expression;
+		} else if (expression instanceof ExpressionMaximum e) {
 			return String.format("max(%s, %s)", expression(e.getLeft(), variablePrefix), expression(e.getRight(), variablePrefix));
-		} else if (expression instanceof ExpressionPower) {
-			ExpressionPower e = (ExpressionPower) expression;
+		} else if (expression instanceof ExpressionPower e) {
 			return String.format("pow(%s, %s)", expression(e.getLeft(), variablePrefix), expression(e.getRight(), variablePrefix));
-		} else if (expression instanceof ExpressionVariable) {
-			ExpressionVariable v = (ExpressionVariable) expression;
-			// return String.format("%s%s", variablePrefix.apply(v.getVariable().getName()), v.getVariable().getName());
-			return String.format("%s", variablePrefix.apply(v.getVariable().getName()));
-		} else if (expression instanceof ExpressionGreater) {
-			ExpressionGreater e = (ExpressionGreater) expression;
+		} else if (expression instanceof ExpressionVariable e) {
+			return String.format("%s", variablePrefix.apply(e.getVariable().getName()));
+		} else if (expression instanceof ExpressionGreater e) {
 			return String.format("%s > %s", expression(e.getLeft(), variablePrefix), expression(e.getRight(), variablePrefix));
-		} else if (expression instanceof ExpressionLess) {
-			ExpressionLess e = (ExpressionLess) expression;
+		} else if (expression instanceof ExpressionLess e) {
 			return String.format("%s < %s", expression(e.getLeft(), variablePrefix), expression(e.getRight(), variablePrefix));
-		} else if (expression instanceof ExpressionLeq) {
-			ExpressionLeq e = (ExpressionLeq) expression;
+		} else if (expression instanceof ExpressionLeq e) {
 			return String.format("%s <= %s", expression(e.getLeft(), variablePrefix), expression(e.getRight(), variablePrefix));
-		} else if (expression instanceof ExpressionGeq) {
-			ExpressionGeq e = (ExpressionGeq) expression;
+		} else if (expression instanceof ExpressionGeq e) {
 			return String.format("%s >= %s", expression(e.getLeft(), variablePrefix), expression(e.getRight(), variablePrefix));
-		} else if (expression instanceof ExpressionEqual) {
-			ExpressionEqual e = (ExpressionEqual) expression;
+		} else if (expression instanceof ExpressionEqual e) {
 			return String.format("%s == %s", expression(e.getLeft(), variablePrefix), expression(e.getRight(), variablePrefix));
-		} else if (expression instanceof ExpressionNEqual) {
-			ExpressionNEqual e = (ExpressionNEqual) expression;
+		} else if (expression instanceof ExpressionNEqual e) {
 			return String.format("%s != %s", expression(e.getLeft(), variablePrefix), expression(e.getRight(), variablePrefix));
-		} else if (expression instanceof ExpressionAnd) {
-			ExpressionAnd e = (ExpressionAnd) expression;
+		} else if (expression instanceof ExpressionAnd e) {
 			return String.format("%s and %s", expression(e.getLeft(), variablePrefix), expression(e.getRight(), variablePrefix));
-		} else if (expression instanceof ExpressionOr) {
-			ExpressionOr e = (ExpressionOr) expression;
+		} else if (expression instanceof ExpressionOr e) {
 			return String.format("%s or %s", expression(e.getLeft(), variablePrefix), expression(e.getRight(), variablePrefix));
-		} else if (expression instanceof ExpressionEnumLiteral) {
-			ExpressionEnumLiteral e = (ExpressionEnumLiteral) expression;
+		} else if (expression instanceof ExpressionEnumLiteral e) {
 			return String.format("\"%s::%s\"", e.getType().getName(), e.getLiteral().getName());
 		} else if (expression instanceof ExpressionNullLiteral) {
 			return "None";
-		} else if (expression instanceof ExpressionVector) {
-			ExpressionVector e = (ExpressionVector) expression;
+		} else if (expression instanceof ExpressionVector e) {
 			return String.format("[%s]", e.getElements().stream().map(ee -> expression (ee, variablePrefix)).collect(Collectors.joining(", ")));
-		} else if (expression instanceof ExpressionMinus) {
-			ExpressionMinus e = (ExpressionMinus) expression;
+		} else if (expression instanceof ExpressionMinus e) {
 			return String.format("%s * -1", expression(e.getSub(), variablePrefix));
-		} else if (expression instanceof ExpressionPlus) {
-			ExpressionPlus e = (ExpressionPlus) expression;
+		} else if (expression instanceof ExpressionPlus e) {
 			return expression(e.getSub(), variablePrefix);
-		} else if (expression instanceof ExpressionBracket) {
-			ExpressionBracket e = (ExpressionBracket) expression;
-			//return expression(e.getSub(), variablePrefix);
+		} else if (expression instanceof ExpressionBracket e) {
 			return String.format("(%s)", expression(e.getSub(), variablePrefix));
-		} else if (expression instanceof ExpressionFunctionCall) {
-			ExpressionFunctionCall e = (ExpressionFunctionCall) expression;
+		} else if (expression instanceof ExpressionFunctionCall e) {
 			if (e.getFunctionName().equals("add")) {
 				return String.format("%s + [%s]", expression(e.getArgs().get(0), variablePrefix), expression(e.getArgs().get(1), variablePrefix));
 			} else if (e.getFunctionName().equals("size")) {
@@ -241,8 +217,7 @@ class SnakesHelper {
 			} else if (e.getFunctionName().equals("concat")) {
 			    return String.format("%s + %s", expression(e.getArgs().get(0), variablePrefix), expression(e.getArgs().get(1), variablePrefix));
 			} 
-		} else if (expression instanceof ExpressionQuantifier) {
-			ExpressionQuantifier e = (ExpressionQuantifier) expression;
+		} else if (expression instanceof ExpressionQuantifier e) {
 			String collection = expression(e.getCollection(), variablePrefix);
 			String it = e.getIterator().getName();
 			String condition = expression(e.getCondition(), (String variable) -> "");
@@ -253,15 +228,13 @@ class SnakesHelper {
 			} else if (e.getQuantifier() == QUANTIFIER.FORALL) {
 				return String.format("len([%s for %s in %s if %s]) == len(%s)", it, it, collection, condition, collection);
 			}
-		} else if (expression instanceof ExpressionMap) {
-			ExpressionMap e = (ExpressionMap) expression;
+		} else if (expression instanceof ExpressionMap e) {
 			return String.format("{%s}", e.getPairs().stream().map(p -> {
 				String key = expression(p.getKey(), variablePrefix);
 				String value = expression(p.getValue(), variablePrefix);
 				return String.format("%s: %s", key, value);
 			}).collect(Collectors.joining(", ")));
-		} else if (expression instanceof ExpressionMapRW) {
-			ExpressionMapRW e = (ExpressionMapRW) expression;
+		} else if (expression instanceof ExpressionMapRW e) {
 			String map = expression(e.getMap(), variablePrefix);
 			String key = expression(e.getKey(), variablePrefix);
 			if (e.getValue() == null) {
@@ -270,15 +243,13 @@ class SnakesHelper {
 				String value = expression(e.getValue(), variablePrefix);
 				return String.format("{**%s, **{%s: %s}}", map, key, value);
 			}
-		} else if (expression instanceof ExpressionRecord) {
-			ExpressionRecord e = (ExpressionRecord) expression;
+		} else if (expression instanceof ExpressionRecord e) {
 			return String.format("{%s}", e.getFields().stream().map(p -> {
 				String key = p.getRecordField().getName();
 				String value = expression(p.getExp(), variablePrefix);
 				return String.format("\"%s\": %s", key, value);
 			}).collect(Collectors.joining(", ")));
-		} else if (expression instanceof ExpressionRecordAccess) {
-			ExpressionRecordAccess e = (ExpressionRecordAccess) expression;
+		} else if (expression instanceof ExpressionRecordAccess e) {
 			String map = expression(e.getRecord(), variablePrefix);
 			return String.format("%s[\"%s\"]", map, e.getField().getName());
 		} 

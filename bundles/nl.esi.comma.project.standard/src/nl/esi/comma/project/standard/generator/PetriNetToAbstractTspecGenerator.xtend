@@ -13,6 +13,7 @@
 package nl.esi.comma.project.standard.generator
 
 import java.io.BufferedReader
+import java.io.PrintStream
 import java.util.concurrent.TimeUnit
 import org.eclipse.emf.common.util.URI
 import org.eclipse.emf.ecore.resource.Resource
@@ -21,8 +22,8 @@ import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
 
-import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
 import static extension nl.esi.xtext.common.lang.generator.FileSystemAccessUtil.*
+import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
 
 class PetriNetToAbstractTspecGenerator extends AbstractGenerator {
     val String pythonExe;
@@ -47,16 +48,10 @@ class PetriNetToAbstractTspecGenerator extends AbstractGenerator {
             '-tsdir=' + fsa.rootURI.toPath,
             '-pudir=' + fsa.getURI('plantuml').toPath
         ])
-
-        val out = process.inputReader.readAll
-        if (!out.isNullOrEmpty) {
-            System.out.print(out)
-        }
-        val err = process.errorReader.readAll
-        if (!err.isNullOrEmpty) {
-            System.err.print(err)
-        }
-        if (!process.waitFor(10, TimeUnit::SECONDS)) {
+        process.inputReader.pipeTo(System.out)
+        process.errorReader.pipeTo(System.err)
+        if (!process.waitFor(10, TimeUnit::MINUTES)) {
+            process.destroyForcibly
             throw new RuntimeException('Python process did not end in time')
         } else if (process.exitValue != 0) {
             throw new RuntimeException(
@@ -67,12 +62,12 @@ class PetriNetToAbstractTspecGenerator extends AbstractGenerator {
         fsa.refresh
     }
 
-    def String readAll(BufferedReader reader) {
-        var text = ''
-        var String line = null
-        while ((line = reader.readLine()) !== null) {
-            text += line + System.lineSeparator
-        }
-        return text
+    def Thread pipeTo(BufferedReader input, PrintStream output) {
+        return Thread.startVirtualThread[
+            var String line = null
+            while ((line = input.readLine()) !== null) {
+                output.println(line)
+            }
+        ]
     }
 }
