@@ -173,6 +173,6 @@ public final class LibraryToExprGenerator {
 	 */
 	private static String parameterName(Method method, int index) {
 		Parameter p = method.getParameters()[index];
-		return p.isNamePresent() ? p.getName() : "p" + index;
+		return p.isNamePresent() ? "_" +p.getName() : "p" + index;
 	}
 }
