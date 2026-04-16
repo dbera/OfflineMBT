@@ -1,0 +1,32 @@
+import "../../../input/issue367/issue367.types"
+
+record Dummy {
+    DummyInput input
+    DummyOutput output
+}
+
+record DummyInput {
+    UNIT Flow_01xqgnw
+    Input d1
+    UNIT Flow_12ridhf
+    Report d2
+    UNIT Event_052akh2
+    UNIT Flow_1jw2qfx
+    Input d4
+    UNIT Event_07r9aer
+    UNIT Flow_1u9fpei
+    Report d3
+}
+
+record DummyOutput {
+    UNIT Flow_01xqgnw
+    Input d1
+    UNIT Flow_12ridhf
+    Report d2
+    UNIT Event_052akh2
+    UNIT Flow_1jw2qfx
+    Input d4
+    UNIT Event_07r9aer
+    UNIT Flow_1u9fpei
+    Report d3
+}

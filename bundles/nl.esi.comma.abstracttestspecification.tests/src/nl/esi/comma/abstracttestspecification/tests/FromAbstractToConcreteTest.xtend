@@ -113,4 +113,9 @@ class FromAbstractToConcreteTest {
     def void testIssue299() {
         testGenerator('issue299');
     }
+
+    @Test
+    def void testIssue367() {
+        testGenerator('issue367');
+    }
 }

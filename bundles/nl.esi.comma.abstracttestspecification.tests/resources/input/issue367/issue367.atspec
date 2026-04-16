@@ -1,0 +1,114 @@
+import "issue367.ps"
+
+using issue367.Root.d1
+using issue367.Root.d4
+using issue367.Root.d2
+using issue367.Root.d3
+using issue367.Root.Event_052akh2
+using issue367.Root.Event_07r9aer
+using issue367.Root.Flow_01xqgnw
+using issue367.Root.Flow_12ridhf
+using issue367.Root.Flow_1u9fpei
+using issue367.Root.Flow_1jw2qfx
+
+abstract-test-definition
+
+Test-Scenario: S1
+
+compose-step-name: Root_T1_default_0
+action-case: issue367.Root.T1.default
+input-binding:
+Event_052akh2 : {
+    "unit": 0
+}
+output-data:
+Flow_01xqgnw : {
+    "unit": 0
+}
+d1 : {
+    "id": 0,
+    "input1": "ONE"
+}
+suppress(Flow_01xqgnw)
+
+run-step-name: Root_T2_default_0 step-type: "Dummy"
+action-case: issue367.Root.T2.default
+consumes-from-step: Root_T1_default_0 { d1  }
+input-binding:
+Flow_01xqgnw : {
+    "unit": 0
+}
+d1 : {
+    "id": 0,
+    "input1": "ONE"
+}
+output-data:
+Flow_12ridhf : {
+    "unit": 0
+}
+d2 : {
+    "id": 0
+}
+suppress(Flow_12ridhf)
+
+compose-step-name: Root_T3_default_0
+action-case: issue367.Root.T3.default
+consumes-from-step: Root_T2_default_0 { d2  }
+input-binding:
+Flow_12ridhf : {
+    "unit": 0
+}
+d2 : {
+    "id": 0
+}
+output-data:
+Flow_1u9fpei : {
+    "unit": 0
+}
+d3 : {
+    "id": 0
+}
+suppress(Flow_1u9fpei)
+data-references: d3
+issue367.Root.T3.default.x
+issue367.Root.T3.default.y
+
+compose-step-name: Root_T4_default_0
+action-case: issue367.Root.T4.default
+consumes-from-step: Root_T3_default_0 { d3  }
+input-binding:
+Flow_1u9fpei : {
+    "unit": 0
+}
+d3 : {
+    "id": 0
+}
+output-data:
+Flow_1jw2qfx : {
+    "unit": 0
+}
+d4 : {
+    "id": 0
+}
+suppress(Flow_1jw2qfx)
+data-references: d4
+issue367.Root.T4.default.z
+
+run-step-name: Root_T5_default_0 step-type: "Dummy"
+action-case: issue367.Root.T5.default
+consumes-from-step: Root_T4_default_0 { d4  }
+input-binding:
+Flow_1jw2qfx : {
+    "unit": 0
+}
+d4 : {
+    "id": 0
+}
+output-data:
+Event_07r9aer : {
+    "unit": 0
+}
+suppress(Event_07r9aer)
+
+generate-file "./dataset/"
+
