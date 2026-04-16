@@ -36,22 +36,30 @@ jobs:
       if: success() || failure()
       uses: scacap/action-surefire-report@v1
     - name: Attach LSP Client Languages
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: bpmn4s-lsp-client
         path: bundles/nl.asml.matala.product/target/lezer-grammar
         retention-days: 10
     - name: Attach Toolchain
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: bpmn4s-editor-dev
         path: bundles/nl.esi.comma.project.standard.cli/target/dist
         retention-days: 10
     - name: Attach Design Documentation
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: matala-design-documentation
-        path: bundles/nl.asml.matala.doc.design/target/website
+        path: |
+          bundles/nl.asml.matala.doc.design/target/website
+          !bundles/nl.asml.matala.doc.design/target/website/.asciidoctor/**/*
+        retention-days: 10
+    - name: Attach Design Documentation PDF
+      uses: actions/upload-artifact@v7
+      with:
+        path: bundles/nl.asml.matala.doc.design/target/website/matala-design.pdf
+        archive: false
         retention-days: 10
     # Optional: Uploads the full dependency graph to GitHub to improve the quality of Dependabot alerts this repository can receive
     # - name: Update dependency graph

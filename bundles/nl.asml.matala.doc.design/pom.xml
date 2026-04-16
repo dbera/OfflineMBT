@@ -40,9 +40,8 @@
                             <goal>unpack-dependencies</goal>
                         </goals>
                         <configuration>
-                            <includes>adoc/*.adoc</includes>
-                            <outputDirectory>
-                                ${project.build.directory}/adoc-gen/extracted</outputDirectory>
+                            <includes>adoc/**</includes>
+                            <outputDirectory>${project.build.directory}/adoc-ext</outputDirectory>
                         </configuration>
                     </execution>
                 </executions>
@@ -94,7 +93,7 @@
                                 <resource>
                                     <directory>${project.basedir}/..</directory>
                                     <includes>
-                                        <include>**/model/generated/*.ecore</include>
+                                        <include>*/model/generated/*.ecore</include>
                                     </includes>
                                 </resource>
                             </resources>
@@ -138,11 +137,12 @@
                         <configuration>
                             <resolve>true</resolve>
                             <config>
-                                <documentTitle>Matala meta-models</documentTitle>
+                                <documentTitle>Language meta-models</documentTitle>
                                 <renderDefaults>false</renderDefaults>
                                 <repeatInherited>false</repeatInherited>
                                 <renderDiagrams>true</renderDiagrams>
                                 <diagramsOutputPath>images</diagramsOutputPath>
+                                <diagramsOutputFormat>png</diagramsOutputFormat>
                             </config>
                             <inputFiles>
                                 <inputFile>${project.build.directory}/meta-models/nl.esi.xtext.common.lang/model/generated/Base.ecore</inputFile>
@@ -174,14 +174,29 @@
                 <configuration>
                     <!-- Attributes common to all output formats -->
                     <sourceDirectory>adoc</sourceDirectory>
+                    <sourceDocumentName>index.adoc</sourceDocumentName>
                     <attributes>
                         <last-update-label>false</last-update-label>
                         <sectnumlevels>4</sectnumlevels>
                         <toclevels>4</toclevels>
                         <doctype>book</doctype>
                         <icons>font</icons>
+                        <imagesdir />
+                        <imgsdir>images</imgsdir>
                         <eclipse-help-location>https://help.eclipse.org/2024-09/topic</eclipse-help-location>
                     </attributes>
+                    <resources>
+                        <resource>
+                            <directory>${basedir}/images</directory>
+                            <targetPath>images</targetPath>
+                        </resource>
+                        <resource>
+                            <directory>${project.build.directory}/adoc-ext/adoc</directory>
+                            <excludes>
+                                <exclude>**/*.adoc</exclude>
+                            </excludes>
+                        </resource>
+                    </resources>
                 </configuration>
 
                 <executions>
@@ -196,8 +211,6 @@
                             <outputDirectory>${project.build.directory}/eclipse-help</outputDirectory>
                             <backend>html5</backend>
                             <attributes>
-                                <imagesdir />
-                                <imgsdir>../../images</imgsdir>
                                 <!-- Using a cleaner skin, see https://github.com/darshandsoni/asciidoctor-skins#usage -->
                                 <stylesdir>${project.basedir}/css</stylesdir>
                                 <stylesheet>adoc-foundation.css</stylesheet>
@@ -219,20 +232,12 @@
                             <outputDirectory>${project.build.directory}/website</outputDirectory>
                             <backend>html5</backend>
                             <attributes>
-                                <imagesdir />
-                                <imgsdir>images</imgsdir>
                                 <sectnums />
                                 <sectanchors>true</sectanchors>
                                 <toc>left</toc>
                                 <output-html />
                                 <output-site />
                             </attributes>
-                            <resources>
-                                <resource>
-                                    <directory>${basedir}/images</directory>
-                                    <targetPath>images</targetPath>
-                                </resource>
-                            </resources>
                         </configuration>
                     </execution>
 
@@ -248,8 +253,7 @@
                             <outputFile>${project.build.directory}/website/matala-design.pdf</outputFile>
                             <backend>pdf</backend>
                             <attributes>
-                                <imagesdir />
-                                <imgsdir>${basedir}/images</imgsdir>
+                                <imgsdir>${project.build.directory}/website/images</imgsdir>
                                 <sectnums />
                                 <toc />
                                 <numbered />
@@ -295,6 +299,9 @@
                             <includes>
                                 <include>**/*</include>
                             </includes>
+                            <excludes>
+                                <exclude>.asciidoctor/</exclude>
+                            </excludes>
                         </fileSet>
                     </additionalFileSets>
                 </configuration>

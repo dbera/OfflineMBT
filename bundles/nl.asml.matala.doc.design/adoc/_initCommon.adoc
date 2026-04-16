@@ -15,6 +15,7 @@
 ifndef::pluginsdir[:pluginsdir: ../../]
 ifndef::imgsdir[:imgsdir: ../images]
 ifndef::gendocdir[:gendocdir: ../target/adoc-gen]
+ifndef::extdocdir[:extdocdir: ../target/adoc-ext/adoc]
 
 :idprefix:
 :idseparator: -
