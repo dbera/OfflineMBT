@@ -3,11 +3,11 @@
  * 
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
- * 
+ *
  * This program and the accompanying materials are made available
  * under the terms of the MIT License which is available at
  * https://opensource.org/licenses/MIT
- * 
+ *
  * SPDX-License-Identifier: MIT
  */
 /*
@@ -20,7 +20,6 @@ import nl.esi.comma.expressions.conversion.IExpressionConvertersProvider
 import nl.esi.comma.expressions.functions.ExpressionFunctionLibrariesProvider
 import nl.esi.comma.expressions.functions.IExpressionFunctionLibrariesProvider
 import nl.esi.comma.expressions.scoping.ExpressionsImportUriGlobalScopeProvider
-import org.eclipse.xtext.resource.XtextResourceSet
 import org.eclipse.xtext.scoping.IGlobalScopeProvider
 
 /**

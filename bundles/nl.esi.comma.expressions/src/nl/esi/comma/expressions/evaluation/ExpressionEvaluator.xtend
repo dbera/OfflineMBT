@@ -154,20 +154,11 @@ class ExpressionEvaluator {
     protected dispatch def Expression doEvaluate(ExpressionRecordAccess expression, IEvaluationContext context) {
         // ExpressionRecordAccess#getRecord() is not optimized, see #shouldOptimize(EReference, EObject).
         // Hence it should be evaluated before used
-        val recordExpression = expression.record.evaluate(context).evaluate(context)
+        val recordExpression = expression.record.evaluate(context)
         if (recordExpression instanceof ExpressionRecord) {
             // TODO: Should we throw an Exception when the field is not associated with a value?
-            return recordExpression.fields.findFirst[recordField == expression.field]?.exp.evaluate(context)
+            return recordExpression.fields.findFirst[recordField == expression.field]?.exp
         }
-    }
-
-    protected dispatch def Expression doEvaluate(ExpressionRecord expression, IEvaluationContext context) {
-        // for an ExpressionRecord we can only evaluate the fields and return them in a new expression record
-        val cpy = EcoreUtil.copy(expression)
-        for (field: expression.fields){
-            field.exp = field.exp.evaluate(context)
-        }
-        return cpy;
     }
 
 //    protected dispatch def Expression doEvaluate(ExpressionRecord expression, IEvaluationContext context) {

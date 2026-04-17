@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <?pde?>
 <!-- generated with https://github.com/eclipse-cbi/targetplatform-dsl -->
-<target name="OfflineMBT - Maven Dependencies" sequenceNumber="1775115047">
+<target name="OfflineMBT - Maven Dependencies" sequenceNumber="1758098992">
   <locations>
     <location includeDependencyDepth="none" includeDependencyScopes="compile" includeSource="true" missingManifest="generate" type="Maven" label="MavenCentral">
       <dependencies>

@@ -10,7 +10,9 @@
  *
  * SPDX-License-Identifier: MIT
  */
-target "OfflineMBT - Maven Dependencies" with configurePhase requirements source
+target "OfflineMBT - Maven Dependencies"
+
+with configurePhase requirements source
 
 maven MavenCentral scope=compile dependencyDepth=none missingManifest=generate includeSources {
     dependency {

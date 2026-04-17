@@ -14,7 +14,6 @@ package nl.esi.comma.expressions.validation
 
 import com.google.inject.Inject
 import java.util.List
-import nl.esi.comma.expressions.evaluation.IEvaluationContext
 import nl.esi.comma.expressions.expression.Expression
 import nl.esi.comma.expressions.expression.ExpressionAddition
 import nl.esi.comma.expressions.expression.ExpressionAnd
@@ -41,10 +40,12 @@ import nl.esi.comma.expressions.expression.ExpressionPower
 import nl.esi.comma.expressions.expression.ExpressionRecord
 import nl.esi.comma.expressions.expression.ExpressionSubtraction
 import nl.esi.comma.expressions.expression.ExpressionVector
-import nl.esi.comma.expressions.expression.Variable
+import nl.esi.comma.expressions.expression.VariableDecl
 import nl.esi.comma.expressions.functions.ExpressionFunctionsRegistry
 import nl.esi.comma.types.BasicTypes
 import nl.esi.comma.types.types.Dimension
+import nl.esi.comma.types.types.MapTypeConstructor
+import nl.esi.comma.types.types.SimpleTypeDecl
 import nl.esi.comma.types.types.TypeDecl
 import nl.esi.comma.types.types.TypeObject
 import nl.esi.comma.types.types.TypesFactory
@@ -57,9 +58,6 @@ import org.eclipse.xtext.validation.Check
 
 import static extension nl.esi.comma.expressions.utilities.ExpressionsUtilities.*
 import static extension nl.esi.comma.types.utilities.TypeUtilities.*
-import nl.esi.comma.expressions.expression.VariableDecl
-import nl.esi.comma.types.types.MapTypeConstructor
-import nl.esi.comma.types.types.SimpleTypeDecl
 
 /*
  * This class mainly captures the ComMA type system for expressions. Constraints are not formulated
@@ -67,14 +65,13 @@ import nl.esi.comma.types.types.SimpleTypeDecl
  */
 class ExpressionValidator extends AbstractExpressionValidator {
 	@Inject protected IScopeProvider scopeProvider
+	
+	/** 
+	 *  For yet unknown reason this inject is needed to  
+	 *  run nl.esi.comma.abstracttestspecification.tests.FromAbstractToConcreteTest.testIssue299()
+	 *  correctly
+	 * */
 	@Inject ExpressionFunctionsRegistry registry
-	IEvaluationContext evaluationContext = new IEvaluationContext(){
-    
-    override getExpression(Variable variable) {
-        throw new UnsupportedOperationException("TODO: auto-generated method stub")
-    }
-	    
-	}
 	
     static def boolean numeric(TypeObject t) {
         return t.subTypeOf(BasicTypes.getIntType(t)) || t.subTypeOf(BasicTypes.getRealType(t))

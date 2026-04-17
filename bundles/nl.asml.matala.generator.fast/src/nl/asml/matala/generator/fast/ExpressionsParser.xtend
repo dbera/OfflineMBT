@@ -221,7 +221,26 @@ class ExpressionsParser {
 
 
     def static dispatch CharSequence generateExpression(ExpressionFnCall expr, CharSequence ref)   {
-        return generateExpression(expr.function.name, expr.args, ref);
+        val functionName = expr.function.name
+        if(functionName.equals('size')) 
+            return '''(«generateExpression(expr.args.get(0), ref)».length)'''
+        else if(functionName.equals('remove')) 
+            return '''smVarContainer.remove(«generateExpression(expr.args.get(0), ref)», «generateExpression(expr.args.get(1), ref)»)'''
+        else if(functionName.equals('isEmpty')) 
+            return '''(«generateExpression(expr.args.get(0), ref)».length == 0)'''
+        else if(functionName.equals('contains')) 
+            return '''smVarContainer.contains(«generateExpression(expr.args.get(0), ref)», «generateExpression(expr.args.get(1), ref)»)'''
+        else if(functionName.equals('add')) 
+            return '''[«generateExpression(expr.args.get(1), ref)»]'''
+            // return '''smVarContainer.add(«generateExpression(args.get(0), ref)», «generateExpression(args.get(1), ref)»)'''
+        else if(functionName.equals('asReal')) 
+            return '''(double)(«generateExpression(expr.args.get(0), ref)»)'''
+        else if(functionName.equals('abs')) 
+            return '''Math.abs(«generateExpression(expr.args.get(0), ref)»)'''
+        else if(functionName.equals('get'))
+            return '''«generateExpression(expr.args.get(0), ref)»[«generateExpression(expr.args.get(1), ref)»]'''
+        else 
+            return '''UNSUPPORTED FUNCTION NAME: «functionName»'''
     }
 
 	def static CharSequence generateDim(ExpressionVector vec) {
@@ -308,29 +327,6 @@ class ExpressionsParser {
             default: false
         }
     }
-    
-    private def static CharSequence generateExpression(String functionName, List<Expression> args, CharSequence ref) {
-        if(functionName.equals('size')) 
-            return '''(«generateExpression(args.get(0), ref)».length)'''
-        else if(functionName.equals('remove')) 
-            return '''smVarContainer.remove(«generateExpression(args.get(0), ref)», «generateExpression(args.get(1), ref)»)'''
-        else if(functionName.equals('isEmpty')) 
-            return '''(«generateExpression(args.get(0), ref)».length == 0)'''
-        else if(functionName.equals('contains')) 
-            return '''smVarContainer.contains(«generateExpression(args.get(0), ref)», «generateExpression(args.get(1), ref)»)'''
-        else if(functionName.equals('add')) 
-            return '''[«generateExpression(args.get(1), ref)»]'''
-            // return '''smVarContainer.add(«generateExpression(args.get(0), ref)», «generateExpression(args.get(1), ref)»)'''
-        else if(functionName.equals('asReal')) 
-            return '''(double)(«generateExpression(args.get(0), ref)»)'''
-        else if(functionName.equals('abs')) 
-            return '''Math.abs(«generateExpression(args.get(0), ref)»)'''
-        else if(functionName.equals('get'))
-            return '''«generateExpression(args.get(0), ref)»[«generateExpression(args.get(1), ref)»]'''
-        else 
-            return '''UNSUPPORTED FUNCTION NAME: «functionName»'''
-    }
-    
 }
 
 

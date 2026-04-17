@@ -41,7 +41,7 @@ class CausalGraphRuntimeModule extends AbstractCausalGraphRuntimeModule {
     override Class<? extends IFormatter> bindIFormatter() {
         return CausalGraphFormatter
     }
-    
+
     def Class<? extends IExpressionFunctionLibrariesProvider> bindIExpressionFunctionLibrariesProvider() {
         return ExpressionFunctionLibrariesProvider
     }
@@ -49,5 +49,5 @@ class CausalGraphRuntimeModule extends AbstractCausalGraphRuntimeModule {
     def Class<? extends IExpressionConvertersProvider> bindIExpressionConvertersProvider() {
         return ExpressionConvertersProvider
     }
-    
+
 }
