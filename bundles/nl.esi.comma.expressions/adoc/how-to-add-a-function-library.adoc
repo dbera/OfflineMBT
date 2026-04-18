@@ -164,7 +164,7 @@ Avoid generics with unchecked casts::
   Prefer concrete overloads over a single generic `<T>` method. For example, split `abs` into `abs(long)` and `abs(BigDecimal)` instead of using `<T> T abs(T value)`.
 
 Parameter names::
-  If the library is compiled with the `-parameters` flag (configured in both `pom.xml` and the Eclipse setup), the real parameter names appear in the generated `.expr` declarations. Otherwise, synthetic names (`p0`, `p1`, …) are used.
+  If the library is compiled with the `-parameters` flag (configured in both `pom.xml` and the Eclipse setup), the real parameter names appear (prefixed with `_`) in the generated `.expr` declarations. Otherwise, synthetic names (`p0`, `p1`, …) are used.
 
 === Adding custom converters
 

@@ -27,7 +27,7 @@ The framework consists of the following key components that work together to pro
 ----
 User Library Class
     ↓
-ExpressionFunctionsLibrary (Provider)
+ExpressionFunctionLibrariesProvider
     ↓
 ExpressionFunctionsRegistry
     ↓
@@ -36,8 +36,6 @@ LibraryToExprGenerator (Auto-generates Xtext grammar)
 InMemoryExprResourceRegistry (Stores in-memory)
     ↓
 ExpressionsImportUriGlobalScopeProvider (Makes available)
-    ↓
-InMemoryAwareResourceSet (Provides resources)
     ↓
 DefaultExpressionFunctions (Default implementations)
 ----
@@ -59,7 +57,6 @@ DefaultExpressionFunctions (Default implementations)
 
 - `getFunctions()` - Returns Map<String, List<Method>> of all registered functions
 - `hasFunction(String name)` - Checks if a function with the given name exists
-- `validateFunction(ExpressionFnCall functionCall, IEvaluationContext context)` - Validates function call including argument validation
 - `invokeFunction(ExpressionFnCall functionCall, IEvaluationContext context)` - Invokes matching function and returns result as an Expression
 
 **Integration**:
@@ -67,7 +64,7 @@ DefaultExpressionFunctions (Default implementations)
 - Uses `IExpressionConverter` instances for type conversion
 - Coordinates with `InMemoryExprResourceRegistry` for library registration
 
-==== ExpressionFunctionsLibraryProvider
+==== ExpressionFunctionLibrariesProvider
 
 **Purpose**: Extension point for contributing custom function libraries.
 
@@ -132,22 +129,13 @@ See also <<how-to-add-an-expression-function-library>>
 - Resolves import URIs to function libraries
 - Provides scope visibility for in memory expressions via imports
 
-==== InMemoryAwareResourceSet
-
-**Purpose**: Custom `ResourceSet` that makes in-memory resources available alongside regular resources.
-
-**Responsibilities**:
-
-- Extends `SynchronizedXtextResourceSet` class
-- Registers the in memory uri handler
-
 ==== DefaultExpressionFunctions
 
 **Purpose**: Makes the default built-in functions available in all languages derived from expressions. This way they can be used in expression evaluations.
 
 **Built-in Functions**: isEmpty, size, contains, add, asReal, abs, hasKey, deleteKey, get, at, toString, concat, range
 
-**Integration**: Automatically registered in `ExpressionFunctionsRegistry` during initialization via ExpressionFunctionsLibraryProvider.
+**Integration**: Automatically registered in `ExpressionFunctionsRegistry` during initialization via `ExpressionFunctionLibrariesProvider`.
 
 ==== ExpressionConvertersProvider
 
