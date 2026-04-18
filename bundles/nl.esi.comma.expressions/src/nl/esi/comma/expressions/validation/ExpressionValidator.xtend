@@ -41,7 +41,6 @@ import nl.esi.comma.expressions.expression.ExpressionRecord
 import nl.esi.comma.expressions.expression.ExpressionSubtraction
 import nl.esi.comma.expressions.expression.ExpressionVector
 import nl.esi.comma.expressions.expression.VariableDecl
-import nl.esi.comma.expressions.functions.ExpressionFunctionsRegistry
 import nl.esi.comma.types.BasicTypes
 import nl.esi.comma.types.types.Dimension
 import nl.esi.comma.types.types.MapTypeConstructor
@@ -66,17 +65,9 @@ import static extension nl.esi.comma.types.utilities.TypeUtilities.*
 class ExpressionValidator extends AbstractExpressionValidator {
 	@Inject protected IScopeProvider scopeProvider
 	
-	/** 
-	 *  For yet unknown reason this inject is needed to  
-	 *  run nl.esi.comma.abstracttestspecification.tests.FromAbstractToConcreteTest.testIssue299()
-	 *  correctly
-	 * */
-	@Inject ExpressionFunctionsRegistry registry
-	
     static def boolean numeric(TypeObject t) {
         return t.subTypeOf(BasicTypes.getIntType(t)) || t.subTypeOf(BasicTypes.getRealType(t))
     }
-
 
     //Type checking
     @Check

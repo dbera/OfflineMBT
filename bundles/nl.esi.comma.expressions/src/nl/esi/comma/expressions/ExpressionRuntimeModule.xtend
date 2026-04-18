@@ -23,7 +23,6 @@ import nl.esi.comma.expressions.evaluation.ExpressionEvaluator
 import nl.esi.comma.expressions.functions.ExpressionFunctionLibrariesProvider
 import nl.esi.comma.expressions.functions.ExpressionFunctionsRegistry
 import nl.esi.comma.expressions.functions.IExpressionFunctionLibrariesProvider
-import nl.esi.comma.expressions.functions.InMemoryExprResourceRegistry
 import nl.esi.comma.expressions.scoping.ExpressionsImportUriGlobalScopeProvider
 import org.eclipse.xtext.scoping.IGlobalScopeProvider
 
@@ -49,7 +48,6 @@ class ExpressionRuntimeModule extends AbstractExpressionRuntimeModule {
      */
     override void configure(Binder binder) {
         super.configure(binder)
-        binder.bind(InMemoryExprResourceRegistry).in(Scopes.SINGLETON)
         binder.bind(ExpressionFunctionsRegistry).in(Scopes.SINGLETON)
         binder.bind(ExpressionEvaluator).in(Scopes.SINGLETON)
     }

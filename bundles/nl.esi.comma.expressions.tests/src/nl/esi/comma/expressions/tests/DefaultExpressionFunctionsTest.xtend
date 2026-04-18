@@ -15,12 +15,12 @@ package nl.esi.comma.expressions.tests
 import com.google.inject.Inject
 import nl.esi.comma.expressions.expression.ExpressionModel
 import nl.esi.comma.expressions.functions.DefaultExpressionFunctions
+import nl.esi.comma.expressions.functions.ExpressionFunctionsRegistry
 import nl.esi.comma.expressions.functions.InMemoryExprResourceRegistry
 import org.eclipse.xtext.resource.XtextResourceSet
-import org.eclipse.xtext.scoping.IGlobalScopeProvider
 import org.junit.jupiter.api.Assertions
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 
 /**
  * Tests that DefaultExpressionFunctions is correctly registered in-memory via
@@ -40,31 +40,28 @@ import org.junit.jupiter.api.BeforeEach
  */
 class DefaultExpressionFunctionsTest extends ExpressionEvaluatorTestBase {
 
-    @Inject InMemoryExprResourceRegistry inMemoryRegistry
+    @Inject ExpressionFunctionsRegistry registry
     @Inject XtextResourceSet resourceSet
     
     @BeforeEach 
     def void setImports(){
-        var handler = inMemoryRegistry.getURIHandler();
+        var handler = registry.getURIHandler();
         resourceSet.URIConverter?.URIHandlers?.add(0, handler);
     }
-    
-    
-    
 
     @Test
     def void defaultFunctions_registeredInMemory_uriExists() {
         val uri = InMemoryExprResourceRegistry.uriFor(DefaultExpressionFunctions)
-        Assertions.assertTrue(inMemoryRegistry.handles(uri),
-            "URI scheme should be 'inmemory'")
-        Assertions.assertNotNull(inMemoryRegistry.getContent(uri),
+        Assertions.assertTrue(registry.handlesURI(uri),
+            "URI scheme should be 'imr'")
+        Assertions.assertNotNull(registry.getContent(uri),
             "Content should be generated for DefaultExpressionFunctions")
     }
 
     @Test
     def void defaultFunctions_registeredInMemory_contentContainsFunctionDeclarations() {
         val uri = InMemoryExprResourceRegistry.uriFor(DefaultExpressionFunctions)
-        val content = inMemoryRegistry.getContent(uri)
+        val content = registry.getContent(uri)
 
         Assertions.assertAll(
             [Assertions.assertTrue(content.contains("function bool isEmpty("),   "isEmpty")],
@@ -80,10 +77,10 @@ class DefaultExpressionFunctionsTest extends ExpressionEvaluatorTestBase {
     @Test
     def void defaultFunctions_uriHandler_canReadContent() {
         val uri = InMemoryExprResourceRegistry.uriFor(DefaultExpressionFunctions)
-        Assertions.assertTrue(inMemoryRegistry.getURIHandler.exists(uri, emptyMap),
+        Assertions.assertTrue(registry.getURIHandler.exists(uri, emptyMap),
             "URIHandler should report the in-memory URI as existing")
 
-        val stream = inMemoryRegistry.getURIHandler.createInputStream(uri, emptyMap)
+        val stream = registry.getURIHandler.createInputStream(uri, emptyMap)
         val bytes  = stream.readAllBytes
         Assertions.assertTrue(bytes.length > 0, "InputStream should produce non-empty content")
     }

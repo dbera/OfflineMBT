@@ -23,6 +23,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.eclipse.emf.common.util.URI;
+import org.eclipse.emf.ecore.resource.URIHandler;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -53,17 +56,15 @@ public class ExpressionFunctionsRegistry {
 
 	private final Set<IExpressionConverter> converters;
 
-	private final InMemoryExprResourceRegistry inMemoryRegistry;
+	private final InMemoryExprResourceRegistry inMemoryRegistry = new InMemoryExprResourceRegistry();
 
 
 	@Inject
-	public ExpressionFunctionsRegistry(InMemoryExprResourceRegistry inMemoryRegistry,
-			IExpressionConvertersProvider convertersProvider, IExpressionFunctionLibrariesProvider librariesProvider) {
-		this.inMemoryRegistry = inMemoryRegistry;
+	public ExpressionFunctionsRegistry(IExpressionConvertersProvider convertersProvider, IExpressionFunctionLibrariesProvider librariesProvider) {
 		librariesProvider.get().stream().forEach(this::addLibraryFunctions);
 		this.converters = convertersProvider.get();
 	}
-
+	
 	/** Returns an unmodifiable map of all registered functions. */
 	public Map<String, List<Method>> getFunctions() {
 		return Collections.unmodifiableMap(functions);
@@ -109,6 +110,26 @@ public class ExpressionFunctionsRegistry {
 			throw new RuntimeException("Error invoking function " + funcName + " with args " + Arrays.toString(args),
 					e);
 		}
+	}
+	/**
+	 *  Returns the URIHandler from the in-memory registry, which can be used to resolve URIs for resources
+	 */
+	public URIHandler getURIHandler() {
+		return inMemoryRegistry.getURIHandler();
+	}
+	
+    /** Returns an iterable of all registered URIs in the  registry. */
+	public Iterable<? extends URI> getRegisteredURIs() {
+	  return  inMemoryRegistry.getRegisteredURIs();
+	}
+	/** Checks if the registry can handle the given URI. */
+	public boolean handlesURI(URI uri) {
+		return inMemoryRegistry.handles(uri);
+	}
+
+	/** Returns the content associated with the given URI, or null if not found. */
+	public String getContent(URI uri) {
+		return inMemoryRegistry.getContent(uri);
 	}
 
 	/**
