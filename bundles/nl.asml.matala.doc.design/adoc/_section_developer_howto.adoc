@@ -21,12 +21,5 @@ This section describes useful information for a developer.
 // add your includes here make thus the includes start with level 3 ===
 // please note that the include may also come from a plugin
 // as described here:
-include::how-to/add-documentation-from-plugin.adoc[levelOffset=1]
-
-ifdef::gendocdir-extracted[]
-include::{gendocdir-extracted}/how-to-add-a-function-library.adoc[]
-
-endif::[] 
-ifndef::gendocdir-extracted[]
-include::{pluginsdir}/nl.esi.comma.expressions/adoc/how-to-add-a-function-library.adoc[]
-endif::[] 
+include::how-to/add-documentation-from-plugin.adoc[]
+include::{extdocdir}/how-to-add-a-function-library.adoc[]

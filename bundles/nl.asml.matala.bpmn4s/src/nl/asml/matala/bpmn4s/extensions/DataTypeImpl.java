@@ -12,12 +12,8 @@
  */
 package nl.asml.matala.bpmn4s.extensions;
 
-import static nl.asml.matala.bpmn4s.extensions.Constants.ATTRIBUTE_NAME;
-import static nl.asml.matala.bpmn4s.extensions.Constants.ATTRIBUTE_TYPE;
-import static nl.asml.matala.bpmn4s.extensions.Constants.DATATYPE_TYPE;
-import static nl.asml.matala.bpmn4s.extensions.Constants.BPMN4S_NS;
+import static nl.asml.matala.bpmn4s.extensions.Constants.*;
 
-import org.camunda.bpm.model.bpmn.impl.instance.BpmnModelElementInstanceImpl;
 import org.camunda.bpm.model.bpmn.impl.instance.ExtensionElementsImpl;
 import org.camunda.bpm.model.xml.ModelBuilder;
 import org.camunda.bpm.model.xml.impl.instance.ModelTypeInstanceContext;
@@ -27,8 +23,11 @@ import org.camunda.bpm.model.xml.type.attribute.Attribute;
 
 public class DataTypeImpl extends ExtensionElementsImpl implements DataType{
 
-	protected static Attribute<String> type;
+	protected static Attribute<String> id;
 	protected static Attribute<String> name;
+	protected static Attribute<String> type;
+	protected static Attribute<String> keyTypeRef;
+	protected static Attribute<String> valueTypeRef;
 	public DataTypeImpl(ModelTypeInstanceContext instanceContext) {
 		super(instanceContext);
 	}
@@ -41,22 +40,32 @@ public class DataTypeImpl extends ExtensionElementsImpl implements DataType{
 	          return new DataTypeImpl(instanceContext);
 	        }
 	      });
+		id = typeBuilder.stringAttribute(ATTRIBUTE_ID)
+				  .namespace(BPMN4S_NS)
+			      .required()
+			      .build();
 		name = typeBuilder.stringAttribute(ATTRIBUTE_NAME)
 				  .namespace(BPMN4S_NS)
 			      .required()
 			      .build();
 		type = typeBuilder.stringAttribute(ATTRIBUTE_TYPE)
-		  .namespace(BPMN4S_NS)
-	      .required()
-	      .build();
+				  .namespace(BPMN4S_NS)
+			      .required()
+			      .build();
+		keyTypeRef = typeBuilder.stringAttribute(ATTRIBUTE_KEYTYPEREF)
+				  .namespace(BPMN4S_NS)
+			      .required()
+			      .build();
+		valueTypeRef = typeBuilder.stringAttribute(ATTRIBUTE_VALUETYPEREF)
+				  .namespace(BPMN4S_NS)
+			      .required()
+			      .build();
 
 	    typeBuilder.build();
 	}
 
-
-	@Override
-	public String getType() {
-		return type.getValue(this);
+	public String getId() {
+		return id.getValue(this);
 	}
 
 	@Override
@@ -64,4 +73,18 @@ public class DataTypeImpl extends ExtensionElementsImpl implements DataType{
 		return name.getValue(this);
 	}
 
+	@Override
+	public String getType() {
+		return type.getValue(this);
+	}
+	
+	@Override
+	public String getKeyTypeRef() {
+		return keyTypeRef.getValue(this);
+	}
+	
+	@Override
+	public String getValueTypeRef() {
+		return valueTypeRef.getValue(this);
+	}
 }

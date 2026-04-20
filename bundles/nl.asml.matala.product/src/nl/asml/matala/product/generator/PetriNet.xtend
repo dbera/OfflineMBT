@@ -60,15 +60,9 @@ class PetriNet {
     }
     
     def add_to_init_place_expression_map(String p, String e) {
-        if(init_place_expression_map.keySet.contains(p)) 
-            init_place_expression_map.get(p).add(e)
-        else{
-            var lst = new ArrayList<String>
-            lst.add(e)
-            init_place_expression_map.put(p,lst)
-        }
+        init_place_expression_map.computeIfAbsent(p)[newArrayList] += e
     }
-        
+    
     def is_internal_place(String p) {
         for(ip : internal_places) {
             if(ip.name.equals(p)) return true

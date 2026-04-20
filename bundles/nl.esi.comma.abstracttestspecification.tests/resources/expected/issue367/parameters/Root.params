@@ -1,0 +1,12 @@
+import "../types/Root.types"
+
+data-instances
+DummyInput RootInput
+DummyOutput RootOutput
+
+data-implementation
+// Empty
+
+path-prefix "./dataset/"
+var-ref RootInput -> file-name "RootInput.json"
+var-ref RootOutput -> file-name "RootOutput.json"

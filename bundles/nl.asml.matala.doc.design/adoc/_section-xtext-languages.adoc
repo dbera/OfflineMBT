@@ -14,7 +14,9 @@
 include::_initCommon.adoc[]
 
 [[xtext-languages]]
-== Xtext Languages Overview
+== Xtext Languages
+
+=== Overview
 
 Figure <<xtext-grammars>> shows a deployment diagram of all Xtext based DSLs and their relations, where:
 
@@ -30,7 +32,7 @@ For more information about the reuse of existing grammars, please read the (i.e.
 
 [[xtext-grammars]]
 .Xtext languages and their relations
-[plantuml, images/xtext-grammars, svg]
+[plantuml, images/xtext-grammars, png]
 ....
 @startuml
 
@@ -50,3 +52,7 @@ artifact nl.esi.comma.causalgraph.CausalGraph #white/aquamarine
 
 @enduml
 ....
+
+<<<
+
+include::{extdocdir}/nl.esi.comma.types.adoc[leveloffset=2]

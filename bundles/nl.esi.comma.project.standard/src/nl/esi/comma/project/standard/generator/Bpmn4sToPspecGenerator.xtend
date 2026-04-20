@@ -24,17 +24,15 @@ import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
 import static extension nl.esi.xtext.common.lang.generator.FileSystemAccessUtil.*
 
 class Bpmn4sToPspecGenerator extends AbstractGenerator {
-    val boolean simulation
     val int numTests
     val int depthLimit
     val int stateLimit
 
     new() {
-        this(false, 1, 300, 1000)
+        this(1, 300, 1000)
     }
 
-    new(boolean simulation, int numTests, int depthLimit, int stateLimit) {
-        this.simulation = simulation
+    new(int numTests, int depthLimit, int stateLimit) {
         this.numTests = numTests
         this.depthLimit = depthLimit
         this.stateLimit = stateLimit
@@ -55,7 +53,7 @@ class Bpmn4sToPspecGenerator extends AbstractGenerator {
         fsa.generateFile(typesPath, '// TODO: Generate content')
 
         // Generate the pspec file from the bpmn file
-        Main.compile(uri.toPath, simulation, fsa.rootURI.toPath, depthLimit, stateLimit, numTests)
+        Main.compile(uri.toPath, fsa.rootURI.toPath, depthLimit, stateLimit, numTests)
 
         // Refresh the files-system to detect the generated files
         fsa.refresh

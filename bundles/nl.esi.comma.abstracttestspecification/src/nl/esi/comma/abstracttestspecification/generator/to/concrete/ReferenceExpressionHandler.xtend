@@ -35,6 +35,7 @@ class ReferenceExpressionHandler {
     def resolveStepReferenceExpressions(RunStep rstep) {
         debug(" [INFO] Resolving references for Run Step: " + rstep.name)
         val Map<String, List<String>> mapLHStoRHS = newLinkedHashMap
+        val Set<String> nestedFieldPrefixes = newHashSet
 
         for (cstep : rstep.referencedComposeSteps) {
             debug(" [INFO] > Referenced Compose Step: " + cstep.name)
@@ -44,20 +45,23 @@ class ReferenceExpressionHandler {
             for (nestedcstep : #[cstep].closure[referencedComposeSteps]) {
                 debug(" [INFO] --> Nested Compose Step: " + nestedcstep.name)
                 // Run block input data structure = Concrete TSpec step input data structure
-                nestedcstep.evaluateReferenceConstrains('''step_«nestedcstep.name».output.''', mapLHStoRHS)
+                val fieldPrefix = '''step_«nestedcstep.name».output.'''
+                nestedFieldPrefixes += fieldPrefix
+                nestedcstep.evaluateReferenceConstrains(fieldPrefix, mapLHStoRHS)
             }
         }
 
         debug(" [INFO] Expressions Before Rewrite: ")
         mapLHStoRHS.forEach[k, l | l.forEach[v | debug('''    > K: «k» > V: «v»''')]]
 
-        val appliedKeys = rewriteExpressions(mapLHStoRHS)
+        rewriteVariableReferences(mapLHStoRHS)
 
         debug(" [INFO] Expressions After Rewrite: ")
-        mapLHStoRHS.forEach[k, l | l.forEach[v | debug('''    «IF appliedKeys.contains(k)»*«ELSE»>«ENDIF» K: «k» > V: «v»''')]]
+        mapLHStoRHS.forEach[k, l | l.forEach[v | debug('''    > K: «k» > V: «v»''')]]
 
-        // remove expressions that were used to overwrite other expressions
-        mapLHStoRHS.keySet.removeAll(appliedKeys)
+        // remove the fields of the nested compose steps as they are not an input of this run step,
+        // and were only used for rewriting the RHS expressions
+        mapLHStoRHS.keySet.removeIf(field | nestedFieldPrefixes.exists[ prefix | field.startsWith(prefix)])
 
         return mapLHStoRHS
     }
@@ -104,25 +108,22 @@ class ReferenceExpressionHandler {
         }
     }
 
-    private def Set<String> rewriteExpressions(Map<String, List<String>> mapLHStoRHS) {
-        val appliedKeys = newHashSet
+    private def void rewriteVariableReferences(Map<String, List<String>> mapLHStoRHS) {
         for (expressions : mapLHStoRHS.values) {
             for (var i = 0; i < expressions.size; i++) {
                 val expression = expressions.get(i)
-                for (key : mapLHStoRHS.keySet.filter[k|expression.contains(k)]) {
+                val variableReference = mapLHStoRHS.keySet.findFirst[k|expression.contains(k)]
+                if (variableReference !== null) {
                     // RHS expression should be rewritten as it references a variable
-                    val varRHS = mapLHStoRHS.get(key)
-                    appliedKeys += key
-
+                    val replacements = mapLHStoRHS.get(variableReference)
                     // Replace the (variable in the) expression with all expressions that are assigned to the variable
                     expressions.remove(i)
-                    expressions.addAll(i, varRHS.map[varExp|expression.replace(key, varExp)])
+                    expressions.addAll(i, replacements.map[exp|expression.replace(variableReference, exp)])
                     // The inserted expressions might refer to other variables in their turn,
                     // so make sure to re-evalue them again
                     i--
                 }
             }
         }
-        return appliedKeys
     }
 }
