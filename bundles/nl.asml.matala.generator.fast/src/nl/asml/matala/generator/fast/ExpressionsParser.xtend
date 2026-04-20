@@ -221,26 +221,26 @@ class ExpressionsParser {
 
 
     def static dispatch CharSequence generateExpression(ExpressionFnCall expr, CharSequence ref)   {
-        val functionName = expr.function.name
-        if(functionName.equals('size')) 
+        val fnName = expr.function.name
+        if(fnName.equals('size')) 
             return '''(«generateExpression(expr.args.get(0), ref)».length)'''
-        else if(functionName.equals('remove')) 
+        else if(fnName.equals('remove')) 
             return '''smVarContainer.remove(«generateExpression(expr.args.get(0), ref)», «generateExpression(expr.args.get(1), ref)»)'''
-        else if(functionName.equals('isEmpty')) 
+        else if(fnName.equals('isEmpty')) 
             return '''(«generateExpression(expr.args.get(0), ref)».length == 0)'''
-        else if(functionName.equals('contains')) 
+        else if(fnName.equals('contains')) 
             return '''smVarContainer.contains(«generateExpression(expr.args.get(0), ref)», «generateExpression(expr.args.get(1), ref)»)'''
-        else if(functionName.equals('add')) 
+        else if(fnName.equals('add')) 
             return '''[«generateExpression(expr.args.get(1), ref)»]'''
             // return '''smVarContainer.add(«generateExpression(args.get(0), ref)», «generateExpression(args.get(1), ref)»)'''
-        else if(functionName.equals('asReal')) 
+        else if(fnName.equals('asReal')) 
             return '''(double)(«generateExpression(expr.args.get(0), ref)»)'''
-        else if(functionName.equals('abs')) 
+        else if(fnName.equals('abs')) 
             return '''Math.abs(«generateExpression(expr.args.get(0), ref)»)'''
-        else if(functionName.equals('get'))
+        else if(fnName.equals('get'))
             return '''«generateExpression(expr.args.get(0), ref)»[«generateExpression(expr.args.get(1), ref)»]'''
         else 
-            return '''UNSUPPORTED FUNCTION NAME: «functionName»'''
+            return '''UNSUPPORTED FUNCTION NAME: «fnName»'''
     }
 
 	def static CharSequence generateDim(ExpressionVector vec) {
@@ -328,5 +328,3 @@ class ExpressionsParser {
         }
     }
 }
-
-

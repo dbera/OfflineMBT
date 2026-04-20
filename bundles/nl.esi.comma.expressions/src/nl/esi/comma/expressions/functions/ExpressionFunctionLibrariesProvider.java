@@ -19,7 +19,9 @@ import java.util.Set;
  * 
   */
 public class ExpressionFunctionLibrariesProvider implements IExpressionFunctionLibrariesProvider {
+	private static final Set<Class<?>> libraries = Set.of(DefaultExpressionFunctions.class);
+
 	public Set<Class<?>> get(){
-		return Set.of(DefaultExpressionFunctions.class);
+		return libraries;
 	}
 }

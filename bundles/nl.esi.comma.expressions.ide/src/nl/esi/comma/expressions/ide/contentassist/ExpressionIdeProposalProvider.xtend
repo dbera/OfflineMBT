@@ -68,22 +68,6 @@ class ExpressionIdeProposalProvider extends AbstractExpressionIdeProposalProvide
                     createDefaultValue(mapType.valueType, null, context, acceptor)
                 }
             }
-//TODO Check and remove
-//            case feature == 'functionName': {
-//                for (func : ExpressionFunction.values) {
-//                    val proposal = proposalCreator.createProposal(func.name + '()', context, [ entry |
-//                        entry.kind = ContentAssistEntry.KIND_FUNCTION
-//                        entry.label = func.name
-//                        entry.description = 'Function'
-//                        entry.documentation = func.documentation
-//                        entry.editPositions +=
-//                            new TextRegion(context.offset + func.name.length + 1, entry.proposal.length - 2)
-//                    ])
-//                    if (proposal !== null) {
-//                        acceptor.accept(proposal, proposalPriorities.getDefaultPriority(proposal))
-//                    }
-//                }
-//            }
         }
     }
 

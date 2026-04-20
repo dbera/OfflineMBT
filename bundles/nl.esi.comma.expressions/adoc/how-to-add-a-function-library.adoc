@@ -14,7 +14,7 @@
 [[how-to-add-an-expression-function-library]]
 == How to Add an Expression Function Library
 
-A library is a plain Java class whose `public` methods (static or instance) are automatically exposed as callable functions in `.expr` models via the `call` keyword. This guide describes how to add custom function libraries and converters to the Expression Functions Framework.
+A library is a plain Java class whose `public` methods (static or instance) are automatically exposed as callable functions in `.expr` models. This guide describes how to add custom function libraries and converters to the Expression Functions Framework.
 
 === Workflow: Registration to Usage
 
@@ -77,7 +77,7 @@ The framework then automatically registers the libraries: it generates in-memory
 
 ==== Step 4: Usage
 
-Functions become available in expressions via the `call` keyword:
+Functions become available in expressions. The `call` keyword is optional. :
 
 [source]
 ----

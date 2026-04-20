@@ -322,11 +322,4 @@ class ExpressionEvaluatorFunctionTest extends ExpressionEvaluatorTestBase {
             }
         ''')
     }
-    
-    override assertEval(String expected, String input) {
-        val newInput = input.replaceAll("(\\w+\\s*\\()", "call $1")
-        super.assertEval(expected, newInput)
-        
-    }
-    
 }
