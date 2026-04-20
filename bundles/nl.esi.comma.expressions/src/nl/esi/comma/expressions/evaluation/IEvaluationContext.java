@@ -16,9 +16,11 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 
 import org.eclipse.emf.common.util.TreeIterator;
 import org.eclipse.emf.ecore.EObject;
@@ -270,6 +272,71 @@ public interface IEvaluationContext {
 		}
 		return null;
 	}
+	
+	default Object toObject(Expression expression) {
+		var intValue = asInt(expression);
+		if (intValue != null)
+			return intValue.longValue();
+
+		var realValue = asReal(expression);
+		if (realValue != null)
+			return realValue;
+
+		var boolValue = asBool(expression);
+		if (boolValue != null)
+			return boolValue;
+
+		return asString(expression);
+	}
+	
+	default List<?> toList(ExpressionVector vector) {
+		// TODO validate against type annotation if present
+		List<Object> result = new ArrayList<>();
+		for (Expression element : vector.getElements()) {
+			Object converted = toObject(element);
+			if (converted == null) {
+				// throw illegal argument exception
+				throw new IllegalArgumentException(
+						"Vector element conversion failed: expected an Object but got null.");
+			}
+
+			result.add(converted);
+		}
+		// return a new list the has generic type of the first element using streaming, if possible
+		if (!result.isEmpty()) {
+			Class<?> elementType = result.getFirst().getClass();
+			return result.stream().map(elementType::cast).toList();
+		}
+		return result;
+	}
+
+	default  Map<?, ?> toMap(ExpressionMap map) {
+		Map<Object, Object> result = new LinkedHashMap<>();
+		for (var pair : map.getPairs()) {
+			Object key = toObject(pair.getKey());
+			if (key == null) {
+				throw new IllegalArgumentException(String
+						.format("Map key conversion from %s failed: expected an Object but got null.", pair.getKey()));
+			}
+			Object value = toObject(pair.getValue());
+			if (value == null) {
+				throw new IllegalArgumentException(String.format(
+						"Map value conversion from %s failed: expected an Object but got null.", pair.getValue()));
+			}
+			result.put(key, value);
+		}
+		// return a new map the has generic types of the first element using streaming,
+		// if possible
+		if (!result.isEmpty()) {
+			Class<?> keyType = result.keySet().iterator().next().getClass();
+			Class<?> valueType = result.values().iterator().next().getClass();
+			return result.entrySet().stream().collect(
+					Collectors.toMap(entry -> keyType.cast(entry.getKey()), entry -> valueType.cast(entry.getValue())));
+		}
+		return result;
+	}
+
+
 
 	/**
 	 * Converts a Java {@link Collection} to an {@link ExpressionVector}.

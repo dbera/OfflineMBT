@@ -13,12 +13,9 @@
 package nl.esi.comma.expressions.conversion;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import nl.esi.comma.expressions.evaluation.IEvaluationContext;
 import nl.esi.comma.expressions.expression.Expression;
@@ -55,17 +52,12 @@ public final class DefaultExpressionsConverter implements IExpressionConverter {
 
 		// Vector → List
 		if (expression instanceof ExpressionVector vector) {
-			return convertVector(vector, context);
+			return context.toList(vector);
 		}
 
 		// Map → Map
 		if (expression instanceof ExpressionMap map) {
-			return convertMap(map, context);
-		}
-
-		// Record → custom Java object
-		if (expression instanceof ExpressionRecord record) {
-			return convertRecord(record, targetType, context);
+			return context.toMap(map);
 		}
 
 		// Scalar conversions
@@ -107,10 +99,6 @@ public final class DefaultExpressionsConverter implements IExpressionConverter {
 			return targetType.isAssignableFrom(Map.class);
 		}
 
-		if (expression instanceof ExpressionRecord record) {
-			return isRecordConvertible(record, targetType, context);
-		}
-
 		// Scalar: check what the expression resolves to, then verify target accepts it
 		if (context.asInt(expression) != null) {
 			return targetType == long.class || targetType == int.class || targetType == short.class
@@ -130,138 +118,14 @@ public final class DefaultExpressionsConverter implements IExpressionConverter {
 		return false;
 	}
 
-	// ---- Vector conversion ----
-
-	private List<?> convertVector(ExpressionVector vector, IEvaluationContext context) {
-		// TODO validate against type annotation if present
-		List<Object> result = new ArrayList<>();
-		for (Expression element : vector.getElements()) {
-			Object converted = convert(element, context);
-			if (converted == null) {
-				// throw illegal argument exception
-				throw new IllegalArgumentException(
-						"Vector element conversion failed: expected an Object but got null.");
-			}
-
-			result.add(converted);
-		}
-		// return a new list the has generic type of the first element using streaming, if possible
-		if (!result.isEmpty()) {
-			Class<?> elementType = result.getFirst().getClass();
-			return result.stream().map(elementType::cast).toList();
-		}
-		return result;
-	}
-
-	// ---- Map conversion ----
-
-	private Map<?, ?> convertMap(ExpressionMap map, IEvaluationContext context) {
-		Map<Object, Object> result = new LinkedHashMap<>();
-		for (var pair : map.getPairs()) {
-			Object key = convert(pair.getKey(), context);
-			if (key == null) {
-				throw new IllegalArgumentException(String
-						.format("Map key conversion from %s failed: expected an Object but got null.", pair.getKey()));
-			}
-			Object value = convert(pair.getValue(), context);
-			if (value == null) {
-				throw new IllegalArgumentException(String.format(
-						"Map value conversion from %s failed: expected an Object but got null.", pair.getValue()));
-			}
-			result.put(key, value);
-		}
-		// return a new map the has generic types of the first element using streaming,
-		// if possible
-		if (!result.isEmpty()) {
-			Class<?> keyType = result.keySet().iterator().next().getClass();
-			Class<?> valueType = result.values().iterator().next().getClass();
-			return result.entrySet().stream().collect(
-					Collectors.toMap(entry -> keyType.cast(entry.getKey()), entry -> valueType.cast(entry.getValue())));
-		}
-		return result;
-	}
-
-	// ---- Record conversion ----
-
-	/**
-	 * Converts an ExpressionRecord to a Java object via reflection.
-	 * 
-	 * The record type name must match the target class simple name. The target
-	 * class must have a no-arg constructor. Record field names must match Java
-	 * field names.
-	 */
-	private <T> T convertRecord(ExpressionRecord record, Class<T> targetType, IEvaluationContext context) {
-		if (!record.getType().getName().equals(targetType.getSimpleName())) {
-			throw new IllegalArgumentException(String.format("Type mismatch: record '%s' cannot convert to class '%s'.",
-					record.getType().getName(), targetType.getSimpleName()));
-		}
-
-		try {
-			var constructor = targetType.getDeclaredConstructor();
-			constructor.setAccessible(true);
-			T instance = constructor.newInstance();
-
-			int fieldCount = record.getType().getFields().size();
-			for (int i = 0; i < fieldCount; i++) {
-				var recordField = record.getType().getFields().get(i);
-				var recordValue = record.getFields().get(i);
-
-				if (!(recordValue instanceof Expression expr)) {
-					continue;
-				}
-
-				var javaField = targetType.getDeclaredField(recordField.getName());
-				javaField.setAccessible(true);
-				javaField.set(instance, toObject(expr, javaField.getType(), context));
-			}
-
-			return instance;
-		} catch (NoSuchMethodException e) {
-			throw new IllegalArgumentException(
-					String.format("'%s' must have a no-arg constructor.", targetType.getSimpleName()), e);
-		} catch (NoSuchFieldException e) {
-			throw new IllegalArgumentException(
-					String.format("Field '%s' not found in '%s'.", e.getMessage(), targetType.getSimpleName()), e);
-		} catch (ReflectiveOperationException e) {
-			throw new IllegalArgumentException(
-					String.format("Failed to convert record to '%s': %s", targetType.getSimpleName(), e.getMessage()),
-					e);
-		}
-	}
-
-	private boolean isRecordConvertible(ExpressionRecord record, Class<?> targetType, IEvaluationContext context) {
-		if (!record.getType().getName().equals(targetType.getSimpleName())) {
-			return false;
-		}
-		try {
-			targetType.getDeclaredConstructor();
-			int fieldCount = record.getType().getFields().size();
-			for (int i = 0; i < fieldCount; i++) {
-				var recordValue = record.getFields().get(i);
-				if (!(recordValue instanceof Expression expr)) {
-					continue;
-				}
-				var fieldName = record.getType().getFields().get(i).getName();
-				var javaField = targetType.getDeclaredField(fieldName);
-				if (!isConvertible(expr, javaField.getType(), context)) {
-					return false;
-				}
-			}
-			return true;
-		} catch (NoSuchMethodException | NoSuchFieldException | SecurityException e) {
-			return false;
-		}
-	}
-
 	// ---- Scalar conversion ----
-
 	/**
 	 * Converts a scalar expression to the requested Java type. Lets the context
 	 * resolve the expression to its natural Java type first, then checks if that
 	 * result is assignable to the target type.
 	 */
 	private Object convertScalar(Expression expression, Class<?> targetType, IEvaluationContext context) {
-		Object value = convert(expression, context);
+		Object value = context.toObject(expression);
 		if (value == null) {
 			return targetType.isPrimitive() ? defaultPrimitive(targetType) : null;
 		}
@@ -326,26 +190,6 @@ public final class DefaultExpressionsConverter implements IExpressionConverter {
 		if (type == float.class)
 			return 0.0f;
 		return null;
-	}
-
-	/**
-	 * Best-effort conversion when no specific target type is given (Object.class).
-	 * Tries int → real → bool → string in order.
-	 */
-	private Object convert(Expression expression, IEvaluationContext context) {
-		var intValue = context.asInt(expression);
-		if (intValue != null)
-			return intValue.longValue();
-
-		var realValue = context.asReal(expression);
-		if (realValue != null)
-			return realValue;
-
-		var boolValue = context.asBool(expression);
-		if (boolValue != null)
-			return boolValue;
-
-		return context.asString(expression);
 	}
 
 }
