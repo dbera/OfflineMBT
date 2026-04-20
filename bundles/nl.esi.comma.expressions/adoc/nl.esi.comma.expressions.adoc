@@ -12,12 +12,12 @@
 ////
 
 [[nl.esi.comma.expressions]]
-=== Expressions
+= Expressions
 :lang: en
 
 [.normal]
 
-==== Expression Language Overview
+== Expression Language Overview
 
 Expressions are used to compute values, make decisions, and define conditions in models. The language supports a variety of operators, function calls, and value types, and is designed to be familiar to users of modern programming and modeling languages.
 
@@ -26,7 +26,7 @@ Expressions are used to compute values, make decisions, and define conditions in
 Users can add their own types. See <<nl.esi.comma.types>> for details.
 
 
-==== Literals
+=== Literals
 
 * Boolean: `true`, `false`
 * Integer: `42`, `-7`
@@ -39,7 +39,7 @@ Users can add their own types. See <<nl.esi.comma.types>> for details.
 * Map: `<map<int, string>>{1 -> "a", 2 -> "b"}`
 * Wildcard: `*` (matches any value)
 
-==== Variables
+=== Variables
 
 Variables are declared with a type and a name, with optional initialization. Their values can be used in expressions:
 
@@ -50,14 +50,14 @@ real x
 bool flag = true
 ....
 
-==== Operators
+=== Operators
 
 * Logical: `and`, `or`, `not` (case-insensitive: `AND`/`and`, `OR`/`or`, `NOT`/`not`)
 * Comparison: `==`, `!=`, `<`, `<=`, `>`, `>=`
 * Arithmetic: `+`, `-`, `*`, `/`, `mod`, `^`, `max`, `min`
 * Postfix: record field access `record.field`, map access `map[key]`, map write `map[key -> value]`
 
-==== Function Calls
+=== Function Calls
 
 Functions can be called in two ways:
 
@@ -69,7 +69,7 @@ call sum(v)           // calls function declared in the model
 range(1, 10, 2)       // calls a registered function
 ....
 
-==== Parentheses
+=== Parentheses
 
 Parentheses can be used to group expressions and control evaluation order:
 
@@ -77,7 +77,7 @@ Parentheses can be used to group expressions and control evaluation order:
 (1 + 2) * 3
 ....
 
-==== Type Annotation for Vectors and Maps
+=== Type Annotation for Vectors and Maps
 
 Vectors and maps can be constructed with explicit type annotation. The type is specified in angle brackets before the value:
 
@@ -86,7 +86,7 @@ Vectors and maps can be constructed with explicit type annotation. The type is s
 <map<int, string>>{1 -> "a", 2 -> "b"}
 ....
 
-==== Wildcard Expression
+=== Wildcard Expression
 
 The wildcard  *  can be used as a standalone expression to match any value. It is useful in pattern matching or as a placeholder. Note: this is different from `*` used as a multiplication operator in arithmetic expressions.
 
@@ -96,7 +96,7 @@ Example of wildcard usage:
 bool result = (someValue == *)
 ....
 
-==== Examples
+=== Examples
 
 ....
 int x = 5 + 3 * 2           // multiplication operator
@@ -104,7 +104,7 @@ bool b = (x > 10) and not false
 string s = "Hello, " + "world!"
 ....
 
-==== Vectors and Records
+=== Vectors and Records
 
 Vectors and records can be constructed and accessed as follows:
 
@@ -115,7 +115,7 @@ int n = call get(numbers, 0)
 string name = p.name
 ....
 
-==== Maps
+=== Maps
 
 Maps associate keys with values. Example:
 
@@ -125,11 +125,11 @@ string v = m[1]
 string v2 = m[2 -> "c"]
 ....
 
-==== Null Value
+=== Null Value
 
 The `null` literal represents the absence of a value. It can be used with any type.
 
-==== Operator Precedence
+=== Operator Precedence
 
 Operators are evaluated in the following order (highest to lowest):
 
@@ -143,7 +143,7 @@ Operators are evaluated in the following order (highest to lowest):
 . Equality: `==`, `!=` (left-associative)
 . Logical: `and`, `or` (left-associative, lowest precedence)
 
-==== Notes
+=== Notes
 
 * All expressions are side-effect free.
 * Type checking is performed at model validation time.

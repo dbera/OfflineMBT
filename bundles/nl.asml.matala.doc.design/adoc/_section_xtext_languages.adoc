@@ -56,3 +56,5 @@ artifact nl.esi.comma.causalgraph.CausalGraph #white/aquamarine
 <<<
 
 include::{extdocdir}/nl.esi.comma.types.adoc[leveloffset=2]
+include::{extdocdir}/nl.esi.comma.expressions.adoc[leveloffset=2]
+include::{extdocdir}/expression-functions-framework-design.adoc[leveloffset=2]
