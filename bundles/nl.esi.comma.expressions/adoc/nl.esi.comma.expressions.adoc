@@ -57,16 +57,37 @@ bool flag = true
 * Arithmetic: `+`, `-`, `*`, `/`, `mod`, `^`, `max`, `min`
 * Postfix: record field access `record.field`, map access `map[key]`, map write `map[key -> value]`
 
-=== Function Calls
+=== Function Declarations
 
-Functions can be called in two ways:
-
-* `call function_name(args)` - calls a function declared in the model, using the `call` keyword
-* `function_name(args)` - calls a registered function available in the environment (e.g., from function libraries)
+Functions are declared using the `function` keyword, followed by a return type, a name, and a comma-separated parameter list in parentheses. Each parameter has a type and a name:
 
 ....
-call sum(v)           // calls function declared in the model
-range(1, 10, 2)       // calls a registered function
+function ReturnType name(ParamType1 param1, ParamType2 param2)
+....
+
+Examples:
+
+....
+function int sum(int[] values)
+function real average(int[] values)
+function string formatDate(int year, int month, int day)
+function bool isValid(string input)
+....
+
+NOTE: Function declarations define the signature only. Some implementations might be provided by a registered Java function library. See <<how-to-add-an-expression-function-library>> for details.
+
+TIP: The following functions are provided by default and do not need to be declared: `isEmpty`, `size`, `contains`, `add`, `concat`, `at`, `get`, `hasKey`, `deleteKey`, `asReal`, `abs`, `toString`, `range`.
+
+=== Function Calls
+
+Declared Functions can be called with or without call in front of the function name:
+
+* `call function_name(args)`
+* `function_name(args)`
+
+....
+call sum(v)           // calls function explicitely declared in the model
+range(1, 10, 2)       // calls a default function
 ....
 
 === Parentheses
