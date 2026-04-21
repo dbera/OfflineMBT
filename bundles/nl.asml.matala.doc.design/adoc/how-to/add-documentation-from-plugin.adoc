@@ -11,6 +11,8 @@
   // SPDX-License-Identifier: MIT
 ////
 
+include::../_initCommon.adoc[]
+
 [[add-or-change-documentation-in-bundle]]
 === Add or change documentation in a bundle
 

@@ -25,7 +25,7 @@ Denotes the bundle containing the Xtext grammar.
 The dashed arrows between the packages denote the bundle dependencies as defined by the `Require-Bundle` in the `MANIFEST.MF` of the bundle.
 
 Artifact::
-Denotes the grammar, which is explained in more detail in section <<matala-meta-models>>.
+Denotes the grammar, which is explained in more detail in section <<language-meta-models>>.
 The stereotype denotes the file extensions of the DSL.
 The arrows between the artifacts denote either language reuse (i.e. `with` keyword, denoted by an open arrow) or language references (i.e. `import` keyword, denoted by a closed arrow).
 For more information about the reuse of existing grammars, please read the (i.e. https://eclipse.dev/Xtext/documentation/301_grammarlanguage.html#grammar-mixins[Grammar Mixins]) section of the Xtext documentation.
@@ -56,5 +56,6 @@ artifact nl.esi.comma.causalgraph.CausalGraph #white/aquamarine
 <<<
 
 include::{extdocdir}/nl.esi.comma.types.adoc[leveloffset=2]
+
 include::{extdocdir}/nl.esi.comma.expressions.adoc[leveloffset=2]
 include::{extdocdir}/expression-functions-framework-design.adoc[leveloffset=2]
