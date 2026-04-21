@@ -32,7 +32,6 @@ import asyncio
 import socket
 import logging
 import time
-import traceback
 import webbrowser
 import argparse
 from typing import Optional
