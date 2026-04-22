@@ -12,7 +12,10 @@
  */
 package nl.esi.comma.types.utilities
 
+import java.math.BigDecimal
+import java.math.BigInteger
 import java.util.ArrayList
+import java.util.Collection
 import java.util.List
 import nl.esi.comma.types.BasicTypes
 import nl.esi.comma.types.types.EnumElement
@@ -294,7 +297,7 @@ class TypeUtilities {
     def static boolean subTypeOf(TypeObject t1, TypeObject t2) {
         if(t1 === null || t2 === null) return false
         if(t1.synonym(t2)) return true // reflexive case
-        if(t1.identical(BasicTypes.anyType)) return true // any is subtype of all types
+        if(t2.identical(BasicTypes.anyType)) return true // all types are subType of any
         if (t1 instanceof RecordTypeDecl && t2 instanceof RecordTypeDecl) // record type subtyping
             return getAllParents(t1 as RecordTypeDecl).contains(t2)
 
@@ -344,6 +347,41 @@ class TypeUtilities {
         val vtc = EcoreUtil.copy(vtd.constructor)
         vtc.dimensions += TypesFactory.eINSTANCE.createDimension
         return vtc
+    }
+
+    def static MapTypeConstructor mapOf(TypeDecl keyType, TypeDecl valueType) {
+        val mtc = TypesFactory.eINSTANCE.createMapTypeConstructor
+        mtc.type = keyType
+        mtc.valueType = TypesFactory.eINSTANCE.createTypeReference => [
+            type = valueType
+        ]
+        return mtc
+    }
+
+    /**
+     * Maps a Java object to the corresponding built-in {@link SimpleTypeDecl}
+     * ({@code int}, {@code real}, {@code string}, {@code bool}, {@code any}).
+     */
+    def static SimpleTypeDecl resolveBasicType(Object value) {
+        if (value === null) return BasicTypes.anyType
+        if (value instanceof Long || value instanceof Integer
+                || value instanceof Short || value instanceof Byte
+                || value instanceof BigInteger) return BasicTypes.intType
+        if (value instanceof BigDecimal || value instanceof Double
+                || value instanceof Float) return BasicTypes.realType
+        if (value instanceof String || value instanceof CharSequence) return BasicTypes.stringType
+        if (value instanceof Boolean) return BasicTypes.boolType
+        return BasicTypes.anyType
+    }
+
+    /**
+     * Infers the element {@link SimpleTypeDecl} from the first element of a collection.
+     * Falls back to {@code any} if the collection is empty or the type is unknown.
+     */
+    def static SimpleTypeDecl inferElementType(Collection<?> collection) {
+        if (collection.empty) return BasicTypes.anyType
+        val first = collection.iterator.next
+        return resolveBasicType(first) ?: BasicTypes.anyType
     }
 
     def static getImports(Resource res) {

@@ -41,7 +41,7 @@ import nl.esi.comma.expressions.expression.ExpressionConstantString
 import nl.esi.comma.expressions.expression.ExpressionDivision
 import nl.esi.comma.expressions.expression.ExpressionEnumLiteral
 import nl.esi.comma.expressions.expression.ExpressionEqual
-import nl.esi.comma.expressions.expression.ExpressionFunctionCall
+import nl.esi.comma.expressions.expression.ExpressionFnCall
 import nl.esi.comma.expressions.expression.ExpressionGeq
 import nl.esi.comma.expressions.expression.ExpressionGreater
 import nl.esi.comma.expressions.expression.ExpressionLeq
@@ -58,7 +58,6 @@ import nl.esi.comma.expressions.expression.ExpressionNot
 import nl.esi.comma.expressions.expression.ExpressionOr
 import nl.esi.comma.expressions.expression.ExpressionPlus
 import nl.esi.comma.expressions.expression.ExpressionPower
-import nl.esi.comma.expressions.expression.ExpressionQuantifier
 import nl.esi.comma.expressions.expression.ExpressionRecord
 import nl.esi.comma.expressions.expression.ExpressionRecordAccess
 import nl.esi.comma.expressions.expression.ExpressionSubtraction
@@ -162,11 +161,7 @@ class Utils
         return new ArrayList<String>()
     }
 
-    def dispatch ArrayList<String> findVariableAssignments(ExpressionFunctionCall b) {
-        return new ArrayList<String>()
-    }
-
-    def dispatch ArrayList<String> findVariableAssignments(ExpressionQuantifier q) {
+    def dispatch ArrayList<String> findVariableAssignments(ExpressionFnCall b) {
         return new ArrayList<String>()
     }
 

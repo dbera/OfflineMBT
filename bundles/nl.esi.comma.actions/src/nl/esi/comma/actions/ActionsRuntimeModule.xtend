@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2024, 2025 TNO-ESI
- *
+ * 
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
  *
@@ -15,15 +15,28 @@
  */
 package nl.esi.comma.actions
 
-import nl.esi.comma.types.scoping.TypesImportUriGlobalScopeProvider
+import nl.esi.comma.expressions.conversion.ExpressionConvertersProvider
+import nl.esi.comma.expressions.conversion.IExpressionConvertersProvider
+import nl.esi.comma.expressions.functions.ExpressionFunctionLibrariesProvider
+import nl.esi.comma.expressions.functions.IExpressionFunctionLibrariesProvider
+import nl.esi.comma.expressions.scoping.ExpressionsImportUriGlobalScopeProvider
 import org.eclipse.xtext.scoping.IGlobalScopeProvider
 
 /**
  * Use this class to register components to be used at runtime / without the Equinox extension registry.
  */
 class ActionsRuntimeModule extends AbstractActionsRuntimeModule {
-	
-	override Class<? extends IGlobalScopeProvider> bindIGlobalScopeProvider() {
-		return TypesImportUriGlobalScopeProvider
-	}
+
+    override Class<? extends IGlobalScopeProvider> bindIGlobalScopeProvider() {
+        return ExpressionsImportUriGlobalScopeProvider
+    }
+
+    def Class<? extends IExpressionFunctionLibrariesProvider> bindIExpressionFunctionLibrariesProvider() {
+        return ExpressionFunctionLibrariesProvider
+    }
+
+    def Class<? extends IExpressionConvertersProvider> bindIExpressionConvertersProvider() {
+        return ExpressionConvertersProvider
+    }
+
 }

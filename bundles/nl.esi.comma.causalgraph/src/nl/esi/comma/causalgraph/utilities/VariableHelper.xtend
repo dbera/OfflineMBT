@@ -12,12 +12,11 @@
  */
 package nl.esi.comma.causalgraph.utilities
 
+import nl.esi.comma.actions.actions.ActionsFactory
+import nl.esi.comma.actions.actions.AssignmentAction
 import nl.esi.comma.causalgraph.causalGraph.CausalGraphFactory
 import nl.esi.comma.expressions.expression.ExpressionFactory
 import nl.esi.comma.expressions.expression.Variable
-import nl.esi.comma.types.types.TypesFactory
-import nl.esi.comma.actions.actions.ActionsFactory
-import nl.esi.comma.actions.actions.AssignmentAction
 import nl.esi.comma.types.BasicTypes
 import nl.esi.comma.types.types.TypeDecl
 

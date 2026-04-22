@@ -16,14 +16,12 @@
 package nl.esi.comma.expressions.formatting2
 
 import com.google.inject.Inject
-import nl.esi.comma.expressions.expression.Expression
 import nl.esi.comma.expressions.expression.ExpressionAddition
 import nl.esi.comma.expressions.expression.ExpressionAnd
 import nl.esi.comma.expressions.expression.ExpressionBracket
 import nl.esi.comma.expressions.expression.ExpressionDivision
 import nl.esi.comma.expressions.expression.ExpressionEnumLiteral
 import nl.esi.comma.expressions.expression.ExpressionEqual
-import nl.esi.comma.expressions.expression.ExpressionFunctionCall
 import nl.esi.comma.expressions.expression.ExpressionGeq
 import nl.esi.comma.expressions.expression.ExpressionGreater
 import nl.esi.comma.expressions.expression.ExpressionLeq
@@ -39,7 +37,6 @@ import nl.esi.comma.expressions.expression.ExpressionNot
 import nl.esi.comma.expressions.expression.ExpressionOr
 import nl.esi.comma.expressions.expression.ExpressionPlus
 import nl.esi.comma.expressions.expression.ExpressionPower
-import nl.esi.comma.expressions.expression.ExpressionQuantifier
 import nl.esi.comma.expressions.expression.ExpressionRecord
 import nl.esi.comma.expressions.expression.ExpressionRecordAccess
 import nl.esi.comma.expressions.expression.ExpressionSubtraction
@@ -259,31 +256,6 @@ class ExpressionFormatter extends TypesFormatter {
 		//rFinder.assignment(pairAccess.valueAssignment_2).prepend(noSpace)
 		pair.key.format
 		pair.value.format
-	}
-	
-	def dispatch void format(ExpressionFunctionCall expr, extension IFormattableDocument document) {		
-		val rFinder = expr.regionFor
-		
-		rFinder.keyword(expressionFunctionCallAccess.leftParenthesisKeyword_1).prepend(oneSpace).append(noSpace)
-		rFinder.keyword(expressionFunctionCallAccess.rightParenthesisKeyword_3).prepend(oneSpace)
-		formatSimpleCommas(rFinder.keywords(expressionFunctionCallAccess.commaKeyword_2_1_0), document)
-		
-		for(Expression sub : expr.args) {
-			sub.format
-		}
-	}
-	
-	def dispatch void format(ExpressionQuantifier expr, extension IFormattableDocument document) {		
-		val rFinder = expr.regionFor
-		
-		rFinder.keyword(expressionQuantifierAccess.leftParenthesisKeyword_1).prepend(oneSpace).append(noSpace)
-		rFinder.keyword(expressionQuantifierAccess.inKeyword_3).surround(oneSpace)
-		rFinder.keyword(expressionQuantifierAccess.colonKeyword_5).surround(oneSpace)
-		rFinder.keyword(expressionQuantifierAccess.rightParenthesisKeyword_7).prepend(noSpace)
-		
-		expr.iterator.format
-		expr.collection.format
-		expr.condition.format
 	}
 	
 	def dispatch void format(ExpressionEnumLiteral expressionEnumLiteral, extension IFormattableDocument document) {

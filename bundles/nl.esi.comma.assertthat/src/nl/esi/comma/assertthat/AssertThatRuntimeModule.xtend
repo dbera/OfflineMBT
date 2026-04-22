@@ -15,9 +15,27 @@
  */
 package nl.esi.comma.assertthat
 
+import nl.esi.comma.expressions.conversion.ExpressionConvertersProvider
+import nl.esi.comma.expressions.conversion.IExpressionConvertersProvider
+import nl.esi.comma.expressions.functions.ExpressionFunctionLibrariesProvider
+import nl.esi.comma.expressions.functions.IExpressionFunctionLibrariesProvider
+import nl.esi.comma.expressions.scoping.ExpressionsImportUriGlobalScopeProvider
+import org.eclipse.xtext.scoping.IGlobalScopeProvider
 
 /**
  * Use this class to register components to be used at runtime / without the Equinox extension registry.
  */
 class AssertThatRuntimeModule extends AbstractAssertThatRuntimeModule {
+    override Class<? extends IGlobalScopeProvider> bindIGlobalScopeProvider() {
+        return ExpressionsImportUriGlobalScopeProvider
+    }
+
+    def Class<? extends IExpressionFunctionLibrariesProvider> bindIExpressionFunctionLibrariesProvider() {
+        return ExpressionFunctionLibrariesProvider
+    }
+
+    def Class<? extends IExpressionConvertersProvider> bindIExpressionConvertersProvider() {
+        return ExpressionConvertersProvider
+    }
+    
 }

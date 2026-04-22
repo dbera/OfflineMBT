@@ -1,0 +1,175 @@
+////
+  // Copyright (c) 2024, 2025 TNO-ESI
+  //
+  // See the NOTICE file(s) distributed with this work for additional
+  // information regarding copyright ownership.
+  //
+  // This program and the accompanying materials are made available
+  // under the terms of the MIT License which is available at
+  // https://opensource.org/licenses/MIT
+  //
+  // SPDX-License-Identifier: MIT
+////
+
+[[how-to-add-an-expression-function-library]]
+== How to Add an Expression Function Library
+
+A library is a plain Java class whose `public` methods (static or instance) are automatically exposed as callable functions in `.expr` models. This guide describes how to add custom function libraries and converters to the Expression Functions Framework.
+
+=== Workflow: Registration to Usage
+
+==== Step 1: Define Function Library
+
+Create a Java class with `public` methods — static or instance:
+
+[source,java]
+----
+class SomeLibrary {    
+    // Static: no instance needed
+    /** Returns the element at {@code index}, or {@code null} if out of bounds. */
+    public static Expression get(ExpressionVector vector, @PositiveOrZero long index) {
+        if (index >= 0 && index < vector.getElements().size()) {
+            return vector.getElements().get((int) index);
+        }
+        return null;
+    }
+
+    // Instance: requires a receiver object at evaluation time
+    /** Alternatively regular java objects can also be used, but then more conversion is needed. */
+    public Object sum(List<Object> list) {
+        int sum = 0;
+        for (Object obj : list) {
+            if (obj instanceof Integer) {
+                sum += (Integer) obj;
+            }
+        }
+        return sum;
+   }
+}
+----
+
+==== Step 2: Add Library
+
+Extends `ExpressionFunctionLibrariesProvider` to contribute the library:
+
+[source,java]
+----
+public class MyFunctionsProvider extends ExpressionFunctionLibrariesProvider {
+    @Override
+    public Set<Class<?>> get() {
+        return Streams.concat(super.get().stream(), Stream.of(SomeLibrary.class)).collect(Collectors::toSet);
+    }
+}
+----
+
+==== Step 3: Bind the provider in your RuntimeModule
+
+Override `bindIExpressionFunctionLibrariesProvider` in your language's RuntimeModule to return the custom provider:
+
+[source,xtend]
+----
+def Class<? extends IExpressionFunctionLibrariesProvider> bindIExpressionFunctionLibrariesProvider() {
+    return MyFunctionsProvider
+}
+----
+
+The framework then automatically registers the libraries: it generates in-memory `.expr` declarations and makes them visible in the global scope — no explicit `import` is needed.
+
+==== Step 4: Usage
+
+Functions become available in expressions. The `call` keyword is optional. :
+
+[source]
+----
+int[] v  = call range(1, 10, 2)   // range is available in the default library
+int   s  = call sum(v)            // Uses newly registered function
+----
+
+=== Providing instances for non-static methods
+
+Static methods are invoked directly. For instance methods, a receiver object must be provided at evaluation time via `IEvaluationContext.getLibraryFunctionObjects()`.
+
+Override this method in your evaluation context to return the relevant instances:
+
+[source,java]
+----
+IEvaluationContext ctx = new IEvaluationContext() {
+    private final MyFunctions myLib = new MyFunctions();
+
+    @Override
+    public Expression getExpression(Variable variable) { ... }
+
+    @Override
+    public List<Object> getLibraryFunctionObjects() {
+        return List.of(myLib);
+    }
+};
+----
+
+At invocation time, `ExpressionFunctionsRegistry` searches the list for the first object whose class is assignable to the method's declaring class and uses it as the receiver. If no matching instance is found for a non-static method, an `IllegalStateException` is thrown.
+
+=== Library class constraints
+
+Methods exposed as functions must be::
+  `public` — non-public methods are ignored.
+  Both `static` and instance methods are supported.
+
+Return type must not be `void`::
+  Void methods are skipped during generation because expression functions must produce a value.
+
+Supported parameter and return types::
++
+[cols="1,1", options="header"]
+|===
+| Java type | Expression type
+
+| `boolean` / `Boolean`
+| `bool`
+
+| `long` / `Long` / `int` / `Integer` / `short` / `byte`
+| `int`
+
+| `double` / `Double` / `float` / `Float` / `BigDecimal`
+| `real`
+
+| `String`
+| `string`
+
+| `List<T>` / `Collection<T>`
+| `T[]` (vector)
+
+| `Map<K, V>`
+| `map<K, V>`
+
+| `ExpressionVector`
+| `any[]` (vector) — *no conversion*
+
+| `ExpressionMap`
+| `map<any, any>` — *no conversion*
+
+| `Expression`
+| `any` — *no conversion*
+
+| `Object` / generic type variable
+| `any`
+|===
+
++
+TIP: Using EMF model types (`ExpressionVector`, `ExpressionMap`, `Expression`) directly as parameter or return types avoids conversion overhead. The framework passes the raw EMF objects without converting to/from Java collections. This is the preferred approach when the function operates on expression structures rather than plain Java values — see `DefaultExpressionFunctions` for examples.
+
+Overloaded methods are supported::
+  Multiple methods with the same name but different parameter types or counts are allowed (e.g. `abs(long)` and `abs(BigDecimal)`). Overload resolution is based on the expression argument types at the call site.
+
+Avoid generics with unchecked casts::
+  Prefer concrete overloads over a single generic `<T>` method. For example, split `abs` into `abs(long)` and `abs(BigDecimal)` instead of using `<T> T abs(T value)`.
+
+Parameter names::
+  If the library is compiled with the `-parameters` flag (configured in both `pom.xml` and the Eclipse setup), the real parameter names appear (prefixed with `_`) in the generated `.expr` declarations. Otherwise, synthetic names (`p0`, `p1`, …) are used.
+
+=== Adding custom converters
+
+If your library uses custom Java types as parameters or return values, you may need to provide a custom converter:
+
+1. Implement the `IExpressionConverter` interface
+2. Extend `ExpressionConvertersProvider` to include your converter
+3. Bind via `bindIExpressionConvertersProvider` in the derived language RuntimeModule

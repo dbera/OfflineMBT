@@ -36,6 +36,9 @@ abstract class ExpressionEvaluatorTestBase {
     @Inject
     ISerializer serializer
 
+    @Inject
+    ExpressionEvaluator evaluator
+
     val SAVE_OPTIONS = SaveOptions.newBuilder.format.options
 
     protected def void assertEval(String expected, String input) {
@@ -50,7 +53,6 @@ abstract class ExpressionEvaluatorTestBase {
         val expressions = parser.parse(input)
         Assertions.assertTrue(expressions.eResource.errors.isEmpty, '''Unexpected errors in input: «expressions.eResource.errors.join(", ")»''')
         Assertions.assertEquals(expressions.variables.size, expressions.variables.map[variable.name].toSet.size, 'Variables cannot be declared multiple times')
-        val evaluator = new ExpressionEvaluator()
         val context = expressions.variables.toMap([variable], [expression])
         for (assignment : expressions.variables.reject[expression === null]) {
             assignment.expression = evaluator.evaluate(assignment.expression) [ variable |

@@ -17,18 +17,10 @@ import java.util.List
 import nl.esi.comma.expressions.expression.Expression
 import nl.esi.comma.expressions.expression.ExpressionAddition
 import nl.esi.comma.expressions.expression.ExpressionAnd
-import nl.esi.comma.expressions.expression.ExpressionAny
-import nl.esi.comma.expressions.expression.ExpressionBinary
-import nl.esi.comma.expressions.expression.ExpressionBracket
-import nl.esi.comma.expressions.expression.ExpressionConstantBool
-import nl.esi.comma.expressions.expression.ExpressionConstantInt
-import nl.esi.comma.expressions.expression.ExpressionConstantReal
-import nl.esi.comma.expressions.expression.ExpressionConstantString
 import nl.esi.comma.expressions.expression.ExpressionDivision
 import nl.esi.comma.expressions.expression.ExpressionEnumLiteral
 import nl.esi.comma.expressions.expression.ExpressionEqual
 import nl.esi.comma.expressions.expression.ExpressionFnCall
-import nl.esi.comma.expressions.expression.ExpressionFunctionCall
 import nl.esi.comma.expressions.expression.ExpressionGeq
 import nl.esi.comma.expressions.expression.ExpressionGreater
 import nl.esi.comma.expressions.expression.ExpressionLeq
@@ -40,22 +32,19 @@ import nl.esi.comma.expressions.expression.ExpressionMinimum
 import nl.esi.comma.expressions.expression.ExpressionMinus
 import nl.esi.comma.expressions.expression.ExpressionModulo
 import nl.esi.comma.expressions.expression.ExpressionMultiply
-import nl.esi.comma.expressions.expression.ExpressionNEqual
 import nl.esi.comma.expressions.expression.ExpressionNot
-import nl.esi.comma.expressions.expression.ExpressionNullLiteral
 import nl.esi.comma.expressions.expression.ExpressionOr
 import nl.esi.comma.expressions.expression.ExpressionPackage
 import nl.esi.comma.expressions.expression.ExpressionPlus
 import nl.esi.comma.expressions.expression.ExpressionPower
-import nl.esi.comma.expressions.expression.ExpressionQuantifier
 import nl.esi.comma.expressions.expression.ExpressionRecord
-import nl.esi.comma.expressions.expression.ExpressionRecordAccess
 import nl.esi.comma.expressions.expression.ExpressionSubtraction
-import nl.esi.comma.expressions.expression.ExpressionVariable
 import nl.esi.comma.expressions.expression.ExpressionVector
-import nl.esi.comma.expressions.expression.QUANTIFIER
+import nl.esi.comma.expressions.expression.VariableDecl
 import nl.esi.comma.types.BasicTypes
 import nl.esi.comma.types.types.Dimension
+import nl.esi.comma.types.types.MapTypeConstructor
+import nl.esi.comma.types.types.SimpleTypeDecl
 import nl.esi.comma.types.types.TypeDecl
 import nl.esi.comma.types.types.TypeObject
 import nl.esi.comma.types.types.TypesFactory
@@ -66,6 +55,7 @@ import org.eclipse.emf.ecore.EReference
 import org.eclipse.xtext.scoping.IScopeProvider
 import org.eclipse.xtext.validation.Check
 
+import static extension nl.esi.comma.expressions.utilities.ExpressionsUtilities.*
 import static extension nl.esi.comma.types.utilities.TypeUtilities.*
 
 /*
@@ -78,98 +68,23 @@ class ExpressionValidator extends AbstractExpressionValidator {
     static def boolean numeric(TypeObject t) {
         return t.subTypeOf(BasicTypes.getIntType(t)) || t.subTypeOf(BasicTypes.getRealType(t))
     }
-	
-	//Type computation. No checking is performed. If the type cannot be determined, null is returned
-	static def TypeObject typeOf(Expression e) {
-		if(e === null) return null
-		switch(e){
-			ExpressionConstantBool |
-			ExpressionAnd |
-			ExpressionOr |
-			ExpressionNot |
-			ExpressionEqual |
-			ExpressionNEqual |
-			ExpressionLess |
-			ExpressionGreater |
-			ExpressionLeq |
-			ExpressionGeq : BasicTypes.getBoolType(e)
-			ExpressionConstantInt |
-			ExpressionModulo : BasicTypes.getIntType(e)
-			ExpressionConstantReal : BasicTypes.getRealType(e)
-			ExpressionAddition |
-			ExpressionSubtraction |
-			ExpressionDivision | 
-			ExpressionMultiply |
-			ExpressionPower |
-			ExpressionMinimum |
-			ExpressionMaximum : inferTypeBinaryArithmetic(e)
-			ExpressionMinus |
-			ExpressionPlus : {
-				val t = e.sub.typeOf
-				if(t.subTypeOf(BasicTypes.getIntType(e)) || t.subTypeOf(BasicTypes.getRealType(e)))
-					t
-				else
-					null
-			}
-			ExpressionVariable : e.variable?.type.typeObject
-			ExpressionConstantString : BasicTypes.getStringType(e)
-			ExpressionBracket : e.sub?.typeOf
-			ExpressionEnumLiteral : e.type
-            ExpressionNullLiteral : BasicTypes.getAnyType(e)
-			ExpressionRecord : e.type
-			ExpressionRecordAccess : e.field?.type?.typeObject
-			ExpressionAny : BasicTypes.getAnyType(e)
-			ExpressionFnCall : e.function.returnType.type
-			ExpressionFunctionCall : ExpressionFunction.valueOf(e)?.inferType(e.args, ExpressionFunction.RETURN_ARG)
-			ExpressionVector : e.typeAnnotation?.type?.typeObject
-			ExpressionQuantifier : {
-				if(e.quantifier == QUANTIFIER::DELETE)
-					e.collection.typeOf
-				else
-					BasicTypes.getBoolType(e)
-			}
-			ExpressionMap : e.typeAnnotation?.type?.typeObject
-			ExpressionMapRW : {
-				val t = e.map.typeOf
-				if(t !== null && t.mapType)
-					if(e.value !== null){
-						t
-					}else{
-						t.valueType
-					}
-				else
-					null
-			}
-			
-		}
-	}
-		
-	static def TypeObject inferTypeBinaryArithmetic(ExpressionBinary e){
-		val leftType = e.left.typeOf
-		val rightType = e.right.typeOf
-		switch(e){
-			ExpressionAddition : {
-				if(leftType.subTypeOf(BasicTypes.getIntType(e)) && rightType.subTypeOf(BasicTypes.getIntType(e))) return BasicTypes.getIntType(e)
-				if(leftType.subTypeOf(BasicTypes.getRealType(e)) && rightType.subTypeOf(BasicTypes.getRealType(e))) return BasicTypes.getRealType(e)
-				if(leftType.subTypeOf(BasicTypes.getStringType(e)) && rightType.subTypeOf(BasicTypes.getStringType(e))) return BasicTypes.getStringType(e)
-				return null
-			}
-			ExpressionSubtraction |
-			ExpressionDivision |
-			ExpressionPower | 
-			ExpressionMultiply |
-			ExpressionMinimum |
-			ExpressionMaximum : {
-				if(leftType.subTypeOf(BasicTypes.getIntType(e)) && rightType.subTypeOf(BasicTypes.getIntType(e))) return BasicTypes.getIntType(e)
-				if(leftType.subTypeOf(BasicTypes.getRealType(e)) && rightType.subTypeOf(BasicTypes.getRealType(e))) return BasicTypes.getRealType(e)
-				return null
-			}
-			default : null
-		}
-	}
+
+    //Type checking
+    @Check
+    def checkVariableDecl(VariableDecl vd){
+        val lhs = vd.variable.type.typeObject
+        var rhs = typeOf(vd.expression)
+        if (lhs instanceof SimpleTypeDecl){
+            if(rhs instanceof MapTypeConstructor) {
+                rhs = rhs.valueType.typeObject
+            }
+        }
+        if (rhs !== null && !subTypeOf(lhs,rhs)) {
+            error('''Type mismatch: declared type '«lhs.typeName»' does not match the expected type '«rhs.typeName»' ''', ExpressionPackage.Literals.VARIABLE_DECL__VARIABLE)
+        }
+    }
 	
 	//Type checking
-	
 	@Check
 	def checkTypingExpression(Expression e){
 		switch(e){
@@ -177,6 +92,7 @@ class ExpressionValidator extends AbstractExpressionValidator {
 		        val leftType = e.left.typeOf
 		        val rightType = e.right.typeOf
 		        if(leftType === null || rightType === null) {return}
+		        if(leftType.identical(BasicTypes.anyType) || rightType.identical(BasicTypes.anyType)) {return}
                 if(!leftType.synonym(rightType)){
                     error("Type mismatch: actual type does not match the expected type", ExpressionPackage.Literals.EXPRESSION_BINARY__LEFT)
                 }
@@ -335,21 +251,13 @@ class ExpressionValidator extends AbstractExpressionValidator {
 						error("The element does not conform to the base type", ExpressionPackage.Literals.EXPRESSION_VECTOR__ELEMENTS, e.elements.indexOf(el))
 				}
 			}
-			ExpressionFunctionCall : {
-			    val func = ExpressionFunction.valueOf(e)
-			    if (func === null) {
-			        error("Unknown function", ExpressionPackage.Literals.EXPRESSION_FUNCTION_CALL__FUNCTION_NAME)
-			    } else {
-			        switch (result: func.validate(e.args)) {
-			        	case null: { /* No Error */ }
-			        	case result.key < 0: error(result.value, ExpressionPackage.Literals.EXPRESSION_FUNCTION_CALL__FUNCTION_NAME)
-			        	default: error(result.value, ExpressionPackage.Literals.EXPRESSION_FUNCTION_CALL__ARGS, result.key)
-			        }
-			    }
-			}
             ExpressionFnCall: {
+                if (e.function === null || e.function.name === null) {
+                    error('''Function declaration not found. Name or number of args («e.args.size») is wrong''', null)
+                    return
+                }
                 if (e.args.size != e.function.params.size) {
-                    error('''Function «e.function.name» expects «e.function.params.size» arguments.''', null)
+                    error('''No Function «e.function.name» declared with «e.args.size» arguments.''', null)
                 } else {
                     for (var i = 0; i < e.args.size; i++) {
                         val paramType = e.function.params.get(i).type.typeObject
@@ -361,17 +269,6 @@ class ExpressionValidator extends AbstractExpressionValidator {
                     }
                 }
             }
-			//TODO consider adding a new check if the type of the iterator is compatible with the type of
-			//the vector elements
-			ExpressionQuantifier: {
-				val collectionType = e.collection.typeOf
-				if(collectionType !== null && !isVectorType(collectionType))
-					error("Expression must be of type vector", ExpressionPackage.Literals.EXPRESSION_QUANTIFIER__COLLECTION)
-				val condType = e.condition.typeOf
-				if(condType !== null && !condType.subTypeOf(BasicTypes.getBoolType(e)))
-					error("Condition expression must be of type boolean", ExpressionPackage.Literals.EXPRESSION_QUANTIFIER__CONDITION)
-	
-			}
 		}
 	}
 	

@@ -32,7 +32,6 @@ import nl.esi.comma.expressions.expression.ExpressionConstantString;
 import nl.esi.comma.expressions.expression.ExpressionDivision;
 import nl.esi.comma.expressions.expression.ExpressionEnumLiteral;
 import nl.esi.comma.expressions.expression.ExpressionEqual;
-import nl.esi.comma.expressions.expression.ExpressionFunctionCall;
 import nl.esi.comma.expressions.expression.ExpressionGeq;
 import nl.esi.comma.expressions.expression.ExpressionGreater;
 import nl.esi.comma.expressions.expression.ExpressionLeq;
@@ -50,13 +49,11 @@ import nl.esi.comma.expressions.expression.ExpressionNullLiteral;
 import nl.esi.comma.expressions.expression.ExpressionOr;
 import nl.esi.comma.expressions.expression.ExpressionPlus;
 import nl.esi.comma.expressions.expression.ExpressionPower;
-import nl.esi.comma.expressions.expression.ExpressionQuantifier;
 import nl.esi.comma.expressions.expression.ExpressionRecord;
 import nl.esi.comma.expressions.expression.ExpressionRecordAccess;
 import nl.esi.comma.expressions.expression.ExpressionSubtraction;
 import nl.esi.comma.expressions.expression.ExpressionVariable;
 import nl.esi.comma.expressions.expression.ExpressionVector;
-import nl.esi.comma.expressions.expression.QUANTIFIER;
 import nl.esi.comma.expressions.expression.TypeAnnotation;
 import nl.esi.comma.types.types.EnumTypeDecl;
 import nl.esi.comma.types.types.MapTypeConstructor;
@@ -245,41 +242,6 @@ public class ProposalHelper {
 		} else if (expression instanceof ExpressionBracket) {
 			ExpressionBracket e = (ExpressionBracket) expression;
 			return expression(e.getSub(), variablePrefix);
-		} else if (expression instanceof ExpressionFunctionCall) {
-			ExpressionFunctionCall e = (ExpressionFunctionCall) expression;
-			if (e.getFunctionName().equals("add")) {
-				return String.format("%s + [%s]", expression(e.getArgs().get(0), variablePrefix), expression(e.getArgs().get(1), variablePrefix));
-			} else if (e.getFunctionName().equals("size")) {
-				return String.format("len(%s)", expression(e.getArgs().get(0), variablePrefix));
-			} else if (e.getFunctionName().equals("isEmpty")) {
-				return String.format("len(%s) == 0", expression(e.getArgs().get(0), variablePrefix));
-			} else if (e.getFunctionName().equals("contains")) {
-				return String.format("%s in %s", expression(e.getArgs().get(1), variablePrefix), expression(e.getArgs().get(0), variablePrefix));
-			} else if (e.getFunctionName().equals("abs")) {
-				return String.format("abs(%s)", expression(e.getArgs().get(0), variablePrefix));
-			} else if (e.getFunctionName().equals("asReal")) {
-				return String.format("float(%s)", expression(e.getArgs().get(0), variablePrefix));
-			} else if (e.getFunctionName().equals("hasKey")) {
-				String map = expression(e.getArgs().get(0), variablePrefix);
-				String key = expression(e.getArgs().get(1), variablePrefix);
-				return String.format("(%s in %s)", key, map);
-			} else if (e.getFunctionName().equals("deleteKey")) {
-				String map = expression(e.getArgs().get(0), variablePrefix);
-				String key = expression(e.getArgs().get(1), variablePrefix);
-				return String.format("{_k: _v for _k, _v in %s.items() if _k != %s}", map, key);
-		    }
-		} else if (expression instanceof ExpressionQuantifier) {
-			ExpressionQuantifier e = (ExpressionQuantifier) expression;
-			String collection = expression(e.getCollection(), variablePrefix);
-			String it = e.getIterator().getName();
-			String condition = expression(e.getCondition(), (String variable) -> "");
-			if (e.getQuantifier() == QUANTIFIER.EXISTS) {
-				return String.format("len([%s for %s in %s if %s]) != 0", it, it, collection, condition);
-			} else if (e.getQuantifier() == QUANTIFIER.DELETE) {
-				return String.format("[%s for %s in %s if not (%s)]", it, it, collection, condition);
-			} else if (e.getQuantifier() == QUANTIFIER.FORALL) {
-				return String.format("len([%s for %s in %s if %s]) == len(%s)", it, it, collection, condition, collection);
-			}
 		} else if (expression instanceof ExpressionMap) {
 			ExpressionMap e = (ExpressionMap) expression;
 			return String.format("{%s}", e.getPairs().stream().map(p -> {

@@ -12,29 +12,30 @@
  */
 package nl.esi.comma.scenarios.generator.specflow
 
+import java.util.ArrayList
 import nl.esi.comma.expressions.expression.Expression
-import nl.esi.comma.expressions.validation.ExpressionValidator
-import nl.esi.comma.types.types.SimpleTypeDecl
-import nl.esi.comma.types.types.EnumTypeDecl
-import nl.esi.comma.expressions.expression.ExpressionConstantInt
-import nl.esi.comma.expressions.expression.ExpressionEnumLiteral
-import nl.esi.comma.types.types.EnumElement
+import nl.esi.comma.expressions.expression.ExpressionAny
 import nl.esi.comma.expressions.expression.ExpressionConstantBool
+import nl.esi.comma.expressions.expression.ExpressionConstantInt
 import nl.esi.comma.expressions.expression.ExpressionConstantReal
 import nl.esi.comma.expressions.expression.ExpressionConstantString
-import nl.esi.comma.expressions.expression.ExpressionAny
-import nl.esi.comma.types.types.RecordTypeDecl
+import nl.esi.comma.expressions.expression.ExpressionEnumLiteral
 import nl.esi.comma.expressions.expression.ExpressionRecord
-import nl.esi.comma.expressions.expression.Field
-import org.eclipse.emf.common.util.EList
-import nl.esi.comma.types.types.VectorTypeDecl
 import nl.esi.comma.expressions.expression.ExpressionVector
-import java.util.ArrayList
+import nl.esi.comma.expressions.expression.Field
+import nl.esi.comma.types.types.EnumElement
+import nl.esi.comma.types.types.EnumTypeDecl
+import nl.esi.comma.types.types.RecordTypeDecl
+import nl.esi.comma.types.types.SimpleTypeDecl
+import nl.esi.comma.types.types.VectorTypeDecl
+import org.eclipse.emf.common.util.EList
+
+import static nl.esi.comma.expressions.utilities.ExpressionsUtilities.*
 
 class EventOutputToString {
     
     static def String OuputDataToString(Expression e){
-        var type = ExpressionValidator.typeOf(e)
+        var type = typeOf(e)
         switch(type){
             SimpleTypeDecl : generateTypeString(type, e)
             EnumTypeDecl : generateTypeString(type, (e as ExpressionEnumLiteral).literal)
@@ -44,7 +45,7 @@ class EventOutputToString {
     
     static def ArrayList<String> OuputDataToStringList(ExpressionRecord e){
         var strList = new ArrayList<String>()
-        var type = ExpressionValidator.typeOf(e)
+        var type = typeOf(e)
         if (type instanceof RecordTypeDecl){
             strList.addAll(generateTypeStringList(type, (e as ExpressionRecord).fields))
         }

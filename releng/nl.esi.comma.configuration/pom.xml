@@ -208,6 +208,7 @@
                             -->
                             <!-- We have to increase the code cache size the default is 48MB is to little -->
                             <compilerArg>-XX:ReservedCodeCacheSize=64MB</compilerArg>
+                            <compilerArg>-parameters</compilerArg>
                         </compilerArgs>
                     </configuration>
                 </plugin>

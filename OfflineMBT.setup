@@ -116,6 +116,14 @@
           value="false"/>
     </setupTask>
     <setupTask
+    xsi:type="setup:CompoundTask"
+    name="Java Development">
+  <setupTask
+      xsi:type="setup:PreferenceTask"
+      key="org.eclipse.jdt.core.compiler.codegen.methodParameters"
+      value="generate"/>
+</setupTask>
+    <setupTask
         xsi:type="setup:CompoundTask"
         name="org.eclipse.debug.ui">
       <setupTask

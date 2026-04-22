@@ -1,0 +1,158 @@
+////
+  // Copyright (c) 2024, 2025 TNO-ESI
+  //
+  // See the NOTICE file(s) distributed with this work for additional
+  // information regarding copyright ownership.
+  //
+  // This program and the accompanying materials are made available
+  // under the terms of the MIT License which is available at
+  // https://opensource.org/licenses/MIT
+  //
+  // SPDX-License-Identifier: MIT
+////
+
+= Expression Functions Framework Design
+
+== Overview
+
+The Expression Functions Framework provides an extensible mechanism to register custom functions and value converters for use within expression evaluation. The framework automatically generates an Xtext-based expression DSL from registered function libraries and makes them available through a scoping provider using an in-memory resource set.
+
+== Architecture
+
+=== Core Components
+
+The framework consists of the following key components that work together to provide function registration and discovery:
+
+[source]
+----
+User Library Class
+    ↓
+ExpressionFunctionLibrariesProvider
+    ↓
+ExpressionFunctionsRegistry
+    ↓
+LibraryToExprGenerator (Auto-generates Xtext grammar)
+    ↓
+InMemoryExprResourceRegistry (Stores in-memory)
+    ↓
+ExpressionsImportUriGlobalScopeProvider (Makes available)
+    ↓
+DefaultExpressionFunctions (Default implementations)
+----
+
+== Component Details
+
+=== ExpressionFunctionsRegistry
+
+**Purpose**: Central registry that manages all registered function libraries, validates function calls, and invokes functions with proper type conversion and argument validation.
+
+**Responsibilities**:
+
+- Registers function libraries from providers at initialization
+- Maintains a mapping of function names to their method implementations
+- Invokes functions with automatic type conversion using converters
+- Supports method overloading based on parameter count and type compatibility
+
+**Key Methods**:
+
+- `getFunctions()` - Returns Map<String, List<Method>> of all registered functions
+- `hasFunction(String name)` - Checks if a function with the given name exists
+- `invokeFunction(ExpressionFnCall functionCall, IEvaluationContext context)` - Invokes matching function and returns result as an Expression
+
+**Integration**:
+
+- Uses `IExpressionConverter` instances for type conversion
+- Coordinates with `InMemoryExprResourceRegistry` for library registration
+
+=== ExpressionFunctionLibrariesProvider
+
+**Purpose**: Extension point for contributing custom function libraries.
+
+**Pattern**: Returns the set of classes to be registered. To be specified in the (derived) language runtime.
+
+**Responsibilities**:
+
+- Enable dynamic library discovery at runtime
+
+**Key Methods**:
+
+- `get()` - Return a collection of function libraries as classes
+
+=== Function Library Class
+
+**Pattern**: Plain Java classes with public methods.
+
+**Characteristics**:
+
+- Each method represents an individual function
+- Function overloading allowed
+
+See also <<how-to-add-an-expression-function-library>>
+
+=== LibraryToExprGenerator
+
+**Purpose**: Automatically generates Xtext expression grammar from registered Java function libraries.
+
+**Responsibilities**:
+
+- Introspects Java method signatures
+- Generates corresponding Xtext expression function definitions
+- Creates in-memory _expr_ Xtext models
+- Registers generated artifacts with the registry
+
+**Key Features**:
+
+- Automatic type mapping (Java types → Xtext types)
+
+=== InMemoryExprResourceRegistry
+
+**Purpose**: Manages in-memory storage of the generated expression artifacts.
+
+**Responsibilities**:
+
+- Stores generated Xtext _expr_ models in memory
+- Provides resource lookup by URI
+- Maintains lifecycle of generated resources
+
+**Key Methods**:
+
+- `addLibrary()` - Register an in-memory resource
+- `getURIHandler()` - returns the shared URI handler that can be registered in a resource set
+
+=== ExpressionsImportUriGlobalScopeProvider
+
+**Purpose**: Makes registered functions available to expression scoping through URI-based imports.
+
+**Responsibilities**:
+
+- Extends `TypesImportUriGlobalScopeProvider` class
+- Resolves import URIs to function libraries
+- Provides scope visibility for in memory expressions via imports
+
+=== DefaultExpressionFunctions
+
+**Purpose**: Makes the default built-in functions available in all languages derived from expressions. This way they can be used in expression evaluations.
+
+**Built-in Functions**: isEmpty, size, contains, add, asReal, abs, hasKey, deleteKey, get, at, toString, concat, range
+
+**Integration**: Automatically registered in `ExpressionFunctionsRegistry` during initialization via `ExpressionFunctionLibrariesProvider`.
+
+=== ExpressionConvertersProvider
+
+**Purpose**: Extension point for contributing custom value converters.
+
+**Pattern**: Returns the set of converters to be used for conversion. To be specified in the (derived) language runtime.
+
+**Responsibilities**:
+
+- Define custom type conversion logic
+- Support for bidirectional conversions
+- Integration with expression evaluation engine
+
+**Key Methods**:
+
+- `get()` - Return a collection of converter implementations
+
+== Dynamic Expression DSL Generation
+
+When a library is registered, `LibraryToExprGenerator` introspects its method signatures, maps Java types to expression types, and produces an in-memory `.expr` resource stored in `InMemoryExprResourceRegistry`. `ExpressionsImportUriGlobalScopeProvider` adds these URIs to every resource set so the generated function declarations are visible without an explicit `import` — enabling content assist, validation, and navigation in the IDE.
