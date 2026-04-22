@@ -20,10 +20,12 @@ import nl.esi.comma.actions.actions.AssignmentAction
 import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
 import nl.esi.comma.inputspecification.inputSpecification.InputSpecificationPackage
 import nl.esi.comma.testspecification.testspecification.RefStep
+import nl.esi.comma.testspecification.testspecification.StepSequence
 import org.eclipse.emf.ecore.EClass
 import org.eclipse.xtext.validation.Check
 
 import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.serialize
+import nl.esi.comma.testspecification.testspecification.TestspecificationPackage
 
 /**
  * This class contains custom validation rules. 
@@ -54,6 +56,14 @@ class TestspecificationValidator extends AbstractTestspecificationValidator {
                     }
                 }
             }
+        }
+    }
+
+    @Check
+    def protected void checkEmptyStepSequence(StepSequence stepSequence) {
+        if (stepSequence.step.isEmpty) {
+            error('Test sequence is empty, no executable steps reached within depth limit.',
+                TestspecificationPackage.Literals.STEP_SEQUENCE__STEP)
         }
     }
 }

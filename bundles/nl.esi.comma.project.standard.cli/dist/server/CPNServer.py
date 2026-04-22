@@ -252,7 +252,7 @@ async def handle_bpmn(bpmn_file: UploadFile = File(alias="bpmn-file")):
     except Exception as e:
         status_code = 400
         failed = response['response']
-        failed['exception'] = str(e)
+        failed['exception'] = format_error(e)
 
     # return the response as JSON
     return JSONResponse(response, status_code=status_code)
@@ -294,7 +294,7 @@ async def test_generator(
     except Exception as e:
         status_code = 400
         failed = response['response']
-        failed['exception'] = str(e)
+        failed['exception'] = format_error(e)
 
     return JSONResponse(response, status_code=status_code)
 
@@ -343,7 +343,7 @@ async def handle_scenario_load(uuid: str, scenario_file: UploadFile = File(alias
 
     except Exception as e:
         status_code = 400
-        response['exception'] = str(e)
+        response['exception'] = format_error(e)
 
     return JSONResponse(response, status_code=status_code)
 
@@ -377,7 +377,7 @@ async def handle_transitions_enabled(uuid: str):
             response['id_transition_dict'][_k] = _v[0].name
     except Exception as e:
         status_code = 400
-        response['exception'] = str(e)
+        response['exception'] = format_error(e)
 
     return JSONResponse(response, status_code=status_code)
 
@@ -510,6 +510,9 @@ async def lsp_endpoint(ws: WebSocket):
         except Exception:
             pass
         logger.info("LSP endpoint cleanup complete")
+
+def format_error(e: Exception) -> str:
+    return f"{type(e).__name__}: {str(e)}"
 
 # Running the API
 if __name__ == "__main__":
