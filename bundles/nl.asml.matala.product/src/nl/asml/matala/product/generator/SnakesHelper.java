@@ -17,6 +17,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import nl.esi.comma.actions.actions.Action;
+import nl.esi.comma.actions.actions.ActionList;
 import nl.esi.comma.actions.actions.AssignmentAction;
 import nl.esi.comma.actions.actions.ForAction;
 import nl.esi.comma.actions.actions.IfAction;
@@ -349,31 +350,36 @@ class SnakesHelper {
 			}
 		} else if(action instanceof IfAction) {
 			var txt = new String();
-			var indent_level = indent + "	";
 			var act = (IfAction) action;
 			txt += String.format("if %s:\n",expression(act.getGuard(), variablePrefix));
-			for(var a : act.getThenList().getActions()) {
-				txt += indent_level + String.format("%s\n", action(a,variablePrefix, indent_level)); 
-			}
+			txt += indentActionList(act.getThenList(), variablePrefix, indent);
 			if(act.getElseList()!= null) {
 				txt += "else:\n";
-				for(var a : act.getElseList().getActions()) {
-					txt += indent_level + String.format("%s\n", action(a,variablePrefix, indent_level)); 
-				}
+				txt += indentActionList(act.getElseList(), variablePrefix, indent);
 			}
 			return txt.trim();
 		} else if(action instanceof ForAction) {
 			var txt = new String();
-			var indent_level = indent + "	";
 			var act = (ForAction) action;
 			txt += String.format("for %s in %s:\n", act.getVar().getName(), expression(act.getExp(), variablePrefix));
-			for(var a : act.getDoList().getActions()) {
-				txt += indent_level + String.format("%s\n", action(a,variablePrefix, indent_level));
-			}
+			txt += indentActionList(act.getDoList(), variablePrefix, indent);
 			return txt.trim();
 		}
 		
 		throw new RuntimeException("Not supported");
+	}
+
+	private static String indentActionList(ActionList actionList, Function<String, String> variablePrefix, String indent) {
+		var txt = new String();
+		var indent_level = indent + "	";
+		if (actionList == null || actionList.getActions().isEmpty()) {
+			txt += indent_level + "pass\n";
+		} else {
+			for(var a : actionList.getActions()) {
+				txt += indent_level + String.format("%s\n", action(a,variablePrefix, indent_level));
+			}
+		}
+		return txt;
 	}
 
 	static String commaAction(Action action, Function<String, String> variablePrefix, String indent) {
