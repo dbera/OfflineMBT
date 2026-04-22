@@ -1,0 +1,153 @@
+@startuml
+node "SupervisonModelSupervisionPressureHandler" {
+    [SupervisonModelSupervisionPressureHandler_StartPump_default@null@COMPOSE@]
+    [SupervisonModelSupervisionPressureHandler_WaitforPumpOff_default@null@INTERNAL@]
+    [SupervisonModelSupervisionPressureHandler_Restart_default@null@INTERNAL@]
+    [SupervisonModelSupervisionPressureHandler_TurnOffPump_default@null@COMPOSE@]
+    [SupervisonModelSupervisionPressureHandler_WaitforPumpStated_default@null@INTERNAL@]
+}
+node "SupervisonModelAcquisitionController" {
+    [SupervisonModelAcquisitionController_AcquisitionStopped_default@null@INTERNAL@]
+    [SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default@ExecAcquisitionCommand@RUN@]
+    [SupervisonModelAcquisitionController_StartAcquisition_default@ExecAcquisitionCommand@RUN@]
+    [SupervisonModelAcquisitionController_Acquisitionexecdone_default@null@INTERNAL@]
+    [SupervisonModelAcquisitionController_StopAcquisition_default@ExecAcquisitionCommand@RUN@]
+    [SupervisonModelAcquisitionController_AcquisitionStarted_default@null@INTERNAL@]
+}
+node "SupervisonModelTemperatureController" {
+    [SupervisonModelTemperatureController_return_default@null@INTERNAL@]
+    [SupervisonModelTemperatureController_CheckTemp_default@TempCheck@ASSERT@]
+    [SupervisonModelTemperatureController_SetTemperature_default@null@INTERNAL@]
+    [SupervisonModelTemperatureController_ResetTemperature_default@null@INTERNAL@]
+    [SupervisonModelTemperatureController_WaitforReset_default@null@INTERNAL@]
+    [SupervisonModelTemperatureController_WaitforTempSet_default@null@INTERNAL@]
+}
+node "SupervisonModelSupervisionTemperatureHandler" {
+    [SupervisonModelSupervisionTemperatureHandler_CreateResetTempMessage_default@null@COMPOSE@]
+    [SupervisonModelSupervisionTemperatureHandler_ExecuteSetTemp_default@SetTemperature@RUN@]
+    [SupervisonModelSupervisionTemperatureHandler_CreateSetTempMessage_default@null@COMPOSE@]
+}
+node "SupervisonModelPumpController" {
+    [SupervisonModelPumpController_done_default@null@INTERNAL@]
+    [SupervisonModelPumpController_startpump_default@ExecPumpCommand@RUN@]
+    [SupervisonModelPumpController_stoppump_default@ExecPumpCommand@RUN@]
+    [SupervisonModelPumpController_pumpstopped_default@null@INTERNAL@]
+}
+node "SupervisonModelImagingController" {
+    [SupervisonModelImagingController_WaitforUnprepareImaging_default@null@INTERNAL@]
+    [SupervisonModelImagingController_returntoprep_default@null@INTERNAL@]
+    [SupervisonModelImagingController_UnprepareImaging_default@null@INTERNAL@]
+    [SupervisonModelImagingController_WaitforImagingStopped_default@null@INTERNAL@]
+    [SupervisonModelImagingController_StartLowResImaging_default@null@INTERNAL@]
+    [SupervisonModelImagingController_nextimage_default@null@INTERNAL@]
+    [SupervisonModelImagingController_StartHighResImaging_default@null@INTERNAL@]
+    [SupervisonModelImagingController_Stopimaging_default@null@INTERNAL@]
+    [SupervisonModelImagingController_WaitforPrepared_default@null@INTERNAL@]
+    [SupervisonModelImagingController_PrepareImaging_default@null@INTERNAL@]
+    [SupervisonModelImagingController_ImagingFinished_default@null@INTERNAL@]
+}
+node "SupervisonModelVacuumController" {
+    [SupervisonModelVacuumController_TurnOff_default@null@INTERNAL@]
+    [SupervisonModelVacuumController_SetVacuum_default@null@INTERNAL@]
+    [SupervisonModelVacuumController_return_default@null@INTERNAL@]
+    [SupervisonModelVacuumController_WaitforOff_default@null@INTERNAL@]
+    [SupervisonModelVacuumController_WaitforVacuumSet_default@null@INTERNAL@]
+}
+node "SupervisonModelSupervisionImaging" {
+    [SupervisonModelSupervisionImaging_WaitforStopAcquisition_default@null@INTERNAL@]
+    [SupervisonModelSupervisionImaging_CheckLowResImageQuality_default@CheckAcquisitionResult@ASSERT@]
+    [SupervisonModelSupervisionImaging_WaitforStartAcquisition_default@null@INTERNAL@]
+    [SupervisonModelSupervisionImaging_StopAcquisition_default@null@COMPOSE@]
+    [SupervisonModelSupervisionImaging_StartAcquisition_default@null@COMPOSE@]
+    [SupervisonModelSupervisionImaging_CheckHighResImageQuality_default@CheckAcquisitionResult@ASSERT@]
+}
+node "SupervisonModelSupervisionImagePreparation" {
+    [SupervisonModelSupervisionImagePreparation_Unprepare_default@null@COMPOSE@]
+    [SupervisonModelSupervisionImagePreparation_Prepare_default@null@COMPOSE@]
+    [SupervisonModelSupervisionImagePreparation_Waitforprepare_default@null@INTERNAL@]
+    [SupervisonModelSupervisionImagePreparation_WaitforUnprepare_default@null@INTERNAL@]
+}
+EqStatus --> [SupervisonModelSupervisionPressureHandler_StartPump_default@null@COMPOSE@]
+VacuumRequest --> [SupervisonModelSupervisionPressureHandler_StartPump_default@null@COMPOSE@]
+[SupervisonModelSupervisionPressureHandler_StartPump_default@null@COMPOSE@] --> PumpRequest
+[SupervisonModelSupervisionPressureHandler_StartPump_default@null@COMPOSE@] --> EqStatus
+PumpUpdate --> [SupervisonModelSupervisionPressureHandler_WaitforPumpOff_default@null@INTERNAL@]
+EqStatus --> [SupervisonModelSupervisionPressureHandler_WaitforPumpOff_default@null@INTERNAL@]
+[SupervisonModelSupervisionPressureHandler_WaitforPumpOff_default@null@INTERNAL@] --> VacuumUpdate
+[SupervisonModelSupervisionPressureHandler_WaitforPumpOff_default@null@INTERNAL@] --> EqStatus
+EqStatus --> [SupervisonModelSupervisionPressureHandler_TurnOffPump_default@null@COMPOSE@]
+VacuumRequest --> [SupervisonModelSupervisionPressureHandler_TurnOffPump_default@null@COMPOSE@]
+[SupervisonModelSupervisionPressureHandler_TurnOffPump_default@null@COMPOSE@] --> PumpRequest
+[SupervisonModelSupervisionPressureHandler_TurnOffPump_default@null@COMPOSE@] --> EqStatus
+PumpUpdate --> [SupervisonModelSupervisionPressureHandler_WaitforPumpStated_default@null@INTERNAL@]
+EqStatus --> [SupervisonModelSupervisionPressureHandler_WaitforPumpStated_default@null@INTERNAL@]
+[SupervisonModelSupervisionPressureHandler_WaitforPumpStated_default@null@INTERNAL@] --> VacuumUpdate
+[SupervisonModelSupervisionPressureHandler_WaitforPumpStated_default@null@INTERNAL@] --> EqStatus
+[SupervisonModelAcquisitionController_AcquisitionStopped_default@null@INTERNAL@] --> AcqUpdate
+AcquisitionReq --> [SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default@ExecAcquisitionCommand@RUN@]
+AcquisitionReq --> [SupervisonModelAcquisitionController_StartAcquisition_default@ExecAcquisitionCommand@RUN@]
+[SupervisonModelAcquisitionController_Acquisitionexecdone_default@null@INTERNAL@] --> AcqUpdate
+AcquisitionReq --> [SupervisonModelAcquisitionController_StopAcquisition_default@ExecAcquisitionCommand@RUN@]
+[SupervisonModelAcquisitionController_StopAcquisition_default@ExecAcquisitionCommand@RUN@] --> ImageData
+[SupervisonModelAcquisitionController_AcquisitionStarted_default@null@INTERNAL@] --> AcqUpdate
+temp_achieved --> [SupervisonModelTemperatureController_CheckTemp_default@TempCheck@ASSERT@]
+[SupervisonModelTemperatureController_SetTemperature_default@null@INTERNAL@] --> TempRequest
+[SupervisonModelTemperatureController_ResetTemperature_default@null@INTERNAL@] --> TempRequest
+TempUpdate --> [SupervisonModelTemperatureController_WaitforReset_default@null@INTERNAL@]
+TempUpdate --> [SupervisonModelTemperatureController_WaitforTempSet_default@null@INTERNAL@]
+TempRequest --> [SupervisonModelSupervisionTemperatureHandler_CreateResetTempMessage_default@null@COMPOSE@]
+EqStatus --> [SupervisonModelSupervisionTemperatureHandler_CreateResetTempMessage_default@null@COMPOSE@]
+[SupervisonModelSupervisionTemperatureHandler_CreateResetTempMessage_default@null@COMPOSE@] --> EqStatus
+EqStatus --> [SupervisonModelSupervisionTemperatureHandler_ExecuteSetTemp_default@SetTemperature@RUN@]
+[SupervisonModelSupervisionTemperatureHandler_ExecuteSetTemp_default@SetTemperature@RUN@] --> TempUpdate
+[SupervisonModelSupervisionTemperatureHandler_ExecuteSetTemp_default@SetTemperature@RUN@] --> temp_achieved
+[SupervisonModelSupervisionTemperatureHandler_ExecuteSetTemp_default@SetTemperature@RUN@] --> EqStatus
+TempRequest --> [SupervisonModelSupervisionTemperatureHandler_CreateSetTempMessage_default@null@COMPOSE@]
+[SupervisonModelPumpController_done_default@null@INTERNAL@] --> PumpUpdate
+PumpRequest --> [SupervisonModelPumpController_startpump_default@ExecPumpCommand@RUN@]
+PumpRequest --> [SupervisonModelPumpController_stoppump_default@ExecPumpCommand@RUN@]
+[SupervisonModelPumpController_pumpstopped_default@null@INTERNAL@] --> PumpUpdate
+ImagingUpdate --> [SupervisonModelImagingController_WaitforUnprepareImaging_default@null@INTERNAL@]
+[SupervisonModelImagingController_UnprepareImaging_default@null@INTERNAL@] --> ImagingRequest
+ImagingUpdate --> [SupervisonModelImagingController_WaitforImagingStopped_default@null@INTERNAL@]
+[SupervisonModelImagingController_StartLowResImaging_default@null@INTERNAL@] --> ImagingRequest
+[SupervisonModelImagingController_StartHighResImaging_default@null@INTERNAL@] --> ImagingRequest
+[SupervisonModelImagingController_Stopimaging_default@null@INTERNAL@] --> ImagingRequest
+ImagingUpdate --> [SupervisonModelImagingController_WaitforPrepared_default@null@INTERNAL@]
+[SupervisonModelImagingController_PrepareImaging_default@null@INTERNAL@] --> ImagingRequest
+ImagingUpdate --> [SupervisonModelImagingController_ImagingFinished_default@null@INTERNAL@]
+[SupervisonModelVacuumController_TurnOff_default@null@INTERNAL@] --> VacuumRequest
+[SupervisonModelVacuumController_SetVacuum_default@null@INTERNAL@] --> VacuumRequest
+VacuumUpdate --> [SupervisonModelVacuumController_WaitforOff_default@null@INTERNAL@]
+VacuumUpdate --> [SupervisonModelVacuumController_WaitforVacuumSet_default@null@INTERNAL@]
+AcqUpdate --> [SupervisonModelSupervisionImaging_WaitforStopAcquisition_default@null@INTERNAL@]
+EqStatus --> [SupervisonModelSupervisionImaging_WaitforStopAcquisition_default@null@INTERNAL@]
+[SupervisonModelSupervisionImaging_WaitforStopAcquisition_default@null@INTERNAL@] --> EqStatus
+[SupervisonModelSupervisionImaging_WaitforStopAcquisition_default@null@INTERNAL@] --> ImagingUpdate
+ImageData --> [SupervisonModelSupervisionImaging_CheckLowResImageQuality_default@CheckAcquisitionResult@ASSERT@]
+AcqUpdate --> [SupervisonModelSupervisionImaging_WaitforStartAcquisition_default@null@INTERNAL@]
+EqStatus --> [SupervisonModelSupervisionImaging_WaitforStartAcquisition_default@null@INTERNAL@]
+[SupervisonModelSupervisionImaging_WaitforStartAcquisition_default@null@INTERNAL@] --> EqStatus
+[SupervisonModelSupervisionImaging_WaitforStartAcquisition_default@null@INTERNAL@] --> ImagingUpdate
+ImagingRequest --> [SupervisonModelSupervisionImaging_StopAcquisition_default@null@COMPOSE@]
+[SupervisonModelSupervisionImaging_StopAcquisition_default@null@COMPOSE@] --> AcquisitionReq
+ImagingRequest --> [SupervisonModelSupervisionImaging_StartAcquisition_default@null@COMPOSE@]
+EqStatus --> [SupervisonModelSupervisionImaging_StartAcquisition_default@null@COMPOSE@]
+[SupervisonModelSupervisionImaging_StartAcquisition_default@null@COMPOSE@] --> AcquisitionReq
+[SupervisonModelSupervisionImaging_StartAcquisition_default@null@COMPOSE@] --> EqStatus
+ImageData --> [SupervisonModelSupervisionImaging_CheckHighResImageQuality_default@CheckAcquisitionResult@ASSERT@]
+ImagingRequest --> [SupervisonModelSupervisionImagePreparation_Unprepare_default@null@COMPOSE@]
+[SupervisonModelSupervisionImagePreparation_Unprepare_default@null@COMPOSE@] --> AcquisitionReq
+ImagingRequest --> [SupervisonModelSupervisionImagePreparation_Prepare_default@null@COMPOSE@]
+EqStatus --> [SupervisonModelSupervisionImagePreparation_Prepare_default@null@COMPOSE@]
+[SupervisonModelSupervisionImagePreparation_Prepare_default@null@COMPOSE@] --> AcquisitionReq
+[SupervisonModelSupervisionImagePreparation_Prepare_default@null@COMPOSE@] --> EqStatus
+AcqUpdate --> [SupervisonModelSupervisionImagePreparation_Waitforprepare_default@null@INTERNAL@]
+EqStatus --> [SupervisonModelSupervisionImagePreparation_Waitforprepare_default@null@INTERNAL@]
+[SupervisonModelSupervisionImagePreparation_Waitforprepare_default@null@INTERNAL@] --> EqStatus
+[SupervisonModelSupervisionImagePreparation_Waitforprepare_default@null@INTERNAL@] --> ImagingUpdate
+AcqUpdate --> [SupervisonModelSupervisionImagePreparation_WaitforUnprepare_default@null@INTERNAL@]
+EqStatus --> [SupervisonModelSupervisionImagePreparation_WaitforUnprepare_default@null@INTERNAL@]
+[SupervisonModelSupervisionImagePreparation_WaitforUnprepare_default@null@INTERNAL@] --> EqStatus
+[SupervisonModelSupervisionImagePreparation_WaitforUnprepare_default@null@INTERNAL@] --> ImagingUpdate
+@enduml
