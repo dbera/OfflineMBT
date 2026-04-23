@@ -55,6 +55,7 @@ import org.eclipse.emf.common.util.EList
 import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.EReference
 import org.eclipse.emf.ecore.util.EcoreUtil
+import nl.esi.comma.expressions.functions.ExpressionFunctionsRegistry.NoMatchingFunctionFoundException
 
 @Singleton
 class ExpressionEvaluator {
@@ -168,11 +169,11 @@ class ExpressionEvaluator {
         try {
             return functionsRegistry.invokeFunction(expression, context);
         }
-        catch(IndexOutOfBoundsException e) {
-            throw e
+        catch(NoMatchingFunctionFoundException e) {
+            return null;
         }
         catch(Exception e) {
-            return null
+            throw e;
         }
     }
 
