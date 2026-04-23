@@ -20,7 +20,6 @@ import java.util.Map;
 import nl.esi.comma.expressions.evaluation.IEvaluationContext;
 import nl.esi.comma.expressions.expression.Expression;
 import nl.esi.comma.expressions.expression.ExpressionMap;
-import nl.esi.comma.expressions.expression.ExpressionRecord;
 import nl.esi.comma.expressions.expression.ExpressionVector;
 import nl.esi.comma.types.types.Type;
 
@@ -39,7 +38,8 @@ import nl.esi.comma.types.types.Type;
 public final class DefaultExpressionsConverter implements IExpressionConverter {
 
 	@Override
-	public Object toObject(Expression expression, Class<?> targetType, IEvaluationContext context) {
+	public Object toObject(Expression expression, Class<?> targetType) {
+		var context = IEvaluationContext.EMPTY; // No variable resolution needed for type checking in this default converter
 
 		if (expression == null) {
 			return null;
@@ -67,7 +67,7 @@ public final class DefaultExpressionsConverter implements IExpressionConverter {
 	// ---- Type annotation resolution ----
 
 	@Override
-	public Expression toExpression(Object object, Type type, IEvaluationContext context) {
+	public Expression toExpression(Object object, Type type) {
 		if (type.getType().getName().equals("void")) {
 			if (object != null) {
 				throw new IllegalArgumentException("Cannot convert non-null value to void type.");
@@ -77,11 +77,14 @@ public final class DefaultExpressionsConverter implements IExpressionConverter {
 		if (object instanceof Expression expr) {
 			return expr;
 		}
+		var context = IEvaluationContext.EMPTY; // No variable resolution needed for type checking in this default converter
 		return context.toExpression(object);
 	}
 
 	@Override
-	public boolean isConvertible(Expression expression, Class<?> targetType, IEvaluationContext context) {
+	public boolean isConvertible(Expression expression, Class<?> targetType) {
+		
+		var context = IEvaluationContext.EMPTY; // No variable resolution needed for type checking in this default converter
 		if (expression == null) {
 			return false;
 		}

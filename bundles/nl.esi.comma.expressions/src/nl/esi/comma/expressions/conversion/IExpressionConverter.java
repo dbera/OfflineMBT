@@ -12,19 +12,33 @@
  */
 package nl.esi.comma.expressions.conversion;
 
-import nl.esi.comma.expressions.evaluation.IEvaluationContext;
 import nl.esi.comma.expressions.expression.Expression;
 import nl.esi.comma.types.types.Type;
 
 public interface IExpressionConverter {
 	/**
 	 * Converts an Expression to a Java Object of the specified type.
+	 * 
+	 * @param expression the Expression to convert
+	 * @param targetType the target Java type to convert to
+	 * @return the converted Java Object of the specified targetType
 	 */
-	Object toObject(Expression expression, Class<?> targetType, IEvaluationContext context);
+	Object toObject(Expression expression, Class<?> targetType);
 	/**
 	 * Converts a Java Object to an Expression of the specified type.
+	 * 
+	 * @param object the Java Object to convert
+	 * @param type the target Expression type
+	 * @return the converted Expression
 	 */
-	Expression toExpression(Object object, Type type, IEvaluationContext context);
+	Expression toExpression(Object object, Type type);
 
-	boolean isConvertible(Expression expression, Class<?> targetType, IEvaluationContext context);
+	/**
+	 * Checks if an Expression can be converted to a Java Object of the specified type.
+	 * 
+	 * @param expression the Expression to check for convertibility
+	 * @param targetType the target Java type
+	 * @return true if the Expression can be converted to the targetType, false otherwise
+	 */
+	boolean isConvertible(Expression expression, Class<?> targetType);
 }

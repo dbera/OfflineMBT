@@ -227,7 +227,7 @@ public class ExpressionFunctionsRegistry {
 	/** Converts a Java object to an Expression using registered converters. */
 	private Expression toExpression(Object object, Type type, IEvaluationContext context) {
 		for (IExpressionConverter converter : converters) {
-			Expression expr = converter.toExpression(object, type, context);
+			Expression expr = converter.toExpression(object, type);
 			if (expr != null) {
 				return expr;
 			}
@@ -238,8 +238,8 @@ public class ExpressionFunctionsRegistry {
 	/** Converts an Expression to a Java object using registered converters. */
 	private Object toObject(Expression type, Class<?> paramType, IEvaluationContext context) {
 		for (IExpressionConverter converter : converters) {
-			if (converter.isConvertible(type, paramType, context)) {
-				return converter.toObject(type, paramType, context);
+			if (converter.isConvertible(type, paramType)) {
+				return converter.toObject(type, paramType);
 			}
 		}
 		return null;
@@ -249,7 +249,7 @@ public class ExpressionFunctionsRegistry {
 	private boolean isValidArgumentType(Expression expression, Class<?> paramType, IEvaluationContext context) {
 
 		for (IExpressionConverter converter : converters) {
-			if (converter.isConvertible(expression, paramType, context)) {
+			if (converter.isConvertible(expression, paramType)) {
 				return true;
 			}
 		}
