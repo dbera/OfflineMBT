@@ -50,7 +50,6 @@ import nl.esi.comma.expressions.expression.ExpressionRecordAccess
 import nl.esi.comma.expressions.expression.ExpressionSubtraction
 import nl.esi.comma.expressions.expression.ExpressionVariable
 import nl.esi.comma.expressions.expression.ExpressionVector
-import nl.esi.comma.expressions.expression.VariableDecl
 import nl.esi.comma.expressions.functions.ExpressionFunctionsRegistry
 import org.eclipse.emf.common.util.EList
 import org.eclipse.emf.ecore.EObject
@@ -124,16 +123,8 @@ class ExpressionEvaluator {
         return null
     }
 
-
     protected dispatch def Expression doEvaluate(ExpressionVariable expression, IEvaluationContext context) {
         var reference = context.getExpression(expression.variable)
-        if ( reference === null ) {
-            // try the default case
-            val parent = expression.variable.eContainer
-            if( parent instanceof VariableDecl){
-                reference = parent.expression
-            } 
-        }
         if (reference !== null) {
             // Reference should be evaluated before used, hence wrap it with brackets.
             // Reduction will remove the brackets if the evaluated value doesn't require them.
