@@ -27,55 +27,78 @@ import nl.esi.comma.expressions.expression.ExpressionVector;
  * and are registered via {@link ExpressionFunctionsRegistry#addLibraryFunctions}.
  *
  * Methods use EMF model types ({@link ExpressionVector}, {@link ExpressionMap})
- * directly where possible, avoiding conversion overhead.
- * Commented-out variants show the equivalent List/Map-based implementations
- * The commented-out methods also work but the current implementation is more
- * efficient as it requires less conversion.
+ * directly where possible, avoiding conversion overhead. The pure Java equivalents
+ * using standard collection types are documented in the Javadoc of each method.
  */
 public class DefaultExpressionFunctions {
 
-	/** Returns {@code true} if the vector is empty. */
+	/**
+	 * Returns {@code true} if the vector is empty.
+	 * <p>This is the optimized EMF implementation of the following pure Java equivalent:</p>
+	 * <pre>
+	 * public static boolean isEmpty(Collection&lt;?&gt; collection) {
+	 *     return collection.isEmpty();
+	 * }
+	 * </pre>
+	 */
 	public static boolean isEmpty(ExpressionVector vector) {
 		return vector.getElements().isEmpty();
 	}
-//	public static boolean isEmpty(Collection<?> collection) {
-//		return collection.isEmpty();
-//	}
 
-	/** Returns the number of elements in a vector. */
+	/**
+	 * Returns the number of elements in a vector.
+	 * <p>This is the optimized EMF implementation of the following pure Java equivalent:</p>
+	 * <pre>
+	 * public static long size(Collection&lt;?&gt; collection) {
+	 *     return collection.size();
+	 * }
+	 * </pre>
+	 */
 	public static long size(ExpressionVector vector) {
 		return vector.getElements().size();
 	}
-//	public static long size(Collection<?> collection) {
-//		return collection.size();
-//	}
 
-	/** Returns the number of entries in a map. */
+	/**
+	 * Returns the number of entries in a map.
+	 * <p>This is the optimized EMF implementation of the following pure Java equivalent:</p>
+	 * <pre>
+	 * public static long size(Map&lt;?, ?&gt; map) {
+	 *     return map.size();
+	 * }
+	 * </pre>
+	 */
 	public static long size(ExpressionMap map) {
 		return map.getPairs().size();
 	}
-//	public static long size(Map<?, ?> map) {
-//		return map.size();
-//	}
 
-	/** Returns {@code true} if the vector contains an element equal to {@code value}. */
+	/**
+	 * Returns {@code true} if the vector contains an element equal to {@code value}.
+	 * <p>This is the optimized EMF implementation of the following pure Java equivalent:</p>
+	 * <pre>
+	 * public static boolean contains(Collection&lt;?&gt; collection, Object value) {
+	 *     return collection.stream().anyMatch(e -&gt; e != null &amp;&amp; e.equals(value));
+	 * }
+	 * </pre>
+	 */
 	public static boolean contains(ExpressionVector vector, Expression value) {
 		return vector.getElements().stream().anyMatch(e -> EcoreUtil.equals(e, value));
 	}
-//	public static boolean contains(Collection<?> collection, Object value) {
-//		return collection.stream().anyMatch(e -> e != null && e.equals(value));
-//	}
 
-	/** Returns the vector with {@code element} appended. */
+	/**
+	 * Returns the vector with {@code element} appended.
+	 * <p>This is the optimized EMF implementation of the following pure Java equivalent:</p>
+	 * <pre>
+	 * public static List&lt;Object&gt; add(List&lt;Object&gt; list, Object element) {
+	 *     list = new ArrayList&lt;&gt;(list);
+	 *     list.add(element);
+	 *     return list;
+	 * }
+	 * </pre>
+	 */
 	public static ExpressionVector add(ExpressionVector vector, Expression element) {
 		vector.getElements().add(element);
 		return vector;
 	}
-//	public static List<Object> add(List<Object> list, Object element) {
-//		list = new ArrayList<>(list);
-//		list.add(element);
-//		return list;
-//	}
 
 	/** Converts an integer to a real (BigDecimal). */
 	public static BigDecimal asReal(long value) {
@@ -92,66 +115,99 @@ public class DefaultExpressionFunctions {
 		return value.abs();
 	}
 
-	/** Returns {@code true} if the map contains a key equal to {@code key}. */
+	/**
+	 * Returns {@code true} if the map contains a key equal to {@code key}.
+	 * <p>This is the optimized EMF implementation of the following pure Java equivalent:</p>
+	 * <pre>
+	 * public static boolean hasKey(Map&lt;Object, Object&gt; map, Object key) {
+	 *     return map.keySet().stream().anyMatch(k -&gt; k != null &amp;&amp; k.equals(key));
+	 * }
+	 * </pre>
+	 */
 	public static boolean hasKey(ExpressionMap map, Expression key) {
 		return map.getPairs().stream().anyMatch(p -> EcoreUtil.equals(p.getKey(), key));
 	}
-//	public static boolean hasKey(Map<Object, Object> map, Object key) {
-//		return map.keySet().stream().anyMatch(k -> k != null && k.equals(key));
-//	}
 
-	/** Removes the entry with key equal to {@code key} and returns the modified map. */
+	/**
+	 * Removes the entry with key equal to {@code key} and returns the modified map.
+	 * <p>This is the optimized EMF implementation of the following pure Java equivalent:</p>
+	 * <pre>
+	 * public static Map&lt;Object, Object&gt; deleteKey(Map&lt;Object, Object&gt; map, Object key) {
+	 *     map.remove(key);
+	 *     return map;
+	 * }
+	 * </pre>
+	 */
 	public static ExpressionMap deleteKey(ExpressionMap map, Expression key) {
 		map.getPairs().removeIf(p -> EcoreUtil.equals(p.getKey(), key));
 		return map;
 	}
-//	public static Map<Object, Object> deleteKey(Map<Object, Object> map, Object key) {
-//		map.remove(key);
-//		return map;
-//	}
 
-	/** Returns the element at {@code index}, or @link {@link IndexOutOfBoundsException} */
+	/**
+	 * Returns the value of the map entry at {@code index}, or throws {@link IndexOutOfBoundsException}.
+	 * <p>This is the optimized EMF implementation of the following pure Java equivalent:</p>
+	 * <pre>
+	 * public static Object get(Map&lt;Object, Object&gt; map, long index) {
+	 *     return new ArrayList&lt;&gt;(map.values()).get((int) index);
+	 * }
+	 * </pre>
+	 */
 	public static Expression get(ExpressionMap map, long index) throws IndexOutOfBoundsException {
 		return map.getPairs().get((int) index).getValue();
 	}
 	
-	/** Returns the element at {@code index}, or Index out of bounds */
+	/**
+	 * Returns the element at {@code index}, or Index out of bounds.
+	 * <p>This is the optimized EMF implementation of the following pure Java equivalent:</p>
+	 * <pre>
+	 * public static Object get(List&lt;Object&gt; list, long index) {
+	 *     if (index &gt;= 0 &amp;&amp; index &lt; list.size()) {
+	 *         return list.get((int) index);
+	 *     }
+	 *     return null;
+	 * }
+	 * </pre>
+	 */
 	public static Expression get(ExpressionVector vector, long index) throws IndexOutOfBoundsException {
 		return vector.getElements().get((int) index);
 	}
-//	public static Object get(List<Object> list, long index) {
-//		if (index >= 0 && index < list.size()) {
-//			return list.get((int) index);
-//		}
-//		return null;
-//	}
 
-	/** Returns the vector with the element at or {@link IndexOutOfBoundsException}. */
+	/**
+	 * Returns the vector with the element at {@code index} replaced, or {@link IndexOutOfBoundsException}.
+	 * <p>This is the optimized EMF implementation of the following pure Java equivalent:</p>
+	 * <pre>
+	 * public static List&lt;Object&gt; at(List&lt;Object&gt; list, long index, Object value) {
+	 *     if (index &gt;= 0 &amp;&amp; index &lt; list.size()) {
+	 *         list = new ArrayList&lt;&gt;(list);
+	 *         list.set((int) index, value);
+	 *     }
+	 *     return list;
+	 * }
+	 * </pre>
+	 */
 	public static ExpressionVector at(ExpressionVector vector, long index, Expression value) throws IndexOutOfBoundsException {
 		vector.getElements().set((int) index, value);
 		return vector;
 	}
-//	public static List<Object> at(List<Object> list, long index, Object value) {
-//		if (index >= 0 && index < list.size()) {
-//			list = new ArrayList<>(list);
-//			list.set((int) index, value);
-//		}
-//		return list;
-//	}
 
 	/** Converts an integer to its string representation. */
 	public static String toString(long value) {
 		return Long.toString(value);
 	}
 
-	/** Concatenates two vectors by appending all elements of {@code vector2} to {@code vector1}. */
+	/**
+	 * Concatenates two vectors by appending all elements of {@code vector2} to {@code vector1}.
+	 * <p>This is the optimized EMF implementation of the following pure Java equivalent:</p>
+	 * <pre>
+	 * public static List&lt;Object&gt; concat(List&lt;Object&gt; list1, List&lt;Object&gt; list2) {
+	 *     return Streams.concat(list1.stream(), list2.stream()).toList();
+	 * }
+	 * </pre>
+	 */
 	public static ExpressionVector concat(ExpressionVector vector1, ExpressionVector vector2) {
 		vector1.getElements().addAll(EcoreUtil.copyAll(vector2.getElements()));
 		return vector1;
 	}
-//	public static List<Object> concat(List<Object> list1, List<Object> list2) {
-//		return Streams.concat(list1.stream(), list2.stream()).toList();
-//	}
 
 	/** Creates an integer range {@code [0, end)}. */
 	public static List<Long> range(long end) {
