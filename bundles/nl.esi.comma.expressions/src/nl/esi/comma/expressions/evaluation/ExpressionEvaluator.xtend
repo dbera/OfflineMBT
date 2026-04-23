@@ -84,13 +84,6 @@ class ExpressionEvaluator {
     protected def boolean shouldOptimize(EReference eReference, EObject eObject) {
         return switch (eReference) {
             case ExpressionPackage.Literals.EXPRESSION_RECORD_ACCESS__RECORD: false
-            case ExpressionPackage.Literals.EXPRESSION_FN_CALL__FUNCTION: 
-                if(eObject instanceof ExpressionFnCall) {
-                    functionsRegistry.canOptimize(eObject);
-                }
-                else {
-                    true
-                }
             default: true
         }
     }

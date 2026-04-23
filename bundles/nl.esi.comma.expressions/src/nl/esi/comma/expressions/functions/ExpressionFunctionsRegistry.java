@@ -75,14 +75,6 @@ public class ExpressionFunctionsRegistry {
 		return functions.containsKey(name);
 	}
 
-	/** Can optimize if exists and all overloads are static */
-	public boolean canOptimize(ExpressionFnCall functionCall)
-			throws UnsupportedOperationException, IllegalArgumentException {
-		var funcName = functionCall.getFunction().getName();
-		var methods = functions.get(funcName);
-		return methods != null && methods.stream().allMatch(m -> isStatic(m));
-	}
-	
 	/**
 	 * Invokes the matching function and returns the result as an Expression. For
 	 * instance methods, uses the first object from context assignable to the
