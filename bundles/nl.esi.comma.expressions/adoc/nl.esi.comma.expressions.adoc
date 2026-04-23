@@ -166,7 +166,6 @@ Operators are evaluated in the following order (highest to lowest):
 
 === Notes
 
-* All expressions are side-effect free.
 * Type checking is performed at model validation time.
 * Functions and operators may be overloaded for different types.
 * The wildcard `*` can be used as a placeholder or to match any value.
