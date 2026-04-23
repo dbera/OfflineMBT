@@ -145,15 +145,6 @@ class ExpressionEvaluator {
         }
     }
 
-//    protected dispatch def Expression doEvaluate(ExpressionRecord expression, IEvaluationContext context) {
-//        // ExpressionRecordAccess#getRecord() is not optimized, see #shouldOptimize(EReference, EObject).
-//        // Hence it should be evaluated before used
-//        for( f: expression.fields) {
-//            f.exp = f.exp.doEvaluate(context)
-//        }
-//        return expression
-//    }
-
     // Functions
     protected dispatch def Expression doEvaluate(ExpressionMapRW expression, extension IEvaluationContext context) {
         val mapExpr = expression.map
