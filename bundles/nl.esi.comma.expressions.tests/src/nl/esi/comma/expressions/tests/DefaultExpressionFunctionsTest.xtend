@@ -1,13 +1,13 @@
 /**
  * Copyright (c) 2024, 2025 TNO-ESI
- *
+ * 
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
- *
+ * 
  * This program and the accompanying materials are made available
  * under the terms of the MIT License which is available at
  * https://opensource.org/licenses/MIT
- *
+ * 
  * SPDX-License-Identifier: MIT
  */
 package nl.esi.comma.expressions.tests
@@ -27,7 +27,7 @@ import org.junit.jupiter.api.Test
  * InMemoryExprResourceRegistry when addLibraryFunctions is called, and that
  * the generated .expr declarations can be resolved and evaluated using the
  * 'call' syntax from the Expression grammar.
- *
+ * 
  * The flow under test:
  *   1. ExpressionFunctionsRegistry.addLibraryFunctions(DefaultExpressionFunctions)
  *      → calls InMemoryExprResourceRegistry.addLibrary(DefaultExpressionFunctions)
@@ -42,9 +42,9 @@ class DefaultExpressionFunctionsTest extends ExpressionEvaluatorTestBase {
 
     @Inject ExpressionFunctionsRegistry registry
     @Inject XtextResourceSet resourceSet
-    
-    @BeforeEach 
-    def void setImports(){
+
+    @BeforeEach
+    def void setImports() {
         var handler = registry.getURIHandler();
         resourceSet.URIConverter?.URIHandlers?.add(0, handler);
     }
@@ -64,13 +64,14 @@ class DefaultExpressionFunctionsTest extends ExpressionEvaluatorTestBase {
         val content = registry.getContent(uri)
 
         Assertions.assertAll(
-            [Assertions.assertTrue(content.contains("function bool isEmpty("),   "isEmpty")],
-            [Assertions.assertTrue(content.contains("function int size("),       "size")],
-            [Assertions.assertTrue(content.contains("function bool contains("),  "contains")],
-            [Assertions.assertTrue(content.contains("function real asReal("),    "asReal")],
-            [Assertions.assertTrue(content.contains("function bool hasKey("),    "hasKey")],
+            [Assertions.assertTrue(content.contains("function bool isEmpty("), "isEmpty")],
+            [Assertions.assertTrue(content.contains("function int size("), "size")],
+            [Assertions.assertTrue(content.contains("function bool contains("), "contains")],
+            [Assertions.assertTrue(content.contains("function real asReal("), "asReal")],
+            [Assertions.assertTrue(content.contains("function bool hasKey("), "hasKey")],
             [Assertions.assertTrue(content.contains("function string toString("), "toString")],
-            [Assertions.assertTrue(content.contains("function int[] range("),    "range")]
+            [Assertions.assertTrue(content.contains("function any[] set("), "set")],
+            [Assertions.assertTrue(content.contains("function int[] range("), "range")]
         )
     }
 
@@ -81,18 +82,17 @@ class DefaultExpressionFunctionsTest extends ExpressionEvaluatorTestBase {
             "URIHandler should report the in-memory URI as existing")
 
         val stream = registry.getURIHandler.createInputStream(uri, emptyMap)
-        val bytes  = stream.readAllBytes
+        val bytes = stream.readAllBytes
         Assertions.assertTrue(bytes.length > 0, "InputStream should produce non-empty content")
     }
 
     // -------------------------------------------------------------------------
     // Parsing tests — verify the generated .expr is parseable by Xtext
     // -------------------------------------------------------------------------
-
     @Test
     def void defaultFunctions_inMemoryResource_parsesWithoutErrors() {
-        val uri  = InMemoryExprResourceRegistry.uriFor(DefaultExpressionFunctions)
-        val res  = resourceSet.getResource(uri, true)
+        val uri = InMemoryExprResourceRegistry.uriFor(DefaultExpressionFunctions)
+        val res = resourceSet.getResource(uri, true)
         Assertions.assertNotNull(res, "Resource should be loadable from in-memory URI")
         Assertions.assertTrue(res.errors.isEmpty,
             '''In-memory resource has parse errors: «res.errors.map[message].join(", ")»''')
@@ -103,25 +103,26 @@ class DefaultExpressionFunctionsTest extends ExpressionEvaluatorTestBase {
 
     @Test
     def void defaultFunctions_inMemoryResource_containsExpectedFunctionDecls() {
-        val uri   = InMemoryExprResourceRegistry.uriFor(DefaultExpressionFunctions)
-        val res   = resourceSet.getResource(uri, true)
+        val uri = InMemoryExprResourceRegistry.uriFor(DefaultExpressionFunctions)
+        val res = resourceSet.getResource(uri, true)
         val model = res.contents.head as ExpressionModel
         val names = model.functions.map[name].toSet
 
         Assertions.assertAll(
-            [Assertions.assertTrue(names.contains("isEmpty"),    "isEmpty")],
-            [Assertions.assertTrue(names.contains("size"),       "size")],
-            [Assertions.assertTrue(names.contains("contains"),   "contains")],
-            [Assertions.assertTrue(names.contains("add"),        "add")],
-            [Assertions.assertTrue(names.contains("asReal"),     "asReal")],
-            [Assertions.assertTrue(names.contains("abs"),        "abs")],
-            [Assertions.assertTrue(names.contains("hasKey"),     "hasKey")],
-            [Assertions.assertTrue(names.contains("deleteKey"),  "deleteKey")],
-            [Assertions.assertTrue(names.contains("get"),        "get")],
-            [Assertions.assertTrue(names.contains("at"),         "at")],
-            [Assertions.assertTrue(names.contains("toString"),   "toString")],
-            [Assertions.assertTrue(names.contains("concat"),     "concat")],
-            [Assertions.assertTrue(names.contains("range"),      "range")]
+            [Assertions.assertTrue(names.contains("isEmpty"), "isEmpty")],
+            [Assertions.assertTrue(names.contains("size"), "size")],
+            [Assertions.assertTrue(names.contains("contains"), "contains")],
+            [Assertions.assertTrue(names.contains("add"), "add")],
+            [Assertions.assertTrue(names.contains("asReal"), "asReal")],
+            [Assertions.assertTrue(names.contains("abs"), "abs")],
+            [Assertions.assertTrue(names.contains("hasKey"), "hasKey")],
+            [Assertions.assertTrue(names.contains("deleteKey"), "deleteKey")],
+            [Assertions.assertTrue(names.contains("get"), "get")],
+            [Assertions.assertTrue(names.contains("at"), "at")],
+            [Assertions.assertTrue(names.contains("set"), "set")],
+            [Assertions.assertTrue(names.contains("toString"), "toString")],
+            [Assertions.assertTrue(names.contains("concat"), "concat")],
+            [Assertions.assertTrue(names.contains("range"), "range")]
         )
     }
 
@@ -129,7 +130,6 @@ class DefaultExpressionFunctionsTest extends ExpressionEvaluatorTestBase {
     // Evaluation tests — use 'call' syntax to invoke functions from the
     // generated in-memory resource and verify results
     // -------------------------------------------------------------------------
-
     static val TYPES = '''
         record T {
             int ti
@@ -391,5 +391,16 @@ class DefaultExpressionFunctionsTest extends ExpressionEvaluatorTestBase {
             map<int, string> result = call deleteKey(t.ti2s, 1)
         ''')
     }
-    
+
+    @Test
+    def void call_set_replacesElement() {
+        assertEval('''
+            «TYPES»
+            int[] result = <int[]> [10, 42, 30]
+        ''', '''
+            «TYPES»
+            int[] result = call set(<int[]> [10, 20, 30], 1, 42)
+        ''')
+    }
+
 }

@@ -190,6 +190,24 @@ public class DefaultExpressionFunctions {
 		return vector;
 	}
 
+	/**
+	 * Returns the vector with the element at {@code index} replaced, or {@link IndexOutOfBoundsException}.
+	 * <p>This is the optimized EMF implementation of the following pure Java equivalent:</p>
+	 * <pre>
+	 * public static List&lt;Object&gt; set(List&lt;Object&gt; list, long index, Object value) {
+	 *     if (index &gt;= 0 &amp;&amp; index &lt; list.size()) {
+	 *         list = new ArrayList&lt;&gt;(list);
+	 *         list.set((int) index, value);
+	 *     }
+	 *     return list;
+	 * }
+	 * </pre>
+	 */
+	public static ExpressionVector set(ExpressionVector vector, long index, Expression value) throws IndexOutOfBoundsException {
+		vector.getElements().set((int) index, value);
+		return vector;
+	}
+
 	/** Converts an integer to its string representation. */
 	public static String toString(long value) {
 		return Long.toString(value);
