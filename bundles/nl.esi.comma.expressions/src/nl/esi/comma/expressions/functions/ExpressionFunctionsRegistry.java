@@ -21,8 +21,11 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
+import org.apache.log4j.Logger;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.resource.URIHandler;
 
@@ -43,6 +46,8 @@ import nl.esi.comma.types.types.Type;
  */
 @Singleton
 public class ExpressionFunctionsRegistry {
+	
+	private static final Logger logger = Logger.getLogger(ExpressionFunctionsRegistry.class);
 	
 	public static class NoMatchingFunctionFoundException extends RuntimeException {
 		private static final long serialVersionUID = 1L;
@@ -134,8 +139,7 @@ public class ExpressionFunctionsRegistry {
 				try {
 					registerFunction(method.getName(), method);
 				} catch (Exception e) {
-					System.err.println("Failed to register function " + method.getName() + " from " + libraryClass.getName()
-							+ ": " + e.getMessage());
+					logger.error(String.format("Failed to register function '%s.%s': %s", libraryClass.getName(), getSignature(method), e.getMessage()));
 				}
 			}
 		}
@@ -147,7 +151,20 @@ public class ExpressionFunctionsRegistry {
 			throw new IllegalArgumentException("Function cannot be null");
 		if (!isPublic(method))
 			throw new IllegalArgumentException("Function must be public");
-		functions.computeIfAbsent(name, k -> new ArrayList<>()).add(method);
+		var overloads = functions.computeIfAbsent(name, k -> new ArrayList<>());
+		for (var existing : overloads) {
+			String signature = getSignature(method);
+			if (Objects.equals(getSignature(existing), signature)) {
+				throw new IllegalArgumentException("Function with same signature already exists: "
+						+ existing.getDeclaringClass().getName() + "." + signature);
+			}
+		}
+		overloads.add(method);
+	}
+
+	private String getSignature(Method method) {
+		return method.getName() + Arrays.stream(method.getParameterTypes()).map(Class::getSimpleName)
+				.collect(Collectors.joining(",", "(", ")"));
 	}
 
 	/**
