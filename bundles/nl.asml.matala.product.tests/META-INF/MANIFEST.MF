@@ -10,7 +10,9 @@ Require-Bundle: nl.asml.matala.product,
  org.eclipse.xtext.testing,
  org.eclipse.xtext.xbase.testing,
  org.eclipse.xtext.xbase.lib;bundle-version="2.36.0"
-Import-Package: org.junit.jupiter.api;version="[5.1.0,6.0.0)",
+Import-Package: org.apache.commons.io;version="[2.16.0,3.0.0)",
+ org.junit.jupiter.api;version="[5.1.0,6.0.0)",
  org.junit.jupiter.api.extension;version="[5.1.0,6.0.0)"
 Bundle-RequiredExecutionEnvironment: JavaSE-21
-Export-Package: nl.asml.matala.product.tests;x-internal=true
+Export-Package: nl.asml.matala.product.tests;x-internal=true,
+ nl.asml.matala.testutils

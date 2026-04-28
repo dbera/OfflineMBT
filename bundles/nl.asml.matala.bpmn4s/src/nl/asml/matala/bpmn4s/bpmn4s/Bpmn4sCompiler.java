@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -760,8 +761,8 @@ public class Bpmn4sCompiler{
 	 * Fetch the names of components that poses a RUN task.
 	 * @return List with components names
 	 */
-	private ArrayList<String> listSUTcomponents () {
-		ArrayList<String> result = new ArrayList<String>();
+	private Set<String> listSUTcomponents () {
+		LinkedHashSet<String> result = new LinkedHashSet<String>();
 		for (Element elem: model.elements.values()) {
 			if (model.isRunTask(elem.getId())) {
 				result.add(sanitize(compile(elem.getParentComponents().getLast())));

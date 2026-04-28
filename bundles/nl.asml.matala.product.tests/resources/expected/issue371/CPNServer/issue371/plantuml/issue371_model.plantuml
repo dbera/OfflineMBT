@@ -1,0 +1,4 @@
+@startuml
+Event_0o4qsh5 --> [Root_T1_default@null@INTERNAL@]
+[Root_T1_default@null@INTERNAL@] --> Event_1bks5sc
+@enduml

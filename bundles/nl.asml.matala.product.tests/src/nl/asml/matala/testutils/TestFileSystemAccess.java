@@ -10,7 +10,7 @@
  *
  * SPDX-License-Identifier: MIT
  */
-package nl.esi.comma.abstracttestspecification.tests;
+package nl.asml.matala.testutils;
 
 import java.io.IOException;
 import java.io.InputStream;

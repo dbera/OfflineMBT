@@ -1,0 +1,46 @@
+import "issue371.types"
+specification issue371
+{
+    system Root
+    {
+        //inputs
+        
+        //outputs
+    
+        local
+        MyContext	Event_0o4qsh5
+        MyContext	Event_1bks5sc
+    
+        init
+        Event_0o4qsh5 := MyContext { myField = 0 }
+    
+    
+        desc "Root_Model"
+        
+        action			T1
+        element-label	"T1"
+        case			default
+        with-inputs		Event_0o4qsh5
+        produces-outputs	Event_1bks5sc
+        updates:
+            Event_1bks5sc := Event_0o4qsh5
+            if true then
+              // Empty
+            else
+              // Empty
+            fi
+            for int i in range(2) do
+              // Empty
+            end-for
+            if not false then
+              Event_1bks5sc.myField := 1
+            fi
+    
+        element-labels ["Root"]
+    }
+    
+	SUT-blocks 
+	depth-limits 300
+	state-limits 1000
+	num-tests 1
+}
