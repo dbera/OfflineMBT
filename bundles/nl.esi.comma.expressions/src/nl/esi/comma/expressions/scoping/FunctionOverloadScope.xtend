@@ -12,7 +12,7 @@
  */
 package nl.esi.comma.expressions.scoping
 
-import nl.esi.comma.expressions.expression.ExpressionFnCall
+import nl.esi.comma.expressions.expression.ExpressionFunctionCall
 import nl.esi.comma.expressions.expression.FunctionDecl
 import org.eclipse.emf.ecore.EObject
 import org.eclipse.xtext.naming.QualifiedName
@@ -33,9 +33,9 @@ import static extension nl.esi.comma.types.utilities.TypeUtilities.*
 class FunctionOverloadScope implements IScope {
     
     val IScope parent
-    val ExpressionFnCall context
+    val ExpressionFunctionCall context
     
-    new(IScope parent, ExpressionFnCall context) {
+    new(IScope parent, ExpressionFunctionCall context) {
         this.parent = parent
         this.context = context
     }

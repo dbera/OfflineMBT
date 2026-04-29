@@ -24,7 +24,7 @@ import nl.esi.comma.expressions.expression.ExpressionConstantString
 import nl.esi.comma.expressions.expression.ExpressionDivision
 import nl.esi.comma.expressions.expression.ExpressionEnumLiteral
 import nl.esi.comma.expressions.expression.ExpressionEqual
-import nl.esi.comma.expressions.expression.ExpressionFnCall
+import nl.esi.comma.expressions.expression.ExpressionFunctionCall
 import nl.esi.comma.expressions.expression.ExpressionGeq
 import nl.esi.comma.expressions.expression.ExpressionGreater
 import nl.esi.comma.expressions.expression.ExpressionLeq
@@ -140,7 +140,7 @@ class ExpressionsCommaGenerator extends TypesCommaGenerator {
 	'''«e.getVariable().getName()»'''
 
     // Added DB for CG. 19.06.2025
-    def dispatch CharSequence exprToComMASyntax(ExpressionFnCall e)
+    def dispatch CharSequence exprToComMASyntax(ExpressionFunctionCall e)
     {
         var str = new String();
         for(Expression arg : e.getArgs()) {
@@ -155,7 +155,7 @@ class ExpressionsCommaGenerator extends TypesCommaGenerator {
         return fnName + "(" + str + ")";
     }
 
-	def CharSequence getFunctionText(ExpressionFnCall e) {
+	def CharSequence getFunctionText(ExpressionFunctionCall e) {
 	        val fnName = e.function.name
 			if (fnName.equals("add")) {
 				return String.format("add(%s,%s)", exprToComMASyntax(e.getArgs().get(0)), exprToComMASyntax(e.getArgs().get(1)))

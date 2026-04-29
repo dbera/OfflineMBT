@@ -36,7 +36,7 @@ import nl.esi.comma.expressions.conversion.IExpressionConverter;
 import nl.esi.comma.expressions.conversion.IExpressionConvertersProvider;
 import nl.esi.comma.expressions.evaluation.IEvaluationContext;
 import nl.esi.comma.expressions.expression.Expression;
-import nl.esi.comma.expressions.expression.ExpressionFnCall;
+import nl.esi.comma.expressions.expression.ExpressionFunctionCall;
 import nl.esi.comma.types.types.Type;
 
 /**
@@ -85,7 +85,7 @@ public class ExpressionFunctionsRegistry {
 	 * instance methods, uses the first object from context assignable to the
 	 * declaring class.
 	 */
-	public Expression invokeFunction(ExpressionFnCall functionCall, IEvaluationContext context) throws NoMatchingFunctionFoundException {
+	public Expression invokeFunction(ExpressionFunctionCall functionCall, IEvaluationContext context) throws NoMatchingFunctionFoundException {
 		var funcName = functionCall.getFunction().getName();
 		var method = findMatchingMethod(functionCall, context);
 		if (method == null) {
@@ -189,7 +189,7 @@ public class ExpressionFunctionsRegistry {
 	 * Supports method overloading by checking parameter count and type
 	 * compatibility.
 	 */
-	private Method findMatchingMethod(ExpressionFnCall functionCall, IEvaluationContext context) {
+	private Method findMatchingMethod(ExpressionFunctionCall functionCall, IEvaluationContext context) {
 		var candidates = functions.get(functionCall.getFunction().getName());
 		if (candidates == null) {
 			return null;
@@ -215,7 +215,7 @@ public class ExpressionFunctionsRegistry {
 	}
 
 	/** Converts function call arguments to their Java object representations. */
-	private Object[] convertArguments(ExpressionFnCall funcCall, Class<?>[] paramTypes, IEvaluationContext context) {
+	private Object[] convertArguments(ExpressionFunctionCall funcCall, Class<?>[] paramTypes, IEvaluationContext context) {
 		var funcName = funcCall.getFunction().getName();
 		var argExprs = funcCall.getArgs();
 		if (argExprs.size() != paramTypes.length) {

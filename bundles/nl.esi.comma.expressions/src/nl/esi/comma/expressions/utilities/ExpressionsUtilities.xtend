@@ -26,7 +26,7 @@ import nl.esi.comma.expressions.expression.ExpressionDivision
 import nl.esi.comma.expressions.expression.ExpressionEnumLiteral
 import nl.esi.comma.expressions.expression.ExpressionEqual
 import nl.esi.comma.expressions.expression.ExpressionFactory
-import nl.esi.comma.expressions.expression.ExpressionFnCall
+import nl.esi.comma.expressions.expression.ExpressionFunctionCall
 import nl.esi.comma.expressions.expression.ExpressionGeq
 import nl.esi.comma.expressions.expression.ExpressionGreater
 import nl.esi.comma.expressions.expression.ExpressionLeq
@@ -159,7 +159,7 @@ class ExpressionsUtilities {
             ExpressionRecord : e.type
             ExpressionRecordAccess : e.field?.type?.typeObject
             ExpressionAny : BasicTypes.getAnyType(e)
-            ExpressionFnCall : e.function.returnType.type
+            ExpressionFunctionCall : e.function.returnType.type
             ExpressionVector : e.typeAnnotation?.type?.typeObject
             ExpressionMap : e.typeAnnotation?.type?.typeObject
             ExpressionMapRW : {

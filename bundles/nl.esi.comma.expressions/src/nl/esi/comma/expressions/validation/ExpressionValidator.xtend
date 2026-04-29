@@ -20,7 +20,7 @@ import nl.esi.comma.expressions.expression.ExpressionAnd
 import nl.esi.comma.expressions.expression.ExpressionDivision
 import nl.esi.comma.expressions.expression.ExpressionEnumLiteral
 import nl.esi.comma.expressions.expression.ExpressionEqual
-import nl.esi.comma.expressions.expression.ExpressionFnCall
+import nl.esi.comma.expressions.expression.ExpressionFunctionCall
 import nl.esi.comma.expressions.expression.ExpressionGeq
 import nl.esi.comma.expressions.expression.ExpressionGreater
 import nl.esi.comma.expressions.expression.ExpressionLeq
@@ -244,7 +244,7 @@ class ExpressionValidator extends AbstractExpressionValidator {
 						error("The element does not conform to the base type", ExpressionPackage.Literals.EXPRESSION_VECTOR__ELEMENTS, e.elements.indexOf(el))
 				}
 			}
-            ExpressionFnCall: {
+            ExpressionFunctionCall: {
                 if (e.function === null || e.function.name === null) {
                     error('''Function declaration not found. Name or number of args («e.args.size») is wrong''', null)
                     return
@@ -257,7 +257,7 @@ class ExpressionValidator extends AbstractExpressionValidator {
                         val argType = typeOf(e.args.get(i))
                         if (!subTypeOf(argType, paramType)) {
                             error('''Function «e.function.name» expects argument «i + 1» to be of type «paramType.typeName».''',
-                                ExpressionPackage.Literals.EXPRESSION_FN_CALL__ARGS, i)
+                                ExpressionPackage.Literals.EXPRESSION_FUNCTION_CALL__ARGS, i)
                         }
                     }
                 }

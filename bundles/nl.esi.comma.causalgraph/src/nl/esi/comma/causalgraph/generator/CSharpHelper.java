@@ -34,7 +34,7 @@ import nl.esi.comma.expressions.expression.ExpressionConstantString;
 import nl.esi.comma.expressions.expression.ExpressionDivision;
 import nl.esi.comma.expressions.expression.ExpressionEnumLiteral;
 import nl.esi.comma.expressions.expression.ExpressionEqual;
-import nl.esi.comma.expressions.expression.ExpressionFnCall;
+import nl.esi.comma.expressions.expression.ExpressionFunctionCall;
 import nl.esi.comma.expressions.expression.ExpressionGeq;
 import nl.esi.comma.expressions.expression.ExpressionGreater;
 import nl.esi.comma.expressions.expression.ExpressionLeq;
@@ -178,8 +178,8 @@ class CSharpHelper {
 			ExpressionBracket e = (ExpressionBracket) expression;
 			//return expression(e.getSub(), variablePrefix);
 			return String.format("(%s)", expression(e.getSub(), variablePrefix));
-		} else if (expression instanceof ExpressionFnCall) {
-			ExpressionFnCall e = (ExpressionFnCall) expression;
+		} else if (expression instanceof ExpressionFunctionCall) {
+			ExpressionFunctionCall e = (ExpressionFunctionCall) expression;
 			String str = new String();
 			String fnName = e.getFunction().getName();
 			if (fnName.equals("add")) {

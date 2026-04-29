@@ -128,11 +128,11 @@ ExpressionLevel9 returns Expression:
 	ExpressionVariable |
 	ExpressionRecord |
 	ExpressionAny |
-    ExpressionFnCall |
+    ExpressionFunctionCall |
 	ExpressionTypeAnnotated
 ;
 
-ExpressionFnCall: 
+ExpressionFunctionCall: 
     ('call')? function = [FunctionDecl|ID] '(' (args += Expression (',' args += Expression)*)? ')'
 ;
 

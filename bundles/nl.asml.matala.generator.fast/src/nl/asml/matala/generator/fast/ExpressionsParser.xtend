@@ -28,7 +28,7 @@ import nl.esi.comma.expressions.expression.ExpressionConstantString
 import nl.esi.comma.expressions.expression.ExpressionDivision
 import nl.esi.comma.expressions.expression.ExpressionEnumLiteral
 import nl.esi.comma.expressions.expression.ExpressionEqual
-import nl.esi.comma.expressions.expression.ExpressionFnCall
+import nl.esi.comma.expressions.expression.ExpressionFunctionCall
 import nl.esi.comma.expressions.expression.ExpressionGeq
 import nl.esi.comma.expressions.expression.ExpressionGreater
 import nl.esi.comma.expressions.expression.ExpressionLeq
@@ -220,7 +220,7 @@ class ExpressionsParser {
 	'''«expr.value»'''	
 
 
-    def static dispatch CharSequence generateExpression(ExpressionFnCall expr, CharSequence ref)   {
+    def static dispatch CharSequence generateExpression(ExpressionFunctionCall expr, CharSequence ref)   {
         val fnName = expr.function.name
         if(fnName.equals('size')) 
             return '''(«generateExpression(expr.args.get(0), ref)».length)'''

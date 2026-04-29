@@ -33,7 +33,7 @@ import nl.esi.comma.expressions.expression.ExpressionConstantString;
 import nl.esi.comma.expressions.expression.ExpressionDivision;
 import nl.esi.comma.expressions.expression.ExpressionEnumLiteral;
 import nl.esi.comma.expressions.expression.ExpressionEqual;
-import nl.esi.comma.expressions.expression.ExpressionFnCall;
+import nl.esi.comma.expressions.expression.ExpressionFunctionCall;
 import nl.esi.comma.expressions.expression.ExpressionGeq;
 import nl.esi.comma.expressions.expression.ExpressionGreater;
 import nl.esi.comma.expressions.expression.ExpressionLeq;
@@ -172,7 +172,7 @@ class SnakesHelper {
 			return expression(e.getSub(), variablePrefix);
 		} else if (expression instanceof ExpressionBracket e) {
 			return String.format("(%s)", expression(e.getSub(), variablePrefix));
-		} else if (expression instanceof ExpressionFnCall e) {
+		} else if (expression instanceof ExpressionFunctionCall e) {
 			var fnName = e.getFunction().getName();
 			if (fnName.equals("add")) {
 				return String.format("%s + [%s]", expression(e.getArgs().get(0), variablePrefix), expression(e.getArgs().get(1), variablePrefix));

@@ -57,7 +57,7 @@ DefaultExpressionFunctions (Default implementations)
 
 - `getFunctions()` - Returns Map<String, List<Method>> of all registered functions
 - `hasFunction(String name)` - Checks if a function with the given name exists
-- `invokeFunction(ExpressionFnCall functionCall, IEvaluationContext context)` - Invokes matching function and returns result as an Expression
+- `invokeFunction(ExpressionFunctionCall functionCall, IEvaluationContext context)` - Invokes matching function and returns result as an Expression
 
 **Integration**:
 

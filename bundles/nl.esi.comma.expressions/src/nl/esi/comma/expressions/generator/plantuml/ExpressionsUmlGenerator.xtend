@@ -23,7 +23,7 @@ import nl.esi.comma.expressions.expression.ExpressionConstantString
 import nl.esi.comma.expressions.expression.ExpressionDivision
 import nl.esi.comma.expressions.expression.ExpressionEnumLiteral
 import nl.esi.comma.expressions.expression.ExpressionEqual
-import nl.esi.comma.expressions.expression.ExpressionFnCall
+import nl.esi.comma.expressions.expression.ExpressionFunctionCall
 import nl.esi.comma.expressions.expression.ExpressionGeq
 import nl.esi.comma.expressions.expression.ExpressionGreater
 import nl.esi.comma.expressions.expression.ExpressionLeq
@@ -150,7 +150,7 @@ class ExpressionsUmlGenerator extends CommaGenerator{
     def dispatch CharSequence generateExpression(ExpressionMapRW expr)
     '''«generateExpression(expr.map)»[«generateExpression(expr.key)»«IF expr.value !== null»->«generateExpression(expr.value)»«ENDIF»]'''
     
-    def dispatch CharSequence generateExpression(ExpressionFnCall expr)
+    def dispatch CharSequence generateExpression(ExpressionFunctionCall expr)
     '''call «expr.function.name»(«FOR a : expr.args SEPARATOR ', '»«generateExpression(a)»«ENDFOR»)'''
     
 }

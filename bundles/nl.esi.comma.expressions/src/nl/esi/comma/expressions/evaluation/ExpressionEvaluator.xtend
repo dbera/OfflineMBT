@@ -27,7 +27,7 @@ import nl.esi.comma.expressions.expression.ExpressionDivision
 import nl.esi.comma.expressions.expression.ExpressionEnumLiteral
 import nl.esi.comma.expressions.expression.ExpressionEqual
 import nl.esi.comma.expressions.expression.ExpressionFactory
-import nl.esi.comma.expressions.expression.ExpressionFnCall
+import nl.esi.comma.expressions.expression.ExpressionFunctionCall
 import nl.esi.comma.expressions.expression.ExpressionGeq
 import nl.esi.comma.expressions.expression.ExpressionGreater
 import nl.esi.comma.expressions.expression.ExpressionLeq
@@ -165,7 +165,7 @@ class ExpressionEvaluator {
         }
     }
 
-    protected dispatch def Expression doEvaluate(ExpressionFnCall expression, IEvaluationContext context) {
+    protected dispatch def Expression doEvaluate(ExpressionFunctionCall expression, IEvaluationContext context) {
         try {
             return functionsRegistry.invokeFunction(expression, context);
         }
@@ -285,7 +285,7 @@ class ExpressionEvaluator {
             ExpressionVariable,
             ExpressionRecord,
             ExpressionAny,
-            ExpressionFnCall,
+            ExpressionFunctionCall,
             ExpressionVector,
             ExpressionMap,
             ExpressionBracket: expression.sub

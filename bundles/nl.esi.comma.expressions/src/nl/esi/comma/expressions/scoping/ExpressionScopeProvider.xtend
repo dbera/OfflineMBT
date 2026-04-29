@@ -17,7 +17,7 @@ package nl.esi.comma.expressions.scoping
 
 import nl.esi.comma.expressions.expression.ExpressionBinary
 import nl.esi.comma.expressions.expression.ExpressionEnumLiteral
-import nl.esi.comma.expressions.expression.ExpressionFnCall
+import nl.esi.comma.expressions.expression.ExpressionFunctionCall
 import nl.esi.comma.expressions.expression.ExpressionPackage
 import nl.esi.comma.expressions.expression.ExpressionRecord
 import nl.esi.comma.expressions.expression.ExpressionRecordAccess
@@ -62,7 +62,7 @@ class ExpressionScopeProvider extends AbstractExpressionScopeProvider {
                 val rec = context.eContainer
                 return rec instanceof ExpressionRecord ? scopeFor(TypeUtilities::getAllFields(rec.type)) : IScope.NULLSCOPE
             }
-            ExpressionFnCall case reference == ExpressionPackage.Literals.EXPRESSION_FN_CALL__FUNCTION: {
+            ExpressionFunctionCall case reference == ExpressionPackage.Literals.EXPRESSION_FUNCTION_CALL__FUNCTION: {
                 // Use custom scope that implements three-phase matching:
                 // 1. Exact type match (arg count + types)
                 // 2. Size match (arg count only - for better error messages)
