@@ -403,4 +403,158 @@ class DefaultExpressionFunctionsTest extends ExpressionEvaluatorTestBase {
         ''')
     }
 
+    // -------------------------------------------------------------------------
+    // Side-effect-free behavior tests — verify original vectors/maps are NOT modified
+    // -------------------------------------------------------------------------
+
+    @Test
+    def void call_set_isSideEffectFree() {
+        assertEval('''
+            «TYPES»
+            int[] original = <int[]> [10, 20, 30]
+            int[] result = <int[]> [10, 42, 30]
+        ''', '''
+            «TYPES»
+            int[] original = <int[]> [10, 20, 30]
+            int[] result = call set(original, 1, 42)
+        ''')
+    }
+
+    @Test
+    def void call_at_isSideEffectFree() {
+        assertEval('''
+            «TYPES»
+            int[] original = <int[]> [10, 20, 30]
+            int[] result = <int[]> [10, 99, 30]
+        ''', '''
+            «TYPES»
+            int[] original = <int[]> [10, 20, 30]
+            int[] result = call at(original, 1, 99)
+        ''')
+    }
+
+    @Test
+    def void call_deleteKey_isSideEffectFree() {
+        assertEval('''
+            «TYPES»
+            T t = T { ti2s = <map<int, string>> { 1 -> "one", 2 -> "two" } }
+            map<int, string> original = <map<int, string>> { 1 -> "one", 2 -> "two" }
+            map<int, string> result = <map<int, string>> { 2 -> "two" }
+        ''', '''
+            «TYPES»
+            T t = T { ti2s = <map<int, string>> { 1 -> "one", 2 -> "two" } }
+            map<int, string> original = <map<int, string>> { 1 -> "one", 2 -> "two" }
+            map<int, string> result = call deleteKey(original, 1)
+        ''')
+    }
+
+    @Test
+    def void call_concat_isSideEffectFree() {
+        assertEval('''
+            «TYPES»
+            int[] vec1 = <int[]> [1, 2]
+            int[] vec2 = <int[]> [3, 4]
+            int[] result = <int[]> [1, 2, 3, 4]
+        ''', '''
+            «TYPES»
+            int[] vec1 = <int[]> [1, 2]
+            int[] vec2 = <int[]> [3, 4]
+            int[] result = call concat(vec1, vec2)
+        ''')
+    }
+
+    @Test
+    def void call_add_isSideEffectFree() {
+        assertEval('''
+            «TYPES»
+            int[] original = <int[]> [1, 2]
+            int[] result = <int[]> [1, 2, 3]
+        ''', '''
+            «TYPES»
+            int[] original = <int[]> [1, 2]
+            int[] result = call add(original, 3)
+        ''')
+    }
+
+    @Test
+    def void call_set_chainedCallsDoNotAffectEachOther() {
+        assertEval('''
+            «TYPES»
+            int[] original = <int[]> [1, 2, 3]
+            int[] set1 = <int[]> [99, 2, 3]
+            int[] set2 = <int[]> [1, 99, 3]
+        ''', '''
+            «TYPES»
+            int[] original = <int[]> [1, 2, 3]
+            int[] set1 = call set(original, 0, 99)
+            int[] set2 = call set(original, 1, 99)
+        ''')
+    }
+
+    @Test
+    def void call_deleteKey_multipleDeletesFromCopyDoNotAffectOriginal() {
+        assertEval('''
+            «TYPES»
+            T t = T { ti2s = <map<int, string>> { 1 -> "one", 2 -> "two", 3 -> "three" } }
+            map<int, string> original = <map<int, string>> { 1 -> "one", 2 -> "two", 3 -> "three" }
+            map<int, string> deleted1 = <map<int, string>> { 2 -> "two", 3 -> "three" }
+            map<int, string> deleted2 = <map<int, string>> { 1 -> "one", 2 -> "two", 3 -> "three" }
+        ''', '''
+            «TYPES»
+            T t = T { ti2s = <map<int, string>> { 1 -> "one", 2 -> "two", 3 -> "three" } }
+            map<int, string> original = <map<int, string>> { 1 -> "one", 2 -> "two", 3 -> "three" }
+            map<int, string> deleted1 = call deleteKey(original, 1)
+            map<int, string> deleted2 = original
+        ''')
+    }
+
+    @Test
+    def void call_concat_sourceVectorsUnmodified() {
+        assertEval('''
+            «TYPES»
+            int[] vec1 = <int[]> [1, 2]
+            int[] vec2 = <int[]> [3, 4]
+            int[] combined = <int[]> [1, 2, 3, 4]
+            int[] vec1After = <int[]> [1, 2]
+            int[] vec2After = <int[]> [3, 4]
+        ''', '''
+            «TYPES»
+            int[] vec1 = <int[]> [1, 2]
+            int[] vec2 = <int[]> [3, 4]
+            int[] combined = call concat(vec1, vec2)
+            int[] vec1After = vec1
+            int[] vec2After = vec2
+        ''')
+    }
+
+    @Test
+    def void call_add_sourceVectorUnmodified() {
+        assertEval('''
+            «TYPES»
+            int[] vec = <int[]> [1, 2]
+            int[] added = <int[]> [1, 2, 3]
+            int[] vecAfter = <int[]> [1, 2]
+        ''', '''
+            «TYPES»
+            int[] vec = <int[]> [1, 2]
+            int[] added = call add(vec, 3)
+            int[] vecAfter = vec
+        ''')
+    }
+
+    @Test
+    def void call_at_sourceVectorUnmodified() {
+        assertEval('''
+            «TYPES»
+            int[] vec = <int[]> [10, 20, 30]
+            int[] modified = <int[]> [10, 99, 30]
+            int[] vecAfter = <int[]> [10, 20, 30]
+        ''', '''
+            «TYPES»
+            int[] vec = <int[]> [10, 20, 30]
+            int[] modified = call at(vec, 1, 99)
+            int[] vecAfter = vec
+        ''')
+    }
+
 }
