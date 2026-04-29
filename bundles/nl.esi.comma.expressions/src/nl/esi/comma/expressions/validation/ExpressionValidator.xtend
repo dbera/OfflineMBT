@@ -43,8 +43,6 @@ import nl.esi.comma.expressions.expression.ExpressionVector
 import nl.esi.comma.expressions.expression.VariableDecl
 import nl.esi.comma.types.BasicTypes
 import nl.esi.comma.types.types.Dimension
-import nl.esi.comma.types.types.MapTypeConstructor
-import nl.esi.comma.types.types.SimpleTypeDecl
 import nl.esi.comma.types.types.TypeDecl
 import nl.esi.comma.types.types.TypeObject
 import nl.esi.comma.types.types.TypesFactory
@@ -74,11 +72,6 @@ class ExpressionValidator extends AbstractExpressionValidator {
     def checkVariableDecl(VariableDecl vd){
         val lhs = vd.variable.type.typeObject
         var rhs = typeOf(vd.expression)
-        if (lhs instanceof SimpleTypeDecl){
-            if(rhs instanceof MapTypeConstructor) {
-                rhs = rhs.valueType.typeObject
-            }
-        }
         if (rhs !== null && !subTypeOf(lhs,rhs)) {
             error('''Type mismatch: declared type '«lhs.typeName»' does not match the expected type '«rhs.typeName»' ''', ExpressionPackage.Literals.VARIABLE_DECL__VARIABLE)
         }

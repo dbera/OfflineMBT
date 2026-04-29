@@ -166,7 +166,7 @@ class ExpressionValidationTest {
         validate('''
             map<int, string> m = <map<int, string>>{1 -> "a", 2 -> "b"}
             string v = m[1]
-            string v2 = m[2 -> "c"]
+            map<int, string>  v2 = m[2 -> "c"]
         ''')
     }
 
