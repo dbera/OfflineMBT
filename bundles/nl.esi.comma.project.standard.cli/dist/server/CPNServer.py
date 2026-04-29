@@ -428,7 +428,9 @@ async def handle_markings_goto(uuid: str, payload: dict):
 # The root will serve index.html from ../web
 @app.get("/")
 async def index():
-    return serve_web("index.html")
+    response = FileResponse(os.path.join(WEB_PATH, "index.html"))
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    return response
 
 # This route handles any web files in the root directory
 @app.get("/{path:path}")
