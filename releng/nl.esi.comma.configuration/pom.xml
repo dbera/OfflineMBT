@@ -24,6 +24,10 @@
     <packaging>pom</packaging>
 
     <properties>
+        <!-- The end-user readable version number. -->
+        <!-- The default is 'dev'. Ci/CD overrides this for releases only, to e.g. v0.1, v0.1-M1, v0.1-RC1. -->
+        <version.enduser>dev</version.enduser>
+
         <release.type>latest</release.type>
 
         <java.version>21</java.version>
