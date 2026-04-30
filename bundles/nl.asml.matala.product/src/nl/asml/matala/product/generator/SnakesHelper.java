@@ -12,6 +12,8 @@
  */
 package nl.asml.matala.product.generator;
 
+import static nl.esi.xtext.common.lang.utilities.EcoreUtil3.serialize;
+
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -56,7 +58,6 @@ import nl.esi.comma.expressions.expression.ExpressionRecordAccess;
 import nl.esi.comma.expressions.expression.ExpressionSubtraction;
 import nl.esi.comma.expressions.expression.ExpressionVariable;
 import nl.esi.comma.expressions.expression.ExpressionVector;
-import nl.esi.comma.expressions.generator.ExpressionsCommaGenerator;
 import nl.esi.comma.types.types.EnumTypeDecl;
 import nl.esi.comma.types.types.MapTypeConstructor;
 import nl.esi.comma.types.types.MapTypeDecl;
@@ -317,16 +318,16 @@ class SnakesHelper {
 			// String variable = String.format("%s%s", variablePrefix.apply(a.getAssignment().getName()), a.getAssignment().getName());
 			String variable = String.format("%s", variablePrefix.apply(a.getAssignment().getName()));
 			// if(a.isSymbolic()) return String.format("%s = %s%s%s", variable, QUOTE, expression(a.getExp(), variablePrefix).replace("\"", "\\\""), QUOTE);
-			if(a.isSymbolic()) return String.format("%s = %s%s%s", variable, QUOTE, (new ExpressionsCommaGenerator()).exprToComMASyntax(a.getExp()).toString().replace("\"", "\\\""), QUOTE);
+			if(a.isSymbolic()) return String.format("%s = %s%s%s", variable, QUOTE, serialize(a.getExp()).toString().replace("\"", "\\\""), QUOTE);
 			else return String.format("%s = %s", variable, expression(a.getExp(), variablePrefix));
 		} else if (action instanceof RecordFieldAssignmentAction) {
 			RecordFieldAssignmentAction a = (RecordFieldAssignmentAction) action;
 			ExpressionRecordAccess access = (ExpressionRecordAccess) a.getFieldAccess();
 			String QUOTE = "\"";
 			if(a.isSymbolic()) {
-				String record = (new ExpressionsCommaGenerator()).exprToComMASyntax(access.getRecord()).toString();
+				String record = serialize(access.getRecord()).toString();
 				String field = access.getField().getName();
-				String value = (new ExpressionsCommaGenerator()).exprToComMASyntax(a.getExp()).toString();
+				String value = serialize(a.getExp()).toString();
 				return String.format("%s.%s = %s%s%s", record, field, QUOTE, value.replace("\"", "\\\""), QUOTE);
 				// return QUOTE + (new ActionsUmlGenerator()).generateAction(a).toString() + QUOTE;
 			} else {
@@ -369,14 +370,14 @@ class SnakesHelper {
 			AssignmentAction a = (AssignmentAction) action;
 			String QUOTE = "\"";
 			String variable = String.format("%s", variablePrefix.apply(a.getAssignment().getName()));
-			return String.format("%s = %s%s%s", variable, QUOTE, (new ExpressionsCommaGenerator()).exprToComMASyntax(a.getExp()).toString(), QUOTE); //.replace("\"", "\\\"")
+			return String.format("%s = %s%s%s", variable, QUOTE, serialize(a.getExp()).toString(), QUOTE); //.replace("\"", "\\\"")
 		} else if (action instanceof RecordFieldAssignmentAction) {
 			RecordFieldAssignmentAction a = (RecordFieldAssignmentAction) action;
 			ExpressionRecordAccess access = (ExpressionRecordAccess) a.getFieldAccess();
 			String QUOTE = "\"";
-			String record = (new ExpressionsCommaGenerator()).exprToComMASyntax(access.getRecord()).toString();
+			String record = serialize(access.getRecord()).toString();
 			String field = access.getField().getName();
-			String value = (new ExpressionsCommaGenerator()).exprToComMASyntax(a.getExp()).toString();
+			String value = serialize(a.getExp()).toString();
 			return String.format("%s.%s = %s%s%s", record, field, QUOTE, value, QUOTE); //.replace("\"", "\\\"")
 		} else if(action instanceof IfAction) {
 			var txt = new String();

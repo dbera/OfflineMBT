@@ -35,6 +35,9 @@ import nl.esi.comma.types.types.VectorTypeDecl
 import nl.esi.xtext.common.lang.base.ModelContainer
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.emf.ecore.util.EcoreUtil
+import org.eclipse.emf.ecore.EObject
+import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.serialize
+import nl.esi.comma.types.types.RecordFieldKind
 
 class TypeUtilities {
 	/*
@@ -392,4 +395,28 @@ class TypeUtilities {
         val suffix = '.' + fileExtension.toLowerCase
         return res.imports.filter[importURI.toLowerCase.endsWith(suffix)]
     }
+    
+    def static CharSequence generateDefaultValue(EObject t) {
+        switch (t) {
+            TypeReference:
+                generateDefaultValue(t.type)
+            SimpleTypeDecl: {
+                if(t.name.equals("int")) return '''0'''
+                if(t.name.equals("real")) return '''0.0'''
+                if(t.name.equals("bool")) return '''true'''
+                if(t.name.equals("string")) return '''""'''
+                ""
+            }
+            EnumTypeDecl:
+                serialize(t) + "::" + t.literals.get(0).name
+            RecordTypeDecl: '''«serialize(t)»{«FOR f : TypeUtilities::getAllFields(t).reject[kind == RecordFieldKind::SYMBOLIC] SEPARATOR ', '»«f.name» = «generateDefaultValue(f.type)»«ENDFOR»}'''
+            VectorTypeDecl: '''<«serialize(t)»>[]'''
+            VectorTypeConstructor: '''<«serialize(t)»>[]'''
+            MapTypeDecl: '''<«serialize(t)»>{}'''
+            MapTypeConstructor: '''<«serialize(t)»>{}'''
+            default:
+                ""
+        }
+    }
+    
 }
