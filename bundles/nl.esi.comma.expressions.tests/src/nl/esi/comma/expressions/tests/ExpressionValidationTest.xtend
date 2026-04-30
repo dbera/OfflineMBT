@@ -130,7 +130,7 @@ class ExpressionValidationTest {
         validate('''
             function int sum(int[] v)
             int[] v = <int[]>[1, 2, 3]
-            int s1 = call sum(v)
+            int s1 = sum(v)
             int s2 = range(1, 10, 2)
         ''')
     }
@@ -156,7 +156,7 @@ class ExpressionValidationTest {
             record Person { string name, int age }
             int[] numbers = <int[]>[1, 2, 3]
             Person p = Person{name = "Alice", age = 30}
-            int n = call get(numbers, 0)
+            int n = get(numbers, 0)
             string name = p.name
         ''')
     }

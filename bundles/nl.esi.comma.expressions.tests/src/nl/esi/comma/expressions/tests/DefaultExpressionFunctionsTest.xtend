@@ -149,7 +149,7 @@ class DefaultExpressionFunctionsTest extends ExpressionEvaluatorTestBase {
             bool result = true
         ''', '''
             «TYPES»
-            bool result = call isEmpty(<int[]> [])
+            bool result = isEmpty(<int[]> [])
         ''')
     }
 
@@ -160,7 +160,7 @@ class DefaultExpressionFunctionsTest extends ExpressionEvaluatorTestBase {
             bool result = false
         ''', '''
             «TYPES»
-            bool result = call isEmpty(<int[]> [1, 2, 3])
+            bool result = isEmpty(<int[]> [1, 2, 3])
         ''')
     }
 
@@ -171,7 +171,7 @@ class DefaultExpressionFunctionsTest extends ExpressionEvaluatorTestBase {
             int result = 3
         ''', '''
             «TYPES»
-            int result = call size(<int[]> [10, 20, 30])
+            int result = size(<int[]> [10, 20, 30])
         ''')
     }
 
@@ -182,7 +182,7 @@ class DefaultExpressionFunctionsTest extends ExpressionEvaluatorTestBase {
             bool result = true
         ''', '''
             «TYPES»
-            bool result = call contains(<string[]> ["a", "b", "c"], "b")
+            bool result = contains(<string[]> ["a", "b", "c"], "b")
         ''')
     }
 
@@ -193,7 +193,7 @@ class DefaultExpressionFunctionsTest extends ExpressionEvaluatorTestBase {
             bool result = false
         ''', '''
             «TYPES»
-            bool result = call contains(<string[]> ["a", "b", "c"], "z")
+            bool result = contains(<string[]> ["a", "b", "c"], "z")
         ''')
     }
 
@@ -204,7 +204,7 @@ class DefaultExpressionFunctionsTest extends ExpressionEvaluatorTestBase {
             real result = 42.0
         ''', '''
             «TYPES»
-            real result = call asReal(42)
+            real result = asReal(42)
         ''')
     }
 
@@ -215,7 +215,7 @@ class DefaultExpressionFunctionsTest extends ExpressionEvaluatorTestBase {
             int result = 7
         ''', '''
             «TYPES»
-            int result = call abs(-7)
+            int result = abs(-7)
         ''')
     }
 
@@ -226,7 +226,7 @@ class DefaultExpressionFunctionsTest extends ExpressionEvaluatorTestBase {
             real result = 3.14
         ''', '''
             «TYPES»
-            real result = call abs(-3.14)
+            real result = abs(-3.14)
         ''')
     }
 
@@ -239,7 +239,7 @@ class DefaultExpressionFunctionsTest extends ExpressionEvaluatorTestBase {
         ''', '''
             «TYPES»
             T t = T { ti2s = <map<int, string>> { 1 -> "one" } }
-            bool result = call hasKey(t.ti2s, 1)
+            bool result = hasKey(t.ti2s, 1)
         ''')
     }
 
@@ -252,7 +252,7 @@ class DefaultExpressionFunctionsTest extends ExpressionEvaluatorTestBase {
         ''', '''
             «TYPES»
             T t = T { ti2s = <map<int, string>> { 1 -> "one" } }
-            bool result = call hasKey(t.ti2s, 99)
+            bool result = hasKey(t.ti2s, 99)
         ''')
     }
 
@@ -263,7 +263,7 @@ class DefaultExpressionFunctionsTest extends ExpressionEvaluatorTestBase {
             string result = "123"
         ''', '''
             «TYPES»
-            string result = call toString(123)
+            string result = toString(123)
         ''')
     }
 
@@ -274,7 +274,7 @@ class DefaultExpressionFunctionsTest extends ExpressionEvaluatorTestBase {
             int[] result = <int[]> [0, 1, 2]
         ''', '''
             «TYPES»
-            int[] result = call range(3)
+            int[] result = range(3)
         ''')
     }
 
@@ -285,7 +285,7 @@ class DefaultExpressionFunctionsTest extends ExpressionEvaluatorTestBase {
             int[] result = <int[]> [2, 3, 4]
         ''', '''
             «TYPES»
-            int[] result = call range(2, 5)
+            int[] result = range(2, 5)
         ''')
     }
 
@@ -296,7 +296,7 @@ class DefaultExpressionFunctionsTest extends ExpressionEvaluatorTestBase {
             int[] result = <int[]> [0, 2, 4]
         ''', '''
             «TYPES»
-            int[] result = call range(0, 6, 2)
+            int[] result = range(0, 6, 2)
         ''')
     }
 
@@ -307,7 +307,7 @@ class DefaultExpressionFunctionsTest extends ExpressionEvaluatorTestBase {
             int[] result = <int[]> [1, 2, 3]
         ''', '''
             «TYPES»
-            int[] result = call add(<int[]> [1, 2], 3)
+            int[] result = add(<int[]> [1, 2], 3)
         ''')
     }
 
@@ -318,7 +318,7 @@ class DefaultExpressionFunctionsTest extends ExpressionEvaluatorTestBase {
             int[] result = <int[]> [1, 4, 7]
         ''', '''
             «TYPES»
-            int[] result = call range(1, 9, 3)
+            int[] result = range(1, 9, 3)
         ''')
     }
 
@@ -329,7 +329,7 @@ class DefaultExpressionFunctionsTest extends ExpressionEvaluatorTestBase {
             int[] result = <int[]> [5, 3, 1]
         ''', '''
             «TYPES»
-            int[] result = call range(5, 0, -2)
+            int[] result = range(5, 0, -2)
         ''')
     }
 
@@ -340,7 +340,7 @@ class DefaultExpressionFunctionsTest extends ExpressionEvaluatorTestBase {
             int result = 20
         ''', '''
             «TYPES»
-            int result = call get(<int[]> [10, 20, 30], 1)
+            int result = get(<int[]> [10, 20, 30], 1)
         ''')
     }
 
@@ -351,7 +351,7 @@ class DefaultExpressionFunctionsTest extends ExpressionEvaluatorTestBase {
             int[] result = <int[]> [10, 99, 30]
         ''', '''
             «TYPES»
-            int[] result = call at(<int[]> [10, 20, 30], 1, 99)
+            int[] result = at(<int[]> [10, 20, 30], 1, 99)
         ''')
     }
 
@@ -362,7 +362,7 @@ class DefaultExpressionFunctionsTest extends ExpressionEvaluatorTestBase {
             int[] result = <int[]> [1, 2, 3, 4]
         ''', '''
             «TYPES»
-            int[] result = call concat(<int[]> [1, 2], <int[]> [3, 4])
+            int[] result = concat(<int[]> [1, 2], <int[]> [3, 4])
         ''')
     }
 
@@ -375,7 +375,7 @@ class DefaultExpressionFunctionsTest extends ExpressionEvaluatorTestBase {
         ''', '''
             «TYPES»
             T t = T { ti2s = <map<int, string>> { 1 -> "one", 2 -> "two" } }
-            int result = call size(t.ti2s)
+            int result = size(t.ti2s)
         ''')
     }
 
@@ -388,7 +388,7 @@ class DefaultExpressionFunctionsTest extends ExpressionEvaluatorTestBase {
         ''', '''
             «TYPES»
             T t = T { ti2s = <map<int, string>> { 1 -> "one", 2 -> "two" } }
-            map<int, string> result = call deleteKey(t.ti2s, 1)
+            map<int, string> result = deleteKey(t.ti2s, 1)
         ''')
     }
 
@@ -399,7 +399,7 @@ class DefaultExpressionFunctionsTest extends ExpressionEvaluatorTestBase {
             int[] result = <int[]> [10, 42, 30]
         ''', '''
             «TYPES»
-            int[] result = call set(<int[]> [10, 20, 30], 1, 42)
+            int[] result = set(<int[]> [10, 20, 30], 1, 42)
         ''')
     }
 
@@ -416,7 +416,7 @@ class DefaultExpressionFunctionsTest extends ExpressionEvaluatorTestBase {
         ''', '''
             «TYPES»
             int[] original = <int[]> [10, 20, 30]
-            int[] result = call set(original, 1, 42)
+            int[] result = set(original, 1, 42)
         ''')
     }
 
@@ -429,7 +429,7 @@ class DefaultExpressionFunctionsTest extends ExpressionEvaluatorTestBase {
         ''', '''
             «TYPES»
             int[] original = <int[]> [10, 20, 30]
-            int[] result = call at(original, 1, 99)
+            int[] result = at(original, 1, 99)
         ''')
     }
 
@@ -444,7 +444,7 @@ class DefaultExpressionFunctionsTest extends ExpressionEvaluatorTestBase {
             «TYPES»
             T t = T { ti2s = <map<int, string>> { 1 -> "one", 2 -> "two" } }
             map<int, string> original = <map<int, string>> { 1 -> "one", 2 -> "two" }
-            map<int, string> result = call deleteKey(original, 1)
+            map<int, string> result = deleteKey(original, 1)
         ''')
     }
 
@@ -459,7 +459,7 @@ class DefaultExpressionFunctionsTest extends ExpressionEvaluatorTestBase {
             «TYPES»
             int[] vec1 = <int[]> [1, 2]
             int[] vec2 = <int[]> [3, 4]
-            int[] result = call concat(vec1, vec2)
+            int[] result = concat(vec1, vec2)
         ''')
     }
 
@@ -472,7 +472,7 @@ class DefaultExpressionFunctionsTest extends ExpressionEvaluatorTestBase {
         ''', '''
             «TYPES»
             int[] original = <int[]> [1, 2]
-            int[] result = call add(original, 3)
+            int[] result = add(original, 3)
         ''')
     }
 
@@ -486,8 +486,8 @@ class DefaultExpressionFunctionsTest extends ExpressionEvaluatorTestBase {
         ''', '''
             «TYPES»
             int[] original = <int[]> [1, 2, 3]
-            int[] set1 = call set(original, 0, 99)
-            int[] set2 = call set(original, 1, 99)
+            int[] set1 = set(original, 0, 99)
+            int[] set2 = set(original, 1, 99)
         ''')
     }
 
@@ -503,7 +503,7 @@ class DefaultExpressionFunctionsTest extends ExpressionEvaluatorTestBase {
             «TYPES»
             T t = T { ti2s = <map<int, string>> { 1 -> "one", 2 -> "two", 3 -> "three" } }
             map<int, string> original = <map<int, string>> { 1 -> "one", 2 -> "two", 3 -> "three" }
-            map<int, string> deleted1 = call deleteKey(original, 1)
+            map<int, string> deleted1 = deleteKey(original, 1)
             map<int, string> deleted2 = original
         ''')
     }
@@ -521,7 +521,7 @@ class DefaultExpressionFunctionsTest extends ExpressionEvaluatorTestBase {
             «TYPES»
             int[] vec1 = <int[]> [1, 2]
             int[] vec2 = <int[]> [3, 4]
-            int[] combined = call concat(vec1, vec2)
+            int[] combined = concat(vec1, vec2)
             int[] vec1After = vec1
             int[] vec2After = vec2
         ''')
@@ -537,7 +537,7 @@ class DefaultExpressionFunctionsTest extends ExpressionEvaluatorTestBase {
         ''', '''
             «TYPES»
             int[] vec = <int[]> [1, 2]
-            int[] added = call add(vec, 3)
+            int[] added = add(vec, 3)
             int[] vecAfter = vec
         ''')
     }
@@ -552,7 +552,7 @@ class DefaultExpressionFunctionsTest extends ExpressionEvaluatorTestBase {
         ''', '''
             «TYPES»
             int[] vec = <int[]> [10, 20, 30]
-            int[] modified = call at(vec, 1, 99)
+            int[] modified = at(vec, 1, 99)
             int[] vecAfter = vec
         ''')
     }

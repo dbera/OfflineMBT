@@ -133,7 +133,7 @@ ExpressionLevel9 returns Expression:
 ;
 
 ExpressionFunctionCall: 
-    ('call')? function = [FunctionDecl|ID] '(' (args += Expression (',' args += Expression)*)? ')'
+    function = [FunctionDecl|ID] '(' (args += Expression (',' args += Expression)*)? ')'
 ;
 
 ExpressionBracket:

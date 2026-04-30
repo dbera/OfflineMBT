@@ -34,7 +34,7 @@ class ExpressionFunctionsValidation {
     def void registeredFunction_validCall_noValidationError() {
         val result = parse('''
             int[] xs = <int[]>[]
-            bool r = call isEmpty(xs)
+            bool r = isEmpty(xs)
         ''')
         assertDoesNotThrow [EcoreUtil3.validate(result)]
     }
@@ -44,7 +44,7 @@ class ExpressionFunctionsValidation {
     def void registeredFunction_validCall_revalidate_noValidationError() {
         val result = parse('''
             int[] xs = <int[]>[]
-            bool r = call isEmpty(xs)
+            bool r = isEmpty(xs)
         ''')
         assertDoesNotThrow [EcoreUtil3.validate(result)]
         assertDoesNotThrow [EcoreUtil3.validate(result)]
@@ -53,7 +53,7 @@ class ExpressionFunctionsValidation {
     @Test
     def void registeredFunction_wrongArgCount_validationError() {
         val result = parse('''
-            int r = call size()
+            int r = size()
         ''')
         val ex = assertThrows(ValidationException) [EcoreUtil3.validate(result)]
         assertTrue(ex.message.contains('No Function size declared with 0 arguments'),
@@ -64,7 +64,7 @@ class ExpressionFunctionsValidation {
     def void registeredFunction_incompatibleArgType_validationError() {
         // 'isEmpty' expects a vector; bool has no converter to ExpressionVector.
         val result = parse('''
-            bool r = call isEmpty(true)
+            bool r = isEmpty(true)
         ''')
         val ex = assertThrows(ValidationException) [EcoreUtil3.validate(result)]
         assertTrue(ex.message.contains('Function isEmpty expects argument 1 to be of type any[]'),
@@ -75,7 +75,7 @@ class ExpressionFunctionsValidation {
     def void unregisteredFunction_validDeclaredCall_noValidationError() {
         val result = parse('''
             function bool myFn(bool x)
-            bool r = call myFn(true)
+            bool r = myFn(true)
         ''')
         assertDoesNotThrow [EcoreUtil3.validate(result)]
     }
@@ -84,7 +84,7 @@ class ExpressionFunctionsValidation {
     def void unregisteredFunction_wrongArgCount_validationError() {
         val result = parse('''
             function bool myFn(bool x)
-            bool r = call myFn()
+            bool r = myFn()
         ''')
         val ex = assertThrows(ValidationException) [EcoreUtil3.validate(result)]
         assertTrue(ex.message.contains('No Function myFn declared with 0 arguments'),
@@ -95,7 +95,7 @@ class ExpressionFunctionsValidation {
     def void unregisteredFunction_wrongArgType_validationError() {
         val result = parse('''
             function bool myFn(int x)
-            bool r = call myFn(true)
+            bool r = myFn(true)
         ''')
         val ex = assertThrows(ValidationException) [EcoreUtil3.validate(result)]
         assertTrue(ex.message.contains('Function myFn expects argument 1 to be of type int.'),
@@ -112,7 +112,7 @@ class ExpressionFunctionsValidation {
             function int overloaded()
             function int overloaded(int x)
             function int overloaded(int x, int y)
-            int r = call overloaded()
+            int r = overloaded()
         ''')
         assertDoesNotThrow [EcoreUtil3.validate(result)]
     }
@@ -123,7 +123,7 @@ class ExpressionFunctionsValidation {
             function int overloaded()
             function int overloaded(int x)
             function int overloaded(int x, int y)
-            int r = call overloaded(5)
+            int r = overloaded(5)
         ''')
         assertDoesNotThrow [EcoreUtil3.validate(result)]
     }
@@ -134,7 +134,7 @@ class ExpressionFunctionsValidation {
             function int overloaded()
             function int overloaded(int x)
             function int overloaded(int x, int y)
-            int r = call overloaded(5, 10)
+            int r = overloaded(5, 10)
         ''')
         assertDoesNotThrow [EcoreUtil3.validate(result)]
     }
@@ -145,7 +145,7 @@ class ExpressionFunctionsValidation {
             function int overloaded()
             function int overloaded(int x)
             function int overloaded(int x, int y)
-            int r = call overloaded(5, 10, 15)
+            int r = overloaded(5, 10, 15)
         ''')
         val ex = assertThrows(ValidationException) [EcoreUtil3.validate(result)]
         assertTrue(ex.message.contains('No Function overloaded declared with 3 arguments'),
@@ -158,9 +158,9 @@ class ExpressionFunctionsValidation {
             function int compute(int x)
             function bool compute(bool x)
             function string compute(string x)
-            int r1 = call compute(5)
-            bool r2 = call compute(true)
-            string r3 = call compute("test")
+            int r1 = compute(5)
+            bool r2 = compute(true)
+            string r3 = compute("test")
         ''')
         assertDoesNotThrow [EcoreUtil3.validate(result)]
     }
@@ -172,10 +172,10 @@ class ExpressionFunctionsValidation {
             function int calc(int a)
             function int calc(int a, int b)
             function int calc(int a, int b, int c)
-            int r0 = call calc()
-            int r1 = call calc(1)
-            int r2 = call calc(1, 2)
-            int r3 = call calc(1, 2, 3)
+            int r0 = calc()
+            int r1 = calc(1)
+            int r2 = calc(1, 2)
+            int r3 = calc(1, 2, 3)
         ''')
         assertDoesNotThrow [EcoreUtil3.validate(result)]
     }
@@ -186,7 +186,7 @@ class ExpressionFunctionsValidation {
         val result = parse('''
             function int process(int x)
             function int process(int x, int y, int z)
-            int r = call process(1, 2)
+            int r = process(1, 2)
         ''')
         val ex = assertThrows(ValidationException) [EcoreUtil3.validate(result)]
         assertTrue(ex.message.contains('No Function process declared with 2 arguments'),
@@ -198,7 +198,7 @@ class ExpressionFunctionsValidation {
         val result = parse('''
             function int transform(int x)
             function bool transform(bool x)
-            int r = call transform(true)
+            int r = transform(true)
         ''')
         val ex = assertThrows(ValidationException) [EcoreUtil3.validate(result)]
         assertTrue(ex.message.contains('''Type mismatch: declared type 'int' does not match the expected type 'bool' '''),
@@ -214,7 +214,7 @@ class ExpressionFunctionsValidation {
             function int sum(int a, int b)
             function int sum(int a, int b, int c)
             function int sum(int a, int b, int c, int d)
-            int r = call sum(1, 2, 3)
+            int r = sum(1, 2, 3)
         ''')
         assertDoesNotThrow [EcoreUtil3.validate(result)]
     }
