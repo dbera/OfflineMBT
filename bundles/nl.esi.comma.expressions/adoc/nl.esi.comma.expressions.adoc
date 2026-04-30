@@ -53,7 +53,7 @@ bool flag = true
 === Operators
 
 * Logical: `and`, `or`, `not` (case-insensitive: `AND`/`and`, `OR`/`or`, `NOT`/`not`)
-* Comparison: `==`, `!=`, `<`, `<=`, `>`, `>=`
+* Comparison: `==`, `!=`, `<`, `&lt;=`, `>`, `>=`
 * Arithmetic: `+`, `-`, `*`, `/`, `mod`, `^`, `max`, `min`
 * Postfix: record field access `record.field`, map access `map[key]`, map write `map[key -> value]`
 
@@ -76,18 +76,17 @@ function bool isValid(string input)
 
 NOTE: Function declarations define the signature only. Some implementations might be provided by a registered Java function library. See <<how-to-add-an-expression-function-library>> for details.
 
-TIP: The following functions are provided by default and do not need to be declared: `isEmpty`, `size`, `contains`, `add`, `concat`, `at`, `get`, `hasKey`, `deleteKey`, `asReal`, `abs`, `toString`, `range`.
+NOTE: Functions added via <<how-to-add-an-expression-function-library>> don't need to be declared.
 
 === Function Calls
 
-Declared Functions can be called with or without call in front of the function name:
+Declared Functions can be called as follows:
 
-* `call function_name(args)`
 * `function_name(args)`
 
 ....
-call sum(v)           // calls function explicitely declared in the model
-range(1, 10, 2)       // calls a default function
+int total = sum(v)             // calls function explicitely declared in the model
+int numbers = range(1, 10, 2)  // calls a default function
 ....
 
 === Parentheses
@@ -117,7 +116,7 @@ Example of wildcard usage:
 bool result = (someValue == *)
 ....
 
-=== Examples
+=== Expression Examples
 
 ....
 int x = 5 + 3 * 2           // multiplication operator
@@ -132,7 +131,7 @@ Vectors and records can be constructed and accessed as follows:
 ....
 int[] numbers = <int[]>[1, 2, 3]
 Person p = Person{name = "Alice", age = 30}
-int n = call get(numbers, 0)
+int n = get(numbers, 0)
 string name = p.name
 ....
 
@@ -160,7 +159,7 @@ Operators are evaluated in the following order (highest to lowest):
 . Power: `^` (right-associative)
 . Multiplicative: `*`, `/`, `mod`, `max`, `min` (left-associative)
 . Additive: `+`, `-` (left-associative)
-. Comparison: `<`, `<=`, `>`, `>=` (left-associative)
+. Comparison: `<`, `&lt;=`, `>`, `>=` (left-associative)
 . Equality: `==`, `!=` (left-associative)
 . Logical: `and`, `or` (left-associative, lowest precedence)
 

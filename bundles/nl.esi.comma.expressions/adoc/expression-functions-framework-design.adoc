@@ -23,22 +23,12 @@ The Expression Functions Framework provides an extensible mechanism to register 
 
 The framework consists of the following key components that work together to provide function registration and discovery:
 
-[source]
-----
-User Library Class
-    ↓
-ExpressionFunctionLibrariesProvider
-    ↓
-ExpressionFunctionsRegistry
-    ↓
-LibraryToExprGenerator (Auto-generates Xtext grammar)
-    ↓
-InMemoryExprResourceRegistry (Stores in-memory)
-    ↓
-ExpressionsImportUriGlobalScopeProvider (Makes available)
-    ↓
-DefaultExpressionFunctions (Default implementations)
-----
+* <<ExpressionFunctionLibrariesProvider>> - Extension point for contributing custom function libraries
+* <<ExpressionFunctionsRegistry>> - Central registry managing registered function libraries
+* <<LibraryToExprGenerator>> - Auto-generates Xtext grammar from function libraries
+* <<InMemoryExprResourceRegistry>> - Stores generated artifacts in-memory
+* <<ExpressionsImportUriGlobalScopeProvider>> - Makes functions available through scoping
+* <<DefaultExpressionFunctions>> - Default built-in function implementations
 
 == Component Details
 

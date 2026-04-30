@@ -12,13 +12,13 @@
 ////
 
 [[how-to-add-an-expression-function-library]]
-== How to Add an Expression Function Library
+= How to Add an Expression Function Library
 
 A library is a plain Java class whose `public` methods (static or instance) are automatically exposed as callable functions in `.expr` models. This guide describes how to add custom function libraries and converters to the Expression Functions Framework.
 
-=== Workflow: Registration to Usage
+== Workflow: Registration to Usage
 
-==== Step 1: Define Function Library
+=== Step 1: Define Function Library
 
 Create a Java class with `public` methods — static or instance:
 
@@ -27,7 +27,7 @@ Create a Java class with `public` methods — static or instance:
 class SomeLibrary {    
     // Static: no instance needed
     /** Returns the element at {@code index}, or {@code null} if out of bounds. */
-    public static Expression get(ExpressionVector vector, @PositiveOrZero long index) {
+    public static Expression get(ExpressionVector vector, long index) {
         if (index >= 0 && index < vector.getElements().size()) {
             return vector.getElements().get((int) index);
         }
@@ -39,8 +39,8 @@ class SomeLibrary {
     public Object sum(List<Object> list) {
         int sum = 0;
         for (Object obj : list) {
-            if (obj instanceof Integer) {
-                sum += (Integer) obj;
+            if (obj instanceof Integer iObj) {
+                sum += iObj;
             }
         }
         return sum;
@@ -48,7 +48,7 @@ class SomeLibrary {
 }
 ----
 
-==== Step 2: Add Library
+=== Step 2: Add Library
 
 Extends `ExpressionFunctionLibrariesProvider` to contribute the library:
 
@@ -62,7 +62,7 @@ public class MyFunctionsProvider extends ExpressionFunctionLibrariesProvider {
 }
 ----
 
-==== Step 3: Bind the provider in your RuntimeModule
+=== Step 3: Bind the provider in your RuntimeModule
 
 Override `bindIExpressionFunctionLibrariesProvider` in your language's RuntimeModule to return the custom provider:
 
@@ -75,17 +75,17 @@ def Class<? extends IExpressionFunctionLibrariesProvider> bindIExpressionFunctio
 
 The framework then automatically registers the libraries: it generates in-memory `.expr` declarations and makes them visible in the global scope — no explicit `import` is needed.
 
-==== Step 4: Usage
+=== Step 4: Usage
 
 Functions become available in expressions. The `call` keyword is optional. :
 
 [source]
 ----
-int[] v  = call range(1, 10, 2)   // range is available in the default library
-int   s  = call sum(v)            // Uses newly registered function
+int[] v  = range(1, 10, 2)   // range is available in the default library
+int   s  = sum(v)            // Uses newly registered function
 ----
 
-=== Providing instances for non-static methods
+== Providing instances for non-static methods
 
 Static methods are invoked directly. For instance methods, a receiver object must be provided at evaluation time via `IEvaluationContext.getLibraryFunctionObjects()`.
 
@@ -108,16 +108,34 @@ IEvaluationContext ctx = new IEvaluationContext() {
 
 At invocation time, `ExpressionFunctionsRegistry` searches the list for the first object whose class is assignable to the method's declaring class and uses it as the receiver. If no matching instance is found for a non-static method, an `IllegalStateException` is thrown.
 
-=== Library class constraints
+== Library class constraints
 
 Methods exposed as functions must be::
   `public` — non-public methods are ignored.
   Both `static` and instance methods are supported.
 
 Return type must not be `void`::
-  Void methods are skipped during generation because expression functions must produce a value.
+  Expression functions are handled side-effect free by the framework and always produce a value. Functions are pure computations that create a new result based on their inputs. Void methods cannot satisfy this requirement because they do not return a new value, so they are skipped during generation.
 
-Supported parameter and return types::
+=== Unsupported Functions and Logging
+
+When functions fail to register (e.g., non-public method or duplicate signature), the framework logs an error message but continues initialization to ensure partial function library availability.
+
+**Registration Errors** are logged in the following format:
+
+----
+Failed to register function '<class.name>.<signature>': <error reason>
+----
+
+Examples:
+
+- Non-public method: `Failed to register function 'MyLibrary.getValue(int)': Function must be public`
+- Duplicate signature: `Failed to register function 'MyLibrary.process(String)': Function with same signature already exists: OtherLibrary.process(String)`
+- Void return: `Failed to register function 'MyLibrary.doSomething()': Function must return a value`
+
+These errors do not prevent other functions from being registered.
+
+== Supported parameter and return types
 +
 [cols="1,1", options="header"]
 |===
@@ -166,7 +184,7 @@ Avoid generics with unchecked casts::
 Parameter names::
   If the library is compiled with the `-parameters` flag (configured in both `pom.xml` and the Eclipse setup), the real parameter names appear (prefixed with `_`) in the generated `.expr` declarations. Otherwise, synthetic names (`p0`, `p1`, …) are used.
 
-=== Adding custom converters
+== Adding custom converters
 
 If your library uses custom Java types as parameters or return values, you may need to provide a custom converter:
 
