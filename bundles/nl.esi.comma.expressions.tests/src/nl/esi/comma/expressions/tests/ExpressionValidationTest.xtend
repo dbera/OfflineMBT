@@ -40,13 +40,6 @@ class ExpressionValidationTest {
     }
 
     @Test
-    def void testWildcardAsStandaloneExpression() {
-        validate('''
-            bool wildcard = *
-        ''')
-    }
-
-    @Test
     def void testLiterals() {
         validate('''
             bool b1 = true

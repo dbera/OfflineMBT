@@ -14,7 +14,6 @@ package nl.esi.comma.expressions.functions.tests;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -24,10 +23,10 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 
-import nl.esi.comma.expressions.functions.DefaultExpressionFunctions;
 import nl.esi.comma.expressions.generator.LibraryToExprGenerator;
 import nl.esi.comma.expressions.expression.Expression;
 import nl.esi.comma.expressions.expression.ExpressionMap;
@@ -36,13 +35,23 @@ import nl.esi.comma.expressions.expression.ExpressionVector;
 /**
  * Unit tests for {@link LibraryToExprGenerator}.
  *
+ * <p>Tests the two core capabilities:
+ * <ol>
+ *   <li>{@link LibraryToExprGenerator#generate(java.lang.reflect.Method)} - 
+ *       converts a method to a function declaration
+ *   </li>
+ *   <li>{@link LibraryToExprGenerator#getCustomTypes(java.lang.reflect.Method)} - 
+ *       extracts custom types from a method signature
+ *   </li>
+ * </ol>
+ * 
  * <p>These are plain JUnit 5 tests — no Xtext injection needed because the
  * generator works purely through reflection and string building.
  */
 class LibraryToExprGeneratorTest {
 
     // =========================================================================
-    // Type-mapping tests  (toExprType)
+    // Type-mapping tests (toExprType)
     // =========================================================================
 
     @Test
@@ -101,6 +110,7 @@ class LibraryToExprGeneratorTest {
     void typeMapping_genericMapTypes() throws Exception {
         // Map<String, Long> → map<string, int>
         var mapStringLong = SampleLibrary.class.getMethod("mapStringLong").getGenericReturnType();
+        
         assertEquals("map<string, int>", LibraryToExprGenerator.toExprType(mapStringLong));
 
         // Map<Object, Object> → map<any, any>
@@ -118,170 +128,178 @@ class LibraryToExprGeneratorTest {
     }
 
     // =========================================================================
-    // Generation tests — DefaultExpressionFunctions
+    // generate(Method) tests — Function declaration generation
     // =========================================================================
 
     @Test
-    void generate_defaultFunctions_containsAllFunctionDeclarations() {
-        String output = LibraryToExprGenerator.generate(DefaultExpressionFunctions.class);
-        System.out.println(output);
-
-        // Every function from functions.expr must appear in the generated output
-        assertAll(
-            () -> assertTrue(output.contains("function bool isEmpty("),    "isEmpty"),
-            () -> assertTrue(output.contains("function int size("),        "size(collection)"),
-            () -> assertTrue(output.contains("function bool contains("),   "contains"),
-            () -> assertTrue(output.contains("function bool hasKey("),     "hasKey"),
-            () -> assertTrue(output.contains("function real asReal("),     "asReal"),
-            () -> assertTrue(output.contains("function string toString("), "toString"),
-            () -> assertTrue(output.contains("function bool isEmpty("),    "isEmpty"),
-            () -> assertTrue(output.contains("function any[] add("),       "add"),
-            () -> assertTrue(output.contains("function any[] at("),        "at"),
-            () -> assertTrue(output.contains("function any[] concat("),    "concat"),
-            () -> assertTrue(output.contains("function int[] range("),     "range")
-        );
+    void generate_primitiveMethod_correctDeclaration() throws Exception {
+        var method = SampleLibrary.class.getMethod("sampleBool", long.class, String.class);
+        String result = LibraryToExprGenerator.generate(method);
+        
+        assertEquals("function bool sampleBool(int p0, string p1)", result);
     }
 
     @Test
-    void generate_defaultFunctions_overloadsArePresent() {
-        String output = LibraryToExprGenerator.generate(DefaultExpressionFunctions.class);
-
-        // range has three overloads
-        long rangeCount = output.lines()
-            .filter(l -> l.startsWith("function") && l.contains(" range("))
-            .count();
-        assertEquals(3, rangeCount, "Expected 3 overloads for range");
-
-        // size has two overloads (Collection and Map)
-        long sizeCount = output.lines()
-            .filter(l -> l.startsWith("function") && l.contains(" size("))
-            .count();
-        assertEquals(2, sizeCount, "Expected 2 overloads for size");
+    void generate_genericCollectionMethod_correctDeclaration() throws Exception {
+        var method = SampleLibrary.class.getMethod("listOfLong");
+        String result = LibraryToExprGenerator.generate(method);
+        
+        assertEquals("function int[] listOfLong()", result);
     }
 
     @Test
-    void generate_defaultFunctions_headerCommentPresent() {
-        String output = LibraryToExprGenerator.generate(DefaultExpressionFunctions.class);
-        assertTrue(output.startsWith("// Generated by LibraryToExprGenerator from "));
-        assertTrue(output.contains(DefaultExpressionFunctions.class.getName()));
+    void generate_genericMapMethod_correctDeclaration() throws Exception {
+        var method = SampleLibrary.class.getMethod("mapStringLong");
+        String result = LibraryToExprGenerator.generate(method);
+        
+        assertEquals("function map<string, int> mapStringLong()", result);
     }
 
     @Test
-    void generate_defaultFunctions_onlyFunctionLines() {
-        String output = LibraryToExprGenerator.generate(DefaultExpressionFunctions.class);
+    void generate_emfTypeMethod_correctDeclaration() throws Exception {
+        var method = SampleLibrary.class.getMethod("emfVectorArg", ExpressionVector.class);
+        String result = LibraryToExprGenerator.generate(method);
+        
+        assertEquals("function any[] emfVectorArg(any[] p0)", result);
+    }
 
-        // Every non-blank, non-comment line must start with "function "
-        output.lines()
-            .filter(l -> !l.isBlank())
-            .filter(l -> !l.startsWith("//"))
-            .forEach(line ->
-                assertTrue(line.startsWith("function "),
-                    "Unexpected line in output: " + line)
-            );
+    @Test
+    void generate_customTypeMethod_correctDeclaration() throws Exception {
+        var method = SampleLibrary.class.getMethod("processUUID", UUID.class);
+        String result = LibraryToExprGenerator.generate(method);
+        
+        assertEquals("function uuid processUUID(uuid p0)", result);
+    }
+
+    @Test
+    void generate_voidMethod_returnsEmptyString() throws Exception {
+        var method = SampleLibrary.class.getMethod("voidMethod");
+        String result = LibraryToExprGenerator.generate(method);
+        
+        assertEquals("", result);
+    }
+
+    @Test
+    void generate_multipleParameters_correctDeclaration() throws Exception {
+        var method = SampleLibrary.class.getMethod("multiParam", String.class, long.class, BigDecimal.class);
+        String result = LibraryToExprGenerator.generate(method);
+        
+        assertEquals("function string multiParam(string p0, int p1, real p2)", result);
+    }
+
+    @Test
+    void generate_instanceMethod_correctDeclaration() throws Exception {
+        var method = SampleLibrary.class.getMethod("instanceMethod");
+        String result = LibraryToExprGenerator.generate(method);
+        
+        assertEquals("function string instanceMethod()", result);
     }
 
     // =========================================================================
-    // Generation tests — custom library
+    // getCustomTypes(Method) tests — Custom type extraction
     // =========================================================================
 
     @Test
-    void generate_customLibrary_correctDeclarations() {
-        String output = LibraryToExprGenerator.generate(SampleLibrary.class);
-
-        assertAll(
-            () -> assertTrue(output.contains("function int[] listOfLong("),              "listOfLong"),
-            () -> assertTrue(output.contains("function string[] listOfString("),         "listOfString"),
-            () -> assertTrue(output.contains("function map<string, int> mapStringLong("), "mapStringLong"),
-            () -> assertTrue(output.contains("function bool sampleBool("),               "sampleBool"),
-            () -> assertTrue(output.contains("function real sampleReal("),               "sampleReal"),
-            () -> assertTrue(output.contains("function string sampleString("),           "sampleString"),
-            // EMF types
-            () -> assertTrue(output.contains("function any[] emfVectorArg(any[]"),      "emfVectorArg"),
-            () -> assertTrue(output.contains("function map<any, any> emfMapArg(map<any, any>"), "emfMapArg"),
-            () -> assertTrue(output.contains("function any emfExprArg(any"),             "emfExprArg"),
-            // instance method
-            () -> assertTrue(output.contains("function string instanceMethod("),         "instanceMethod")
-        );
+    void getCustomTypes_noCustomTypes_returnsEmpty() throws Exception {
+        var method = SampleLibrary.class.getMethod("sampleBool", long.class, String.class);
+        List<String> types = LibraryToExprGenerator.getCustomTypes(method);
+        
+        assertEquals(0, types.size());
     }
 
     @Test
-    void generate_customLibrary_voidMethodIsSkipped() {
-        String output = LibraryToExprGenerator.generate(SampleLibrary.class);
-        assertFalse(output.contains("voidMethod"), "void method must not appear in output");
+    void getCustomTypes_singleCustomReturnType_returnsIt() throws Exception {
+        var method = SampleLibrary.class.getMethod("processUUID", UUID.class);
+        List<String> types = LibraryToExprGenerator.getCustomTypes(method);
+        
+        assertEquals(1, types.size());
+        assertEquals("uuid", types.get(0));
     }
 
     @Test
-    void generate_customLibrary_privateMethodIsSkipped() {
-        String output = LibraryToExprGenerator.generate(SampleLibrary.class);
-        assertFalse(output.contains("privateMethod"), "private method must not appear in output");
+    void getCustomTypes_customInParameterAndReturn_returnsDeduped() throws Exception {
+        var method = SampleLibrary.class.getMethod("uuidToString", UUID.class);
+        List<String> types = LibraryToExprGenerator.getCustomTypes(method);
+        
+        assertEquals(1, types.size());
+        assertEquals("uuid", types.get(0));
     }
 
     @Test
-    void generate_customLibrary_instanceMethodIsIncluded() {
-        String output = LibraryToExprGenerator.generate(SampleLibrary.class);
-        assertTrue(output.contains("instanceMethod"), "public instance method must appear in output");
+    void getCustomTypes_multipleCustomTypes_returnsAll() throws Exception {
+        var method = SampleLibrary.class.getMethod("processMultipleCustom", UUID.class, CustomType.class);
+        List<String> types = LibraryToExprGenerator.getCustomTypes(method);
+        
+        assertEquals(2, types.size());
+        assertTrue(types.contains("uuid"));
+        assertTrue(types.contains("customtype"));
     }
 
     @Test
-    void generate_emptyLibrary_onlyHeaderLine() {
-        String output = LibraryToExprGenerator.generate(EmptyLibrary.class);
-        long nonCommentLines = output.lines()
-            .filter(l -> !l.isBlank() && !l.startsWith("//"))
-            .count();
-        assertEquals(0, nonCommentLines, "Empty library should produce no function declarations");
+    void getCustomTypes_customInGenericCollection_returnsCustom() throws Exception {
+        var method = SampleLibrary.class.getMethod("listOfUUIDs");
+        List<String> types = LibraryToExprGenerator.getCustomTypes(method);
+        
+        // List<UUID> is a collection, so UUID inside is custom
+        assertEquals(1, types.size());
+        assertEquals("uuid", types.get(0));
+    }
+
+    @Test
+    void getCustomTypes_voidMethod_returnsEmpty() throws Exception {
+        var method = SampleLibrary.class.getMethod("voidMethod");
+        List<String> types = LibraryToExprGenerator.getCustomTypes(method);
+        
+        assertEquals(0, types.size());
+    }
+
+    @Test
+    void getCustomTypes_emfTypesExcluded_empty() throws Exception {
+        var method = SampleLibrary.class.getMethod("emfVectorArg", ExpressionVector.class);
+        List<String> types = LibraryToExprGenerator.getCustomTypes(method);
+        
+        // ExpressionVector is an EMF type, not a custom type
+        assertEquals(0, types.size());
     }
 
     // =========================================================================
-    // IFileSystemAccessAdapter tests
+    // Helper: Sample library with various method signatures
     // =========================================================================
 
-    @Test
-    void generate_withAdapter_writesToGivenPath() {
-        Map<String, String> captured = new HashMap<>();
-        LibraryToExprGenerator.generate(SampleLibrary.class, "out/sample.expr", captured::put);
-
-        assertTrue(captured.containsKey("out/sample.expr"));
-        assertTrue(captured.get("out/sample.expr").contains("function bool sampleBool("));
-    }
-
-    @Test
-    void generate_withAdapter_autoNamedFile() {
-        Map<String, String> captured = new HashMap<>();
-        LibraryToExprGenerator.generate(SampleLibrary.class, captured::put);
-
-        String expectedName = SampleLibrary.class.getSimpleName().toLowerCase() + ".expr";
-        assertTrue(captured.containsKey(expectedName),
-            "Expected file name: " + expectedName + ", got: " + captured.keySet());
-    }
-
-    // =========================================================================
-    // Helper: small library used across several tests
-    // =========================================================================
-
-    /** Minimal library with a representative spread of types and visibility. */
+    /** Sample library with representative method signatures for testing. */
     static class SampleLibrary {
-        public static List<Long>              listOfLong()                            { return null; }
-        public static List<String>            listOfString()                          { return null; }
-        public static Collection<?>           collectionWild()                        { return null; }
-        public static Map<String, Long>       mapStringLong()                         { return null; }
-        public static Map<Object, Object>     mapObjObj()                             { return null; }
-        public static boolean                 sampleBool(long a, String b)            { return false; }
-        public static BigDecimal              sampleReal(BigDecimal x)                { return x; }
-        public static String                  sampleString(String s, long n)          { return s; }
-        // EMF expression types
-        public static ExpressionVector        emfVectorArg(ExpressionVector v)        { return v; }
-        public static ExpressionMap           emfMapArg(ExpressionMap m)              { return m; }
-        public static Expression              emfExprArg(Expression e, long index)    { return e; }
+        // Primitive and built-in types
+        public static boolean sampleBool(long a, String b)                { return false; }
+        public static String multiParam(String s, long n, BigDecimal d)   { return s; }
 
-        // These must NOT appear in generated output:
-        public static void                    voidMethod()                            {}
-        @SuppressWarnings("unused")
-        private static String                 privateMethod()                         { return null; }
-        public        String                  instanceMethod()                        { return null; }
+        // Generic collection types
+        public static List<Long> listOfLong()                             { return null; }
+        public static List<String> listOfString()                         { return null; }
+        public static List<UUID> listOfUUIDs()                            { return null; }
+        public static Collection<?> collectionWild()                      { return null; }
+        
+        // Generic map types
+        public static Map<String, Long> mapStringLong()                   { return null; }
+        public static Map<Object, Object> mapObjObj()                     { return null; }
+        
+        // EMF expression types
+        public static ExpressionVector emfVectorArg(ExpressionVector v)   { return v; }
+        public static ExpressionMap emfMapArg(ExpressionMap m)            { return m; }
+        public static Expression emfExprArg(Expression e, long index)     { return e; }
+        
+        // Custom types
+        public static UUID processUUID(UUID id)                           { return id; }
+        public static String uuidToString(UUID id)                        { return id.toString(); }
+        public static CustomType processMultipleCustom(UUID id, CustomType ct) { return ct; }
+
+        // These must NOT appear in generated output or have special behavior:
+        public static void voidMethod()                                   {}
+        
+        // Instance method - should be included
+        public String instanceMethod()                                    { return null; }
     }
 
-    /** Library with no eligible methods. */
-    static class EmptyLibrary {
-        public static void onlyVoid() {}
+    /** Placeholder for a custom type used in testing. */
+    static class CustomType {
     }
 }

@@ -14,9 +14,7 @@ package nl.esi.comma.expressions.tests
 
 import com.google.inject.Inject
 import nl.esi.comma.expressions.expression.ExpressionModel
-import nl.esi.comma.expressions.functions.DefaultExpressionFunctions
 import nl.esi.comma.expressions.functions.ExpressionFunctionsRegistry
-import nl.esi.comma.expressions.functions.InMemoryExprResourceRegistry
 import org.eclipse.xtext.resource.XtextResourceSet
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
@@ -51,7 +49,7 @@ class DefaultExpressionFunctionsTest extends ExpressionEvaluatorTestBase {
 
     @Test
     def void defaultFunctions_registeredInMemory_uriExists() {
-        val uri = InMemoryExprResourceRegistry.uriFor(DefaultExpressionFunctions)
+        val uri = ExpressionFunctionsRegistry.EXPR_URI
         Assertions.assertTrue(registry.handlesURI(uri),
             "URI scheme should be 'imr'")
         Assertions.assertNotNull(registry.getContent(uri),
@@ -60,7 +58,7 @@ class DefaultExpressionFunctionsTest extends ExpressionEvaluatorTestBase {
 
     @Test
     def void defaultFunctions_registeredInMemory_contentContainsFunctionDeclarations() {
-        val uri = InMemoryExprResourceRegistry.uriFor(DefaultExpressionFunctions)
+        val uri = ExpressionFunctionsRegistry.EXPR_URI
         val content = registry.getContent(uri)
 
         Assertions.assertAll(
@@ -77,7 +75,7 @@ class DefaultExpressionFunctionsTest extends ExpressionEvaluatorTestBase {
 
     @Test
     def void defaultFunctions_uriHandler_canReadContent() {
-        val uri = InMemoryExprResourceRegistry.uriFor(DefaultExpressionFunctions)
+        val uri = ExpressionFunctionsRegistry.EXPR_URI
         Assertions.assertTrue(registry.getURIHandler.exists(uri, emptyMap),
             "URIHandler should report the in-memory URI as existing")
 
@@ -91,7 +89,7 @@ class DefaultExpressionFunctionsTest extends ExpressionEvaluatorTestBase {
     // -------------------------------------------------------------------------
     @Test
     def void defaultFunctions_inMemoryResource_parsesWithoutErrors() {
-        val uri = InMemoryExprResourceRegistry.uriFor(DefaultExpressionFunctions)
+        val uri = ExpressionFunctionsRegistry.EXPR_URI
         val res = resourceSet.getResource(uri, true)
         Assertions.assertNotNull(res, "Resource should be loadable from in-memory URI")
         Assertions.assertTrue(res.errors.isEmpty,
@@ -103,7 +101,7 @@ class DefaultExpressionFunctionsTest extends ExpressionEvaluatorTestBase {
 
     @Test
     def void defaultFunctions_inMemoryResource_containsExpectedFunctionDecls() {
-        val uri = InMemoryExprResourceRegistry.uriFor(DefaultExpressionFunctions)
+        val uri = ExpressionFunctionsRegistry.EXPR_URI
         val res = resourceSet.getResource(uri, true)
         val model = res.contents.head as ExpressionModel
         val names = model.functions.map[name].toSet

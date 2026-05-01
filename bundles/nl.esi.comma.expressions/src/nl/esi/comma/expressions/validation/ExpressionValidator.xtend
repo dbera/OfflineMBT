@@ -72,7 +72,7 @@ class ExpressionValidator extends AbstractExpressionValidator {
     def checkVariableDecl(VariableDecl vd){
         val lhs = vd.variable.type.typeObject
         var rhs = typeOf(vd.expression)
-        if (rhs !== null && !subTypeOf(lhs,rhs)) {
+        if (rhs !== null && !lhs.isAssignableFrom(rhs)) {
             error('''Type mismatch: declared type '«lhs.typeName»' does not match the expected type '«rhs.typeName»' ''', ExpressionPackage.Literals.VARIABLE_DECL__VARIABLE)
         }
     }
@@ -255,7 +255,7 @@ class ExpressionValidator extends AbstractExpressionValidator {
                     for (var i = 0; i < e.args.size; i++) {
                         val paramType = e.function.params.get(i).type.typeObject
                         val argType = typeOf(e.args.get(i))
-                        if (!subTypeOf(argType, paramType)) {
+                        if (!argType.subTypeOf(paramType) ) {
                             error('''Function «e.function.name» expects argument «i + 1» to be of type «paramType.typeName».''',
                                 ExpressionPackage.Literals.EXPRESSION_FUNCTION_CALL__ARGS, i)
                         }

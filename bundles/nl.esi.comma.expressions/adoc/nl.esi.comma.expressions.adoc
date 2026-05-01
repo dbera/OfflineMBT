@@ -173,3 +173,5 @@ Operators are evaluated in the following order (highest to lowest):
 * Logical operators `and`, `or`, and `not` are case-insensitive and accept both lowercase and uppercase forms (e.g., `AND`, `and`, `OR`, `or`, `NOT`, `not`).
 * Operator associativity: most operators are left-associative; the power operator `^` is right-associative.
 * Variables can be declared with optional initialization: `Type name = expression` or just `Type name`.
+
+NOTE: When invoking functions with custom Java types, `IExpressionConverter` instances are evaluated in order until one successfully converts the argument. The first successful conversion is used. This allows custom converters to handle specific types while falling back to default converters for built-in types. See <<how-to-add-a-function-library>> for details on implementing custom converters.

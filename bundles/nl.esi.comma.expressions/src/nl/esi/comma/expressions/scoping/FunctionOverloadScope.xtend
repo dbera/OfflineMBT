@@ -90,7 +90,7 @@ class FunctionOverloadScope implements IScope {
         for (var i = 0; i < fd.params.size; i++) {
             val paramType = fd.params.get(i).type.typeObject
             val argType = typeOf(context.args.get(i))
-            if (!subTypeOf(argType, paramType)) {
+            if (!argType.subTypeOf(paramType)) {
                 return false
             }
         }

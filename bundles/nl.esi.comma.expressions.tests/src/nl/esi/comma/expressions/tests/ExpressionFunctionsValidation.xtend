@@ -39,6 +39,15 @@ class ExpressionFunctionsValidation {
         assertDoesNotThrow [EcoreUtil3.validate(result)]
     }
 
+    @Test
+    def void duplicate_types_noValidationError() {
+        val result = parse('''
+            type aType
+            type aType
+        ''')
+        assertDoesNotThrow [EcoreUtil3.validate(result)]
+    }
+
     // Second validate on the same model verifies repeated validation is stable.
     @Test
     def void registeredFunction_validCall_revalidate_noValidationError() {

@@ -13,7 +13,6 @@
 package nl.esi.comma.expressions.scoping
 
 import com.google.inject.Inject
-import nl.esi.comma.expressions.functions.InMemoryExprResourceRegistry
 import nl.esi.comma.types.scoping.TypesImportUriGlobalScopeProvider
 import org.eclipse.emf.ecore.resource.Resource
 import nl.esi.comma.expressions.functions.ExpressionFunctionsRegistry
@@ -33,7 +32,7 @@ class ExpressionsImportUriGlobalScopeProvider extends TypesImportUriGlobalScopeP
      * Extends the list of imported URIs with all dynamically registered function library URIs.
      * 
      * <p>Calls the parent implementation first to get types and other standard URIs, then adds
-     * all URIs managed by {@link InMemoryExprResourceRegistry} (which contains generated function grammars).
+     * all URIs managed by {@link ExpressionFunctionsRegistry} (which contains generated function grammars).
      * 
      */
     override getImportedUris(Resource resource) {

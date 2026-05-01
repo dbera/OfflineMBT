@@ -21,8 +21,6 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
@@ -47,6 +45,8 @@ import nl.esi.comma.types.types.Type;
 @Singleton
 public class ExpressionFunctionsRegistry {
 	
+	public static final URI EXPR_URI = InMemoryExprResourceRegistry.IMR_URI;
+	
 	private static final Logger logger = Logger.getLogger(ExpressionFunctionsRegistry.class);
 	
 	public static class NoMatchingFunctionFoundException extends RuntimeException {
@@ -59,7 +59,7 @@ public class ExpressionFunctionsRegistry {
 
 	private final Map<String, List<Method>> functions = new LinkedHashMap<>();
 
-	private final Set<IExpressionConverter> converters;
+	private final List<IExpressionConverter> converters;
 
 	private final InMemoryExprResourceRegistry inMemoryRegistry = new InMemoryExprResourceRegistry();
 
@@ -67,7 +67,7 @@ public class ExpressionFunctionsRegistry {
 	@Inject
 	public ExpressionFunctionsRegistry(IExpressionConvertersProvider convertersProvider, IExpressionFunctionLibrariesProvider librariesProvider) {
 		librariesProvider.get().stream().forEach(this::addLibraryFunctions);
-		this.converters = convertersProvider.get();
+		this.converters = new ArrayList<>(convertersProvider.get());
 	}
 	
 	/** Returns an unmodifiable map of all registered functions. */
@@ -128,12 +128,15 @@ public class ExpressionFunctionsRegistry {
 	public String getContent(URI uri) {
 		return inMemoryRegistry.getContent(uri);
 	}
-
+    
+	
+	public void addConverter(IExpressionConverter converter) {
+		converters.add(converter);
+	}
 	/**
 	 * Registers all public methods from a library class as expression functions.
 	 */
-	private void addLibraryFunctions(Class<?> libraryClass) {
-		inMemoryRegistry.addLibrary(libraryClass);
+	public void addLibraryFunctions(Class<?> libraryClass) {
 		for (Method method : libraryClass.getDeclaredMethods()) {
 			if (isPublic(method)) {
 				try {
@@ -151,14 +154,8 @@ public class ExpressionFunctionsRegistry {
 			throw new IllegalArgumentException("Function cannot be null");
 		if (!isPublic(method))
 			throw new IllegalArgumentException("Function must be public");
+		inMemoryRegistry.addMethod(method);
 		var overloads = functions.computeIfAbsent(name, k -> new ArrayList<>());
-		for (var existing : overloads) {
-			String signature = getSignature(method);
-			if (Objects.equals(getSignature(existing), signature)) {
-				throw new IllegalArgumentException("Function with same signature already exists: "
-						+ existing.getDeclaringClass().getName() + "." + signature);
-			}
-		}
 		overloads.add(method);
 	}
 
@@ -236,9 +233,9 @@ public class ExpressionFunctionsRegistry {
 	/** Converts a Java object to an Expression using registered converters. */
 	private Expression toExpression(Object object, Type type, IEvaluationContext context) {
 		for (IExpressionConverter converter : converters) {
-			Expression expr = converter.toExpression(object, type);
-			if (expr != null) {
-				return expr;
+			var expression = converter.toExpression(object, type);
+			if (expression.isPresent()) {
+				return expression.get();
 			}
 		}
 		return null;
@@ -247,9 +244,10 @@ public class ExpressionFunctionsRegistry {
 	/** Converts an Expression to a Java object using registered converters. */
 	private Object toObject(Expression type, Class<?> paramType, IEvaluationContext context) {
 		for (IExpressionConverter converter : converters) {
-			if (converter.isConvertible(type, paramType)) {
-				return converter.toObject(type, paramType);
-			}
+			var obj = converter.toObject(type, paramType);
+				if (obj.isPresent()) {
+					return obj.get();
+				}
 		}
 		return null;
 	}
@@ -258,7 +256,7 @@ public class ExpressionFunctionsRegistry {
 	private boolean isValidArgumentType(Expression expression, Class<?> paramType, IEvaluationContext context) {
 
 		for (IExpressionConverter converter : converters) {
-			if (converter.isConvertible(expression, paramType)) {
+			if (converter.toObject(expression, paramType).isPresent()) {
 				return true;
 			}
 		}
