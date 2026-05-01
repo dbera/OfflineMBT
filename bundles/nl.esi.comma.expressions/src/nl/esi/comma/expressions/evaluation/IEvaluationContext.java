@@ -12,6 +12,14 @@
  */
 package nl.esi.comma.expressions.evaluation;
 
+import static nl.esi.comma.types.utilities.TypeUtilities.asType;
+import static nl.esi.comma.types.utilities.TypeUtilities.getElementType;
+import static nl.esi.comma.types.utilities.TypeUtilities.getKeyType;
+import static nl.esi.comma.types.utilities.TypeUtilities.getTypeObject;
+import static nl.esi.comma.types.utilities.TypeUtilities.getValueType;
+import static nl.esi.comma.types.utilities.TypeUtilities.isMapType;
+import static nl.esi.comma.types.utilities.TypeUtilities.isVectorType;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -40,9 +48,7 @@ import nl.esi.comma.expressions.expression.Pair;
 import nl.esi.comma.expressions.expression.Variable;
 import nl.esi.comma.expressions.functions.ExpressionFunctionsRegistry;
 import nl.esi.comma.expressions.utilities.ExpressionsUtilities;
-import nl.esi.comma.types.types.SimpleTypeDecl;
-import nl.esi.comma.types.types.TypeObject;
-import nl.esi.comma.types.utilities.TypeUtilities;
+import nl.esi.comma.types.types.Type;
 
 public interface IEvaluationContext {
 	static final IEvaluationContext EMPTY = variable -> null;
@@ -133,17 +139,17 @@ public interface IEvaluationContext {
 	}
 
 	/**
-	 * Returns an {@link Expression}, based on the {@code value} type.
+	 * Converts a Java value to an {@link Expression} based on its type.
+	 * Supports conversion of primitive wrapper types, numbers, and strings.
 	 * 
-	 * @see IEvaluationContext#toBool(Boolean)
-	 * @see IEvaluationContext#toString(String)
-	 * @see IEvaluationContext#toString(CharSequence)
-	 * @see IEvaluationContext#toInt(Integer)
-	 * @see IEvaluationContext#toInt(Long)
-	 * @see IEvaluationContext#toInt(BigInteger)
-	 * @see IEvaluationContext#toReal(Float)
-	 * @see IEvaluationContext#toReal(Double)
-	 * @see IEvaluationContext#toReal(BigDecimal)
+	 * @param value the Java value to convert (Boolean, String, Integer, Long, BigInteger, Float, Double, BigDecimal, or CharSequence)
+	 * @return an Expression representing the value, or {@code null} if the value type is not supported
+	 * 
+	 * @see #toExpression(Object, Type) for conversion with explicit type information
+	 * @see #toBoolExpr(Boolean)
+	 * @see #toStringExpr(String)
+	 * @see #toIntExpr(BigInteger)
+	 * @see #toRealExpr(BigDecimal)
 	 */
 	default Expression toExpression(Object value) {
 		if (value instanceof Boolean b) {
@@ -164,12 +170,32 @@ public interface IEvaluationContext {
 			return toRealExpr(r);
 		} else if (value instanceof Float r) {
 			return toRealExpr(r);
-		} else if (value instanceof Collection<?> coll) {
-			return toVectorExpr(coll);
-		} else if (value instanceof Map<?, ?> map) {
-			return toMapExpr(map);
 		} else {
 			return null;
+		}
+	}
+
+	/**
+	 * Converts a Java value to an {@link Expression} with explicit type information.
+	 * For collections and maps, uses the provided type for type annotation and element/key/value type resolution.
+	 * For scalar values, delegates to {@link #toExpression(Object)} for basic conversion.
+	 * 
+	 * @param value the Java value to convert (can be Collection, Map, or any scalar type)
+	 * @param type the ComMA type providing type information for vectors and maps
+	 * @return an Expression representing the value with proper type annotation,
+	 *         or {@code null} if the value or type is {@code null}, or value type doesn't match the type
+	 * 
+	 * @see #toExpression(Object) for scalar value conversion
+	 * @see #toVectorExpr(Collection, Type) for collection conversion
+	 * @see #toMapExpr(Map, Type) for map conversion
+	 */
+	default Expression toExpression(Object value, Type type) {
+		if (value instanceof Collection<?> coll && isVectorType(type)) {
+			return toVectorExpr(coll, type);
+		} else if (value instanceof Map<?, ?> map && isMapType(type)) {
+			return toMapExpr(map, type);
+		} else {
+			return toExpression(value);
 		}
 	}
 
@@ -340,76 +366,74 @@ public interface IEvaluationContext {
 
 	/**
 	 * Converts a Java {@link Collection} to an {@link ExpressionVector}.
-	 * Each element is recursively converted via {@link #toExpression(Object)}.
+	 * Each element is recursively converted via {@link #toExpression(Object, Type)}.
 	 * A {@link nl.esi.comma.expressions.expression.TypeAnnotation TypeAnnotation}
-	 * is inferred from the first element's Java type so the output serializes as
-	 * e.g. {@code <int[]> [1, 2, 3]}.
+	 * is created from the provided type so the output serializes as e.g. {@code <int[]> [1, 2, 3]}.
 	 *
 	 * @param collection the Java collection (typically a {@code List})
+	 * @param type the vector type to use for type annotation and element type resolution
 	 * @return an {@code ExpressionVector} containing the converted elements,
-	 *         or {@code null} if the collection is {@code null}
+	 *         or {@code null} if the collection or type is {@code null}, or type is not a vector type
 	 */
-	default ExpressionVector toVectorExpr(Collection<?> collection) {
+	default ExpressionVector toVectorExpr(Collection<?> collection, Type type) {
 		if (collection == null) {
 			return null;
 		}
-		// Infer element type and create a typed vector shell (with TypeAnnotation)
-		SimpleTypeDecl elementTypeDecl = TypeUtilities.inferElementType(collection);
-		ExpressionVector vector = (ExpressionVector) ExpressionsUtilities.createDefaultValue(
-				TypeUtilities.vectorOf(elementTypeDecl));
+		if (!isVectorType(type)) {
+			return null;
+		}
 
+		// Create typed vector shell with type annotation
+		ExpressionVector vector = ExpressionFactory.eINSTANCE.createExpressionVector();
+		var typeAnnotation = ExpressionFactory.eINSTANCE.createTypeAnnotation();
+		typeAnnotation.setType(ExpressionsUtilities.asExprType(type));
+		vector.setTypeAnnotation(typeAnnotation);
+
+		// Convert elements and add them
 		for (Object element : collection) {
-			Expression converted = toExpression(element);
+			Expression converted = toExpression(element, asType(getElementType(getTypeObject(type))));
 			if (converted != null) {
 				vector.getElements().add(converted);
 			}
 		}
+
 		return vector;
 	}
 
 	/**
 	 * Converts a Java {@link Map} to an {@link ExpressionMap}.
-	 * Each key and value is recursively converted via {@link #toExpression(Object)}.
+	 * Each key and value is recursively converted via {@link #toExpression(Object, Type)}.
 	 * A {@link nl.esi.comma.expressions.expression.TypeAnnotation TypeAnnotation}
-	 * is inferred from the first entry's key/value Java types so the output
-	 * serializes as e.g. {@code <map<int, string>> { 1 -> "a" }}.
+	 * is created from the provided type so the output serializes as e.g. {@code <map<int, string>> { 1 -> "a" }}.
 	 *
 	 * @param map the Java map
+	 * @param type the map type to use for type annotation and key/value type resolution
 	 * @return an {@code ExpressionMap} containing the converted key-value pairs,
-	 *         or {@code null} if the map is {@code null}
+	 *         or {@code null} if the map or type is {@code null}, or type is not a map type
 	 */
-	default ExpressionMap toMapExpr(Map<?, ?> map) {
+	default ExpressionMap toMapExpr(Map<?, ?> map, Type type) {
 		if (map == null) {
 			return null;
 		}
-
-		// Infer key/value types from the first entry and create a typed map shell
-		ExpressionMap exprMap;
-		if (!map.isEmpty()) {
-			Map.Entry<?, ?> firstEntry = map.entrySet().iterator().next();
-			SimpleTypeDecl keyTypeDecl = TypeUtilities.resolveBasicType(firstEntry.getKey());
-			SimpleTypeDecl valTypeDecl = TypeUtilities.resolveBasicType(firstEntry.getValue());
-			exprMap = (ExpressionMap) ExpressionsUtilities.createDefaultValue(
-					TypeUtilities.mapOf(keyTypeDecl, valTypeDecl));
-		} else {
-			exprMap = ExpressionFactory.eINSTANCE.createExpressionMap();
+		if (!isMapType(type)) {
+			return null;
+		}
+		// Create typed map shell with type annotation
+		ExpressionMap exprMap = ExpressionFactory.eINSTANCE.createExpressionMap();
+		if (type != null) {
+			var typeAnnotation = ExpressionFactory.eINSTANCE.createTypeAnnotation();
+			typeAnnotation.setType(ExpressionsUtilities.asExprType(type));
+			exprMap.setTypeAnnotation(typeAnnotation);
 		}
 
+		// Convert entries to pairs and add them
 		for (Map.Entry<?, ?> entry : map.entrySet()) {
-			Expression keyExpr = toExpression(entry.getKey());
-			Expression valExpr = toExpression(entry.getValue());
-			if (keyExpr != null && valExpr != null) {
-				Pair pair = ExpressionFactory.eINSTANCE.createPair();
-				pair.setKey(keyExpr);
-				pair.setValue(valExpr);
-				exprMap.getPairs().add(pair);
-			}
+			Pair pair = ExpressionFactory.eINSTANCE.createPair();
+			pair.setKey(toExpression(entry.getKey(), asType(getKeyType(getTypeObject(type)))));
+			pair.setValue(toExpression(entry.getValue(), asType(getValueType(getTypeObject(type)))));
+			exprMap.getPairs().add(pair);
 		}
 
 		return exprMap;
-	}
-
-	default TypeObject typeOf(Expression expression) {
-		return ExpressionsUtilities.typeOf(expression);
 	}
 }

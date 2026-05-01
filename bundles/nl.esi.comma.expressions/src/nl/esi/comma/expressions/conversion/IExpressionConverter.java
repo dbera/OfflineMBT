@@ -12,6 +12,8 @@
  */
 package nl.esi.comma.expressions.conversion;
 
+import java.util.Optional;
+
 import nl.esi.comma.expressions.expression.Expression;
 import nl.esi.comma.types.types.Type;
 
@@ -23,7 +25,7 @@ public interface IExpressionConverter {
 	 * @param targetType the target Java type to convert to
 	 * @return the converted Java Object of the specified targetType
 	 */
-	Object toObject(Expression expression, Class<?> targetType);
+	Optional<Object> toObject(Expression expression, Class<?> targetType);
 	/**
 	 * Converts a Java Object to an Expression of the specified type.
 	 * 
@@ -31,14 +33,5 @@ public interface IExpressionConverter {
 	 * @param type the target Expression type
 	 * @return the converted Expression
 	 */
-	Expression toExpression(Object object, Type type);
-
-	/**
-	 * Checks if an Expression can be converted to a Java Object of the specified type.
-	 * 
-	 * @param expression the Expression to check for convertibility
-	 * @param targetType the target Java type
-	 * @return true if the Expression can be converted to the targetType, false otherwise
-	 */
-	boolean isConvertible(Expression expression, Class<?> targetType);
+	Optional<Expression> toExpression(Object object, Type type);
 }
