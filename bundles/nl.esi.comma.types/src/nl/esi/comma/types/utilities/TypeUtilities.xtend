@@ -102,8 +102,8 @@ class TypeUtilities {
 	def static boolean isMapType(TypeObject t){
 		t instanceof MapTypeConstructor || t instanceof MapTypeDecl
 	}
-	
-	def static TypeObject getKeyType(TypeObject t){
+
+  	def static TypeObject getKeyType(TypeObject t){
 		if(t instanceof MapTypeConstructor) return t.type
 		if(t instanceof MapTypeDecl) return t.constructor.type
 		
@@ -204,7 +204,7 @@ class TypeUtilities {
 	def static dispatch TypeDecl getBaseType(VectorTypeDecl vtd){
 		vtd.constructor.getBaseType
 	}	
-	
+
     def static dispatch TypeObject getElementType(VectorTypeConstructor vtc) {
         if (vtc.getDimensions().size() > 1) {
             return EcoreUtil.copy(vtc) => [
@@ -294,24 +294,39 @@ class TypeUtilities {
         t1 === t2
     }
 
-    def static boolean subTypeOf(TypeObject t1, TypeObject t2) {
-        if(t1 === null || t2 === null) return false
-        if(t1.synonym(t2)) return true // reflexive case
-        if(t2.identical(BasicTypes.anyType)) return true // all types are subType of any
-        if (t1 instanceof RecordTypeDecl && t2 instanceof RecordTypeDecl) // record type subtyping
-            return getAllParents(t1 as RecordTypeDecl).contains(t2)
+    /**
+     * TODO current type isAssignableFrom baseType even if baseType is any 
+     * which it of course impossible.
+     * But we can only fix this if we support templates in FunctionDecl
+     * if fixed then change true to false below.
+     */
+    def static boolean isAssignableFrom(TypeObject type, TypeObject baseType) {
+        type.subTypeOf(baseType,true)
+    }
 
-        if (t1 instanceof VectorTypeConstructor) {
-            if (t2 instanceof VectorTypeConstructor) {
-                if(!t1.type.subTypeOf(t2.type)) return false
-                if(t1.dimensions.size != t2.dimensions.size) return false
-                for (i : 0 ..< t1.dimensions.size) {
-                    if(t1.dimensions.get(i).size != t2.dimensions.get(i).size) return false
+    def static boolean subTypeOf(TypeObject subType, TypeObject baseType) {
+        subType.subTypeOf(baseType,true)
+    }
+
+    private def static boolean subTypeOf(TypeObject subType, TypeObject baseType, boolean anyTypeAllowed) {
+        if(subType === null || baseType === null) return false
+        if(subType.synonym(baseType)) return true // reflexive case
+        if (subType instanceof RecordTypeDecl && baseType instanceof RecordTypeDecl) // record type subtyping
+            return getAllParents(subType as RecordTypeDecl).contains(baseType)
+
+        if (subType instanceof VectorTypeConstructor) {
+            if (baseType instanceof VectorTypeConstructor) {
+                if(!subType.type.subTypeOf(baseType.type, anyTypeAllowed)) return false
+                if(subType.dimensions.size != baseType.dimensions.size) return false
+                for (i : 0 ..< subType.dimensions.size) {
+                    if(subType.dimensions.get(i).size != baseType.dimensions.get(i).size) return false
                 }
                 return true
             }
         }
-        false
+        // at the end because we also have any[] which should be a vector with any objects in it. 
+        // this should not match any
+        return anyTypeAllowed && (baseType.identical(BasicTypes.anyType))// all types are subType of any
     }
 
     def static boolean synonym(TypeObject t1, TypeObject t2) {
