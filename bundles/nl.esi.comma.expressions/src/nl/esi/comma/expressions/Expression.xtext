@@ -194,12 +194,6 @@ Pair:
 	key = Expression '->' value = Expression
 ;
 
-enum QUANTIFIER :
-	EXISTS = 'exists' |
-	FORALL = 'forAll' |
-	DELETE = 'delete'
-;
-
 // --- add extra superclasses in metamodel -------
 
 ExpressionBinary returns Expression:           
