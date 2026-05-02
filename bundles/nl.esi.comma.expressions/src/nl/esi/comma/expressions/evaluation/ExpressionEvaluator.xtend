@@ -12,6 +12,8 @@
  */
 package nl.esi.comma.expressions.evaluation
 
+import com.google.inject.Inject
+import com.google.inject.Singleton
 import nl.esi.comma.expressions.expression.Expression
 import nl.esi.comma.expressions.expression.ExpressionAddition
 import nl.esi.comma.expressions.expression.ExpressionAnd
@@ -25,7 +27,6 @@ import nl.esi.comma.expressions.expression.ExpressionDivision
 import nl.esi.comma.expressions.expression.ExpressionEnumLiteral
 import nl.esi.comma.expressions.expression.ExpressionEqual
 import nl.esi.comma.expressions.expression.ExpressionFactory
-import nl.esi.comma.expressions.expression.ExpressionFnCall
 import nl.esi.comma.expressions.expression.ExpressionFunctionCall
 import nl.esi.comma.expressions.expression.ExpressionGeq
 import nl.esi.comma.expressions.expression.ExpressionGreater
@@ -44,21 +45,29 @@ import nl.esi.comma.expressions.expression.ExpressionOr
 import nl.esi.comma.expressions.expression.ExpressionPackage
 import nl.esi.comma.expressions.expression.ExpressionPlus
 import nl.esi.comma.expressions.expression.ExpressionPower
-import nl.esi.comma.expressions.expression.ExpressionQuantifier
 import nl.esi.comma.expressions.expression.ExpressionRecord
 import nl.esi.comma.expressions.expression.ExpressionRecordAccess
 import nl.esi.comma.expressions.expression.ExpressionSubtraction
 import nl.esi.comma.expressions.expression.ExpressionVariable
 import nl.esi.comma.expressions.expression.ExpressionVector
-import nl.esi.comma.expressions.validation.ExpressionFunction
+import nl.esi.comma.expressions.functions.ExpressionFunctionsRegistry
 import org.eclipse.emf.common.util.EList
 import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.EReference
 import org.eclipse.emf.ecore.util.EcoreUtil
+import nl.esi.comma.expressions.functions.ExpressionFunctionsRegistry.NoMatchingFunctionFoundException
 
+@Singleton
 class ExpressionEvaluator {
     static extension val ExpressionFactory m_exp = ExpressionFactory.eINSTANCE
 
+    ExpressionFunctionsRegistry functionsRegistry
+    
+    @Inject
+    new(ExpressionFunctionsRegistry functionsRegistry) {
+        this.functionsRegistry = functionsRegistry
+    }
+    
     def Expression evaluate(Expression expression, IEvaluationContext context) {
         if (expression === null || context === null) {
             return null
@@ -116,7 +125,7 @@ class ExpressionEvaluator {
     }
 
     protected dispatch def Expression doEvaluate(ExpressionVariable expression, IEvaluationContext context) {
-        val reference = context.getExpression(expression.variable)
+        var reference = context.getExpression(expression.variable)
         if (reference !== null) {
             // Reference should be evaluated before used, hence wrap it with brackets.
             // Reduction will remove the brackets if the evaluated value doesn't require them.
@@ -138,11 +147,6 @@ class ExpressionEvaluator {
     }
 
     // Functions
-
-    protected dispatch def Expression doEvaluate(ExpressionFunctionCall expression, IEvaluationContext context) {
-        return ExpressionFunction.valueOf(expression)?.evaluate(expression.args, context)
-    }
-
     protected dispatch def Expression doEvaluate(ExpressionMapRW expression, extension IEvaluationContext context) {
         val mapExpr = expression.map
         if (mapExpr instanceof ExpressionMap) {
@@ -161,12 +165,16 @@ class ExpressionEvaluator {
         }
     }
 
-    protected dispatch def Expression doEvaluate(ExpressionFnCall expression, IEvaluationContext context) {
-        throw new UnsupportedOperationException('Not supported: ' + expression.function.name)
-    }
-
-    protected dispatch def Expression doEvaluate(ExpressionQuantifier expression, IEvaluationContext context) {
-        throw new UnsupportedOperationException('Not supported: ' + expression.quantifier.literal)
+    protected dispatch def Expression doEvaluate(ExpressionFunctionCall expression, IEvaluationContext context) {
+        try {
+            return functionsRegistry.invokeFunction(expression, context);
+        }
+        catch(NoMatchingFunctionFoundException e) {
+            return null;
+        }
+        catch(Exception e) {
+            throw e;
+        }
     }
 
     // Binary
@@ -277,9 +285,7 @@ class ExpressionEvaluator {
             ExpressionVariable,
             ExpressionRecord,
             ExpressionAny,
-            ExpressionFnCall,
             ExpressionFunctionCall,
-            ExpressionQuantifier,
             ExpressionVector,
             ExpressionMap,
             ExpressionBracket: expression.sub

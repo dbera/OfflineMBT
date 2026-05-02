@@ -21,7 +21,7 @@
 			class="nl.esi.comma.expressions.ui.ExpressionExecutableExtensionFactory:org.eclipse.xtext.ui.editor.XtextEditor"
 			contributorClass="org.eclipse.ui.editors.text.TextEditorActionContributor"
 			default="true"
-			extensions="e"
+			extensions="expr"
 			id="nl.esi.comma.expressions.Expression"
 			name="Expression Editor">
 		</editor>
@@ -223,13 +223,13 @@
 		point="org.eclipse.emf.ecore.extension_parser">
 		<parser
 			class="nl.esi.comma.expressions.ui.ExpressionExecutableExtensionFactory:org.eclipse.xtext.resource.IResourceFactory"
-			type="e">
+			type="expr">
 		</parser>
 	</extension>
 	<extension point="org.eclipse.xtext.extension_resourceServiceProvider">
 		<resourceServiceProvider
 			class="nl.esi.comma.expressions.ui.ExpressionExecutableExtensionFactory:org.eclipse.xtext.ui.resource.IResourceUIServiceProvider"
-			uriExtension="e">
+			uriExtension="expr">
 		</resourceServiceProvider>
 	</extension>
 	<!-- marker definitions for nl.esi.comma.expressions.Expression -->
@@ -257,7 +257,7 @@
 	<extension point="org.eclipse.xtext.builder.participant">
 		<participant
 			class="nl.esi.comma.expressions.ui.ExpressionExecutableExtensionFactory:org.eclipse.xtext.builder.IXtextBuilderParticipant"
-			fileExtensions="e"/>
+			fileExtensions="expr"/>
 	</extension>
 	<extension point="org.eclipse.ui.preferencePages">
 		<page
@@ -400,24 +400,24 @@
 	<extension point="org.eclipse.compare.contentViewers">
 		<viewer id="nl.esi.comma.expressions.Expression.compare.contentViewers"
 			class="nl.esi.comma.expressions.ui.ExpressionExecutableExtensionFactory:org.eclipse.xtext.ui.compare.InjectableViewerCreator"
-			extensions="e">
+			extensions="expr">
 		</viewer>
 	</extension>
 	<extension point="org.eclipse.compare.contentMergeViewers">
 		<viewer id="nl.esi.comma.expressions.Expression.compare.contentMergeViewers"
 			class="nl.esi.comma.expressions.ui.ExpressionExecutableExtensionFactory:org.eclipse.xtext.ui.compare.InjectableViewerCreator"
-			extensions="e" label="Expression Compare">
+			extensions="expr" label="Expression Compare">
 		</viewer>
 	</extension>
 	<extension point="org.eclipse.ui.editors.documentProviders">
 		<provider id="nl.esi.comma.expressions.Expression.editors.documentProviders"
 			class="nl.esi.comma.expressions.ui.ExpressionExecutableExtensionFactory:org.eclipse.xtext.ui.editor.model.XtextDocumentProvider"
-			extensions="e">
+			extensions="expr">
 		</provider>
 	</extension>
 	<extension point="org.eclipse.team.core.fileTypes">
 		<fileTypes
-			extension="e"
+			extension="expr"
 			type="text">
 		</fileTypes>
 	</extension>

@@ -12,42 +12,41 @@
  */
 package nl.esi.comma.expressions.generator
 
+import nl.esi.comma.expressions.expression.Expression
+import nl.esi.comma.expressions.expression.ExpressionAddition
+import nl.esi.comma.expressions.expression.ExpressionAnd
+import nl.esi.comma.expressions.expression.ExpressionAny
+import nl.esi.comma.expressions.expression.ExpressionBracket
 import nl.esi.comma.expressions.expression.ExpressionConstantBool
 import nl.esi.comma.expressions.expression.ExpressionConstantInt
 import nl.esi.comma.expressions.expression.ExpressionConstantReal
 import nl.esi.comma.expressions.expression.ExpressionConstantString
+import nl.esi.comma.expressions.expression.ExpressionDivision
 import nl.esi.comma.expressions.expression.ExpressionEnumLiteral
+import nl.esi.comma.expressions.expression.ExpressionEqual
+import nl.esi.comma.expressions.expression.ExpressionFunctionCall
+import nl.esi.comma.expressions.expression.ExpressionGeq
+import nl.esi.comma.expressions.expression.ExpressionGreater
+import nl.esi.comma.expressions.expression.ExpressionLeq
+import nl.esi.comma.expressions.expression.ExpressionLess
+import nl.esi.comma.expressions.expression.ExpressionMap
+import nl.esi.comma.expressions.expression.ExpressionMapRW
+import nl.esi.comma.expressions.expression.ExpressionMaximum
+import nl.esi.comma.expressions.expression.ExpressionMinimum
+import nl.esi.comma.expressions.expression.ExpressionMinus
+import nl.esi.comma.expressions.expression.ExpressionModulo
+import nl.esi.comma.expressions.expression.ExpressionMultiply
+import nl.esi.comma.expressions.expression.ExpressionNEqual
+import nl.esi.comma.expressions.expression.ExpressionNot
+import nl.esi.comma.expressions.expression.ExpressionNullLiteral
+import nl.esi.comma.expressions.expression.ExpressionOr
+import nl.esi.comma.expressions.expression.ExpressionPower
 import nl.esi.comma.expressions.expression.ExpressionRecord
+import nl.esi.comma.expressions.expression.ExpressionRecordAccess
+import nl.esi.comma.expressions.expression.ExpressionSubtraction
+import nl.esi.comma.expressions.expression.ExpressionVariable
 import nl.esi.comma.expressions.expression.ExpressionVector
 import nl.esi.comma.types.generator.TypesCommaGenerator
-import nl.esi.comma.expressions.expression.ExpressionMap
-import nl.esi.comma.expressions.expression.ExpressionRecordAccess
-import nl.esi.comma.expressions.expression.ExpressionVariable
-import nl.esi.comma.expressions.expression.ExpressionFunctionCall
-import nl.esi.comma.expressions.expression.ExpressionAny
-import nl.esi.comma.expressions.expression.ExpressionAddition
-import nl.esi.comma.expressions.expression.ExpressionSubtraction
-import nl.esi.comma.expressions.expression.ExpressionMultiply
-import nl.esi.comma.expressions.expression.ExpressionDivision
-import nl.esi.comma.expressions.expression.ExpressionModulo
-import nl.esi.comma.expressions.expression.ExpressionMinimum
-import nl.esi.comma.expressions.expression.ExpressionMaximum
-import nl.esi.comma.expressions.expression.ExpressionPower
-import nl.esi.comma.expressions.expression.ExpressionGreater
-import nl.esi.comma.expressions.expression.ExpressionLess
-import nl.esi.comma.expressions.expression.ExpressionLeq
-import nl.esi.comma.expressions.expression.ExpressionGeq
-import nl.esi.comma.expressions.expression.ExpressionEqual
-import nl.esi.comma.expressions.expression.ExpressionNEqual
-import nl.esi.comma.expressions.expression.ExpressionAnd
-import nl.esi.comma.expressions.expression.ExpressionOr
-import nl.esi.comma.expressions.expression.ExpressionMapRW
-import nl.esi.comma.expressions.expression.ExpressionFnCall
-import nl.esi.comma.expressions.expression.Expression
-import nl.esi.comma.expressions.expression.ExpressionNot
-import nl.esi.comma.expressions.expression.ExpressionBracket
-import nl.esi.comma.expressions.expression.ExpressionMinus
-import nl.esi.comma.expressions.expression.ExpressionNullLiteral
 
 class ExpressionsCommaGenerator extends TypesCommaGenerator {
 	
@@ -141,7 +140,7 @@ class ExpressionsCommaGenerator extends TypesCommaGenerator {
 	'''«e.getVariable().getName()»'''
 
     // Added DB for CG. 19.06.2025
-    def dispatch CharSequence exprToComMASyntax(ExpressionFnCall e)
+    def dispatch CharSequence exprToComMASyntax(ExpressionFunctionCall e)
     {
         var str = new String();
         for(Expression arg : e.getArgs()) {
@@ -156,44 +155,42 @@ class ExpressionsCommaGenerator extends TypesCommaGenerator {
         return fnName + "(" + str + ")";
     }
 
-	def dispatch CharSequence exprToComMASyntax(ExpressionFunctionCall e)
-	'''«getFunctionText(e)»'''
-
 	def CharSequence getFunctionText(ExpressionFunctionCall e) {
-			if (e.getFunctionName().equals("add")) {
+	        val fnName = e.function.name
+			if (fnName.equals("add")) {
 				return String.format("add(%s,%s)", exprToComMASyntax(e.getArgs().get(0)), exprToComMASyntax(e.getArgs().get(1)))
-			} else if (e.getFunctionName().equals("size")) {
+			} else if (fnName.equals("size")) {
 				return String.format("size(%s)", exprToComMASyntax(e.getArgs().get(0)))
-			} else if (e.getFunctionName().equals("isEmpty")) {
+			} else if (fnName.equals("isEmpty")) {
 				return String.format("isEmpty(%s)", exprToComMASyntax(e.getArgs().get(0)))
-			} else if (e.getFunctionName().equals("contains")) {
+			} else if (fnName.equals("contains")) {
 				return String.format("contains(%s,%s)", exprToComMASyntax(e.getArgs().get(1)), exprToComMASyntax(e.getArgs().get(0)))
-			} else if (e.getFunctionName().equals("abs")) {
+			} else if (fnName.equals("abs")) {
 				return String.format("abs(%s)", exprToComMASyntax(e.getArgs().get(0)))
-			} else if (e.getFunctionName().equals("asReal")) {
+			} else if (fnName.equals("asReal")) {
 				return String.format("asReal(%s)", exprToComMASyntax(e.getArgs().get(0)))
-			} else if (e.getFunctionName().equals("hasKey")) {
+			} else if (fnName.equals("hasKey")) {
 				var map = exprToComMASyntax(e.getArgs().get(0));
 				var key = exprToComMASyntax(e.getArgs().get(1));
 				return String.format("hasKey(%s,%s)", key, map);
-			} else if (e.getFunctionName().equals("get")) { // added 18.08.2024
+			} else if (fnName.equals("get")) { // added 18.08.2024
 				var lst = exprToComMASyntax(e.getArgs().get(0));
 				var idx = exprToComMASyntax(e.getArgs().get(1));
 				return String.format("get(%s,%s)", lst, idx);
-			} else if (e.getFunctionName().equals("deleteKey")) {
+			} else if (fnName.equals("deleteKey")) {
 				var map = exprToComMASyntax(e.getArgs().get(0));
 				var key = exprToComMASyntax(e.getArgs().get(1));
 				return String.format("deleteKey(%s,%s)", map, key);
-			} else if (e.getFunctionName().equals("at")) {
+			} else if (fnName.equals("at")) {
                 var lst = exprToComMASyntax(e.getArgs().get(0));
                 var idx = exprToComMASyntax(e.getArgs().get(1));
                 var v = exprToComMASyntax(e.getArgs().get(2));
                 return String.format("at(%s,%s,%s)", lst, idx, v);
-            } else if (e.getFunctionName().equals("toString")) {
+            } else if (fnName.equals("toString")) {
                 return String.format("toString(%s)", exprToComMASyntax(e.getArgs().get(0)))
-            } else if (e.getFunctionName().equals("concat")) {
+            } else if (fnName.equals("concat")) {
                 return String.format("concat(%s,%s)", exprToComMASyntax(e.getArgs().get(0)), exprToComMASyntax(e.getArgs().get(1)))
-            } else if (e.getFunctionName().equals("range")) {
+            } else if (fnName.equals("range")) {
                 if (e.getArgs().size() == 1) {
                     return String.format("range(%s)", exprToComMASyntax(e.getArgs().get(0)))
                 } else if (e.getArgs().size() == 2) {

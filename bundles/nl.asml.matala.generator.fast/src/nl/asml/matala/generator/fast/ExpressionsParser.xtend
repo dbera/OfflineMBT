@@ -12,6 +12,7 @@
  */
 package nl.asml.matala.generator.fast
 
+import java.util.List
 import java.util.Map
 import nl.esi.comma.actions.actions.AssignmentAction
 import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
@@ -45,7 +46,6 @@ import nl.esi.comma.expressions.expression.ExpressionNullLiteral
 import nl.esi.comma.expressions.expression.ExpressionOr
 import nl.esi.comma.expressions.expression.ExpressionPlus
 import nl.esi.comma.expressions.expression.ExpressionPower
-import nl.esi.comma.expressions.expression.ExpressionQuantifier
 import nl.esi.comma.expressions.expression.ExpressionRecord
 import nl.esi.comma.expressions.expression.ExpressionRecordAccess
 import nl.esi.comma.expressions.expression.ExpressionSubtraction
@@ -220,46 +220,29 @@ class ExpressionsParser {
 	'''«expr.value»'''	
 
 
-    def static dispatch CharSequence generateExpression(ExpressionFunctionCall expr, CharSequence ref)
-    {
-    	if(expr.functionName.equals('size')) 
-    		return '''(«generateExpression(expr.args.get(0), ref)».length)'''
-    	else if(expr.functionName.equals('remove')) 
-    		return '''smVarContainer.remove(«generateExpression(expr.args.get(0), ref)», «generateExpression(expr.args.get(1), ref)»)'''
-    	else if(expr.functionName.equals('isEmpty')) 
-    		return '''(«generateExpression(expr.args.get(0), ref)».length == 0)'''
-    	else if(expr.functionName.equals('contains')) 
-    		return '''smVarContainer.contains(«generateExpression(expr.args.get(0), ref)», «generateExpression(expr.args.get(1), ref)»)'''
-    	else if(expr.functionName.equals('add')) 
-    		return '''[«generateExpression(expr.args.get(1), ref)»]'''
-    		// return '''smVarContainer.add(«generateExpression(expr.args.get(0), ref)», «generateExpression(expr.args.get(1), ref)»)'''
-    	else if(expr.functionName.equals('asReal')) 
-    		return '''(double)(«generateExpression(expr.args.get(0), ref)»)'''
-    	else if(expr.functionName.equals('abs')) 
-    		return '''Math.abs(«generateExpression(expr.args.get(0), ref)»)'''
-    	else if(expr.functionName.equals('get'))
-    		return '''«generateExpression(expr.args.get(0), ref)»[«generateExpression(expr.args.get(1), ref)»]'''
-    	else 
-    		return '''UNSUPPORTED FUNCTION NAME: «expr.functionName»'''
+    def static dispatch CharSequence generateExpression(ExpressionFunctionCall expr, CharSequence ref)   {
+        val fnName = expr.function.name
+        if(fnName.equals('size')) 
+            return '''(«generateExpression(expr.args.get(0), ref)».length)'''
+        else if(fnName.equals('remove')) 
+            return '''smVarContainer.remove(«generateExpression(expr.args.get(0), ref)», «generateExpression(expr.args.get(1), ref)»)'''
+        else if(fnName.equals('isEmpty')) 
+            return '''(«generateExpression(expr.args.get(0), ref)».length == 0)'''
+        else if(fnName.equals('contains')) 
+            return '''smVarContainer.contains(«generateExpression(expr.args.get(0), ref)», «generateExpression(expr.args.get(1), ref)»)'''
+        else if(fnName.equals('add')) 
+            return '''[«generateExpression(expr.args.get(1), ref)»]'''
+            // return '''smVarContainer.add(«generateExpression(args.get(0), ref)», «generateExpression(args.get(1), ref)»)'''
+        else if(fnName.equals('asReal')) 
+            return '''(double)(«generateExpression(expr.args.get(0), ref)»)'''
+        else if(fnName.equals('abs')) 
+            return '''Math.abs(«generateExpression(expr.args.get(0), ref)»)'''
+        else if(fnName.equals('get'))
+            return '''«generateExpression(expr.args.get(0), ref)»[«generateExpression(expr.args.get(1), ref)»]'''
+        else 
+            return '''UNSUPPORTED FUNCTION NAME: «fnName»'''
     }
-    
-	/*    
-    '''
-    «IF expr.functionName.equals('size')»(«generateExpression(expr.args.get(0), ref)».length)«ENDIF»
-    «IF expr.functionName.equals('remove')»smVarContainer.remove(«generateExpression(expr.args.get(0), ref)», «generateExpression(expr.args.get(1), ref)»)«ENDIF»
-    «IF expr.functionName.equals('isEmpty')»(«generateExpression(expr.args.get(0), ref)».length == 0)«ENDIF»
-    «IF expr.functionName.equals('contains')»smVarContainer.contains(«generateExpression(expr.args.get(0), ref)», «generateExpression(expr.args.get(1), ref)»)«ENDIF»
-    «IF expr.functionName.equals('add')»smVarContainer.add(«generateExpression(expr.args.get(0), ref)», «generateExpression(expr.args.get(1), ref)»)«ENDIF»
-    «IF expr.functionName.equals('asReal')»(double)(«generateExpression(expr.args.get(0), ref)»)«ENDIF»
-    «IF expr.functionName.equals('abs')»Math.abs(«generateExpression(expr.args.get(0), ref)»)«ENDIF»
-    '''
-    */
-    
-    def static dispatch CharSequence generateExpression(ExpressionQuantifier expr, CharSequence ref)
-    '''
-		USE_REMOVE_INSTEAD
-	'''
-	
+
 	def static CharSequence generateDim(ExpressionVector vec) {
 		var dimTxt = ''''''
 		if(vec.typeAnnotation.type instanceof VectorTypeConstructor) {

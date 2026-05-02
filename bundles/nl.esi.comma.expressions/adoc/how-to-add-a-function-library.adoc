@@ -1,0 +1,331 @@
+////
+  // Copyright (c) 2024, 2025 TNO-ESI
+  //
+  // See the NOTICE file(s) distributed with this work for additional
+  // information regarding copyright ownership.
+  //
+  // This program and the accompanying materials are made available
+  // under the terms of the MIT License which is available at
+  // https://opensource.org/licenses/MIT
+  //
+  // SPDX-License-Identifier: MIT
+////
+
+[[how-to-add-an-expression-function-library]]
+= How to Add an Expression Function Library
+
+A library is a plain Java class whose `public` methods (static or instance) are automatically exposed as callable functions in `.expr` models. This guide describes how to add custom function libraries and converters to the Expression Functions Framework.
+
+== Workflow: Registration to Usage
+
+=== Step 1: Define Function Library
+
+Create a Java class with `public` methods — static or instance:
+
+[source,java]
+----
+class SomeLibrary {    
+    // Static: no instance needed
+    /** Returns the element at {@code index}, or {@code null} if out of bounds. */
+    public static Expression get(ExpressionVector vector, long index) {
+        if (index >= 0 && index < vector.getElements().size()) {
+            return vector.getElements().get((int) index);
+        }
+        return null;
+    }
+
+    // Instance: requires a receiver object at evaluation time
+    /** Alternatively regular java objects can also be used, but then more conversion is needed. */
+    public Object sum(List<Object> list) {
+        int sum = 0;
+        for (Object obj : list) {
+            if (obj instanceof Integer iObj) {
+                sum += iObj;
+            }
+        }
+        return sum;
+   }
+}
+----
+
+=== Step 2: Add Library
+
+Extends `ExpressionFunctionLibrariesProvider` to contribute the library:
+
+[source,java]
+----
+public class MyFunctionsProvider extends ExpressionFunctionLibrariesProvider {
+    @Override
+    public Set<Class<?>> get() {
+        return Streams.concat(super.get().stream(), Stream.of(SomeLibrary.class)).collect(Collectors::toSet);
+    }
+}
+----
+
+=== Step 3: Bind the provider in your RuntimeModule
+
+Override `bindIExpressionFunctionLibrariesProvider` in your language's RuntimeModule to return the custom provider:
+
+[source,xtend]
+----
+def Class<? extends IExpressionFunctionLibrariesProvider> bindIExpressionFunctionLibrariesProvider() {
+    return MyFunctionsProvider
+}
+----
+
+The framework then automatically registers the libraries: it generates in-memory `.expr` declarations and makes them visible in the global scope — no explicit `import` is needed.
+
+=== Step 4: Usage
+
+Functions become available in expressions. The `call` keyword is optional. :
+
+[source]
+----
+int[] v  = range(1, 10, 2)   // range is available in the default library
+int   s  = sum(v)            // Uses newly registered function
+----
+
+== Providing instances for non-static methods
+
+Static methods are invoked directly. For instance methods, a receiver object must be provided at evaluation time via `IEvaluationContext.getLibraryFunctionObjects()`.
+
+Override this method in your evaluation context to return the relevant instances:
+
+[source,java]
+----
+IEvaluationContext ctx = new IEvaluationContext() {
+    private final MyFunctions myLib = new MyFunctions();
+
+    @Override
+    public Expression getExpression(Variable variable) { ... }
+
+    @Override
+    public List<Object> getLibraryFunctionObjects() {
+        return List.of(myLib);
+    }
+};
+----
+
+At invocation time, `ExpressionFunctionsRegistry` searches the list for the first object whose class is assignable to the method's declaring class and uses it as the receiver. If no matching instance is found for a non-static method, an `IllegalStateException` is thrown.
+
+== Library class constraints
+
+Methods exposed as functions must be::
+  `public` — non-public methods are ignored.
+  Both `static` and instance methods are supported.
+
+Return type must not be `void`::
+  Expression functions are handled side-effect free by the framework and always produce a value. Functions are pure computations that create a new result based on their inputs. Void methods cannot satisfy this requirement because they do not return a new value, so they are skipped during generation.
+
+=== Unsupported Functions and Logging
+
+When functions fail to register (e.g., non-public method or duplicate signature), the framework logs an error message but continues initialization to ensure partial function library availability.
+
+**Registration Errors** are logged in the following format:
+
+----
+Failed to register function '<class.name>.<signature>': <error reason>
+----
+
+Examples:
+
+- Non-public method: `Failed to register function 'MyLibrary.getValue(int)': Function must be public`
+- Duplicate signature: `Failed to register function 'MyLibrary.process(String)': Function with same signature already exists: OtherLibrary.process(String)`
+- Void return: `Failed to register function 'MyLibrary.doSomething()': Function must return a value`
+
+These errors do not prevent other functions from being registered.
+
+== Supported parameter and return types
++
+[cols="1,1", options="header"]
+|===
+| Java type | Expression type
+
+| `boolean` / `Boolean`
+| `bool`
+
+| `long` / `Long` / `int` / `Integer` / `short` / `byte`
+| `int`
+
+| `double` / `Double` / `float` / `Float` / `BigDecimal`
+| `real`
+
+| `String`
+| `string`
+
+| `List<T>` / `Collection<T>`
+| `T[]` (vector)
+
+| `Map<K, V>`
+| `map<K, V>`
+
+| `ExpressionVector`
+| `any[]` (vector) — *no conversion*
+
+| `ExpressionMap`
+| `map<any, any>` — *no conversion*
+
+| `Expression`
+| `any` — *no conversion*
+
+| `Object` / generic type variable
+| `any`
+|===
+
++
+TIP: Using EMF model types (`ExpressionVector`, `ExpressionMap`, `Expression`) directly as parameter or return types avoids conversion overhead. The framework passes the raw EMF objects without converting to/from Java collections. This is the preferred approach when the function operates on expression structures rather than plain Java values — see `DefaultExpressionFunctions` for examples.
+
+Overloaded methods are supported::
+  Multiple methods with the same name but different parameter types or counts are allowed (e.g. `abs(long)` and `abs(BigDecimal)`). Overload resolution is based on the expression argument types at the call site.
+
+Avoid generics with unchecked casts::
+  Prefer concrete overloads over a single generic `<T>` method. For example, split `abs` into `abs(long)` and `abs(BigDecimal)` instead of using `<T> T abs(T value)`.
+
+Parameter names::
+  If the library is compiled with the `-parameters` flag (configured in both `pom.xml` and the Eclipse setup), the real parameter names appear (prefixed with `_`) in the generated `.expr` declarations. Otherwise, synthetic names (`p0`, `p1`, …) are used.
+
+== Adding custom converters
+
+If your library uses custom Java types as parameters or return values, you may need to provide a custom converter:
+
+1. Implement the `IExpressionConverter` interface with the following methods:
+   - `Optional<Object> toObject(Expression expression, Class<?> targetType)` - Converts an Expression to a Java Object
+   - `Optional<Expression> toExpression(Object object, Type type)` - Converts a Java Object to an Expression
+2. Extend `ExpressionConvertersProvider` to include your converter
+3. Bind via `bindIExpressionConvertersProvider` in the derived language RuntimeModule
+
+Both methods return `Optional` to indicate success or failure of the conversion.
+
+NOTE: When a library uses custom Java types (like `UUID`), the framework automatically generates `type` declarations in the in-memory `.expr` file. These types are then used in function signatures. For example, if your library has a method `UUID fromString(String s)`, the generated declaration will be `function uuid fromString(string p0)`. You only need to implement a converter for type mapping; the type declaration is generated automatically.
+
+=== Example: Custom Converter for UUID
+
+Here's a simple example of implementing `IExpressionConverter` for a Java `UUID` type:
+
+==== Minimal SampleLibrary with UUID
+
+First, create a library that uses UUID:
+
+[source, java]
+----
+import java.util.UUID;
+
+public class UUIDLibrary {
+    
+    /**
+     * Creates a UUID from a string representation.
+     */
+    public static UUID fromString(String uuidStr) {
+        return UUID.fromString(uuidStr);
+    }
+
+    /**
+     * Converts a UUID to its string representation.
+     */
+    public static String uuidToString(UUID uuid) {
+        return uuid != null ? uuid.toString() : "";
+    }
+    
+    /**
+     * Validates that a string represents a valid UUID format.
+     * Note: This takes a String, not UUID, to validate the format before conversion.
+     */
+    public static boolean isValidUUID(String uuid) {
+        try {
+            UUID.fromString(uuid);
+            return true;
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+    }
+}
+----
+
+==== UUIDConverter Implementation
+
+Then implement the converter to bridge between expressions and UUIDs:
+
+[source, java]
+----
+import java.util.Optional;
+import java.util.UUID;
+import nl.esi.comma.expressions.conversion.IExpressionConverter;
+import nl.esi.comma.expressions.evaluation.IEvaluationContext;
+import nl.esi.comma.expressions.expression.Expression;
+import nl.esi.comma.types.types.Type;
+
+public class UUIDConverter implements IExpressionConverter {
+
+    @Override
+    public Optional<Object> toObject(Expression expression, Class<?> targetType) {
+        // Only convert to UUID type
+        if (!targetType.equals(UUID.class)) {
+            return Optional.empty();
+        }
+        
+        // Handle null
+        if (expression == null) {
+            return Optional.empty();
+        }
+
+        var context = IEvaluationContext.EMPTY;
+        // Convert string expression to UUID
+        try {
+            String value = context.asString(expression);
+            if (value == null || value.isEmpty()) {
+                return Optional.empty();
+            }
+            UUID uuid = UUID.fromString(value);
+            return Optional.of(uuid);
+        } catch (IllegalArgumentException e) {
+            // Invalid UUID format
+            return Optional.empty();
+        }
+    }
+
+    @Override
+    public Optional<Expression> toExpression(Object object, Type type) {
+        // Only convert UUID objects
+        if (!(object instanceof UUID)) {
+            return Optional.empty();
+        }
+        
+        var context = IEvaluationContext.EMPTY;
+        Expression result = context.toExpression(object.toString());
+        if (result != null) {
+            return Optional.of(result);
+        }
+        return Optional.empty();
+    }
+}
+----
+
+==== Generated Declarations
+
+When the library is registered, the framework automatically generates the following in-memory `.expr` declarations:
+
+[source]
+----
+type uuid
+function uuid fromString(string p0)
+function string uuidToString(uuid p0)
+function bool isValidUUID(string p0)
+----
+
+Notice:
+- `type uuid` is automatically declared for the custom Java type
+- Functions that take `UUID` parameters use the `uuid` type (e.g., `uuidToString(uuid p0)`)
+- Functions that take `String` parameters use the `string` type (e.g., `isValidUUID(string p0)`)
+- Parameter names use `p0`, `p1`, etc., unless compiled with the `-parameters` flag
+
+==== Usage
+
+Once registered, the converter enables seamless UUID handling in expressions:
+
+[source]
+----
+uuid id = fromString("550e8400-e29b-41d4-a716-446655440000")
+string str = uuidToString(id)                             // → "550e8400-e29b-41d4-a716-446655440000"
+bool valid = isValidUUID("550e8400-e29b-41d4-a716-446655440000")  // → true
+bool invalid = isValidUUID("not-a-uuid")                  // → false
+----

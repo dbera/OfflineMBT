@@ -30,6 +30,7 @@ import nl.asml.matala.product.product.SymbConstraint
 import nl.asml.matala.product.product.VarRef
 import nl.esi.comma.expressions.evaluation.ExpressionEvaluator
 import nl.esi.comma.expressions.evaluation.IEvaluationContext
+import nl.esi.comma.expressions.expression.ExpressionConstantInt
 import nl.esi.comma.types.types.RecordTypeDecl
 import nl.esi.comma.types.types.SimpleTypeDecl
 import nl.esi.comma.types.types.TypeDecl
@@ -38,8 +39,8 @@ import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
 
+import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.getService
 import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.serialize
-import nl.esi.comma.expressions.expression.ExpressionConstantInt
 
 /**
  * Generates code from your *.ps model files on save.
@@ -184,6 +185,8 @@ class ProductGenerator extends AbstractGenerator {
 	}
 	
 	def Pair<PetriNet,String> populatePetriNet(PetriNet pnet, Block block) {
+         val expressionEvaluator = block.getService(ExpressionEvaluator)
+	    
 		var methodTxt = ''''''		
 		var map_output_input = new HashMap<String, List<String>>
 		// populate list of places
@@ -228,7 +231,7 @@ class ProductGenerator extends AbstractGenerator {
 				var BigInteger priority = BigInteger.ZERO
 				if (update.priority !== null) {
 				    val evalCtx = IEvaluationContext.EMPTY
-				    val prioExp = new ExpressionEvaluator().evaluate(update.priority, evalCtx)
+				    val prioExp = expressionEvaluator.evaluate(update.priority, evalCtx)
 				    priority = evalCtx.asInt(prioExp) ?: BigInteger.ZERO
 				}
 				var tr = new Transition(block.name, block.name+"_"+tname, qname, priority.intValue)

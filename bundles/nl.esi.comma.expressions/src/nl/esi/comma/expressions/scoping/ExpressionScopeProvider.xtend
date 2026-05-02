@@ -23,18 +23,20 @@ import nl.esi.comma.expressions.expression.ExpressionRecord
 import nl.esi.comma.expressions.expression.ExpressionRecordAccess
 import nl.esi.comma.expressions.expression.ExpressionVector
 import nl.esi.comma.expressions.expression.Field
-import nl.esi.comma.expressions.validation.ExpressionFunction
-import nl.esi.comma.expressions.validation.ExpressionValidator
+import nl.esi.comma.expressions.expression.FunctionDecl
 import nl.esi.comma.types.types.EnumTypeDecl
 import nl.esi.comma.types.types.RecordTypeDecl
 import nl.esi.comma.types.types.TypeObject
+import nl.esi.comma.types.types.TypesPackage
 import nl.esi.comma.types.utilities.TypeUtilities
 import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.EReference
 import org.eclipse.emf.ecore.EStructuralFeature
+import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.scoping.IScope
 import org.eclipse.xtext.scoping.Scopes
 
+import static nl.esi.comma.expressions.utilities.ExpressionsUtilities.*
 import static org.eclipse.xtext.scoping.Scopes.*
 
 /**
@@ -44,8 +46,9 @@ import static org.eclipse.xtext.scoping.Scopes.*
  * on how and when to use it.
  */
 class ExpressionScopeProvider extends AbstractExpressionScopeProvider {
-
+    
     override getScope(EObject context, EReference reference) {
+
         val contextType = context.getContextType(reference)
         switch (context) {
             case contextType instanceof EnumTypeDecl  && reference == ExpressionPackage.Literals.EXPRESSION_ENUM_LITERAL__LITERAL: {
@@ -55,12 +58,28 @@ class ExpressionScopeProvider extends AbstractExpressionScopeProvider {
                 return scopeFor(TypeUtilities::getAllFields(context.type))
             }
             ExpressionRecordAccess case reference == ExpressionPackage.Literals.EXPRESSION_RECORD_ACCESS__FIELD: {
-                val type = ExpressionValidator.typeOf(context.record)
+                val type = typeOf(context.record)
                 return type instanceof RecordTypeDecl ? scopeFor(TypeUtilities::getAllFields(type)) : IScope.NULLSCOPE
             }
             Field case reference == ExpressionPackage.Literals.FIELD__RECORD_FIELD: {
                 val rec = context.eContainer
                 return rec instanceof ExpressionRecord ? scopeFor(TypeUtilities::getAllFields(rec.type)) : IScope.NULLSCOPE
+            }
+            ExpressionFunctionCall case reference == ExpressionPackage.Literals.EXPRESSION_FUNCTION_CALL__FUNCTION: {
+                // Use custom scope that implements three-phase matching:
+                // 1. Exact type match (arg count + types)
+                // 2. Size match (arg count only - for better error messages)
+                // 3. First function (any overload - for error reporting)
+                return new FunctionOverloadScope(delegateGetScope(context, reference), context)
+            }
+        }
+
+        // Make TypeParams from enclosing FunctionDecl visible as TypeDecls
+        if (reference == TypesPackage.Literals.TYPE__TYPE) {
+            val funcDecl = EcoreUtil2.getContainerOfType(context, FunctionDecl)
+            if (funcDecl !== null && !funcDecl.typeParams.empty) {
+                val parent = super.getScope(context, reference)
+                return Scopes.scopeFor(funcDecl.typeParams, parent)
             }
         }
 
@@ -76,17 +95,10 @@ class ExpressionScopeProvider extends AbstractExpressionScopeProvider {
                 context.type
             }
             ExpressionBinary case reference != ExpressionPackage.Literals.EXPRESSION_BINARY__LEFT: {
-                ExpressionValidator.typeOf(context.left)
-            }
-            ExpressionFunctionCall case reference != ExpressionPackage.Literals.EXPRESSION_FUNCTION_CALL__FUNCTION_NAME: {
-                val function = ExpressionFunction.valueOf(context)
-                if (function !== null) {
-                    // TODO: This only works if writing arguments in order, not when changing arguments!
-                    return function.inferType(context.args, context.args.length)
-                }
+                typeOf(context.left)
             }
             ExpressionVector: {
-                val vct = ExpressionValidator.typeOf(context)
+                val vct = typeOf(context)
                 vct === null ? null : TypeUtilities::getElementType(vct)
             }
         }

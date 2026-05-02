@@ -40,7 +40,6 @@ import nl.esi.comma.expressions.expression.ExpressionNot
 import nl.esi.comma.expressions.expression.ExpressionOr
 import nl.esi.comma.expressions.expression.ExpressionPlus
 import nl.esi.comma.expressions.expression.ExpressionPower
-import nl.esi.comma.expressions.expression.ExpressionQuantifier
 import nl.esi.comma.expressions.expression.ExpressionRecord
 import nl.esi.comma.expressions.expression.ExpressionRecordAccess
 import nl.esi.comma.expressions.expression.ExpressionSubtraction
@@ -152,8 +151,6 @@ class ExpressionsUmlGenerator extends CommaGenerator{
     '''«generateExpression(expr.map)»[«generateExpression(expr.key)»«IF expr.value !== null»->«generateExpression(expr.value)»«ENDIF»]'''
     
     def dispatch CharSequence generateExpression(ExpressionFunctionCall expr)
-    '''«expr.functionName»(«FOR a : expr.args SEPARATOR ', '»«generateExpression(a)»«ENDFOR»)'''
+    '''call «expr.function.name»(«FOR a : expr.args SEPARATOR ', '»«generateExpression(a)»«ENDFOR»)'''
     
-    def dispatch CharSequence generateExpression(ExpressionQuantifier expr)
-    '''«expr.quantifier»(«expr.iterator.name» in «generateExpression(expr.collection)» : «generateExpression(expr.condition)»)'''
 }

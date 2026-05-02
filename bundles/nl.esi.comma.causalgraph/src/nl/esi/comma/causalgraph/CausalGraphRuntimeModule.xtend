@@ -1,13 +1,13 @@
 /**
  * Copyright (c) 2024, 2025 TNO-ESI
- *
+ * 
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
- *
+ * 
  * This program and the accompanying materials are made available
  * under the terms of the MIT License which is available at
  * https://opensource.org/licenses/MIT
- *
+ * 
  * SPDX-License-Identifier: MIT
  */
 /*
@@ -17,7 +17,11 @@ package nl.esi.comma.causalgraph
 
 import nl.esi.comma.causalgraph.conversion.CausalGraphValueConverterService
 import nl.esi.comma.causalgraph.formatting.CausalGraphFormatter
-import nl.esi.comma.types.scoping.TypesImportUriGlobalScopeProvider
+import nl.esi.comma.expressions.conversion.ExpressionConvertersProvider
+import nl.esi.comma.expressions.conversion.IExpressionConvertersProvider
+import nl.esi.comma.expressions.functions.ExpressionFunctionLibrariesProvider
+import nl.esi.comma.expressions.functions.IExpressionFunctionLibrariesProvider
+import nl.esi.comma.expressions.scoping.ExpressionsImportUriGlobalScopeProvider
 import org.eclipse.xtext.conversion.IValueConverterService
 import org.eclipse.xtext.formatting.IFormatter
 
@@ -25,8 +29,9 @@ import org.eclipse.xtext.formatting.IFormatter
  * Use this class to register components to be used at runtime / without the Equinox extension registry.
  */
 class CausalGraphRuntimeModule extends AbstractCausalGraphRuntimeModule {
+
     override bindIGlobalScopeProvider() {
-        return TypesImportUriGlobalScopeProvider
+        return ExpressionsImportUriGlobalScopeProvider
     }
 
     override Class<? extends IValueConverterService> bindIValueConverterService() {
@@ -36,4 +41,13 @@ class CausalGraphRuntimeModule extends AbstractCausalGraphRuntimeModule {
     override Class<? extends IFormatter> bindIFormatter() {
         return CausalGraphFormatter
     }
+
+    def Class<? extends IExpressionFunctionLibrariesProvider> bindIExpressionFunctionLibrariesProvider() {
+        return ExpressionFunctionLibrariesProvider
+    }
+
+    def Class<? extends IExpressionConvertersProvider> bindIExpressionConvertersProvider() {
+        return ExpressionConvertersProvider
+    }
+
 }

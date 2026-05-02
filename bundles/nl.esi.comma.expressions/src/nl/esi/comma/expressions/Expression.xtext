@@ -34,7 +34,11 @@ VariableDecl:
 ;
 
 FunctionDecl:
-    'function' returnType = Type name = ID '(' (params += FunctionParam (',' params += FunctionParam)*)? ')'
+    'function' ('<' typeParams += TypeParam (',' typeParams += TypeParam)* '>')? returnType = Type name = ID '(' (params += FunctionParam (',' params += FunctionParam)*)? ')'
+;
+
+TypeParam returns types::TypeDecl:
+    {TypeParam} name = ID
 ;
 
 FunctionParam:
@@ -128,14 +132,12 @@ ExpressionLevel9 returns Expression:
 	ExpressionVariable |
 	ExpressionRecord |
 	ExpressionAny |
-    ExpressionFnCall |
-	ExpressionFunctionCall |
-	ExpressionQuantifier |
+    ExpressionFunctionCall |
 	ExpressionTypeAnnotated
 ;
 
-ExpressionFnCall: 
-    'call' function = [FunctionDecl|ID] '(' (args += Expression (',' args += Expression)*)? ')'
+ExpressionFunctionCall: 
+    function = [FunctionDecl|ID] '(' (args += Expression (',' args += Expression)*)? ')'
 ;
 
 ExpressionBracket:
@@ -183,18 +185,6 @@ ExpressionAny :
 	{ExpressionAny} "*"
 ;
 
-// We assume a library of functions. They can be provided in a separate model.
-// At the moment we have just a check of the function name and then a dedicated check for the types of the arguments
-// TODO: consider an expression (or function) Expression in Interval
-ExpressionFunctionCall: 
-	functionName = ID '(' (args += Expression (',' args += Expression)*)? ')'
-;
-
-//TODO rename to iterator? after adding 'delete' the expression is not a pure quantifier any more
-ExpressionQuantifier: 
-	quantifier = QUANTIFIER '(' iterator = Variable 'in' collection = Expression ':' condition = Expression ')'
-;
-
 ExpressionTypeAnnotated returns Expression:
 	TypeAnnotation( ({ExpressionVector.typeAnnotation = current} '[' (elements += Expression (',' elements += Expression)*)? ']') |
 		            ({ExpressionMap.typeAnnotation = current} '{' (pairs += Pair (',' pairs += Pair)*)? '}'))
@@ -206,12 +196,6 @@ TypeAnnotation :
 
 Pair:
 	key = Expression '->' value = Expression
-;
-
-enum QUANTIFIER :
-	EXISTS = 'exists' |
-	FORALL = 'forAll' |
-	DELETE = 'delete'
 ;
 
 // --- add extra superclasses in metamodel -------
@@ -252,6 +236,11 @@ ConcreteExpressionUnary returns ExpressionUnary:
 
 
 //Extensions to the Types language
+
+@Override
+Type returns types::Type:
+	TypeReference | VectorTypeConstructor | MapTypeConstructor
+;
 
 @Override 
 TypeReference: type = [types::TypeDecl] ;

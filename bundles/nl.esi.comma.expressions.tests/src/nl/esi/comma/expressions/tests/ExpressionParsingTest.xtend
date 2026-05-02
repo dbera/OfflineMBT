@@ -23,6 +23,7 @@ import org.eclipse.xtext.testing.util.ParseHelper
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.^extension.ExtendWith
+import nl.esi.xtext.common.lang.utilities.EcoreUtil3
 
 @ExtendWith(InjectionExtension)
 @InjectWith(ExpressionInjectorProvider)
@@ -39,4 +40,16 @@ class ExpressionParsingTest {
         val errors = result.eResource.errors
         Assertions.assertTrue(errors.isEmpty, '''Unexpected errors: «errors.join(", ")»''')
     }
+    
+    @Test
+    def void saveModel(){
+                val result = parseHelper.parse('''
+            int test = call abs(-1)
+        ''')
+        EcoreUtil3.validate(result)
+        
+        val txt = EcoreUtil3.serialize(result);
+        println(txt)
+    }
+    
 }
