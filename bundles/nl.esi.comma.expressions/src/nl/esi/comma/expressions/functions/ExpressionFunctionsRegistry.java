@@ -12,6 +12,8 @@
  */
 package nl.esi.comma.expressions.functions;
 
+import static nl.esi.comma.expressions.utilities.ExpressionsUtilities.getActualFunctionReturnType;
+
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -97,7 +99,7 @@ public class ExpressionFunctionsRegistry {
 		try {
 			try {
 				var result = method.invoke(receiver, args);
-				return toExpression(result, functionCall.getFunction().getReturnType(), context);
+				return toExpression(result, getActualFunctionReturnType(functionCall), context);
 			} catch (InvocationTargetException e) {
 				throw e.getTargetException();
 			}// Rethrow runtime exceptions without wrapping

@@ -68,7 +68,7 @@ class DefaultExpressionFunctionsTest extends ExpressionEvaluatorTestBase {
             [Assertions.assertTrue(content.contains("function real asReal("), "asReal")],
             [Assertions.assertTrue(content.contains("function bool hasKey("), "hasKey")],
             [Assertions.assertTrue(content.contains("function string toString("), "toString")],
-            [Assertions.assertTrue(content.contains("function any[] set("), "set")],
+            [Assertions.assertTrue(content.contains("function <T> T[] set("), "set")],
             [Assertions.assertTrue(content.contains("function int[] range("), "range")]
         )
     }

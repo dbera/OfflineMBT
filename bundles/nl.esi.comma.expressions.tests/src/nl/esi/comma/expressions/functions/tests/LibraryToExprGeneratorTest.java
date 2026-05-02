@@ -160,7 +160,7 @@ class LibraryToExprGeneratorTest {
         var method = SampleLibrary.class.getMethod("emfVectorArg", ExpressionVector.class);
         String result = LibraryToExprGenerator.generate(method);
         
-        assertEquals("function any[] emfVectorArg(any[] p0)", result);
+        assertEquals("function <T> T[] emfVectorArg(T[] p0)", result);
     }
 
     @Test

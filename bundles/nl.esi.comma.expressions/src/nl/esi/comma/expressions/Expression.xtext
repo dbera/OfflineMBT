@@ -34,7 +34,11 @@ VariableDecl:
 ;
 
 FunctionDecl:
-    'function' returnType = Type name = ID '(' (params += FunctionParam (',' params += FunctionParam)*)? ')'
+    'function' ('<' typeParams += TypeParam (',' typeParams += TypeParam)* '>')? returnType = Type name = ID '(' (params += FunctionParam (',' params += FunctionParam)*)? ')'
+;
+
+TypeParam returns types::TypeDecl:
+    {TypeParam} name = ID
 ;
 
 FunctionParam:
@@ -232,6 +236,11 @@ ConcreteExpressionUnary returns ExpressionUnary:
 
 
 //Extensions to the Types language
+
+@Override
+Type returns types::Type:
+	TypeReference | VectorTypeConstructor | MapTypeConstructor
+;
 
 @Override 
 TypeReference: type = [types::TypeDecl] ;

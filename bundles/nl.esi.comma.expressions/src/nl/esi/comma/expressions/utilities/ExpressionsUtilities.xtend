@@ -49,6 +49,8 @@ import nl.esi.comma.expressions.expression.ExpressionRecordAccess
 import nl.esi.comma.expressions.expression.ExpressionSubtraction
 import nl.esi.comma.expressions.expression.ExpressionVariable
 import nl.esi.comma.expressions.expression.ExpressionVector
+import nl.esi.comma.expressions.expression.FunctionParam
+import nl.esi.comma.expressions.expression.TypeParam
 import nl.esi.comma.types.BasicTypes
 import nl.esi.comma.types.types.EnumTypeDecl
 import nl.esi.comma.types.types.MapTypeConstructor
@@ -61,6 +63,7 @@ import nl.esi.comma.types.types.TypeObject
 import nl.esi.comma.types.types.TypeReference
 import nl.esi.comma.types.types.VectorTypeConstructor
 import nl.esi.comma.types.types.VectorTypeDecl
+import org.eclipse.emf.ecore.util.EcoreUtil
 
 import static extension nl.esi.comma.types.utilities.TypeUtilities.*
 import static extension org.eclipse.emf.ecore.util.EcoreUtil.*
@@ -159,7 +162,7 @@ class ExpressionsUtilities {
             ExpressionRecord : e.type
             ExpressionRecordAccess : e.field?.type?.typeObject
             ExpressionAny : BasicTypes.getAnyType(e)
-            ExpressionFunctionCall : e.function.returnType.type
+            ExpressionFunctionCall : e.actualFunctionReturnType.typeObject
             ExpressionVector : e.typeAnnotation?.type?.typeObject
             ExpressionMap : e.typeAnnotation?.type?.typeObject
             ExpressionMapRW : {
@@ -175,6 +178,55 @@ class ExpressionsUtilities {
             }
             
         }
+    }
+
+    /**
+     *  Resolve the actual return type
+     */
+    def static Type getActualFunctionReturnType(ExpressionFunctionCall functionCall) {
+        val returnType = functionCall.function.returnType.type
+        if (returnType instanceof TypeParam) {
+            val iter = functionCall.function.params.iterator
+            for( arg: functionCall.args){
+                if (iter.hasNext) {
+                val param = iter.next
+                if (param.type.isMapType && arg.typeOf.isMapType){
+                    if( param.type.typeObject.keyType == returnType) {
+                        return arg.typeOf.keyType.asType
+                    }
+                    if( param.type.typeObject.valueType == returnType) {
+                        return arg.typeOf.valueType.asType
+                    }
+                }
+                if (param.type.isVectorType && arg.typeOf.isVectorType){
+                    if( param.type.typeObject.elementType == returnType) {
+                        return arg.typeOf.elementType.asType
+                    }
+                }
+                if (param.type.type == returnType){
+                    return arg.typeOf.asType
+                }
+                
+                }
+            }
+        }
+        return functionCall.function.returnType
+    }
+
+    /**
+     * Replace the template function param with the actual type
+     */
+    def static getActualFunctionParam(FunctionParam param, Expression arg){
+        if (param.type.isMapType && arg.typeOf.isMapType){
+            return asExprType(arg.typeOf.asType)
+        }
+        else if (param.type.isVectorType && arg.typeOf.isVectorType){
+            return asExprType(arg.typeOf.asType)
+        }
+        else if (param.type.type instanceof TypeParam){
+            return arg.typeOf.asType
+        }
+        return param.type
     }
     
     def static TypeObject inferTypeBinaryArithmetic(ExpressionBinary e){

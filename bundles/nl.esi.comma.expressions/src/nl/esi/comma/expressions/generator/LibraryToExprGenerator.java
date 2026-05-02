@@ -21,9 +21,11 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -53,14 +55,25 @@ import nl.esi.comma.expressions.expression.ExpressionVector;
  *   <li>Numeric: {@code double/Double/float/Float/BigDecimal} → {@code real}</li>
  *   <li>String: {@code String} → {@code string}</li>
  *   <li>EMF expression types:
- *       {@link ExpressionVector} → {@code any[]},
- *       {@link ExpressionMap} → {@code map<any,any>},
+ *       {@link ExpressionVector} with generics → {@code T[]},
+ *       {@link ExpressionMap} with generics → {@code map<K,V>},
  *       {@link Expression} → {@code any}
  *   </li>
- *   <li>Collections: {@code List, Collection} → {@code any[]}</li>
- *   <li>Maps: {@code Map} → {@code map<any,any>}</li>
+ *   <li>Collections: {@code List, Collection} → {@code T[]}</li>
+ *   <li>Maps: {@code Map} → {@code map<K,V>}</li>
  *   <li>Generic types: {@code List<String>} → {@code string[]}, {@code Map<String, Long>} → {@code map<string, int>}</li>
+ *   <li>Type variables: {@code <T>} → {@code T}</li>
  *   <li>Custom types: Any other type (e.g., {@code UUID}) → lowercase simple name (e.g., {@code uuid})</li>
+ * </ul>
+ * 
+ * <p><strong>Template Support:</strong>
+ * Methods using EMF expression collection types automatically generate template function declarations.
+ * For example:
+ * <ul>
+ *   <li>{@code Expression get(ExpressionMap, long)} generates: {@code function <K, V> V get(map<K, V> p0, int p1)}</li>
+ *   <li>{@code ExpressionVector add(ExpressionVector, Expression)} generates: {@code function <T> T[] add(T[] p0, T p1)}</li>
+ *   <li>{@code boolean hasKey(ExpressionMap, Expression)} generates: {@code function <K, V> bool hasKey(map<K, V> p0, K p1)}</li>
+ *   <li>{@code boolean contains(ExpressionVector, Expression)} generates: {@code function <T> bool contains(T[] p0, T p1)}</li>
  * </ul>
  * 
  * <p><strong>Example Usage:</strong>
@@ -130,36 +143,126 @@ public final class LibraryToExprGenerator {
 	}
 
 	// -- Core generation ------------------------------------------------------
+
+	/**
+	 * Determines the template context for a method by scanning for EMF expression
+	 * types in its signature. The context determines how EMF types are mapped:
+	 * <ul>
+	 *   <li>{@code VECTOR}: {@link ExpressionVector} → {@code T[]},
+	 *       {@link Expression} → {@code T}</li>
+	 *   <li>{@code MAP}: {@link ExpressionMap} → {@code map<K, V>},
+	 *       {@link Expression} as parameter → {@code K},
+	 *       {@link Expression} as return → {@code V}</li>
+	 *   <li>{@code NONE}: No EMF collection types; {@link Expression} → {@code any}</li>
+	 * </ul>
+	 */
+	private enum TemplateContext {
+		NONE, VECTOR, MAP;
+
+		Set<String> typeParams() {
+			return switch (this) {
+			case VECTOR -> new LinkedHashSet<>(List.of("T"));
+			case MAP -> new LinkedHashSet<>(List.of("K", "V"));
+			case NONE -> new LinkedHashSet<>();
+			};
+		}
+	}
+
+	/**
+	 * Determines the template context for a method by scanning for
+	 * {@link ExpressionVector} and {@link ExpressionMap} in params and return type.
+	 */
+	private static TemplateContext resolveTemplateContext(Method method) {
+		List<Class<?>> allRawTypes = new ArrayList<>();
+		allRawTypes.add(rawType(method.getGenericReturnType()));
+		for (Type t : method.getGenericParameterTypes()) {
+			allRawTypes.add(rawType(t));
+		}
+
+		for (Class<?> cls : allRawTypes) {
+			if (cls != null && ExpressionMap.class.isAssignableFrom(cls)) return TemplateContext.MAP;
+		}
+		for (Class<?> cls : allRawTypes) {
+			if (cls != null && ExpressionVector.class.isAssignableFrom(cls)) return TemplateContext.VECTOR;
+		}
+		return TemplateContext.NONE;
+	}
+
+	private static Class<?> rawType(Type type) {
+		if (type instanceof Class<?> cls) return cls;
+		if (type instanceof ParameterizedType pt) return (Class<?>) pt.getRawType();
+		return null;
+	}
+
 	/**
 	 * Converts a single method to a {@code function ...} declaration, or empty if
-	 * void.
+	 * void. Automatically synthesizes template parameters for methods using EMF
+	 * expression collection types ({@link ExpressionVector}, {@link ExpressionMap}).
 	 */
 	private static Optional<String> toFunctionDecl(Method method) {
-		String returnExpr = toExprType(method.getGenericReturnType());
+		TemplateContext ctx = resolveTemplateContext(method);
+
+		String returnExpr = toExprType(method.getGenericReturnType(), ctx, true);
 		if (returnExpr == null)
 			return Optional.empty();
 
 		String params = IntStream.range(0, method.getParameterCount())
-				.mapToObj(i -> toExprType(method.getGenericParameterTypes()[i]) + " " + parameterName(method, i))
+				.mapToObj(i -> toExprType(method.getGenericParameterTypes()[i], ctx, false) + " " + parameterName(method, i))
 				.collect(Collectors.joining(", "));
 
-		return Optional.of("function " + returnExpr + " " + method.getName() + "(" + params + ")");
+		// Combine explicit Java type parameters with synthesized EMF template params
+		Set<String> typeParams = new LinkedHashSet<>();
+		for (TypeVariable<?> tv : method.getTypeParameters()) {
+			typeParams.add(tv.getName());
+		}
+		collectTypeVariables(method.getGenericReturnType(), typeParams);
+		for (Type pt : method.getGenericParameterTypes()) {
+			collectTypeVariables(pt, typeParams);
+		}
+		typeParams.addAll(ctx.typeParams());
+
+		// Remove type params not used in the return type and replace them with "any" in params
+		Set<String> usedInReturn = typeParams.stream()
+				.filter(tp -> returnExpr.matches(".*\\b" + tp + "\\b.*"))
+				.collect(Collectors.toCollection(LinkedHashSet::new));
+		Set<String> unusedParams = new LinkedHashSet<>(typeParams);
+		unusedParams.removeAll(usedInReturn);
+		String finalParams = params;
+		for (String tp : unusedParams) {
+			finalParams = finalParams.replaceAll("\\b" + tp + "\\b", "any");
+		}
+
+		String typeParamStr = usedInReturn.isEmpty() ? "" : "<" + String.join(", ", usedInReturn) + "> ";
+		return Optional.of("function " + typeParamStr + returnExpr + " " + method.getName() + "(" + finalParams + ")");
 	}
 
 	// -- Type mapping: Java Type → expr type string ---------------------------
 
 	/**
-	 * Maps a Java {@link Type} to an expr type string; returns {@code null} for
-	 * void.
+	 * Maps a Java {@link Type} to an expr type string; returns {@code null} for void.
+	 * Type variables are rendered as-is (e.g., "T"). EMF expression types are mapped
+	 * based on the {@link TemplateContext}.
+	 *
+	 * @param type      the Java type to map
+	 * @param ctx       the template context (VECTOR, MAP, or NONE)
+	 * @param isReturn  whether this type appears in return position
 	 */
-	public static String toExprType(Type type) {
+	private static String toExprType(Type type, TemplateContext ctx, boolean isReturn) {
 		return switch (type) {
 		case Class<?> c when c == void.class || c == Void.class -> null;
-		case Class<?> cls -> rawClassToExpr(cls);
-		case ParameterizedType pt -> parameterizedToExpr(pt);
-		case TypeVariable<?> tv -> "any";
+		case Class<?> cls -> rawClassToExpr(cls, ctx, isReturn);
+		case ParameterizedType pt -> parameterizedToExpr(pt, ctx, isReturn);
+		case TypeVariable<?> tv -> tv.getName();
 		default -> "any";
 		};
+	}
+
+	/**
+	 * Public convenience overload without template context (for external callers).
+	 * EMF expression types map to {@code any}/{@code any[]}/{@code map<any, any>}.
+	 */
+	public static String toExprType(Type type) {
+		return toExprType(type, TemplateContext.NONE, false);
 	}
 
 	private static final Map<Class<?>, String> TYPE_MAP = Map.ofEntries(Map.entry(boolean.class, "bool"),
@@ -169,34 +272,64 @@ public final class LibraryToExprGenerator {
 			Map.entry(double.class, "real"), Map.entry(Double.class, "real"), Map.entry(float.class, "real"),
 			Map.entry(Float.class, "real"), Map.entry(BigDecimal.class, "real"), Map.entry(String.class, "string"));
 
-	private static String rawClassToExpr(Class<?> cls) {
+	private static String rawClassToExpr(Class<?> cls, TemplateContext ctx, boolean isReturn) {
 		String mapped = TYPE_MAP.get(cls);
 		if (mapped != null)            return mapped;
-		// Exclude Object - should be treated as "any"
 		if (cls == Object.class)       return "any";
-		// EMF expression model types
-		if (ExpressionVector.class.isAssignableFrom(cls)) return "any[]";
-		if (ExpressionMap.class.isAssignableFrom(cls))    return "map<any, any>";
-		if (Expression.class.isAssignableFrom(cls))       return "any";
+		// EMF expression model types — context-sensitive mapping
+		if (ExpressionVector.class.isAssignableFrom(cls)) {
+			return ctx == TemplateContext.VECTOR ? "T[]" : "any[]";
+		}
+		if (ExpressionMap.class.isAssignableFrom(cls)) {
+			return ctx == TemplateContext.MAP ? "map<K, V>" : "map<any, any>";
+		}
+		if (Expression.class.isAssignableFrom(cls)) {
+			return switch (ctx) {
+			case VECTOR -> "T";
+			case MAP -> isReturn ? "V" : "K";
+			case NONE -> "any";
+			};
+		}
 		// Java collection / map types
-		if (Collection.class.isAssignableFrom(cls))       return "any[]";
-		if (Map.class.isAssignableFrom(cls))              return "map<any, any>";
-		// Custom types - use their class name
+		if (Collection.class.isAssignableFrom(cls)) return "any[]";
+		if (Map.class.isAssignableFrom(cls))        return "map<any, any>";
 		return cls.getSimpleName().toLowerCase();
 	}
 
-	private static String parameterizedToExpr(ParameterizedType pt) {
+	private static String parameterizedToExpr(ParameterizedType pt, TemplateContext ctx, boolean isReturn) {
 		Class<?> raw = (Class<?>) pt.getRawType();
 		Type[] args = pt.getActualTypeArguments();
 
+		if (ExpressionVector.class.isAssignableFrom(raw)) {
+			return (args.length > 0 ? toExprType(args[0], ctx, isReturn) : (ctx == TemplateContext.VECTOR ? "T" : "any")) + "[]";
+		}
+		if (ExpressionMap.class.isAssignableFrom(raw)) {
+			String k = args.length > 0 ? toExprType(args[0], ctx, false) : (ctx == TemplateContext.MAP ? "K" : "any");
+			String v = args.length > 1 ? toExprType(args[1], ctx, true)  : (ctx == TemplateContext.MAP ? "V" : "any");
+			return "map<" + k + ", " + v + ">";
+		}
 		if (Collection.class.isAssignableFrom(raw)) {
-			return (args.length > 0 ? toExprType(args[0]) : "any") + "[]";
+			return (args.length > 0 ? toExprType(args[0], ctx, isReturn) : "any") + "[]";
 		}
 		if (Map.class.isAssignableFrom(raw)) {
-			return "map<" + (args.length > 0 ? toExprType(args[0]) : "any") + ", "
-					+ (args.length > 1 ? toExprType(args[1]) : "any") + ">";
+			return "map<" + (args.length > 0 ? toExprType(args[0], ctx, false) : "any") + ", "
+					+ (args.length > 1 ? toExprType(args[1], ctx, true) : "any") + ">";
 		}
-		return rawClassToExpr(raw);
+		return rawClassToExpr(raw, ctx, isReturn);
+	}
+
+	/**
+	 * Recursively collects all type variable names from a Type.
+	 * Handles ParameterizedTypes by extracting their type arguments.
+	 */
+	private static void collectTypeVariables(Type type, Set<String> result) {
+		if (type instanceof TypeVariable<?> tv) {
+			result.add(tv.getName());
+		} else if (type instanceof ParameterizedType pt) {
+			for (Type arg : pt.getActualTypeArguments()) {
+				collectTypeVariables(arg, result);
+			}
+		}
 	}
 
 	// -- Helpers --------------------------------------------------------------

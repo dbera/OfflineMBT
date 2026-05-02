@@ -124,7 +124,17 @@ class ExpressionValidationTest {
             function int sum(int[] v)
             int[] v = <int[]>[1, 2, 3]
             int s1 = sum(v)
-            int s2 = range(1, 10, 2)
+            int[] s2 = range(1, 10, 2)
+        ''')
+    }
+
+    @Test
+    def void testFunctionCallsWithTemplates() {
+        validate('''
+            function <T> T sum(T[] v)
+            int[] v = <int[]>[1, 2, 3]
+            int s1 = sum(v)
+            int[] s2 = range(1, 10, 2)
         ''')
     }
 

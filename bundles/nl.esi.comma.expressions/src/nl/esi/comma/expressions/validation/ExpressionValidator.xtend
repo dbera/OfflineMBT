@@ -253,8 +253,10 @@ class ExpressionValidator extends AbstractExpressionValidator {
                     error('''No Function «e.function.name» declared with «e.args.size» arguments.''', null)
                 } else {
                     for (var i = 0; i < e.args.size; i++) {
-                        val paramType = e.function.params.get(i).type.typeObject
-                        val argType = typeOf(e.args.get(i))
+                        val arg = e.args.get(i)
+                        val param = e.function.params.get(i)
+                        val paramType = param.getActualFunctionParam(arg).typeObject
+                        val argType = arg.typeOf
                         if (!argType.subTypeOf(paramType) ) {
                             error('''Function «e.function.name» expects argument «i + 1» to be of type «paramType.typeName».''',
                                 ExpressionPackage.Literals.EXPRESSION_FUNCTION_CALL__ARGS, i)

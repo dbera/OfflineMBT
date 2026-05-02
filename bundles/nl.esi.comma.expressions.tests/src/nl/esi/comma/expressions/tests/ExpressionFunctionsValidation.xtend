@@ -228,6 +228,163 @@ class ExpressionFunctionsValidation {
         assertDoesNotThrow [EcoreUtil3.validate(result)]
     }
     
+    // ========================================================================
+    // Template (generic) function tests - getActualFunctionParam / getActualFunctionReturnType
+    // ========================================================================
+
+    @Test
+    def void templateFunction_directTypeParam_validCall_noValidationError() {
+        val result = parse('''
+            function <T> T identity(T x)
+            int r = identity(5)
+        ''')
+        assertDoesNotThrow [EcoreUtil3.validate(result)]
+    }
+
+    @Test
+    def void templateFunction_directTypeParam_boolArg_noValidationError() {
+        val result = parse('''
+            function <T> T identity(T x)
+            bool r = identity(true)
+        ''')
+        assertDoesNotThrow [EcoreUtil3.validate(result)]
+    }
+
+    @Test
+    def void templateFunction_directTypeParam_stringArg_noValidationError() {
+        val result = parse('''
+            function <T> T identity(T x)
+            string r = identity("hello")
+        ''')
+        assertDoesNotThrow [EcoreUtil3.validate(result)]
+    }
+
+    @Test
+    def void templateFunction_vectorTypeParam_validCall_noValidationError() {
+        val result = parse('''
+            function <T> int count(T[] items)
+            int[] xs = <int[]>[]
+            int r = count(xs)
+        ''')
+        assertDoesNotThrow [EcoreUtil3.validate(result)]
+    }
+
+    @Test
+    def void templateFunction_twoTypeParams_validCall_noValidationError() {
+        val result = parse('''
+            function <K, V> V lookup(K key, V defaultVal)
+            string r = lookup(5, "fallback")
+        ''')
+        assertDoesNotThrow [EcoreUtil3.validate(result)]
+    }
+
+    @Test
+    def void templateFunction_returnTypeResolved_mismatch_validationError() {
+        val result = parse('''
+            function <T> T identity(T x)
+            string r = identity(5)
+        ''')
+        val ex = assertThrows(ValidationException) [EcoreUtil3.validate(result)]
+        assertTrue(ex.message.contains("Type mismatch"),
+            '''Expected type mismatch error but got: «ex.message»''')
+    }
+
+    @Test
+    def void templateFunction_multipleArgs_mixedTypeParams_noValidationError() {
+        val result = parse('''
+            function <T> T first(T a, T b)
+            int r = first(1, 2)
+        ''')
+        assertDoesNotThrow [EcoreUtil3.validate(result)]
+    }
+
+    @Test
+    def void templateFunction_overloaded_differentArgCounts_noValidationError() {
+        val result = parse('''
+            function <T> T wrap(T x)
+            function <T> T wrap(T x, T y)
+            int r1 = wrap(1)
+            int r2 = wrap(1, 2)
+        ''')
+        assertDoesNotThrow [EcoreUtil3.validate(result)]
+    }
+
+    @Test
+    def void templateFunction_mapTypeParam_validCall_noValidationError() {
+        val result = parse('''
+            function <V> int mapSize(map<int,V> m)
+            map<int, string> ms = <map<int, string>>{}
+            int r = mapSize(ms)
+        ''')
+        assertDoesNotThrow [EcoreUtil3.validate(result)]
+    }
+
+    @Test
+    def void templateFunction_returnTypeFromVectorElement_noValidationError() {
+        val result = parse('''
+            function <T> T head(T[] items)
+            int[] xs = <int[]>[]
+            int r = head(xs)
+        ''')
+        assertDoesNotThrow [EcoreUtil3.validate(result)]
+    }
+
+    @Test
+    def void templateFunction_returnTypeFromVectorElement_mismatch_validationError() {
+        val result = parse('''
+            function <T> T head(T[] items)
+            int[] xs = <int[]>[]
+            string r = head(xs)
+        ''')
+        val ex = assertThrows(ValidationException) [EcoreUtil3.validate(result)]
+        assertTrue(ex.message.contains("Type mismatch"),
+            '''Expected type mismatch error but got: «ex.message»''')
+    }
+
+    @Test
+    def void templateFunction_returnTypeFromMapValue_noValidationError() {
+        val result = parse('''
+           function <V> V firstValue(map<int, V> m)
+            map<int, string> ms = <map<int, string>>{1 -> "a", 2 -> "b"}
+           string r = firstValue(ms)
+        ''')
+        assertDoesNotThrow [EcoreUtil3.validate(result)]
+    }
+
+    @Test
+    def void templateFunction_returnTypeFromMapKey_mismatch_validationError() {
+        val result = parse('''
+            function <K, V> K firstKey(map<K, V> m)
+            map<int, string> ms = <map<int, string>>[]
+            string r = firstKey(ms)
+        ''')
+        val ex = assertThrows(ValidationException) [EcoreUtil3.validate(result)]
+        assertTrue(ex.message.contains("Type mismatch"),
+            '''Expected type mismatch error but got: «ex.message»''')
+    }
+
+    @Test
+    def void templateFunction_returnTypeFromMapValue_mismatch_validationError() {
+        val result = parse('''
+            function <K, V> V firstValue(map<K, V> m)
+            map<int, string> ms = <map<int, string>>[]
+            int r = firstValue(ms)
+        ''')
+        val ex = assertThrows(ValidationException) [EcoreUtil3.validate(result)]
+        assertTrue(ex.message.contains("Type mismatch"),
+            '''Expected type mismatch error but got: «ex.message»''')
+    }
+
+    @Test
+    def void templateFunction_revalidate_noValidationError() {
+        val result = parse('''
+            function <T> T identity(T x)
+            int r = identity(5)
+        ''')
+        assertDoesNotThrow [EcoreUtil3.validate(result)]
+        assertDoesNotThrow [EcoreUtil3.validate(result)]
+    }
+
     private def ExpressionModel parse(String model) {
         val result = parseHelper.parse(model)
         assertNotNull(result)
