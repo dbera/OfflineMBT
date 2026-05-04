@@ -15,7 +15,6 @@ package nl.esi.comma.types.utilities
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.util.ArrayList
-import java.util.Collection
 import java.util.List
 import nl.esi.comma.types.BasicTypes
 import nl.esi.comma.types.types.EnumElement
@@ -389,15 +388,6 @@ class TypeUtilities {
         return BasicTypes.anyType
     }
 
-    /**
-     * Infers the element {@link SimpleTypeDecl} from the first element of a collection.
-     * Falls back to {@code any} if the collection is empty or the type is unknown.
-     */
-    def static SimpleTypeDecl inferElementType(Collection<?> collection) {
-        if (collection.empty) return BasicTypes.anyType
-        val first = collection.iterator.next
-        return resolveBasicType(first) ?: BasicTypes.anyType
-    }
 
     def static getImports(Resource res) {
         return res.contents.filter(ModelContainer).flatMap[imports]
