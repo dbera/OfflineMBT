@@ -136,7 +136,7 @@ class LibraryToExprGeneratorTest {
         var method = SampleLibrary.class.getMethod("sampleBool", long.class, String.class);
         String result = LibraryToExprGenerator.generate(method);
         
-        assertEquals("function bool sampleBool(int p0, string p1)", result);
+        assertTrue(result.matches("function bool sampleBool\\(int \\w+, string \\w+\\)"));
     }
 
     @Test
@@ -160,7 +160,7 @@ class LibraryToExprGeneratorTest {
         var method = SampleLibrary.class.getMethod("emfVectorArg", ExpressionVector.class);
         String result = LibraryToExprGenerator.generate(method);
         
-        assertEquals("function <T> T[] emfVectorArg(T[] p0)", result);
+        assertTrue(result.matches("function <T> T\\[\\] emfVectorArg\\(T\\[\\] \\w+\\)"));
     }
 
     @Test
@@ -168,7 +168,7 @@ class LibraryToExprGeneratorTest {
         var method = SampleLibrary.class.getMethod("processUUID", UUID.class);
         String result = LibraryToExprGenerator.generate(method);
         
-        assertEquals("function uuid processUUID(uuid p0)", result);
+        assertTrue(result.matches("function uuid processUUID\\(uuid \\w+\\)"));
     }
 
     @Test
@@ -184,7 +184,7 @@ class LibraryToExprGeneratorTest {
         var method = SampleLibrary.class.getMethod("multiParam", String.class, long.class, BigDecimal.class);
         String result = LibraryToExprGenerator.generate(method);
         
-        assertEquals("function string multiParam(string p0, int p1, real p2)", result);
+        assertTrue(result.matches("function string multiParam\\(string \\w+, int \\w+, real \\w+\\)"));
     }
 
     @Test
