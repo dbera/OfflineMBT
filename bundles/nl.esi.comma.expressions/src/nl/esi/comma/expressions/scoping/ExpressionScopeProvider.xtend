@@ -76,10 +76,11 @@ class ExpressionScopeProvider extends AbstractExpressionScopeProvider {
             }
             case reference == TypesPackage.Literals.TYPE__TYPE: {
                 val funcDecl = context.getContainerOfType(FunctionDecl)
+                val parent = delegateGetScope(context, reference)
                 if (funcDecl !==null && !funcDecl.typeParams.empty) {
-                    val parent = delegateGetScope(context, reference)
                     return Scopes.scopeFor(funcDecl.typeParams, parent)
                 }
+                return parent
             }
         }
 

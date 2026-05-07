@@ -198,8 +198,8 @@ class ExpressionsUtilities {
         val resolutionMap = newLinkedHashMap
         for (gtp : genericsTypeParams) {
             val resolved = gtp.getActualFunctionTypes(functionCall)
-            if (!resolved.empty) {
-                // here we just take the head, there is a validation that raises an error when there are more.
+            if (resolved.size == 1) {
+                // only resolve it if exactly one match is found
                 resolutionMap.put(gtp, resolved.head)
             }
         }

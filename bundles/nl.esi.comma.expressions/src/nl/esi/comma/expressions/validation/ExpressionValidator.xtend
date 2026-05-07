@@ -70,10 +70,10 @@ class ExpressionValidator extends AbstractExpressionValidator {
 
    //Type checking
     @Check
-    def checkFunctionDecl(FunctionDecl fd){
+    def checkUnusedTemplateVariable(FunctionDecl fd){
         for (tp: fd.typeParams){
             if(fd.params.findFirst[!type.genericsTypeParams.filter[it === tp].empty] === null){
-               error('''Generics type param «tp.name» not used ''',fd, ExpressionPackage.Literals.FUNCTION_DECL__TYPE_PARAMS, fd.typeParams.indexOf(tp))
+               warning('''Generics type param «tp.name» not used ''',fd, ExpressionPackage.Literals.FUNCTION_DECL__TYPE_PARAMS, fd.typeParams.indexOf(tp))
             }
         }
    }
@@ -268,7 +268,7 @@ class ExpressionValidator extends AbstractExpressionValidator {
                     for (var i = 0; i < e.args.size; i++) {
                         val arg = e.args.get(i)
                         val param = e.function.params.get(i)
-                        val paramType = param.type.inferActualType(arg).typeObject
+                        val paramType = param.type.inferActualType(arg)?.typeObject
                         val argType = arg.typeOf
                         if (!argType.subTypeOf(paramType) ) {
                             error('''Function «e.function.name» expects argument «param.name» to be of type «paramType.typeName».''',

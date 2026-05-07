@@ -294,10 +294,6 @@ class TypeUtilities {
     }
 
     def static boolean subTypeOf(TypeObject subType, TypeObject baseType) {
-        subType.subTypeOf(baseType,false)
-    }
-
-    private def static boolean subTypeOf(TypeObject subType, TypeObject baseType, boolean anyTypeAllowed) {
         if(subType === null || baseType === null) return false
         if(subType.synonym(baseType)) return true // reflexive case
         if (subType instanceof RecordTypeDecl && baseType instanceof RecordTypeDecl) // record type subtyping
@@ -305,7 +301,7 @@ class TypeUtilities {
 
         if (subType instanceof VectorTypeConstructor) {
             if (baseType instanceof VectorTypeConstructor) {
-                if(!subType.type.subTypeOf(baseType.type, anyTypeAllowed)) return false
+                if(!subType.type.subTypeOf(baseType.type)) return false
                 if(subType.dimensions.size != baseType.dimensions.size) return false
                 for (i : 0 ..< subType.dimensions.size) {
                     if(subType.dimensions.get(i).size != baseType.dimensions.get(i).size) return false
@@ -313,9 +309,14 @@ class TypeUtilities {
                 return true
             }
         }
-        // at the end because we also have any[] which should be a vector with any objects in it. 
-        // this should not match any
-        return anyTypeAllowed && (baseType.identical(BasicTypes.anyType))// all types are subType of any
+        if (subType instanceof MapTypeConstructor) {
+            if (baseType instanceof MapTypeConstructor) {
+                if(!subType.type.subTypeOf(baseType.type)) return false
+                if(!getValueType(subType).subTypeOf(getValueType(baseType))) return false
+                return true
+            }
+        }
+        return false
     }
 
     def static boolean synonym(TypeObject t1, TypeObject t2) {
@@ -333,6 +334,9 @@ class TypeUtilities {
     }
 
     def static String getTypeName(TypeObject type) {
+        if (type === null){
+            return "null"
+        }
         return switch (type) {
             TypeDecl: type.name
             VectorTypeConstructor: '''«type.type.name»«FOR dim : type.dimensions»[]«ENDFOR»'''
