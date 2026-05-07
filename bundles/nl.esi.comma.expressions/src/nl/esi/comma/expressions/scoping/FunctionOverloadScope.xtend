@@ -19,7 +19,7 @@ import org.eclipse.xtext.naming.QualifiedName
 import org.eclipse.xtext.resource.IEObjectDescription
 import org.eclipse.xtext.scoping.IScope
 
-import static nl.esi.comma.expressions.utilities.ExpressionsUtilities.*
+import static extension nl.esi.comma.expressions.utilities.ExpressionsUtilities.*
 import static extension nl.esi.comma.types.utilities.TypeUtilities.*
 
 /**
@@ -88,9 +88,11 @@ class FunctionOverloadScope implements IScope {
         }
         
         for (var i = 0; i < fd.params.size; i++) {
-            val paramType = fd.params.get(i).type.typeObject
-            val argType = typeOf(context.args.get(i))
-            if (!argType.subTypeOf(paramType)) {
+            val param = fd.params.get(i)
+            val arg = context.args.get(i)
+            val actualType = param.type.inferActualType(arg)
+            val argType = typeOf(arg)
+            if (!argType.subTypeOf(actualType.type)) {
                 return false
             }
         }

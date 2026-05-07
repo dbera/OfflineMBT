@@ -59,10 +59,11 @@ bool flag = true
 
 === Function Declarations
 
-Functions are declared using the `function` keyword, followed by a return type, a name, and a comma-separated parameter list in parentheses. Each parameter has a type and a name:
+Functions are declared using the `function` keyword, followed by an optional list of type parameters in angle brackets, a return type, a name, and a comma-separated parameter list in parentheses. Each parameter has a type and a name:
 
 ....
 function ReturnType name(ParamType1 param1, ParamType2 param2)
+function <T> T generic_name(T param1, T param2)
 ....
 
 Examples:
@@ -72,11 +73,42 @@ function int sum(int[] values)
 function real average(int[] values)
 function string formatDate(int year, int month, int day)
 function bool isValid(string input)
+function <T> T get(T[] vector, int index)
+function <K, V> V mapGet(map<K, V> map, K key)
 ....
 
 NOTE: Function declarations define the signature only. Some implementations might be provided by a registered Java function library. See <<how-to-add-an-expression-function-library>> for details.
 
-NOTE: Functions added via <<how-to-add-an-expression-function-library>> don't need to be declared.
+NOTE: Functions added via <<how-to-add-an-expression-function-library>> don't need to be declared. The framework automatically generates function declarations from registered Java methods.
+
+=== Template/Generic Functions
+
+Generic (template) functions allow a single function declaration to work with multiple types using type parameters. Type parameters are declared in angle brackets after the `function` keyword:
+
+....
+function <T> T get(T[] vector, int index)          // T is a type parameter
+function <K, V> V mapGet(map<K, V> m, K key)      // K and V are type parameters
+....
+
+Type parameters are instantiated at each call site based on the argument types. For example:
+
+....
+int x = get(<int[]>[1, 2, 3], 0)                  // T is instantiated as int → result is int
+string s = get(<string[]>["a", "b"], 0)           // T is instantiated as string → result is string
+int value = mapGet(<map<string, int>>{"k" -> 42}, "k")  // K=string, V=int → result is int
+....
+
+**Automatic template generation from Java libraries**:
+
+When a function library method uses EMF expression types (`ExpressionVector`, `ExpressionMap`, `Expression`), the framework automatically generates a template function declaration. For example:
+
+- Java method: `Expression get(ExpressionVector v, long i)` 
+  Generated: `function <T> T get(T[] p0, int p1)`
+
+- Java method: `Expression get(ExpressionMap m, Expression key)`
+  Generated: `function <K, V> V get(map<K, V> p0, K p1)`
+
+See <<how-to-add-an-expression-function-library>> for details on template function generation from Java libraries.
 
 === Function Calls
 

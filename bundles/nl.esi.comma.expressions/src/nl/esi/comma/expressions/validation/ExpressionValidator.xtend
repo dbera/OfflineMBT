@@ -40,6 +40,7 @@ import nl.esi.comma.expressions.expression.ExpressionPower
 import nl.esi.comma.expressions.expression.ExpressionRecord
 import nl.esi.comma.expressions.expression.ExpressionSubtraction
 import nl.esi.comma.expressions.expression.ExpressionVector
+import nl.esi.comma.expressions.expression.FunctionDecl
 import nl.esi.comma.expressions.expression.VariableDecl
 import nl.esi.comma.types.BasicTypes
 import nl.esi.comma.types.types.Dimension
@@ -67,13 +68,23 @@ class ExpressionValidator extends AbstractExpressionValidator {
         return t.subTypeOf(BasicTypes.getIntType(t)) || t.subTypeOf(BasicTypes.getRealType(t))
     }
 
+   //Type checking
+    @Check
+    def checkFunctionDecl(FunctionDecl fd){
+        for (tp: fd.typeParams){
+            if(fd.params.findFirst[!type.genericsTypeParams.filter[it === tp].empty] === null){
+               error('''Generics type param «tp.name» not used ''',fd, ExpressionPackage.Literals.FUNCTION_DECL__TYPE_PARAMS, fd.typeParams.indexOf(tp))
+            }
+        }
+   }
+    
     //Type checking
     @Check
     def checkVariableDecl(VariableDecl vd){
         val lhs = vd.variable.type.typeObject
-        var rhs = typeOf(vd.expression)
+        var rhs = vd.expression
         if (rhs !== null && !lhs.isAssignableFrom(rhs)) {
-            error('''Type mismatch: declared type '«lhs.typeName»' does not match the expected type '«rhs.typeName»' ''', ExpressionPackage.Literals.VARIABLE_DECL__VARIABLE)
+            error('''Type mismatch: declared type '«lhs.typeName»' does not match the expected type '«rhs.typeOf.typeName»' ''', ExpressionPackage.Literals.VARIABLE_DECL__VARIABLE)
         }
     }
 	
@@ -252,14 +263,22 @@ class ExpressionValidator extends AbstractExpressionValidator {
                 if (e.args.size != e.function.params.size) {
                     error('''No Function «e.function.name» declared with «e.args.size» arguments.''', null)
                 } else {
+                    val ambiguousTypes = e.function.typeParams.filter[tp |tp.getActualFunctionTypes(e).size>1].toList
+
                     for (var i = 0; i < e.args.size; i++) {
                         val arg = e.args.get(i)
                         val param = e.function.params.get(i)
-                        val paramType = param.getActualFunctionParam(arg).typeObject
+                        val paramType = param.type.inferActualType(arg).typeObject
                         val argType = arg.typeOf
                         if (!argType.subTypeOf(paramType) ) {
-                            error('''Function «e.function.name» expects argument «i + 1» to be of type «paramType.typeName».''',
-                                ExpressionPackage.Literals.EXPRESSION_FUNCTION_CALL__ARGS, i)
+                            error('''Function «e.function.name» expects argument «param.name» to be of type «paramType.typeName».''',
+                                e, ExpressionPackage.Literals.EXPRESSION_FUNCTION_CALL__ARGS, i)
+                        }
+                        val containedGenerics = param.type.genericsTypeParams
+                        val isAmbiguous = !containedGenerics.filter[ambiguousTypes.contains(it)].empty
+                        if (isAmbiguous){
+                            error('''Function «e.function.name» generic type mismatch typeParam «param.name» resolving is ambiguous''',
+                               e,  ExpressionPackage.Literals.EXPRESSION_FUNCTION_CALL__ARGS, i)
                         }
                     }
                 }

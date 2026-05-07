@@ -12,7 +12,7 @@
  */
 package nl.esi.comma.expressions.functions;
 
-import static nl.esi.comma.expressions.utilities.ExpressionsUtilities.getActualFunctionReturnType;
+import static nl.esi.comma.expressions.utilities.ExpressionsUtilities.inferActualReturnType;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -99,7 +99,7 @@ public class ExpressionFunctionsRegistry {
 		try {
 			try {
 				var result = method.invoke(receiver, args);
-				return toExpression(result, getActualFunctionReturnType(functionCall), context);
+				return toExpression(result, inferActualReturnType(functionCall), context);
 			} catch (InvocationTargetException e) {
 				throw e.getTargetException();
 			}// Rethrow runtime exceptions without wrapping
@@ -156,6 +156,8 @@ public class ExpressionFunctionsRegistry {
 			throw new IllegalArgumentException("Function cannot be null");
 		if (!isPublic(method))
 			throw new IllegalArgumentException("Function must be public");
+		if (!isTemplatizable(method))
+			throw new IllegalArgumentException("Function cannot be templatized (returns Object without type binding): " + getSignature(method));
 		inMemoryRegistry.addMethod(method);
 		var overloads = functions.computeIfAbsent(name, k -> new ArrayList<>());
 		overloads.add(method);
@@ -273,6 +275,34 @@ public class ExpressionFunctionsRegistry {
 	/** Checks if a method has static modifier. */
 	private boolean isStatic(Method method) {
 		return Modifier.isStatic(method.getModifiers());
+	}
+
+	/**
+	 * Checks if a method can be templatized. A method is templatizable if:
+	 * <ul>
+	 *   <li>It does not return void/Void, OR</li>
+	 *   <li>It returns Object (java.lang.Object) without EMF context (which maps to "any")</li>
+	 * </ul>
+	 * Methods returning Object without type binding cannot be used in expressions
+	 * as the return type would be "any" - ambiguous and not useful.
+	 * 
+	 * @param method the method to check
+	 * @return true if the method can be templatized, false otherwise
+	 */
+	private boolean isTemplatizable(Method method) {
+		Class<?> returnType = method.getReturnType();
+		
+		// Void/void methods are not templatizable (they shouldn't be registered anyway)
+		if (returnType == void.class || returnType == Void.class) {
+			return false;
+		}
+		
+		// Object return type (maps to "any") is not templatizable - too ambiguous
+		if (returnType == Object.class) {
+			return false;
+		}
+		
+		return true;
 	}
 
 }

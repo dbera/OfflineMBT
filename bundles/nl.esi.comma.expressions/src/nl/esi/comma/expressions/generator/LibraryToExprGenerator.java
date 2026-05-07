@@ -221,19 +221,8 @@ public final class LibraryToExprGenerator {
 		}
 		typeParams.addAll(ctx.typeParams());
 
-		// Remove type params not used in the return type and replace them with "any" in params
-		Set<String> usedInReturn = typeParams.stream()
-				.filter(tp -> returnExpr.matches(".*\\b" + tp + "\\b.*"))
-				.collect(Collectors.toCollection(LinkedHashSet::new));
-		Set<String> unusedParams = new LinkedHashSet<>(typeParams);
-		unusedParams.removeAll(usedInReturn);
-		String finalParams = params;
-		for (String tp : unusedParams) {
-			finalParams = finalParams.replaceAll("\\b" + tp + "\\b", "any");
-		}
-
-		String typeParamStr = usedInReturn.isEmpty() ? "" : "<" + String.join(", ", usedInReturn) + "> ";
-		return Optional.of("function " + typeParamStr + returnExpr + " " + method.getName() + "(" + finalParams + ")");
+		String typeParamStr = typeParams.isEmpty() ? "" : "<" + String.join(", ", typeParams) + "> ";
+		return Optional.of("function " + typeParamStr + returnExpr + " " + method.getName() + "(" + params + ")");
 	}
 
 	// -- Type mapping: Java Type → expr type string ---------------------------

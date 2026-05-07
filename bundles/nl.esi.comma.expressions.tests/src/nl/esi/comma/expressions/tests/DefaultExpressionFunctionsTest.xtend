@@ -62,11 +62,11 @@ class DefaultExpressionFunctionsTest extends ExpressionEvaluatorTestBase {
         val content = registry.getContent(uri)
 
         Assertions.assertAll(
-            [Assertions.assertTrue(content.contains("function bool isEmpty("), "isEmpty")],
-            [Assertions.assertTrue(content.contains("function int size("), "size")],
-            [Assertions.assertTrue(content.contains("function bool contains("), "contains")],
+            [Assertions.assertTrue(content.contains("function <T> bool isEmpty("), "isEmpty")],
+            [Assertions.assertTrue(content.contains("function <T> int size("), "size")],
+            [Assertions.assertTrue(content.contains("function <T> bool contains("), "contains")],
             [Assertions.assertTrue(content.contains("function real asReal("), "asReal")],
-            [Assertions.assertTrue(content.contains("function bool hasKey("), "hasKey")],
+            [Assertions.assertTrue(content.contains("function <K, V> bool hasKey("), "hasKey")],
             [Assertions.assertTrue(content.contains("function string toString("), "toString")],
             [Assertions.assertTrue(content.contains("function <T> T[] set("), "set")],
             [Assertions.assertTrue(content.contains("function int[] range("), "range")]

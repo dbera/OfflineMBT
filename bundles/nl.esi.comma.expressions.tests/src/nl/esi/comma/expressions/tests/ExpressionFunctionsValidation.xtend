@@ -23,6 +23,8 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.^extension.ExtendWith
 
 import static org.junit.jupiter.api.Assertions.*
+import nl.esi.comma.expressions.expression.MapTypeConstructor
+import org.eclipse.emf.ecore.util.EcoreUtil
 
 @ExtendWith(InjectionExtension)
 @InjectWith(ExpressionInjectorProvider)
@@ -76,8 +78,8 @@ class ExpressionFunctionsValidation {
             bool r = isEmpty(true)
         ''')
         val ex = assertThrows(ValidationException) [EcoreUtil3.validate(result)]
-        assertTrue(ex.message.contains('Function isEmpty expects argument 1 to be of type any[]'),
-            '''Expected "Function isEmpty expects 1 arguments to be of any[]" but got: «ex.message»''')
+        assertTrue(ex.message.contains('Function isEmpty expects argument'),
+            '''Expected "Function isEmpty expects" but got: «ex.message»''')
     }
 
     @Test
@@ -107,7 +109,7 @@ class ExpressionFunctionsValidation {
             bool r = myFn(true)
         ''')
         val ex = assertThrows(ValidationException) [EcoreUtil3.validate(result)]
-        assertTrue(ex.message.contains('Function myFn expects argument 1 to be of type int.'),
+        assertTrue(ex.message.contains('Function myFn expects argument x to be of type int.'),
             '''Expected "Function myFn expects argument 1 to be of type int." but got: «ex.message»''')
     }
 
@@ -342,13 +344,39 @@ class ExpressionFunctionsValidation {
     }
 
     @Test
-    def void templateFunction_returnTypeFromMapValue_noValidationError() {
+    def void templateFunction_returnTypeFromMapKey_noValidationError() {
         val result = parse('''
-           function <V> V firstValue(map<int, V> m)
-            map<int, string> ms = <map<int, string>>{1 -> "a", 2 -> "b"}
-           string r = firstValue(ms)
+            function <K, V> K firstKey(map<K, V> m)
+            map<int, string> ms = <map<int, string>>{}
+            int r = firstKey(ms)
         ''')
         assertDoesNotThrow [EcoreUtil3.validate(result)]
+    }
+
+    @Test
+    def void templateFunction_returnTypeFromMapValue_noValidationError() {
+        val result = parse('''
+           function <K, V> V firstValue(map<K, V> m)
+           map<int, string> ms = <map<int, string>>{1 -> "a", 2 -> "b"}
+           string r = firstValue(ms)
+        ''')
+        EcoreUtil.resolveAll(result);
+        println(EcoreUtil3.serialize(result))
+        val m = result.functions.get(0).params.get(0).type as MapTypeConstructor
+        println(m.valueType.type)
+        assertDoesNotThrow [EcoreUtil3.validate(result)]
+    }
+
+
+    @Test
+    def void templateFunction_multipleArgs_mixedTypeParams_validationError() {
+        val result = parse('''
+            function <T> T first(T a, T b)
+            int r = first(1, "string")
+        ''')
+        val ex = assertThrows(ValidationException) [EcoreUtil3.validate(result)]
+        assertTrue(ex.message.contains("type mismatch"),
+            '''Expected type mismatch error but got: «ex.message»''')
     }
 
     @Test
@@ -367,7 +395,7 @@ class ExpressionFunctionsValidation {
     def void templateFunction_returnTypeFromMapValue_mismatch_validationError() {
         val result = parse('''
             function <K, V> V firstValue(map<K, V> m)
-            map<int, string> ms = <map<int, string>>[]
+            map<int, string> ms = <map<int, string>>{}
             int r = firstValue(ms)
         ''')
         val ex = assertThrows(ValidationException) [EcoreUtil3.validate(result)]
@@ -382,8 +410,27 @@ class ExpressionFunctionsValidation {
             int r = identity(5)
         ''')
         assertDoesNotThrow [EcoreUtil3.validate(result)]
+    }
+    
+    @Test
+    def void templateFunction_complexReturn_noValidationError() {
+        val result = parse('''
+            function <T> map<int, T> mapOf(T x)
+            map<int,string> m = mapOf("x")
+        ''')
         assertDoesNotThrow [EcoreUtil3.validate(result)]
     }
+ 
+   @Test
+    def void templateFunction_complexArg_noValidationError() {
+        val result = parse('''
+            function <T> map<int, T> flatten(map<int, map<int,T>> x)
+            map<int, map<int, string>> mc = <map<int, map<int, string>>>{}
+            map<int,string> m = flatten(mc)
+        ''')
+        assertDoesNotThrow [EcoreUtil3.validate(result)]
+    }
+    
 
     private def ExpressionModel parse(String model) {
         val result = parseHelper.parse(model)

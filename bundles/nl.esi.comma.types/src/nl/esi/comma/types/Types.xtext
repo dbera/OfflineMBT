@@ -108,6 +108,10 @@ MapTypeDecl:
 	name = ID '=' constructor = MapTypeConstructor
 ;
 
+GenericsTypeParam returns TypeDecl:
+    {GenericsTypeParam} name = ID
+;
+
 /*
  * Type denotes a syntactical construct (reference to a definition or an inline vector or map type)
  */

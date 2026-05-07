@@ -28,16 +28,17 @@ import nl.esi.comma.types.types.EnumTypeDecl
 import nl.esi.comma.types.types.RecordTypeDecl
 import nl.esi.comma.types.types.TypeObject
 import nl.esi.comma.types.types.TypesPackage
-import nl.esi.comma.types.utilities.TypeUtilities
 import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.EReference
 import org.eclipse.emf.ecore.EStructuralFeature
-import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.scoping.IScope
 import org.eclipse.xtext.scoping.Scopes
 
-import static nl.esi.comma.expressions.utilities.ExpressionsUtilities.*
 import static org.eclipse.xtext.scoping.Scopes.*
+
+import static extension nl.esi.comma.expressions.utilities.ExpressionsUtilities.*
+import static extension nl.esi.comma.types.utilities.TypeUtilities.*
+import static extension org.eclipse.xtext.EcoreUtil2.*
 
 /**
  * This class contains custom scoping description.
@@ -48,22 +49,23 @@ import static org.eclipse.xtext.scoping.Scopes.*
 class ExpressionScopeProvider extends AbstractExpressionScopeProvider {
     
     override getScope(EObject context, EReference reference) {
-
+ 
         val contextType = context.getContextType(reference)
+       
         switch (context) {
             case contextType instanceof EnumTypeDecl  && reference == ExpressionPackage.Literals.EXPRESSION_ENUM_LITERAL__LITERAL: {
                 return scopeFor((contextType as EnumTypeDecl).literals)
             }
             ExpressionRecord case reference == ExpressionPackage.Literals.FIELD__RECORD_FIELD: {
-                return scopeFor(TypeUtilities::getAllFields(context.type))
+                return scopeFor(context.type.allFields)
             }
             ExpressionRecordAccess case reference == ExpressionPackage.Literals.EXPRESSION_RECORD_ACCESS__FIELD: {
-                val type = typeOf(context.record)
-                return type instanceof RecordTypeDecl ? scopeFor(TypeUtilities::getAllFields(type)) : IScope.NULLSCOPE
+                val type = context.record.typeOf
+                return type instanceof RecordTypeDecl ? scopeFor(type.allFields) : IScope.NULLSCOPE
             }
             Field case reference == ExpressionPackage.Literals.FIELD__RECORD_FIELD: {
                 val rec = context.eContainer
-                return rec instanceof ExpressionRecord ? scopeFor(TypeUtilities::getAllFields(rec.type)) : IScope.NULLSCOPE
+                return rec instanceof ExpressionRecord ? scopeFor(rec.type.allFields) : IScope.NULLSCOPE
             }
             ExpressionFunctionCall case reference == ExpressionPackage.Literals.EXPRESSION_FUNCTION_CALL__FUNCTION: {
                 // Use custom scope that implements three-phase matching:
@@ -72,14 +74,12 @@ class ExpressionScopeProvider extends AbstractExpressionScopeProvider {
                 // 3. First function (any overload - for error reporting)
                 return new FunctionOverloadScope(delegateGetScope(context, reference), context)
             }
-        }
-
-        // Make TypeParams from enclosing FunctionDecl visible as TypeDecls
-        if (reference == TypesPackage.Literals.TYPE__TYPE) {
-            val funcDecl = EcoreUtil2.getContainerOfType(context, FunctionDecl)
-            if (funcDecl !== null && !funcDecl.typeParams.empty) {
-                val parent = super.getScope(context, reference)
-                return Scopes.scopeFor(funcDecl.typeParams, parent)
+            case reference == TypesPackage.Literals.TYPE__TYPE: {
+                val funcDecl = context.getContainerOfType(FunctionDecl)
+                if (funcDecl !==null && !funcDecl.typeParams.empty) {
+                    val parent = delegateGetScope(context, reference)
+                    return Scopes.scopeFor(funcDecl.typeParams, parent)
+                }
             }
         }
 
@@ -99,7 +99,7 @@ class ExpressionScopeProvider extends AbstractExpressionScopeProvider {
             }
             ExpressionVector: {
                 val vct = typeOf(context)
-                vct === null ? null : TypeUtilities::getElementType(vct)
+                vct === null ? null : vct.elementType
             }
         }
         return type

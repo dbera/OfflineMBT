@@ -44,7 +44,7 @@ class ExpressionParsingTest {
     @Test
     def void saveModel(){
                 val result = parseHelper.parse('''
-            int test = call abs(-1)
+            int test = abs(-1)
         ''')
         EcoreUtil3.validate(result)
         

@@ -175,6 +175,71 @@ These errors do not prevent other functions from being registered.
 +
 TIP: Using EMF model types (`ExpressionVector`, `ExpressionMap`, `Expression`) directly as parameter or return types avoids conversion overhead. The framework passes the raw EMF objects without converting to/from Java collections. This is the preferred approach when the function operates on expression structures rather than plain Java values — see `DefaultExpressionFunctions` for examples.
 
+=== Template Function Generation
+
+When a Java method uses EMF expression collection types (`ExpressionVector`, `ExpressionMap`), the framework automatically generates a template (generic) function declaration instead of a monomorphic one. This enables a single Java method to work with any element type in vectors and maps.
+
+**How it works**:
+
+The framework analyzes the method signature to determine the template context:
+
+- **Vector context**: If the method uses `ExpressionVector`, the generated declaration uses type parameter `<T>`, where `ExpressionVector` maps to `T[]` and `Expression` maps to `T`.
+- **Map context**: If the method uses `ExpressionMap`, the generated declaration uses type parameters `<K, V>`, where `ExpressionMap` maps to `map<K, V>`, `Expression` as a parameter maps to `K`, and `Expression` as a return type maps to `V`.
+- **No collection context**: If neither `ExpressionVector` nor `ExpressionMap` is used, `Expression` parameters/returns map to `any` and no template is generated.
+
+**Examples**:
+
+.Vector template
+[source, java]
+----
+// Java method
+public static Expression get(ExpressionVector vector, long index) {
+    ...
+}
+
+// Generated declaration
+function <T> T get(T[] p0, int p1)
+
+// Usage in expressions
+int x = get(<int[]>[1, 2, 3], 0)        // → 1
+string y = get(<string[]>["a", "b"], 0) // → "a"
+----
+
+.Map template
+[source, java]
+----
+// Java method
+public static Expression get(ExpressionMap map, Expression key) {
+    ...
+}
+
+// Generated declaration
+function <K, V> V get(map<K, V> p0, K p1)
+
+// Usage in expressions
+int value = get(<map<string, int>>{"count" -> 42}, "count") // → 42
+string name = get(<map<int, string>>{1 -> "Alice"}, 1)      // → "Alice"
+----
+
+.No template (plain Expression parameters)
+[source, java]
+----
+// Java method
+public static Expression concat(Expression a, Expression b) {
+    ...
+}
+
+// Generated declaration (no template, uses any)
+function any concat(any p0, any p1)
+----
+
+**Benefits**:
+
+- **Type safety**: Template functions provide compile-time type checking for element types in vectors and maps.
+- **Code reuse**: A single Java method implementation serves all element types without overloading.
+- **IDE support**: Content assist and validation work correctly with the synthesized generic types.
+- **Performance**: Avoids unnecessary boxing/unboxing or type conversions.
+
 Overloaded methods are supported::
   Multiple methods with the same name but different parameter types or counts are allowed (e.g. `abs(long)` and `abs(BigDecimal)`). Overload resolution is based on the expression argument types at the call site.
 

@@ -293,18 +293,8 @@ class TypeUtilities {
         t1 === t2
     }
 
-    /**
-     * TODO current type isAssignableFrom baseType even if baseType is any 
-     * which it of course impossible.
-     * But we can only fix this if we support templates in FunctionDecl
-     * if fixed then change true to false below.
-     */
-    def static boolean isAssignableFrom(TypeObject type, TypeObject baseType) {
-        type.subTypeOf(baseType,true)
-    }
-
     def static boolean subTypeOf(TypeObject subType, TypeObject baseType) {
-        subType.subTypeOf(baseType,true)
+        subType.subTypeOf(baseType,false)
     }
 
     private def static boolean subTypeOf(TypeObject subType, TypeObject baseType, boolean anyTypeAllowed) {

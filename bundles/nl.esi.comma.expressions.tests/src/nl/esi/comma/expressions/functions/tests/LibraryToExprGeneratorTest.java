@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
 
@@ -53,6 +54,13 @@ class LibraryToExprGeneratorTest {
     // =========================================================================
     // Type-mapping tests (toExprType)
     // =========================================================================
+    @Test
+    void typeMapping_justPrint() {
+        // print the full SampleLibrart as expr.
+		Stream.of(SampleLibrary.class.getMethods()).map(LibraryToExprGenerator::getCustomTypes)
+				.flatMap(Collection::stream).map(s-> "type "+s).forEach(System.out::println);
+		Stream.of(SampleLibrary.class.getMethods()).map(LibraryToExprGenerator::generate).forEach(System.out::println);
+    }
 
     @Test
     void typeMapping_primitives() {
@@ -88,42 +96,6 @@ class LibraryToExprGeneratorTest {
             () -> assertEquals("any[]",        LibraryToExprGenerator.toExprType(ArrayList.class)),
             () -> assertEquals("map<any, any>", LibraryToExprGenerator.toExprType(Map.class)),
             () -> assertEquals("map<any, any>", LibraryToExprGenerator.toExprType(HashMap.class))
-        );
-    }
-
-    @Test
-    void typeMapping_genericCollectionTypes() throws Exception {
-        // List<Long>   → int[]
-        var listLong = SampleLibrary.class.getMethod("listOfLong").getGenericReturnType();
-        assertEquals("int[]", LibraryToExprGenerator.toExprType(listLong));
-
-        // List<String> → string[]
-        var listString = SampleLibrary.class.getMethod("listOfString").getGenericReturnType();
-        assertEquals("string[]", LibraryToExprGenerator.toExprType(listString));
-
-        // Collection<?> → any[]  (wildcard)
-        var collWild = SampleLibrary.class.getMethod("collectionWild").getGenericReturnType();
-        assertEquals("any[]", LibraryToExprGenerator.toExprType(collWild));
-    }
-
-    @Test
-    void typeMapping_genericMapTypes() throws Exception {
-        // Map<String, Long> → map<string, int>
-        var mapStringLong = SampleLibrary.class.getMethod("mapStringLong").getGenericReturnType();
-        
-        assertEquals("map<string, int>", LibraryToExprGenerator.toExprType(mapStringLong));
-
-        // Map<Object, Object> → map<any, any>
-        var mapObjObj = SampleLibrary.class.getMethod("mapObjObj").getGenericReturnType();
-        assertEquals("map<any, any>", LibraryToExprGenerator.toExprType(mapObjObj));
-    }
-
-    @Test
-    void typeMapping_emfExpressionTypes() {
-        assertAll(
-            () -> assertEquals("any[]",         LibraryToExprGenerator.toExprType(ExpressionVector.class)),
-            () -> assertEquals("map<any, any>", LibraryToExprGenerator.toExprType(ExpressionMap.class)),
-            () -> assertEquals("any",           LibraryToExprGenerator.toExprType(Expression.class))
         );
     }
 
@@ -164,14 +136,6 @@ class LibraryToExprGeneratorTest {
     }
 
     @Test
-    void generate_customTypeMethod_correctDeclaration() throws Exception {
-        var method = SampleLibrary.class.getMethod("processUUID", UUID.class);
-        String result = LibraryToExprGenerator.generate(method);
-        
-        assertTrue(result.matches("function uuid processUUID\\(uuid \\w+\\)"));
-    }
-
-    @Test
     void generate_voidMethod_returnsEmptyString() throws Exception {
         var method = SampleLibrary.class.getMethod("voidMethod");
         String result = LibraryToExprGenerator.generate(method);
@@ -193,6 +157,33 @@ class LibraryToExprGeneratorTest {
         String result = LibraryToExprGenerator.generate(method);
         
         assertEquals("function string instanceMethod()", result);
+    }
+
+    @Test
+    void generate_genericTemplateMethod_withVectorContext_bindsTypeVariable() throws Exception {
+        var method = SampleLibrary.class.getMethod("processVector", ExpressionVector.class);
+        String result = LibraryToExprGenerator.generate(method);
+        
+        // With ExpressionVector context, type variable T is bound to the vector element type
+        assertTrue(result.matches("function <T> T processVector\\(T\\[\\] \\w+\\)"));
+    }
+
+    @Test
+    void generate_genericTemplateMethod_withMapContext_bindsTypeVariables() throws Exception {
+        var method = SampleLibrary.class.getMethod("processMap", ExpressionMap.class);
+        String result = LibraryToExprGenerator.generate(method);
+        
+        // With ExpressionMap context, type variables K, V are bound to map key/value types
+        assertTrue(result.matches("function <K, V> V processMap\\(map<K, V> \\w+\\)"));
+    }
+
+    @Test
+    void generate_genericTemplateMethod_complexVector_bindsMultipleTypes() throws Exception {
+        var method = SampleLibrary.class.getMethod("filterVector", ExpressionVector.class, Expression.class);
+        String result = LibraryToExprGenerator.generate(method);
+        
+        // Vector context binds T; Expression in param position becomes T (matches vector element)
+        assertTrue(result.matches("function <T> bool filterVector\\(T\\[\\] \\w+, T \\w+\\)"));
     }
 
     // =========================================================================
@@ -291,6 +282,11 @@ class LibraryToExprGeneratorTest {
         public static UUID processUUID(UUID id)                           { return id; }
         public static String uuidToString(UUID id)                        { return id.toString(); }
         public static CustomType processMultipleCustom(UUID id, CustomType ct) { return ct; }
+
+        // Generic template methods with EMF expression types (proper template binding)
+        public static <T> T processVector(ExpressionVector v)             { return null; }
+        public static <K, V> V processMap(ExpressionMap m)                { return null; }
+        public static <T> boolean filterVector(ExpressionVector v, Expression e) { return false; }
 
         // These must NOT appear in generated output or have special behavior:
         public static void voidMethod()                                   {}

@@ -35,11 +35,29 @@ class ExpressionFunctionsRegistryTest {
         static def void test(int a){
             
         }
+        
+        static def Object returnsObject(){
+            return null
+        }
     }
 
     static class TestLibrary2 {
         static def void test(int a){
             
+        }
+    }
+    
+    static class TestLibraryNonTemplatizable {
+        static def Object badMethod(){
+            return null
+        }
+        
+        static def void voidMethod(){
+            
+        }
+        
+        static def String goodMethod(){
+            return "ok"
         }
     }
 
@@ -52,6 +70,12 @@ class ExpressionFunctionsRegistryTest {
     val sameLibraryTwice = new IExpressionFunctionLibrariesProvider() {
         override get() {
             return Collections.unmodifiableSet(#{TestLibrary1, TestLibrary2})
+        }
+    }
+
+    val nonTemplatizableLibrary = new IExpressionFunctionLibrariesProvider() {
+        override get() {
+            return Collections.unmodifiableSet(#{TestLibraryNonTemplatizable})
         }
     }
 
@@ -98,5 +122,27 @@ class ExpressionFunctionsRegistryTest {
                 }
             }
         }
+    }
+
+    @Test
+    def void nonTemplatizable_objectReturnType_isRejected() {
+        // Create registry with library containing non-templatizable methods
+        val registry = new ExpressionFunctionsRegistry(convertersProvider, nonTemplatizableLibrary)
+
+        // Methods returning Object or void should not be registered
+        Assertions.assertFalse(
+            registry.hasFunction("badMethod"),
+            "Method returning Object should be rejected as non-templatizable"
+        )
+        Assertions.assertFalse(
+            registry.hasFunction("voidMethod"),
+            "Method returning void should be rejected as non-templatizable"
+        )
+
+        // Methods with valid return types should be registered
+        Assertions.assertTrue(
+            registry.hasFunction("goodMethod"),
+            "Method returning String should be successfully registered"
+        )
     }
 }

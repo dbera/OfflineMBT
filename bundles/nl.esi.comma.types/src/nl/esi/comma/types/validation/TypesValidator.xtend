@@ -37,6 +37,7 @@ import org.eclipse.xtext.validation.Check
 import org.eclipse.xtext.validation.EValidatorRegistrar
 
 import static extension nl.esi.comma.types.utilities.TypeUtilities.*
+import nl.esi.comma.types.types.GenericsTypeParam
 
 /**
  * This class contains custom validation rules. 
@@ -219,11 +220,12 @@ class TypesValidator extends AbstractTypesValidator {
 	/*
 	 * Constraints:
 	 * - key type of maps is an enum or a simple type
+	 * - It can also be a generics type param which use in a non concrete context, link for instance function declarations 
 	 * Rationale: semantics of equality of structured types needs further investigation
 	 */
 	 @Check
 	 def checkKeyType(MapTypeConstructor mtc){
-	 	if(!(mtc.keyType instanceof EnumTypeDecl) && !(mtc.keyType instanceof SimpleTypeDecl)){
+	 	if(!(mtc.keyType instanceof EnumTypeDecl) && !(mtc.keyType instanceof SimpleTypeDecl) && !(mtc.keyType instanceof GenericsTypeParam)){
 	 		error("The type of map keys has to be enumeration or simple type", TypesPackage.Literals.TYPE__TYPE)
 	 	}
 	 }

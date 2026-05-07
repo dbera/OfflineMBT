@@ -56,7 +56,6 @@ class ExpressionValidationTest {
             record MyRecord { int field1, string field2 }
             MyRecord rec = MyRecord{field1 = 1, field2 = "x"}
             map<int, string> m = <map<int, string>>{1 -> "a", 2 -> "b"}
-            bool w = *
             bool n = null
         ''')
     }
@@ -90,6 +89,29 @@ class ExpressionValidationTest {
             bool d = 2 <= 3
             bool ^e = 3 > 2
             bool f = 3 >= 2
+        ''')
+    }
+
+
+   @Test
+    def void testComparisonNull() {
+        validate('''
+            string nString = null
+            bool a = nString == null
+            bool b = null == nString
+            bool c = null == null
+            int i = null
+            bool d = i == null
+            bool ^e = null == i
+            bool f = true == null and true != null
+        ''')
+    }
+
+   @Test
+    def void testComparisonAny() {
+        validate('''
+            bool a = true == *
+            bool d = 3 == *
         ''')
     }
 

@@ -34,11 +34,7 @@ VariableDecl:
 ;
 
 FunctionDecl:
-    'function' ('<' typeParams += TypeParam (',' typeParams += TypeParam)* '>')? returnType = Type name = ID '(' (params += FunctionParam (',' params += FunctionParam)*)? ')'
-;
-
-TypeParam returns types::TypeDecl:
-    {TypeParam} name = ID
+    'function' ('<' typeParams += GenericsTypeParam  (',' typeParams += GenericsTypeParam)* '>')? returnType = Type name = ID '(' (params += FunctionParam (',' params += FunctionParam)*)? ')'
 ;
 
 FunctionParam:
@@ -253,4 +249,9 @@ VectorTypeConstructor:
 @Override 
 MapTypeConstructor: 
 	'map' '<' type = [types::TypeDecl] ',' valueType = Type '>'
+;
+
+@Override
+GenericsTypeParam returns types::GenericsTypeParam:
+    name = ID
 ;
