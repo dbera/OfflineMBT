@@ -34,25 +34,46 @@ The framework consists of the following key components that work together to pro
 
 === ExpressionFunctionsRegistry
 
-**Purpose**: Central registry that manages all registered function libraries, validates function calls, and invokes functions with proper type conversion and argument validation.
+**Purpose**: Central registry that manages all registered function libraries, validates function methods, and invokes functions with proper type conversion and argument validation.
 
 **Responsibilities**:
 
 - Registers function libraries from providers at initialization
+- Validates methods before registration (visibility, return type, templatization)
 - Maintains a mapping of function names to their method implementations
+- Finds matching overloads based on parameter count and type compatibility
 - Invokes functions with automatic type conversion using converters
-- Supports method overloading based on parameter count and type compatibility
+
+**Method Registration Validation**:
+
+During registration, each method is validated against the following constraints:
+
+- **Public visibility**: Only `public` methods are registered; non-public methods are ignored
+- **Non-void return types**: Methods must not return `void` or `Void` 
+- **No Object return type**: Methods must not return `Object` (java.lang.Object), as the return type would map to "any" — too ambiguous for expressions
+- **Templatization check**: Methods are templatizable only if they return a concrete, mappable type (not void/Void/Object)
+
+Methods that violate these constraints are skipped during registration, and an error is logged. This ensures only well-defined functions are available in expressions.
+
+**Method Overloading**:
+
+Multiple methods with the same name but different parameter lists are supported. Overload resolution occurs at invocation time by matching:
+- Parameter count (arity)
+- Argument type compatibility with each parameter position
+
+The first matching overload is selected and invoked.
 
 **Key Methods**:
 
 - `getFunctions()` - Returns Map<String, List<Method>> of all registered functions
 - `hasFunction(String name)` - Checks if a function with the given name exists
-- `invokeFunction(ExpressionFunctionCall functionCall, IEvaluationContext context)` - Invokes matching function and returns result as an Expression
+- `invokeFunction(ExpressionFunctionCall functionCall, IEvaluationContext context)` - Finds matching overload, converts arguments, invokes method, and returns result as an Expression
 
 **Integration**:
 
-- Uses `IExpressionConverter` instances for type conversion
-- Coordinates with `InMemoryExprResourceRegistry` for library registration
+- Uses `IExpressionConverter` instances for bidirectional type conversion
+- Coordinates with `InMemoryExprResourceRegistry` for storing generated function definitions
+- Receives library classes from `IExpressionFunctionLibrariesProvider` at initialization
 
 === ExpressionFunctionLibrariesProvider
 
@@ -93,23 +114,20 @@ See also <<how-to-add-an-expression-function-library>>
 **Key Features**:
 
 - Automatic type mapping (Java types → Xtext types)
-- **Template function generation**: Methods using EMF expression types (`ExpressionVector`, `ExpressionMap`, `Expression`) automatically generate generic/template function declarations
+- **Template function generation**: Methods using generated DSL expression collection types (`ExpressionVector`, `ExpressionMap` — defined in Expressions.xtext) automatically generate generic/template function declarations
 
 **Template Synthesis**:
 
-When a Java method uses EMF expression collection types in its signature, `LibraryToExprGenerator` synthesizes type parameters to create a generic template function:
+When a Java method uses the generated DSL expression collection types in its signature, `LibraryToExprGenerator` synthesizes type parameters to create a generic template function:
 
-- **Vector context** (presence of `ExpressionVector`): `ExpressionVector` → `T[]`, `Expression` → `T`
+- **Vector context** (presence of `ExpressionVector`): `ExpressionVector` → `T[]`, `Expression` parameter/return → `T`
   - Example: `Expression get(ExpressionVector v, long i)` generates `function <T> T get(T[] p0, int p1)`
 
 - **Map context** (presence of `ExpressionMap`): `ExpressionMap` → `map<K, V>`, `Expression` as parameter → `K`, `Expression` as return → `V`
   - Example: `Expression get(ExpressionMap m, Expression key)` generates `function <K, V> V get(map<K, V> p0, K p1)`
   - Example: `boolean hasKey(ExpressionMap m, Expression key)` generates `function <K, V> bool hasKey(map<K, V> p0, K p1)`
 
-- **No collection context** (only plain `Expression` parameters/return): `Expression` → `any`
-  - Example: `Expression concat(Expression a, Expression b)` generates `function any concat(any p0, any p1)`
-
-This allows a single Java method to work generically across different element types in vectors and maps without requiring separate overloaded methods in Java.
+This design allows a single Java method to work generically across different element types in vectors and maps without requiring separate overloaded methods in Java. Methods using only concrete types (not collections) map directly to their corresponding expression types (e.g., `String` → `string`, `long` → `int`).
 
 === InMemoryExprResourceRegistry
 

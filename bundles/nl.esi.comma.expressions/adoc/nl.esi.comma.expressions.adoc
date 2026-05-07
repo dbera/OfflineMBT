@@ -100,7 +100,7 @@ int value = mapGet(<map<string, int>>{"k" -> 42}, "k")  // K=string, V=int → r
 
 **Automatic template generation from Java libraries**:
 
-When a function library method uses EMF expression types (`ExpressionVector`, `ExpressionMap`, `Expression`), the framework automatically generates a template function declaration. For example:
+When a function library method uses generated DSL expression types (`ExpressionVector`, `ExpressionMap`, `Expression` — from Expressions.xtext), the framework automatically generates a template function declaration. For example:
 
 - Java method: `Expression get(ExpressionVector v, long i)` 
   Generated: `function <T> T get(T[] p0, int p1)`
