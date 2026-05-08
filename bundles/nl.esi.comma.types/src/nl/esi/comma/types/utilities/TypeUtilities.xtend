@@ -296,6 +296,7 @@ class TypeUtilities {
     def static boolean subTypeOf(TypeObject subType, TypeObject baseType) {
         if(subType === null || baseType === null) return false
         if(subType.synonym(baseType)) return true // reflexive case
+        if(subType.identical(BasicTypes.anyType)) return true // any is subtype of all types
         if (subType instanceof RecordTypeDecl && baseType instanceof RecordTypeDecl) // record type subtyping
             return getAllParents(subType as RecordTypeDecl).contains(baseType)
 
