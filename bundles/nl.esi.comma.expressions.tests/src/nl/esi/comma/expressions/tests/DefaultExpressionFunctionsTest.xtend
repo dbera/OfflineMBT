@@ -253,6 +253,32 @@ class DefaultExpressionFunctionsTest extends ExpressionEvaluatorTestBase {
             bool result = hasKey(t.ti2s, 99)
         ''')
     }
+    
+       @Test
+    def void call_size_mapRecordField_returnsSize() {
+        assertEval('''
+            «TYPES»
+            T t = T { ti2s = <map<int, string>> { 1 -> "one" } }
+            int result = 1
+        ''', '''
+            «TYPES»
+            T t = T { ti2s = <map<int, string>> { 1 -> "one" } }
+            int result = size(t.ti2s)
+        ''')
+    }
+
+       @Test
+    def void call_size_vectorRecordField_returnsSize() {
+        assertEval('''
+            «TYPES»
+            T t = T { tis = <int[]> [1,2,3] }
+            int result = 3
+        ''', '''
+            «TYPES»
+            T t = T { tis = <int[]> [1,2,3] }
+            int result = size(t.tis)
+        ''')
+    }
 
     @Test
     def void call_toString_convertsLongToString() {
