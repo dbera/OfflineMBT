@@ -63,7 +63,7 @@ TestSequence:
 
 StepSequence:
 	'step-sequence' name = ID '{'
-		step += AbstractStep+
+		step += AbstractStep*
 	'}'
 ;
 
@@ -81,17 +81,14 @@ AssertionStep:
 ;
 
 RunStep:
-	//'step-id' identifier = ID
 	'step-id' inputVar = [expr::Variable|ID]
 	'step-type' type = [types::TypeDecl|ID]
 	'step-input' stepVar = [expr::Variable|ID]
 	('for-features' featuresForStep += [expr::Variable|ID]+ )?
 	refStep += RefStep*
-	//('ref-to-step-output' input = ActionList)?
-	//('output-data' output = ActionList)?
-	//('local-parameters' localParams += Param+)? 
 ;
 
 RefStep:
-	'ref-to-step-output' input = ActionList 	('for-features' featuresToOutput += [expr::Variable|ID]+ )?
+	'ref-to-step-output' input = ActionList
+	('for-features' featuresToOutput += [expr::Variable|ID]+ )?
 ;

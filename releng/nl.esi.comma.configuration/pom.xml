@@ -24,6 +24,10 @@
     <packaging>pom</packaging>
 
     <properties>
+        <!-- The end-user readable version number. -->
+        <!-- The default is 'dev'. Ci/CD overrides this for releases only, to e.g. v0.1, v0.1-M1, v0.1-RC1. -->
+        <version.enduser>dev</version.enduser>
+
         <release.type>latest</release.type>
 
         <java.version>21</java.version>
@@ -305,6 +309,10 @@
                                 <exclude>src-gen/**</exclude>
                                 <exclude>xtend-gen/**</exclude>
                                 <exclude>templates/**</exclude>
+                                <!-- Excluding test resources -->
+                                <exclude>resources/input/**</exclude>
+                                <exclude>resources/actual/**</exclude>
+                                <exclude>resources/expected/**</exclude>
                                 <exclude>**/*.aird</exclude>
                                 <exclude>**/*.e4xmi</exclude>
                                 <exclude>**/*.ecore</exclude>
@@ -323,15 +331,6 @@
                                 <exclude>**/.checkstyle</exclude>
                                 <exclude>**/.env</exclude>
                                 <exclude>**/.babelrc</exclude>
-                                <!-- Start: Matala file types -->
-                                <exclude>**/*.bpmn</exclude>
-                                <exclude>**/*.types</exclude>
-                                <exclude>**/*.ps</exclude>
-                                <exclude>**/*.atspec</exclude>
-                                <exclude>**/*.tspec</exclude>
-                                <exclude>**/*.params</exclude>
-                                <exclude>**/*.json</exclude>
-                                <!-- End: Matala file types -->
                                 <exclude>.META-INF_MANIFEST.MF</exclude>
                                 <exclude>.polyglot.*</exclude>
                                 <exclude>.tycho-consumer*</exclude>
@@ -339,7 +338,6 @@
                                 <exclude>checkstyle.xml</exclude>
                                 <exclude>plugin.xml_gen</exclude>
                                 <exclude>pom.tycho</exclude>
-                                <exclude>nl.asml.matala.bpmn4s.editor/dist/**</exclude>
                                 <exclude>**/.venv/**</exclude>
                                 <exclude>**/htmlcov/**</exclude>
                                 <exclude>**/.coverage</exclude>

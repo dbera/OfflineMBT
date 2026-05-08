@@ -525,8 +525,8 @@ class CommaMain {
 		try {
             generator.generate(resource, fileAccess, new CmdLineContext)
 		} catch (Exception e) {
-            System.out.println(e.localizedMessage)
-            System.out.println(INFO_STOP)
+            System.err.println(e.localizedMessage)
+            System.err.println(INFO_STOP)
             System.exit(1)
             return;
 		}

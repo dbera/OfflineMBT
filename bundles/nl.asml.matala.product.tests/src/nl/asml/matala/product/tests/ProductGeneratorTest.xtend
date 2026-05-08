@@ -10,12 +10,11 @@
  *
  * SPDX-License-Identifier: MIT
  */
-package nl.esi.comma.abstracttestspecification.tests
+package nl.asml.matala.product.tests
 
 import nl.asml.matala.product.ProductStandaloneSetup
+import nl.asml.matala.product.generator.ProductGenerator
 import nl.asml.matala.testutils.XtextGeneratorTest
-import nl.esi.comma.abstracttestspecification.AbstractTestspecificationStandaloneSetup
-import nl.esi.comma.abstracttestspecification.generator.to.concrete.FromAbstractToConcrete
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.testing.InjectWith
 import org.eclipse.xtext.testing.extensions.InjectionExtension
@@ -24,22 +23,18 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.^extension.ExtendWith
 
 @ExtendWith(InjectionExtension)
-@InjectWith(AbstractTestspecificationInjectorProvider)
-class FromAbstractToConcreteTest {
+@InjectWith(ProductInjectorProvider)
+class ProductGeneratorTest {
     @BeforeAll
     static def void setup() {
         if (!Resource.Factory.Registry.INSTANCE.getExtensionToFactoryMap().containsKey('ps')) {
             System.out.println("Registering product language");
             ProductStandaloneSetup.doSetup
         }
-        if (!Resource.Factory.Registry.INSTANCE.getExtensionToFactoryMap().containsKey('atspec')) {
-            System.out.println("Registering abstract TSPEC language");
-            AbstractTestspecificationStandaloneSetup.doSetup
-        }
     }
 
     private def void testGenerator(String testcase) {
-        XtextGeneratorTest.regressionTest(new FromAbstractToConcrete(), testcase + '.atspec')
+        XtextGeneratorTest.regressionTest(new ProductGenerator(), testcase + '.ps')
     }
 
     @Test
@@ -53,17 +48,7 @@ class FromAbstractToConcreteTest {
     }
 
     @Test
-    def void testIssue249() {
-        testGenerator('issue249');
-    }
-
-    @Test
-    def void testIssue299() {
-        testGenerator('issue299');
-    }
-
-    @Test
-    def void testIssue367() {
-        testGenerator('issue367');
+    def void testIssue371() {
+        testGenerator('issue371');
     }
 }
