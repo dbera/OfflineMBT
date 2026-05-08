@@ -95,7 +95,7 @@ the Department of Electrical Engineering of Eindhoven University of Technology.
          version="0.0.0"/>
 
    <plugin
-         id="nl.esi.comma.expressions.ui"
+         id="nl.esi.xtext.expressions.ui"
          version="0.0.0"/>
 
    <plugin

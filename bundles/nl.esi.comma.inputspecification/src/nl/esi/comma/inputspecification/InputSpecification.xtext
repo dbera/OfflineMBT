@@ -16,7 +16,7 @@ generate inputSpecification "http://www.esi.nl/comma/inputspecification/InputSpe
 
 import "http://www.esi.nl/xtext/common/lang/Base" as base
 import "http://www.esi.nl/xtext/types/Types" as types
-import "http://www.esi.nl/comma/expressions/Expression" as expr
+import "http://www.esi.nl/xtext/expressions/Expression" as expr
 
 Main returns base::ModelContainer: {Main}
 	imports += Import*

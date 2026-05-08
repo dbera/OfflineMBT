@@ -14,8 +14,8 @@ package nl.esi.comma.scenarios.generator.traces
 
 import java.util.HashMap
 import java.util.List
-import nl.esi.comma.expressions.expression.Expression
-import nl.esi.comma.expressions.expression.ExpressionAny
+import nl.esi.xtext.expressions.expression.Expression
+import nl.esi.xtext.expressions.expression.ExpressionAny
 import nl.esi.comma.scenarios.scenarios.ActionType
 import nl.esi.comma.scenarios.scenarios.Scenario
 import nl.esi.comma.scenarios.scenarios.Scenarios

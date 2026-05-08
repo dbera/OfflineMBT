@@ -25,11 +25,11 @@ import nl.asml.matala.generator.docgen.DocGen
 import nl.esi.comma.actions.actions.Action
 import nl.esi.comma.actions.actions.AssignmentAction
 import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
-import nl.esi.comma.expressions.expression.Expression
-import nl.esi.comma.expressions.expression.ExpressionNullLiteral
-import nl.esi.comma.expressions.expression.ExpressionRecord
-import nl.esi.comma.expressions.expression.ExpressionRecordAccess
-import nl.esi.comma.expressions.expression.ExpressionVariable
+import nl.esi.xtext.expressions.expression.Expression
+import nl.esi.xtext.expressions.expression.ExpressionNullLiteral
+import nl.esi.xtext.expressions.expression.ExpressionRecord
+import nl.esi.xtext.expressions.expression.ExpressionRecordAccess
+import nl.esi.xtext.expressions.expression.ExpressionVariable
 import nl.esi.comma.inputspecification.inputSpecification.APIDefinition
 import nl.esi.comma.inputspecification.inputSpecification.Main
 import nl.esi.comma.project.standard.generator.^extension.IStandardProjectGeneratorExtension

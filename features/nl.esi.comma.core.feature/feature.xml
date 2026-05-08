@@ -76,11 +76,11 @@ the Department of Electrical Engineering of Eindhoven University of Technology.
          version="0.0.0"/>
 
    <plugin
-         id="nl.esi.comma.expressions"
+         id="nl.esi.xtext.expressions"
          version="0.0.0"/>
 
    <plugin
-         id="nl.esi.comma.expressions.ide"
+         id="nl.esi.xtext.expressions.ide"
          version="0.0.0"/>
 
    <plugin

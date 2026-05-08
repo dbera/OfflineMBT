@@ -25,17 +25,17 @@ import nl.esi.comma.actions.actions.PCFragmentDefinition
 import nl.esi.comma.actions.actions.ParameterizedEvent
 import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
 import nl.esi.comma.actions.actions.VariableDeclBlock
-import nl.esi.comma.expressions.expression.ExpressionAny
-import nl.esi.comma.expressions.expression.ExpressionRecord
-import nl.esi.comma.expressions.expression.Field
-import nl.esi.comma.expressions.expression.Variable
+import nl.esi.xtext.expressions.expression.ExpressionAny
+import nl.esi.xtext.expressions.expression.ExpressionRecord
+import nl.esi.xtext.expressions.expression.Field
+import nl.esi.xtext.expressions.expression.Variable
 import nl.esi.xtext.types.BasicTypes
 import nl.esi.xtext.common.lang.base.BasePackage
 import org.eclipse.xtext.validation.Check
 
 import static extension nl.esi.comma.actions.utilities.ActionsUtilities.*
 import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
-import static extension nl.esi.comma.expressions.utilities.ExpressionsUtilities.*
+import static extension nl.esi.xtext.expressions.utilities.ExpressionsUtilities.*
 
 class ActionsValidator extends AbstractActionsValidator {
 	public static final String REPLY_WRONG_NUMBER_PARAMS = "trigger_remove_param"

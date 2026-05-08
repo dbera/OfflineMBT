@@ -7,7 +7,7 @@
 		<project>nl.esi.comma.actions</project>
 		<project>nl.esi.comma.behavior</project>
 		<project>nl.esi.comma.behavior.scl</project>
-		<project>nl.esi.comma.expressions</project>
+		<project>nl.esi.xtext.expressions</project>
 		<project>nl.esi.comma.inputspecification</project>
 		<project>nl.esi.comma.product.standard</project>
 		<project>nl.esi.comma.project.standard.standalone</project>

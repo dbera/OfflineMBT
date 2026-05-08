@@ -12,8 +12,8 @@
  */
 package nl.esi.comma.testspecification.generator.utils
 
-import nl.esi.comma.expressions.expression.ExpressionRecordAccess
-import nl.esi.comma.expressions.expression.ExpressionVariable
+import nl.esi.xtext.expressions.expression.ExpressionRecordAccess
+import nl.esi.xtext.expressions.expression.ExpressionVariable
 import nl.esi.xtext.types.types.MapTypeConstructor
 import nl.esi.xtext.types.types.Type
 import nl.esi.xtext.types.types.TypeReference

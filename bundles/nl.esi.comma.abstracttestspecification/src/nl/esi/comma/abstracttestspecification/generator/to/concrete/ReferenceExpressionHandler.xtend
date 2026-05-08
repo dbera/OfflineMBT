@@ -19,8 +19,8 @@ import nl.esi.comma.abstracttestspecification.abstractTestspecification.Abstract
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.ComposeStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.RunStep
 import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
-import nl.esi.comma.expressions.evaluation.ExpressionEvaluator
-import nl.esi.comma.expressions.expression.ExpressionVariable
+import nl.esi.xtext.expressions.evaluation.ExpressionEvaluator
+import nl.esi.xtext.expressions.expression.ExpressionVariable
 import nl.esi.xtext.types.types.RecordFieldKind
 import nl.esi.xtext.common.lang.utilities.EcoreUtil3
 

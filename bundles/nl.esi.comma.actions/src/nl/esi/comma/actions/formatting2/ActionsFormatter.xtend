@@ -25,8 +25,8 @@ import nl.esi.comma.actions.actions.PCFragment
 import nl.esi.comma.actions.actions.ParameterizedEvent
 import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
 import nl.esi.comma.actions.services.ActionsGrammarAccess
-import nl.esi.comma.expressions.expression.Expression
-import nl.esi.comma.expressions.formatting2.ExpressionFormatter
+import nl.esi.xtext.expressions.expression.Expression
+import nl.esi.xtext.expressions.formatting2.ExpressionFormatter
 import org.eclipse.xtext.formatting2.IFormattableDocument
 
 class ActionsFormatter extends ExpressionFormatter {

@@ -36,17 +36,17 @@ import nl.esi.comma.assertthat.assertThat.JsonMember
 import nl.esi.comma.assertthat.assertThat.JsonObject
 import nl.esi.comma.assertthat.assertThat.JsonValue
 
-import nl.esi.comma.expressions.expression.Expression
-import nl.esi.comma.expressions.expression.ExpressionConstantBool
-import nl.esi.comma.expressions.expression.ExpressionConstantInt
-import nl.esi.comma.expressions.expression.ExpressionConstantReal
-import nl.esi.comma.expressions.expression.ExpressionConstantString
-import nl.esi.comma.expressions.expression.ExpressionFactory
-import nl.esi.comma.expressions.expression.ExpressionMinus
-import nl.esi.comma.expressions.expression.ExpressionPlus
-import nl.esi.comma.expressions.expression.ExpressionRecordAccess
-import nl.esi.comma.expressions.expression.ExpressionVariable
-import nl.esi.comma.expressions.expression.Variable
+import nl.esi.xtext.expressions.expression.Expression
+import nl.esi.xtext.expressions.expression.ExpressionConstantBool
+import nl.esi.xtext.expressions.expression.ExpressionConstantInt
+import nl.esi.xtext.expressions.expression.ExpressionConstantReal
+import nl.esi.xtext.expressions.expression.ExpressionConstantString
+import nl.esi.xtext.expressions.expression.ExpressionFactory
+import nl.esi.xtext.expressions.expression.ExpressionMinus
+import nl.esi.xtext.expressions.expression.ExpressionPlus
+import nl.esi.xtext.expressions.expression.ExpressionRecordAccess
+import nl.esi.xtext.expressions.expression.ExpressionVariable
+import nl.esi.xtext.expressions.expression.Variable
 
 import nl.esi.xtext.types.types.MapTypeConstructor
 import nl.esi.xtext.types.types.Type
@@ -58,7 +58,7 @@ import org.eclipse.emf.common.util.EList
 import org.eclipse.emf.ecore.util.EcoreUtil
 
 import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.serialize
-import nl.esi.comma.expressions.expression.ExpressionNullLiteral
+import nl.esi.xtext.expressions.expression.ExpressionNullLiteral
 import nl.esi.comma.abstracttestspecification.generator.to.concrete.ConcreteExpressionHandler
 import java.util.LinkedHashMap
 import java.util.Map

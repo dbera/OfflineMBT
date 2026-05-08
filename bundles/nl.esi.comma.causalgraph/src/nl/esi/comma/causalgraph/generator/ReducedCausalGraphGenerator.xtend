@@ -20,7 +20,7 @@ import nl.esi.comma.causalgraph.causalGraph.StepType
 import nl.esi.comma.causalgraph.causalGraph.VariableAccess
 import nl.esi.comma.causalgraph.utilities.CausalGraphRefinements
 import nl.esi.comma.causalgraph.utilities.NodeAttributes
-import nl.esi.comma.expressions.expression.ExpressionFactory
+import nl.esi.xtext.expressions.expression.ExpressionFactory
 import nl.esi.xtext.types.BasicTypes
 import org.eclipse.emf.common.util.URI
 import org.eclipse.lsat.common.xtend.annotations.IntermediateProperty

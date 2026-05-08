@@ -16,7 +16,7 @@ import nl.esi.comma.systemconfig.configuration.FeatureDefinition
 import java.util.List
 import java.util.ArrayList
 import java.util.HashSet
-import nl.esi.comma.expressions.expression.ExpressionEnumLiteral
+import nl.esi.xtext.expressions.expression.ExpressionEnumLiteral
 import java.util.HashMap
 import javax.xml.crypto.dsig.keyinfo.KeyValue
 import nl.esi.xtext.types.types.TypeDecl

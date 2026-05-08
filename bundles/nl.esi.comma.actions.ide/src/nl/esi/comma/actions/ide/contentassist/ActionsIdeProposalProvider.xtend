@@ -17,7 +17,7 @@ package nl.esi.comma.actions.ide.contentassist
 
 import nl.esi.comma.actions.actions.AssignmentAction
 import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
-import nl.esi.comma.expressions.expression.ExpressionRecordAccess
+import nl.esi.xtext.expressions.expression.ExpressionRecordAccess
 import org.eclipse.xtext.Assignment
 import org.eclipse.xtext.CrossReference
 import org.eclipse.xtext.Keyword

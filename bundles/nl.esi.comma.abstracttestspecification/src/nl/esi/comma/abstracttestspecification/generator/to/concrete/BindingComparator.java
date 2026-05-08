@@ -23,12 +23,12 @@ import nl.esi.comma.assertthat.assertThat.JsonExpression;
 import nl.esi.comma.assertthat.assertThat.JsonMember;
 import nl.esi.comma.assertthat.assertThat.JsonObject;
 import nl.esi.comma.assertthat.assertThat.JsonValue;
-import nl.esi.comma.expressions.expression.Expression;
-import nl.esi.comma.expressions.expression.ExpressionConstantBool;
-import nl.esi.comma.expressions.expression.ExpressionConstantInt;
-import nl.esi.comma.expressions.expression.ExpressionConstantReal;
-import nl.esi.comma.expressions.expression.ExpressionConstantString;
-import nl.esi.comma.expressions.expression.ExpressionMinus;
+import nl.esi.xtext.expressions.expression.Expression;
+import nl.esi.xtext.expressions.expression.ExpressionConstantBool;
+import nl.esi.xtext.expressions.expression.ExpressionConstantInt;
+import nl.esi.xtext.expressions.expression.ExpressionConstantReal;
+import nl.esi.xtext.expressions.expression.ExpressionConstantString;
+import nl.esi.xtext.expressions.expression.ExpressionMinus;
 
 public class BindingComparator implements Comparator<Binding>{
 	

@@ -513,9 +513,9 @@
         <setEntry value="nl.esi.comma.constraints.ide@default:default"/>
         <setEntry value="nl.esi.comma.constraints.ui@default:default"/>
         <setEntry value="nl.esi.comma.constraints@default:default"/>
-        <setEntry value="nl.esi.comma.expressions.ide@default:default"/>
-        <setEntry value="nl.esi.comma.expressions.ui@default:default"/>
-        <setEntry value="nl.esi.comma.expressions@default:default"/>
+        <setEntry value="nl.esi.xtext.expressions.ide@default:default"/>
+        <setEntry value="nl.esi.xtext.expressions.ui@default:default"/>
+        <setEntry value="nl.esi.xtext.expressions@default:default"/>
         <setEntry value="nl.esi.comma.inputspecification.ide@default:default"/>
         <setEntry value="nl.esi.comma.inputspecification.ui@default:default"/>
         <setEntry value="nl.esi.comma.inputspecification@default:default"/>

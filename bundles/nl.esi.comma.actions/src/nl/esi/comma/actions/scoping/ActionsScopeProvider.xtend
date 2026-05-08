@@ -18,7 +18,7 @@ package nl.esi.comma.actions.scoping
 import nl.esi.comma.actions.actions.ActionsPackage
 import nl.esi.comma.actions.actions.AssignmentAction
 import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
-import nl.esi.comma.expressions.expression.ExpressionRecordAccess
+import nl.esi.xtext.expressions.expression.ExpressionRecordAccess
 import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.EStructuralFeature
 

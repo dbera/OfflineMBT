@@ -18,7 +18,7 @@ package nl.asml.matala.product.ide.contentassist
 import com.google.inject.Inject
 import nl.asml.matala.product.product.DataReferences
 import nl.esi.comma.actions.services.ActionsGrammarAccess
-import nl.esi.comma.expressions.services.ExpressionGrammarAccess
+import nl.esi.xtext.expressions.services.ExpressionGrammarAccess
 import nl.esi.xtext.types.types.RecordField
 import org.eclipse.xtext.CrossReference
 import org.eclipse.xtext.EcoreUtil2

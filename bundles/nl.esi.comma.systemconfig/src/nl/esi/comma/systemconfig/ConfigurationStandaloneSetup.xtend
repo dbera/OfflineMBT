@@ -16,7 +16,7 @@
 package nl.esi.comma.systemconfig
 
 import nl.esi.xtext.types.TypesStandaloneSetup
-import nl.esi.comma.expressions.ExpressionStandaloneSetup
+import nl.esi.xtext.expressions.ExpressionStandaloneSetup
 
 /**
  * Initialization support for running Xtext languages without Equinox extension registry.

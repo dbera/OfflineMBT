@@ -38,7 +38,7 @@ Workflow {
 			name = "nl.esi.comma.actions.Actions"
 			fileExtensions = "act"
 			
-			referencedResource = "platform:/resource/nl.esi.comma.expressions/model/generated/Expression.genmodel"
+			referencedResource = "platform:/resource/nl.esi.xtext.expressions/model/generated/Expression.genmodel"
 			
 			serializer = {
 				generateStub = false

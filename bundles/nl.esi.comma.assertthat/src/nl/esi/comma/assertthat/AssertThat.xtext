@@ -14,7 +14,7 @@ grammar nl.esi.comma.assertthat.AssertThat with nl.esi.comma.actions.Actions
 
 generate assertThat "http://www.esi.nl/comma/assertthat/AssertThat"
 
-import "http://www.esi.nl/comma/expressions/Expression" as expr
+import "http://www.esi.nl/xtext/expressions/Expression" as expr
 
 DataAssertions: {DataAssertions}
     'assertions' name = ID '{'

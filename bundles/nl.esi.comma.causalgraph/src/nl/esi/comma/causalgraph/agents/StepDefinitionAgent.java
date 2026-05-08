@@ -41,8 +41,8 @@ import nl.esi.comma.causalgraph.causalGraph.ScenarioStep;
 import nl.esi.comma.causalgraph.causalGraph.StepBody;
 import nl.esi.comma.causalgraph.utilities.CausalGraphQueries;
 import nl.esi.comma.causalgraph.utilities.VariableHelper;
-import nl.esi.comma.expressions.expression.Expression;
-import nl.esi.comma.expressions.expression.Variable;
+import nl.esi.xtext.expressions.expression.Expression;
+import nl.esi.xtext.expressions.expression.Variable;
 
 /**
  * StepDefinitionAgent class for processing causal graph nodes and generating step definitions.
@@ -295,33 +295,33 @@ public class StepDefinitionAgent {
         }
         
         try {
-            if (expression instanceof nl.esi.comma.expressions.expression.ExpressionConstantInt) {
-                nl.esi.comma.expressions.expression.ExpressionConstantInt intExpr = 
-                    (nl.esi.comma.expressions.expression.ExpressionConstantInt) expression;
+            if (expression instanceof nl.esi.xtext.expressions.expression.ExpressionConstantInt) {
+                nl.esi.xtext.expressions.expression.ExpressionConstantInt intExpr = 
+                    (nl.esi.xtext.expressions.expression.ExpressionConstantInt) expression;
                 return intExpr.getValue();
             }
             
-            if (expression instanceof nl.esi.comma.expressions.expression.ExpressionConstantReal) {
-                nl.esi.comma.expressions.expression.ExpressionConstantReal realExpr = 
-                    (nl.esi.comma.expressions.expression.ExpressionConstantReal) expression;
+            if (expression instanceof nl.esi.xtext.expressions.expression.ExpressionConstantReal) {
+                nl.esi.xtext.expressions.expression.ExpressionConstantReal realExpr = 
+                    (nl.esi.xtext.expressions.expression.ExpressionConstantReal) expression;
                 return realExpr.getValue();
             }
             
-            if (expression instanceof nl.esi.comma.expressions.expression.ExpressionConstantString) {
-                nl.esi.comma.expressions.expression.ExpressionConstantString stringExpr = 
-                    (nl.esi.comma.expressions.expression.ExpressionConstantString) expression;
+            if (expression instanceof nl.esi.xtext.expressions.expression.ExpressionConstantString) {
+                nl.esi.xtext.expressions.expression.ExpressionConstantString stringExpr = 
+                    (nl.esi.xtext.expressions.expression.ExpressionConstantString) expression;
                 return stringExpr.getValue();
             }
             
-            if (expression instanceof nl.esi.comma.expressions.expression.ExpressionConstantBool) {
-                nl.esi.comma.expressions.expression.ExpressionConstantBool boolExpr = 
-                    (nl.esi.comma.expressions.expression.ExpressionConstantBool) expression;
+            if (expression instanceof nl.esi.xtext.expressions.expression.ExpressionConstantBool) {
+                nl.esi.xtext.expressions.expression.ExpressionConstantBool boolExpr = 
+                    (nl.esi.xtext.expressions.expression.ExpressionConstantBool) expression;
                 return boolExpr.isValue();
             }
             
-            if (expression instanceof nl.esi.comma.expressions.expression.ExpressionVariable) {
-                nl.esi.comma.expressions.expression.ExpressionVariable varExpr = 
-                    (nl.esi.comma.expressions.expression.ExpressionVariable) expression;
+            if (expression instanceof nl.esi.xtext.expressions.expression.ExpressionVariable) {
+                nl.esi.xtext.expressions.expression.ExpressionVariable varExpr = 
+                    (nl.esi.xtext.expressions.expression.ExpressionVariable) expression;
                 if (varExpr.getVariable() != null) {
                     return varExpr.getVariable().getName();
                 }

@@ -19,8 +19,8 @@ import nl.asml.matala.product.ProductStandaloneSetup
 import nl.asml.matala.product.services.ProductGrammarAccess
 import nl.esi.comma.actions.services.ActionsGrammarAccess
 import nl.esi.comma.assertthat.services.AssertThatGrammarAccess
-import nl.esi.comma.expressions.expression.ExpressionPackage
-import nl.esi.comma.expressions.services.ExpressionGrammarAccess
+import nl.esi.xtext.expressions.expression.ExpressionPackage
+import nl.esi.xtext.expressions.services.ExpressionGrammarAccess
 import nl.esi.xtext.common.lang.utilities.EcoreUtil3
 import org.eclipse.xtext.CrossReference
 import org.eclipse.xtext.ParserRule

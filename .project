@@ -12,9 +12,9 @@
 		<project>nl.esi.comma.behavior</project>
 		<project>nl.esi.comma.behavior.ide</project>
 		<project>nl.esi.comma.behavior.ui</project>
-		<project>nl.esi.comma.expressions</project>
-		<project>nl.esi.comma.expressions.ide</project>
-		<project>nl.esi.comma.expressions.ui</project>
+		<project>nl.esi.xtext.expressions</project>
+		<project>nl.esi.xtext.expressions.ide</project>
+		<project>nl.esi.xtext.expressions.ui</project>
 		<project>nl.esi.comma.inputspecification</project>
 		<project>nl.esi.comma.inputspecification.ide</project>
 		<project>nl.esi.comma.inputspecification.ui</project>

@@ -200,8 +200,8 @@
                             <exclude>*:${project.artifactId}-nl.esi.comma.constraints-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.constraints.dashboard-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.constraints.ide-*</exclude>
-                            <exclude>*:${project.artifactId}-nl.esi.comma.expressions-*</exclude>
-                            <exclude>*:${project.artifactId}-nl.esi.comma.expressions.ide-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.esi.xtext.expressions-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.esi.xtext.expressions.ide-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.inputspecification-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.inputspecification.ide-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.project.standard-*</exclude>

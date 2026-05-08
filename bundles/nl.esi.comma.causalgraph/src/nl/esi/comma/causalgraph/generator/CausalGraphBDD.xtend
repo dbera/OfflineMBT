@@ -24,11 +24,11 @@ import nl.esi.comma.causalgraph.causalGraph.LanguageBody
 import nl.esi.comma.causalgraph.causalGraph.Node
 import nl.esi.comma.causalgraph.causalGraph.ScenarioDecl
 import nl.esi.comma.causalgraph.causalGraph.ScenarioStep
-import nl.esi.comma.expressions.expression.Expression
-import nl.esi.comma.expressions.expression.ExpressionConstantBool
-import nl.esi.comma.expressions.expression.ExpressionConstantInt
-import nl.esi.comma.expressions.expression.ExpressionConstantReal
-import nl.esi.comma.expressions.expression.ExpressionConstantString
+import nl.esi.xtext.expressions.expression.Expression
+import nl.esi.xtext.expressions.expression.ExpressionConstantBool
+import nl.esi.xtext.expressions.expression.ExpressionConstantInt
+import nl.esi.xtext.expressions.expression.ExpressionConstantReal
+import nl.esi.xtext.expressions.expression.ExpressionConstantString
 import org.eclipse.xtext.generator.IFileSystemAccess2
 
 import static extension nl.esi.comma.causalgraph.utilities.CausalGraphQueries.*

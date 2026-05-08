@@ -20,8 +20,8 @@ import nl.esi.comma.abstracttestspecification.abstractTestspecification.Executab
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.RunStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.TSMain
 import nl.esi.comma.assertthat.assertThat.DataAssertionItem
-import nl.esi.comma.expressions.expression.ExpressionVariable
-import nl.esi.comma.expressions.services.ExpressionGrammarAccess
+import nl.esi.xtext.expressions.expression.ExpressionVariable
+import nl.esi.xtext.expressions.services.ExpressionGrammarAccess
 import org.eclipse.emf.common.util.URI
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.generator.AbstractGenerator

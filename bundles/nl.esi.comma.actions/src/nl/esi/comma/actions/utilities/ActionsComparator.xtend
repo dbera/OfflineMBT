@@ -18,7 +18,7 @@ import nl.esi.comma.actions.actions.IfAction
 import nl.esi.comma.actions.actions.Multiplicity
 import nl.esi.comma.actions.actions.PCFragmentReference
 import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
-import nl.esi.comma.expressions.utilities.ExpressionsComparator
+import nl.esi.xtext.expressions.utilities.ExpressionsComparator
 
 class ActionsComparator extends ExpressionsComparator{
 	

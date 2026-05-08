@@ -31,8 +31,8 @@ import nl.esi.comma.causalgraph.causalGraph.RequirementDecl
 import nl.esi.comma.causalgraph.causalGraph.ScenarioDecl
 import nl.esi.comma.causalgraph.causalGraph.ScenarioStep
 import nl.esi.comma.causalgraph.causalGraph.StepType
-import nl.esi.comma.expressions.expression.MapTypeConstructor
-import nl.esi.comma.expressions.expression.Variable
+import nl.esi.xtext.expressions.expression.MapTypeConstructor
+import nl.esi.xtext.expressions.expression.Variable
 import nl.esi.xtext.types.types.Type
 import nl.esi.xtext.types.types.TypeDecl
 import nl.esi.xtext.common.lang.base.BasePackage

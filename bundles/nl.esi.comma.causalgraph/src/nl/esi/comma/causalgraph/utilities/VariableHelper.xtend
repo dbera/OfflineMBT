@@ -15,8 +15,8 @@ package nl.esi.comma.causalgraph.utilities
 import nl.esi.comma.actions.actions.ActionsFactory
 import nl.esi.comma.actions.actions.AssignmentAction
 import nl.esi.comma.causalgraph.causalGraph.CausalGraphFactory
-import nl.esi.comma.expressions.expression.ExpressionFactory
-import nl.esi.comma.expressions.expression.Variable
+import nl.esi.xtext.expressions.expression.ExpressionFactory
+import nl.esi.xtext.expressions.expression.Variable
 import nl.esi.xtext.types.BasicTypes
 import nl.esi.xtext.types.types.TypeDecl
 

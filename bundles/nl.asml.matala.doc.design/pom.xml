@@ -147,7 +147,7 @@
                             <inputFiles>
                                 <inputFile>${project.build.directory}/meta-models/nl.esi.xtext.common.lang/model/generated/Base.ecore</inputFile>
                                 <inputFile>${project.build.directory}/meta-models/nl.esi.xtext.types/model/generated/Types.ecore</inputFile>
-                                <inputFile>${project.build.directory}/meta-models/nl.esi.comma.expressions/model/generated/Expression.ecore</inputFile>
+                                <inputFile>${project.build.directory}/meta-models/nl.esi.xtext.expressions/model/generated/Expression.ecore</inputFile>
                                 <inputFile>${project.build.directory}/meta-models/nl.esi.comma.actions/model/generated/Actions.ecore</inputFile>
                                 <inputFile>${project.build.directory}/meta-models/nl.esi.comma.assertthat/model/generated/AssertThat.ecore</inputFile>
                                 <inputFile>${project.build.directory}/meta-models/nl.asml.matala.product/model/generated/Product.ecore</inputFile>

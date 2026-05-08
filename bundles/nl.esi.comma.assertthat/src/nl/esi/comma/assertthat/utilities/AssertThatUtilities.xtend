@@ -18,10 +18,10 @@ import nl.esi.comma.assertthat.assertThat.JsonArray
 import nl.esi.comma.assertthat.assertThat.JsonExpression
 import nl.esi.comma.assertthat.assertThat.JsonObject
 import nl.esi.comma.assertthat.assertThat.JsonValue
-import nl.esi.comma.expressions.evaluation.IEvaluationContext
-import nl.esi.comma.expressions.expression.Expression
-import nl.esi.comma.expressions.expression.ExpressionFactory
-import nl.esi.comma.expressions.utilities.ExpressionsUtilities
+import nl.esi.xtext.expressions.evaluation.IEvaluationContext
+import nl.esi.xtext.expressions.expression.Expression
+import nl.esi.xtext.expressions.expression.ExpressionFactory
+import nl.esi.xtext.expressions.utilities.ExpressionsUtilities
 import nl.esi.xtext.types.types.EnumTypeDecl
 import nl.esi.xtext.types.types.RecordField
 import nl.esi.xtext.types.types.RecordTypeDecl

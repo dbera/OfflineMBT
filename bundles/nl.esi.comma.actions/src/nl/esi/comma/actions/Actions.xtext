@@ -10,13 +10,13 @@
  *
  * SPDX-License-Identifier: MIT
  */
-grammar nl.esi.comma.actions.Actions with nl.esi.comma.expressions.Expression
+grammar nl.esi.comma.actions.Actions with nl.esi.xtext.expressions.Expression
 
 generate actions "http://www.esi.nl/comma/actions/Actions"
 
 import "http://www.esi.nl/xtext/common/lang/Base" as base
 import "http://www.esi.nl/xtext/types/Types" as types
-import "http://www.esi.nl/comma/expressions/Expression" as expr
+import "http://www.esi.nl/xtext/expressions/Expression" as expr
 
 /*
  * Actions are statements, acts of sending one or more events, or a declaration of 

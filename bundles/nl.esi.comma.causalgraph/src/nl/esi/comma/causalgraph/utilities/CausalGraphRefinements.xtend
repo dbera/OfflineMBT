@@ -20,7 +20,7 @@ import nl.esi.comma.causalgraph.causalGraph.DataFlowEdge
 import nl.esi.comma.causalgraph.causalGraph.Node
 import nl.esi.comma.causalgraph.causalGraph.ScenarioDecl
 import nl.esi.comma.causalgraph.causalGraph.ScenarioStep
-import nl.esi.comma.expressions.expression.Variable
+import nl.esi.xtext.expressions.expression.Variable
 
 import static extension nl.esi.comma.causalgraph.utilities.CausalGraphQueries.*
 

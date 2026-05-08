@@ -21,8 +21,8 @@ import nl.esi.comma.actions.actions.PCFragment
 import nl.esi.comma.actions.actions.PCFragmentDefinition
 import nl.esi.comma.actions.actions.PCFragmentReference
 import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
-import nl.esi.comma.expressions.expression.ExpressionRecordAccess
-import nl.esi.comma.expressions.expression.ExpressionVariable
+import nl.esi.xtext.expressions.expression.ExpressionRecordAccess
+import nl.esi.xtext.expressions.expression.ExpressionVariable
 
 class ActionsUtilities {
 	

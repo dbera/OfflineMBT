@@ -22,8 +22,8 @@ import nl.esi.comma.abstracttestspecification.abstractTestspecification.Binding
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.RunStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.StepReference
 import nl.esi.comma.assertthat.assertThat.JsonValue
-import nl.esi.comma.expressions.expression.ExpressionVariable
-import nl.esi.comma.expressions.expression.Variable
+import nl.esi.xtext.expressions.expression.ExpressionVariable
+import nl.esi.xtext.expressions.expression.Variable
 import nl.esi.xtext.types.types.EnumTypeDecl
 import nl.esi.xtext.types.types.MapTypeConstructor
 import nl.esi.xtext.types.types.RecordTypeDecl
