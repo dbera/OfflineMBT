@@ -15,7 +15,7 @@
  */
 package nl.esi.comma.testspecification.ide
 
-import nl.esi.comma.types.ide.contentassist.TypesIdeContentProposalCreator
+import nl.esi.xtext.types.ide.contentassist.TypesIdeContentProposalCreator
 
 /**
  * Use this class to register ide components.

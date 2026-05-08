@@ -19,12 +19,12 @@ import nl.esi.comma.expressions.expression.ExpressionAny
 import nl.esi.comma.scenarios.scenarios.ActionType
 import nl.esi.comma.scenarios.scenarios.Scenario
 import nl.esi.comma.scenarios.scenarios.Scenarios
-import nl.esi.comma.types.types.Type
+import nl.esi.xtext.types.types.Type
 import nl.esi.xtext.common.lang.base.Import
 import org.eclipse.xtext.generator.IFileSystemAccess
 
 import static nl.esi.xtext.common.lang.utilities.EcoreUtil3.serialize
-import static nl.esi.comma.types.utilities.TypeUtilities.generateDefaultValue
+import static nl.esi.xtext.types.utilities.TypeUtilities.generateDefaultValue
 
 class ScenarioTracesGenerator {
 	final static String DEFAULT_SERVER_IP = "192.68.32.1"

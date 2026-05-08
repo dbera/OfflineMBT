@@ -14,12 +14,12 @@ package nl.asml.matala.product.generator
 
 import java.util.ArrayList
 import nl.asml.matala.product.product.Product
-import nl.esi.comma.types.types.TypesModel
+import nl.esi.xtext.types.types.TypesModel
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.EcoreUtil2
-import nl.esi.comma.types.types.TypeDecl
-import nl.esi.comma.types.types.EnumTypeDecl
-import nl.esi.comma.types.types.RecordTypeDecl
+import nl.esi.xtext.types.types.TypeDecl
+import nl.esi.xtext.types.types.EnumTypeDecl
+import nl.esi.xtext.types.types.RecordTypeDecl
 
 class TypesGenerator 
 {

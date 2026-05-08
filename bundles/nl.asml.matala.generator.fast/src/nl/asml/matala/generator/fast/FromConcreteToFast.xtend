@@ -42,8 +42,8 @@ import nl.esi.comma.testspecification.testspecification.AssertionStep
 import nl.esi.comma.testspecification.testspecification.RunStep
 import nl.esi.comma.testspecification.testspecification.TSMain
 import nl.esi.comma.testspecification.testspecification.TestDefinition
-import nl.esi.comma.types.types.SimpleTypeDecl
-import nl.esi.comma.types.types.TypeDecl
+import nl.esi.xtext.types.types.SimpleTypeDecl
+import nl.esi.xtext.types.types.TypeDecl
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2

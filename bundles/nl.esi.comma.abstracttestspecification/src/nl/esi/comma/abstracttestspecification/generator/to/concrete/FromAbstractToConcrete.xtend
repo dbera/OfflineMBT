@@ -29,7 +29,7 @@ import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
 
 import static extension nl.esi.comma.abstracttestspecification.generator.utils.Utils.*
-import static extension nl.esi.comma.types.utilities.TypeUtilities.*
+import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
 import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
 
 class FromAbstractToConcrete extends AbstractGenerator {

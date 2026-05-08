@@ -42,7 +42,7 @@ nl.esi.comma.steps -[hidden]- nl.esi.comma.scenarios
 nl.esi.comma.steps -[hidden]- nl.esi.comma.behavior.scl
 nl.esi.comma.behavior.scl -[hidden]- nl.esi.comma.scenarios
 
-artifact nl.esi.comma.types.Types #white/aqua
+artifact nl.esi.xtext.types.Types #white/aqua
 artifact nl.asml.matala.product.Product #white/aqua
 artifact nl.esi.comma.abstracttestspecification.AbstractTestspecification #white/aqua
 artifact nl.esi.comma.inputspecification.InputSpecification #white/aqua
@@ -55,7 +55,7 @@ artifact nl.esi.comma.causalgraph.CausalGraph #white/aquamarine
 
 <<<
 
-include::{extdocdir}/nl.esi.comma.types.adoc[leveloffset=2]
+include::{extdocdir}/nl.esi.xtext.types.adoc[leveloffset=2]
 
 include::{extdocdir}/nl.esi.comma.expressions.adoc[leveloffset=2]
 include::{extdocdir}/expression-functions-framework-design.adoc[leveloffset=2]

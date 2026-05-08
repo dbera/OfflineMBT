@@ -212,8 +212,8 @@
                             <exclude>*:${project.artifactId}-nl.esi.comma.systemconfig-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.testspecification-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.testspecification.ide-*</exclude>
-                            <exclude>*:${project.artifactId}-nl.esi.comma.types-*</exclude>
-                            <exclude>*:${project.artifactId}-nl.esi.comma.types.ide-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.esi.xtext.types-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.esi.xtext.types.ide-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.xtext.lsp.server-*</exclude>
                             <exclude>*:${project.artifactId}-org.aopalliance-*</exclude>
                             <exclude>*:${project.artifactId}-org.apache.aries.spifly.dynamic.bundle-*</exclude>

@@ -31,9 +31,9 @@ import nl.asml.matala.product.product.VarRef
 import nl.esi.comma.expressions.evaluation.ExpressionEvaluator
 import nl.esi.comma.expressions.evaluation.IEvaluationContext
 import nl.esi.comma.expressions.expression.ExpressionConstantInt
-import nl.esi.comma.types.types.RecordTypeDecl
-import nl.esi.comma.types.types.SimpleTypeDecl
-import nl.esi.comma.types.types.TypeDecl
+import nl.esi.xtext.types.types.RecordTypeDecl
+import nl.esi.xtext.types.types.SimpleTypeDecl
+import nl.esi.xtext.types.types.TypeDecl
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2

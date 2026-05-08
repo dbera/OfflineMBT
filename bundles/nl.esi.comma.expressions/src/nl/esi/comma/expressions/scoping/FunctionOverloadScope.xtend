@@ -20,7 +20,7 @@ import org.eclipse.xtext.resource.IEObjectDescription
 import org.eclipse.xtext.scoping.IScope
 
 import static extension nl.esi.comma.expressions.utilities.ExpressionsUtilities.*
-import static extension nl.esi.comma.types.utilities.TypeUtilities.*
+import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
 
 /**
  * Custom scope for function call resolution with three-phase matching strategy:

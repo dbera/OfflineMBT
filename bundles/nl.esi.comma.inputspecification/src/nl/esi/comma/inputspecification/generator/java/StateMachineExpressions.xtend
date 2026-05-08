@@ -44,7 +44,7 @@ import nl.esi.comma.expressions.expression.ExpressionSubtraction
 import nl.esi.comma.expressions.expression.ExpressionVariable
 import nl.esi.comma.expressions.expression.ExpressionVector
 import nl.esi.comma.expressions.expression.Field
-import nl.esi.comma.types.types.VectorTypeConstructor
+import nl.esi.xtext.types.types.VectorTypeConstructor
 
 class StateMachineExpressions 
 {

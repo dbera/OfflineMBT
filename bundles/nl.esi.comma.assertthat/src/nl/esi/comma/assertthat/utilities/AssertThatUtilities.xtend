@@ -22,14 +22,14 @@ import nl.esi.comma.expressions.evaluation.IEvaluationContext
 import nl.esi.comma.expressions.expression.Expression
 import nl.esi.comma.expressions.expression.ExpressionFactory
 import nl.esi.comma.expressions.utilities.ExpressionsUtilities
-import nl.esi.comma.types.types.EnumTypeDecl
-import nl.esi.comma.types.types.RecordField
-import nl.esi.comma.types.types.RecordTypeDecl
-import nl.esi.comma.types.types.SimpleTypeDecl
-import nl.esi.comma.types.types.TypeObject
+import nl.esi.xtext.types.types.EnumTypeDecl
+import nl.esi.xtext.types.types.RecordField
+import nl.esi.xtext.types.types.RecordTypeDecl
+import nl.esi.xtext.types.types.SimpleTypeDecl
+import nl.esi.xtext.types.types.TypeObject
 import org.eclipse.emf.ecore.util.EcoreUtil
 
-import static extension nl.esi.comma.types.utilities.TypeUtilities.*
+import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
 
 class AssertThatUtilities {
     static extension val ExpressionFactory m_expr = ExpressionFactory.eINSTANCE

@@ -46,7 +46,7 @@ import nl.esi.comma.expressions.expression.Pair
 import nl.esi.comma.expressions.expression.Variable
 import nl.esi.comma.expressions.expression.VariableDecl
 import nl.esi.comma.expressions.services.ExpressionGrammarAccess
-import nl.esi.comma.types.formatting2.TypesFormatter
+import nl.esi.xtext.types.formatting2.TypesFormatter
 import org.eclipse.xtext.formatting2.IFormattableDocument
 
 class ExpressionFormatter extends TypesFormatter {

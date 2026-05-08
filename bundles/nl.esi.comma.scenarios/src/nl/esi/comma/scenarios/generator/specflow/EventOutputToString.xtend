@@ -23,11 +23,11 @@ import nl.esi.comma.expressions.expression.ExpressionEnumLiteral
 import nl.esi.comma.expressions.expression.ExpressionRecord
 import nl.esi.comma.expressions.expression.ExpressionVector
 import nl.esi.comma.expressions.expression.Field
-import nl.esi.comma.types.types.EnumElement
-import nl.esi.comma.types.types.EnumTypeDecl
-import nl.esi.comma.types.types.RecordTypeDecl
-import nl.esi.comma.types.types.SimpleTypeDecl
-import nl.esi.comma.types.types.VectorTypeDecl
+import nl.esi.xtext.types.types.EnumElement
+import nl.esi.xtext.types.types.EnumTypeDecl
+import nl.esi.xtext.types.types.RecordTypeDecl
+import nl.esi.xtext.types.types.SimpleTypeDecl
+import nl.esi.xtext.types.types.VectorTypeDecl
 import org.eclipse.emf.common.util.EList
 
 import static nl.esi.comma.expressions.utilities.ExpressionsUtilities.*

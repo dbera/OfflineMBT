@@ -15,7 +15,7 @@ grammar nl.esi.comma.testspecification.Testspecification with nl.esi.comma.asser
 generate testspecification "http://www.esi.nl/comma/testspecification/Testspecification"
 
 import "http://www.esi.nl/xtext/common/lang/Base" as base
-import "http://www.esi.nl/comma/types/Types" as types
+import "http://www.esi.nl/xtext/types/Types" as types
 import "http://www.esi.nl/comma/expressions/Expression" as expr
 
 TSMain returns base::ModelContainer: {TSMain}

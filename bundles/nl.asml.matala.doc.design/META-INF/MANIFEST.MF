@@ -28,6 +28,6 @@ Require-Bundle: com.google.guava,
  nl.esi.comma.steps;resolution:=optional,
  nl.esi.comma.systemconfig;resolution:=optional,
  nl.esi.comma.testspecification;resolution:=optional,
- nl.esi.comma.types;resolution:=optional,
+ nl.esi.xtext.types;resolution:=optional,
  nl.esi.xtext.common.lang;resolution:=optional,
  nl.esi.xtext.lsp.generator;resolution:=optional

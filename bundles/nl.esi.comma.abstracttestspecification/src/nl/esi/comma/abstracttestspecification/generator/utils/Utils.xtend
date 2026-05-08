@@ -48,11 +48,11 @@ import nl.esi.comma.expressions.expression.ExpressionRecordAccess
 import nl.esi.comma.expressions.expression.ExpressionVariable
 import nl.esi.comma.expressions.expression.Variable
 
-import nl.esi.comma.types.types.MapTypeConstructor
-import nl.esi.comma.types.types.Type
-import nl.esi.comma.types.types.TypeReference
-import nl.esi.comma.types.types.TypesFactory
-import nl.esi.comma.types.types.VectorTypeConstructor
+import nl.esi.xtext.types.types.MapTypeConstructor
+import nl.esi.xtext.types.types.Type
+import nl.esi.xtext.types.types.TypeReference
+import nl.esi.xtext.types.types.TypesFactory
+import nl.esi.xtext.types.types.VectorTypeConstructor
 
 import org.eclipse.emf.common.util.EList
 import org.eclipse.emf.ecore.util.EcoreUtil

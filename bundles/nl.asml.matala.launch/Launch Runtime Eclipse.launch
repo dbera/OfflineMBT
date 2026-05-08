@@ -538,9 +538,9 @@
         <setEntry value="nl.esi.comma.testspecification.ide@default:default"/>
         <setEntry value="nl.esi.comma.testspecification.ui@default:default"/>
         <setEntry value="nl.esi.comma.testspecification@default:default"/>
-        <setEntry value="nl.esi.comma.types.ide@default:default"/>
-        <setEntry value="nl.esi.comma.types.ui@default:default"/>
-        <setEntry value="nl.esi.comma.types@default:default"/>
+        <setEntry value="nl.esi.xtext.types.ide@default:default"/>
+        <setEntry value="nl.esi.xtext.types.ui@default:default"/>
+        <setEntry value="nl.esi.xtext.types@default:default"/>
     </setAttribute>
     <booleanAttribute key="show_selected_only" value="false"/>
     <stringAttribute key="templateConfig" value="${target_home}/configuration/config.ini"/>

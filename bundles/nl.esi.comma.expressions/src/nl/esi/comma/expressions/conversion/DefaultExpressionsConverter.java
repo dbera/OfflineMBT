@@ -22,7 +22,7 @@ import nl.esi.comma.expressions.evaluation.IEvaluationContext;
 import nl.esi.comma.expressions.expression.Expression;
 import nl.esi.comma.expressions.expression.ExpressionMap;
 import nl.esi.comma.expressions.expression.ExpressionVector;
-import nl.esi.comma.types.types.Type;
+import nl.esi.xtext.types.types.Type;
 
 /**
  * Default converter from Expression model types to plain Java types.

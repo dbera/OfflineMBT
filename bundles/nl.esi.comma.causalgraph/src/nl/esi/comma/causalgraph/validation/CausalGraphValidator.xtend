@@ -33,8 +33,8 @@ import nl.esi.comma.causalgraph.causalGraph.ScenarioStep
 import nl.esi.comma.causalgraph.causalGraph.StepType
 import nl.esi.comma.expressions.expression.MapTypeConstructor
 import nl.esi.comma.expressions.expression.Variable
-import nl.esi.comma.types.types.Type
-import nl.esi.comma.types.types.TypeDecl
+import nl.esi.xtext.types.types.Type
+import nl.esi.xtext.types.types.TypeDecl
 import nl.esi.xtext.common.lang.base.BasePackage
 import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.validation.Check

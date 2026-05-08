@@ -20,7 +20,7 @@ import nl.esi.comma.expressions.evaluation.IEvaluationContext
 import nl.esi.comma.expressions.expression.Expression
 import nl.esi.comma.expressions.expression.ExpressionModel
 import nl.esi.comma.expressions.functions.ExpressionFunctionsRegistry
-import nl.esi.comma.types.types.Type
+import nl.esi.xtext.types.types.Type
 import org.eclipse.xtext.resource.XtextResourceSet
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach

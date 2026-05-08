@@ -24,14 +24,14 @@ import nl.esi.comma.abstracttestspecification.abstractTestspecification.StepRefe
 import nl.esi.comma.assertthat.assertThat.JsonValue
 import nl.esi.comma.expressions.expression.ExpressionVariable
 import nl.esi.comma.expressions.expression.Variable
-import nl.esi.comma.types.types.EnumTypeDecl
-import nl.esi.comma.types.types.MapTypeConstructor
-import nl.esi.comma.types.types.RecordTypeDecl
-import nl.esi.comma.types.types.SimpleTypeDecl
-import nl.esi.comma.types.types.Type
-import nl.esi.comma.types.types.TypeDecl
-import nl.esi.comma.types.types.TypeReference
-import nl.esi.comma.types.types.VectorTypeConstructor
+import nl.esi.xtext.types.types.EnumTypeDecl
+import nl.esi.xtext.types.types.MapTypeConstructor
+import nl.esi.xtext.types.types.RecordTypeDecl
+import nl.esi.xtext.types.types.SimpleTypeDecl
+import nl.esi.xtext.types.types.Type
+import nl.esi.xtext.types.types.TypeDecl
+import nl.esi.xtext.types.types.TypeReference
+import nl.esi.xtext.types.types.VectorTypeConstructor
 import org.eclipse.emf.common.util.EList
 
 import static extension nl.esi.comma.abstracttestspecification.generator.utils.Utils.*

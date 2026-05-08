@@ -25,10 +25,10 @@ import nl.esi.comma.expressions.expression.TypeAnnotation
 import nl.esi.comma.expressions.services.ExpressionGrammarAccess
 import nl.esi.comma.expressions.utilities.ProposalHelper
 import nl.esi.comma.expressions.utilities.UnsupportedTypeException
-import nl.esi.comma.types.types.EnumTypeDecl
-import nl.esi.comma.types.types.Type
-import nl.esi.comma.types.types.TypeReference
-import nl.esi.comma.types.utilities.TypeUtilities
+import nl.esi.xtext.types.types.EnumTypeDecl
+import nl.esi.xtext.types.types.Type
+import nl.esi.xtext.types.types.TypeReference
+import nl.esi.xtext.types.utilities.TypeUtilities
 import org.eclipse.xtext.Assignment
 import org.eclipse.xtext.ParserRule
 import org.eclipse.xtext.RuleCall

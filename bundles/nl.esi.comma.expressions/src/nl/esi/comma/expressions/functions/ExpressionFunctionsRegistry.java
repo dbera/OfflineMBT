@@ -37,7 +37,7 @@ import nl.esi.comma.expressions.conversion.IExpressionConvertersProvider;
 import nl.esi.comma.expressions.evaluation.IEvaluationContext;
 import nl.esi.comma.expressions.expression.Expression;
 import nl.esi.comma.expressions.expression.ExpressionFunctionCall;
-import nl.esi.comma.types.types.Type;
+import nl.esi.xtext.types.types.Type;
 
 /**
  * Registry for managing expression functions with validation and invocation.

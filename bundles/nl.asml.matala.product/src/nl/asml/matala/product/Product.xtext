@@ -15,7 +15,7 @@ grammar nl.asml.matala.product.Product with nl.esi.comma.assertthat.AssertThat
 generate product "http://www.asml.nl/matala/product/Product"
 
 import "http://www.esi.nl/xtext/common/lang/Base" as base
-import "http://www.esi.nl/comma/types/Types" as types
+import "http://www.esi.nl/xtext/types/Types" as types
 import "http://www.esi.nl/comma/expressions/Expression" as expr
 
 Product returns base::ModelContainer: {Product}

@@ -33,8 +33,8 @@ import nl.esi.comma.expressions.expression.ExpressionPlus;
 import nl.esi.comma.expressions.expression.ExpressionRecordAccess;
 import nl.esi.comma.expressions.expression.ExpressionVariable;
 import nl.esi.comma.expressions.expression.ExpressionVector;
-import nl.esi.comma.types.types.EnumElement;
-import nl.esi.comma.types.types.EnumTypeDecl;
+import nl.esi.xtext.types.types.EnumElement;
+import nl.esi.xtext.types.types.EnumTypeDecl;
 
 /**
  *

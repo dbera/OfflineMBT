@@ -59,17 +59,17 @@ import nl.esi.comma.expressions.expression.ExpressionRecordAccess;
 import nl.esi.comma.expressions.expression.ExpressionSubtraction;
 import nl.esi.comma.expressions.expression.ExpressionVariable;
 import nl.esi.comma.expressions.expression.ExpressionVector;
-import nl.esi.comma.types.types.EnumTypeDecl;
-import nl.esi.comma.types.types.MapTypeConstructor;
-import nl.esi.comma.types.types.MapTypeDecl;
-import nl.esi.comma.types.types.RecordFieldKind;
-import nl.esi.comma.types.types.RecordTypeDecl;
-import nl.esi.comma.types.types.SimpleTypeDecl;
-import nl.esi.comma.types.types.Type;
-import nl.esi.comma.types.types.TypeDecl;
-import nl.esi.comma.types.types.VectorTypeConstructor;
-import nl.esi.comma.types.types.VectorTypeDecl;
-import nl.esi.comma.types.utilities.TypeUtilities;
+import nl.esi.xtext.types.types.EnumTypeDecl;
+import nl.esi.xtext.types.types.MapTypeConstructor;
+import nl.esi.xtext.types.types.MapTypeDecl;
+import nl.esi.xtext.types.types.RecordFieldKind;
+import nl.esi.xtext.types.types.RecordTypeDecl;
+import nl.esi.xtext.types.types.SimpleTypeDecl;
+import nl.esi.xtext.types.types.Type;
+import nl.esi.xtext.types.types.TypeDecl;
+import nl.esi.xtext.types.types.VectorTypeConstructor;
+import nl.esi.xtext.types.types.VectorTypeDecl;
+import nl.esi.xtext.types.utilities.TypeUtilities;
 
 class SnakesHelper {
 	static String defaultValue(Type type, String targetName) {

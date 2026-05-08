@@ -10,12 +10,12 @@
  *
  * SPDX-License-Identifier: MIT
  */
-grammar nl.esi.comma.expressions.Expression with nl.esi.comma.types.Types
+grammar nl.esi.comma.expressions.Expression with nl.esi.xtext.types.Types
 
 generate expression "http://www.esi.nl/comma/expressions/Expression"
 
 import "http://www.esi.nl/xtext/common/lang/Base" as base
-import "http://www.esi.nl/comma/types/Types" as types
+import "http://www.esi.nl/xtext/types/Types" as types
 
 ExpressionModel returns base::ModelContainer: {ExpressionModel}
     imports += Import*

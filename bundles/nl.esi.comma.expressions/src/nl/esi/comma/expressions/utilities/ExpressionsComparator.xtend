@@ -29,7 +29,7 @@ import nl.esi.comma.expressions.expression.ExpressionUnary
 import nl.esi.comma.expressions.expression.ExpressionVariable
 import nl.esi.comma.expressions.expression.ExpressionVector
 import nl.esi.comma.expressions.expression.Variable
-import nl.esi.comma.types.utilities.TypesComparator
+import nl.esi.xtext.types.utilities.TypesComparator
 
 class ExpressionsComparator extends TypesComparator {
 	

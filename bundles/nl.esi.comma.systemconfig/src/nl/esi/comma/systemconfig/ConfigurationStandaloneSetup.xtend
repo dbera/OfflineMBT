@@ -15,7 +15,7 @@
  */
 package nl.esi.comma.systemconfig
 
-import nl.esi.comma.types.TypesStandaloneSetup
+import nl.esi.xtext.types.TypesStandaloneSetup
 import nl.esi.comma.expressions.ExpressionStandaloneSetup
 
 /**

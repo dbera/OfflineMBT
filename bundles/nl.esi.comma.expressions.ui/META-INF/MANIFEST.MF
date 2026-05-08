@@ -7,7 +7,7 @@ Bundle-SymbolicName: nl.esi.comma.expressions.ui; singleton:=true
 Bundle-ActivationPolicy: lazy
 Require-Bundle: nl.esi.comma.expressions;visibility:=reexport,
  nl.esi.comma.expressions.ide,
- nl.esi.comma.types.ui;visibility:=reexport,
+ nl.esi.xtext.types.ui;visibility:=reexport,
  org.eclipse.xtext.ui,
  org.eclipse.xtext.ui.shared,
  org.eclipse.xtext.ui.codetemplates.ui,
@@ -24,6 +24,6 @@ Export-Package: nl.esi.comma.expressions.ui,
  nl.esi.comma.expressions.ui.internal;uses:="org.osgi.framework,com.google.inject,org.eclipse.ui.plugin",
  nl.esi.comma.expressions.ui.labeling,
  nl.esi.comma.expressions.ui.outline,
- nl.esi.comma.expressions.ui.quickfix;uses:="nl.esi.comma.types.ui.quickfix"
+ nl.esi.comma.expressions.ui.quickfix;uses:="nl.esi.xtext.types.ui.quickfix"
 Bundle-Activator: nl.esi.comma.expressions.ui.internal.ExpressionsActivator
 Automatic-Module-Name: nl.esi.comma.expressions.ui

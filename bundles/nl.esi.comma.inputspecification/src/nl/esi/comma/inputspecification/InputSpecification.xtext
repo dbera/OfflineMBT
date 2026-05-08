@@ -15,7 +15,7 @@ grammar nl.esi.comma.inputspecification.InputSpecification with nl.esi.comma.act
 generate inputSpecification "http://www.esi.nl/comma/inputspecification/InputSpecification"
 
 import "http://www.esi.nl/xtext/common/lang/Base" as base
-import "http://www.esi.nl/comma/types/Types" as types
+import "http://www.esi.nl/xtext/types/Types" as types
 import "http://www.esi.nl/comma/expressions/Expression" as expr
 
 Main returns base::ModelContainer: {Main}

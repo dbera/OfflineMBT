@@ -24,10 +24,10 @@ import nl.esi.comma.expressions.expression.ExpressionRecordAccess
 import nl.esi.comma.expressions.expression.ExpressionVector
 import nl.esi.comma.expressions.expression.Field
 import nl.esi.comma.expressions.expression.FunctionDecl
-import nl.esi.comma.types.types.EnumTypeDecl
-import nl.esi.comma.types.types.RecordTypeDecl
-import nl.esi.comma.types.types.TypeObject
-import nl.esi.comma.types.types.TypesPackage
+import nl.esi.xtext.types.types.EnumTypeDecl
+import nl.esi.xtext.types.types.RecordTypeDecl
+import nl.esi.xtext.types.types.TypeObject
+import nl.esi.xtext.types.types.TypesPackage
 import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.EReference
 import org.eclipse.emf.ecore.EStructuralFeature
@@ -37,7 +37,7 @@ import org.eclipse.xtext.scoping.Scopes
 import static org.eclipse.xtext.scoping.Scopes.*
 
 import static extension nl.esi.comma.expressions.utilities.ExpressionsUtilities.*
-import static extension nl.esi.comma.types.utilities.TypeUtilities.*
+import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
 import static extension org.eclipse.xtext.EcoreUtil2.*
 
 /**

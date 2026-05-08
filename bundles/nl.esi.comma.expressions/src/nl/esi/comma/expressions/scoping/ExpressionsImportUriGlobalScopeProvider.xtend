@@ -13,7 +13,7 @@
 package nl.esi.comma.expressions.scoping
 
 import com.google.inject.Inject
-import nl.esi.comma.types.scoping.TypesImportUriGlobalScopeProvider
+import nl.esi.xtext.types.scoping.TypesImportUriGlobalScopeProvider
 import org.eclipse.emf.ecore.resource.Resource
 import nl.esi.comma.expressions.functions.ExpressionFunctionsRegistry
 

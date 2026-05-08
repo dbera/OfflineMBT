@@ -42,20 +42,20 @@ import nl.esi.comma.expressions.expression.ExpressionSubtraction
 import nl.esi.comma.expressions.expression.ExpressionVector
 import nl.esi.comma.expressions.expression.FunctionDecl
 import nl.esi.comma.expressions.expression.VariableDecl
-import nl.esi.comma.types.BasicTypes
-import nl.esi.comma.types.types.Dimension
-import nl.esi.comma.types.types.TypeDecl
-import nl.esi.comma.types.types.TypeObject
-import nl.esi.comma.types.types.TypesFactory
-import nl.esi.comma.types.types.VectorTypeConstructor
-import nl.esi.comma.types.types.VectorTypeDecl
+import nl.esi.xtext.types.BasicTypes
+import nl.esi.xtext.types.types.Dimension
+import nl.esi.xtext.types.types.TypeDecl
+import nl.esi.xtext.types.types.TypeObject
+import nl.esi.xtext.types.types.TypesFactory
+import nl.esi.xtext.types.types.VectorTypeConstructor
+import nl.esi.xtext.types.types.VectorTypeDecl
 import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.EReference
 import org.eclipse.xtext.scoping.IScopeProvider
 import org.eclipse.xtext.validation.Check
 
 import static extension nl.esi.comma.expressions.utilities.ExpressionsUtilities.*
-import static extension nl.esi.comma.types.utilities.TypeUtilities.*
+import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
 
 /*
  * This class mainly captures the ComMA type system for expressions. Constraints are not formulated

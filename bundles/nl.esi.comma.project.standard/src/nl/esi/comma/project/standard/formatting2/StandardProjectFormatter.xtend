@@ -17,7 +17,7 @@ package nl.esi.comma.project.standard.formatting2
 
 import com.google.inject.Inject
 import nl.esi.comma.project.standard.services.StandardProjectGrammarAccess
-import nl.esi.comma.types.formatting2.TypesFormatter
+import nl.esi.xtext.types.formatting2.TypesFormatter
 
 class StandardProjectFormatter extends TypesFormatter {
 	

@@ -64,11 +64,11 @@ the Department of Electrical Engineering of Eindhoven University of Technology.
    </requires>
 
    <plugin
-         id="nl.esi.comma.types.ide"
+         id="nl.esi.xtext.types.ide"
          version="0.0.0"/>
 
    <plugin
-         id="nl.esi.comma.types"
+         id="nl.esi.xtext.types"
          version="0.0.0"/>
 
    <plugin

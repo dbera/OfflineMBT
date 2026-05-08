@@ -57,13 +57,13 @@ import nl.esi.comma.expressions.expression.ExpressionRecordAccess;
 import nl.esi.comma.expressions.expression.ExpressionSubtraction;
 import nl.esi.comma.expressions.expression.ExpressionVariable;
 import nl.esi.comma.expressions.expression.ExpressionVector;
-import nl.esi.comma.types.types.EnumTypeDecl;
-import nl.esi.comma.types.types.MapTypeDecl;
-import nl.esi.comma.types.types.RecordFieldKind;
-import nl.esi.comma.types.types.RecordTypeDecl;
-import nl.esi.comma.types.types.SimpleTypeDecl;
-import nl.esi.comma.types.types.TypeDecl;
-import nl.esi.comma.types.types.VectorTypeDecl;
+import nl.esi.xtext.types.types.EnumTypeDecl;
+import nl.esi.xtext.types.types.MapTypeDecl;
+import nl.esi.xtext.types.types.RecordFieldKind;
+import nl.esi.xtext.types.types.RecordTypeDecl;
+import nl.esi.xtext.types.types.SimpleTypeDecl;
+import nl.esi.xtext.types.types.TypeDecl;
+import nl.esi.xtext.types.types.VectorTypeDecl;
 
 import static nl.esi.xtext.common.lang.utilities.EcoreUtil3.serialize;
 

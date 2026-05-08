@@ -13,7 +13,7 @@
 		<project>nl.esi.comma.project.standard.standalone</project>
 		<project>nl.esi.comma.signature</project>
 		<project>nl.esi.comma.testspecification</project>
-		<project>nl.esi.comma.types</project>
+		<project>nl.esi.xtext.types</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

@@ -12,13 +12,13 @@
  */
 package nl.esi.comma.expressions.evaluation;
 
-import static nl.esi.comma.types.utilities.TypeUtilities.asType;
-import static nl.esi.comma.types.utilities.TypeUtilities.getElementType;
-import static nl.esi.comma.types.utilities.TypeUtilities.getKeyType;
-import static nl.esi.comma.types.utilities.TypeUtilities.getTypeObject;
-import static nl.esi.comma.types.utilities.TypeUtilities.getValueType;
-import static nl.esi.comma.types.utilities.TypeUtilities.isMapType;
-import static nl.esi.comma.types.utilities.TypeUtilities.isVectorType;
+import static nl.esi.xtext.types.utilities.TypeUtilities.asType;
+import static nl.esi.xtext.types.utilities.TypeUtilities.getElementType;
+import static nl.esi.xtext.types.utilities.TypeUtilities.getKeyType;
+import static nl.esi.xtext.types.utilities.TypeUtilities.getTypeObject;
+import static nl.esi.xtext.types.utilities.TypeUtilities.getValueType;
+import static nl.esi.xtext.types.utilities.TypeUtilities.isMapType;
+import static nl.esi.xtext.types.utilities.TypeUtilities.isVectorType;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -48,7 +48,7 @@ import nl.esi.comma.expressions.expression.Pair;
 import nl.esi.comma.expressions.expression.Variable;
 import nl.esi.comma.expressions.functions.ExpressionFunctionsRegistry;
 import nl.esi.comma.expressions.utilities.ExpressionsUtilities;
-import nl.esi.comma.types.types.Type;
+import nl.esi.xtext.types.types.Type;
 
 public interface IEvaluationContext {
 	static final IEvaluationContext EMPTY = variable -> null;

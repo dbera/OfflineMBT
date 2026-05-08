@@ -37,13 +37,13 @@ import nl.esi.comma.expressions.expression.ExpressionRecordAccess
 import nl.esi.comma.expressions.expression.ExpressionVariable
 import nl.esi.comma.expressions.expression.Field
 import nl.esi.comma.expressions.expression.Variable
-import nl.esi.comma.types.types.RecordField
-import nl.esi.comma.types.types.RecordFieldKind
+import nl.esi.xtext.types.types.RecordField
+import nl.esi.xtext.types.types.RecordFieldKind
 import org.eclipse.emf.ecore.EObject
 import org.eclipse.xtext.validation.Check
 
 import static extension nl.esi.comma.actions.utilities.ActionsUtilities.*
-import static extension nl.esi.comma.types.utilities.TypeUtilities.*
+import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
 import static extension org.eclipse.lsat.common.xtend.Queries.*
 
 /**

@@ -12,8 +12,8 @@
  */
 package nl.esi.comma.expressions.utilities;
 
-import nl.esi.comma.types.types.Type
-import nl.esi.comma.types.types.TypeDecl
+import nl.esi.xtext.types.types.Type
+import nl.esi.xtext.types.types.TypeDecl
 import org.eclipse.xtend.lib.annotations.Accessors
 
 class UnsupportedTypeException extends RuntimeException {

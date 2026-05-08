@@ -23,7 +23,7 @@ Expressions are used to compute values, make decisions, and define conditions in
 
 *Supported value types:* bool, int, real, string, enum, record, vector, map, null.
 
-Users can add their own types. See <<nl.esi.comma.types>> for details.
+Users can add their own types. See <<nl.esi.xtext.types>> for details.
 
 
 === Literals

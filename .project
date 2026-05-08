@@ -26,9 +26,9 @@
 		<project>nl.esi.comma.testspecification.tests</project>
 		<project>nl.esi.comma.testspecification.ui</project>
 		<project>nl.esi.comma.testspecification.ui.tests</project>
-		<project>nl.esi.comma.types</project>
-		<project>nl.esi.comma.types.ide</project>
-		<project>nl.esi.comma.types.ui</project>
+		<project>nl.esi.xtext.types</project>
+		<project>nl.esi.xtext.types.ide</project>
+		<project>nl.esi.xtext.types.ui</project>
 		<project>TestSpecification</project>
 		<project>TestSpecificationV2</project>
 	</projects>

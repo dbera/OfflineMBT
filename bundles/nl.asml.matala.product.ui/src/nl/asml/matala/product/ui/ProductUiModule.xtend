@@ -16,7 +16,7 @@
 package nl.asml.matala.product.ui
 
 import nl.asml.matala.product.ide.contentassist.ProductIdeCrossrefProposalProvider
-import nl.esi.comma.types.ide.contentassist.TypesIdeContentProposalCreator
+import nl.esi.xtext.types.ide.contentassist.TypesIdeContentProposalCreator
 import org.eclipse.xtend.lib.annotations.FinalFieldsConstructor
 import org.eclipse.xtext.ide.editor.contentassist.IdeContentProposalCreator
 import org.eclipse.xtext.ide.editor.contentassist.IdeCrossrefProposalProvider

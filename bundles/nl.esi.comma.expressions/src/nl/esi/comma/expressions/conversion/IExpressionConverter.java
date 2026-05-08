@@ -15,7 +15,7 @@ package nl.esi.comma.expressions.conversion;
 import java.util.Optional;
 
 import nl.esi.comma.expressions.expression.Expression;
-import nl.esi.comma.types.types.Type;
+import nl.esi.xtext.types.types.Type;
 
 public interface IExpressionConverter {
 	/**
