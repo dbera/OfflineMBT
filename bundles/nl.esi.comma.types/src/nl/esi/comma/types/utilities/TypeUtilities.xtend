@@ -22,6 +22,7 @@ import nl.esi.comma.types.types.EnumTypeDecl
 import nl.esi.comma.types.types.MapTypeConstructor
 import nl.esi.comma.types.types.MapTypeDecl
 import nl.esi.comma.types.types.RecordField
+import nl.esi.comma.types.types.RecordFieldKind
 import nl.esi.comma.types.types.RecordTypeDecl
 import nl.esi.comma.types.types.SimpleTypeDecl
 import nl.esi.comma.types.types.Type
@@ -32,8 +33,11 @@ import nl.esi.comma.types.types.TypesFactory
 import nl.esi.comma.types.types.VectorTypeConstructor
 import nl.esi.comma.types.types.VectorTypeDecl
 import nl.esi.xtext.common.lang.base.ModelContainer
+import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.emf.ecore.util.EcoreUtil
+
+import static nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
 
 class TypeUtilities {
 	/*
@@ -391,5 +395,28 @@ class TypeUtilities {
     def static getImports(Resource res, String fileExtension) {
         val suffix = '.' + fileExtension.toLowerCase
         return res.imports.filter[importURI.toLowerCase.endsWith(suffix)]
+    }
+
+    def static CharSequence generateDefaultValue(EObject t) {
+        switch (t) {
+            TypeReference:
+                generateDefaultValue(t.type)
+            SimpleTypeDecl: {
+                if(t.name.equals("int")) return '''0'''
+                if(t.name.equals("real")) return '''0.0'''
+                if(t.name.equals("bool")) return '''true'''
+                if(t.name.equals("string")) return '''""'''
+                ""
+            }
+            EnumTypeDecl:
+                serialize(t) + "::" + t.literals.get(0).name
+            RecordTypeDecl: '''«serialize(t)»{«FOR f : TypeUtilities::getAllFields(t).reject[kind == RecordFieldKind::SYMBOLIC] SEPARATOR ', '»«f.name» = «generateDefaultValue(f.type)»«ENDFOR»}'''
+            VectorTypeDecl: '''<«serialize(t)»>[]'''
+            VectorTypeConstructor: '''<«serialize(t)»>[]'''
+            MapTypeDecl: '''<«serialize(t)»>{}'''
+            MapTypeConstructor: '''<«serialize(t)»>{}'''
+            default:
+                ""
+        }
     }
 }

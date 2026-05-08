@@ -57,7 +57,6 @@ import nl.esi.comma.expressions.expression.ExpressionRecordAccess;
 import nl.esi.comma.expressions.expression.ExpressionSubtraction;
 import nl.esi.comma.expressions.expression.ExpressionVariable;
 import nl.esi.comma.expressions.expression.ExpressionVector;
-import nl.esi.comma.expressions.generator.ExpressionsCommaGenerator;
 import nl.esi.comma.types.types.EnumTypeDecl;
 import nl.esi.comma.types.types.MapTypeDecl;
 import nl.esi.comma.types.types.RecordFieldKind;
@@ -66,6 +65,7 @@ import nl.esi.comma.types.types.SimpleTypeDecl;
 import nl.esi.comma.types.types.TypeDecl;
 import nl.esi.comma.types.types.VectorTypeDecl;
 
+import static nl.esi.xtext.common.lang.utilities.EcoreUtil3.serialize;
 
 class CSharpHelper {
 	static String defaultValue(TypeDecl type) {
@@ -373,17 +373,17 @@ class CSharpHelper {
 			// String variable = String.format("%s%s", variablePrefix.apply(a.getAssignment().getName()), a.getAssignment().getName());
 			String variable = String.format("%s", variablePrefix.apply(a.getAssignment().getName()));
 			// if(a.isSymbolic()) return String.format("%s = %s%s%s", variable, QUOTE, expression(a.getExp(), variablePrefix).replace("\"", "\\\""), QUOTE);
-			if(a.isSymbolic()) return String.format("%s = %s%s%s", variable, QUOTE, (new ExpressionsCommaGenerator()).exprToComMASyntax(a.getExp()).toString(), QUOTE);
+			if(a.isSymbolic()) return String.format("%s = %s%s%s", variable, QUOTE, serialize(a.getExp()).toString(), QUOTE);
 			// else return String.format("%s = %s", variable, expression(a.getExp(), variablePrefix));
-			else return String.format("%s = %s%s%s", variable, QUOTE, (new ExpressionsCommaGenerator()).exprToComMASyntax(a.getExp()).toString(), QUOTE);
+			else return String.format("%s = %s%s%s", variable, QUOTE, serialize(a.getExp()).toString(), QUOTE);
 		} else if (action instanceof RecordFieldAssignmentAction) {
 			RecordFieldAssignmentAction a = (RecordFieldAssignmentAction) action;
 			ExpressionRecordAccess access = (ExpressionRecordAccess) a.getFieldAccess();
 			String QUOTE = "\"";
 			if(a.isSymbolic()) {
-				String record = (new ExpressionsCommaGenerator()).exprToComMASyntax(access.getRecord()).toString();
+				String record = serialize(access.getRecord()).toString();
 				String field = access.getField().getName();
-				String value = (new ExpressionsCommaGenerator()).exprToComMASyntax(a.getExp()).toString();
+				String value = serialize(a.getExp()).toString();
 				return String.format("%s.%s = %s%s%s", record, field, QUOTE, value, QUOTE);
 				// return QUOTE + (new ActionsUmlGenerator()).generateAction(a).toString() + QUOTE;
 			} else {
@@ -419,7 +419,7 @@ class CSharpHelper {
 		} else if(action instanceof FunctionCall) {
 			var act = (FunctionCall) action;
 			//return expression(act.getExp(), variablePrefix);
-			return (new ExpressionsCommaGenerator()).exprToComMASyntax(act.getExp()).toString();
+			return serialize(act.getExp()).toString();
 		} 
 		
 		throw new RuntimeException("Not supported");
@@ -430,14 +430,14 @@ class CSharpHelper {
 			AssignmentAction a = (AssignmentAction) action;
 			String QUOTE = "";
 			String variable = String.format("%s", variablePrefix.apply(a.getAssignment().getName()));
-			return String.format("%s = %s%s%s", variable, QUOTE, (new ExpressionsCommaGenerator()).exprToComMASyntax(a.getExp()).toString(), QUOTE); //.replace("\"", "\\\"")
+			return String.format("%s = %s%s%s", variable, QUOTE, serialize(a.getExp()).toString(), QUOTE); //.replace("\"", "\\\"")
 		} else if (action instanceof RecordFieldAssignmentAction) {
 			RecordFieldAssignmentAction a = (RecordFieldAssignmentAction) action;
 			ExpressionRecordAccess access = (ExpressionRecordAccess) a.getFieldAccess();
 			String QUOTE = "";
-			String record = (new ExpressionsCommaGenerator()).exprToComMASyntax(access.getRecord()).toString();
+			String record = serialize(access.getRecord()).toString();
 			String field = access.getField().getName();
-			String value = (new ExpressionsCommaGenerator()).exprToComMASyntax(a.getExp()).toString();
+			String value = serialize(a.getExp()).toString();
 			return String.format("%s.%s = %s%s%s", record, field, QUOTE, value, QUOTE); //.replace("\"", "\\\"")
 		} else if(action instanceof IfAction) {
 			var txt = new String();
@@ -466,7 +466,7 @@ class CSharpHelper {
 		} else if(action instanceof FunctionCall) {
 			var act = (FunctionCall) action;
 			// return expression(act.getExp(), variablePrefix);
-			return (new ExpressionsCommaGenerator()).exprToComMASyntax(act.getExp()).toString();
+			return serialize(act.getExp()).toString();
 		}
 		
 		throw new RuntimeException("Not supported");

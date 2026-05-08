@@ -69,6 +69,8 @@ import nl.esi.comma.expressions.expression.Variable
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
 
+import static nl.esi.xtext.common.lang.utilities.EcoreUtil3.serialize
+
 class Utils 
 {
     // Added for Asserts
@@ -269,7 +271,7 @@ class Utils
         var list = new ArrayList<String>()
         for (f : exp.fields) {
             var fqname = getFQName(f)
-            list += "updateDict[\"" + fqname + "\"] = \"\"\"" + (new ExpressionGenerator).exprToComMASyntax(f.exp) + " \"\"\"\n"
+            list += "updateDict[\"" + fqname + "\"] = \"\"\"" + serialize(f.exp) + " \"\"\"\n"
             list += findVariableAssignments(f.exp)
         }
         return list

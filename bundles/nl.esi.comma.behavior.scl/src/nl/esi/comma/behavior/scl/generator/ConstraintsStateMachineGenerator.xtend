@@ -12,51 +12,49 @@
  */
 package nl.esi.comma.behavior.scl.generator
 
+import dk.brics.automaton.Automaton
+import dk.brics.automaton.RegExp
 import java.util.ArrayList
 import java.util.HashMap
 import java.util.HashSet
 import java.util.List
 import java.util.Map
 import java.util.Set
-
-import nl.esi.comma.behavior.scl.scl.Templates
-import nl.esi.comma.behavior.scl.scl.Existential
-import nl.esi.comma.behavior.scl.scl.RespondedExistence
-import nl.esi.comma.behavior.scl.scl.Response
-import nl.esi.comma.behavior.scl.scl.AlternateResponse
-import nl.esi.comma.behavior.scl.scl.ChainResponse
-import nl.esi.comma.behavior.scl.scl.Precedence
-import nl.esi.comma.behavior.scl.scl.AlternatePrecedence
-import nl.esi.comma.behavior.scl.scl.ChainPrecedence
-import nl.esi.comma.behavior.scl.scl.CoExistance
-import nl.esi.comma.behavior.scl.scl.Succession
-import nl.esi.comma.behavior.scl.scl.AlternateSuccession
-import nl.esi.comma.behavior.scl.scl.ChainSuccession
-import nl.esi.comma.behavior.scl.scl.NotSuccession
-import nl.esi.comma.behavior.scl.scl.NotCoExistance
-import nl.esi.comma.behavior.scl.scl.NotChainSuccession
-import nl.esi.comma.behavior.scl.scl.Ref
-import nl.esi.comma.behavior.scl.scl.RefStep
-import nl.esi.comma.behavior.scl.scl.RefSequence
-import nl.esi.comma.behavior.scl.scl.Init
-import nl.esi.comma.behavior.scl.scl.End
-import nl.esi.comma.behavior.scl.scl.Model
-import nl.esi.comma.behavior.scl.scl.Choice
-import nl.esi.comma.behavior.scl.scl.SimpleChoice
-import nl.esi.comma.behavior.scl.scl.ExclusiveChoice
-import nl.esi.comma.behavior.scl.scl.AtLeast
-import nl.esi.comma.behavior.scl.scl.AtMost
-import nl.esi.comma.behavior.scl.scl.Exact
-import nl.esi.comma.behavior.scl.scl.Future
-import nl.esi.comma.behavior.scl.scl.Past
-import nl.esi.comma.behavior.scl.scl.Dependencies
-import dk.brics.automaton.Automaton
-import dk.brics.automaton.RegExp
+import nl.esi.comma.actions.generator.plantuml.ActionsUmlGenerator
 import nl.esi.comma.automata.RelationType
 import nl.esi.comma.automata.Semantics
 import nl.esi.comma.behavior.scl.scl.Actions
-import nl.esi.comma.expressions.generator.ExpressionsCommaGenerator
-import nl.esi.comma.actions.generator.plantuml.ActionsUmlGenerator
+import nl.esi.comma.behavior.scl.scl.AlternatePrecedence
+import nl.esi.comma.behavior.scl.scl.AlternateResponse
+import nl.esi.comma.behavior.scl.scl.AlternateSuccession
+import nl.esi.comma.behavior.scl.scl.AtLeast
+import nl.esi.comma.behavior.scl.scl.AtMost
+import nl.esi.comma.behavior.scl.scl.ChainPrecedence
+import nl.esi.comma.behavior.scl.scl.ChainResponse
+import nl.esi.comma.behavior.scl.scl.ChainSuccession
+import nl.esi.comma.behavior.scl.scl.Choice
+import nl.esi.comma.behavior.scl.scl.CoExistance
+import nl.esi.comma.behavior.scl.scl.Dependencies
+import nl.esi.comma.behavior.scl.scl.End
+import nl.esi.comma.behavior.scl.scl.Exact
+import nl.esi.comma.behavior.scl.scl.ExclusiveChoice
+import nl.esi.comma.behavior.scl.scl.Existential
+import nl.esi.comma.behavior.scl.scl.Future
+import nl.esi.comma.behavior.scl.scl.Init
+import nl.esi.comma.behavior.scl.scl.Model
+import nl.esi.comma.behavior.scl.scl.NotChainSuccession
+import nl.esi.comma.behavior.scl.scl.NotCoExistance
+import nl.esi.comma.behavior.scl.scl.NotSuccession
+import nl.esi.comma.behavior.scl.scl.Past
+import nl.esi.comma.behavior.scl.scl.Precedence
+import nl.esi.comma.behavior.scl.scl.Ref
+import nl.esi.comma.behavior.scl.scl.RefSequence
+import nl.esi.comma.behavior.scl.scl.RefStep
+import nl.esi.comma.behavior.scl.scl.RespondedExistence
+import nl.esi.comma.behavior.scl.scl.Response
+import nl.esi.comma.behavior.scl.scl.SimpleChoice
+import nl.esi.comma.behavior.scl.scl.Succession
+import nl.esi.comma.behavior.scl.scl.Templates
 
 class ConstraintsStateMachineGenerator 
 {
@@ -127,7 +125,6 @@ class ConstraintsStateMachineGenerator
     def computeStateMachine(List<Templates> templateList, String path, String name) 
     { 
        var sem = new Semantics
-       var debug = false
        var List<Automaton> automataList = new ArrayList<Automaton>();
        for(templates : templateList) {
             for(elm : templates.type) {

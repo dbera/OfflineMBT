@@ -17,22 +17,23 @@ import nl.esi.comma.actions.actions.IfAction
 import nl.esi.comma.actions.actions.PCFragmentReference
 import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
 import nl.esi.comma.actions.utilities.EventPatternMultiplicity
-import nl.esi.comma.expressions.generator.ExpressionsCommaGenerator
 
-class ActionsUmlGenerator extends ExpressionsCommaGenerator { //ExpressionsUmlGenerator {
+import static nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
+
+class ActionsUmlGenerator { //ExpressionsUmlGenerator {
 	
 	/*new(String fileName, IFileSystemAccess fsa) {
 		//super(fileName, fsa)
 	}*/
 		
 	def dispatch CharSequence generateAction(AssignmentAction a)
-	'''«a.assignment.name» := «exprToComMASyntax(a.exp)» '''
+	'''«a.assignment.name» := «serialize(a.exp)» '''
 	
 	def dispatch CharSequence generateAction(RecordFieldAssignmentAction a)
-	'''«exprToComMASyntax(a.fieldAccess)» := «exprToComMASyntax(a.exp)» '''
+	'''«serialize(a.fieldAccess)» := «serialize(a.exp)» '''
 	
 	def dispatch CharSequence generateAction(IfAction a)
-	'''if «exprToComMASyntax(a.guard)» then «FOR act : a.thenList.actions»«generateAction(act)»«ENDFOR»«IF a.elseList !== null» else «FOR act : a.elseList.actions»«generateAction(act)» «ENDFOR»«ENDIF»fi '''
+	'''if «serialize(a.guard)» then «FOR act : a.thenList.actions»«generateAction(act)»«ENDFOR»«IF a.elseList !== null» else «FOR act : a.elseList.actions»«generateAction(act)» «ENDFOR»«ENDIF»fi '''
 	
 	def dispatch CharSequence generateAction(PCFragmentReference a)
 	'''fragment «a.fragment.name»'''
