@@ -15,12 +15,12 @@ package nl.esi.comma.causalgraph.generator;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import nl.esi.comma.actions.actions.Action;
-import nl.esi.comma.actions.actions.AssignmentAction;
-import nl.esi.comma.actions.actions.ForAction;
-import nl.esi.comma.actions.actions.FunctionCall;
-import nl.esi.comma.actions.actions.IfAction;
-import nl.esi.comma.actions.actions.RecordFieldAssignmentAction;
+import nl.esi.xtext.actions.actions.Action;
+import nl.esi.xtext.actions.actions.AssignmentAction;
+import nl.esi.xtext.actions.actions.ForAction;
+import nl.esi.xtext.actions.actions.FunctionCall;
+import nl.esi.xtext.actions.actions.IfAction;
+import nl.esi.xtext.actions.actions.RecordFieldAssignmentAction;
 // import nl.esi.comma.behavior.behavior.TriggeredTransition;
 import nl.esi.xtext.expressions.expression.Expression;
 import nl.esi.xtext.expressions.expression.ExpressionAddition;

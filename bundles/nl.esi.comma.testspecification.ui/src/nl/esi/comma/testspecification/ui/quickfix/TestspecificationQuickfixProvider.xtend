@@ -15,7 +15,7 @@
  */
 package nl.esi.comma.testspecification.ui.quickfix
 
-import nl.esi.comma.actions.ui.quickfix.ActionsQuickfixProvider
+import nl.esi.xtext.actions.ui.quickfix.ActionsQuickfixProvider
 
 /**
  * Custom quickfixes.

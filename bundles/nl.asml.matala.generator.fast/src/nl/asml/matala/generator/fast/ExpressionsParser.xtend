@@ -14,8 +14,8 @@ package nl.asml.matala.generator.fast
 
 import java.util.List
 import java.util.Map
-import nl.esi.comma.actions.actions.AssignmentAction
-import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
+import nl.esi.xtext.actions.actions.AssignmentAction
+import nl.esi.xtext.actions.actions.RecordFieldAssignmentAction
 import nl.esi.xtext.expressions.expression.Expression
 import nl.esi.xtext.expressions.expression.ExpressionAddition
 import nl.esi.xtext.expressions.expression.ExpressionAnd

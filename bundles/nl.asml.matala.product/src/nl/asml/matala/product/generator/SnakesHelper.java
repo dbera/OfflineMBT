@@ -18,12 +18,12 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import nl.esi.comma.actions.actions.Action;
-import nl.esi.comma.actions.actions.ActionList;
-import nl.esi.comma.actions.actions.AssignmentAction;
-import nl.esi.comma.actions.actions.ForAction;
-import nl.esi.comma.actions.actions.IfAction;
-import nl.esi.comma.actions.actions.RecordFieldAssignmentAction;
+import nl.esi.xtext.actions.actions.Action;
+import nl.esi.xtext.actions.actions.ActionList;
+import nl.esi.xtext.actions.actions.AssignmentAction;
+import nl.esi.xtext.actions.actions.ForAction;
+import nl.esi.xtext.actions.actions.IfAction;
+import nl.esi.xtext.actions.actions.RecordFieldAssignmentAction;
 import nl.esi.xtext.expressions.expression.Expression;
 import nl.esi.xtext.expressions.expression.ExpressionAddition;
 import nl.esi.xtext.expressions.expression.ExpressionAnd;

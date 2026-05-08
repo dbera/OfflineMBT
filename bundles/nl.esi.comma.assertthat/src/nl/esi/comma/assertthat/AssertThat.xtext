@@ -10,7 +10,7 @@
  *
  * SPDX-License-Identifier: MIT
  */
-grammar nl.esi.comma.assertthat.AssertThat with nl.esi.comma.actions.Actions
+grammar nl.esi.comma.assertthat.AssertThat with nl.esi.xtext.actions.Actions
 
 generate assertThat "http://www.esi.nl/comma/assertthat/AssertThat"
 

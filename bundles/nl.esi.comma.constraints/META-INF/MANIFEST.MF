@@ -6,7 +6,7 @@ Bundle-Vendor: TNO-ESI
 Bundle-Version: 4.2.0.qualifier
 Bundle-SymbolicName: nl.esi.comma.constraints; singleton:=true
 Bundle-ActivationPolicy: lazy
-Require-Bundle: nl.esi.comma.actions;visibility:=reexport,
+Require-Bundle: nl.esi.xtext.actions;visibility:=reexport,
  nl.esi.comma.steps,
  nl.esi.comma.scenarios,
  org.eclipse.xtext,

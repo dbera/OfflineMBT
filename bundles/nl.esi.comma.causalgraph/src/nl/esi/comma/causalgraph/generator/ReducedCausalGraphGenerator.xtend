@@ -12,7 +12,7 @@
  */
 package nl.esi.comma.causalgraph.generator
 
-import nl.esi.comma.actions.actions.ActionsFactory
+import nl.esi.xtext.actions.actions.ActionsFactory
 import nl.esi.comma.causalgraph.CausalGraphStandaloneSetup
 import nl.esi.comma.causalgraph.causalGraph.CausalGraphFactory
 import nl.esi.comma.causalgraph.causalGraph.ScenarioStep

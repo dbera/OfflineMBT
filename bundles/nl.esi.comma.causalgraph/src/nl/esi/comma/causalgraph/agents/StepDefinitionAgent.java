@@ -255,7 +255,7 @@ public class StepDefinitionAgent {
         Map<String, Object> variableInitialValues = new HashMap<>();
         
         if (graph.getAssignments() != null) {
-            for (nl.esi.comma.actions.actions.AssignmentAction assignment : graph.getAssignments()) {
+            for (nl.esi.xtext.actions.actions.AssignmentAction assignment : graph.getAssignments()) {
                 try {
                     Variable assignedVariable = assignment.getAssignment();
                     if (assignedVariable != null) {
@@ -706,7 +706,7 @@ public class StepDefinitionAgent {
                         continue;
                     }
                     
-                    EList<nl.esi.comma.actions.actions.AssignmentAction> stepArgumentsList = targetScenarioStep.getStepArguments();
+                    EList<nl.esi.xtext.actions.actions.AssignmentAction> stepArgumentsList = targetScenarioStep.getStepArguments();
                     stepArgumentsList.clear();
                     
                     if (argsData instanceof Map) {
@@ -762,7 +762,7 @@ public class StepDefinitionAgent {
                                 continue;
                             }
                             
-                            nl.esi.comma.actions.actions.AssignmentAction assignmentAction = VariableHelper.createStepArgumentWithVariable(
+                            nl.esi.xtext.actions.actions.AssignmentAction assignmentAction = VariableHelper.createStepArgumentWithVariable(
                                 parameterVariable, paramValue, paramType);
                             
                             System.out.println(String.format("      Created assignment action for existing parameter variable: %s", assignmentAction.getAssignment().getName()));

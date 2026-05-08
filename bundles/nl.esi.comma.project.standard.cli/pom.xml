@@ -192,8 +192,8 @@
                             <exclude>*:${project.artifactId}-nl.asml.matala.product.lsp.server-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.abstracttestspecification-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.abstracttestspecification.ide-*</exclude>
-                            <exclude>*:${project.artifactId}-nl.esi.comma.actions-*</exclude>
-                            <exclude>*:${project.artifactId}-nl.esi.comma.actions.ide-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.esi.xtext.actions-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.esi.xtext.actions.ide-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.assertthat-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.assertthat.ide-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.automata-*</exclude>

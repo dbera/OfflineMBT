@@ -12,8 +12,8 @@
  */
 package nl.esi.comma.testspecification.generator.utils
 
-import nl.esi.comma.actions.actions.AssignmentAction
-import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
+import nl.esi.xtext.actions.actions.AssignmentAction
+import nl.esi.xtext.actions.actions.RecordFieldAssignmentAction
 import nl.esi.xtext.expressions.expression.Expression
 import nl.esi.xtext.expressions.expression.ExpressionMap
 import nl.esi.xtext.expressions.expression.ExpressionRecord

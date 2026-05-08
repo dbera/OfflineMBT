@@ -22,9 +22,9 @@ import java.util.Map
 import java.util.Set
 import java.util.regex.Pattern
 import nl.asml.matala.generator.docgen.DocGen
-import nl.esi.comma.actions.actions.Action
-import nl.esi.comma.actions.actions.AssignmentAction
-import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
+import nl.esi.xtext.actions.actions.Action
+import nl.esi.xtext.actions.actions.AssignmentAction
+import nl.esi.xtext.actions.actions.RecordFieldAssignmentAction
 import nl.esi.xtext.expressions.expression.Expression
 import nl.esi.xtext.expressions.expression.ExpressionNullLiteral
 import nl.esi.xtext.expressions.expression.ExpressionRecord

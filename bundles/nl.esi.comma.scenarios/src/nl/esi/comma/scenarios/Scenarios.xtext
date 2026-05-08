@@ -10,7 +10,7 @@
  *
  * SPDX-License-Identifier: MIT
  */
-grammar nl.esi.comma.scenarios.Scenarios with nl.esi.comma.actions.Actions
+grammar nl.esi.comma.scenarios.Scenarios with nl.esi.xtext.actions.Actions
 
 generate scenarios "http://www.esi.nl/comma/scenarios/Scenarios"
 

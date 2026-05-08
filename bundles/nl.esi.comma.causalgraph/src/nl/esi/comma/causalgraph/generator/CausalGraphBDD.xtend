@@ -15,7 +15,7 @@ package nl.esi.comma.causalgraph.generator
 import java.util.ArrayList
 import java.util.LinkedHashMap
 import java.util.List
-import nl.esi.comma.actions.actions.AssignmentAction
+import nl.esi.xtext.actions.actions.AssignmentAction
 import nl.esi.comma.causalgraph.causalGraph.AliasTypeDecl
 import nl.esi.comma.causalgraph.causalGraph.CausalGraph
 import nl.esi.comma.causalgraph.causalGraph.ControlFlowEdge

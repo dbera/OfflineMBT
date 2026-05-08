@@ -18,7 +18,7 @@ package nl.esi.comma.causalgraph.validation
 import java.util.List
 import java.util.Map
 import java.util.TreeMap
-import nl.esi.comma.actions.actions.ActionsPackage
+import nl.esi.xtext.actions.actions.ActionsPackage
 import nl.esi.comma.causalgraph.causalGraph.CausalGraph
 import nl.esi.comma.causalgraph.causalGraph.CausalGraphPackage
 import nl.esi.comma.causalgraph.causalGraph.ControlFlowEdge

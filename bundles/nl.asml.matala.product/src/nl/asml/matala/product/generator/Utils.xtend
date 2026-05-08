@@ -28,8 +28,8 @@ import nl.asml.matala.product.product.SymbConstraint
 import nl.asml.matala.product.product.Update
 import nl.asml.matala.product.product.UpdateOutVar
 import nl.asml.matala.product.product.VarRef
-import nl.esi.comma.actions.actions.AssignmentAction
-import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
+import nl.esi.xtext.actions.actions.AssignmentAction
+import nl.esi.xtext.actions.actions.RecordFieldAssignmentAction
 import nl.esi.comma.assertthat.assertThat.DataAssertions
 import nl.esi.xtext.expressions.expression.ExpressionAddition
 import nl.esi.xtext.expressions.expression.ExpressionAnd

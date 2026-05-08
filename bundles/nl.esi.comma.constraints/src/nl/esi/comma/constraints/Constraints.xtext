@@ -10,7 +10,7 @@
  *
  * SPDX-License-Identifier: MIT
  */
-grammar nl.esi.comma.constraints.Constraints with nl.esi.comma.actions.Actions
+grammar nl.esi.comma.constraints.Constraints with nl.esi.xtext.actions.Actions
 
 generate constraints "http://www.esi.nl/comma/constraints/Constraints"
 

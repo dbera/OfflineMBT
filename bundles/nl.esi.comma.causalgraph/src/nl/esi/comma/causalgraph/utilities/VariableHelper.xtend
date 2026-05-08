@@ -12,8 +12,8 @@
  */
 package nl.esi.comma.causalgraph.utilities
 
-import nl.esi.comma.actions.actions.ActionsFactory
-import nl.esi.comma.actions.actions.AssignmentAction
+import nl.esi.xtext.actions.actions.ActionsFactory
+import nl.esi.xtext.actions.actions.AssignmentAction
 import nl.esi.comma.causalgraph.causalGraph.CausalGraphFactory
 import nl.esi.xtext.expressions.expression.ExpressionFactory
 import nl.esi.xtext.expressions.expression.Variable

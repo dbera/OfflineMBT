@@ -72,7 +72,7 @@ the Department of Electrical Engineering of Eindhoven University of Technology.
          version="0.0.0"/>
 
    <plugin
-         id="nl.esi.comma.actions"
+         id="nl.esi.xtext.actions"
          version="0.0.0"/>
 
    <plugin
@@ -84,7 +84,7 @@ the Department of Electrical Engineering of Eindhoven University of Technology.
          version="0.0.0"/>
 
    <plugin
-         id="nl.esi.comma.actions.ide"
+         id="nl.esi.xtext.actions.ide"
          version="0.0.0"/>
 
    <plugin

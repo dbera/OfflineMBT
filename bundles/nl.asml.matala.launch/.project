@@ -4,7 +4,7 @@
 	<comment></comment>
 	<projects>
 		<project>nl.asml.matala.product</project>
-		<project>nl.esi.comma.actions</project>
+		<project>nl.esi.xtext.actions</project>
 		<project>nl.esi.comma.behavior</project>
 		<project>nl.esi.comma.behavior.scl</project>
 		<project>nl.esi.xtext.expressions</project>

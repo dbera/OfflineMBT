@@ -25,11 +25,11 @@ import nl.asml.matala.product.product.ProductPackage
 import nl.asml.matala.product.product.RefConstraint
 import nl.asml.matala.product.product.Update
 import nl.asml.matala.product.product.UpdateOutVar
-import nl.esi.comma.actions.actions.ActionsPackage
-import nl.esi.comma.actions.actions.AssignmentAction
-import nl.esi.comma.actions.actions.ForAction
-import nl.esi.comma.actions.actions.IfAction
-import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
+import nl.esi.xtext.actions.actions.ActionsPackage
+import nl.esi.xtext.actions.actions.AssignmentAction
+import nl.esi.xtext.actions.actions.ForAction
+import nl.esi.xtext.actions.actions.IfAction
+import nl.esi.xtext.actions.actions.RecordFieldAssignmentAction
 import nl.esi.xtext.expressions.expression.Expression
 import nl.esi.xtext.expressions.expression.ExpressionPackage
 import nl.esi.xtext.expressions.expression.ExpressionRecord
@@ -42,7 +42,7 @@ import nl.esi.xtext.types.types.RecordFieldKind
 import org.eclipse.emf.ecore.EObject
 import org.eclipse.xtext.validation.Check
 
-import static extension nl.esi.comma.actions.utilities.ActionsUtilities.*
+import static extension nl.esi.xtext.actions.utilities.ActionsUtilities.*
 import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
 import static extension org.eclipse.lsat.common.xtend.Queries.*
 

@@ -499,9 +499,9 @@
         <setEntry value="nl.asml.matala.product.ide@default:default"/>
         <setEntry value="nl.asml.matala.product.ui@default:default"/>
         <setEntry value="nl.asml.matala.product@default:default"/>
-        <setEntry value="nl.esi.comma.actions.ide@default:default"/>
-        <setEntry value="nl.esi.comma.actions.ui@default:default"/>
-        <setEntry value="nl.esi.comma.actions@default:default"/>
+        <setEntry value="nl.esi.xtext.actions.ide@default:default"/>
+        <setEntry value="nl.esi.xtext.actions.ui@default:default"/>
+        <setEntry value="nl.esi.xtext.actions@default:default"/>
         <setEntry value="nl.esi.comma.assertthat.ide@default:default"/>
         <setEntry value="nl.esi.comma.assertthat.ui@default:default"/>
         <setEntry value="nl.esi.comma.assertthat@default:default"/>

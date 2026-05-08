@@ -17,7 +17,7 @@ import java.util.List
 import java.util.Map
 import nl.asml.matala.product.ProductStandaloneSetup
 import nl.asml.matala.product.services.ProductGrammarAccess
-import nl.esi.comma.actions.services.ActionsGrammarAccess
+import nl.esi.xtext.actions.services.ActionsGrammarAccess
 import nl.esi.comma.assertthat.services.AssertThatGrammarAccess
 import nl.esi.xtext.expressions.expression.ExpressionPackage
 import nl.esi.xtext.expressions.services.ExpressionGrammarAccess

@@ -11,7 +11,7 @@
  * SPDX-License-Identifier: MIT
  */
  
-grammar nl.esi.comma.causalgraph.CausalGraph with nl.esi.comma.actions.Actions
+grammar nl.esi.comma.causalgraph.CausalGraph with nl.esi.xtext.actions.Actions
 
 generate causalGraph "http://www.esi.nl/comma/causalgraph/CausalGraph"
 
