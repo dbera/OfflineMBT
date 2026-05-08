@@ -221,7 +221,7 @@ class ExpressionsUtilities {
         for (gtp : genericsTypeParams) {
             val matched = newLinkedHashSet
             collectMatchingTypes(type, argType, gtp, matched)
-            if (!matched.empty) {
+            if (matched.size == 1) {
                 resolutionMap.put(gtp, matched.head.asType)
             }
         }
