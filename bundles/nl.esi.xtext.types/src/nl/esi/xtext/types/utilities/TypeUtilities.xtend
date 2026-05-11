@@ -408,8 +408,7 @@ class TypeUtilities {
                 if(t.name.equals("string")) return '''""'''
                 ""
             }
-            EnumTypeDecl:
-                serialize(t) + "::" + t.literals.get(0).name
+            EnumTypeDecl: serialize(t) + "::" + t.literals.get(0).name
             RecordTypeDecl: '''«serialize(t)»{«FOR f : TypeUtilities::getAllFields(t).reject[kind == RecordFieldKind::SYMBOLIC] SEPARATOR ', '»«f.name» = «generateDefaultValue(f.type)»«ENDFOR»}'''
             VectorTypeDecl: '''<«serialize(t)»>[]'''
             VectorTypeConstructor: '''<«serialize(t)»>[]'''
