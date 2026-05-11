@@ -15,7 +15,7 @@
  */
 package nl.esi.comma.project.standard.ide
 
-import nl.esi.comma.types.ide.contentassist.TypesIdeContentProposalCreator
+import nl.esi.xtext.types.ide.contentassist.TypesIdeContentProposalCreator
 import org.eclipse.xtext.ide.editor.contentassist.IdeContentProposalCreator
 
 /**

@@ -12,7 +12,7 @@
  */
 package nl.esi.comma.causalgraph.generator
 
-import nl.esi.comma.actions.actions.ActionsFactory
+import nl.esi.xtext.actions.actions.ActionsFactory
 import nl.esi.comma.causalgraph.CausalGraphStandaloneSetup
 import nl.esi.comma.causalgraph.causalGraph.CausalGraphFactory
 import nl.esi.comma.causalgraph.causalGraph.ScenarioStep
@@ -20,8 +20,8 @@ import nl.esi.comma.causalgraph.causalGraph.StepType
 import nl.esi.comma.causalgraph.causalGraph.VariableAccess
 import nl.esi.comma.causalgraph.utilities.CausalGraphRefinements
 import nl.esi.comma.causalgraph.utilities.NodeAttributes
-import nl.esi.comma.expressions.expression.ExpressionFactory
-import nl.esi.comma.types.BasicTypes
+import nl.esi.xtext.expressions.expression.ExpressionFactory
+import nl.esi.xtext.types.BasicTypes
 import org.eclipse.emf.common.util.URI
 import org.eclipse.lsat.common.xtend.annotations.IntermediateProperty
 import org.eclipse.xtext.resource.XtextResourceSet

@@ -12,8 +12,8 @@
  */
 package nl.asml.matala.product.ide.contentassist
 
-import nl.esi.comma.expressions.expression.ExpressionPackage
-import nl.esi.comma.types.types.TypesPackage
+import nl.esi.xtext.expressions.expression.ExpressionPackage
+import nl.esi.xtext.types.types.TypesPackage
 import org.eclipse.xtext.CrossReference
 import org.eclipse.xtext.ide.editor.contentassist.ContentAssistContext
 import org.eclipse.xtext.ide.editor.contentassist.ContentAssistEntry

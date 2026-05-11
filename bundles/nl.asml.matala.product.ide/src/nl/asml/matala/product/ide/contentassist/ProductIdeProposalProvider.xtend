@@ -17,13 +17,13 @@ package nl.asml.matala.product.ide.contentassist
 
 import com.google.inject.Inject
 import nl.asml.matala.product.product.DataReferences
-import nl.esi.comma.actions.services.ActionsGrammarAccess
-import nl.esi.comma.expressions.services.ExpressionGrammarAccess
-import nl.esi.comma.types.types.RecordField
+import nl.esi.xtext.actions.services.ActionsGrammarAccess
+import nl.esi.xtext.expressions.services.ExpressionGrammarAccess
+import nl.esi.xtext.types.types.RecordField
 import org.eclipse.xtext.CrossReference
 import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.ide.editor.contentassist.ContentAssistContext
-import nl.esi.comma.types.types.RecordFieldKind
+import nl.esi.xtext.types.types.RecordFieldKind
 
 /**
  * See https://www.eclipse.org/Xtext/documentation/310_eclipse_support.html#content-assist

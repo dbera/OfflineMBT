@@ -42,7 +42,7 @@ include::../_initCommon.adoc[]
 . Add a reference to a 'main' index file for example `_section_xtext_languages.adoc`.
 +
 ----
-    include::{extdocdir}/nl.esi.comma.types.adoc[leveloffset=2]
+    include::{extdocdir}/nl.esi.xtext.types.adoc[leveloffset=2]
 ----
 +
 [NOTE]

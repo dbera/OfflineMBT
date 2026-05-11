@@ -499,9 +499,9 @@
         <setEntry value="nl.asml.matala.product.ide@default:default"/>
         <setEntry value="nl.asml.matala.product.ui@default:default"/>
         <setEntry value="nl.asml.matala.product@default:default"/>
-        <setEntry value="nl.esi.comma.actions.ide@default:default"/>
-        <setEntry value="nl.esi.comma.actions.ui@default:default"/>
-        <setEntry value="nl.esi.comma.actions@default:default"/>
+        <setEntry value="nl.esi.xtext.actions.ide@default:default"/>
+        <setEntry value="nl.esi.xtext.actions.ui@default:default"/>
+        <setEntry value="nl.esi.xtext.actions@default:default"/>
         <setEntry value="nl.esi.comma.assertthat.ide@default:default"/>
         <setEntry value="nl.esi.comma.assertthat.ui@default:default"/>
         <setEntry value="nl.esi.comma.assertthat@default:default"/>
@@ -513,9 +513,9 @@
         <setEntry value="nl.esi.comma.constraints.ide@default:default"/>
         <setEntry value="nl.esi.comma.constraints.ui@default:default"/>
         <setEntry value="nl.esi.comma.constraints@default:default"/>
-        <setEntry value="nl.esi.comma.expressions.ide@default:default"/>
-        <setEntry value="nl.esi.comma.expressions.ui@default:default"/>
-        <setEntry value="nl.esi.comma.expressions@default:default"/>
+        <setEntry value="nl.esi.xtext.expressions.ide@default:default"/>
+        <setEntry value="nl.esi.xtext.expressions.ui@default:default"/>
+        <setEntry value="nl.esi.xtext.expressions@default:default"/>
         <setEntry value="nl.esi.comma.inputspecification.ide@default:default"/>
         <setEntry value="nl.esi.comma.inputspecification.ui@default:default"/>
         <setEntry value="nl.esi.comma.inputspecification@default:default"/>
@@ -538,9 +538,9 @@
         <setEntry value="nl.esi.comma.testspecification.ide@default:default"/>
         <setEntry value="nl.esi.comma.testspecification.ui@default:default"/>
         <setEntry value="nl.esi.comma.testspecification@default:default"/>
-        <setEntry value="nl.esi.comma.types.ide@default:default"/>
-        <setEntry value="nl.esi.comma.types.ui@default:default"/>
-        <setEntry value="nl.esi.comma.types@default:default"/>
+        <setEntry value="nl.esi.xtext.types.ide@default:default"/>
+        <setEntry value="nl.esi.xtext.types.ui@default:default"/>
+        <setEntry value="nl.esi.xtext.types@default:default"/>
     </setAttribute>
     <booleanAttribute key="show_selected_only" value="false"/>
     <stringAttribute key="templateConfig" value="${target_home}/configuration/config.ini"/>

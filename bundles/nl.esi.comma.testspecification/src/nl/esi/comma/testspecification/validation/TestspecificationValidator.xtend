@@ -15,9 +15,9 @@
  */
 package nl.esi.comma.testspecification.validation
 
-import nl.esi.comma.actions.actions.ActionsPackage
-import nl.esi.comma.actions.actions.AssignmentAction
-import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
+import nl.esi.xtext.actions.actions.ActionsPackage
+import nl.esi.xtext.actions.actions.AssignmentAction
+import nl.esi.xtext.actions.actions.RecordFieldAssignmentAction
 import nl.esi.comma.inputspecification.inputSpecification.InputSpecificationPackage
 import nl.esi.comma.testspecification.testspecification.RefStep
 import nl.esi.comma.testspecification.testspecification.StepSequence

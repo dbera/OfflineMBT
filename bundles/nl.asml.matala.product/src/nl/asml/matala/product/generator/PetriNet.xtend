@@ -18,7 +18,7 @@ import java.util.HashSet
 import java.util.List
 import java.util.Map
 import java.util.Set
-import nl.esi.comma.types.types.SimpleTypeDecl
+import nl.esi.xtext.types.types.SimpleTypeDecl
 
 class PetriNet {
     public var places = new ArrayList<Place>

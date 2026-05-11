@@ -20,7 +20,7 @@ import java.util.HashSet
 import java.util.List
 import java.util.Map
 import java.util.Set
-import nl.esi.comma.actions.generator.plantuml.ActionsUmlGenerator
+import nl.esi.xtext.actions.generator.plantuml.ActionsUmlGenerator
 import nl.esi.comma.automata.RelationType
 import nl.esi.comma.automata.Semantics
 import nl.esi.comma.behavior.scl.scl.Actions

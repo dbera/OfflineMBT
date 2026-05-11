@@ -10,7 +10,7 @@
  *
  * SPDX-License-Identifier: MIT
  */
-module nl.esi.comma.expressions.GenerateExpression
+module nl.esi.xtext.expressions.GenerateExpression
 
 import org.eclipse.xtext.xtext.generator.*
 import org.eclipse.xtext.xtext.generator.model.project.*

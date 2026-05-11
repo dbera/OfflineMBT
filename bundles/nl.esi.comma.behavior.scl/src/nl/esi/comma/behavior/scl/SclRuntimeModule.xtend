@@ -15,11 +15,11 @@
  */
 package nl.esi.comma.behavior.scl
 
-import nl.esi.comma.expressions.conversion.ExpressionConvertersProvider
-import nl.esi.comma.expressions.conversion.IExpressionConvertersProvider
-import nl.esi.comma.expressions.functions.ExpressionFunctionLibrariesProvider
-import nl.esi.comma.expressions.functions.IExpressionFunctionLibrariesProvider
-import nl.esi.comma.expressions.scoping.ExpressionsImportUriGlobalScopeProvider
+import nl.esi.xtext.expressions.conversion.ExpressionConvertersProvider
+import nl.esi.xtext.expressions.conversion.IExpressionConvertersProvider
+import nl.esi.xtext.expressions.functions.ExpressionFunctionLibrariesProvider
+import nl.esi.xtext.expressions.functions.IExpressionFunctionLibrariesProvider
+import nl.esi.xtext.expressions.scoping.ExpressionsImportUriGlobalScopeProvider
 import org.eclipse.xtext.scoping.IGlobalScopeProvider
 
 /**

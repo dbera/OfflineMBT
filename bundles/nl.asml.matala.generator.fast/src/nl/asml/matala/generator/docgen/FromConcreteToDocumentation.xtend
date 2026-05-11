@@ -15,9 +15,9 @@ package nl.asml.matala.generator.docgen
 import java.util.ArrayList
 import java.util.HashMap
 import java.util.List
-import nl.esi.comma.actions.actions.AssignmentAction
-import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
-import nl.esi.comma.expressions.expression.Variable
+import nl.esi.xtext.actions.actions.AssignmentAction
+import nl.esi.xtext.actions.actions.RecordFieldAssignmentAction
+import nl.esi.xtext.expressions.expression.Variable
 import nl.esi.comma.inputspecification.inputSpecification.APIDefinition
 import nl.esi.comma.inputspecification.inputSpecification.Main
 import nl.esi.comma.testspecification.generator.utils.Step
