@@ -15,7 +15,7 @@
  */
 package nl.esi.comma.testspecification.ui
 
-import nl.esi.comma.types.ide.contentassist.TypesIdeContentProposalCreator
+import nl.esi.xtext.types.ide.contentassist.TypesIdeContentProposalCreator
 import org.eclipse.xtend.lib.annotations.FinalFieldsConstructor
 
 /**

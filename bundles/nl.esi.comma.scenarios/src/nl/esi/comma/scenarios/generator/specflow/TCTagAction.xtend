@@ -12,7 +12,7 @@
  */
 package nl.esi.comma.scenarios.generator.specflow
 
-import nl.esi.comma.expressions.expression.Expression
+import nl.esi.xtext.expressions.expression.Expression
 
 class TCTagAction {
     

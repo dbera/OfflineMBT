@@ -67,8 +67,8 @@ import nl.esi.comma.abstracttestspecification.abstractTestspecification.ComposeS
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.RunStep;
 import nl.esi.comma.abstracttestspecification.generator.to.concrete.ConcreteExpressionHandler;
 import nl.esi.comma.assertthat.assertThat.JsonValue;
-import nl.esi.comma.expressions.expression.ExpressionVariable;
-import nl.esi.comma.types.types.TypeDecl;
+import nl.esi.xtext.expressions.expression.ExpressionVariable;
+import nl.esi.xtext.types.types.TypeDecl;
 
 public class CamundaParser {
 

@@ -13,24 +13,24 @@
 package nl.esi.comma.scenarios.generator.specflow
 
 import java.util.ArrayList
-import nl.esi.comma.expressions.expression.Expression
-import nl.esi.comma.expressions.expression.ExpressionAny
-import nl.esi.comma.expressions.expression.ExpressionConstantBool
-import nl.esi.comma.expressions.expression.ExpressionConstantInt
-import nl.esi.comma.expressions.expression.ExpressionConstantReal
-import nl.esi.comma.expressions.expression.ExpressionConstantString
-import nl.esi.comma.expressions.expression.ExpressionEnumLiteral
-import nl.esi.comma.expressions.expression.ExpressionRecord
-import nl.esi.comma.expressions.expression.ExpressionVector
-import nl.esi.comma.expressions.expression.Field
-import nl.esi.comma.types.types.EnumElement
-import nl.esi.comma.types.types.EnumTypeDecl
-import nl.esi.comma.types.types.RecordTypeDecl
-import nl.esi.comma.types.types.SimpleTypeDecl
-import nl.esi.comma.types.types.VectorTypeDecl
+import nl.esi.xtext.expressions.expression.Expression
+import nl.esi.xtext.expressions.expression.ExpressionAny
+import nl.esi.xtext.expressions.expression.ExpressionConstantBool
+import nl.esi.xtext.expressions.expression.ExpressionConstantInt
+import nl.esi.xtext.expressions.expression.ExpressionConstantReal
+import nl.esi.xtext.expressions.expression.ExpressionConstantString
+import nl.esi.xtext.expressions.expression.ExpressionEnumLiteral
+import nl.esi.xtext.expressions.expression.ExpressionRecord
+import nl.esi.xtext.expressions.expression.ExpressionVector
+import nl.esi.xtext.expressions.expression.Field
+import nl.esi.xtext.types.types.EnumElement
+import nl.esi.xtext.types.types.EnumTypeDecl
+import nl.esi.xtext.types.types.RecordTypeDecl
+import nl.esi.xtext.types.types.SimpleTypeDecl
+import nl.esi.xtext.types.types.VectorTypeDecl
 import org.eclipse.emf.common.util.EList
 
-import static nl.esi.comma.expressions.utilities.ExpressionsUtilities.*
+import static nl.esi.xtext.expressions.utilities.ExpressionsUtilities.*
 
 class EventOutputToString {
     

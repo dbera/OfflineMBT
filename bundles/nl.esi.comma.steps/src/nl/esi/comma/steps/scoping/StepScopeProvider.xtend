@@ -18,7 +18,7 @@ package nl.esi.comma.steps.scoping
 import nl.esi.comma.steps.step.FeatureList
 import nl.esi.comma.systemconfig.configuration.ConfigurationPackage
 import nl.esi.comma.systemconfig.configuration.FeatureDefinition
-import nl.esi.comma.types.utilities.CommaUtilities
+import nl.esi.xtext.types.utilities.CommaUtilities
 import org.eclipse.emf.ecore.EReference
 import org.eclipse.xtext.scoping.IScope
 import org.eclipse.xtext.scoping.Scopes

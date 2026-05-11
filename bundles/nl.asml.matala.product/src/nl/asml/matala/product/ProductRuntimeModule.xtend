@@ -15,11 +15,11 @@
  */
 package nl.asml.matala.product
 
-import nl.esi.comma.expressions.conversion.ExpressionConvertersProvider
-import nl.esi.comma.expressions.conversion.IExpressionConvertersProvider
-import nl.esi.comma.expressions.functions.ExpressionFunctionLibrariesProvider
-import nl.esi.comma.expressions.functions.IExpressionFunctionLibrariesProvider
-import nl.esi.comma.expressions.scoping.ExpressionsImportUriGlobalScopeProvider
+import nl.esi.xtext.expressions.conversion.ExpressionConvertersProvider
+import nl.esi.xtext.expressions.conversion.IExpressionConvertersProvider
+import nl.esi.xtext.expressions.functions.ExpressionFunctionLibrariesProvider
+import nl.esi.xtext.expressions.functions.IExpressionFunctionLibrariesProvider
+import nl.esi.xtext.expressions.scoping.ExpressionsImportUriGlobalScopeProvider
 
 /**
  * Use this class to register components to be used at runtime / without the Equinox extension registry.

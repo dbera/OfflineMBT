@@ -12,63 +12,64 @@
  */
 package nl.asml.matala.product.generator;
 
+import static nl.esi.xtext.common.lang.utilities.EcoreUtil3.serialize;
+
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import nl.esi.comma.actions.actions.Action;
-import nl.esi.comma.actions.actions.ActionList;
-import nl.esi.comma.actions.actions.AssignmentAction;
-import nl.esi.comma.actions.actions.ForAction;
-import nl.esi.comma.actions.actions.IfAction;
-import nl.esi.comma.actions.actions.RecordFieldAssignmentAction;
-import nl.esi.comma.expressions.expression.Expression;
-import nl.esi.comma.expressions.expression.ExpressionAddition;
-import nl.esi.comma.expressions.expression.ExpressionAnd;
-import nl.esi.comma.expressions.expression.ExpressionAny;
-import nl.esi.comma.expressions.expression.ExpressionBracket;
-import nl.esi.comma.expressions.expression.ExpressionConstantBool;
-import nl.esi.comma.expressions.expression.ExpressionConstantInt;
-import nl.esi.comma.expressions.expression.ExpressionConstantReal;
-import nl.esi.comma.expressions.expression.ExpressionConstantString;
-import nl.esi.comma.expressions.expression.ExpressionDivision;
-import nl.esi.comma.expressions.expression.ExpressionEnumLiteral;
-import nl.esi.comma.expressions.expression.ExpressionEqual;
-import nl.esi.comma.expressions.expression.ExpressionFunctionCall;
-import nl.esi.comma.expressions.expression.ExpressionGeq;
-import nl.esi.comma.expressions.expression.ExpressionGreater;
-import nl.esi.comma.expressions.expression.ExpressionLeq;
-import nl.esi.comma.expressions.expression.ExpressionLess;
-import nl.esi.comma.expressions.expression.ExpressionMap;
-import nl.esi.comma.expressions.expression.ExpressionMapRW;
-import nl.esi.comma.expressions.expression.ExpressionMaximum;
-import nl.esi.comma.expressions.expression.ExpressionMinimum;
-import nl.esi.comma.expressions.expression.ExpressionMinus;
-import nl.esi.comma.expressions.expression.ExpressionModulo;
-import nl.esi.comma.expressions.expression.ExpressionMultiply;
-import nl.esi.comma.expressions.expression.ExpressionNEqual;
-import nl.esi.comma.expressions.expression.ExpressionNot;
-import nl.esi.comma.expressions.expression.ExpressionNullLiteral;
-import nl.esi.comma.expressions.expression.ExpressionOr;
-import nl.esi.comma.expressions.expression.ExpressionPlus;
-import nl.esi.comma.expressions.expression.ExpressionPower;
-import nl.esi.comma.expressions.expression.ExpressionRecord;
-import nl.esi.comma.expressions.expression.ExpressionRecordAccess;
-import nl.esi.comma.expressions.expression.ExpressionSubtraction;
-import nl.esi.comma.expressions.expression.ExpressionVariable;
-import nl.esi.comma.expressions.expression.ExpressionVector;
-import nl.esi.comma.expressions.generator.ExpressionsCommaGenerator;
-import nl.esi.comma.types.types.EnumTypeDecl;
-import nl.esi.comma.types.types.MapTypeConstructor;
-import nl.esi.comma.types.types.MapTypeDecl;
-import nl.esi.comma.types.types.RecordFieldKind;
-import nl.esi.comma.types.types.RecordTypeDecl;
-import nl.esi.comma.types.types.SimpleTypeDecl;
-import nl.esi.comma.types.types.Type;
-import nl.esi.comma.types.types.TypeDecl;
-import nl.esi.comma.types.types.VectorTypeConstructor;
-import nl.esi.comma.types.types.VectorTypeDecl;
-import nl.esi.comma.types.utilities.TypeUtilities;
+import nl.esi.xtext.actions.actions.Action;
+import nl.esi.xtext.actions.actions.ActionList;
+import nl.esi.xtext.actions.actions.AssignmentAction;
+import nl.esi.xtext.actions.actions.ForAction;
+import nl.esi.xtext.actions.actions.IfAction;
+import nl.esi.xtext.actions.actions.RecordFieldAssignmentAction;
+import nl.esi.xtext.expressions.expression.Expression;
+import nl.esi.xtext.expressions.expression.ExpressionAddition;
+import nl.esi.xtext.expressions.expression.ExpressionAnd;
+import nl.esi.xtext.expressions.expression.ExpressionAny;
+import nl.esi.xtext.expressions.expression.ExpressionBracket;
+import nl.esi.xtext.expressions.expression.ExpressionConstantBool;
+import nl.esi.xtext.expressions.expression.ExpressionConstantInt;
+import nl.esi.xtext.expressions.expression.ExpressionConstantReal;
+import nl.esi.xtext.expressions.expression.ExpressionConstantString;
+import nl.esi.xtext.expressions.expression.ExpressionDivision;
+import nl.esi.xtext.expressions.expression.ExpressionEnumLiteral;
+import nl.esi.xtext.expressions.expression.ExpressionEqual;
+import nl.esi.xtext.expressions.expression.ExpressionFunctionCall;
+import nl.esi.xtext.expressions.expression.ExpressionGeq;
+import nl.esi.xtext.expressions.expression.ExpressionGreater;
+import nl.esi.xtext.expressions.expression.ExpressionLeq;
+import nl.esi.xtext.expressions.expression.ExpressionLess;
+import nl.esi.xtext.expressions.expression.ExpressionMap;
+import nl.esi.xtext.expressions.expression.ExpressionMapRW;
+import nl.esi.xtext.expressions.expression.ExpressionMaximum;
+import nl.esi.xtext.expressions.expression.ExpressionMinimum;
+import nl.esi.xtext.expressions.expression.ExpressionMinus;
+import nl.esi.xtext.expressions.expression.ExpressionModulo;
+import nl.esi.xtext.expressions.expression.ExpressionMultiply;
+import nl.esi.xtext.expressions.expression.ExpressionNEqual;
+import nl.esi.xtext.expressions.expression.ExpressionNot;
+import nl.esi.xtext.expressions.expression.ExpressionNullLiteral;
+import nl.esi.xtext.expressions.expression.ExpressionOr;
+import nl.esi.xtext.expressions.expression.ExpressionPlus;
+import nl.esi.xtext.expressions.expression.ExpressionPower;
+import nl.esi.xtext.expressions.expression.ExpressionRecord;
+import nl.esi.xtext.expressions.expression.ExpressionRecordAccess;
+import nl.esi.xtext.expressions.expression.ExpressionSubtraction;
+import nl.esi.xtext.expressions.expression.ExpressionVariable;
+import nl.esi.xtext.expressions.expression.ExpressionVector;
+import nl.esi.xtext.types.types.EnumTypeDecl;
+import nl.esi.xtext.types.types.MapTypeConstructor;
+import nl.esi.xtext.types.types.MapTypeDecl;
+import nl.esi.xtext.types.types.RecordFieldKind;
+import nl.esi.xtext.types.types.RecordTypeDecl;
+import nl.esi.xtext.types.types.SimpleTypeDecl;
+import nl.esi.xtext.types.types.Type;
+import nl.esi.xtext.types.types.TypeDecl;
+import nl.esi.xtext.types.types.VectorTypeConstructor;
+import nl.esi.xtext.types.types.VectorTypeDecl;
+import nl.esi.xtext.types.utilities.TypeUtilities;
 
 class SnakesHelper {
 	static String defaultValue(Type type, String targetName) {
@@ -318,16 +319,16 @@ class SnakesHelper {
 			// String variable = String.format("%s%s", variablePrefix.apply(a.getAssignment().getName()), a.getAssignment().getName());
 			String variable = String.format("%s", variablePrefix.apply(a.getAssignment().getName()));
 			// if(a.isSymbolic()) return String.format("%s = %s%s%s", variable, QUOTE, expression(a.getExp(), variablePrefix).replace("\"", "\\\""), QUOTE);
-			if(a.isSymbolic()) return String.format("%s = %s%s%s", variable, QUOTE, (new ExpressionsCommaGenerator()).exprToComMASyntax(a.getExp()).toString().replace("\"", "\\\""), QUOTE);
+			if(a.isSymbolic()) return String.format("%s = %s%s%s", variable, QUOTE, serialize(a.getExp()).toString().replace("\"", "\\\""), QUOTE);
 			else return String.format("%s = %s", variable, expression(a.getExp(), variablePrefix));
 		} else if (action instanceof RecordFieldAssignmentAction) {
 			RecordFieldAssignmentAction a = (RecordFieldAssignmentAction) action;
 			ExpressionRecordAccess access = (ExpressionRecordAccess) a.getFieldAccess();
 			String QUOTE = "\"";
 			if(a.isSymbolic()) {
-				String record = (new ExpressionsCommaGenerator()).exprToComMASyntax(access.getRecord()).toString();
+				String record = serialize(access.getRecord()).toString();
 				String field = access.getField().getName();
-				String value = (new ExpressionsCommaGenerator()).exprToComMASyntax(a.getExp()).toString();
+				String value = serialize(a.getExp()).toString();
 				return String.format("%s.%s = %s%s%s", record, field, QUOTE, value.replace("\"", "\\\""), QUOTE);
 				// return QUOTE + (new ActionsUmlGenerator()).generateAction(a).toString() + QUOTE;
 			} else {
@@ -375,14 +376,14 @@ class SnakesHelper {
 			AssignmentAction a = (AssignmentAction) action;
 			String QUOTE = "\"";
 			String variable = String.format("%s", variablePrefix.apply(a.getAssignment().getName()));
-			return String.format("%s = %s%s%s", variable, QUOTE, (new ExpressionsCommaGenerator()).exprToComMASyntax(a.getExp()).toString(), QUOTE); //.replace("\"", "\\\"")
+			return String.format("%s = %s%s%s", variable, QUOTE, serialize(a.getExp()).toString(), QUOTE); //.replace("\"", "\\\"")
 		} else if (action instanceof RecordFieldAssignmentAction) {
 			RecordFieldAssignmentAction a = (RecordFieldAssignmentAction) action;
 			ExpressionRecordAccess access = (ExpressionRecordAccess) a.getFieldAccess();
 			String QUOTE = "\"";
-			String record = (new ExpressionsCommaGenerator()).exprToComMASyntax(access.getRecord()).toString();
+			String record = serialize(access.getRecord()).toString();
 			String field = access.getField().getName();
-			String value = (new ExpressionsCommaGenerator()).exprToComMASyntax(a.getExp()).toString();
+			String value = serialize(a.getExp()).toString();
 			return String.format("%s.%s = %s%s%s", record, field, QUOTE, value, QUOTE); //.replace("\"", "\\\"")
 		} else if(action instanceof IfAction) {
 			var txt = new String();

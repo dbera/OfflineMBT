@@ -1,0 +1,29 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Actions Language UI
+Bundle-Vendor: TNO-ESI
+Bundle-Version: 4.2.0.qualifier
+Bundle-SymbolicName: nl.esi.xtext.actions.ui; singleton:=true
+Bundle-ActivationPolicy: lazy
+Require-Bundle: nl.esi.xtext.actions;visibility:=reexport,
+ nl.esi.xtext.actions.ide,
+ nl.esi.xtext.expressions.ui;visibility:=reexport,
+ org.eclipse.xtext.ui,
+ org.eclipse.xtext.ui.shared,
+ org.eclipse.xtext.ui.codetemplates.ui,
+ org.eclipse.ui.editors;bundle-version="3.5.0",
+ org.eclipse.ui.ide;bundle-version="3.5.0",
+ org.eclipse.ui,
+ org.eclipse.compare,
+ org.eclipse.xtext.builder,
+ org.eclipse.xtend.lib;bundle-version="2.14.0";resolution:=optional,
+ org.eclipse.xtext.xbase.lib;bundle-version="2.15.0"
+Import-Package: org.apache.log4j
+Bundle-RequiredExecutionEnvironment: JavaSE-21
+Export-Package: nl.esi.xtext.actions.ui,
+ nl.esi.xtext.actions.ui.internal,
+ nl.esi.xtext.actions.ui.labeling,
+ nl.esi.xtext.actions.ui.outline,
+ nl.esi.xtext.actions.ui.quickfix
+Bundle-Activator: nl.esi.xtext.actions.ui.internal.ActionsActivator
+Automatic-Module-Name: nl.esi.xtext.actions.ui

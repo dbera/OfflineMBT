@@ -8,7 +8,7 @@ Bundle-SymbolicName: nl.esi.comma.systemconfig.ui; singleton:=true
 Bundle-ActivationPolicy: lazy
 Require-Bundle: nl.esi.comma.systemconfig;visibility:=reexport,
  nl.esi.comma.systemconfig.ide,
- nl.esi.comma.expressions.ui;visibility:=reexport,
+ nl.esi.xtext.expressions.ui;visibility:=reexport,
  org.eclipse.xtext.ui,
  org.eclipse.xtext.ui.shared,
  org.eclipse.xtext.ui.codetemplates.ui,
