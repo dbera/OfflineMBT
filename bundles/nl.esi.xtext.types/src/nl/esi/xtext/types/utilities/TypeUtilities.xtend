@@ -16,13 +16,13 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import java.util.ArrayList
 import java.util.List
+import nl.esi.xtext.common.lang.base.ModelContainer
 import nl.esi.xtext.types.BasicTypes
 import nl.esi.xtext.types.types.EnumElement
 import nl.esi.xtext.types.types.EnumTypeDecl
 import nl.esi.xtext.types.types.MapTypeConstructor
 import nl.esi.xtext.types.types.MapTypeDecl
 import nl.esi.xtext.types.types.RecordField
-import nl.esi.xtext.types.types.RecordFieldKind
 import nl.esi.xtext.types.types.RecordTypeDecl
 import nl.esi.xtext.types.types.SimpleTypeDecl
 import nl.esi.xtext.types.types.Type
@@ -32,12 +32,8 @@ import nl.esi.xtext.types.types.TypeReference
 import nl.esi.xtext.types.types.TypesFactory
 import nl.esi.xtext.types.types.VectorTypeConstructor
 import nl.esi.xtext.types.types.VectorTypeDecl
-import nl.esi.xtext.common.lang.base.ModelContainer
-import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.emf.ecore.util.EcoreUtil
-
-import static nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
 
 class TypeUtilities {
 	/*
@@ -395,27 +391,5 @@ class TypeUtilities {
     def static getImports(Resource res, String fileExtension) {
         val suffix = '.' + fileExtension.toLowerCase
         return res.imports.filter[importURI.toLowerCase.endsWith(suffix)]
-    }
-
-    def static CharSequence generateDefaultValue(EObject t) {
-        switch (t) {
-            TypeReference:
-                generateDefaultValue(t.type)
-            SimpleTypeDecl: {
-                if(t.name.equals("int")) return '''0'''
-                if(t.name.equals("real")) return '''0.0'''
-                if(t.name.equals("bool")) return '''true'''
-                if(t.name.equals("string")) return '''""'''
-                ""
-            }
-            EnumTypeDecl: serialize(t) + "::" + t.literals.get(0).name
-            RecordTypeDecl: '''«serialize(t)»{«FOR f : TypeUtilities::getAllFields(t).reject[kind == RecordFieldKind::SYMBOLIC] SEPARATOR ', '»«f.name» = «generateDefaultValue(f.type)»«ENDFOR»}'''
-            VectorTypeDecl: '''<«serialize(t)»>[]'''
-            VectorTypeConstructor: '''<«serialize(t)»>[]'''
-            MapTypeDecl: '''<«serialize(t)»>{}'''
-            MapTypeConstructor: '''<«serialize(t)»>{}'''
-            default:
-                ""
-        }
     }
 }

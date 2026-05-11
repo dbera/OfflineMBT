@@ -24,7 +24,7 @@ import nl.esi.xtext.common.lang.base.Import
 import org.eclipse.xtext.generator.IFileSystemAccess
 
 import static nl.esi.xtext.common.lang.utilities.EcoreUtil3.serialize
-import static nl.esi.xtext.types.utilities.TypeUtilities.generateDefaultValue
+import static nl.esi.xtext.expressions.utilities.ExpressionsUtilities.generateDefaultValue
 
 class ScenarioTracesGenerator {
 	final static String DEFAULT_SERVER_IP = "192.68.32.1"

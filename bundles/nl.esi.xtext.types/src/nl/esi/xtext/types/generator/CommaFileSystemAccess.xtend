@@ -18,8 +18,6 @@ import org.eclipse.xtext.generator.AbstractFileSystemAccess
 import org.eclipse.xtext.generator.IFileSystemAccess
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.OutputConfiguration
-import org.eclipse.core.runtime.IPath
-import org.eclipse.core.runtime.Path
 
 class CommaFileSystemAccess implements IFileSystemAccess {
 

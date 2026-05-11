@@ -62,16 +62,17 @@ import nl.esi.xtext.types.types.RecordFieldKind
 import nl.esi.xtext.types.types.RecordTypeDecl
 import nl.esi.xtext.types.types.SimpleTypeDecl
 import nl.esi.xtext.types.types.Type
-import nl.esi.xtext.types.types.TypeDecl
 import nl.esi.xtext.types.types.TypeObject
+import nl.esi.xtext.types.types.TypeReference
 import nl.esi.xtext.types.types.VectorTypeConstructor
 import nl.esi.xtext.types.types.VectorTypeDecl
 import nl.esi.xtext.types.utilities.TypeUtilities
 import org.eclipse.emf.ecore.EObject
 
+import static nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
+
 import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
 import static extension org.eclipse.emf.ecore.util.EcoreUtil.*
-import nl.esi.xtext.types.types.TypeReference
 
 class ExpressionsUtilities {
     static extension val ExpressionFactory EXPRESSION_FACTORY = ExpressionFactory.eINSTANCE
@@ -333,13 +334,25 @@ class ExpressionsUtilities {
         }
     }
 
-    /**
-     * Check if a TypeDecl reference matches the generic param; if so, collect the actual type.
-     */
-    private def static void collectFromTypeDecl(TypeDecl typeDecl, TypeObject actualType, GenericsTypeParam genParam, Set<TypeObject> result) {
-        if (typeDecl == genParam && actualType !== null) {
-            result.add(actualType)
+    def static CharSequence generateDefaultValue(EObject t) {
+        switch (t) {
+            TypeReference:
+                generateDefaultValue(t.type)
+            SimpleTypeDecl: {
+                if(t.name.equals("int")) return '''0'''
+                if(t.name.equals("real")) return '''0.0'''
+                if(t.name.equals("bool")) return '''true'''
+                if(t.name.equals("string")) return '''""'''
+                ""
+            }
+            EnumTypeDecl: serialize(t) + "::" + t.literals.get(0).name
+            RecordTypeDecl: '''«serialize(t)»{«FOR f : TypeUtilities::getAllFields(t).reject[kind == RecordFieldKind::SYMBOLIC] SEPARATOR ', '»«f.name» = «generateDefaultValue(f.type)»«ENDFOR»}'''
+            VectorTypeDecl: '''<«serialize(t)»>[]'''
+            VectorTypeConstructor: '''<«serialize(t)»>[]'''
+            MapTypeDecl: '''<«serialize(t)»>{}'''
+            MapTypeConstructor: '''<«serialize(t)»>{}'''
+            default:
+                ""
         }
     }
-
 }

@@ -21,8 +21,6 @@ import nl.esi.xtext.types.types.TypesFactory
 import nl.esi.xtext.types.types.VectorTypeConstructor
 import org.eclipse.emf.ecore.util.EcoreUtil
 
-import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.serialize
-
 class Utils 
 {
     private new() {
