@@ -11,13 +11,13 @@
  * SPDX-License-Identifier: MIT
  */
  
-grammar nl.esi.comma.causalgraph.CausalGraph with nl.esi.comma.actions.Actions
+grammar nl.esi.comma.causalgraph.CausalGraph with nl.esi.xtext.actions.Actions
 
 generate causalGraph "http://www.esi.nl/comma/causalgraph/CausalGraph"
 
 import "http://www.esi.nl/xtext/common/lang/Base" as base
-import "http://www.esi.nl/comma/types/Types" as types
-import "http://www.esi.nl/comma/expressions/Expression" as expr
+import "http://www.esi.nl/xtext/types/Types" as types
+import "http://www.esi.nl/xtext/expressions/Expression" as expr
 
 CausalGraph returns base::ModelContainer: {CausalGraph}
     imports += Import*

@@ -1,0 +1,45 @@
+<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:bpmn4s="http://bpmn4s" id="sample-diagram" targetNamespace="http://bpmn.io/schema/bpmn" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd">
+  <bpmn2:process bpmn4s:ctxName="ctx" bpmn4s:ctxTypeRef="DataType_1cuqdnb" id="BPMN4S_root" isExecutable="false" name="Root">
+    <bpmn2:extensionElements>
+      <bpmn4s:dataTypes>
+        <bpmn4s:dataType id="DataType_1cuqdnb" name="MyContext" type="Context">
+          <bpmn4s:field name="myField" typeRef="Int"/>
+        </bpmn4s:dataType>
+      </bpmn4s:dataTypes>
+    </bpmn2:extensionElements>
+    <bpmn2:startEvent bpmn4s:ctxInit="ctx := MyContext { myField = 0 }" id="Event_0o4qsh5">
+      <bpmn2:outgoing>Flow_09kzrtt</bpmn2:outgoing>
+    </bpmn2:startEvent>
+    <bpmn2:task bpmn4s:ctxUpdate="if true then&#10;  // Empty&#10;else&#10;  // Empty&#10;fi&#10;for int i in range(2) do&#10;  // Empty&#10;end-for&#10;if not false then&#10;  ctx.myField := 1&#10;fi" id="Activity_05c0r1d" name="T1">
+      <bpmn2:incoming>Flow_09kzrtt</bpmn2:incoming>
+      <bpmn2:outgoing>Flow_0fg1p64</bpmn2:outgoing>
+    </bpmn2:task>
+    <bpmn2:sequenceFlow id="Flow_09kzrtt" sourceRef="Event_0o4qsh5" targetRef="Activity_05c0r1d"/>
+    <bpmn2:endEvent id="Event_1bks5sc">
+      <bpmn2:incoming>Flow_0fg1p64</bpmn2:incoming>
+    </bpmn2:endEvent>
+    <bpmn2:sequenceFlow id="Flow_0fg1p64" sourceRef="Activity_05c0r1d" targetRef="Event_1bks5sc"/>
+  </bpmn2:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_root">
+    <bpmndi:BPMNPlane bpmnElement="BPMN4S_root" id="BPMNPlane_root">
+      <bpmndi:BPMNShape bpmnElement="Activity_05c0r1d" id="Activity_05c0r1d_di">
+        <dc:Bounds height="80" width="100" x="270" y="110"/>
+        <bpmndi:BPMNLabel/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="Event_0o4qsh5" id="Event_0o4qsh5_di">
+        <dc:Bounds height="36" width="36" x="182" y="132"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="Event_1bks5sc" id="Event_1bks5sc_di">
+        <dc:Bounds height="36" width="36" x="422" y="132"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge bpmnElement="Flow_09kzrtt" id="Flow_09kzrtt_di">
+        <di:waypoint x="218" y="150"/>
+        <di:waypoint x="270" y="150"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="Flow_0fg1p64" id="Flow_0fg1p64_di">
+        <di:waypoint x="370" y="150"/>
+        <di:waypoint x="422" y="150"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn2:definitions>

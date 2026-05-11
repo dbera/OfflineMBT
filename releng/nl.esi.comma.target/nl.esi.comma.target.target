@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <?pde version="3.8"?>
-<target name="Generated from OfflineMBT" sequenceNumber="9">
+<target name="Generated from OfflineMBT">
   <locations>
     <location type="Target" uri="file:${project_loc:/nl.esi.comma.target}/nl.esi.comma.maven.target"/>
     <location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">

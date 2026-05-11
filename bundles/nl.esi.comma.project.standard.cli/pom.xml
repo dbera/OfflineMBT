@@ -192,16 +192,16 @@
                             <exclude>*:${project.artifactId}-nl.asml.matala.product.lsp.server-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.abstracttestspecification-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.abstracttestspecification.ide-*</exclude>
-                            <exclude>*:${project.artifactId}-nl.esi.comma.actions-*</exclude>
-                            <exclude>*:${project.artifactId}-nl.esi.comma.actions.ide-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.esi.xtext.actions-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.esi.xtext.actions.ide-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.assertthat-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.assertthat.ide-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.automata-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.constraints-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.constraints.dashboard-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.constraints.ide-*</exclude>
-                            <exclude>*:${project.artifactId}-nl.esi.comma.expressions-*</exclude>
-                            <exclude>*:${project.artifactId}-nl.esi.comma.expressions.ide-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.esi.xtext.expressions-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.esi.xtext.expressions.ide-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.inputspecification-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.inputspecification.ide-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.project.standard-*</exclude>
@@ -212,8 +212,8 @@
                             <exclude>*:${project.artifactId}-nl.esi.comma.systemconfig-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.testspecification-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.testspecification.ide-*</exclude>
-                            <exclude>*:${project.artifactId}-nl.esi.comma.types-*</exclude>
-                            <exclude>*:${project.artifactId}-nl.esi.comma.types.ide-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.esi.xtext.types-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.esi.xtext.types.ide-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.xtext.lsp.server-*</exclude>
                             <exclude>*:${project.artifactId}-org.aopalliance-*</exclude>
                             <exclude>*:${project.artifactId}-org.apache.aries.spifly.dynamic.bundle-*</exclude>
@@ -261,6 +261,26 @@
                         <goals>
                             <goal>shade</goal>
                         </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>package-toolchain</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <finalName>bpmn4s-editor-${version.enduser}</finalName>
+                            <appendAssemblyId>false</appendAssemblyId>
+                            <descriptors>
+                                <descriptor>${basedir}/assembly.xml</descriptor>
+                            </descriptors>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>

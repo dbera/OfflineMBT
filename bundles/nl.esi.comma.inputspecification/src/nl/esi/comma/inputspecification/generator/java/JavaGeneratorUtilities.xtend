@@ -13,14 +13,14 @@
 package nl.esi.comma.inputspecification.generator.java
 
 import java.util.ArrayList
-import nl.esi.comma.expressions.expression.Variable
-import nl.esi.comma.types.types.EnumTypeDecl
-import nl.esi.comma.types.types.SimpleTypeDecl
-import nl.esi.comma.types.types.TypeDecl
-import nl.esi.comma.types.types.VectorTypeDecl
-import nl.esi.comma.expressions.expression.ExpressionRecordAccess
-import nl.esi.comma.expressions.expression.ExpressionVariable
-import nl.esi.comma.expressions.expression.Expression
+import nl.esi.xtext.expressions.expression.Variable
+import nl.esi.xtext.types.types.EnumTypeDecl
+import nl.esi.xtext.types.types.SimpleTypeDecl
+import nl.esi.xtext.types.types.TypeDecl
+import nl.esi.xtext.types.types.VectorTypeDecl
+import nl.esi.xtext.expressions.expression.ExpressionRecordAccess
+import nl.esi.xtext.expressions.expression.ExpressionVariable
+import nl.esi.xtext.expressions.expression.Expression
 
 class JavaGeneratorUtilities 
 {

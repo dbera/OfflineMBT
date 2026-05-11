@@ -1,0 +1,34 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Actions Language Core
+Bundle-Vendor: TNO-ESI
+Bundle-Version: 4.2.0.qualifier
+Bundle-SymbolicName: nl.esi.xtext.actions; singleton:=true
+Bundle-ActivationPolicy: lazy
+Require-Bundle: nl.esi.xtext.expressions;visibility:=reexport,
+ org.eclipse.xtext,
+ org.eclipse.xtext.xbase,
+ org.eclipse.equinox.common;bundle-version="3.5.0",
+ org.eclipse.emf.ecore,
+ org.antlr.runtime;bundle-version="[3.2.0,3.2.1)",
+ org.eclipse.xtext.util,
+ org.eclipse.emf.common,
+ org.eclipse.xtext.xbase.lib;bundle-version="2.15.0",
+ org.eclipse.xtend.lib;bundle-version="2.15.0"
+Bundle-RequiredExecutionEnvironment: JavaSE-21
+Export-Package: nl.esi.xtext.actions,
+ nl.esi.xtext.actions.actions,
+ nl.esi.xtext.actions.actions.impl,
+ nl.esi.xtext.actions.actions.util,
+ nl.esi.xtext.actions.formatting2,
+ nl.esi.xtext.actions.generator,
+ nl.esi.xtext.actions.generator.plantuml,
+ nl.esi.xtext.actions.parser.antlr,
+ nl.esi.xtext.actions.parser.antlr.internal,
+ nl.esi.xtext.actions.scoping,
+ nl.esi.xtext.actions.serializer,
+ nl.esi.xtext.actions.services,
+ nl.esi.xtext.actions.utilities,
+ nl.esi.xtext.actions.validation
+Import-Package: org.apache.log4j
+Automatic-Module-Name: nl.esi.xtext.actions

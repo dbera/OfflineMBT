@@ -14,7 +14,7 @@ package nl.esi.comma.project.standard.cli;
 
 import com.google.inject.Injector;
 
-import nl.esi.comma.types.generator.CommaMain;
+import nl.esi.xtext.types.generator.CommaMain;
 
 public class Main {
 	public static void main(String[] args) {

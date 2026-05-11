@@ -20,8 +20,8 @@ import nl.esi.comma.abstracttestspecification.abstractTestspecification.Executab
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.RunStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.TSMain
 import nl.esi.comma.assertthat.assertThat.DataAssertionItem
-import nl.esi.comma.expressions.expression.ExpressionVariable
-import nl.esi.comma.expressions.services.ExpressionGrammarAccess
+import nl.esi.xtext.expressions.expression.ExpressionVariable
+import nl.esi.xtext.expressions.services.ExpressionGrammarAccess
 import org.eclipse.emf.common.util.URI
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.generator.AbstractGenerator
@@ -29,11 +29,11 @@ import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
 
 import static extension nl.esi.comma.abstracttestspecification.generator.utils.Utils.*
+import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
 import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
-import static extension nl.esi.comma.types.utilities.TypeUtilities.*
 
 class FromAbstractToConcrete extends AbstractGenerator {
-
+    
     override doGenerate(Resource res, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
         val atd = res.contents.filter(TSMain).map[model].filter(AbstractTestDefinition).head
         if (atd === null) {
@@ -53,46 +53,48 @@ class FromAbstractToConcrete extends AbstractGenerator {
  
     }
 
-    def private generateConcreteTest(AbstractTestDefinition atd) '''
-        «FOR sys : atd.systems»
-            import "parameters/«sys».params"
-        «ENDFOR»
-        
-        Test-Purpose    "The purpose of this test is..."
-        Background      "The background of this test is..."
-        
-        test-sequence from_abstract_to_concrete {
-            test_single_sequence
-        }
-        
-        step-sequence test_single_sequence {
-        «FOR test : atd.testSeq»
-            «FOR step : test.step.filter(ExecutableStep)»
+    def private generateConcreteTest(AbstractTestDefinition atd) {
+        val executableSteps = atd.testSeq.flatMap[step].filter(ExecutableStep).toList
+        val sutexpr = extractSUTVarExpressions(atd)
+
+        return '''
+            «FOR sys : atd.systems»
+                import "parameters/«sys».params"
+            «ENDFOR»
+            
+            Test-Purpose    "The purpose of this test is..."
+            Background      "The background of this test is..."
+            
+            test-sequence from_abstract_to_concrete {
+                test_single_sequence
+            }
+            
+            step-sequence test_single_sequence {
+            «FOR step : executableSteps»
                 
                 «printStep(step)»
             «ENDFOR»
-        «ENDFOR»
-        }
-        
-        generate-file "«atd.filePath»"
-        
-        step-parameters
-        «FOR test : atd.testSeq»
-            «FOR step : test.step.filter(ExecutableStep)»
+            }
+            
+            generate-file "«atd.filePath»"
+            
+            «IF !executableSteps.isEmpty»
+            step-parameters
+            «FOR step : executableSteps»
                 «step.stepType.get(0)» step_«step.name»
             «ENDFOR»
-        «ENDFOR»
-        
-        «var sutexpr = extractSUTVarExpressions(atd)»
-        «IF !sutexpr.empty»
-        sut-param-init 
-        «FOR lhs: sutexpr.keySet»
-            «FOR rhs: sutexpr.get(lhs)»
-                «lhs» := «rhs»
-            «ENDFOR»
-        «ENDFOR»
-        «ENDIF»
-    '''
+            «ENDIF»
+            
+            «IF !sutexpr.empty»
+                sut-param-init 
+                «FOR lhs: sutexpr.keySet»
+                    «FOR rhs: sutexpr.get(lhs)»
+                        «lhs» := «rhs»
+                    «ENDFOR»
+                «ENDFOR»
+            «ENDIF»
+        '''
+    }
     
     def printStep(ExecutableStep step) {
         return switch (step) {

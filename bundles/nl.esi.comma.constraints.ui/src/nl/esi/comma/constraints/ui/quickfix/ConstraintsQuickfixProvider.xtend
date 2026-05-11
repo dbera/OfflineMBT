@@ -22,7 +22,7 @@ import java.util.List
 import java.util.regex.Pattern
 import nl.esi.comma.constraints.constraints.Actions
 import nl.esi.comma.constraints.constraints.Constraints
-import nl.esi.comma.types.ui.quickfix.TypesQuickfixProvider
+import nl.esi.xtext.types.ui.quickfix.TypesQuickfixProvider
 import org.eclipse.emf.ecore.EObject
 import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.nodemodel.util.NodeModelUtils

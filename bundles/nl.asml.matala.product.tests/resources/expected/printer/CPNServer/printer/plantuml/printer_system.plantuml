@@ -1,0 +1,57 @@
+@startuml
+node "PrintFactoryOptimization" {
+    [PrintFactoryOptimization_ComposeOptimizationJob_default@null@COMPOSE@]
+    [PrintFactoryOptimization_RunOptimizationJob_default@ExecuteOptimizer@RUN@]
+}
+node "PrintFactoryA3DPrinter" {
+    [PrintFactoryA3DPrinter_RunPrintJob_default@ExecutePrinter@RUN@]
+    [PrintFactoryA3DPrinter_ComposePrintJob_default@null@COMPOSE@]
+    [PrintFactoryA3DPrinter_ComposePrepareJob_default@null@COMPOSE@]
+    [PrintFactoryA3DPrinter_RunPrepareJob_default@ExecutePrinter@RUN@]
+}
+node "PrintFactoryInspection" {
+    [PrintFactoryInspection_RunVisualinspection_default@ExecuteInspection@RUN@]
+    [PrintFactoryInspection_ComposeVisualInspectionJob_default@null@COMPOSE@]
+}
+node "PrintFactoryFactoryAutomation" {
+    [PrintFactoryFactoryAutomation_SendPrintJob_default@null@INTERNAL@]
+    [PrintFactoryFactoryAutomation_NextJob_default@null@INTERNAL@]
+    [PrintFactoryFactoryAutomation_WaitforOptimizationJob_default@null@INTERNAL@]
+    [PrintFactoryFactoryAutomation_Gateway_1f8wap6_default@null@INTERNAL@]
+    [PrintFactoryFactoryAutomation_Gateway_1j3rupx_default@null@INTERNAL@]
+    [PrintFactoryFactoryAutomation_WaitforVisualInspection_default@null@INTERNAL@]
+    [PrintFactoryFactoryAutomation_SendOptimizationJob_default@null@INTERNAL@]
+    [PrintFactoryFactoryAutomation_PreparePrinter_default@null@INTERNAL@]
+    [PrintFactoryFactoryAutomation_AssertVisualInspection_default@Assert_Visual_Inspection@ASSERT@]
+    [PrintFactoryFactoryAutomation_SendVisualInspectionJob_default@null@INTERNAL@]
+    [PrintFactoryFactoryAutomation_WaitforPrepare_default@null@INTERNAL@]
+    [PrintFactoryFactoryAutomation_WaitforPrintJob_default@null@INTERNAL@]
+}
+optJob --> [PrintFactoryOptimization_ComposeOptimizationJob_default@null@COMPOSE@]
+inspectionReport --> [PrintFactoryOptimization_ComposeOptimizationJob_default@null@COMPOSE@]
+[PrintFactoryOptimization_ComposeOptimizationJob_default@null@COMPOSE@] --> inspectionReport
+[PrintFactoryOptimization_RunOptimizationJob_default@ExecuteOptimizer@RUN@] --> corrections
+[PrintFactoryOptimization_RunOptimizationJob_default@ExecuteOptimizer@RUN@] --> optResult
+[PrintFactoryA3DPrinter_RunPrintJob_default@ExecutePrinter@RUN@] --> printResult
+[PrintFactoryA3DPrinter_RunPrintJob_default@ExecutePrinter@RUN@] --> printReport
+corrections --> [PrintFactoryA3DPrinter_ComposePrintJob_default@null@COMPOSE@]
+printJob --> [PrintFactoryA3DPrinter_ComposePrintJob_default@null@COMPOSE@]
+printJob --> [PrintFactoryA3DPrinter_ComposePrepareJob_default@null@COMPOSE@]
+[PrintFactoryA3DPrinter_RunPrepareJob_default@ExecutePrinter@RUN@] --> printResult
+[PrintFactoryInspection_RunVisualinspection_default@ExecuteInspection@RUN@] --> inspectionResult
+[PrintFactoryInspection_RunVisualinspection_default@ExecuteInspection@RUN@] --> inspectionReport
+printReport --> [PrintFactoryInspection_ComposeVisualInspectionJob_default@null@COMPOSE@]
+inspectionJob --> [PrintFactoryInspection_ComposeVisualInspectionJob_default@null@COMPOSE@]
+[PrintFactoryInspection_ComposeVisualInspectionJob_default@null@COMPOSE@] --> printReport
+printRequests --> [PrintFactoryFactoryAutomation_SendPrintJob_default@null@INTERNAL@]
+[PrintFactoryFactoryAutomation_SendPrintJob_default@null@INTERNAL@] --> printJob
+optResult --> [PrintFactoryFactoryAutomation_WaitforOptimizationJob_default@null@INTERNAL@]
+inspectionResult --> [PrintFactoryFactoryAutomation_WaitforVisualInspection_default@null@INTERNAL@]
+[PrintFactoryFactoryAutomation_SendOptimizationJob_default@null@INTERNAL@] --> optJob
+[PrintFactoryFactoryAutomation_PreparePrinter_default@null@INTERNAL@] --> printJob
+inspectionReport --> [PrintFactoryFactoryAutomation_AssertVisualInspection_default@Assert_Visual_Inspection@ASSERT@]
+[PrintFactoryFactoryAutomation_AssertVisualInspection_default@Assert_Visual_Inspection@ASSERT@] --> inspectionReport
+[PrintFactoryFactoryAutomation_SendVisualInspectionJob_default@null@INTERNAL@] --> inspectionJob
+printResult --> [PrintFactoryFactoryAutomation_WaitforPrepare_default@null@INTERNAL@]
+printResult --> [PrintFactoryFactoryAutomation_WaitforPrintJob_default@null@INTERNAL@]
+@enduml

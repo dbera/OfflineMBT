@@ -38,16 +38,16 @@ import nl.esi.comma.assertthat.assertThat.ScriptParameterNamedPositional
 import nl.esi.comma.assertthat.assertThat.ScriptParameterPositional
 import nl.esi.comma.assertthat.assertThat.ScriptParameterPositionalFile
 import nl.esi.comma.assertthat.assertThat.ScriptParameterWithValue
-import nl.esi.comma.expressions.expression.Expression
-import nl.esi.comma.expressions.expression.ExpressionBracket
-import nl.esi.comma.expressions.expression.ExpressionConstantBool
-import nl.esi.comma.expressions.expression.ExpressionConstantInt
-import nl.esi.comma.expressions.expression.ExpressionConstantReal
-import nl.esi.comma.expressions.expression.ExpressionConstantString
-import nl.esi.comma.expressions.expression.ExpressionMapRW
-import nl.esi.comma.expressions.expression.ExpressionRecordAccess
-import nl.esi.comma.expressions.expression.ExpressionVariable
-import nl.esi.comma.expressions.expression.ExpressionVector
+import nl.esi.xtext.expressions.expression.Expression
+import nl.esi.xtext.expressions.expression.ExpressionBracket
+import nl.esi.xtext.expressions.expression.ExpressionConstantBool
+import nl.esi.xtext.expressions.expression.ExpressionConstantInt
+import nl.esi.xtext.expressions.expression.ExpressionConstantReal
+import nl.esi.xtext.expressions.expression.ExpressionConstantString
+import nl.esi.xtext.expressions.expression.ExpressionMapRW
+import nl.esi.xtext.expressions.expression.ExpressionRecordAccess
+import nl.esi.xtext.expressions.expression.ExpressionVariable
+import nl.esi.xtext.expressions.expression.ExpressionVector
 import nl.esi.comma.testspecification.testspecification.AssertionStep
 import nl.esi.comma.testspecification.testspecification.TestDefinition
 

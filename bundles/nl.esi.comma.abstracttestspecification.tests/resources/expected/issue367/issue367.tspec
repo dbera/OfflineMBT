@@ -1,0 +1,32 @@
+import "parameters/Root.params"
+
+Test-Purpose    "The purpose of this test is..."
+Background      "The background of this test is..."
+
+test-sequence from_abstract_to_concrete {
+    test_single_sequence
+}
+
+step-sequence test_single_sequence {
+
+step-id    step_Root_T2_default_0
+step-type  Dummy
+step-input RootInput
+ref-to-step-output
+    RootInput.d1.id := 0
+    RootInput.d1.input1 := "ONE"
+
+step-id    step_Root_T5_default_0
+step-type  Dummy
+step-input RootInput
+ref-to-step-output
+    RootInput.d4.id := 0
+    RootInput.d4.input1 := step_Root_T2_default_0.output.d2.output1
+}
+
+generate-file "./dataset/"
+
+step-parameters
+Dummy step_Root_T2_default_0
+Dummy step_Root_T5_default_0
+

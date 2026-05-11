@@ -19,9 +19,9 @@ import nl.asml.matala.product.product.Block
 import nl.asml.matala.product.product.RefConstraint
 import nl.asml.matala.product.product.Update
 import nl.asml.matala.product.product.UpdateOutVar
-import nl.esi.comma.actions.actions.ActionsPackage
-import nl.esi.comma.expressions.expression.ExpressionPackage
-import nl.esi.comma.expressions.expression.Variable
+import nl.esi.xtext.actions.actions.ActionsPackage
+import nl.esi.xtext.expressions.expression.ExpressionPackage
+import nl.esi.xtext.expressions.expression.Variable
 import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.EReference
 import org.eclipse.xtext.EcoreUtil2

@@ -18,7 +18,7 @@ package nl.esi.comma.constraints.ui
 import nl.esi.comma.constraints.ui.syntaxcoloring.SCLAntlrTokenToAttributeIdMapper
 import nl.esi.comma.constraints.ui.syntaxcoloring.SCLHighlightingConfiguration
 import nl.esi.comma.constraints.ui.syntaxcoloring.SCLSemanticHighlightingCalculator
-import nl.esi.comma.types.ide.contentassist.TypesIdeContentProposalCreator
+import nl.esi.xtext.types.ide.contentassist.TypesIdeContentProposalCreator
 import org.eclipse.xtend.lib.annotations.FinalFieldsConstructor
 import org.eclipse.xtext.ide.editor.contentassist.IdeContentProposalCreator
 import org.eclipse.xtext.ide.editor.syntaxcoloring.AbstractAntlrTokenToAttributeIdMapper

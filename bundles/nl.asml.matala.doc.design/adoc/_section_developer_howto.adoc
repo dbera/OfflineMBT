@@ -11,13 +11,20 @@
   // SPDX-License-Identifier: MIT
 ////
 
-[appendix]
+include::_initCommon.adoc[]
 
-== Developer how-to[[developer-howto]]
+[[developer-howto]]
+== Developer how-to
 
 This section describes useful information for a developer.
 
 // add your includes here make thus the includes start with level 3 ===
 // please note that the include may also come from a plugin
 // as described here:
+:leveloffset: 2
+
 include::how-to/add-documentation-from-plugin.adoc[]
+
+include::{extdocdir}/how-to-add-a-function-library.adoc[]
+
+:leveloffset: 0

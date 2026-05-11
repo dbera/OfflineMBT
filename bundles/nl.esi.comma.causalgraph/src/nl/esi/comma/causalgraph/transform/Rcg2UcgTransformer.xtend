@@ -20,7 +20,7 @@ import nl.esi.comma.causalgraph.causalGraph.GraphType
 import nl.esi.comma.causalgraph.causalGraph.Node
 import nl.esi.comma.causalgraph.causalGraph.StepType
 import nl.esi.comma.causalgraph.utilities.NodeAttributes
-import nl.esi.comma.expressions.expression.Variable
+import nl.esi.xtext.expressions.expression.Variable
 import nl.esi.xtext.common.lang.base.NamedElement
 import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.util.EcoreUtil

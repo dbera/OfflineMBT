@@ -15,60 +15,57 @@ package nl.esi.comma.causalgraph.generator;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import nl.esi.comma.actions.actions.Action;
-import nl.esi.comma.actions.actions.AssignmentAction;
-import nl.esi.comma.actions.actions.ForAction;
-import nl.esi.comma.actions.actions.FunctionCall;
-import nl.esi.comma.actions.actions.IfAction;
-import nl.esi.comma.actions.actions.RecordFieldAssignmentAction;
+import nl.esi.xtext.actions.actions.Action;
+import nl.esi.xtext.actions.actions.AssignmentAction;
+import nl.esi.xtext.actions.actions.ForAction;
+import nl.esi.xtext.actions.actions.FunctionCall;
+import nl.esi.xtext.actions.actions.IfAction;
+import nl.esi.xtext.actions.actions.RecordFieldAssignmentAction;
 // import nl.esi.comma.behavior.behavior.TriggeredTransition;
-import nl.esi.comma.expressions.expression.Expression;
-import nl.esi.comma.expressions.expression.ExpressionAddition;
-import nl.esi.comma.expressions.expression.ExpressionAnd;
-import nl.esi.comma.expressions.expression.ExpressionAny;
-import nl.esi.comma.expressions.expression.ExpressionBracket;
-import nl.esi.comma.expressions.expression.ExpressionConstantBool;
-import nl.esi.comma.expressions.expression.ExpressionConstantInt;
-import nl.esi.comma.expressions.expression.ExpressionConstantReal;
-import nl.esi.comma.expressions.expression.ExpressionConstantString;
-import nl.esi.comma.expressions.expression.ExpressionDivision;
-import nl.esi.comma.expressions.expression.ExpressionEnumLiteral;
-import nl.esi.comma.expressions.expression.ExpressionEqual;
-import nl.esi.comma.expressions.expression.ExpressionFnCall;
-import nl.esi.comma.expressions.expression.ExpressionFunctionCall;
-import nl.esi.comma.expressions.expression.ExpressionGeq;
-import nl.esi.comma.expressions.expression.ExpressionGreater;
-import nl.esi.comma.expressions.expression.ExpressionLeq;
-import nl.esi.comma.expressions.expression.ExpressionLess;
-import nl.esi.comma.expressions.expression.ExpressionMap;
-import nl.esi.comma.expressions.expression.ExpressionMapRW;
-import nl.esi.comma.expressions.expression.ExpressionMaximum;
-import nl.esi.comma.expressions.expression.ExpressionMinimum;
-import nl.esi.comma.expressions.expression.ExpressionMinus;
-import nl.esi.comma.expressions.expression.ExpressionModulo;
-import nl.esi.comma.expressions.expression.ExpressionMultiply;
-import nl.esi.comma.expressions.expression.ExpressionNEqual;
-import nl.esi.comma.expressions.expression.ExpressionNot;
-import nl.esi.comma.expressions.expression.ExpressionNullLiteral;
-import nl.esi.comma.expressions.expression.ExpressionOr;
-import nl.esi.comma.expressions.expression.ExpressionPlus;
-import nl.esi.comma.expressions.expression.ExpressionPower;
-import nl.esi.comma.expressions.expression.ExpressionQuantifier;
-import nl.esi.comma.expressions.expression.ExpressionRecord;
-import nl.esi.comma.expressions.expression.ExpressionRecordAccess;
-import nl.esi.comma.expressions.expression.ExpressionSubtraction;
-import nl.esi.comma.expressions.expression.ExpressionVariable;
-import nl.esi.comma.expressions.expression.ExpressionVector;
-import nl.esi.comma.expressions.expression.QUANTIFIER;
-import nl.esi.comma.expressions.generator.ExpressionsCommaGenerator;
-import nl.esi.comma.types.types.EnumTypeDecl;
-import nl.esi.comma.types.types.MapTypeDecl;
-import nl.esi.comma.types.types.RecordFieldKind;
-import nl.esi.comma.types.types.RecordTypeDecl;
-import nl.esi.comma.types.types.SimpleTypeDecl;
-import nl.esi.comma.types.types.TypeDecl;
-import nl.esi.comma.types.types.VectorTypeDecl;
+import nl.esi.xtext.expressions.expression.Expression;
+import nl.esi.xtext.expressions.expression.ExpressionAddition;
+import nl.esi.xtext.expressions.expression.ExpressionAnd;
+import nl.esi.xtext.expressions.expression.ExpressionAny;
+import nl.esi.xtext.expressions.expression.ExpressionBracket;
+import nl.esi.xtext.expressions.expression.ExpressionConstantBool;
+import nl.esi.xtext.expressions.expression.ExpressionConstantInt;
+import nl.esi.xtext.expressions.expression.ExpressionConstantReal;
+import nl.esi.xtext.expressions.expression.ExpressionConstantString;
+import nl.esi.xtext.expressions.expression.ExpressionDivision;
+import nl.esi.xtext.expressions.expression.ExpressionEnumLiteral;
+import nl.esi.xtext.expressions.expression.ExpressionEqual;
+import nl.esi.xtext.expressions.expression.ExpressionFunctionCall;
+import nl.esi.xtext.expressions.expression.ExpressionGeq;
+import nl.esi.xtext.expressions.expression.ExpressionGreater;
+import nl.esi.xtext.expressions.expression.ExpressionLeq;
+import nl.esi.xtext.expressions.expression.ExpressionLess;
+import nl.esi.xtext.expressions.expression.ExpressionMap;
+import nl.esi.xtext.expressions.expression.ExpressionMapRW;
+import nl.esi.xtext.expressions.expression.ExpressionMaximum;
+import nl.esi.xtext.expressions.expression.ExpressionMinimum;
+import nl.esi.xtext.expressions.expression.ExpressionMinus;
+import nl.esi.xtext.expressions.expression.ExpressionModulo;
+import nl.esi.xtext.expressions.expression.ExpressionMultiply;
+import nl.esi.xtext.expressions.expression.ExpressionNEqual;
+import nl.esi.xtext.expressions.expression.ExpressionNot;
+import nl.esi.xtext.expressions.expression.ExpressionNullLiteral;
+import nl.esi.xtext.expressions.expression.ExpressionOr;
+import nl.esi.xtext.expressions.expression.ExpressionPlus;
+import nl.esi.xtext.expressions.expression.ExpressionPower;
+import nl.esi.xtext.expressions.expression.ExpressionRecord;
+import nl.esi.xtext.expressions.expression.ExpressionRecordAccess;
+import nl.esi.xtext.expressions.expression.ExpressionSubtraction;
+import nl.esi.xtext.expressions.expression.ExpressionVariable;
+import nl.esi.xtext.expressions.expression.ExpressionVector;
+import nl.esi.xtext.types.types.EnumTypeDecl;
+import nl.esi.xtext.types.types.MapTypeDecl;
+import nl.esi.xtext.types.types.RecordFieldKind;
+import nl.esi.xtext.types.types.RecordTypeDecl;
+import nl.esi.xtext.types.types.SimpleTypeDecl;
+import nl.esi.xtext.types.types.TypeDecl;
+import nl.esi.xtext.types.types.VectorTypeDecl;
 
+import static nl.esi.xtext.common.lang.utilities.EcoreUtil3.serialize;
 
 class CSharpHelper {
 	static String defaultValue(TypeDecl type) {
@@ -181,46 +178,35 @@ class CSharpHelper {
 			ExpressionBracket e = (ExpressionBracket) expression;
 			//return expression(e.getSub(), variablePrefix);
 			return String.format("(%s)", expression(e.getSub(), variablePrefix));
-		} else if (expression instanceof ExpressionFnCall) {
-			ExpressionFnCall e = (ExpressionFnCall) expression;
-			String str = new String();
-			for(Expression arg : e.getArgs()) {
-				if(!str.isEmpty()) str += ", ";
-				str += expression(arg, variablePrefix);
-			}
-			String fnName = e.getFunction().getName();
-			fnName = fnName.replaceAll("_DOT_", ".");
-			fnName = fnName.replaceAll("_PTR_", ".");
-			fnName = fnName.replaceAll("_SCOPE_", "::");
-			fnName = fnName.replaceAll("_REF_", "->");
-			return fnName + "(" + str + ")";
 		} else if (expression instanceof ExpressionFunctionCall) {
 			ExpressionFunctionCall e = (ExpressionFunctionCall) expression;
-			if (e.getFunctionName().equals("add")) {
+			String str = new String();
+			String fnName = e.getFunction().getName();
+			if (fnName.equals("add")) {
 				return String.format("%s + [%s]", expression(e.getArgs().get(0), variablePrefix), expression(e.getArgs().get(1), variablePrefix));
-			} else if (e.getFunctionName().equals("size")) {
+			} else if (fnName.equals("size")) {
 				return String.format("len(%s)", expression(e.getArgs().get(0), variablePrefix));
-			} else if (e.getFunctionName().equals("isEmpty")) {
+			} else if (fnName.equals("isEmpty")) {
 				return String.format("len(%s) == 0", expression(e.getArgs().get(0), variablePrefix));
-			} else if (e.getFunctionName().equals("contains")) {
+			} else if (fnName.equals("contains")) {
 				return String.format("%s in %s", expression(e.getArgs().get(1), variablePrefix), expression(e.getArgs().get(0), variablePrefix));
-			} else if (e.getFunctionName().equals("abs")) {
+			} else if (fnName.equals("abs")) {
 				return String.format("abs(%s)", expression(e.getArgs().get(0), variablePrefix));
-			} else if (e.getFunctionName().equals("asReal")) {
+			} else if (fnName.equals("asReal")) {
 				return String.format("float(%s)", expression(e.getArgs().get(0), variablePrefix));
-			} else if (e.getFunctionName().equals("hasKey")) {
+			} else if (fnName.equals("hasKey")) {
 				String map = expression(e.getArgs().get(0), variablePrefix);
 				String key = expression(e.getArgs().get(1), variablePrefix);
 				return String.format("(%s in %s)", key, map);
-			} else if (e.getFunctionName().equals("get")) { // added 18.08.2024
+			} else if (fnName.equals("get")) { // added 18.08.2024
 				String lst = expression(e.getArgs().get(0), variablePrefix);
 				String idx = expression(e.getArgs().get(1), variablePrefix);
 				return String.format("%s[%s]", lst, idx);
-			} else if (e.getFunctionName().equals("deleteKey")) {
+			} else if (fnName.equals("deleteKey")) {
 				String map = expression(e.getArgs().get(0), variablePrefix);
 				String key = expression(e.getArgs().get(1), variablePrefix);
 				return String.format("{_k: _v for _k, _v in %s.items() if _k != %s}", map, key);
-			} else if (e.getFunctionName().equals("range")) {
+			} else if (fnName.equals("range")) {
 		        if (e.getArgs().size() == 1) {
 		            return String.format("Enumerable.Range(0, %s).ToList()", expression(e.getArgs().get(0), variablePrefix));
 		        } else if (e.getArgs().size() == 2) {
@@ -235,23 +221,21 @@ class CSharpHelper {
 		            return String.format("Enumerable.Range(0, ((%s) - (%s) + (%s) - 1) / (%s)).Select(i => (%s) + i * (%s)).ToList()", 
 		                stop, start, step, step, start, step);
 		        }
-		    } else if (e.getFunctionName().equals("toString")) {
+		    } else if (fnName.equals("toString")) {
 		        return String.format("(%s).ToString()", expression(e.getArgs().get(0), variablePrefix));
-		    } else if (e.getFunctionName().equals("concat")) {
+		    } else if (fnName.equals("concat")) {
 		        return String.format("%s.Concat(%s).ToList()", expression(e.getArgs().get(0), variablePrefix), expression(e.getArgs().get(1), variablePrefix));
-		    } 
-		} else if (expression instanceof ExpressionQuantifier) {
-			ExpressionQuantifier e = (ExpressionQuantifier) expression;
-			String collection = expression(e.getCollection(), variablePrefix);
-			String it = e.getIterator().getName();
-			String condition = expression(e.getCondition(), (String variable) -> "");
-			if (e.getQuantifier() == QUANTIFIER.EXISTS) {
-				return String.format("len([%s for %s in %s if %s]) != 0", it, it, collection, condition);
-			} else if (e.getQuantifier() == QUANTIFIER.DELETE) {
-				return String.format("[%s for %s in %s if not (%s)]", it, it, collection, condition);
-			} else if (e.getQuantifier() == QUANTIFIER.FORALL) {
-				return String.format("len([%s for %s in %s if %s]) == len(%s)", it, it, collection, condition, collection);
-			}
+		    } else {
+		    	for(Expression arg : e.getArgs()) {
+		    		if(!str.isEmpty()) str += ", ";
+		    		str += expression(arg, variablePrefix);
+		    	}
+		    	fnName = fnName.replaceAll("_DOT_", ".");
+		    	fnName = fnName.replaceAll("_PTR_", ".");
+		    	fnName = fnName.replaceAll("_SCOPE_", "::");
+		    	fnName = fnName.replaceAll("_REF_", "->");
+		    	return fnName + "(" + str + ")";
+		    }
 		} else if (expression instanceof ExpressionMap) {
 			ExpressionMap e = (ExpressionMap) expression;
 			return String.format("{%s}", e.getPairs().stream().map(p -> {
@@ -389,17 +373,17 @@ class CSharpHelper {
 			// String variable = String.format("%s%s", variablePrefix.apply(a.getAssignment().getName()), a.getAssignment().getName());
 			String variable = String.format("%s", variablePrefix.apply(a.getAssignment().getName()));
 			// if(a.isSymbolic()) return String.format("%s = %s%s%s", variable, QUOTE, expression(a.getExp(), variablePrefix).replace("\"", "\\\""), QUOTE);
-			if(a.isSymbolic()) return String.format("%s = %s%s%s", variable, QUOTE, (new ExpressionsCommaGenerator()).exprToComMASyntax(a.getExp()).toString(), QUOTE);
+			if(a.isSymbolic()) return String.format("%s = %s%s%s", variable, QUOTE, serialize(a.getExp()).toString(), QUOTE);
 			// else return String.format("%s = %s", variable, expression(a.getExp(), variablePrefix));
-			else return String.format("%s = %s%s%s", variable, QUOTE, (new ExpressionsCommaGenerator()).exprToComMASyntax(a.getExp()).toString(), QUOTE);
+			else return String.format("%s = %s%s%s", variable, QUOTE, serialize(a.getExp()).toString(), QUOTE);
 		} else if (action instanceof RecordFieldAssignmentAction) {
 			RecordFieldAssignmentAction a = (RecordFieldAssignmentAction) action;
 			ExpressionRecordAccess access = (ExpressionRecordAccess) a.getFieldAccess();
 			String QUOTE = "\"";
 			if(a.isSymbolic()) {
-				String record = (new ExpressionsCommaGenerator()).exprToComMASyntax(access.getRecord()).toString();
+				String record = serialize(access.getRecord()).toString();
 				String field = access.getField().getName();
-				String value = (new ExpressionsCommaGenerator()).exprToComMASyntax(a.getExp()).toString();
+				String value = serialize(a.getExp()).toString();
 				return String.format("%s.%s = %s%s%s", record, field, QUOTE, value, QUOTE);
 				// return QUOTE + (new ActionsUmlGenerator()).generateAction(a).toString() + QUOTE;
 			} else {
@@ -435,7 +419,7 @@ class CSharpHelper {
 		} else if(action instanceof FunctionCall) {
 			var act = (FunctionCall) action;
 			//return expression(act.getExp(), variablePrefix);
-			return (new ExpressionsCommaGenerator()).exprToComMASyntax(act.getExp()).toString();
+			return serialize(act.getExp()).toString();
 		} 
 		
 		throw new RuntimeException("Not supported");
@@ -446,14 +430,14 @@ class CSharpHelper {
 			AssignmentAction a = (AssignmentAction) action;
 			String QUOTE = "";
 			String variable = String.format("%s", variablePrefix.apply(a.getAssignment().getName()));
-			return String.format("%s = %s%s%s", variable, QUOTE, (new ExpressionsCommaGenerator()).exprToComMASyntax(a.getExp()).toString(), QUOTE); //.replace("\"", "\\\"")
+			return String.format("%s = %s%s%s", variable, QUOTE, serialize(a.getExp()).toString(), QUOTE); //.replace("\"", "\\\"")
 		} else if (action instanceof RecordFieldAssignmentAction) {
 			RecordFieldAssignmentAction a = (RecordFieldAssignmentAction) action;
 			ExpressionRecordAccess access = (ExpressionRecordAccess) a.getFieldAccess();
 			String QUOTE = "";
-			String record = (new ExpressionsCommaGenerator()).exprToComMASyntax(access.getRecord()).toString();
+			String record = serialize(access.getRecord()).toString();
 			String field = access.getField().getName();
-			String value = (new ExpressionsCommaGenerator()).exprToComMASyntax(a.getExp()).toString();
+			String value = serialize(a.getExp()).toString();
 			return String.format("%s.%s = %s%s%s", record, field, QUOTE, value, QUOTE); //.replace("\"", "\\\"")
 		} else if(action instanceof IfAction) {
 			var txt = new String();
@@ -482,7 +466,7 @@ class CSharpHelper {
 		} else if(action instanceof FunctionCall) {
 			var act = (FunctionCall) action;
 			// return expression(act.getExp(), variablePrefix);
-			return (new ExpressionsCommaGenerator()).exprToComMASyntax(act.getExp()).toString();
+			return serialize(act.getExp()).toString();
 		}
 		
 		throw new RuntimeException("Not supported");

@@ -12,49 +12,49 @@
  */
 package nl.asml.matala.generator.fast
 
+import java.util.List
 import java.util.Map
-import nl.esi.comma.actions.actions.AssignmentAction
-import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
-import nl.esi.comma.expressions.expression.Expression
-import nl.esi.comma.expressions.expression.ExpressionAddition
-import nl.esi.comma.expressions.expression.ExpressionAnd
-import nl.esi.comma.expressions.expression.ExpressionAny
-import nl.esi.comma.expressions.expression.ExpressionBracket
-import nl.esi.comma.expressions.expression.ExpressionConstantBool
-import nl.esi.comma.expressions.expression.ExpressionConstantInt
-import nl.esi.comma.expressions.expression.ExpressionConstantReal
-import nl.esi.comma.expressions.expression.ExpressionConstantString
-import nl.esi.comma.expressions.expression.ExpressionDivision
-import nl.esi.comma.expressions.expression.ExpressionEnumLiteral
-import nl.esi.comma.expressions.expression.ExpressionEqual
-import nl.esi.comma.expressions.expression.ExpressionFunctionCall
-import nl.esi.comma.expressions.expression.ExpressionGeq
-import nl.esi.comma.expressions.expression.ExpressionGreater
-import nl.esi.comma.expressions.expression.ExpressionLeq
-import nl.esi.comma.expressions.expression.ExpressionLess
-import nl.esi.comma.expressions.expression.ExpressionMap
-import nl.esi.comma.expressions.expression.ExpressionMapRW
-import nl.esi.comma.expressions.expression.ExpressionMaximum
-import nl.esi.comma.expressions.expression.ExpressionMinimum
-import nl.esi.comma.expressions.expression.ExpressionMinus
-import nl.esi.comma.expressions.expression.ExpressionModulo
-import nl.esi.comma.expressions.expression.ExpressionMultiply
-import nl.esi.comma.expressions.expression.ExpressionNEqual
-import nl.esi.comma.expressions.expression.ExpressionNot
-import nl.esi.comma.expressions.expression.ExpressionNullLiteral
-import nl.esi.comma.expressions.expression.ExpressionOr
-import nl.esi.comma.expressions.expression.ExpressionPlus
-import nl.esi.comma.expressions.expression.ExpressionPower
-import nl.esi.comma.expressions.expression.ExpressionQuantifier
-import nl.esi.comma.expressions.expression.ExpressionRecord
-import nl.esi.comma.expressions.expression.ExpressionRecordAccess
-import nl.esi.comma.expressions.expression.ExpressionSubtraction
-import nl.esi.comma.expressions.expression.ExpressionVariable
-import nl.esi.comma.expressions.expression.ExpressionVector
-import nl.esi.comma.expressions.expression.Field
-import nl.esi.comma.expressions.expression.VectorTypeConstructor
-import nl.esi.comma.types.types.SimpleTypeDecl
-import nl.esi.comma.types.types.TypeDecl
+import nl.esi.xtext.actions.actions.AssignmentAction
+import nl.esi.xtext.actions.actions.RecordFieldAssignmentAction
+import nl.esi.xtext.expressions.expression.Expression
+import nl.esi.xtext.expressions.expression.ExpressionAddition
+import nl.esi.xtext.expressions.expression.ExpressionAnd
+import nl.esi.xtext.expressions.expression.ExpressionAny
+import nl.esi.xtext.expressions.expression.ExpressionBracket
+import nl.esi.xtext.expressions.expression.ExpressionConstantBool
+import nl.esi.xtext.expressions.expression.ExpressionConstantInt
+import nl.esi.xtext.expressions.expression.ExpressionConstantReal
+import nl.esi.xtext.expressions.expression.ExpressionConstantString
+import nl.esi.xtext.expressions.expression.ExpressionDivision
+import nl.esi.xtext.expressions.expression.ExpressionEnumLiteral
+import nl.esi.xtext.expressions.expression.ExpressionEqual
+import nl.esi.xtext.expressions.expression.ExpressionFunctionCall
+import nl.esi.xtext.expressions.expression.ExpressionGeq
+import nl.esi.xtext.expressions.expression.ExpressionGreater
+import nl.esi.xtext.expressions.expression.ExpressionLeq
+import nl.esi.xtext.expressions.expression.ExpressionLess
+import nl.esi.xtext.expressions.expression.ExpressionMap
+import nl.esi.xtext.expressions.expression.ExpressionMapRW
+import nl.esi.xtext.expressions.expression.ExpressionMaximum
+import nl.esi.xtext.expressions.expression.ExpressionMinimum
+import nl.esi.xtext.expressions.expression.ExpressionMinus
+import nl.esi.xtext.expressions.expression.ExpressionModulo
+import nl.esi.xtext.expressions.expression.ExpressionMultiply
+import nl.esi.xtext.expressions.expression.ExpressionNEqual
+import nl.esi.xtext.expressions.expression.ExpressionNot
+import nl.esi.xtext.expressions.expression.ExpressionNullLiteral
+import nl.esi.xtext.expressions.expression.ExpressionOr
+import nl.esi.xtext.expressions.expression.ExpressionPlus
+import nl.esi.xtext.expressions.expression.ExpressionPower
+import nl.esi.xtext.expressions.expression.ExpressionRecord
+import nl.esi.xtext.expressions.expression.ExpressionRecordAccess
+import nl.esi.xtext.expressions.expression.ExpressionSubtraction
+import nl.esi.xtext.expressions.expression.ExpressionVariable
+import nl.esi.xtext.expressions.expression.ExpressionVector
+import nl.esi.xtext.expressions.expression.Field
+import nl.esi.xtext.expressions.expression.VectorTypeConstructor
+import nl.esi.xtext.types.types.SimpleTypeDecl
+import nl.esi.xtext.types.types.TypeDecl
 
 class ExpressionsParser {
 	
@@ -220,46 +220,29 @@ class ExpressionsParser {
 	'''«expr.value»'''	
 
 
-    def static dispatch CharSequence generateExpression(ExpressionFunctionCall expr, CharSequence ref)
-    {
-    	if(expr.functionName.equals('size')) 
-    		return '''(«generateExpression(expr.args.get(0), ref)».length)'''
-    	else if(expr.functionName.equals('remove')) 
-    		return '''smVarContainer.remove(«generateExpression(expr.args.get(0), ref)», «generateExpression(expr.args.get(1), ref)»)'''
-    	else if(expr.functionName.equals('isEmpty')) 
-    		return '''(«generateExpression(expr.args.get(0), ref)».length == 0)'''
-    	else if(expr.functionName.equals('contains')) 
-    		return '''smVarContainer.contains(«generateExpression(expr.args.get(0), ref)», «generateExpression(expr.args.get(1), ref)»)'''
-    	else if(expr.functionName.equals('add')) 
-    		return '''[«generateExpression(expr.args.get(1), ref)»]'''
-    		// return '''smVarContainer.add(«generateExpression(expr.args.get(0), ref)», «generateExpression(expr.args.get(1), ref)»)'''
-    	else if(expr.functionName.equals('asReal')) 
-    		return '''(double)(«generateExpression(expr.args.get(0), ref)»)'''
-    	else if(expr.functionName.equals('abs')) 
-    		return '''Math.abs(«generateExpression(expr.args.get(0), ref)»)'''
-    	else if(expr.functionName.equals('get'))
-    		return '''«generateExpression(expr.args.get(0), ref)»[«generateExpression(expr.args.get(1), ref)»]'''
-    	else 
-    		return '''UNSUPPORTED FUNCTION NAME: «expr.functionName»'''
+    def static dispatch CharSequence generateExpression(ExpressionFunctionCall expr, CharSequence ref)   {
+        val fnName = expr.function.name
+        if(fnName.equals('size')) 
+            return '''(«generateExpression(expr.args.get(0), ref)».length)'''
+        else if(fnName.equals('remove')) 
+            return '''smVarContainer.remove(«generateExpression(expr.args.get(0), ref)», «generateExpression(expr.args.get(1), ref)»)'''
+        else if(fnName.equals('isEmpty')) 
+            return '''(«generateExpression(expr.args.get(0), ref)».length == 0)'''
+        else if(fnName.equals('contains')) 
+            return '''smVarContainer.contains(«generateExpression(expr.args.get(0), ref)», «generateExpression(expr.args.get(1), ref)»)'''
+        else if(fnName.equals('add')) 
+            return '''[«generateExpression(expr.args.get(1), ref)»]'''
+            // return '''smVarContainer.add(«generateExpression(args.get(0), ref)», «generateExpression(args.get(1), ref)»)'''
+        else if(fnName.equals('asReal')) 
+            return '''(double)(«generateExpression(expr.args.get(0), ref)»)'''
+        else if(fnName.equals('abs')) 
+            return '''Math.abs(«generateExpression(expr.args.get(0), ref)»)'''
+        else if(fnName.equals('get'))
+            return '''«generateExpression(expr.args.get(0), ref)»[«generateExpression(expr.args.get(1), ref)»]'''
+        else 
+            return '''UNSUPPORTED FUNCTION NAME: «fnName»'''
     }
-    
-	/*    
-    '''
-    «IF expr.functionName.equals('size')»(«generateExpression(expr.args.get(0), ref)».length)«ENDIF»
-    «IF expr.functionName.equals('remove')»smVarContainer.remove(«generateExpression(expr.args.get(0), ref)», «generateExpression(expr.args.get(1), ref)»)«ENDIF»
-    «IF expr.functionName.equals('isEmpty')»(«generateExpression(expr.args.get(0), ref)».length == 0)«ENDIF»
-    «IF expr.functionName.equals('contains')»smVarContainer.contains(«generateExpression(expr.args.get(0), ref)», «generateExpression(expr.args.get(1), ref)»)«ENDIF»
-    «IF expr.functionName.equals('add')»smVarContainer.add(«generateExpression(expr.args.get(0), ref)», «generateExpression(expr.args.get(1), ref)»)«ENDIF»
-    «IF expr.functionName.equals('asReal')»(double)(«generateExpression(expr.args.get(0), ref)»)«ENDIF»
-    «IF expr.functionName.equals('abs')»Math.abs(«generateExpression(expr.args.get(0), ref)»)«ENDIF»
-    '''
-    */
-    
-    def static dispatch CharSequence generateExpression(ExpressionQuantifier expr, CharSequence ref)
-    '''
-		USE_REMOVE_INSTEAD
-	'''
-	
+
 	def static CharSequence generateDim(ExpressionVector vec) {
 		var dimTxt = ''''''
 		if(vec.typeAnnotation.type instanceof VectorTypeConstructor) {

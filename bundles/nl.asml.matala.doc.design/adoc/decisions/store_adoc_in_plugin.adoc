@@ -11,6 +11,8 @@
   // SPDX-License-Identifier: MIT
 ////
 
+include::../_initCommon.adoc[]
+
 === Store adoc in plugin
 
 ==== Decision
@@ -18,7 +20,7 @@ Store AsciiDoc documentation inside the plugin's own `adoc/` folder and add the 
 
 ==== Rationale
 Keeping documentation with the plugin ensures documentation is versioned and distributed together with the code, avoids duplication, and makes it easy for consuming projects to reuse documentation from dependencies. 
-For example, `nl.esi.comma.types` exposes its reference material in `adoc/`; downstream builds can include that file when assembling PDFs or site output.
+For example, `nl.esi.xtext.types` exposes its reference material in `adoc/`; downstream builds can include that file when assembling PDFs or site output.
 
 ==== How to
 See also <<add-or-change-documentation-in-bundle>>.

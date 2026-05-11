@@ -1,0 +1,257 @@
+/**
+ * Copyright (c) 2024, 2025 TNO-ESI
+ *
+ * See the NOTICE file(s) distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This program and the accompanying materials are made available
+ * under the terms of the MIT License which is available at
+ * https://opensource.org/licenses/MIT
+ *
+ * SPDX-License-Identifier: MIT
+ */
+grammar nl.esi.xtext.expressions.Expression with nl.esi.xtext.types.Types
+
+generate expression "http://www.esi.nl/xtext/expressions/Expression"
+
+import "http://www.esi.nl/xtext/common/lang/Base" as base
+import "http://www.esi.nl/xtext/types/Types" as types
+
+ExpressionModel returns base::ModelContainer: {ExpressionModel}
+    imports += Import*
+    ( types += TypeDecl
+    | variables += VariableDecl
+    | functions += FunctionDecl
+    )*
+;
+
+Variable:
+    type = Type name = ID
+;
+
+VariableDecl:
+    variable=Variable ('=' expression=Expression)?
+;
+
+FunctionDecl:
+    'function' ('<' typeParams += GenericsTypeParam  (',' typeParams += GenericsTypeParam)* '>')? returnType = Type name = ID '(' (params += FunctionParam (',' params += FunctionParam)*)? ')'
+;
+
+FunctionParam:
+    type = Type name = ID
+;
+
+@Override
+NamedElement returns base::NamedElement:
+	super::NamedElement | Variable | FunctionDecl | FunctionParam
+;
+
+Expression: ExpressionLevel1;
+
+ExpressionLevel1 returns Expression:		// Left associativity
+	ExpressionLevel2
+	( ({ExpressionAnd.left=current}			("AND" | "and")	right=ExpressionLevel2)  
+	| ({ExpressionOr.left=current}			("OR" | "or")	right=ExpressionLevel2)	
+	)*
+;
+
+ExpressionLevel2 returns Expression:		// Left associativity
+	ExpressionLevel3
+	( ({ExpressionEqual.left=current}		"=="	right=ExpressionLevel3) 
+	| ({ExpressionNEqual.left=current}		"!="	right=ExpressionLevel3)	
+	)*
+;
+
+ExpressionLevel3 returns Expression:		// Left associativity
+	ExpressionLevel4
+	( ({ExpressionGeq.left    =current}		">="	right=ExpressionLevel4) 
+	| ({ExpressionGreater.left=current}		">"		right=ExpressionLevel4) 
+	| ({ExpressionLeq.left    =current}		"<="	right=ExpressionLevel4) 
+	| ({ExpressionLess.left   =current}		"<"		right=ExpressionLevel4)
+	)*
+;
+
+ExpressionLevel4 returns Expression:		// Left associativity
+	ExpressionLevel5
+	( ({ExpressionAddition.left   =current}	"+"		right=ExpressionLevel5) 
+	| ({ExpressionSubtraction.left=current}	"-"		right=ExpressionLevel5) 
+	)*
+;
+
+ExpressionLevel5 returns Expression:		// Left associativity
+	ExpressionLevel6
+	( ({ExpressionMultiply.left=current}	"*"		right=ExpressionLevel6) 
+	| ({ExpressionDivision.left=current}	"/"		right=ExpressionLevel6)
+	| ({ExpressionMaximum.left =current}	"max"	right=ExpressionLevel6)
+	| ({ExpressionMinimum.left =current}	"min"	right=ExpressionLevel6)
+	| ({ExpressionModulo.left  =current}	"mod"	right=ExpressionLevel6)
+	)*
+;
+
+ExpressionLevel6 returns Expression:		// Right associativity
+	ExpressionLevel7
+	( ({ExpressionPower.left=current}		"^"     right=ExpressionLevel6)
+	)?
+;
+
+ExpressionLevel7 returns Expression:
+	ExpressionNot | ExpressionMinus | ExpressionPlus | ExpressionLevel8
+;
+
+ExpressionNot: 
+	("NOT" | "not") sub=ExpressionLevel8
+;
+
+ExpressionMinus: 
+	"-" sub=ExpressionLevel8
+;
+
+ExpressionPlus: 
+	"+" sub=ExpressionLevel8
+;
+
+ExpressionLevel8 returns Expression:
+	ExpressionLevel9 (({ExpressionRecordAccess.record = current} '.' field = [types::RecordField | ID]) |
+					  ({ExpressionMapRW.map = current} '[' key = Expression ('->' value = Expression)? ']'))*
+;
+
+
+
+ExpressionLevel9 returns Expression:
+	ExpressionBracket |
+	ExpressionConstantBool |
+	ExpressionConstantInt |
+	ExpressionConstantReal |
+	ExpressionConstantString |
+	ExpressionEnumLiteral |
+    ExpressionNullLiteral |
+	ExpressionVariable |
+	ExpressionRecord |
+	ExpressionAny |
+    ExpressionFunctionCall |
+	ExpressionTypeAnnotated
+;
+
+ExpressionFunctionCall: 
+    function = [FunctionDecl|ID] '(' (args += Expression (',' args += Expression)*)? ')'
+;
+
+ExpressionBracket:
+	"(" sub=Expression ")"
+;
+
+ExpressionConstantBool:
+	value=BOOL
+;
+
+ExpressionConstantInt:
+	value=LONG
+;
+
+ExpressionConstantReal:
+	value=DOUBLE
+;
+
+ExpressionConstantString:
+	value = STRING
+;
+
+ExpressionEnumLiteral: 
+	type = [types::EnumTypeDecl] "::" literal = [types::EnumElement] 
+;
+
+ExpressionNullLiteral:
+    {ExpressionNullLiteral}
+    'null'
+;
+
+ExpressionVariable: 
+	variable=[Variable | ID]
+;
+
+ExpressionRecord: 
+	type = [types::RecordTypeDecl] '{' fields+=Field (',' fields+=Field)* '}'
+;
+
+Field:
+	recordField = [types::RecordField | ID] '=' exp = Expression
+;
+
+ExpressionAny :
+	{ExpressionAny} "*"
+;
+
+ExpressionTypeAnnotated returns Expression:
+	TypeAnnotation( ({ExpressionVector.typeAnnotation = current} '[' (elements += Expression (',' elements += Expression)*)? ']') |
+		            ({ExpressionMap.typeAnnotation = current} '{' (pairs += Pair (',' pairs += Pair)*)? '}'))
+;
+
+TypeAnnotation :
+	'<'type = Type '>'
+;
+
+Pair:
+	key = Expression '->' value = Expression
+;
+
+// --- add extra superclasses in metamodel -------
+
+ExpressionBinary returns Expression:           
+	{ExpressionBinary}
+;
+
+ConcreteExpressionBinary returns ExpressionBinary:
+	  {ExpressionAnd}
+	| {ExpressionOr}
+	| {ExpressionEqual}
+	| {ExpressionNEqual}
+	| {ExpressionGeq}
+	| {ExpressionGreater}
+	| {ExpressionLeq}
+	| {ExpressionLess}
+	| {ExpressionAddition}
+	| {ExpressionSubtraction}
+	| {ExpressionMultiply}
+	| {ExpressionDivision}
+	| {ExpressionMaximum}
+	| {ExpressionMinimum}
+	| {ExpressionModulo}
+	| {ExpressionPower}
+;
+
+ExpressionUnary returns Expression:
+	{ExpressionUnary}
+;
+
+ConcreteExpressionUnary returns ExpressionUnary:
+	  {ExpressionNot}
+	| {ExpressionMinus}
+	| {ExpressionPlus}
+	| {ExpressionBracket}	
+;
+
+
+//Extensions to the Types language
+
+@Override
+Type returns types::Type:
+	TypeReference | VectorTypeConstructor | MapTypeConstructor
+;
+
+@Override 
+TypeReference: type = [types::TypeDecl] ;
+
+@Override 
+VectorTypeConstructor:
+	type = [types::TypeDecl] (dimensions += Dimension)+
+;
+
+@Override 
+MapTypeConstructor: 
+	'map' '<' type = [types::TypeDecl] ',' valueType = Type '>'
+;
+
+@Override
+GenericsTypeParam returns types::GenericsTypeParam:
+    name = ID
+;
