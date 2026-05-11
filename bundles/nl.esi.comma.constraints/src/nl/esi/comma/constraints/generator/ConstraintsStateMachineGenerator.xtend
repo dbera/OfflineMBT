@@ -58,7 +58,7 @@ import nl.esi.comma.constraints.constraints.Templates
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.generator.IFileSystemAccess2
-import nl.esi.comma.actions.generator.plantuml.ActionsUmlGenerator
+import nl.esi.xtext.actions.generator.plantuml.ActionsUmlGenerator
 
 class ConstraintsStateMachineGenerator 
 {

@@ -12,7 +12,7 @@
  */
 package nl.asml.matala.product.generator
 
-import nl.esi.comma.types.types.TypeDecl
+import nl.esi.xtext.types.types.TypeDecl
 
 class Place {
 	public var bname = new String

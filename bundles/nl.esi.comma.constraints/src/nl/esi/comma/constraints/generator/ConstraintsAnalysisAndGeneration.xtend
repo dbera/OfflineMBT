@@ -30,7 +30,7 @@ import org.eclipse.xtext.generator.IFileSystemAccess
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IFileSystemAccessExtension2
 import nl.esi.comma.constraints.constraints.Actions
-import nl.esi.comma.actions.generator.plantuml.ActionsUmlGenerator
+import nl.esi.xtext.actions.generator.plantuml.ActionsUmlGenerator
 import nl.esi.comma.constraints.generator.visualize.ConstraintsDependencyVizGenerator
 import java.util.HashSet
 

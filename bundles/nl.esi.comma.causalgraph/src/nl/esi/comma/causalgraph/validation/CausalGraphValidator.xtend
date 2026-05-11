@@ -18,7 +18,7 @@ package nl.esi.comma.causalgraph.validation
 import java.util.List
 import java.util.Map
 import java.util.TreeMap
-import nl.esi.comma.actions.actions.ActionsPackage
+import nl.esi.xtext.actions.actions.ActionsPackage
 import nl.esi.comma.causalgraph.causalGraph.CausalGraph
 import nl.esi.comma.causalgraph.causalGraph.CausalGraphPackage
 import nl.esi.comma.causalgraph.causalGraph.ControlFlowEdge
@@ -31,10 +31,10 @@ import nl.esi.comma.causalgraph.causalGraph.RequirementDecl
 import nl.esi.comma.causalgraph.causalGraph.ScenarioDecl
 import nl.esi.comma.causalgraph.causalGraph.ScenarioStep
 import nl.esi.comma.causalgraph.causalGraph.StepType
-import nl.esi.comma.expressions.expression.MapTypeConstructor
-import nl.esi.comma.expressions.expression.Variable
-import nl.esi.comma.types.types.Type
-import nl.esi.comma.types.types.TypeDecl
+import nl.esi.xtext.expressions.expression.MapTypeConstructor
+import nl.esi.xtext.expressions.expression.Variable
+import nl.esi.xtext.types.types.Type
+import nl.esi.xtext.types.types.TypeDecl
 import nl.esi.xtext.common.lang.base.BasePackage
 import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.validation.Check

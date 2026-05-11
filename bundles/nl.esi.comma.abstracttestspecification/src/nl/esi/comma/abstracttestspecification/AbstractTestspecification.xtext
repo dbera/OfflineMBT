@@ -15,7 +15,7 @@ grammar nl.esi.comma.abstracttestspecification.AbstractTestspecification with nl
 generate abstractTestspecification "http://www.esi.nl/comma/abstracttestspecification/AbstractTestspecification"
 
 import "http://www.esi.nl/xtext/common/lang/Base" as base
-import "http://www.esi.nl/comma/expressions/Expression" as expr
+import "http://www.esi.nl/xtext/expressions/Expression" as expr
 import "http://www.asml.nl/matala/product/Product" as prod
 import "http://www.esi.nl/comma/assertthat/AssertThat" as assertthat
 

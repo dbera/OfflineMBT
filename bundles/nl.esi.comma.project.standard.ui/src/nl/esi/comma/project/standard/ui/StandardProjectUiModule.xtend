@@ -15,7 +15,7 @@
  */
 package nl.esi.comma.project.standard.ui
 
-import nl.esi.comma.types.ui.contentassist.CommaHyperLinkDetector
+import nl.esi.xtext.types.ui.contentassist.CommaHyperLinkDetector
 import org.eclipse.core.runtime.Platform
 import org.eclipse.jface.text.hyperlink.IHyperlinkDetector
 import org.eclipse.ui.plugin.AbstractUIPlugin

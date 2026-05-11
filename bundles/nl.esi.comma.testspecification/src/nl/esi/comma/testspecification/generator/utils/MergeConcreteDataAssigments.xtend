@@ -12,14 +12,14 @@
  */
 package nl.esi.comma.testspecification.generator.utils
 
-import nl.esi.comma.actions.actions.AssignmentAction
-import nl.esi.comma.actions.actions.RecordFieldAssignmentAction
-import nl.esi.comma.expressions.expression.Expression
-import nl.esi.comma.expressions.expression.ExpressionMap
-import nl.esi.comma.expressions.expression.ExpressionRecord
-import nl.esi.comma.expressions.expression.ExpressionRecordAccess
-import nl.esi.comma.expressions.expression.ExpressionVector
-import nl.esi.comma.expressions.utilities.ProposalHelper
+import nl.esi.xtext.actions.actions.AssignmentAction
+import nl.esi.xtext.actions.actions.RecordFieldAssignmentAction
+import nl.esi.xtext.expressions.expression.Expression
+import nl.esi.xtext.expressions.expression.ExpressionMap
+import nl.esi.xtext.expressions.expression.ExpressionRecord
+import nl.esi.xtext.expressions.expression.ExpressionRecordAccess
+import nl.esi.xtext.expressions.expression.ExpressionVector
+import nl.esi.xtext.expressions.utilities.ProposalHelper
 import nl.esi.comma.testspecification.testspecification.RefStep
 import nl.esi.comma.testspecification.testspecification.TSMain
 import nl.esi.comma.testspecification.testspecification.TestDefinition
@@ -27,7 +27,7 @@ import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.emf.ecore.util.EcoreUtil
 
 import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
-import nl.esi.comma.expressions.expression.ExpressionNullLiteral
+import nl.esi.xtext.expressions.expression.ExpressionNullLiteral
 
 class MergeConcreteDataAssigments {
     def static void transform(Resource resource) {
