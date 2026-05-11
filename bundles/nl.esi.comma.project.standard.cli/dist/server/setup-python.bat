@@ -105,8 +105,9 @@ IF !py_major! LSS 3 (
   EXIT /B 1
 )
 
-IF !py_major!==3 IF !py_minor! LSS 6 (
-  CALL :log "Warning: Python 3.6+ is recommended, but version !python_version! was found"
+IF !py_major!==3 IF !py_minor! LSS 10 (
+  CALL :log "Error: Python 3.10+ is required, but version !python_version! was found"
+  EXIT /B 1
 )
 
 CALL :log "Using python version: !python_version!"
