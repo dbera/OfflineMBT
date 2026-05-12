@@ -3,6 +3,15 @@ Base Xtext Languages and Eclipse Plugins
 
 XPlus is a collection of base Xtext languages and Eclipse plugins/libraries that serve as the foundation for projects such as Offline MBT and other model-based tools.
 
+### Conventions
+
+XPlus follows the following naming conventions:
+
+- **Xtext derivatives** are prefixed with `nl.esi.xtext` in both project names and Java package names. Examples include `nl.esi.xtext.actions`, `nl.esi.xtext.expressions`, and `nl.esi.xtext.types`.
+- **EMF derivatives** are prefixed with `nl.esi.emf` in both project names and Java package names.
+
+These prefixes help identify the origin and purpose of each module within the XPlus ecosystem.
+
 ### Development environment setup
 
 Follow these instructions to set up a development environment.

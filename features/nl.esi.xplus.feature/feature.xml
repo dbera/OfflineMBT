@@ -14,10 +14,10 @@
 
 -->
 <feature
-      id="nl.esi.xplus.core.feature"
+      id="nl.esi.xplus.feature"
       label="XPlus Core DSLs"
       version="4.2.0.qualifier"
-      provider-name="TNO-ESI, Philips">
+      provider-name="TNO-ESI">
 
    <description>
       This feature provides reusable set of XPlus Core Domain-Specific

@@ -14,10 +14,10 @@
 
 -->
 <feature
-      id="nl.esi.xplus.standard.feature"
+      id="nl.esi.xplus.ui.feature"
       label="XPlus DSLs"
       version="4.2.0.qualifier"
-      provider-name="TNO-ESI, Philips">
+      provider-name="TNO-ESI">
 
    <description>
       This feature includes XPlus Core languages feature and adds the default XPlus project language and help.

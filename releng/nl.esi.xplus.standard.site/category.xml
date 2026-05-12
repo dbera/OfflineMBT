@@ -17,13 +17,14 @@
    <description name="XPlus">
       XPlus DSLs and analysis tools.
    </description>
-   <feature id="nl.esi.xplus.core.feature">
+   <feature id="nl.esi.xplus.feature">
       <category name="XPlus"/>
    </feature>
-   <feature id="nl.esi.xplus.standard.feature">
+   <feature id="nl.esi.xplus.ui.feature">
       <category name="XPlus"/>
    </feature>
    <bundle id="nl.esi.xtext.lsp.server"/>
+   <bundle id="nl.esi.xtext.lsp.generator"/>
    <category-def name="XPlus" label="XPlus">
       <description>
          XPlus Framework
