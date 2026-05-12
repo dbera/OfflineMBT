@@ -1,8 +1,0 @@
-record UNIT {
-	int	unit
-}
-
-record MyContext {
-    int	myField
-}
-

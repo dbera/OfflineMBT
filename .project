@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>nl.esi.comma.root</name>
+	<name>nl.esi.xplus.root</name>
 	<comment></comment>
 	<projects>
 		<project>nl.asml.matala.product</project>
@@ -9,23 +9,23 @@
 		<project>nl.esi.xtext.actions</project>
 		<project>nl.esi.xtext.actions.ide</project>
 		<project>nl.esi.xtext.actions.ui</project>
-		<project>nl.esi.comma.behavior</project>
-		<project>nl.esi.comma.behavior.ide</project>
-		<project>nl.esi.comma.behavior.ui</project>
+		<project>nl.esi.xplus.behavior</project>
+		<project>nl.esi.xplus.behavior.ide</project>
+		<project>nl.esi.xplus.behavior.ui</project>
 		<project>nl.esi.xtext.expressions</project>
 		<project>nl.esi.xtext.expressions.ide</project>
 		<project>nl.esi.xtext.expressions.ui</project>
-		<project>nl.esi.comma.inputspecification</project>
-		<project>nl.esi.comma.inputspecification.ide</project>
-		<project>nl.esi.comma.inputspecification.ui</project>
-		<project>nl.esi.comma.signature</project>
-		<project>nl.esi.comma.signature.ide</project>
-		<project>nl.esi.comma.signature.ui</project>
-		<project>nl.esi.comma.testspecification</project>
-		<project>nl.esi.comma.testspecification.ide</project>
-		<project>nl.esi.comma.testspecification.tests</project>
-		<project>nl.esi.comma.testspecification.ui</project>
-		<project>nl.esi.comma.testspecification.ui.tests</project>
+		<project>nl.esi.xplus.inputspecification</project>
+		<project>nl.esi.xplus.inputspecification.ide</project>
+		<project>nl.esi.xplus.inputspecification.ui</project>
+		<project>nl.esi.xplus.signature</project>
+		<project>nl.esi.xplus.signature.ide</project>
+		<project>nl.esi.xplus.signature.ui</project>
+		<project>nl.esi.xplus.testspecification</project>
+		<project>nl.esi.xplus.testspecification.ide</project>
+		<project>nl.esi.xplus.testspecification.tests</project>
+		<project>nl.esi.xplus.testspecification.ui</project>
+		<project>nl.esi.xplus.testspecification.ui.tests</project>
 		<project>nl.esi.xtext.types</project>
 		<project>nl.esi.xtext.types.ide</project>
 		<project>nl.esi.xtext.types.ui</project>

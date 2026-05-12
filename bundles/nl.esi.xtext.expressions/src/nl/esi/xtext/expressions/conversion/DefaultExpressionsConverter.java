@@ -105,7 +105,7 @@ public final class DefaultExpressionsConverter implements IExpressionConverter {
 		}
 
 		// Check scalar type compatibility explicitly
-		// Int types (Long in ComMA)
+		// Int types (Long in XPlus)
 		if (value instanceof Long longVal) {
 			if (targetType == long.class || targetType == int.class || targetType == short.class
 					|| targetType == byte.class || targetType.isAssignableFrom(Long.class)
@@ -114,7 +114,7 @@ public final class DefaultExpressionsConverter implements IExpressionConverter {
 			}
 		}
 
-		// Real types (BigDecimal in ComMA)
+		// Real types (BigDecimal in XPlus)
 		if (value instanceof BigDecimal decVal) {
 			if (targetType == double.class || targetType == float.class || targetType.isAssignableFrom(BigDecimal.class)
 					|| targetType.isAssignableFrom(Number.class)) {

@@ -1,5 +1,0 @@
-@startuml
-node "Root" {
-    [Root_T1_default@null@INTERNAL@]
-}
-@enduml

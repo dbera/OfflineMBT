@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+
+    Copyright (c) 2024, 2025 TNO-ESI
+
+    See the NOTICE file(s) distributed with this work for additional
+    information regarding copyright ownership.
+
+    This program and the accompanying materials are made available
+    under the terms of the MIT License which is available at
+    https://opensource.org/licenses/MIT
+
+    SPDX-License-Identifier: MIT
+
+-->
+<introContent>
+  <extensionContent id="nl.esi.xplus.doc.design" name="xplus-design" alt-style="css/xplus-design.properties" style="css/xplus-design.css" path="tutorials/@">
+    <group label="XPlus" id="xplus" style-id="content-group">
+      <link url="http://org.eclipse.ui.intro/showHelpTopic?id=/nl.esi.xplus.doc.design/target/eclipse-help/index.html"
+            label="Read the XPlus design documentation" id="xplus-design" style-id="content-link">
+        <text>Learn about the XPlus design</text>
+      </link>
+    </group>
+  </extensionContent>
+</introContent>

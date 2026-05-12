@@ -47,7 +47,7 @@ jobs:
       uses: actions/upload-artifact@v7
       with:
         name: bpmn4s-editor-dev
-        path: bundles/nl.esi.comma.project.standard.cli/target/dist
+        path: bundles/nl.esi.xplus.project.standard.cli/target/dist
         retention-days: 10
     - name: Attach Design Documentation
       uses: actions/upload-artifact@v7
@@ -68,7 +68,7 @@ jobs:
       if: github.ref_type == 'tag'
       with:
         files: |
-          bundles/nl.esi.comma.project.standard.cli/target/bpmn4s-editor-*.zip
+          bundles/nl.esi.xplus.project.standard.cli/target/bpmn4s-editor-*.zip
           bundles/nl.asml.matala.doc.design/target/website/matala-design.pdf
     # Optional: Uploads the full dependency graph to GitHub to improve the quality of Dependabot alerts this repository can receive
     # - name: Update dependency graph

@@ -16,10 +16,10 @@
 package nl.esi.xtext.types.ui
 
 import nl.esi.xtext.types.ide.contentassist.TypesIdeContentProposalCreator
-import nl.esi.xtext.types.ui.contentassist.CommaHyperLinkDetector
 import org.eclipse.jface.text.hyperlink.IHyperlinkDetector
 import org.eclipse.xtend.lib.annotations.FinalFieldsConstructor
 import org.eclipse.xtext.ide.editor.contentassist.IdeContentProposalCreator
+import nl.esi.xtext.types.ui.contentassist.XPlusHyperLinkDetector
 
 /**
  * Use this class to register components to be used within the Eclipse IDE.
@@ -28,7 +28,7 @@ import org.eclipse.xtext.ide.editor.contentassist.IdeContentProposalCreator
 class TypesUiModule extends AbstractTypesUiModule {
 	
 	override Class<? extends IHyperlinkDetector> bindIHyperlinkDetector() {
-		return CommaHyperLinkDetector
+		return XPlusHyperLinkDetector
 	}
 
     def  Class<? extends IdeContentProposalCreator> bindIdeContentProposalCreator() {

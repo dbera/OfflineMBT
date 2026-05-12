@@ -243,12 +243,12 @@ class TypesValidator extends AbstractTypesValidator {
 	 *   + the chain of dependencies induced by record fields contains no cycles.
 	 *     Clarification: record R1 with field A of type R2, R2 with field b of type R1 is not allowed.
 	 *     Fields of vector types with base another record type should also be considered.
-	 *     In ComMA, records are treated as values. The structure mentioned above can never be created.
+	 *     In XPlus, records are treated as values. The structure mentioned above can never be created.
 	 */
 	 
 	 /*
 	  * This methods implements the mechanism for registering third-party extensions to the 
-	  * validators of the ComMA languages.
+	  * validators of the XPlus languages.
 	  * All languages that directly or indirectly extend Types language inherit it.
 	  */
 	  

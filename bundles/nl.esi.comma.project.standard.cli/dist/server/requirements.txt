@@ -1,6 +1,0 @@
-snakes
-requests
-fastapi
-uvicorn[standard]
-websockets
-python-multipart

@@ -15,7 +15,7 @@
 -->
 <?eclipse version="3.0"?>
 <plugin>
-   <extension-point id="commaValidator" name="ComMAValidator" schema="schema/commaValidator.exsd"/>
+   <extension-point id="commaValidator" name="XPlusValidator" schema="schema/commaValidator.exsd"/>
 	<extension point="org.eclipse.emf.ecore.generated_package">
 		<package 
 			uri = "http://www.esi.nl/xtext/types/Types"
@@ -27,14 +27,14 @@
        point="org.eclipse.core.runtime.products">
     <product
           application="org.eclipse.ui.ide.workbench"
-          name="ComMA">
+          name="XPlus">
        <property
              name="startupProgressRect"
              value="5,275,445,15">
        </property>
        <property
              name="appName"
-             value="ComMA">
+             value="XPlus">
        </property>
        <property
              name="aboutImage"

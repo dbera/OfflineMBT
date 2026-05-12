@@ -181,7 +181,7 @@ public interface IEvaluationContext {
 	 * For scalar values, delegates to {@link #toExpression(Object)} for basic conversion.
 	 * 
 	 * @param value the Java value to convert (can be Collection, Map, or any scalar type)
-	 * @param type the ComMA type providing type information for vectors and maps
+	 * @param type the XPlus type providing type information for vectors and maps
 	 * @return an Expression representing the value with proper type annotation,
 	 *         or {@code null} if the value or type is {@code null}, or value type doesn't match the type
 	 * 

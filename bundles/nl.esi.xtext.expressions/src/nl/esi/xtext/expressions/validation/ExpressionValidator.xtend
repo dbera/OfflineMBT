@@ -58,8 +58,8 @@ import static extension nl.esi.xtext.expressions.utilities.ExpressionsUtilities.
 import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
 
 /*
- * This class mainly captures the ComMA type system for expressions. Constraints are not formulated
- * in text here. Consult the document with the formal definition of the ComMA type system.
+ * This class mainly captures the XPlus type system for expressions. Constraints are not formulated
+ * in text here. Consult the document with the formal definition of the XPlus type system.
  */
 class ExpressionValidator extends AbstractExpressionValidator {
 	@Inject protected IScopeProvider scopeProvider

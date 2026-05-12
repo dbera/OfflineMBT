@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<projectDescription>
+	<name>nl.esi.xtext.launch</name>
+	<comment></comment>
+	<projects>
+		<project>nl.asml.matala.product</project>
+		<project>nl.esi.xtext.actions</project>
+		<project>nl.esi.xplus.behavior</project>
+		<project>nl.esi.xplus.behavior.scl</project>
+		<project>nl.esi.xtext.expressions</project>
+		<project>nl.esi.xplus.inputspecification</project>
+		<project>nl.esi.xplus.product.standard</project>
+		<project>nl.esi.xplus.project.standard.standalone</project>
+		<project>nl.esi.xplus.signature</project>
+		<project>nl.esi.xplus.testspecification</project>
+		<project>nl.esi.xtext.types</project>
+	</projects>
+	<buildSpec>
+		<buildCommand>
+			<name>org.eclipse.xtext.ui.shared.xtextBuilder</name>
+			<arguments>
+			</arguments>
+		</buildCommand>
+	</buildSpec>
+	<natures>
+		<nature>org.eclipse.xtext.ui.shared.xtextNature</nature>
+	</natures>
+</projectDescription>

@@ -45,10 +45,10 @@ import nl.esi.xtext.expressions.expression.ExpressionRecordAccess
 import nl.esi.xtext.expressions.expression.ExpressionSubtraction
 import nl.esi.xtext.expressions.expression.ExpressionVariable
 import nl.esi.xtext.expressions.expression.ExpressionVector
-import nl.esi.xtext.types.generator.CommaGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess
+import nl.esi.xtext.types.generator.XPlusGenerator
 
-class ExpressionsUmlGenerator extends CommaGenerator{	
+class ExpressionsUmlGenerator extends XPlusGenerator{	
 	
 	new(String fileName, IFileSystemAccess fsa) {
 		super(fileName, fsa)

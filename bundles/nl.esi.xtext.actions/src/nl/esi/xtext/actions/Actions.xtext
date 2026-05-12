@@ -60,7 +60,7 @@ RecordFieldAssignmentAction:
 ;
 
 /*
- * In ComMA we can only change field values of records that are stored in a variable.
+ * In XPlus we can only change field values of records that are stored in a variable.
  * Since we cannot access elements in collections, syntax like collection[i].a := v is not supported
  */
  // TODO: Why not just reuse ExpressionRecordAccess here?
@@ -117,7 +117,7 @@ ActionList: {ActionList}
 ;
 
 /*
- * Construct reused in several ComMA languages.
+ * Construct reused in several XPlus languages.
  * It groups a set of variable declarations and an initialization section
  */
 VariableDeclBlock: {VariableDeclBlock}

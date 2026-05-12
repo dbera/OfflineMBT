@@ -1,5 +1,7 @@
-# OfflineMBT
-Systems Modeling and Test Generation
+# XPlus
+Base Xtext Languages and Eclipse Plugins
+
+XPlus is a collection of base Xtext languages and Eclipse plugins/libraries that serve as the foundation for projects such as Offline MBT and other model-based tools.
 
 ### Development environment setup
 
@@ -41,9 +43,9 @@ To create a development environment:
 - In the second wizard window:
     - Use the green '+' icon at the top right to add the Oomph setup.
         - For **Catalog**, choose **Github Projects**.
-        - For **Resource URIs**, enter `https://raw.githubusercontent.com/dbera/OfflineMBT/main/OfflineMBT.setup` and make sure there are no spaces before or after the URL.
+        - For **Resource URIs**, enter `https://raw.githubusercontent.com/dbera/XPlus/main/XPlus.setup` and make sure there are no spaces before or after the URL.
         - Click the **OK** button.
-    - Check the checkbox for **OfflineMBT**, from the big list.
+    - Check the checkbox for **XPlus**, from the big list.
       It is under **Github Projects** / **<User>**.
     - At the bottom right, select the **Main** stream.
     - Click the **Next** button.
@@ -51,11 +53,11 @@ To create a development environment:
     - Enable the **Show all variables** option to show all options.
     - Choose a **Root install folder** and _Installation folder name_.
       The new development environment will be put at `<root_installation_folder>/<installation_folder_name>`.
-    - Fill in the **OfflineMBT Github repository**:
+    - Fill in the **XPlus Github repository**:
         - Committers with write access to the official Github repository can use one of the default URLs `Git (read-write)` or `HTTPS (read-write)`.
         - Contributors can use the `HTTPS (read-only, anonymous)` URL, as they don't have write access.
           They will not be able to push to the remote repository, they can instead make a fork of the official Git repository.
-          Then they can fill in the URL of their clone instead, i.e. `https://${github.user.id|username}@github.com/<username>/<cloned_repo_name>.git`, with `<username>` replaced by their Github account username, and `<cloned_repo_name>` replaced by the name of the cloned repistory, which defaults to `OfflineMBT`.
+          Then they can fill in the URL of their clone instead, i.e. `https://${github.user.id|username}@github.com/<username>/<cloned_repo_name>.git`, with `<username>` replaced by their Github account username, and `<cloned_repo_name>` replaced by the name of the cloned repository, which defaults to `XPlus`.
     - Fill in your **Github author name** and **Github author email**.
       These will be used for Git commits.
     - Check that the **Target platform** is set to **2024-09**.
@@ -96,13 +98,13 @@ In your new development environment, consider changing the following settings:
 ### Building with Maven
 
 > [!CAUTION]
-> OfflineMBT should be built using [Maven 3.9](https://maven.apache.org/download.cgi) and a _Java 21 VM_.
+> XPlus should be built using [Maven 3.9](https://maven.apache.org/download.cgi) and a _Java 21 VM_.
 > The JDK can be downloaded from e.g. [Adoptium](https://adoptium.net/temurin/archive/?variant=openjdk21&jvmVariant=hotspot&version=21).
 >
 > To test which Java version is used by Maven, type `mvn -version` in a command shell.
 
-To build OfflineMBT with Maven execute the following command in the root:
+To build XPlus with Maven execute the following command in the root:
 
 `mvn clean package -P site`
 
-On a successful build, the built Eclipse P2 repository can be found in the **target** folder of the [releng/nl.esi.comma.standard.site](releng/nl.esi.comma.standard.site/) project.
+On a successful build, the built Eclipse P2 repository can be found in the **target** folder of the [releng/nl.esi.xplus.standard.site](releng/nl.esi.xplus.standard.site/) project.
