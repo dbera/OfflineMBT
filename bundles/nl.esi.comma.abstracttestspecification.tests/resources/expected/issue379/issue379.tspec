@@ -1,0 +1,29 @@
+import "parameters/Root.params"
+
+Test-Purpose    "The purpose of this test is..."
+Background      "The background of this test is..."
+
+test-sequence from_abstract_to_concrete {
+    test_single_sequence
+}
+
+step-sequence test_single_sequence {
+
+step-id    step_Root_Run_default_0
+step-type  RUN
+step-input RootInput
+ref-to-step-output
+    RootInput.data.id := 0
+    RootInput.data.nested.mix := "My Concrete Value"
+    RootInput.data.nested.symbol := "My Concrete Symbol"
+    RootInput.data.id := 1
+    RootInput.data.nested := Nested{mix="My R2 Value",symbol="My R2 Symbol"}
+    RootInput.data.nested.symbol := "My R4 Symbol"
+    RootInput.data.nested.symbol := "My R5 Symbol"
+}
+
+generate-file "./dataset/"
+
+step-parameters
+RUN step_Root_Run_default_0
+

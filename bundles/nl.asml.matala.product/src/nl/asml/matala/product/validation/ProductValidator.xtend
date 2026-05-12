@@ -20,9 +20,9 @@ import java.util.HashSet
 import java.util.Set
 import nl.asml.matala.product.product.ActionType
 import nl.asml.matala.product.product.Block
+import nl.asml.matala.product.product.DataReferences
 import nl.asml.matala.product.product.Function
 import nl.asml.matala.product.product.ProductPackage
-import nl.asml.matala.product.product.RefConstraint
 import nl.asml.matala.product.product.Update
 import nl.asml.matala.product.product.UpdateOutVar
 import nl.esi.xtext.actions.actions.ActionsPackage
@@ -233,7 +233,7 @@ class ProductValidator extends AbstractProductValidator {
     @Check
     def checkConcreteVariablesGuard(Update update) {
         if (update.guard !== null) {
-            update.guard.reportWarningOnAccess(RecordFieldKind::SYMBOLIC)[ field | '''Symbolic record field '«field.FQN»' should not be used in guard''']
+            update.guard.reportWarningOnAccess(RecordFieldKind::SYMBOLIC)[ field | '''Symbolic record field  should not be used in guard''']
         }
     }
 
@@ -245,19 +245,43 @@ class ProductValidator extends AbstractProductValidator {
         if (updateOutputVar.act === null) {
             return
         }
-        updateOutputVar.act.actions.forEach [ action |
-            switch (it: action) {
-                AssignmentAction: {
-                    exp.reportWarningOnAccess(RecordFieldKind::SYMBOLIC)[ field | '''Symbolic record field '«field.FQN»' should not be used in concrete update''']
-                }
-                RecordFieldAssignmentAction: {
-                    // LHS check
-                    fieldAccess.reportWarningOnAccess(RecordFieldKind::SYMBOLIC)[ field | '''Symbolic record field '«field.FQN»' should not be assigned in concrete update''']
-                    // RHS check
-                    exp.reportWarningOnAccess(RecordFieldKind::SYMBOLIC)[ field | '''Symbolic record field '«field.FQN»' should not be used in concrete update''']
-                }
-            }
-        ]
+        updateOutputVar.act.actions.forEach[doCheckConcreteVariableUpdate("concrete update")]
+    }
+
+    /**
+     * Variables that are symbolic may not be used in an init
+     */
+    @Check
+    def checkConcreteVariableUpdate(Block block) {
+        block.initActions.forEach[doCheckConcreteVariableUpdate("initialization assignment")]
+    }
+
+    dispatch def private void doCheckConcreteVariableUpdate(IfAction action, String property) {
+        action.guard.reportWarningOnAccess(RecordFieldKind::SYMBOLIC)[ field | '''Symbolic record field should not be used in «property»''']
+        if (action.thenList !== null) {
+            action.thenList.actions.forEach[doCheckConcreteVariableUpdate(property)]
+        }
+        if (action.elseList !== null) {
+            action.elseList.actions.forEach[doCheckConcreteVariableUpdate(property)]
+        }
+    }
+
+    dispatch def private void doCheckConcreteVariableUpdate(ForAction action, String property) {
+        action.exp.reportWarningOnAccess(RecordFieldKind::SYMBOLIC)[ field | '''Symbolic record field should not be used in «property»''']
+        if (action.doList !== null) {
+            action.doList.actions.forEach[doCheckConcreteVariableUpdate(property)]
+        }
+    }
+
+    dispatch def private void doCheckConcreteVariableUpdate(AssignmentAction action, String property) {
+        action.exp.reportWarningOnAccess(RecordFieldKind::SYMBOLIC)[ field | '''Symbolic record field should not be used in «property»''']
+    }
+
+    dispatch def private void doCheckConcreteVariableUpdate(RecordFieldAssignmentAction action, String property) {
+        // LHS check
+        action.fieldAccess.reportWarningOnAccess(RecordFieldKind::SYMBOLIC)[ field | '''Symbolic record field should not be assigned in «property»''']
+        // RHS check
+        action.exp.reportWarningOnAccess(RecordFieldKind::SYMBOLIC)[ field | '''Symbolic record field should not be used in «property»''']
     }
 
     private def reportWarningOnAccess(Expression expression, RecordFieldKind accessKind, (RecordField)=>String messageProducer) {
@@ -273,21 +297,46 @@ class ProductValidator extends AbstractProductValidator {
         ]
     }
 
-    /**
-     * Variables that are concrete may not be assigned in reference updates
-     */
     @Check
-    def checkSymbolicVariableUpdate(RefConstraint refConstraint) {
-        if (refConstraint.act === null) {
-            return
-        }
-        refConstraint.act.actions.filter(RecordFieldAssignmentAction).forEach [
-            if (fields.forall[kind == RecordFieldKind.CONCRETE]) {
-                val field = fields.last
-                warning('''Concrete record field '«field.FQN»' should not be assigned in reference update''', it,
+    def checkDataReferences(DataReferences dataReferences) {
+        // Validate unique reference names
+        dataReferences.constr.getDuplicatesBy[name].forEach [
+            error('Reference name should be unique', it, ProductPackage.Literals.REF_CONSTRAINT__NAME)
+        ]
+
+        val actions = dataReferences.constr.xcollectOne[act].collect[actions]
+        // All actions in reference updates should be of type RecordFieldAssignmentAction
+        actions.reject(RecordFieldAssignmentAction).forEach[
+            warning('''Only record-field assignments are supported in refrence updates''', it, null)
+        ]
+
+        val assignments = actions.filter(RecordFieldAssignmentAction)
+        assignments.reject[field.type.isVectorType || field.type.isMapType].getDuplicatesBy[field].forEach [
+            warning('''Record fields should be assigned only once''', it,
+                ActionsPackage.Literals.RECORD_FIELD_ASSIGNMENT_ACTION__FIELD_ACCESS)
+        ]
+
+        // Variables that are concrete may not be assigned in reference updates
+        assignments.forEach [
+            if (field.kind == RecordFieldKind.CONCRETE) {
+                warning('''Concrete record field should not be assigned in reference update''', it,
+                    ActionsPackage.Literals.RECORD_FIELD_ASSIGNMENT_ACTION__FIELD_ACCESS)
+            } else if (field.type.isRecordType) {
+                warning('''Fields of nested records should be assigned directly in reference updates''', it,
                     ActionsPackage.Literals.RECORD_FIELD_ASSIGNMENT_ACTION__FIELD_ACCESS)
             }
         ]
+    }
+
+    protected static def <T> Iterable<T> getDuplicatesBy(Iterable<T> source, (T)=>Object functor) {
+        return source.groupBy(functor).values.filter[size > 1].flatten
+    }
+
+    private static def getField(RecordFieldAssignmentAction action) {
+        var record = action.fieldAccess
+        while (record instanceof ExpressionRecordAccess) {
+            return record.field
+        }
     }
 
     /**
