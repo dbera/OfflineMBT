@@ -15,9 +15,7 @@
  */
 package nl.esi.xtext.types.tests
 
-import com.google.inject.Binder
 import com.google.inject.Inject
-import com.google.inject.Module
 import nl.esi.xtext.common.lang.base.ModelContainer
 import nl.esi.xtext.common.lang.utilities.EcoreUtil3
 import org.eclipse.xtext.testing.InjectWith

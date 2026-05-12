@@ -15,14 +15,6 @@
  */
 package nl.esi.xtext.types.ui.contentassist
 
-import com.google.inject.Inject
-import org.eclipse.jface.resource.ImageDescriptor
-import org.eclipse.jface.viewers.StyledString
-import org.eclipse.swt.graphics.Image
-import org.eclipse.xtext.scoping.IScopeProvider
-import org.eclipse.xtext.ui.editor.contentassist.ConfigurableCompletionProposal
-import org.eclipse.xtext.ui.editor.contentassist.ContentAssistContext
-
 /**
  * See https://www.eclipse.org/Xtext/documentation/304_ide_concepts.html#content-assist
  * on how to customize the content assistant.

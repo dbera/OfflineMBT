@@ -63,12 +63,12 @@ class XPlusHyperLinkDetector extends DefaultHyperlinkDetector {
 	}
 
 	def createHyperLinksFor(XtextResource from, ILeafNode sourceNode, EObject target) {
-		val uriConverter = from.getResourceSet().getURIConverter();		
+		val uriConverter = from.getResourceSet().getURIConverter();
 		val uri = EcoreUtil.getURI(target);
 		val normalized = if (uri.isPlatformResource()) uri else uriConverter.normalize(uri);
 		
 		val textRegion = sourceNode.getTextRegion();
-		val region = new Region(textRegion.getOffset(), textRegion.getLength());
+		val IRegion region = new Region(textRegion.getOffset(), textRegion.getLength());
 
 		val hyperLink = hyperlinkProvider.get();
 		hyperLink.setHyperlinkRegion(region);
