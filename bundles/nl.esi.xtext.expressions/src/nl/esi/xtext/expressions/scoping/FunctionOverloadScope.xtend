@@ -1,14 +1,11 @@
 /**
- * Copyright (c) 2024, 2025 TNO-ESI
+ * Copyright (c) 2024, 2026 TNO-ESI
  *
- * See the NOTICE file(s) distributed with this work for additional
- * information regarding copyright ownership.
+ * This program and the accompanying materials are made
+ * available under the terms of the Eclipse Public License 2.0
+ * which is available at https://www.eclipse.org/legal/epl-2.0/
  *
- * This program and the accompanying materials are made available
- * under the terms of the MIT License which is available at
- * https://opensource.org/licenses/MIT
- *
- * SPDX-License-Identifier: MIT
+ * SPDX-License-Identifier: EPL-2.0
  */
 package nl.esi.xtext.expressions.scoping
 
