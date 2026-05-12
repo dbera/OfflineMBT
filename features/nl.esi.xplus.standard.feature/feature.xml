@@ -11,16 +11,15 @@
 
 -->
 <feature
-      id="nl.esi.xplus.feature"
-      label="XPlus Core DSLs"
+      id="nl.esi.xplus.ui.feature"
+      label="XPlus UI DSLs"
       version="4.2.0.qualifier"
       provider-name="TNO-ESI"
       license-feature="nl.esi.xplus.license"
       license-feature-version="4.2.0.qualifier">
 
    <description>
-      This feature provides reusable set of XPlus Core Domain-Specific
-Languages.
+      This feature includes XPlus Core languages feature and adds the default XPlus project language and help.
    </description>
 
    <copyright>
@@ -31,32 +30,24 @@ Languages.
       %license
    </license>
 
-   <requires>
-      <import plugin="nl.esi.xtext.lsp.server" version="0.0.0" match="greaterOrEqual"/>
-   </requires>
-
-   <plugin
-         id="nl.esi.xtext.types.ide"
+   <includes
+         id="nl.esi.xplus.feature"
          version="0.0.0"/>
 
    <plugin
-         id="nl.esi.xtext.types"
+         id="nl.esi.xtext.actions.ui"
          version="0.0.0"/>
 
    <plugin
-         id="nl.esi.xtext.actions"
+         id="nl.esi.xtext.expressions.ui"
          version="0.0.0"/>
 
    <plugin
-         id="nl.esi.xtext.expressions"
+         id="nl.esi.xtext.types.ui"
          version="0.0.0"/>
 
    <plugin
-         id="nl.esi.xtext.expressions.ide"
-         version="0.0.0"/>
-
-   <plugin
-         id="nl.esi.xtext.actions.ide"
+         id="nl.esi.xplus.doc.design"
          version="0.0.0"/>
 
 </feature>

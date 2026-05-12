@@ -99,11 +99,11 @@
         <url>https://esi.nl/</url>
     </organization>
 
-    <licenses>
+   <licenses>
         <license>
-            <name>MIT</name>
-            <url>https://opensource.org/licenses/MIT</url>
-            <comments>SPDX-License-Identifier: MIT</comments>
+            <name>Eclipse Public License - Version 2.0</name>
+            <url>http://www.eclipse.org/legal/epl-2.0</url>
+            <comments>SPDX-License-Identifier: EPL-2.0</comments>
         </license>
     </licenses>
 
@@ -299,7 +299,7 @@
                     </mapping>
                     <licenseSets>
                         <licenseSet>
-                            <header>${session.executionRootDirectory}/releng/nl.esi.xplus.configuration/license_header.txt</header>
+                            <header>${session.executionRootDirectory}/releng/nl.esi.xplus.license/license_header.txt</header>
                             <useDefaultExcludes>true</useDefaultExcludes>
                             <excludes>
                                 <exclude>bin/**</exclude>
