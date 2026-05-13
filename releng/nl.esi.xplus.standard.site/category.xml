@@ -29,9 +29,6 @@
    <feature id="nl.esi.xplus.license">
       <category name="XPlus"/>
    </feature>
-   <feature id="nl.esi.xplus.license.source">
-      <category name="XPlus Source"/>
-   </feature>
    <bundle id="nl.esi.xtext.lsp.server"/>
    <bundle id="nl.esi.xtext.lsp.generator"/>
    <bundle id="nl.esi.xtext.lsp.server.source"/>
