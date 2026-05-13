@@ -20,8 +20,19 @@
    <feature id="nl.esi.xplus.ui.feature">
       <category name="XPlus"/>
    </feature>
+   <feature id="nl.esi.xplus.feature.source">
+      <category name="XPlus"/>
+   </feature>
+   <feature id="nl.esi.xplus.ui.feature.source">
+      <category name="XPlus"/>
+   </feature>
+   <feature id="nl.esi.xplus.license">
+      <category name="XPlus"/>
+   </feature>
    <bundle id="nl.esi.xtext.lsp.server"/>
    <bundle id="nl.esi.xtext.lsp.generator"/>
+   <bundle id="nl.esi.xtext.lsp.server.source"/>
+   <bundle id="nl.esi.xtext.lsp.generator.source"/>
    <category-def name="XPlus" label="XPlus">
       <description>
          XPlus Framework

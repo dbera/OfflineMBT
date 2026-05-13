@@ -27,6 +27,22 @@
 
     <build>
         <plugins>
+            <!-- Enable P2 repository generation with source bundles -->
+            <plugin>
+                <groupId>org.eclipse.tycho</groupId>
+                <artifactId>tycho-p2-plugin</artifactId>
+                <version>${tycho.version}</version>
+                <executions>
+                    <execution>
+                        <id>p2-metadata</id>
+                        <goals>
+                            <goal>p2-metadata</goal>
+                        </goals>
+                        <phase>verify</phase>
+                    </execution>
+                </executions>
+            </plugin>
+
             <plugin>
                 <groupId>org.eclipse.tycho</groupId>
                 <artifactId>tycho-p2-director-plugin</artifactId>

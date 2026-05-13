@@ -218,6 +218,58 @@
                     <artifactId>tycho-versions-plugin</artifactId>
                     <version>${tycho.version}</version>
                 </plugin>
+           <!-- Enable source bundles/features. -->
+            <plugin>
+                <groupId>org.eclipse.tycho</groupId>
+                <artifactId>tycho-source-plugin</artifactId>
+                <version>${tycho.version}</version>
+                <configuration>
+                    <archive>
+                        <addMavenDescriptor>false</addMavenDescriptor>
+                    </archive>
+                    <missingSourcesAction>FAIL</missingSourcesAction>
+                    <skip>${source.feature.skip}</skip>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>plugin-source</id>
+                        <goals>
+                            <goal>plugin-source</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>feature-source</id>
+                        <goals>
+                            <goal>feature-source</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- The following is needed for generated source features that are part of an update site. -->
+            <!-- Tycho will warn about this if not configured. -->
+            <plugin>
+                <groupId>org.eclipse.tycho</groupId>
+                <artifactId>tycho-p2-plugin</artifactId>
+                <version>${tycho.version}</version>
+                <executions>
+                    <execution>
+                        <!-- Don't attach (default) metadata before the source-feature execution. -->
+                        <id>default-p2-metadata-default</id>
+                        <configuration>
+                            <attachP2Metadata>false</attachP2Metadata>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <!-- Do attach metadata after the source-feature execution. -->
+                        <id>attach-p2-metadata</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>p2-metadata</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
 
                 <!-- AsciiDoctor documentation generation configuration. -->
                 <plugin>
@@ -434,6 +486,20 @@
             <plugin>
                 <groupId>org.eclipse.xtend</groupId>
                 <artifactId>xtend-maven-plugin</artifactId>
+            </plugin>
+
+            <!-- Generate source JARs for all bundles -->
+            <plugin>
+                <groupId>org.eclipse.tycho</groupId>
+                <artifactId>tycho-source-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>plugin-source</id>
+                        <goals>
+                            <goal>plugin-source</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
