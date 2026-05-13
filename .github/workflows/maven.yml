@@ -37,30 +37,18 @@ jobs:
     - name: Attach Test Report
       if: success() || failure()
       uses: scacap/action-surefire-report@v1
-    - name: Attach LSP Client Languages
-      uses: actions/upload-artifact@v7
-      with:
-        name: bpmn4s-lsp-client
-        path: bundles/nl.asml.matala.product/target/lezer-grammar
-        retention-days: 10
-    - name: Attach Toolchain
-      uses: actions/upload-artifact@v7
-      with:
-        name: bpmn4s-editor-dev
-        path: bundles/nl.esi.xplus.project.standard.cli/target/dist
-        retention-days: 10
     - name: Attach Design Documentation
       uses: actions/upload-artifact@v7
       with:
-        name: matala-design-documentation
+        name: xplus-design-documentation
         path: |
-          bundles/nl.asml.matala.doc.design/target/website
-          !bundles/nl.asml.matala.doc.design/target/website/.asciidoctor/**/*
+          bundles/nl.esi.xplus.doc.design/target/website
+          !bundles/nl.esi.xplus.doc.design/target/website/.asciidoctor/**/*
         retention-days: 10
     - name: Attach Design Documentation PDF
       uses: actions/upload-artifact@v7
       with:
-        path: bundles/nl.asml.matala.doc.design/target/website/matala-design.pdf
+        path: bundles/nl.esi.xplus.doc.design/target/website/xplus-design.pdf
         retention-days: 10
         archive: false
     - name: Release
@@ -68,8 +56,7 @@ jobs:
       if: github.ref_type == 'tag'
       with:
         files: |
-          bundles/nl.esi.xplus.project.standard.cli/target/bpmn4s-editor-*.zip
-          bundles/nl.asml.matala.doc.design/target/website/matala-design.pdf
+          bundles/nl.esi.xplus.doc.design/target/website/xplus-design.pdf
 
     # Deploy P2 Repository to GitHub Pages for versioned releases
     - name: Deploy P2 Repository (Release)
