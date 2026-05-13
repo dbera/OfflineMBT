@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Copyright (c) 2024, 2026 TNO-ESI
+
+    This program and the accompanying materials are made
+    available under the terms of the Eclipse Public License 2.0
+    which is available at https://www.eclipse.org/legal/epl-2.0/
+
+    SPDX-License-Identifier: EPL-2.0
+
+-->
+<feature
+      id="nl.esi.xplus.feature.source"
+      label="XPlus Core DSLs"
+      version="0.1.0.qualifier"
+      provider-name="TNO-ESI"
+      license-feature="nl.esi.xplus.license"
+      license-feature-version="0.1.0.qualifier">
+
+   <description>
+      This feature provides reusable set of XPlus Core Domain-Specific
+Languages.
+   </description>
+
+   <copyright>
+      %copyright
+   </copyright>
+
+   <license url="%licenseURL">
+      %license
+   </license>
+
+   <requires>
+      <import plugin="nl.esi.xtext.lsp.server" version="0.0.0" match="greaterOrEqual"/>
+   </requires>
+
+   <plugin
+         id="nl.esi.xtext.types.ide.source"
+         version="0.0.0"/>
+
+   <plugin
+         id="nl.esi.xtext.types.source"
+         version="0.0.0"/>
+
+   <plugin
+         id="nl.esi.xtext.actions.source"
+         version="0.0.0"/>
+
+   <plugin
+         id="nl.esi.xtext.expressions.source"
+         version="0.0.0"/>
+
+   <plugin
+         id="nl.esi.xtext.expressions.ide.source"
+         version="0.0.0"/>
+
+   <plugin
+         id="nl.esi.xtext.actions.ide.source"
+         version="0.0.0"/>
+
+</feature>

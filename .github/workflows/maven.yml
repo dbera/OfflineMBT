@@ -51,12 +51,19 @@ jobs:
         path: bundles/nl.esi.xplus.doc.design/target/website/xplus-design.pdf
         retention-days: 10
         archive: false
+    - name: Attach P2 Site Archive
+      uses: actions/upload-artifact@v7
+      with:
+        name: xplus-p2-site
+        path: releng/nl.esi.xplus.standard.site/target/*.zip
+        retention-days: 10
     - name: Release
       uses: softprops/action-gh-release@v3
       if: github.ref_type == 'tag'
       with:
         files: |
           bundles/nl.esi.xplus.doc.design/target/website/xplus-design.pdf
+          releng/nl.esi.xplus.standard.site/target/*.zip
 
     # Deploy P2 Repository to GitHub Pages for versioned releases
     - name: Deploy P2 Repository (Release)
