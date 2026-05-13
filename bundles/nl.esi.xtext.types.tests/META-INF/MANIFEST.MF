@@ -3,7 +3,7 @@ Automatic-Module-Name: nl.esi.xtext.types.tests
 Bundle-ManifestVersion: 2
 Bundle-Name: Types Lang Tests
 Bundle-Vendor: TNO-ESI
-Bundle-Version: 4.2.0.qualifier
+Bundle-Version: 0.1.0.qualifier
 Bundle-SymbolicName: nl.esi.xtext.types.tests;singleton:=true
 Bundle-ActivationPolicy: lazy
 Require-Bundle: org.eclipse.xtext.testing,

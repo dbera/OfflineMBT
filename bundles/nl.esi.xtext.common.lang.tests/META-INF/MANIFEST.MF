@@ -3,7 +3,7 @@ Automatic-Module-Name: nl.esi.xtext.common.lang.tests
 Bundle-ManifestVersion: 2
 Bundle-Name: Base Language Tests
 Bundle-Vendor: TNO-ESI
-Bundle-Version: 4.2.0.qualifier
+Bundle-Version: 0.1.0.qualifier
 Bundle-SymbolicName: nl.esi.xtext.common.lang.tests; singleton:=true
 Bundle-ActivationPolicy: lazy
 Require-Bundle: nl.esi.xtext.common.lang,

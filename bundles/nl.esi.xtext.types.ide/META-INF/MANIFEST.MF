@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Types Language IDE
 Bundle-Vendor: TNO-ESI
-Bundle-Version: 4.2.0.qualifier
+Bundle-Version: 0.1.0.qualifier
 Bundle-SymbolicName: nl.esi.xtext.types.ide; singleton:=true
 Bundle-ActivationPolicy: lazy
 Require-Bundle: nl.esi.xtext.types;visibility:=reexport,

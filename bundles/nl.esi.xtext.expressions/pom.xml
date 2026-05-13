@@ -15,7 +15,7 @@
     <parent>
         <groupId>nl.esi.xplus</groupId>
         <artifactId>nl.esi.xplus.root</artifactId>
-        <version>4.2.0-SNAPSHOT</version>
+        <version>0.1.0-SNAPSHOT</version>
         <relativePath>../../</relativePath>
     </parent>
 
