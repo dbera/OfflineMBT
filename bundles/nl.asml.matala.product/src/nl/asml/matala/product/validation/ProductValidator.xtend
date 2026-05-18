@@ -47,6 +47,9 @@ import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
 import static extension org.eclipse.lsat.common.xtend.Queries.*
 import static extension org.eclipse.xtext.EcoreUtil2.*
 
+import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
+import nl.esi.xtext.types.types.RecordTypeDecl
+
 /**
  * This class contains custom validation rules. 
  * 
@@ -103,6 +106,22 @@ class ProductValidator extends AbstractProductValidator {
             error("Duplicate variable name in local variables: " + localvars.name,
                 ProductPackage.Literals.BLOCK__LOCALVARS, block.localvars.indexOf(localvars))
         ]
+    }
+
+     /**
+     * All block variables should be records with at least 1 concrete field.
+     */
+    @Check
+    def checkBlockVariables(Block block) {
+        for (blockVar : block.invars.union(block.outvars).union(block.localvars)) {
+            if (!blockVar.type.isRecordType) {
+                error("Only record types are allowed for block variables", blockVar,
+                    ExpressionPackage.Literals.VARIABLE__TYPE)
+            } else if ((blockVar.type.type as RecordTypeDecl).allFields.forall[kind != RecordFieldKind::CONCRETE]) {
+                error('''At least 1 field must be concrete for record «blockVar.type.type.name»''', blockVar,
+                    ExpressionPackage.Literals.VARIABLE__TYPE)
+            }
+        }
     }
 
     /**
@@ -359,17 +378,6 @@ class ProductValidator extends AbstractProductValidator {
         }
     }
 
-    protected static def <T> Iterable<T> getDuplicatesBy(Iterable<T> source, (T)=>Object functor) {
-        return source.groupBy(functor).values.filter[size > 1].flatten
-    }
-
-    private static def getField(RecordFieldAssignmentAction action) {
-        var record = action.fieldAccess
-        while (record instanceof ExpressionRecordAccess) {
-            return record.field
-        }
-    }
-
     /**
      * Validate that all concrete record fields are assigned in a concrete update
      */
@@ -430,6 +438,7 @@ class ProductValidator extends AbstractProductValidator {
             }
         }
     }
+
 /* STRANGE BUG: Output Vars are Empty. Appears in Input Vars. 
  * Not appearing as problem during product generation!
  */

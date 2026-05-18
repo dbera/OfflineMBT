@@ -17,18 +17,18 @@ package nl.esi.xtext.types.validation
 
 import com.google.inject.Inject
 import java.util.Set
+import nl.esi.xtext.common.lang.base.BasePackage
+import nl.esi.xtext.common.lang.base.ModelContainer
 import nl.esi.xtext.types.BasicTypes
 import nl.esi.xtext.types.scoping.TypesImportUriGlobalScopeProvider
 import nl.esi.xtext.types.types.EnumTypeDecl
+import nl.esi.xtext.types.types.GenericsTypeParam
 import nl.esi.xtext.types.types.MapTypeConstructor
-import nl.esi.xtext.types.types.RecordFieldKind
 import nl.esi.xtext.types.types.RecordTypeDecl
 import nl.esi.xtext.types.types.SimpleTypeDecl
 import nl.esi.xtext.types.types.Type
 import nl.esi.xtext.types.types.TypesModel
 import nl.esi.xtext.types.types.TypesPackage
-import nl.esi.xtext.common.lang.base.BasePackage
-import nl.esi.xtext.common.lang.base.ModelContainer
 import org.eclipse.core.runtime.Platform
 import org.eclipse.emf.ecore.EClass
 import org.eclipse.emf.ecore.EValidator
@@ -37,7 +37,6 @@ import org.eclipse.xtext.validation.Check
 import org.eclipse.xtext.validation.EValidatorRegistrar
 
 import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
-import nl.esi.xtext.types.types.GenericsTypeParam
 
 /**
  * This class contains custom validation rules. 
@@ -268,16 +267,5 @@ class TypesValidator extends AbstractTypesValidator {
         		}
         	}	
     	}
-    }
-
-     /**
-     * All fields of a record cannot be marked symbolic.
-     */
-    @Check
-    def checkSymbolicField(RecordTypeDecl type) {
-        val allField = type.allFields
-        if (allField.forall[kind != RecordFieldKind::CONCRETE]) {
-            error('''At least 1 field must be concrete for record «type.name»''', TypesPackage.Literals.RECORD_TYPE_DECL__FIELDS)
-        }
     }
 }

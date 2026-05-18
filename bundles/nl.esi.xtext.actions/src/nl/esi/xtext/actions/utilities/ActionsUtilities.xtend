@@ -21,6 +21,7 @@ import nl.esi.xtext.actions.actions.PCFragment
 import nl.esi.xtext.actions.actions.PCFragmentDefinition
 import nl.esi.xtext.actions.actions.PCFragmentReference
 import nl.esi.xtext.actions.actions.RecordFieldAssignmentAction
+import nl.esi.xtext.expressions.expression.Expression
 import nl.esi.xtext.expressions.expression.ExpressionRecordAccess
 import nl.esi.xtext.expressions.expression.ExpressionVariable
 
@@ -60,12 +61,26 @@ class ActionsUtilities {
 	}
 
     def static getFields(RecordFieldAssignmentAction action) {
+        return action.fieldAccess.fields
+    }
+
+    def static getField(RecordFieldAssignmentAction action) {
+        return action.fieldAccess.field
+    }
+
+    def static getFields(Expression expression) {
         val fields = newLinkedList()
-        var record = action.fieldAccess
+        var record = expression
         while (record instanceof ExpressionRecordAccess) {
             fields.addFirst(record.field)
             record = record.record
         }
         return fields
+    }
+
+    def static getField(Expression expression) {
+        if (expression instanceof ExpressionRecordAccess) {
+            return expression.field
+        }
     }
 }

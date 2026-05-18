@@ -99,4 +99,8 @@ class BaseValidator extends AbstractBaseValidator {
             }
         }
     }
+
+    protected static def <T> Iterable<T> getDuplicatesBy(Iterable<T> source, (T)=>Object functor) {
+        return source.groupBy(functor).values.filter[size > 1].flatten
+    }
 }
