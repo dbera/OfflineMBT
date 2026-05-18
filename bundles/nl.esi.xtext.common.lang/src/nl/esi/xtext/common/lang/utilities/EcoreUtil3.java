@@ -46,6 +46,7 @@ import org.eclipse.xtext.serializer.ISerializer;
 import org.eclipse.xtext.serializer.impl.Serializer;
 import org.eclipse.xtext.util.ITextRegion;
 
+import com.google.common.base.Strings;
 import com.google.inject.Guice;
 import com.google.inject.Module;
 
@@ -299,7 +300,7 @@ public class EcoreUtil3 extends EcoreUtil2 {
 		private static final long serialVersionUID = 4543121779695994392L;
 
 		public ValidationException(Diagnostic diagnostic) {
-			super(createMessage(diagnostic), new DiagnosticException(diagnostic));
+			super(createMessage(diagnostic, ""), new DiagnosticException(diagnostic));
 		}
 
 		@Override
@@ -307,10 +308,24 @@ public class EcoreUtil3 extends EcoreUtil2 {
 			return DiagnosticException.class.cast(super.getCause());
 		}
 
-		private static String createMessage(Diagnostic diagnostic) {
+		private static String createMessage(Diagnostic diagnostic, String indent) {
+			StringBuilder message = new StringBuilder(indent);
+			message.append(switch (diagnostic.getSeverity()) {
+				case Diagnostic.INFO -> "INFO: ";
+				case Diagnostic.WARNING -> "WARNING: ";
+				case Diagnostic.ERROR -> "ERROR: ";
+				default -> "";
+			});
+			message.append(diagnostic.getMessage());
+
+			String cIndent = Strings.isNullOrEmpty(indent) ? "- " : "  " + indent;
 			String details = diagnostic.getChildren().stream().filter(c -> c.getSeverity() != Diagnostic.OK)
-					.map(c -> "- " + c.getMessage()).collect(Collectors.joining("\n"));
-			return diagnostic.getMessage() + (details.isEmpty() ? "" : "\n" + details);
+					.map(c -> createMessage(c, cIndent)).collect(Collectors.joining("\n"));
+			if (!details.isEmpty()) {
+				message.append("\n").append(details);
+			}
+
+			return message.toString();
 		}
 	}
 }

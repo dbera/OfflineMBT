@@ -45,6 +45,7 @@ import org.eclipse.xtext.validation.Check
 import static extension nl.esi.xtext.actions.utilities.ActionsUtilities.*
 import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
 import static extension org.eclipse.lsat.common.xtend.Queries.*
+import static extension org.eclipse.xtext.EcoreUtil2.*
 
 /**
  * This class contains custom validation rules. 
@@ -307,7 +308,7 @@ class ProductValidator extends AbstractProductValidator {
         val actions = dataReferences.constr.xcollectOne[act].collect[actions]
         // All actions in reference updates should be of type RecordFieldAssignmentAction
         actions.reject(RecordFieldAssignmentAction).forEach[
-            warning('''Only record-field assignments are supported in refrence updates''', it, null)
+            error('''Only record-field assignments are supported in refrence updates''', it, null)
         ]
 
         val assignments = actions.filter(RecordFieldAssignmentAction)
@@ -318,6 +319,8 @@ class ProductValidator extends AbstractProductValidator {
 
         // Variables that are concrete may not be assigned in reference updates
         assignments.forEach [
+            validateNotSuppressed
+
             if (field.kind == RecordFieldKind.CONCRETE) {
                 warning('''Concrete record field should not be assigned in reference update''', it,
                     ActionsPackage.Literals.RECORD_FIELD_ASSIGNMENT_ACTION__FIELD_ACCESS)
@@ -326,6 +329,34 @@ class ProductValidator extends AbstractProductValidator {
                     ActionsPackage.Literals.RECORD_FIELD_ASSIGNMENT_ACTION__FIELD_ACCESS)
             }
         ]
+    }
+
+    private def void  validateNotSuppressed(RecordFieldAssignmentAction action) {
+        val suppress = action.getContainerOfType(UpdateOutVar)?.suppress
+        if (suppress === null) {
+            return
+        }
+
+        // Check LHS variables
+        val suppressedVariables = suppress.varFields.filter(ExpressionVariable).map[variable].toSet
+        if (suppressedVariables.contains(action.assignment)) {
+            error('''Suppressed field should not be assigned in reference update''', action,
+                ActionsPackage.Literals.RECORD_FIELD_ASSIGNMENT_ACTION__FIELD_ACCESS)
+        }
+
+        // Check LHS record fields
+        val suppressedFields  = suppress.varFields.filter(ExpressionRecordAccess).map[field].toSet
+        if (action.fields.exists[suppressedFields.contains(it)]) {
+            error('''Suppressed field should not be assigned in reference update''', action,
+                ActionsPackage.Literals.RECORD_FIELD_ASSIGNMENT_ACTION__FIELD_ACCESS)
+        }
+
+        // Check RHS record fields
+        val rhsFields = action.exp.eAllContents.filter(Field).toList
+        for (suppressedField : rhsFields.filter[suppressedFields.contains(recordField)]) {
+            error('''Suppressed field should not be assigned in reference update''', suppressedField,
+                ExpressionPackage.Literals.FIELD__RECORD_FIELD)
+        }
     }
 
     protected static def <T> Iterable<T> getDuplicatesBy(Iterable<T> source, (T)=>Object functor) {
