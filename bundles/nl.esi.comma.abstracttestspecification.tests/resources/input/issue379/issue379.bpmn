@@ -30,7 +30,7 @@
     <bpmn2:task bpmn4s:subType="ComposeTask" id="Activity_0t0grto" name="Compose">
       <bpmn2:incoming>Flow_0qbyl67</bpmn2:incoming>
       <bpmn2:outgoing>Flow_056jr2e</bpmn2:outgoing>
-      <bpmn2:dataOutputAssociation bpmn4s:referenceUpdate="r1: data.id := 1&#10;r2: data.nested := Nested {&#10;  id = 2,&#10;  mix = &quot;My R2 Value&quot;,&#10;  symbol = &quot;My R2 Symbol&quot;&#10;}&#10;r3: data.nested.id := 3&#10;r4: data.nested.symbol := &quot;My R4 Symbol&quot;&#10;r5: data.nested.symbol := &quot;My R5 Symbol&quot;" bpmn4s:update="data := Data {&#10; id = 0,&#10; nested = Nested {&#10;  id = 0,&#10;  mix = &quot;My Concrete Value&quot;,&#10;  symbol = &quot;My Concrete Symbol&quot;&#10; }&#10;}" id="DataOutputAssociation_0roeh4c">
+      <bpmn2:dataOutputAssociation bpmn4s:referenceUpdate="r1: data.id := 1&#10;r2: data.nested := Nested {&#10;  mix = &quot;My R2 Value&quot;,&#10;  symbol = &quot;My R2 Symbol&quot;&#10;}&#10;r3: data.nested.symbol := &quot;My R3 Symbol&quot;&#10;r4: data.nested.symbol := &quot;My R4 Symbol&quot;" bpmn4s:update="data := Data {&#10; id = 0,&#10; nested = Nested {&#10;  id = 0,&#10;  mix = &quot;My Concrete Value&quot;,&#10;  symbol = &quot;My Concrete Symbol&quot;&#10; }&#10;}" id="DataOutputAssociation_0roeh4c">
         <bpmn2:targetRef>DataStoreReference_19g3nxb</bpmn2:targetRef>
       </bpmn2:dataOutputAssociation>
     </bpmn2:task>

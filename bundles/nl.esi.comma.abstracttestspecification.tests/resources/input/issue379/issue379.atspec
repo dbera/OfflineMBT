@@ -43,7 +43,6 @@ issue379.Root.Compose.default.r1
 issue379.Root.Compose.default.r2
 issue379.Root.Compose.default.r3
 issue379.Root.Compose.default.r4
-issue379.Root.Compose.default.r5
 
 run-step-name: Root_Run_default_0 step-type: "RUN"
 action-case: issue379.Root.Run.default

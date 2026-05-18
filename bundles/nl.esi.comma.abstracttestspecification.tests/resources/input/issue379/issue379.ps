@@ -37,13 +37,11 @@ specification issue379
         references {
             r1: data.id := 1
             r2: data.nested := Nested {
-              id = 2,
               mix = "My R2 Value",
               symbol = "My R2 Symbol"
             }
-            r3: data.nested.id := 3
+            r3: data.nested.symbol := "My R3 Symbol"
             r4: data.nested.symbol := "My R4 Symbol"
-            r5: data.nested.symbol := "My R5 Symbol"
         } symbolic-link suppress(data.nested.id)
         updates:
             data := Data {
