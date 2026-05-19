@@ -49,7 +49,7 @@ import static extension org.eclipse.xtext.EcoreUtil2.*
 
 import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
 import nl.esi.xtext.types.types.RecordTypeDecl
-
+import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
 /**
  * This class contains custom validation rules. 
  * 
@@ -331,7 +331,8 @@ class ProductValidator extends AbstractProductValidator {
         ]
 
         val assignments = actions.filter(RecordFieldAssignmentAction)
-        assignments.reject[field.type.isVectorType || field.type.isMapType].getDuplicatesBy[field].forEach [
+        val singleValueAssignments = assignments.reject[field.type.isVectorType || field.type.isMapType]
+        singleValueAssignments.getDuplicatesBy[fieldAccess.serialize].forEach [
             warning('''Record fields should be assigned only once''', it,
                 ActionsPackage.Literals.RECORD_FIELD_ASSIGNMENT_ACTION__FIELD_ACCESS)
         ]
@@ -340,10 +341,11 @@ class ProductValidator extends AbstractProductValidator {
         assignments.forEach [
             validateNotSuppressed
 
-            if (field.kind == RecordFieldKind.CONCRETE) {
+            if (fields.forall[kind == RecordFieldKind.CONCRETE]) {
                 warning('''Concrete record field should not be assigned in reference update''', it,
                     ActionsPackage.Literals.RECORD_FIELD_ASSIGNMENT_ACTION__FIELD_ACCESS)
-            } else if (field.type.isRecordType) {
+            }
+            if (field.type.isRecordType) {
                 warning('''Fields of nested records should be assigned directly in reference updates''', it,
                     ActionsPackage.Literals.RECORD_FIELD_ASSIGNMENT_ACTION__FIELD_ACCESS)
             }
