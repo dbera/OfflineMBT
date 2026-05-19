@@ -39,17 +39,16 @@ import nl.esi.xtext.expressions.expression.Field
 import nl.esi.xtext.expressions.expression.Variable
 import nl.esi.xtext.types.types.RecordField
 import nl.esi.xtext.types.types.RecordFieldKind
+import nl.esi.xtext.types.types.RecordTypeDecl
 import org.eclipse.emf.ecore.EObject
 import org.eclipse.xtext.validation.Check
 
 import static extension nl.esi.xtext.actions.utilities.ActionsUtilities.*
+import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
 import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
 import static extension org.eclipse.lsat.common.xtend.Queries.*
 import static extension org.eclipse.xtext.EcoreUtil2.*
 
-import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
-import nl.esi.xtext.types.types.RecordTypeDecl
-import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
 /**
  * This class contains custom validation rules. 
  * 

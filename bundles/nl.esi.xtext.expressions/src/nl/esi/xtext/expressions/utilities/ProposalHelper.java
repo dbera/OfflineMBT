@@ -16,9 +16,12 @@ import static nl.esi.xtext.types.utilities.TypeUtilities.getAllFields;
 
 import java.util.List;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.eclipse.emf.ecore.util.EcoreUtil;
+
+import com.google.common.base.Predicates;
 
 import nl.esi.xtext.expressions.expression.Expression;
 import nl.esi.xtext.expressions.expression.ExpressionAddition;
@@ -59,7 +62,6 @@ import nl.esi.xtext.types.types.EnumTypeDecl;
 import nl.esi.xtext.types.types.MapTypeConstructor;
 import nl.esi.xtext.types.types.MapTypeDecl;
 import nl.esi.xtext.types.types.RecordField;
-import nl.esi.xtext.types.types.RecordFieldKind;
 import nl.esi.xtext.types.types.RecordTypeDecl;
 import nl.esi.xtext.types.types.SimpleTypeDecl;
 import nl.esi.xtext.types.types.Type;
@@ -87,16 +89,24 @@ public class ProposalHelper {
 	}
 
 	public static String defaultValue(TypeAnnotation typeAnn, String targetName) throws UnsupportedTypeException {
-		return createDefaultValueEntry(typeAnn.getType(), targetName, "");
+		return createDefaultValueEntry(typeAnn.getType(), targetName, "", Predicates.alwaysTrue());
+	}
+
+	public static String defaultValue(TypeAnnotation typeAnn, String targetName, Predicate<? super RecordField> filter) throws UnsupportedTypeException {
+		return createDefaultValueEntry(typeAnn.getType(), targetName, "", filter);
 	}
 
 	public static String defaultValue(Type type, String targetName) throws UnsupportedTypeException {
-		return createDefaultValue(type, targetName, "");
+		return createDefaultValue(type, targetName, "", Predicates.alwaysTrue());
 	}
 
-	private static String createDefaultValue(Type type, String targetName, String indent) throws UnsupportedTypeException {
+	public static String defaultValue(Type type, String targetName, Predicate<? super RecordField> filter) throws UnsupportedTypeException {
+		return createDefaultValue(type, targetName, "", filter);
+	}
+
+	private static String createDefaultValue(Type type, String targetName, String indent, Predicate<? super RecordField> filter) throws UnsupportedTypeException {
 		if (type instanceof TypeReference) {
-			return createDefaultValueEntry(type, targetName, indent);
+			return createDefaultValueEntry(type, targetName, indent, filter);
 		} else if (type instanceof VectorTypeConstructor) {
 			return "<" + getTypeName(type) + ">[]";
 		} else if (type instanceof MapTypeConstructor) {
@@ -105,17 +115,17 @@ public class ProposalHelper {
 		throw new UnsupportedTypeException(type);
 	}
 
-	private static String createDefaultValueEntry(Type type, String targetName, String indent) throws UnsupportedTypeException {
+	private static String createDefaultValueEntry(Type type, String targetName, String indent, Predicate<? super RecordField> filter) throws UnsupportedTypeException {
 		if (type instanceof TypeReference) {
-			return createDefaultValue(type.getType(), targetName, indent);
+			return createDefaultValue(type.getType(), targetName, indent, filter);
 		} else if (type instanceof VectorTypeConstructor vecType) {
 			if (vecType.getDimensions().size() > 1) {
-				return createDefaultValue(getOuterDimension(vecType), null, indent);
+				return createDefaultValue(getOuterDimension(vecType), null, indent, filter);
 			}
-			return createDefaultValue(type.getType(), targetName, indent);
+			return createDefaultValue(type.getType(), targetName, indent, filter);
 		} else if (type instanceof MapTypeConstructor mapType) {
-			String key = createDefaultValue(type.getType(), null, indent);
-			String value = createDefaultValue(mapType.getValueType(), null, indent);
+			String key = createDefaultValue(type.getType(), null, indent, filter);
+			String value = createDefaultValue(mapType.getValueType(), null, indent, filter);
 			return key + " -> " + value;
 		}
 		throw new UnsupportedTypeException(type);
@@ -127,9 +137,9 @@ public class ProposalHelper {
 		return outerDimension;
 	}
 
-	private static String createDefaultValue(TypeDecl type, String targetName, String indent) throws UnsupportedTypeException {
+	private static String createDefaultValue(TypeDecl type, String targetName, String indent, Predicate<? super RecordField> filter) throws UnsupportedTypeException {
 		if (type instanceof SimpleTypeDecl simpleType) {
-			if (simpleType.getBase() != null) return createDefaultValue(simpleType.getBase(), targetName, indent);
+			if (simpleType.getBase() != null) return createDefaultValue(simpleType.getBase(), targetName, indent, filter);
 			else if (simpleType.getName().equals("int")) return "0";
 			else if (simpleType.getName().equals("real")) return "0.0";
 			else if (simpleType.getName().equals("bool")) return "true";
@@ -142,16 +152,16 @@ public class ProposalHelper {
 		} else if (type instanceof MapTypeDecl) {
 			return "{}";
 		} else if (type instanceof RecordTypeDecl recType) {
-			List<RecordField> recFields = getAllFields(recType).stream().filter(f -> !RecordFieldKind.SYMBOLIC.equals(f.getKind())).toList();
+			List<RecordField> recFields = getAllFields(recType).stream().filter(filter).toList();
 			if (recFields.size() > 1) {
 				String fieldIndent = indent + "\t";
 				String value = recFields.stream()
-					.map(f -> String.format("%s%s = %s", fieldIndent, f.getName(), createDefaultValue(f.getType(), f.getName(), fieldIndent)))
+					.map(f -> String.format("%s%s = %s", fieldIndent, f.getName(), createDefaultValue(f.getType(), f.getName(), fieldIndent, filter)))
 					.collect(Collectors.joining(",\n"));
 				return String.format("%s {\n%s\n%s}", type.getName(), value, indent);
 			} else {
 				String value = recFields.stream()
-					.map(f -> String.format("%s = %s", f.getName(), createDefaultValue(f.getType(), f.getName(), indent)))
+					.map(f -> String.format("%s = %s", f.getName(), createDefaultValue(f.getType(), f.getName(), indent, filter)))
 					.collect(Collectors.joining(",\n"));
 				return String.format("%s { %s }", type.getName(), value);
 			}
