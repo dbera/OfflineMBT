@@ -34,12 +34,33 @@
                 <artifactId>maven-dependency-plugin</artifactId>
                 <executions>
                     <execution>
+                        <id>unpack-ecore-models</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>unpack-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <useSubDirectoryPerArtifact>true</useSubDirectoryPerArtifact>
+                            <stripVersion>true</stripVersion>
+                            <stripClassifier>true</stripClassifier>
+                            <stripType>true</stripType>
+                            <overWriteReleases>true</overWriteReleases>
+                            <overWriteSnapshots>true</overWriteSnapshots>
+                            <includes>model/**/*.ecore</includes>
+                            <outputDirectory>
+                                ${project.build.directory}/meta-models/</outputDirectory>
+                        </configuration>
+                    </execution>
+                    <execution>
                         <id>unpack-adoc-resources</id>
                         <phase>generate-sources</phase>
                         <goals>
                             <goal>unpack-dependencies</goal>
                         </goals>
                         <configuration>
+                            <includeGroupIds>nl.esi</includeGroupIds>
+                            <overWriteReleases>true</overWriteReleases>
+                            <overWriteSnapshots>true</overWriteSnapshots>
                             <includes>adoc/**</includes>
                             <outputDirectory>${project.build.directory}/adoc-ext</outputDirectory>
                         </configuration>
@@ -78,30 +99,7 @@
 
             <!-- Start: Preparing EcoreDoc -->
             <!-- EcoreDoc cannot handle ecore references based on platform:/resource/ uris yet -->
-            <!-- Workaround: Copy all generated ecore models and change uris to relative uris -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-resources-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <phase>prepare-package</phase>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <configuration>
-                            <resources>
-                                <resource>
-                                    <directory>${project.basedir}/..</directory>
-                                    <includes>
-                                        <include>*/model/generated/*.ecore</include>
-                                    </includes>
-                                </resource>
-                            </resources>
-                            <outputDirectory>${project.build.directory}/meta-models</outputDirectory>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
+            <!-- Workaround: Process all generated ecore models and change uris to relative uris -->
 
             <plugin>
                 <artifactId>maven-antrun-plugin</artifactId>

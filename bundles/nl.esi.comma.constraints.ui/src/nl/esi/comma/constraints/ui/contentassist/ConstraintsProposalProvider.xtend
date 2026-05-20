@@ -27,7 +27,7 @@ import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.ui.editor.contentassist.ConfigurableCompletionProposal
 import org.eclipse.xtext.ui.editor.contentassist.ContentAssistContext
 import org.eclipse.xtext.ui.editor.contentassist.ICompletionProposalAcceptor
-import nl.esi.xtext.types.utilities.CommaUtilities
+import nl.esi.xtext.types.utilities.XPlusUtilities
 import nl.esi.comma.constraints.constraints.ConstraintsPackage
 import nl.esi.comma.constraints.constraints.StepSequenceDef
 import nl.esi.comma.constraints.constraints.ActSequenceDef
@@ -97,7 +97,7 @@ class ConstraintsProposalProvider {
 //	}
 //	
 //	def getAllStepSequences(EObject context) {
-//		var seqs = CommaUtilities::resolveProxy(context, this.scopeProvider.getScope(context, ConstraintsPackage.Literals.REF_STEP_SEQUENCE__SEQ).allElements)
+//		var seqs = XPlusUtilities::resolveProxy(context, this.scopeProvider.getScope(context, ConstraintsPackage.Literals.REF_STEP_SEQUENCE__SEQ).allElements)
 //			.filter[it.eContainer instanceof Constraints]
 //		return seqs
 //	}
@@ -123,7 +123,7 @@ class ConstraintsProposalProvider {
 //	}
 //	
 //	def getAllActSequences(EObject context) {
-//		var seqs = CommaUtilities::resolveProxy(context, this.scopeProvider.getScope(context, ConstraintsPackage.Literals.REF_ACT_SEQUENCE__SEQ).allElements)
+//		var seqs = XPlusUtilities::resolveProxy(context, this.scopeProvider.getScope(context, ConstraintsPackage.Literals.REF_ACT_SEQUENCE__SEQ).allElements)
 //			.filter[it.eContainer instanceof Constraints]
 //		return seqs
 //	}
