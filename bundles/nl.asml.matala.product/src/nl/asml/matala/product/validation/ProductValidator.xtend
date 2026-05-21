@@ -17,6 +17,8 @@ package nl.asml.matala.product.validation
 
 import com.google.common.collect.Iterators
 import java.util.HashSet
+import java.util.List
+import java.util.Map
 import java.util.Set
 import nl.asml.matala.product.product.ActionType
 import nl.asml.matala.product.product.Block
@@ -330,52 +332,91 @@ class ProductValidator extends AbstractProductValidator {
         ]
 
         val assignments = actions.filter(RecordFieldAssignmentAction)
-        val singleValueAssignments = assignments.reject[field.type.isVectorType || field.type.isMapType]
-        singleValueAssignments.getDuplicatesBy[fieldAccess.serialize].forEach [
-            warning('''Record fields should be assigned only once''', it,
-                ActionsPackage.Literals.RECORD_FIELD_ASSIGNMENT_ACTION__FIELD_ACCESS)
+        val singleValueAssignments = newLinkedHashMap
+        assignments.forEach[findAndGroupSingleValueAssignments('', singleValueAssignments)]
+
+        singleValueAssignments.values.filter[size > 1].flatten.forEach[ assignment |
+            val reference = switch (assignment) {
+                RecordFieldAssignmentAction: ActionsPackage.Literals.RECORD_FIELD_ASSIGNMENT_ACTION__FIELD_ACCESS
+                Field: ExpressionPackage.Literals.FIELD__RECORD_FIELD
+            }
+            warning('''Record fields should be assigned only once''', assignment, reference)
         ]
 
-        // Variables that are concrete may not be assigned in reference updates
-        assignments.forEach [
-            validateNotSuppressed
-
-            if (fields.forall[kind == RecordFieldKind.CONCRETE]) {
-                warning('''Concrete record field should not be assigned in reference update''', it,
-                    ActionsPackage.Literals.RECORD_FIELD_ASSIGNMENT_ACTION__FIELD_ACCESS)
-            }
-            if (field.type.isRecordType) {
-                warning('''Fields of nested records should be assigned directly in reference updates''', it,
-                    ActionsPackage.Literals.RECORD_FIELD_ASSIGNMENT_ACTION__FIELD_ACCESS)
+        // Variables that are concrete should not be assigned in reference updates
+        singleValueAssignments.values.flatten.forEach[ assignment |
+            switch (it: assignment) {
+                RecordFieldAssignmentAction: {
+                    if (field.kind == RecordFieldKind.CONCRETE) {
+                        warning('''Concrete record field should not be assigned in reference update''', it,
+                            ActionsPackage.Literals.RECORD_FIELD_ASSIGNMENT_ACTION__FIELD_ACCESS)
+                    }
+                }
+                Field: {
+                    if (recordField.kind == RecordFieldKind.CONCRETE) {
+                        warning('''Concrete record field should not be assigned in reference update''', it,
+                            ExpressionPackage.Literals.FIELD__RECORD_FIELD)
+                    }
+                }
             }
         ]
-    }
 
-    private def void  validateNotSuppressed(RecordFieldAssignmentAction action) {
-        val suppress = action.getContainerOfType(UpdateOutVar)?.suppress
+        // Variables that are supressed cannot be assigned in reference updates
+        val suppress = dataReferences.getContainerOfType(UpdateOutVar)?.suppress
         if (suppress === null) {
             return
         }
 
         // Check LHS variables
         val suppressedVariables = suppress.varFields.filter(ExpressionVariable).map[variable].toSet
-        if (suppressedVariables.contains(action.assignment)) {
-            error('''Suppressed field should not be assigned in reference update''', action,
+        assignments.filter[suppressedVariables.contains(assignment)].forEach[
+            error('''Suppressed field cannot be assigned in reference update''', it,
                 ActionsPackage.Literals.RECORD_FIELD_ASSIGNMENT_ACTION__FIELD_ACCESS)
-        }
+        ]
 
         // Check LHS record fields
         val suppressedFields  = suppress.varFields.filter(ExpressionRecordAccess).map[field].toSet
-        if (action.fields.exists[suppressedFields.contains(it)]) {
-            error('''Suppressed field should not be assigned in reference update''', action,
+        assignments.filter[fields.exists[suppressedFields.contains(it)]].forEach[
+            error('''Suppressed field cannot be assigned in reference update''', it,
                 ActionsPackage.Literals.RECORD_FIELD_ASSIGNMENT_ACTION__FIELD_ACCESS)
-        }
+        ]
 
         // Check RHS record fields
-        val rhsFields = action.exp.eAllContents.filter(Field).toList
+        val rhsFields = dataReferences.eAllContents.filter(Field).toList
         for (suppressedField : rhsFields.filter[suppressedFields.contains(recordField)]) {
-            error('''Suppressed field should not be assigned in reference update''', suppressedField,
+            error('''Suppressed field cannot be assigned in reference update''', suppressedField,
                 ExpressionPackage.Literals.FIELD__RECORD_FIELD)
+        }
+    }
+
+    private def void findAndGroupSingleValueAssignments(EObject source, String prefix, Map<String, List<EObject>> assignments) {
+        switch (it: source) {
+            RecordFieldAssignmentAction case field.type.isVectorType,
+            RecordFieldAssignmentAction case field.type.isMapType: {
+        		// Skip, not a single value
+        	}
+        	RecordFieldAssignmentAction case field.type.isRecordType && exp instanceof ExpressionRecord: {
+        	    (exp as ExpressionRecord).fields.forEach[ actField |
+                    val fieldPrefix = prefix + fieldAccess.serialize + '.'
+        	        findAndGroupSingleValueAssignments(actField, fieldPrefix, assignments)
+        	    ]
+        	}
+        	RecordFieldAssignmentAction: {
+        	    assignments.computeIfAbsent(prefix + fieldAccess.serialize)[newArrayList] += it
+        	}
+        	Field case recordField.type.isVectorType,
+            Field case recordField.type.isMapType: {
+                // Skip, not a single value
+            }
+            Field case recordField.type.isRecordType && exp instanceof ExpressionRecord: {
+                (exp as ExpressionRecord).fields.forEach[ actField |
+                    val fieldPrefix = prefix + recordField.name + '.'
+                    findAndGroupSingleValueAssignments(actField, fieldPrefix, assignments)
+                ]
+            }
+            Field: {
+                assignments.computeIfAbsent(prefix + recordField.name)[newArrayList] += it
+            }
         }
     }
 
