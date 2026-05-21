@@ -14,7 +14,7 @@
     <stringAttribute key="configLocation" value="${workspace_loc}/.metadata/.plugins/org.eclipse.pde.core/Launch Runtime Eclipse"/>
     <booleanAttribute key="default" value="true"/>
     <setAttribute key="deselected_workspace_bundles">
-        <setEntry value="nl.asml.matala.product.lsp.server"/>
+        <setEntry value="nl.asml.matala.server"/>
         <setEntry value="nl.esi.comma.branding"/>
         <setEntry value="nl.esi.comma.product.philips"/>
         <setEntry value="nl.esi.xtext.lsp.generator"/>
