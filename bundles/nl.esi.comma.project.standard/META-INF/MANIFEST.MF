@@ -8,6 +8,10 @@ Bundle-ActivationPolicy: lazy
 Bundle-Activator: nl.esi.comma.project.standard.StandardProjectPlugin
 Bundle-ClassPath: .
 Require-Bundle: nl.esi.xtext.common.lang;visibility:=reexport,
+ nl.esi.xtext.types;visibility:=reexport,
+ nl.esi.xtext.expressions;visibility:=reexport,
+ nl.esi.xtext.actions;visibility:=reexport,
+ nl.esi.xtext.lsp.server;visibility:=reexport,
  org.eclipse.xtext,
  org.eclipse.xtext.xbase,
  org.eclipse.equinox.common;bundle-version="3.5.0",

@@ -189,7 +189,7 @@
                             <exclude>*:${project.artifactId}-nl.asml.matala.bpmn4s-*</exclude>
                             <exclude>*:${project.artifactId}-nl.asml.matala.product-*</exclude>
                             <exclude>*:${project.artifactId}-nl.asml.matala.product.ide-*</exclude>
-                            <exclude>*:${project.artifactId}-nl.asml.matala.product.lsp.server-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.asml.matala.server-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.abstracttestspecification-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.abstracttestspecification.ide-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.xtext.actions.ide-*</exclude>

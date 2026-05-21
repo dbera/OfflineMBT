@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <?pde?>
 <!-- generated with https://github.com/eclipse-cbi/targetplatform-dsl -->
-<target name="OfflineMBT - Maven Dependencies" sequenceNumber="1758098992">
+<target name="OfflineMBT - Maven Dependencies" sequenceNumber="1779284657">
   <locations>
     <location includeDependencyDepth="none" includeDependencyScopes="compile" includeSource="true" missingManifest="generate" type="Maven" label="MavenCentral">
       <dependencies>
@@ -213,6 +213,30 @@
           <groupId>io.projectreactor</groupId>
           <artifactId>reactor-core</artifactId>
           <version>3.6.10</version>
+          <type>jar</type>
+        </dependency>
+        <dependency>
+          <groupId>io.vertx</groupId>
+          <artifactId>vertx-core</artifactId>
+          <version>4.5.0</version>
+          <type>jar</type>
+        </dependency>
+        <dependency>
+          <groupId>io.vertx</groupId>
+          <artifactId>vertx-web</artifactId>
+          <version>4.5.0</version>
+          <type>jar</type>
+        </dependency>
+        <dependency>
+          <groupId>io.vertx</groupId>
+          <artifactId>vertx-web-client</artifactId>
+          <version>4.5.0</version>
+          <type>jar</type>
+        </dependency>
+        <dependency>
+          <groupId>io.vertx</groupId>
+          <artifactId>vertx-auth-common</artifactId>
+          <version>4.5.0</version>
           <type>jar</type>
         </dependency>
       </dependencies>

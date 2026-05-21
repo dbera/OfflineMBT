@@ -14,6 +14,6 @@ Require-Bundle: nl.esi.comma.project.standard;visibility:=reexport,
  nl.esi.comma.testspecification.ide,
  nl.esi.comma.constraints.ide,
  nl.esi.comma.scenarios.ide,
- nl.asml.matala.product.lsp.server
+ nl.asml.matala.server
 Automatic-Module-Name: nl.esi.comma.project.standard.cli
 Bundle-RequiredExecutionEnvironment: JavaSE-21
