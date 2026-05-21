@@ -18,17 +18,26 @@ import java.util.Set
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.ComposeStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.RunStep
+import nl.esi.xtext.actions.actions.Action
+import nl.esi.xtext.actions.actions.ActionsFactory
+import nl.esi.xtext.actions.actions.AssignmentAction
 import nl.esi.xtext.actions.actions.RecordFieldAssignmentAction
+import nl.esi.xtext.common.lang.utilities.EcoreUtil3
 import nl.esi.xtext.expressions.evaluation.ExpressionEvaluator
+import nl.esi.xtext.expressions.expression.ExpressionFactory
+import nl.esi.xtext.expressions.expression.ExpressionRecord
 import nl.esi.xtext.expressions.expression.ExpressionVariable
 import nl.esi.xtext.types.types.RecordFieldKind
-import nl.esi.xtext.common.lang.utilities.EcoreUtil3
 
 import static extension nl.esi.comma.assertthat.utilities.AssertThatUtilities.*
-import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
 import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
+import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
 import static extension org.eclipse.emf.ecore.util.EcoreUtil.*
 import static extension org.eclipse.lsat.common.xtend.Queries.*
+import nl.esi.xtext.actions.actions.ActionList
+import static extension nl.esi.xtext.actions.utilities.ActionsUtilities.*
+import nl.esi.xtext.actions.actions.IfAction
+import nl.esi.xtext.actions.actions.ForAction
 
 class ReferenceExpressionHandler {
     
@@ -75,12 +84,14 @@ class ReferenceExpressionHandler {
     }
 
     private def void evaluateReferenceConstrains(ComposeStep cstep, String fieldPrefix, Map<String, List<String>> mapLHStoRHS) {
-         val expressionEvaluator = EcoreUtil3.getService(cstep, ExpressionEvaluator)
+        val expressionEvaluator = EcoreUtil3.getService(cstep, ExpressionEvaluator)
 
         // Iterate all record field assignments of all constraints
-        for (action : cstep.refs.flatMap[ce].flatMap[act.actions.filter(RecordFieldAssignmentAction)]) {
+        for (action : cstep.refs.flatMap[ce].flatMap[act.flattenAssignments.actions.filter(RecordFieldAssignmentAction)]) {
             // Run block input data structure = Concrete TSpec step input data structure
-            val field = fieldPrefix + EcoreUtil3.serialize(action.fieldAccess)
+            // TODO: Actions formatter doesn't seem to be applied resulting in unwanted spaces.
+            //       Using a simple replace for now
+            val field = fieldPrefix + EcoreUtil3.serialize(action.fieldAccess, true).replace(" ", "")
 
             // action.exp is a reference to the original pspec, hence we should not update that expression!
             // However, serialization requires the expression to be contained by an XtextResource
@@ -106,6 +117,58 @@ class ReferenceExpressionHandler {
 
             mapLHStoRHS.computeIfAbsent(field)[newArrayList] += value
         }
+    }
+
+    private static def ActionList flattenAssignments(ActionList actionList) {
+        if (actionList === null) {
+            return actionList
+        }
+        val flattened = actionList.actions.flatMap[flattenAssignments].toList
+        actionList.actions.clear
+        actionList.actions += flattened
+        return actionList
+    }
+
+    private static def List<Action> flattenAssignments(Action action) {
+        val flattened = newLinkedList
+        switch (action) {
+            AssignmentAction case action.assignment.type.isRecordType && action.exp instanceof ExpressionRecord: {
+                flattened += (action.exp as ExpressionRecord).fields.flatMap [ actField |
+                    flattenAssignments(ActionsFactory.eINSTANCE.createRecordFieldAssignmentAction => [
+                        fieldAccess = ExpressionFactory.eINSTANCE.createExpressionRecordAccess => [
+                            record = ExpressionFactory.eINSTANCE.createExpressionVariable => [
+                                variable = action.assignment
+                            ]
+                            field = actField.recordField
+                        ]
+                        exp = actField.exp.copy
+                    ])
+                ]
+            }
+            RecordFieldAssignmentAction case action.field.type.isRecordType && action.exp instanceof ExpressionRecord: {
+                flattened += (action.exp as ExpressionRecord).fields.flatMap [ actField |
+                    flattenAssignments(ActionsFactory.eINSTANCE.createRecordFieldAssignmentAction => [
+                        fieldAccess = ExpressionFactory.eINSTANCE.createExpressionRecordAccess => [
+                            record = action.fieldAccess.copy
+                            field = actField.recordField
+                        ]
+                        exp = actField.exp.copy
+                    ])
+                ]
+            }
+            IfAction: {
+                flattenAssignments(action.thenList)
+                flattenAssignments(action.elseList)
+                flattened += action
+            }
+            ForAction: {
+                flattenAssignments(action.doList)
+                flattened += action
+            }
+            default:
+                flattened += action
+        }
+        return flattened
     }
 
     private def void rewriteVariableReferences(Map<String, List<String>> mapLHStoRHS) {
