@@ -17,7 +17,8 @@ ref-to-step-output
     RootInput.data.nested.mix := "My Concrete Value"
     RootInput.data.nested.symbol := "My Concrete Symbol"
     RootInput.data.id := 1
-    RootInput.data.nested := Nested{mix="My R2 Value",symbol="My R2 Symbol"}
+    RootInput.data.nested.mix := "My R2 Value"
+    RootInput.data.nested.symbol := "My R2 Symbol"
     RootInput.data.nested.symbol := "My R3 Symbol"
     RootInput.data.nested.symbol := "My R4 Symbol"
 }
