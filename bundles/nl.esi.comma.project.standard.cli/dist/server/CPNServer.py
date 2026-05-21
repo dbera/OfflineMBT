@@ -42,11 +42,12 @@ try:
 except ImportError:
     import CPNUtils as utils          # when run directly (python server/CPNServer.py)
 
-from fastapi import FastAPI, UploadFile, File, Form, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, UploadFile, File, Form, WebSocket, WebSocketDisconnect, Body, Request
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 import websockets
+import httpx
 
 # Configure logging with colored errors and warnings
 class PrefixedFormatter(logging.Formatter):
@@ -84,8 +85,14 @@ sys.path.append(TEMP_PATH)
 # LSP subprocess port - will be set at runtime
 LSP_PORT: Optional[int] = None
 
+# REST file server port - will be set at runtime
+REST_PORT: Optional[int] = None
+
 # Static files path - will be set from command-line arguments
 WEB_PATH = os.path.join(os.path.dirname(__file__), '..', 'web')
+
+# Static files path - will be set from command-line arguments
+MODELS_PATH = os.path.join(os.path.dirname(__file__), '..', 'models')
 
 # LSP subprocess handle - set in __main__, used by lifespan for cleanup
 lsp_proc: Optional[subprocess.Popen] = None
@@ -432,6 +439,79 @@ async def index():
     response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
     return response
 
+# ---- File server proxy (forwards to Java REST server) ----
+
+def _rest_url() -> str:
+    """Base URL of the Java REST file server."""
+    return f"http://127.0.0.1:{REST_PORT}"
+
+async def _proxy_to_rest(method: str, path: Optional[str] = None, body: bytes = None, params: dict = None) -> JSONResponse:
+    """
+    Generic proxy handler for forwarding requests to Java REST server.
+    
+    @param method: HTTP method ("GET", "POST", "PUT")
+    @param path: File path for POST/PUT operations
+    @param body: Request body for POST/PUT operations
+    @param params: Query parameters for GET operations
+    @return: JSON response from REST server or error response
+    """
+    if REST_PORT is None:
+        return JSONResponse({"error": "REST file server not available"}, status_code=503)
+    
+    if path is None or path == "":
+        if method != "GET":
+            return JSONResponse({"error": "path parameter is required"}, status_code=400)
+    
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            if method == "GET":
+                resp = await client.get(f"{_rest_url()}/files", params=params or {})
+            elif method == "POST":
+                resp = await client.post(f"{_rest_url()}/files", params={"path": path}, content=body)
+            elif method == "PUT":
+                resp = await client.put(f"{_rest_url()}/files", params={"path": path}, content=body)
+            else:
+                return JSONResponse({"error": "Unsupported HTTP method"}, status_code=405)
+        
+        # Try to parse response as JSON
+        try:
+            return JSONResponse(resp.json(), status_code=resp.status_code)
+        except ValueError:
+            logger.warning(f"Non-JSON response from REST server {method}: {resp.status_code}")
+            return JSONResponse({"error": resp.text or "Server error"}, status_code=resp.status_code)
+            
+    except httpx.TimeoutException:
+        logger.error(f"REST server request timeout ({method})")
+        return JSONResponse({"error": "REST server timeout"}, status_code=504)
+    except httpx.RequestError as e:
+        logger.error(f"REST server connection error ({method}): {e}")
+        return JSONResponse({"error": "Connection failed to REST server"}, status_code=502)
+    except Exception as e:
+        logger.error(f"Unexpected error in {method} /files: {e}")
+        return JSONResponse({"error": "Internal server error"}, status_code=500)
+
+@app.get("/files")
+async def proxy_files_get(path: Optional[str] = None, extension: Optional[str] = None):
+    """Proxy GET /files to Java REST server."""
+    params = {}
+    if path is not None:
+        params["path"] = path
+    if extension is not None:
+        params["extension"] = extension
+    return await _proxy_to_rest("GET", params=params)
+
+@app.post("/files")
+async def proxy_files_post(path: Optional[str] = None, request: Request = None):
+    """Proxy POST /files to Java REST server."""
+    body = await request.body()
+    return await _proxy_to_rest("POST", path=path, body=body)
+
+@app.put("/files")
+async def proxy_files_put(path: Optional[str] = None, request: Request = None):
+    """Proxy PUT /files to Java REST server."""
+    body = await request.body()
+    return await _proxy_to_rest("PUT", path=path, body=body)
+
 # This route handles any web files in the root directory
 @app.get("/{path:path}")
 async def get(path: str):
@@ -526,10 +606,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='BPMN4S CPN Server')
     parser.add_argument('--web-path', type=str, default=WEB_PATH, help='Path to static files directory')
     parser.add_argument('--server-path', type=str, default=SERVER_PATH, help='Path to static server directory')
+    parser.add_argument('--repository-path', type=str, default=MODELS_PATH, help='Path to model repository (passed to Java REST server)')
     parser.add_argument('--debug', action='store_true', help='Enable debug logging')
     args = parser.parse_args()
     WEB_PATH = args.web_path
     SERVER_PATH = args.server_path
+    REPOSITORY_PATH_ARG = os.path.normpath(os.path.abspath(args.repository_path))
     BPMN4S_GEN = os.path.join(SERVER_PATH, BPMN4S_JAR_NAME)
     JAVA_PATH = os.path.join(SERVER_PATH, *JAVA_REL_PATH)
 
@@ -556,19 +638,28 @@ if __name__ == "__main__":
         logger.error("Failed to find an available port for LSP subprocess. Please check your system resources.")
         sys.exit(1)
 
-    # Set global LSP_PORT for lsp_endpoint to use
-    LSP_PORT = lsp_port
-    logger.info(f"Starting LSP subprocess on port {LSP_PORT}...")
+    rest_port = find_free_port()
+    if rest_port is None:
+        logger.error("Failed to find an available port for REST file server. Please check your system resources.")
+        sys.exit(1)
 
-    # Start LSP subprocess directly
+    # Set global ports for proxy endpoints to use
+    LSP_PORT = lsp_port
+    REST_PORT = rest_port
+    logger.info(f"Starting Java server (LSP on port {LSP_PORT}, REST on port {REST_PORT})...")
+
+    # Start Java ServerLauncher which runs both LSP and REST servers
     lsp_command = [
         JAVA_PATH,
         "-cp",
         BPMN4S_GEN,
-        "nl.asml.matala.product.lsp.server.ProductServerLauncher",
-        "-ws",
-        "-port",
+        "nl.asml.matala.server.ServerLauncher",
+        "--lsp-port",
         str(LSP_PORT),
+        "--rest-port",
+        str(REST_PORT),
+        "--repository-path",
+        REPOSITORY_PATH_ARG,
     ]
 
     logger.debug(f"LSP command: {' '.join(lsp_command)}")
