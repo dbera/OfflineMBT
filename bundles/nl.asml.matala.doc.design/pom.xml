@@ -46,9 +46,16 @@
                             <stripType>true</stripType>
                             <overWriteReleases>true</overWriteReleases>
                             <overWriteSnapshots>true</overWriteSnapshots>
-                            <includes>model/**/*.ecore</includes>
-                            <outputDirectory>
-                                ${project.build.directory}/meta-models/</outputDirectory>
+                            <!-- Include all artifacts starting with "nl.esi and nl.asml" 
+                                 Unfortunately this plugin doesn't support wild cards
+                                 This list was created by first removing includeArtifactIds 
+                                 and then list all nl.esi.*,nl.asml.* folders in meta-models
+                            -->
+                            <includeArtifactIds>nl.asml.matala.product,nl.esi.comma.abstracttestspecification,nl.esi.comma.assertthat,nl.esi.comma.automata,nl.esi.comma.behavior.scl,nl.esi.comma.causalgraph,nl.esi.comma.constraints,nl.esi.comma.constraints.dashboard,nl.esi.comma.inputspecification,nl.esi.comma.project.standard,nl.esi.comma.scenarios,nl.esi.comma.scenarios.dashboard,nl.esi.comma.steps,nl.esi.comma.systemconfig,nl.esi.comma.testspecification,nl.esi.xtext.actions,nl.esi.xtext.common.lang,nl.esi.xtext.expressions,nl.esi.xtext.types</includeArtifactIds>
+                            <!-- !!!don't use group ids becuase tycho flattens them to (useless) p2.eclipse.plugin for eclipse-plugins-->
+                            <includeGroupIds></includeGroupIds>
+                            <includes>META-INF/MANIFEST.MF,model/generated/*.*,**/*.xtext</includes>
+                            <outputDirectory>${project.build.directory}/meta-models/</outputDirectory>
                         </configuration>
                     </execution>
                     <execution>
@@ -77,7 +84,8 @@
                             <goal>java</goal>
                         </goals>
                         <configuration>
-                            <mainClass>nl.asml.matala.doc.design.GenerateGrammarsDiagram</mainClass>
+                            <classpathScope>provided</classpathScope>
+                            <mainClass>nl.esi.xplus.doc.design.GenerateGrammarsDiagram</mainClass>
                             <includePluginDependencies>true</includePluginDependencies>
                             <arguments>
                                 <argument>${project.basedir}/..</argument>
