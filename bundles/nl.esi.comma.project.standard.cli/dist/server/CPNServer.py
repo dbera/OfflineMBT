@@ -43,7 +43,7 @@ except ImportError:
     import CPNUtils as utils          # when run directly (python server/CPNServer.py)
 
 from fastapi import FastAPI, UploadFile, File, Form, WebSocket, WebSocketDisconnect, Body, Request
-from fastapi.responses import JSONResponse, FileResponse
+from fastapi.responses import JSONResponse, FileResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 
 import websockets
@@ -445,15 +445,15 @@ def _rest_url() -> str:
     """Base URL of the Java REST file server."""
     return f"http://127.0.0.1:{REST_PORT}"
 
-async def _proxy_to_rest(method: str, path: Optional[str] = None, body: bytes = None, params: dict = None) -> JSONResponse:
+async def _proxy_to_rest(method: str, path: Optional[str] = None, body: bytes = None, params: dict = None) -> Response:
     """
     Generic proxy handler for forwarding requests to Java REST server.
-    
+
     @param method: HTTP method ("GET", "POST", "PUT")
     @param path: File path for POST/PUT operations
     @param body: Request body for POST/PUT operations
     @param params: Query parameters for GET operations
-    @return: JSON response from REST server or error response
+    @return: Response from REST server (raw bytes with original Content-Type) or error response
     """
     if REST_PORT is None:
         return JSONResponse({"error": "REST file server not available"}, status_code=503)
@@ -472,14 +472,14 @@ async def _proxy_to_rest(method: str, path: Optional[str] = None, body: bytes = 
                 resp = await client.put(f"{_rest_url()}/files", params={"path": path}, content=body)
             else:
                 return JSONResponse({"error": "Unsupported HTTP method"}, status_code=405)
-        
-        # Try to parse response as JSON
-        try:
-            return JSONResponse(resp.json(), status_code=resp.status_code)
-        except ValueError:
-            logger.warning(f"Non-JSON response from REST server {method}: {resp.status_code}")
-            return JSONResponse({"error": resp.text or "Server error"}, status_code=resp.status_code)
-            
+
+        media_type = resp.headers.get("content-type", "application/octet-stream")
+        return Response(
+            content=resp.content,
+            status_code=resp.status_code,
+            media_type=media_type,
+        )
+
     except httpx.TimeoutException:
         logger.error(f"REST server request timeout ({method})")
         return JSONResponse({"error": "REST server timeout"}, status_code=504)
