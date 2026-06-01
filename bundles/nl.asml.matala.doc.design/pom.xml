@@ -40,14 +40,15 @@
                             <goal>unpack-dependencies</goal>
                         </goals>
                         <configuration>
+                        <excludeClassifiers></excludeClassifiers>
                             <useSubDirectoryPerArtifact>true</useSubDirectoryPerArtifact>
                             <stripVersion>true</stripVersion>
                             <stripClassifier>true</stripClassifier>
                             <stripType>true</stripType>
                             <overWriteReleases>true</overWriteReleases>
                             <overWriteSnapshots>true</overWriteSnapshots>
-                            <includes>META-INF/MANIFEST.MF,model/generated/*.*,**/*.xtext</includes>
-                            <outputDirectory>${project.build.directory}/meta-models/</outputDirectory>
+                            <includes>META-INF/**,model/generated/**,**/*.xtext</includes>
+                            <outputDirectory>${project.build.directory}/meta-models</outputDirectory>
                         </configuration>
                     </execution>
                     <execution>
@@ -66,6 +67,48 @@
                 </executions>
             </plugin>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-clean-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <!-- excludeClassifiers doesn't work, so removing source bundles this way -->
+                        <id>remove-source-bundles</id>
+                        <phase>process-sources</phase>
+                        <goals>
+                            <goal>clean</goal>
+                        </goals>
+                        <configuration>
+                            <excludeDefaultDirectories>true</excludeDefaultDirectories>
+                            <filesets>
+                                <fileset>
+                                    <directory>${project.build.directory}/meta-models</directory>
+                                    <includes>
+                                        <include>*.source/**</include>
+                                    </includes>
+                                </fileset>
+                            </filesets>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <!-- The Xtext builder reports errors on the copied xtext files, -->
+                        <!-- so we'll clean them up immediately after the build -->
+                        <id>remove-meta-models</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>clean</goal>
+                        </goals>
+                        <configuration>
+                            <excludeDefaultDirectories>true</excludeDefaultDirectories>
+                            <filesets>
+                                <fileset>
+                                    <directory>${project.build.directory}/meta-models</directory>
+                                </fileset>
+                            </filesets>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.5.0</version>
@@ -76,9 +119,9 @@
                             <goal>java</goal>
                         </goals>
                         <configuration>
-                            <classpathScope>provided</classpathScope>
                             <mainClass>nl.esi.xplus.doc.design.GenerateGrammarsDiagram</mainClass>
                             <includePluginDependencies>true</includePluginDependencies>
+                            <classpathScope>provided</classpathScope>
                             <arguments>
                                 <argument>${project.build.directory}/meta-models</argument>
                                 <argument>${project.build.directory}/adoc-gen/xtext-grammars.plantuml</argument>
@@ -87,14 +130,6 @@
                         </configuration>
                     </execution>
                 </executions>
-                <dependencies>
-                    <!-- Don't know why this dependency is not picked up from the MANIFEST.MF -->
-                    <dependency>
-                        <groupId>org.eclipse.xtend</groupId>
-                        <artifactId>org.eclipse.xtend.lib</artifactId>
-                        <version>${xtend.version}</version>
-                    </dependency>
-                </dependencies>
             </plugin>
 
             <!-- Start: Preparing EcoreDoc -->
@@ -303,30 +338,6 @@
                         </fileSet>
                     </additionalFileSets>
                 </configuration>
-            </plugin>
-
-            <plugin>
-                <!--The Xtext builder reports errors on the copied xtext files,
-                so we'll clean them up immediately after the build-->
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-clean-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>remove-meta-models</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>clean</goal>
-                        </goals>
-                        <configuration>
-                            <excludeDefaultDirectories>true</excludeDefaultDirectories>
-                            <filesets>
-                                <fileset>
-                                    <directory>${project.build.directory}/meta-models/</directory>
-                                </fileset>
-                            </filesets>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>
