@@ -34,14 +34,76 @@
                 <artifactId>maven-dependency-plugin</artifactId>
                 <executions>
                     <execution>
+                        <id>unpack-ecore-models</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>unpack-dependencies</goal>
+                        </goals>
+                        <configuration>
+                        <excludeClassifiers></excludeClassifiers>
+                            <useSubDirectoryPerArtifact>true</useSubDirectoryPerArtifact>
+                            <stripVersion>true</stripVersion>
+                            <stripClassifier>true</stripClassifier>
+                            <stripType>true</stripType>
+                            <overWriteReleases>true</overWriteReleases>
+                            <overWriteSnapshots>true</overWriteSnapshots>
+                            <includes>META-INF/**,model/generated/**,**/*.xtext</includes>
+                            <outputDirectory>${project.build.directory}/meta-models</outputDirectory>
+                        </configuration>
+                    </execution>
+                    <execution>
                         <id>unpack-adoc-resources</id>
                         <phase>generate-sources</phase>
                         <goals>
                             <goal>unpack-dependencies</goal>
                         </goals>
                         <configuration>
+                            <overWriteReleases>true</overWriteReleases>
+                            <overWriteSnapshots>true</overWriteSnapshots>
                             <includes>adoc/**</includes>
                             <outputDirectory>${project.build.directory}/adoc-ext</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-clean-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <!-- excludeClassifiers doesn't work, so removing source bundles this way -->
+                        <id>remove-source-bundles</id>
+                        <phase>process-sources</phase>
+                        <goals>
+                            <goal>clean</goal>
+                        </goals>
+                        <configuration>
+                            <excludeDefaultDirectories>true</excludeDefaultDirectories>
+                            <filesets>
+                                <fileset>
+                                    <directory>${project.build.directory}/meta-models</directory>
+                                    <includes>
+                                        <include>*.source/**</include>
+                                    </includes>
+                                </fileset>
+                            </filesets>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <!-- The Xtext builder reports errors on the copied xtext files, -->
+                        <!-- so we'll clean them up immediately after the build -->
+                        <id>remove-meta-models</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>clean</goal>
+                        </goals>
+                        <configuration>
+                            <excludeDefaultDirectories>true</excludeDefaultDirectories>
+                            <filesets>
+                                <fileset>
+                                    <directory>${project.build.directory}/meta-models</directory>
+                                </fileset>
+                            </filesets>
                         </configuration>
                     </execution>
                 </executions>
@@ -57,51 +119,22 @@
                             <goal>java</goal>
                         </goals>
                         <configuration>
-                            <mainClass>nl.asml.matala.doc.design.GenerateGrammarsDiagram</mainClass>
+                            <mainClass>nl.esi.xplus.doc.design.GenerateGrammarsDiagram</mainClass>
                             <includePluginDependencies>true</includePluginDependencies>
+                            <classpathScope>provided</classpathScope>
                             <arguments>
-                                <argument>${project.basedir}/..</argument>
+                                <argument>${project.build.directory}/meta-models</argument>
                                 <argument>${project.build.directory}/adoc-gen/xtext-grammars.plantuml</argument>
+                                <argument>nl.esi.,nl.asml.</argument>
                             </arguments>
                         </configuration>
                     </execution>
                 </executions>
-                <dependencies>
-                    <!-- Don't know why this dependency is not picked up from the MANIFEST.MF -->
-                    <dependency>
-                        <groupId>org.eclipse.xtend</groupId>
-                        <artifactId>org.eclipse.xtend.lib</artifactId>
-                        <version>${xtend.version}</version>
-                    </dependency>
-                </dependencies>
             </plugin>
 
             <!-- Start: Preparing EcoreDoc -->
             <!-- EcoreDoc cannot handle ecore references based on platform:/resource/ uris yet -->
-            <!-- Workaround: Copy all generated ecore models and change uris to relative uris -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-resources-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <phase>prepare-package</phase>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <configuration>
-                            <resources>
-                                <resource>
-                                    <directory>${project.basedir}/..</directory>
-                                    <includes>
-                                        <include>*/model/generated/*.ecore</include>
-                                    </includes>
-                                </resource>
-                            </resources>
-                            <outputDirectory>${project.build.directory}/meta-models</outputDirectory>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
+            <!-- Workaround: Process all generated ecore models and change uris to relative uris -->
 
             <plugin>
                 <artifactId>maven-antrun-plugin</artifactId>
@@ -112,7 +145,7 @@
                             <target>
                                 <replace token="platform:/resource/" value="../../../"
                                     dir="${project.build.directory}/meta-models">
-                                    <include name="**/*.ecore" />
+                                    <include name="*/model/generated/*.*" />
                                 </replace>
                             </target>
                         </configuration>

@@ -44,7 +44,7 @@ class InputSpecificationScopeProvider extends AbstractInputSpecificationScopePro
 	//wrapper.setValue(new Integer(42));
 	/*
 	def scope_Event_Instance(EventData data, EReference reference) {
-		val machines = CommaUtilities::resolveProxy(data, 
+		val machines = XPlusUtilities::resolveProxy(data, 
 			getScope(data, BehaviorPackage.Literals.ABSTRACT_BEHAVIOR__MACHINES).getAllElements)
 		// how to determine which event this is?
 		val body = EcoreUtil2.getContainerOfType(data, Body);
@@ -70,7 +70,7 @@ class InputSpecificationScopeProvider extends AbstractInputSpecificationScopePro
 	}*/
 
 	/*def scope_Event_Clause(EventData data, EReference reference) {
-		val machines = CommaUtilities::resolveProxy(data, 
+		val machines = XPlusUtilities::resolveProxy(data, 
 			getScope(data, BehaviorPackage.Literals.ABSTRACT_BEHAVIOR__MACHINES).getAllElements)
 	}*/
 }
