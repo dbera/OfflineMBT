@@ -11,7 +11,7 @@ Require-Bundle: nl.esi.comma.systemconfig,
  org.eclipse.xtext.xbase.testing,
  org.eclipse.xtext.xbase.lib;bundle-version="2.14.0",
  org.junit;bundle-version="4.12.0",
- nl.esi.xtext.types;bundle-version="4.2.0"
+ nl.esi.xtext.types
 Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: nl.esi.comma.systemconfig.tests;x-internal=true
 Import-Package: org.hamcrest.core,

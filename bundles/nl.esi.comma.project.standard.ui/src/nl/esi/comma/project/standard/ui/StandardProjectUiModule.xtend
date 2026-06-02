@@ -15,7 +15,7 @@
  */
 package nl.esi.comma.project.standard.ui
 
-import nl.esi.xtext.types.ui.contentassist.CommaHyperLinkDetector
+import nl.esi.xtext.types.ui.contentassist.XPlusHyperLinkDetector
 import org.eclipse.core.runtime.Platform
 import org.eclipse.jface.text.hyperlink.IHyperlinkDetector
 import org.eclipse.ui.plugin.AbstractUIPlugin
@@ -31,6 +31,6 @@ class StandardProjectUiModule extends AbstractStandardProjectUiModule {
 	}
 	
 	override Class<? extends IHyperlinkDetector> bindIHyperlinkDetector() {
-		 return CommaHyperLinkDetector
+		 return XPlusHyperLinkDetector
 	}
 }

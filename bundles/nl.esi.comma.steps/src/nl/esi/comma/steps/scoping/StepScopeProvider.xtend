@@ -18,7 +18,7 @@ package nl.esi.comma.steps.scoping
 import nl.esi.comma.steps.step.FeatureList
 import nl.esi.comma.systemconfig.configuration.ConfigurationPackage
 import nl.esi.comma.systemconfig.configuration.FeatureDefinition
-import nl.esi.xtext.types.utilities.CommaUtilities
+import nl.esi.xtext.types.utilities.XPlusUtilities
 import org.eclipse.emf.ecore.EReference
 import org.eclipse.xtext.scoping.IScope
 import org.eclipse.xtext.scoping.Scopes
@@ -32,7 +32,7 @@ import org.eclipse.xtext.scoping.Scopes
 class StepScopeProvider extends AbstractStepScopeProvider {
 	
 	def IScope scope_FeatureDefinition(FeatureList context, EReference reference) {
-		var featureDefintions = CommaUtilities::resolveProxy(context, this.
+		var featureDefintions = XPlusUtilities::resolveProxy(context, this.
 			getScope(context, ConfigurationPackage.Literals.FEATURE_DEFINITION__FEATURES).allElements)
 			.filter[it.eContainer instanceof FeatureDefinition]
 		return Scopes.scopeFor(featureDefintions)

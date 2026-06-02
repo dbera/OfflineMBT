@@ -445,4 +445,12 @@
 			type="text">
 		</fileTypes>
 	</extension>
+ <extension
+       point="net.sourceforge.plantuml.eclipse.diagramTextProvider">
+    <diagramTextProvider
+          id="nl.esi.comma.constraints.ui.plantuml.ConstraintsDiagramTextProvider"
+          label="Statemachine diagrams generated from constraints"
+          providerClass="nl.esi.comma.constraints.ui.plantuml.ConstraintsDiagramTextProvider">
+    </diagramTextProvider>
+ </extension>
 </plugin>

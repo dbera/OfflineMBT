@@ -92,5 +92,10 @@
       <unit id="org.eclipse.lsat.common.xtend" version="0.0.0"/>
       <repository location="https://download.eclipse.org/lsat/v0.4/update-site/"/>
     </location>
+    <location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
+      <unit id="nl.esi.xplus.lsp.feature.feature.group" version="0.0.0"/>
+      <unit id="nl.esi.xplus.ui.feature.feature.group" version="0.0.0"/>
+      <repository location="https://TNO.github.io/XPlus/nightly/"/>
+    </location>
   </locations>
 </target>
