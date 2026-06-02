@@ -341,6 +341,7 @@
                                 <exclude>**/.venv/**</exclude>
                                 <exclude>**/htmlcov/**</exclude>
                                 <exclude>**/.coverage</exclude>
+                                <exclude>**/.keep</exclude>
                             </excludes>
                         </licenseSet>
                     </licenseSets>
