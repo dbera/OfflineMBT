@@ -99,7 +99,7 @@ Ref returns Ref:
 ;
 
 RefAction:
-    'act' act = Act
+    ('act')? act = Act
 ;
 
 ActionData:
@@ -135,7 +135,7 @@ Composition:
 
 Templates:
      // 'constraint-id' name = ID type += (Existential | Relation | Coupling | Negative)+ //('for-configurations' features += [step::FeatureTag | ID]+ ';')?//[expr::Variable|ID]+)?
-     'constraint-id' name = ID type += ( Dependencies | Past | Future | Choice | Existential)+ // ('for-configurations' features += [Feature|ID]+)?
+     'constraint' (name = ID)? type += ( Dependencies | Past | Future | Choice | Existential)+ // ('for-configurations' features += [Feature|ID]+)?
 ;
 
 Past:

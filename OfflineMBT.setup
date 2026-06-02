@@ -116,13 +116,13 @@
           value="false"/>
     </setupTask>
     <setupTask
-    xsi:type="setup:CompoundTask"
-    name="Java Development">
-  <setupTask
-      xsi:type="setup:PreferenceTask"
-      key="org.eclipse.jdt.core.compiler.codegen.methodParameters"
-      value="generate"/>
-</setupTask>
+        xsi:type="setup:CompoundTask"
+        name="Java Development">
+      <setupTask
+          xsi:type="setup:PreferenceTask"
+          key="org.eclipse.jdt.core.compiler.codegen.methodParameters"
+          value="generate"/>
+    </setupTask>
     <setupTask
         xsi:type="setup:CompoundTask"
         name="org.eclipse.debug.ui">
@@ -372,9 +372,9 @@
           name="de.itemis.xtext.antlr.feature.feature.group"/>
       <requirement
           name="org.python.pydev.feature.feature.group"/>
-      <requirement 
+      <requirement
           name="nl.esi.xplus.lsp.feature.feature.group"/>
-      <requirement 
+      <requirement
           name="nl.esi.xplus.ui.feature.feature.group"/>
       <requirement
           name="*"/>
@@ -397,8 +397,8 @@
             url="https://www.pydev.org/updates/"/>
         <repository
             url="https://download.eclipse.org/lsat/v0.4/update-site/"/>
-        <repository 
-            url="https://TNO.github.io/XPlus/nightly/"/>
+        <repository
+            url="https://TNO.github.io/XPlus/releases/v0.2.1/"/>
       </repositoryList>
     </targlet>
     <composedTarget>OfflineMBT - Maven Dependencies</composedTarget>
