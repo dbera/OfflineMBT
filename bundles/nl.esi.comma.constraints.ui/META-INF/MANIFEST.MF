@@ -19,7 +19,9 @@ Require-Bundle: nl.esi.comma.constraints;visibility:=reexport,
  org.eclipse.xtext.builder,
  org.eclipse.xtext.xbase.lib;bundle-version="2.14.0",
  org.eclipse.xtend.lib;bundle-version="2.14.0";resolution:=optional,
- nl.esi.comma.steps
+ nl.esi.comma.steps,
+ net.sourceforge.plantuml.eclipse,
+ org.eclipse.lsat.common.xtend
 Import-Package: org.apache.log4j
 Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: nl.esi.comma.constraints.ui,
@@ -27,6 +29,7 @@ Export-Package: nl.esi.comma.constraints.ui,
  nl.esi.comma.constraints.ui.internal,
  nl.esi.comma.constraints.ui.labeling,
  nl.esi.comma.constraints.ui.outline,
+ nl.esi.comma.constraints.ui.plantuml,
  nl.esi.comma.constraints.ui.quickfix,
  nl.esi.comma.constraints.ui.syntaxcoloring
 Bundle-Activator: nl.esi.comma.constraints.ui.internal.ConstraintsActivator
