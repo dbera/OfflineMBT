@@ -2,25 +2,19 @@ record UNIT {
 	int	unit
 }
 
+record AssertionsHistory {
+    int[]	inspectionReports
+}
+
+enum ColorType { MONOCHROME COLOR }
+
 record CorrectionItem {
     string	data
 }
 
-enum PrintResolution { LOW MED HIGH }
-
-record Report {
+record CorrectionsReport {
+    mixed map<int,CorrectionItem[]>	correctionsMap
     int	id
-    symbolic string	payload
-    symbolic real	kpi
-}
-
-record OptimizeRequest {
-    int	id
-}
-
-record MeasureRequest {
-    int	id
-    symbolic Report	printJobReport
 }
 
 record FactoryCtx {
@@ -30,9 +24,18 @@ record FactoryCtx {
     ColorType	color
 }
 
-record Result {
-    Outcome	verdict
+record MeasureRequest {
+    int	id
+    mixed Report	printJobReport
 }
+
+enum OperationType { PREP PRINT }
+
+record OptimizeRequest {
+    int	id
+}
+
+enum Outcome { OK NOK }
 
 record PrintRequest {
     int	id
@@ -42,14 +45,20 @@ record PrintRequest {
     OperationType	opType
 }
 
-record CorrectionsReport {
-    mixed map<int,CorrectionItem[]>	correctionsMap
-    int	id
+enum PrintResolution { LOW MED HIGH }
+
+record PrinterVariants {
+    string	version
+    string	release
 }
 
-enum Outcome { OK NOK }
+record Report {
+    int	id
+    symbolic string	payload
+    symbolic real	kpi
+}
 
-enum ColorType { MONOCHROME COLOR }
-
-enum OperationType { PREP PRINT }
+record Result {
+    Outcome	verdict
+}
 

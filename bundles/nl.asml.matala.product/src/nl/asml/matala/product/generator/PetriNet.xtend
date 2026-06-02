@@ -706,7 +706,7 @@ class PetriNet {
             chidx = 0
             for transition in self.getPNPriorityEnabledTransitions():
                 for mode in transition.modes():
-                    if stepFilter is None or (_key.name == stepFilter['transition'] and _elm.dict() == stepFilter['substitution']):
+                    if stepFilter is None or (transition.name == stepFilter['transition'] and mode.dict() == stepFilter['substitution']):
                         choices[chidx] = transition, mode
                         chidx = chidx + 1
             if stepFilter and (len(choices) == 0):
