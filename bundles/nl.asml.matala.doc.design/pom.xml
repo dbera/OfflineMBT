@@ -40,22 +40,15 @@
                             <goal>unpack-dependencies</goal>
                         </goals>
                         <configuration>
+                        <excludeClassifiers></excludeClassifiers>
                             <useSubDirectoryPerArtifact>true</useSubDirectoryPerArtifact>
                             <stripVersion>true</stripVersion>
                             <stripClassifier>true</stripClassifier>
                             <stripType>true</stripType>
                             <overWriteReleases>true</overWriteReleases>
                             <overWriteSnapshots>true</overWriteSnapshots>
-                            <!-- Include all artifacts starting with "nl.esi and nl.asml" 
-                                 Unfortunately this plugin doesn't support wild cards
-                                 This list was created by first removing includeArtifactIds 
-                                 and then list all nl.esi.*,nl.asml.* folders in meta-models
-                            -->
-                            <includeArtifactIds>nl.asml.matala.product,nl.esi.comma.abstracttestspecification,nl.esi.comma.assertthat,nl.esi.comma.automata,nl.esi.comma.behavior.scl,nl.esi.comma.causalgraph,nl.esi.comma.constraints,nl.esi.comma.constraints.dashboard,nl.esi.comma.inputspecification,nl.esi.comma.project.standard,nl.esi.comma.scenarios,nl.esi.comma.scenarios.dashboard,nl.esi.comma.steps,nl.esi.comma.systemconfig,nl.esi.comma.testspecification,nl.esi.xtext.actions,nl.esi.xtext.common.lang,nl.esi.xtext.expressions,nl.esi.xtext.types</includeArtifactIds>
-                            <!-- !!!don't use group ids becuase tycho flattens them to (useless) p2.eclipse.plugin for eclipse-plugins-->
-                            <includeGroupIds></includeGroupIds>
-                            <includes>META-INF/MANIFEST.MF,model/generated/*.*,**/*.xtext</includes>
-                            <outputDirectory>${project.build.directory}/meta-models/</outputDirectory>
+                            <includes>META-INF/**,model/generated/**,**/*.xtext</includes>
+                            <outputDirectory>${project.build.directory}/meta-models</outputDirectory>
                         </configuration>
                     </execution>
                     <execution>
@@ -74,6 +67,48 @@
                 </executions>
             </plugin>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-clean-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <!-- excludeClassifiers doesn't work, so removing source bundles this way -->
+                        <id>remove-source-bundles</id>
+                        <phase>process-sources</phase>
+                        <goals>
+                            <goal>clean</goal>
+                        </goals>
+                        <configuration>
+                            <excludeDefaultDirectories>true</excludeDefaultDirectories>
+                            <filesets>
+                                <fileset>
+                                    <directory>${project.build.directory}/meta-models</directory>
+                                    <includes>
+                                        <include>*.source/**</include>
+                                    </includes>
+                                </fileset>
+                            </filesets>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <!-- The Xtext builder reports errors on the copied xtext files, -->
+                        <!-- so we'll clean them up immediately after the build -->
+                        <id>remove-meta-models</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>clean</goal>
+                        </goals>
+                        <configuration>
+                            <excludeDefaultDirectories>true</excludeDefaultDirectories>
+                            <filesets>
+                                <fileset>
+                                    <directory>${project.build.directory}/meta-models</directory>
+                                </fileset>
+                            </filesets>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.5.0</version>
@@ -84,24 +119,17 @@
                             <goal>java</goal>
                         </goals>
                         <configuration>
-                            <classpathScope>provided</classpathScope>
                             <mainClass>nl.esi.xplus.doc.design.GenerateGrammarsDiagram</mainClass>
                             <includePluginDependencies>true</includePluginDependencies>
+                            <classpathScope>provided</classpathScope>
                             <arguments>
-                                <argument>${project.basedir}/..</argument>
+                                <argument>${project.build.directory}/meta-models</argument>
                                 <argument>${project.build.directory}/adoc-gen/xtext-grammars.plantuml</argument>
+                                <argument>nl.esi.,nl.asml.</argument>
                             </arguments>
                         </configuration>
                     </execution>
                 </executions>
-                <dependencies>
-                    <!-- Don't know why this dependency is not picked up from the MANIFEST.MF -->
-                    <dependency>
-                        <groupId>org.eclipse.xtend</groupId>
-                        <artifactId>org.eclipse.xtend.lib</artifactId>
-                        <version>${xtend.version}</version>
-                    </dependency>
-                </dependencies>
             </plugin>
 
             <!-- Start: Preparing EcoreDoc -->
@@ -117,7 +145,7 @@
                             <target>
                                 <replace token="platform:/resource/" value="../../../"
                                     dir="${project.build.directory}/meta-models">
-                                    <include name="**/*.ecore" />
+                                    <include name="*/model/generated/*.*" />
                                 </replace>
                             </target>
                         </configuration>
