@@ -373,9 +373,7 @@ class CSharpHelper {
 			// String variable = String.format("%s%s", variablePrefix.apply(a.getAssignment().getName()), a.getAssignment().getName());
 			String variable = String.format("%s", variablePrefix.apply(a.getAssignment().getName()));
 			// if(a.isSymbolic()) return String.format("%s = %s%s%s", variable, QUOTE, expression(a.getExp(), variablePrefix).replace("\"", "\\\""), QUOTE);
-			if(a.isSymbolic()) return String.format("%s = %s%s%s", variable, QUOTE, serialize(a.getExp()).toString(), QUOTE);
-			// else return String.format("%s = %s", variable, expression(a.getExp(), variablePrefix));
-			else return String.format("%s = %s%s%s", variable, QUOTE, serialize(a.getExp()).toString(), QUOTE);
+			return String.format("%s = %s%s%s", variable, QUOTE, serialize(a.getExp()).toString(), QUOTE);
 		} else if (action instanceof RecordFieldAssignmentAction) {
 			RecordFieldAssignmentAction a = (RecordFieldAssignmentAction) action;
 			ExpressionRecordAccess access = (ExpressionRecordAccess) a.getFieldAccess();
