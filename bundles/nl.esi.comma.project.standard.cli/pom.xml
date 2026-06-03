@@ -25,6 +25,14 @@
     <artifactId>nl.esi.comma.project.standard.cli</artifactId>
     <packaging>eclipse-plugin</packaging>
 
+    <dependencies>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>nl.asml.matala.generator.fast</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
+
     <build>
         <plugins>
             <plugin>
