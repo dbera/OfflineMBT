@@ -12,6 +12,8 @@
  */
 package nl.esi.comma.causalgraph.generator;
 
+import static nl.esi.xtext.common.lang.utilities.EcoreUtil3.serialize;
+
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -64,8 +66,6 @@ import nl.esi.xtext.types.types.RecordTypeDecl;
 import nl.esi.xtext.types.types.SimpleTypeDecl;
 import nl.esi.xtext.types.types.TypeDecl;
 import nl.esi.xtext.types.types.VectorTypeDecl;
-
-import static nl.esi.xtext.common.lang.utilities.EcoreUtil3.serialize;
 
 class CSharpHelper {
 	static String defaultValue(TypeDecl type) {
@@ -377,19 +377,10 @@ class CSharpHelper {
 		} else if (action instanceof RecordFieldAssignmentAction) {
 			RecordFieldAssignmentAction a = (RecordFieldAssignmentAction) action;
 			ExpressionRecordAccess access = (ExpressionRecordAccess) a.getFieldAccess();
-			String QUOTE = "\"";
-			if(a.isSymbolic()) {
-				String record = serialize(access.getRecord()).toString();
-				String field = access.getField().getName();
-				String value = serialize(a.getExp()).toString();
-				return String.format("%s.%s = %s%s%s", record, field, QUOTE, value, QUOTE);
-				// return QUOTE + (new ActionsUmlGenerator()).generateAction(a).toString() + QUOTE;
-			} else {
-				String record = expression(access.getRecord(), variablePrefix);
-				String field = access.getField().getName();
-				String value = expression(a.getExp(), variablePrefix);
-				return String.format("%s[\"%s\"] = %s", record, field, value);
-			}
+			String record = expression(access.getRecord(), variablePrefix);
+			String field = access.getField().getName();
+			String value = expression(a.getExp(), variablePrefix);
+			return String.format("%s[\"%s\"] = %s", record, field, value);
 		} else if(action instanceof IfAction) {
 			var txt = new String();
 			var indent_level = indent + "	";
