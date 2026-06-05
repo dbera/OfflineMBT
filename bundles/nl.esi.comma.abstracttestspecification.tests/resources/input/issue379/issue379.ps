@@ -1,0 +1,71 @@
+import "issue379.types"
+specification issue379
+{
+    system Root
+    {
+        //inputs
+        
+        //outputs
+    
+        local
+        Data	data
+        Context	Event_0wdp3sm
+        Context	Event_16rbmqm
+        Context	Flow_056jr2e
+    
+        init
+        Event_0wdp3sm := Context {
+          id = 0,
+          nested = Nested {
+            id = 0,
+            mix = "My Init Value",
+            symbol = "My Init Symbol"
+          }
+        }
+    
+    
+        desc "Root_Model"
+        
+        action			Compose
+        element-label	"Compose"
+        case			default step-type "null" action-type COMPOSE
+        with-inputs		Event_0wdp3sm
+        produces-outputs	Flow_056jr2e suppress(Flow_056jr2e.nested.id)
+        updates:
+            Flow_056jr2e := Event_0wdp3sm
+        produces-outputs	data
+        references {
+            r1: data.id := 1
+            r2: data.nested := Nested {
+              mix = "My R2 Value",
+              symbol = "My R2 Symbol"
+            }
+            r3: data.nested.symbol := "My R3 Symbol"
+            r4: data.nested.symbol := "My R4 Symbol"
+        } symbolic-link suppress(data.nested.id)
+        updates:
+            data := Data {
+             id = 0,
+             nested = Nested {
+              id = 0,
+              mix = "My Concrete Value",
+              symbol = "My Concrete Symbol"
+             }
+            }
+        
+        action			Run
+        element-label	"Run"
+        case			default step-type "RUN" action-type RUN
+        with-inputs		Flow_056jr2e, data
+        produces-outputs	Event_16rbmqm suppress(Event_16rbmqm.nested.id)
+        updates:
+            Event_16rbmqm := Flow_056jr2e
+    
+        element-labels ["Root"]
+    }
+    
+	SUT-blocks Root
+	depth-limits 300
+	state-limits 1000
+	num-tests 1
+}

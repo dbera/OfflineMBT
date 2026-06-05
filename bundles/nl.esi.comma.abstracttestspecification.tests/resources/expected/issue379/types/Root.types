@@ -1,0 +1,20 @@
+import "../../../input/issue379/issue379.types"
+
+record RUN {
+    RUNInput input
+    RUNOutput output
+}
+
+record RUNInput {
+    Context Flow_056jr2e
+    Data data
+    Context Event_16rbmqm
+    Context Event_0wdp3sm
+}
+
+record RUNOutput {
+    Context Flow_056jr2e
+    Data data
+    Context Event_16rbmqm
+    Context Event_0wdp3sm
+}

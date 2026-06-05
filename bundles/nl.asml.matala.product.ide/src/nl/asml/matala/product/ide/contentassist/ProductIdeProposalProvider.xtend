@@ -1,13 +1,13 @@
 /**
  * Copyright (c) 2024, 2025 TNO-ESI
- *
+ * 
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
- *
+ * 
  * This program and the accompanying materials are made available
  * under the terms of the MIT License which is available at
  * https://opensource.org/licenses/MIT
- *
+ * 
  * SPDX-License-Identifier: MIT
  */
 /*
@@ -16,14 +16,21 @@
 package nl.asml.matala.product.ide.contentassist
 
 import com.google.inject.Inject
+import java.util.Collections
 import nl.asml.matala.product.product.DataReferences
+import nl.asml.matala.product.product.UpdateOutVar
 import nl.esi.xtext.actions.services.ActionsGrammarAccess
+import nl.esi.xtext.expressions.expression.TypeAnnotation
 import nl.esi.xtext.expressions.services.ExpressionGrammarAccess
+import nl.esi.xtext.expressions.utilities.ProposalHelper
 import nl.esi.xtext.types.types.RecordField
+import nl.esi.xtext.types.types.RecordFieldKind
+import nl.esi.xtext.types.types.Type
 import org.eclipse.xtext.CrossReference
 import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.ide.editor.contentassist.ContentAssistContext
-import nl.esi.xtext.types.types.RecordFieldKind
+
+import static extension nl.esi.xtext.actions.utilities.ActionsUtilities.*
 
 /**
  * See https://www.eclipse.org/Xtext/documentation/310_eclipse_support.html#content-assist
@@ -41,10 +48,38 @@ class ProductIdeProposalProvider extends AbstractProductIdeProposalProvider {
             case expressionGrammarAccess.fieldAccess.recordFieldRecordFieldCrossReference_0_0,
             case expressionGrammarAccess.expressionLevel8Access.fieldRecordFieldCrossReference_1_0_2_0,
             case actionsGrammarAccess.fieldAccessExpAccess.fieldRecordFieldCrossReference_1_2_0: [
-                val ctxSymbolic = EcoreUtil2.getContainerOfType(context.currentModel, DataReferences) !== null
-                return ctxSymbolic || (EObjectOrProxy as RecordField).kind != RecordFieldKind.SYMBOLIC
+                val field = EObjectOrProxy as RecordField
+                return context.isReferenceUpdate
+                    ? !context.suppressedFields.contains(field)
+                    : field.kind != RecordFieldKind.SYMBOLIC
             ]
             default: super.getCrossrefFilter(reference, context)
         }
+    }
+
+    override createDefaultValueEntry(Type type, String targetName, ContentAssistContext context) {
+        return ProposalHelper.defaultValue(type, targetName, createRecordFieldFilter(context))
+    }
+
+    override createDefaultValueEntry(TypeAnnotation typeAnn, String targetName, ContentAssistContext context) {
+        return ProposalHelper.defaultValue(typeAnn, targetName, createRecordFieldFilter(context))
+    }
+
+    protected def (RecordField)=>boolean createRecordFieldFilter(ContentAssistContext context) {
+        if (context.isReferenceUpdate) {
+            val suppressedFields = context.suppressedFields
+            return [field|!suppressedFields.contains(field)]
+        }
+        return [field|!RecordFieldKind.SYMBOLIC.equals(field.kind)]
+    }
+
+    protected def boolean isReferenceUpdate(ContentAssistContext context) {
+        return EcoreUtil2.getContainerOfType(context.currentModel, DataReferences) !== null
+    }
+
+    protected def getSuppressedFields(ContentAssistContext context) {
+        val suppressedVarFields = EcoreUtil2.getContainerOfType(context.currentModel, UpdateOutVar)?.suppress?.
+            varFields ?: Collections.emptyList
+        return suppressedVarFields.map[field].filterNull.toSet
     }
 }
