@@ -1,0 +1,79 @@
+import "issue379.ps"
+
+using issue379.Root.data
+using issue379.Root.Event_0wdp3sm
+using issue379.Root.Event_16rbmqm
+using issue379.Root.Flow_056jr2e
+
+abstract-test-definition
+
+Test-Scenario: S1
+
+compose-step-name: Root_Compose_default_0
+action-case: issue379.Root.Compose.default
+input-binding:
+Event_0wdp3sm : {
+    "id": 0,
+    "nested": {
+        "id": 0,
+        "mix": "My Init Value",
+        "symbol": "My Init Symbol"
+    }
+}
+output-data:
+Flow_056jr2e : {
+    "id": 0,
+    "nested": {
+        "id": 0,
+        "mix": "My Init Value",
+        "symbol": "My Init Symbol"
+    }
+}
+data : {
+    "id": 0,
+    "nested": {
+        "id": 0,
+        "mix": "My Concrete Value",
+        "symbol": "My Concrete Symbol"
+    }
+}
+suppress(Flow_056jr2e.nested.id, data.nested.id)
+data-references: data
+issue379.Root.Compose.default.r1
+issue379.Root.Compose.default.r2
+issue379.Root.Compose.default.r3
+issue379.Root.Compose.default.r4
+
+run-step-name: Root_Run_default_0 step-type: "RUN"
+action-case: issue379.Root.Run.default
+consumes-from-step: Root_Compose_default_0 { data  }
+input-binding:
+Flow_056jr2e : {
+    "id": 0,
+    "nested": {
+        "id": 0,
+        "mix": "My Init Value",
+        "symbol": "My Init Symbol"
+    }
+}
+data : {
+    "id": 0,
+    "nested": {
+        "id": 0,
+        "mix": "My Concrete Value",
+        "symbol": "My Concrete Symbol"
+    }
+}
+output-data:
+Event_16rbmqm : {
+    "id": 0,
+    "nested": {
+        "id": 0,
+        "mix": "My Init Value",
+        "symbol": "My Init Symbol"
+    }
+}
+suppress(Event_16rbmqm.nested.id)
+
+generate-file "./dataset/"
+

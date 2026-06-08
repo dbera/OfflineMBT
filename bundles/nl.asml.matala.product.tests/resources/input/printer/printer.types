@@ -2,6 +2,10 @@ record UNIT {
 	int	unit
 }
 
+record AssertionsHistory {
+    int[]	inspectionReports
+}
+
 enum ColorType { MONOCHROME COLOR }
 
 record CorrectionItem {
@@ -22,7 +26,7 @@ record FactoryCtx {
 
 record MeasureRequest {
     int	id
-    symbolic Report	printJobReport
+    mixed Report	printJobReport
 }
 
 enum OperationType { PREP PRINT }
@@ -42,6 +46,11 @@ record PrintRequest {
 }
 
 enum PrintResolution { LOW MED HIGH }
+
+record PrinterVariants {
+    string	version
+    string	release
+}
 
 record Report {
     int	id

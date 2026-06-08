@@ -1,6 +1,6 @@
 import "parameters/PrintFactoryA3DPrinter.params"
 import "parameters/PrintFactoryInspection.params"
-import "parameters/PrintFactoryFactoryAutomation.params"
+import "parameters/PrintFactoryAssertions.params"
 import "parameters/PrintFactoryOptimization.params"
 
 Test-Purpose    "The purpose of this test is..."
@@ -39,9 +39,9 @@ ref-to-step-output
     PrintFactoryInspectionInput.measureRequest.id := 1
     PrintFactoryInspectionInput.measureRequest.printJobReport := step_PrintFactoryA3DPrinter_RunPrintJob_default_0.output.printReport
 
-assertion-id    step_PrintFactoryFactoryAutomation_AssertVisualInspection_default_0
-assertion-type  Assert_Visual_Inspection
-assertion-input PrintFactoryFactoryAutomationInput
+assertion-id    step_PrintFactoryAssertions_AssertVisualInspection_default_0
+assertion-type  Assertions
+assertion-input PrintFactoryAssertionsInput
 assertion-items {
 assertions default { 
     
@@ -50,8 +50,6 @@ assertions default {
                 }
  }
 }
-ref-to-step-output
-    PrintFactoryFactoryAutomationInput.inspectionReport.id := 1
 
 step-id    step_PrintFactoryOptimization_RunOptimizationJob_default_0
 step-type  ExecuteOptimizer
@@ -86,19 +84,17 @@ ref-to-step-output
     PrintFactoryInspectionInput.measureRequest.id := 2
     PrintFactoryInspectionInput.measureRequest.printJobReport := step_PrintFactoryA3DPrinter_RunPrintJob_default_1.output.printReport
 
-assertion-id    step_PrintFactoryFactoryAutomation_AssertVisualInspection_default_1
-assertion-type  Assert_Visual_Inspection
-assertion-input PrintFactoryFactoryAutomationInput
+assertion-id    step_PrintFactoryAssertions_AssertVisualInspection_default_1
+assertion-type  Assertions
+assertion-input PrintFactoryAssertionsInput
 assertion-items {
 assertions default { 
     
-                assert_kpi: assert-that (step_PrintFactoryInspection_RunVisualinspection_default_0.output.inspectionReport.kpi) {
+                assert_kpi: assert-that (step_PrintFactoryInspection_RunVisualinspection_default_1.output.inspectionReport.kpi) {
                   equal-to 9.0 within-margin relative (1.0)
                 }
  }
 }
-ref-to-step-output
-    PrintFactoryFactoryAutomationInput.inspectionReport.id := 1
 
 step-id    step_PrintFactoryOptimization_RunOptimizationJob_default_1
 step-type  ExecuteOptimizer
@@ -133,19 +129,17 @@ ref-to-step-output
     PrintFactoryInspectionInput.measureRequest.id := 3
     PrintFactoryInspectionInput.measureRequest.printJobReport := step_PrintFactoryA3DPrinter_RunPrintJob_default_2.output.printReport
 
-assertion-id    step_PrintFactoryFactoryAutomation_AssertVisualInspection_default_2
-assertion-type  Assert_Visual_Inspection
-assertion-input PrintFactoryFactoryAutomationInput
+assertion-id    step_PrintFactoryAssertions_AssertVisualInspection_default_2
+assertion-type  Assertions
+assertion-input PrintFactoryAssertionsInput
 assertion-items {
 assertions default { 
     
-                assert_kpi: assert-that (step_PrintFactoryInspection_RunVisualinspection_default_0.output.inspectionReport.kpi) {
+                assert_kpi: assert-that (step_PrintFactoryInspection_RunVisualinspection_default_2.output.inspectionReport.kpi) {
                   equal-to 9.0 within-margin relative (1.0)
                 }
  }
 }
-ref-to-step-output
-    PrintFactoryFactoryAutomationInput.inspectionReport.id := 1
 
 step-id    step_PrintFactoryOptimization_RunOptimizationJob_default_2
 step-type  ExecuteOptimizer
@@ -160,16 +154,65 @@ step-parameters
 ExecutePrinter step_PrintFactoryA3DPrinter_RunPrintJob_default_0
 ExecutePrinter step_PrintFactoryA3DPrinter_RunPrepareJob_default_0
 ExecuteInspection step_PrintFactoryInspection_RunVisualinspection_default_0
-Assert_Visual_Inspection step_PrintFactoryFactoryAutomation_AssertVisualInspection_default_0
+Assertions step_PrintFactoryAssertions_AssertVisualInspection_default_0
 ExecuteOptimizer step_PrintFactoryOptimization_RunOptimizationJob_default_0
 ExecutePrinter step_PrintFactoryA3DPrinter_RunPrintJob_default_1
 ExecutePrinter step_PrintFactoryA3DPrinter_RunPrepareJob_default_1
 ExecuteInspection step_PrintFactoryInspection_RunVisualinspection_default_1
-Assert_Visual_Inspection step_PrintFactoryFactoryAutomation_AssertVisualInspection_default_1
+Assertions step_PrintFactoryAssertions_AssertVisualInspection_default_1
 ExecuteOptimizer step_PrintFactoryOptimization_RunOptimizationJob_default_1
 ExecutePrinter step_PrintFactoryA3DPrinter_RunPrintJob_default_2
 ExecutePrinter step_PrintFactoryA3DPrinter_RunPrepareJob_default_2
 ExecuteInspection step_PrintFactoryInspection_RunVisualinspection_default_2
-Assert_Visual_Inspection step_PrintFactoryFactoryAutomation_AssertVisualInspection_default_2
+Assertions step_PrintFactoryAssertions_AssertVisualInspection_default_2
 ExecuteOptimizer step_PrintFactoryOptimization_RunOptimizationJob_default_2
 
+sut-param-init 
+step_PrintFactoryA3DPrinter_RunPrintJob_default_0.input.variants := PrinterVariants {
+    version = "PX210",
+    release = "1.0.0"
+}
+step_PrintFactoryA3DPrinter_RunPrintJob_default_0.output.variants := PrinterVariants {
+    version = "PX210",
+    release = "1.0.0"
+}
+step_PrintFactoryA3DPrinter_RunPrepareJob_default_0.input.variants := PrinterVariants {
+    version = "PX210",
+    release = "1.1.0"
+}
+step_PrintFactoryA3DPrinter_RunPrepareJob_default_0.output.variants := PrinterVariants {
+    version = "PX210",
+    release = "1.1.0"
+}
+step_PrintFactoryA3DPrinter_RunPrintJob_default_1.input.variants := PrinterVariants {
+    version = "PX210",
+    release = "1.0.0"
+}
+step_PrintFactoryA3DPrinter_RunPrintJob_default_1.output.variants := PrinterVariants {
+    version = "PX210",
+    release = "1.0.0"
+}
+step_PrintFactoryA3DPrinter_RunPrepareJob_default_1.input.variants := PrinterVariants {
+    version = "PX210",
+    release = "1.1.0"
+}
+step_PrintFactoryA3DPrinter_RunPrepareJob_default_1.output.variants := PrinterVariants {
+    version = "PX210",
+    release = "1.1.0"
+}
+step_PrintFactoryA3DPrinter_RunPrintJob_default_2.input.variants := PrinterVariants {
+    version = "TX500",
+    release = "2.1.0"
+}
+step_PrintFactoryA3DPrinter_RunPrintJob_default_2.output.variants := PrinterVariants {
+    version = "TX500",
+    release = "2.1.0"
+}
+step_PrintFactoryA3DPrinter_RunPrepareJob_default_2.input.variants := PrinterVariants {
+    version = "TX500",
+    release = "2.1.0"
+}
+step_PrintFactoryA3DPrinter_RunPrepareJob_default_2.output.variants := PrinterVariants {
+    version = "TX500",
+    release = "2.1.0"
+}

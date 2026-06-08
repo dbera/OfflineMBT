@@ -31,7 +31,7 @@ class printerModel:
     rg_txt = ""
 
     # test generation data
-    sutTypesList = []
+    sutTypesList = ['variants']
     sutVarTransitionMap = {}
     numTestCases = 0
     listOfEnvBlocks = []
@@ -54,14 +54,15 @@ class printerModel:
         self.rg_txt = '@startuml\n'
         self.rg_txt += '[*] --> 0\n'
         self.listOfEnvBlocks = ["PrintFactoryA3DPrinter","PrintFactoryInspection","PrintFactoryOptimization"]
-        self.listOfSUTActions = ["PrintFactoryA3DPrinter_RunPrintJob_default","PrintFactoryA3DPrinter_ComposePrintJob_default","PrintFactoryA3DPrinter_ComposePrepareJob_default","PrintFactoryA3DPrinter_RunPrepareJob_default","PrintFactoryInspection_RunVisualinspection_default","PrintFactoryInspection_ComposeVisualInspectionJob_default","PrintFactoryOptimization_ComposeOptimizationJob_default","PrintFactoryOptimization_RunOptimizationJob_default","PrintFactoryFactoryAutomation_AssertVisualInspection_default"]
-        self.mapOfSuppressTransitionVars = {'PrintFactoryOptimization_RunOptimizationJob_default': ['Event_1oozdnw'],'PrintFactoryInspection_ComposeVisualInspectionJob_default': ['Flow_07l0yyj','printReport'],'PrintFactoryA3DPrinter_ComposePrepareJob_default': ['Flow_0iaelzn'],'PrintFactoryOptimization_ComposeOptimizationJob_default': ['Flow_0y8u5pd','inspectionReport'],'PrintFactoryA3DPrinter_RunPrepareJob_default': ['Event_0mxx05p'],'PrintFactoryA3DPrinter_ComposePrintJob_default': ['Flow_1u2qmtt'],'PrintFactoryA3DPrinter_RunPrintJob_default': ['Event_0jcg6zx']}
-        self.mapOfTransitionQnames = {'PrintFactoryA3DPrinter_RunPrintJob_default': 'printer.PrintFactoryA3DPrinter.RunPrintJob.default','PrintFactoryA3DPrinter_ComposePrintJob_default': 'printer.PrintFactoryA3DPrinter.ComposePrintJob.default','PrintFactoryA3DPrinter_ComposePrepareJob_default': 'printer.PrintFactoryA3DPrinter.ComposePrepareJob.default','PrintFactoryA3DPrinter_RunPrepareJob_default': 'printer.PrintFactoryA3DPrinter.RunPrepareJob.default','PrintFactoryInspection_RunVisualinspection_default': 'printer.PrintFactoryInspection.RunVisualinspection.default','PrintFactoryInspection_ComposeVisualInspectionJob_default': 'printer.PrintFactoryInspection.ComposeVisualInspectionJob.default','PrintFactoryOptimization_ComposeOptimizationJob_default': 'printer.PrintFactoryOptimization.ComposeOptimizationJob.default','PrintFactoryOptimization_RunOptimizationJob_default': 'printer.PrintFactoryOptimization.RunOptimizationJob.default','PrintFactoryFactoryAutomation_AssertVisualInspection_default': 'printer.PrintFactoryFactoryAutomation.AssertVisualInspection.default'}
+        self.listOfSUTActions = ["PrintFactoryA3DPrinter_RunPrintJob_default","PrintFactoryA3DPrinter_ComposePrintJob_default","PrintFactoryA3DPrinter_ComposePrepareJob_default","PrintFactoryA3DPrinter_RunPrepareJob_default","PrintFactoryAssertions_AssertVisualInspection_default","PrintFactoryInspection_RunVisualinspection_default","PrintFactoryInspection_ComposeVisualInspectionJob_default","PrintFactoryOptimization_ComposeOptimizationJob_default","PrintFactoryOptimization_RunOptimizationJob_default"]
+        self.mapOfSuppressTransitionVars = {'PrintFactoryOptimization_RunOptimizationJob_default': ['Event_1oozdnw'],'PrintFactoryInspection_RunVisualinspection_default': ['inspectionReport.id'],'PrintFactoryInspection_ComposeVisualInspectionJob_default': ['Flow_07l0yyj','measureRequest.printJobReport.id','printReport'],'PrintFactoryAssertions_AssertVisualInspection_default': ['Event_1bxlea2','inspectionReport.id'],'PrintFactoryFactoryAutomation_SendVisualInspectionJob_default': ['inspectionJob.printJobReport.id'],'PrintFactoryA3DPrinter_ComposePrepareJob_default': ['Flow_0iaelzn'],'PrintFactoryOptimization_ComposeOptimizationJob_default': ['Flow_0y8u5pd','inspectionReport'],'PrintFactoryA3DPrinter_RunPrepareJob_default': ['Event_0mxx05p'],'PrintFactoryA3DPrinter_ComposePrintJob_default': ['Flow_1u2qmtt'],'PrintFactoryA3DPrinter_RunPrintJob_default': ['Event_0jcg6zx','printReport.id']}
+        self.mapOfTransitionQnames = {'PrintFactoryA3DPrinter_RunPrintJob_default': 'printer.PrintFactoryA3DPrinter.RunPrintJob.default','PrintFactoryA3DPrinter_ComposePrintJob_default': 'printer.PrintFactoryA3DPrinter.ComposePrintJob.default','PrintFactoryA3DPrinter_ComposePrepareJob_default': 'printer.PrintFactoryA3DPrinter.ComposePrepareJob.default','PrintFactoryA3DPrinter_RunPrepareJob_default': 'printer.PrintFactoryA3DPrinter.RunPrepareJob.default','PrintFactoryAssertions_AssertVisualInspection_default': 'printer.PrintFactoryAssertions.AssertVisualInspection.default','PrintFactoryInspection_RunVisualinspection_default': 'printer.PrintFactoryInspection.RunVisualinspection.default','PrintFactoryInspection_ComposeVisualInspectionJob_default': 'printer.PrintFactoryInspection.ComposeVisualInspectionJob.default','PrintFactoryOptimization_ComposeOptimizationJob_default': 'printer.PrintFactoryOptimization.ComposeOptimizationJob.default','PrintFactoryOptimization_RunOptimizationJob_default': 'printer.PrintFactoryOptimization.RunOptimizationJob.default'}
         self.n = PetriNet('printer')
         self.n.globals["Data"] = Data
         self.n.globals.declare("import json")
         self.n.add_place(Place('printJob'))
         self.n.add_place(Place('corrections'))
+        self.n.add_place(Place('variants'))
         self.n.add_place(Place('printResult'))
         self.n.add_place(Place('printReport'))
         self.n.add_place(Place('request'))
@@ -69,8 +70,10 @@ class printerModel:
         self.n.add_place(Place('Event_0jcg6zx'))
         self.n.add_place(Place('Flow_1u2qmtt'))
         self.n.add_place(Place('Flow_0iaelzn'))
-        self.n.add_place(Place('inspectionJob'))
         self.n.add_place(Place('inspectionReport'))
+        self.n.add_place(Place('history'))
+        self.n.add_place(Place('Event_1bxlea2'))
+        self.n.add_place(Place('inspectionJob'))
         self.n.add_place(Place('inspectionResult'))
         self.n.add_place(Place('measureRequest'))
         self.n.add_place(Place('Flow_07l0yyj'))
@@ -90,21 +93,27 @@ class printerModel:
         self.n.add_place(Place('Flow_09b0flo'))
         self.n.add_place(Place('Flow_1rkhqnd'))
         self.n.add_place(Place('Flow_1vq9t2p'))
-        self.n.add_place(Place('Flow_0fe8hce'))
         self.n.add_place(Place('Flow_1y4bjf4'))
         self.n.add_place(Place('Flow_1f74bn4'))
+        self.n.place('history').empty()
+        self.n.place('history').add(json.dumps({"inspectionReports": []}))
         self.n.place('Gateway_1wpvmtk').empty()
         self.n.place('Gateway_1wpvmtk').add(json.dumps({"id": 1, "resolution": "PrintResolution::LOW", "scale": 0.0, "color": "ColorType::MONOCHROME"}))
         self.n.place('printRequests').empty()
         self.n.place('printRequests').add(json.dumps({"id": 1, "resolution": "PrintResolution::LOW", "scale": 50.0, "color": "ColorType::MONOCHROME", "opType": "OperationType::PRINT"}))
         self.n.place('printRequests').add(json.dumps({"id": 2, "resolution": "PrintResolution::MED", "scale": 75.0, "color": "ColorType::COLOR", "opType": "OperationType::PRINT"}))
         self.n.place('printRequests').add(json.dumps({"id": 3, "resolution": "PrintResolution::HIGH", "scale": 75.0, "color": "ColorType::COLOR", "opType": "OperationType::PRINT"}))
+        self.n.place('variants').empty()
+        self.n.place('variants').add(json.dumps({"version": "PX210", "release": "1.0.0"}))
+        self.n.place('variants').add(json.dumps({"version": "TX500", "release": "2.1.0"}))
+        self.n.place('variants').add(json.dumps({"version": "PX210", "release": "1.1.0"}))
         self.n.place('corrections').empty()
         self.n.place('corrections').add(json.dumps({"id": 1, "correctionsMap": {0: [{"data": "X"}, {"data": "Y"}], 1: [{"data": "A"}, {"data": "B"}]}}))
-        self.n.add_transition(PrioritizedTransition('PrintFactoryA3DPrinter_RunPrintJob_default@ExecutePrinter@RUN@', 0))
+        self.n.add_transition(PrioritizedTransition('PrintFactoryA3DPrinter_RunPrintJob_default@ExecutePrinter@RUN@', 0, Expression('(json.loads(v_request, object_pairs_hook=Data().int_keys)["resolution"] == "PrintResolution::HIGH" and json.loads(v_variants, object_pairs_hook=Data().int_keys)["version"] == "TX500") or (json.loads(v_request, object_pairs_hook=Data().int_keys)["resolution"] != "PrintResolution::HIGH" and json.loads(v_variants, object_pairs_hook=Data().int_keys)["version"] != "TX500")')))
         self.n.add_transition(PrioritizedTransition('PrintFactoryA3DPrinter_ComposePrintJob_default@null@COMPOSE@', 0, Expression('json.loads(v_corrections, object_pairs_hook=Data().int_keys)["id"] == json.loads(v_printJob, object_pairs_hook=Data().int_keys)["id"] and json.loads(v_printJob, object_pairs_hook=Data().int_keys)["opType"] == "OperationType::PRINT"')))
         self.n.add_transition(PrioritizedTransition('PrintFactoryA3DPrinter_ComposePrepareJob_default@null@COMPOSE@', 0, Expression('json.loads(v_printJob, object_pairs_hook=Data().int_keys)["opType"] == "OperationType::PREP"')))
-        self.n.add_transition(PrioritizedTransition('PrintFactoryA3DPrinter_RunPrepareJob_default@ExecutePrinter@RUN@', 0))
+        self.n.add_transition(PrioritizedTransition('PrintFactoryA3DPrinter_RunPrepareJob_default@ExecutePrinter@RUN@', 0, Expression('(json.loads(v_request, object_pairs_hook=Data().int_keys)["resolution"] == "PrintResolution::HIGH" and json.loads(v_variants, object_pairs_hook=Data().int_keys)["version"] == "TX500") or (json.loads(v_request, object_pairs_hook=Data().int_keys)["resolution"] != "PrintResolution::HIGH" and json.loads(v_variants, object_pairs_hook=Data().int_keys)["version"] != "TX500")')))
+        self.n.add_transition(PrioritizedTransition('PrintFactoryAssertions_AssertVisualInspection_default@Assertions@ASSERT@', 100, Expression('not (json.loads(v_inspectionReport, object_pairs_hook=Data().int_keys)["id"] in json.loads(v_history, object_pairs_hook=Data().int_keys)["inspectionReports"])')))
         self.n.add_transition(PrioritizedTransition('PrintFactoryInspection_RunVisualinspection_default@ExecuteInspection@RUN@', 0))
         self.n.add_transition(PrioritizedTransition('PrintFactoryInspection_ComposeVisualInspectionJob_default@null@COMPOSE@', 0, Expression('json.loads(v_printReport, object_pairs_hook=Data().int_keys)["id"] == json.loads(v_inspectionJob, object_pairs_hook=Data().int_keys)["id"]')))
         self.n.add_transition(PrioritizedTransition('PrintFactoryOptimization_ComposeOptimizationJob_default@null@COMPOSE@', 0, Expression('json.loads(v_inspectionReport, object_pairs_hook=Data().int_keys)["id"] == json.loads(v_optJob, object_pairs_hook=Data().int_keys)["id"]')))
@@ -116,19 +125,17 @@ class printerModel:
         self.n.add_transition(PrioritizedTransition('PrintFactoryFactoryAutomation_Gateway_1j3rupx_default@null@INTERNAL@', 0))
         self.n.add_transition(PrioritizedTransition('PrintFactoryFactoryAutomation_WaitforVisualInspection_default@null@INTERNAL@', 0))
         self.n.add_transition(PrioritizedTransition('PrintFactoryFactoryAutomation_SendOptimizationJob_default@null@INTERNAL@', 0))
-        self.n.add_transition(PrioritizedTransition('PrintFactoryFactoryAutomation_PreparePrinter_default@null@INTERNAL@', 0))
-        self.n.add_transition(PrioritizedTransition('PrintFactoryFactoryAutomation_AssertVisualInspection_default@Assert_Visual_Inspection@ASSERT@', 0))
+        self.n.add_transition(PrioritizedTransition('PrintFactoryFactoryAutomation_CleanPrinter_default@null@INTERNAL@', 0))
         self.n.add_transition(PrioritizedTransition('PrintFactoryFactoryAutomation_SendVisualInspectionJob_default@null@INTERNAL@', 0))
-        self.n.add_transition(PrioritizedTransition('PrintFactoryFactoryAutomation_WaitforPrepare_default@null@INTERNAL@', 0))
+        self.n.add_transition(PrioritizedTransition('PrintFactoryFactoryAutomation_WaitforClean_default@null@INTERNAL@', 0))
         self.n.add_transition(PrioritizedTransition('PrintFactoryFactoryAutomation_WaitforPrintJob_default@null@INTERNAL@', 0))
-        self.n.add_input('Flow_0fe8hce','PrintFactoryFactoryAutomation_SendOptimizationJob_default@null@INTERNAL@',Variable('v_Flow_0fe8hce'))
-        self.n.add_input('Flow_1f74bn4','PrintFactoryFactoryAutomation_PreparePrinter_default@null@INTERNAL@',Variable('v_Flow_1f74bn4'))
+        self.n.add_input('Flow_0kbycuh','PrintFactoryFactoryAutomation_SendOptimizationJob_default@null@INTERNAL@',Variable('v_Flow_0kbycuh'))
         self.n.add_input('Flow_1y4bjf4','PrintFactoryFactoryAutomation_SendVisualInspectionJob_default@null@INTERNAL@',Variable('v_Flow_1y4bjf4'))
         self.n.add_input('optJob','PrintFactoryOptimization_ComposeOptimizationJob_default@null@COMPOSE@',Variable('v_optJob'))
         self.n.add_input('inspectionReport','PrintFactoryOptimization_ComposeOptimizationJob_default@null@COMPOSE@',Variable('v_inspectionReport'))
         self.n.add_input('Gateway_0p2uo9v','PrintFactoryFactoryAutomation_NextJob_default@null@INTERNAL@',Variable('v_Gateway_0p2uo9v'))
-        self.n.add_input('Flow_1rkhqnd','PrintFactoryFactoryAutomation_WaitforPrepare_default@null@INTERNAL@',Variable('v_Flow_1rkhqnd'))
-        self.n.add_input('printResult','PrintFactoryFactoryAutomation_WaitforPrepare_default@null@INTERNAL@',Variable('v_printResult'))
+        self.n.add_input('inspectionReport','PrintFactoryAssertions_AssertVisualInspection_default@Assertions@ASSERT@',Variable('v_inspectionReport'))
+        self.n.add_input('history','PrintFactoryAssertions_AssertVisualInspection_default@Assertions@ASSERT@',Variable('v_history'))
         self.n.add_input('Flow_16s4ey1','PrintFactoryFactoryAutomation_WaitforPrintJob_default@null@INTERNAL@',Variable('v_Flow_16s4ey1'))
         self.n.add_input('printResult','PrintFactoryFactoryAutomation_WaitforPrintJob_default@null@INTERNAL@',Variable('v_printResult'))
         self.n.add_input('Flow_1dcdx0e','PrintFactoryFactoryAutomation_Gateway_1j3rupx_default@null@INTERNAL@',Variable('v_Flow_1dcdx0e'))
@@ -140,8 +147,12 @@ class printerModel:
         self.n.add_input('optimizeJob','PrintFactoryOptimization_RunOptimizationJob_default@ExecuteOptimizer@RUN@',Variable('v_optimizeJob'))
         self.n.add_input('Flow_0iaelzn','PrintFactoryA3DPrinter_RunPrepareJob_default@ExecutePrinter@RUN@',Variable('v_Flow_0iaelzn'))
         self.n.add_input('request','PrintFactoryA3DPrinter_RunPrepareJob_default@ExecutePrinter@RUN@',Variable('v_request'))
+        self.n.add_input('variants','PrintFactoryA3DPrinter_RunPrepareJob_default@ExecutePrinter@RUN@',Variable('v_variants'))
+        self.n.add_input('Flow_1rkhqnd','PrintFactoryFactoryAutomation_WaitforClean_default@null@INTERNAL@',Variable('v_Flow_1rkhqnd'))
+        self.n.add_input('printResult','PrintFactoryFactoryAutomation_WaitforClean_default@null@INTERNAL@',Variable('v_printResult'))
         self.n.add_input('Flow_1dt29vl','PrintFactoryFactoryAutomation_WaitforVisualInspection_default@null@INTERNAL@',Variable('v_Flow_1dt29vl'))
         self.n.add_input('inspectionResult','PrintFactoryFactoryAutomation_WaitforVisualInspection_default@null@INTERNAL@',Variable('v_inspectionResult'))
+        self.n.add_input('Flow_1f74bn4','PrintFactoryFactoryAutomation_CleanPrinter_default@null@INTERNAL@',Variable('v_Flow_1f74bn4'))
         self.n.add_input('inspectionJob','PrintFactoryInspection_ComposeVisualInspectionJob_default@null@COMPOSE@',Variable('v_inspectionJob'))
         self.n.add_input('printReport','PrintFactoryInspection_ComposeVisualInspectionJob_default@null@COMPOSE@',Variable('v_printReport'))
         self.n.add_input('Flow_01m2s0h','PrintFactoryFactoryAutomation_WaitforOptimizationJob_default@null@INTERNAL@',Variable('v_Flow_01m2s0h'))
@@ -153,19 +164,18 @@ class printerModel:
         self.n.add_input('Flow_1vq9t2p','PrintFactoryFactoryAutomation_Gateway_1f8wap6_default@null@INTERNAL@',Variable('v_Flow_1vq9t2p'))
         self.n.add_input('Flow_1u2qmtt','PrintFactoryA3DPrinter_RunPrintJob_default@ExecutePrinter@RUN@',Variable('v_Flow_1u2qmtt'))
         self.n.add_input('request','PrintFactoryA3DPrinter_RunPrintJob_default@ExecutePrinter@RUN@',Variable('v_request'))
-        self.n.add_input('Flow_0kbycuh','PrintFactoryFactoryAutomation_AssertVisualInspection_default@Assert_Visual_Inspection@ASSERT@',Variable('v_Flow_0kbycuh'))
-        self.n.add_input('inspectionReport','PrintFactoryFactoryAutomation_AssertVisualInspection_default@Assert_Visual_Inspection@ASSERT@',Variable('v_inspectionReport'))
-        self.n.add_output('Flow_01m2s0h','PrintFactoryFactoryAutomation_SendOptimizationJob_default@null@INTERNAL@', Expression('Data().execute_PrintFactoryFactoryAutomation_SendOptimizationJob_default_Flow_01m2s0h(json.loads(v_Flow_0fe8hce, object_pairs_hook=Data().int_keys))'))
-        self.n.add_output('optJob','PrintFactoryFactoryAutomation_SendOptimizationJob_default@null@INTERNAL@', Expression('Data().execute_PrintFactoryFactoryAutomation_SendOptimizationJob_default_optJob(json.loads(v_Flow_0fe8hce, object_pairs_hook=Data().int_keys))'))
-        self.n.add_output('Flow_1rkhqnd','PrintFactoryFactoryAutomation_PreparePrinter_default@null@INTERNAL@', Expression('Data().execute_PrintFactoryFactoryAutomation_PreparePrinter_default_Flow_1rkhqnd(json.loads(v_Flow_1f74bn4, object_pairs_hook=Data().int_keys))'))
-        self.n.add_output('printJob','PrintFactoryFactoryAutomation_PreparePrinter_default@null@INTERNAL@', Expression('Data().execute_PrintFactoryFactoryAutomation_PreparePrinter_default_printJob(json.loads(v_Flow_1f74bn4, object_pairs_hook=Data().int_keys))'))
+        self.n.add_input('variants','PrintFactoryA3DPrinter_RunPrintJob_default@ExecutePrinter@RUN@',Variable('v_variants'))
+        self.n.add_output('Flow_01m2s0h','PrintFactoryFactoryAutomation_SendOptimizationJob_default@null@INTERNAL@', Expression('Data().execute_PrintFactoryFactoryAutomation_SendOptimizationJob_default_Flow_01m2s0h(json.loads(v_Flow_0kbycuh, object_pairs_hook=Data().int_keys))'))
+        self.n.add_output('optJob','PrintFactoryFactoryAutomation_SendOptimizationJob_default@null@INTERNAL@', Expression('Data().execute_PrintFactoryFactoryAutomation_SendOptimizationJob_default_optJob(json.loads(v_Flow_0kbycuh, object_pairs_hook=Data().int_keys))'))
         self.n.add_output('Flow_1dt29vl','PrintFactoryFactoryAutomation_SendVisualInspectionJob_default@null@INTERNAL@', Expression('Data().execute_PrintFactoryFactoryAutomation_SendVisualInspectionJob_default_Flow_1dt29vl(json.loads(v_Flow_1y4bjf4, object_pairs_hook=Data().int_keys))'))
         self.n.add_output('inspectionJob','PrintFactoryFactoryAutomation_SendVisualInspectionJob_default@null@INTERNAL@', Expression('Data().execute_PrintFactoryFactoryAutomation_SendVisualInspectionJob_default_inspectionJob(json.loads(v_Flow_1y4bjf4, object_pairs_hook=Data().int_keys))'))
         self.n.add_output('Flow_0y8u5pd','PrintFactoryOptimization_ComposeOptimizationJob_default@null@COMPOSE@', Expression('Data().get_UNIT()'))
         self.n.add_output('optimizeJob','PrintFactoryOptimization_ComposeOptimizationJob_default@null@COMPOSE@', Expression('Data().execute_PrintFactoryOptimization_ComposeOptimizationJob_default_optimizeJob(json.loads(v_optJob, object_pairs_hook=Data().int_keys),json.loads(v_inspectionReport, object_pairs_hook=Data().int_keys))'))
         self.n.add_output('inspectionReport','PrintFactoryOptimization_ComposeOptimizationJob_default@null@COMPOSE@', Expression('Data().execute_PrintFactoryOptimization_ComposeOptimizationJob_default_inspectionReport(json.loads(v_optJob, object_pairs_hook=Data().int_keys),json.loads(v_inspectionReport, object_pairs_hook=Data().int_keys))'))
         self.n.add_output('Gateway_1wpvmtk','PrintFactoryFactoryAutomation_NextJob_default@null@INTERNAL@', Expression('Data().execute_PrintFactoryFactoryAutomation_NextJob_default_Gateway_1wpvmtk(json.loads(v_Gateway_0p2uo9v, object_pairs_hook=Data().int_keys))'))
-        self.n.add_output('Flow_1vq9t2p','PrintFactoryFactoryAutomation_WaitforPrepare_default@null@INTERNAL@', Expression('Data().execute_PrintFactoryFactoryAutomation_WaitforPrepare_default_Flow_1vq9t2p(json.loads(v_printResult, object_pairs_hook=Data().int_keys),json.loads(v_Flow_1rkhqnd, object_pairs_hook=Data().int_keys))'))
+        self.n.add_output('Event_1bxlea2','PrintFactoryAssertions_AssertVisualInspection_default@Assertions@ASSERT@', Expression('Data().get_UNIT()'))
+        self.n.add_output('history','PrintFactoryAssertions_AssertVisualInspection_default@Assertions@ASSERT@', Expression('Data().execute_PrintFactoryAssertions_AssertVisualInspection_default_history(json.loads(v_inspectionReport, object_pairs_hook=Data().int_keys),json.loads(v_history, object_pairs_hook=Data().int_keys))'))
+        self.n.add_output('inspectionReport','PrintFactoryAssertions_AssertVisualInspection_default@Assertions@ASSERT@', Expression('Data().execute_PrintFactoryAssertions_AssertVisualInspection_default_inspectionReport(json.loads(v_inspectionReport, object_pairs_hook=Data().int_keys),json.loads(v_history, object_pairs_hook=Data().int_keys))'))
         self.n.add_output('Flow_1dcdx0e','PrintFactoryFactoryAutomation_WaitforPrintJob_default@null@INTERNAL@', Expression('Data().execute_PrintFactoryFactoryAutomation_WaitforPrintJob_default_Flow_1dcdx0e(json.loads(v_printResult, object_pairs_hook=Data().int_keys),json.loads(v_Flow_16s4ey1, object_pairs_hook=Data().int_keys))'))
         self.n.add_output('Flow_1y4bjf4','PrintFactoryFactoryAutomation_Gateway_1j3rupx_default@null@INTERNAL@', Expression('Data().execute_PrintFactoryFactoryAutomation_Gateway_1j3rupx_default_Flow_1y4bjf4(json.loads(v_Flow_1dcdx0e, object_pairs_hook=Data().int_keys))'))
         self.n.add_output('Flow_1f74bn4','PrintFactoryFactoryAutomation_Gateway_1j3rupx_default@null@INTERNAL@', Expression('Data().execute_PrintFactoryFactoryAutomation_Gateway_1j3rupx_default_Flow_1f74bn4(json.loads(v_Flow_1dcdx0e, object_pairs_hook=Data().int_keys))'))
@@ -176,9 +186,13 @@ class printerModel:
         self.n.add_output('Event_1oozdnw','PrintFactoryOptimization_RunOptimizationJob_default@ExecuteOptimizer@RUN@', Expression('Data().execute_PrintFactoryOptimization_RunOptimizationJob_default_Event_1oozdnw(json.loads(v_optimizeJob, object_pairs_hook=Data().int_keys),json.loads(v_Flow_0y8u5pd, object_pairs_hook=Data().int_keys))'))
         self.n.add_output('corrections','PrintFactoryOptimization_RunOptimizationJob_default@ExecuteOptimizer@RUN@', Expression('Data().execute_PrintFactoryOptimization_RunOptimizationJob_default_corrections(json.loads(v_optimizeJob, object_pairs_hook=Data().int_keys),json.loads(v_Flow_0y8u5pd, object_pairs_hook=Data().int_keys))'))
         self.n.add_output('optResult','PrintFactoryOptimization_RunOptimizationJob_default@ExecuteOptimizer@RUN@', Expression('Data().get_Result()'))
-        self.n.add_output('Event_0mxx05p','PrintFactoryA3DPrinter_RunPrepareJob_default@ExecutePrinter@RUN@', Expression('Data().execute_PrintFactoryA3DPrinter_RunPrepareJob_default_Event_0mxx05p(json.loads(v_request, object_pairs_hook=Data().int_keys),json.loads(v_Flow_0iaelzn, object_pairs_hook=Data().int_keys))'))
-        self.n.add_output('printResult','PrintFactoryA3DPrinter_RunPrepareJob_default@ExecutePrinter@RUN@', Expression('Data().execute_PrintFactoryA3DPrinter_RunPrepareJob_default_printResult(json.loads(v_request, object_pairs_hook=Data().int_keys),json.loads(v_Flow_0iaelzn, object_pairs_hook=Data().int_keys))'))
+        self.n.add_output('Event_0mxx05p','PrintFactoryA3DPrinter_RunPrepareJob_default@ExecutePrinter@RUN@', Expression('Data().execute_PrintFactoryA3DPrinter_RunPrepareJob_default_Event_0mxx05p(json.loads(v_request, object_pairs_hook=Data().int_keys),json.loads(v_Flow_0iaelzn, object_pairs_hook=Data().int_keys),json.loads(v_variants, object_pairs_hook=Data().int_keys))'))
+        self.n.add_output('printResult','PrintFactoryA3DPrinter_RunPrepareJob_default@ExecutePrinter@RUN@', Expression('Data().execute_PrintFactoryA3DPrinter_RunPrepareJob_default_printResult(json.loads(v_request, object_pairs_hook=Data().int_keys),json.loads(v_Flow_0iaelzn, object_pairs_hook=Data().int_keys),json.loads(v_variants, object_pairs_hook=Data().int_keys))'))
+        self.n.add_output('variants','PrintFactoryA3DPrinter_RunPrepareJob_default@ExecutePrinter@RUN@', Expression('Data().execute_PrintFactoryA3DPrinter_RunPrepareJob_default_variants(json.loads(v_request, object_pairs_hook=Data().int_keys),json.loads(v_Flow_0iaelzn, object_pairs_hook=Data().int_keys),json.loads(v_variants, object_pairs_hook=Data().int_keys))'))
+        self.n.add_output('Flow_1vq9t2p','PrintFactoryFactoryAutomation_WaitforClean_default@null@INTERNAL@', Expression('Data().execute_PrintFactoryFactoryAutomation_WaitforClean_default_Flow_1vq9t2p(json.loads(v_printResult, object_pairs_hook=Data().int_keys),json.loads(v_Flow_1rkhqnd, object_pairs_hook=Data().int_keys))'))
         self.n.add_output('Flow_0kbycuh','PrintFactoryFactoryAutomation_WaitforVisualInspection_default@null@INTERNAL@', Expression('Data().execute_PrintFactoryFactoryAutomation_WaitforVisualInspection_default_Flow_0kbycuh(json.loads(v_inspectionResult, object_pairs_hook=Data().int_keys),json.loads(v_Flow_1dt29vl, object_pairs_hook=Data().int_keys))'))
+        self.n.add_output('Flow_1rkhqnd','PrintFactoryFactoryAutomation_CleanPrinter_default@null@INTERNAL@', Expression('Data().execute_PrintFactoryFactoryAutomation_CleanPrinter_default_Flow_1rkhqnd(json.loads(v_Flow_1f74bn4, object_pairs_hook=Data().int_keys))'))
+        self.n.add_output('printJob','PrintFactoryFactoryAutomation_CleanPrinter_default@null@INTERNAL@', Expression('Data().execute_PrintFactoryFactoryAutomation_CleanPrinter_default_printJob(json.loads(v_Flow_1f74bn4, object_pairs_hook=Data().int_keys))'))
         self.n.add_output('Flow_07l0yyj','PrintFactoryInspection_ComposeVisualInspectionJob_default@null@COMPOSE@', Expression('Data().get_UNIT()'))
         self.n.add_output('measureRequest','PrintFactoryInspection_ComposeVisualInspectionJob_default@null@COMPOSE@', Expression('Data().execute_PrintFactoryInspection_ComposeVisualInspectionJob_default_measureRequest(json.loads(v_printReport, object_pairs_hook=Data().int_keys),json.loads(v_inspectionJob, object_pairs_hook=Data().int_keys))'))
         self.n.add_output('printReport','PrintFactoryInspection_ComposeVisualInspectionJob_default@null@COMPOSE@', Expression('Data().execute_PrintFactoryInspection_ComposeVisualInspectionJob_default_printReport(json.loads(v_printReport, object_pairs_hook=Data().int_keys),json.loads(v_inspectionJob, object_pairs_hook=Data().int_keys))'))
@@ -188,11 +202,10 @@ class printerModel:
         self.n.add_output('Flow_0iaelzn','PrintFactoryA3DPrinter_ComposePrepareJob_default@null@COMPOSE@', Expression('Data().get_UNIT()'))
         self.n.add_output('request','PrintFactoryA3DPrinter_ComposePrepareJob_default@null@COMPOSE@', Expression('Data().execute_PrintFactoryA3DPrinter_ComposePrepareJob_default_request(json.loads(v_printJob, object_pairs_hook=Data().int_keys))'))
         self.n.add_output('Gateway_0p2uo9v','PrintFactoryFactoryAutomation_Gateway_1f8wap6_default@null@INTERNAL@', Expression('Data().execute_PrintFactoryFactoryAutomation_Gateway_1f8wap6_default_Gateway_0p2uo9v(json.loads(v_Flow_09b0flo, object_pairs_hook=Data().int_keys),json.loads(v_Flow_1vq9t2p, object_pairs_hook=Data().int_keys))'))
-        self.n.add_output('Event_0jcg6zx','PrintFactoryA3DPrinter_RunPrintJob_default@ExecutePrinter@RUN@', Expression('Data().execute_PrintFactoryA3DPrinter_RunPrintJob_default_Event_0jcg6zx(json.loads(v_request, object_pairs_hook=Data().int_keys),json.loads(v_Flow_1u2qmtt, object_pairs_hook=Data().int_keys))'))
-        self.n.add_output('printResult','PrintFactoryA3DPrinter_RunPrintJob_default@ExecutePrinter@RUN@', Expression('Data().execute_PrintFactoryA3DPrinter_RunPrintJob_default_printResult(json.loads(v_request, object_pairs_hook=Data().int_keys),json.loads(v_Flow_1u2qmtt, object_pairs_hook=Data().int_keys))'))
-        self.n.add_output('printReport','PrintFactoryA3DPrinter_RunPrintJob_default@ExecutePrinter@RUN@', Expression('Data().execute_PrintFactoryA3DPrinter_RunPrintJob_default_printReport(json.loads(v_request, object_pairs_hook=Data().int_keys),json.loads(v_Flow_1u2qmtt, object_pairs_hook=Data().int_keys))'))
-        self.n.add_output('Flow_0fe8hce','PrintFactoryFactoryAutomation_AssertVisualInspection_default@Assert_Visual_Inspection@ASSERT@', Expression('Data().execute_PrintFactoryFactoryAutomation_AssertVisualInspection_default_Flow_0fe8hce(json.loads(v_Flow_0kbycuh, object_pairs_hook=Data().int_keys),json.loads(v_inspectionReport, object_pairs_hook=Data().int_keys))'))
-        self.n.add_output('inspectionReport','PrintFactoryFactoryAutomation_AssertVisualInspection_default@Assert_Visual_Inspection@ASSERT@', Expression('Data().execute_PrintFactoryFactoryAutomation_AssertVisualInspection_default_inspectionReport(json.loads(v_Flow_0kbycuh, object_pairs_hook=Data().int_keys),json.loads(v_inspectionReport, object_pairs_hook=Data().int_keys))'))
+        self.n.add_output('Event_0jcg6zx','PrintFactoryA3DPrinter_RunPrintJob_default@ExecutePrinter@RUN@', Expression('Data().execute_PrintFactoryA3DPrinter_RunPrintJob_default_Event_0jcg6zx(json.loads(v_request, object_pairs_hook=Data().int_keys),json.loads(v_Flow_1u2qmtt, object_pairs_hook=Data().int_keys),json.loads(v_variants, object_pairs_hook=Data().int_keys))'))
+        self.n.add_output('printResult','PrintFactoryA3DPrinter_RunPrintJob_default@ExecutePrinter@RUN@', Expression('Data().execute_PrintFactoryA3DPrinter_RunPrintJob_default_printResult(json.loads(v_request, object_pairs_hook=Data().int_keys),json.loads(v_Flow_1u2qmtt, object_pairs_hook=Data().int_keys),json.loads(v_variants, object_pairs_hook=Data().int_keys))'))
+        self.n.add_output('printReport','PrintFactoryA3DPrinter_RunPrintJob_default@ExecutePrinter@RUN@', Expression('Data().execute_PrintFactoryA3DPrinter_RunPrintJob_default_printReport(json.loads(v_request, object_pairs_hook=Data().int_keys),json.loads(v_Flow_1u2qmtt, object_pairs_hook=Data().int_keys),json.loads(v_variants, object_pairs_hook=Data().int_keys))'))
+        self.n.add_output('variants','PrintFactoryA3DPrinter_RunPrintJob_default@ExecutePrinter@RUN@', Expression('Data().execute_PrintFactoryA3DPrinter_RunPrintJob_default_variants(json.loads(v_request, object_pairs_hook=Data().int_keys),json.loads(v_Flow_1u2qmtt, object_pairs_hook=Data().int_keys),json.loads(v_variants, object_pairs_hook=Data().int_keys))'))
         self.stepsList.append(self.n.get_marking())
     
     def loadScenario(self, scenario):
@@ -240,7 +253,7 @@ class printerModel:
         chidx = 0
         for transition in self.getPNPriorityEnabledTransitions():
             for mode in transition.modes():
-                if stepFilter is None or (_key.name == stepFilter['transition'] and _elm.dict() == stepFilter['substitution']):
+                if stepFilter is None or (transition.name == stepFilter['transition'] and mode.dict() == stepFilter['substitution']):
                     choices[chidx] = transition, mode
                     chidx = chidx + 1
         if stepFilter and (len(choices) == 0):
@@ -339,7 +352,7 @@ class printerModel:
         return nrOfDependencies
     
     def initializeTestGeneration(self):
-        self.sutVarTransitionMap = {}
+        self.sutVarTransitionMap = {'variants': ['PrintFactoryA3DPrinter_RunPrintJob_default','PrintFactoryA3DPrinter_RunPrepareJob_default']}
         # map_of_transition_modes = {}
         for entry in self.visitedTList:
             if entry:
@@ -376,8 +389,8 @@ class printerModel:
         constraint_list = []
         # tr_assert_ref_dict = {}
         # map_transition_assert = {}
-        self.tr_assert_ref_dict["PrintFactoryFactoryAutomation_AssertVisualInspection_default@Assert_Visual_Inspection@ASSERT@"] = "printer.PrintFactoryFactoryAutomation.AssertVisualInspection.default.default"
-        self.map_transition_assert = {'PrintFactoryInspection_ComposeVisualInspectionJob_default@null@COMPOSE@': ['measureRequest','printReport'],'PrintFactoryA3DPrinter_ComposePrintJob_default@null@COMPOSE@': ['request'],'PrintFactoryA3DPrinter_ComposePrepareJob_default@null@COMPOSE@': ['request'],'PrintFactoryOptimization_ComposeOptimizationJob_default@null@COMPOSE@': ['optimizeJob','inspectionReport'],'PrintFactoryA3DPrinter_RunPrintJob_default@ExecutePrinter@RUN@': ['printReport'],'PrintFactoryFactoryAutomation_AssertVisualInspection_default@Assert_Visual_Inspection@ASSERT@': ['inspectionReport'],'PrintFactoryInspection_RunVisualinspection_default@ExecuteInspection@RUN@': ['inspectionReport'],'PrintFactoryOptimization_RunOptimizationJob_default@ExecuteOptimizer@RUN@': ['corrections']}
+        self.tr_assert_ref_dict["PrintFactoryAssertions_AssertVisualInspection_default@Assertions@ASSERT@"] = "printer.PrintFactoryAssertions.AssertVisualInspection.default.default"
+        self.map_transition_assert = {'PrintFactoryA3DPrinter_RunPrepareJob_default@ExecutePrinter@RUN@': ['variants'],'PrintFactoryInspection_ComposeVisualInspectionJob_default@null@COMPOSE@': ['measureRequest','printReport'],'PrintFactoryA3DPrinter_ComposePrintJob_default@null@COMPOSE@': ['request'],'PrintFactoryA3DPrinter_ComposePrepareJob_default@null@COMPOSE@': ['request'],'PrintFactoryOptimization_ComposeOptimizationJob_default@null@COMPOSE@': ['optimizeJob','inspectionReport'],'PrintFactoryAssertions_AssertVisualInspection_default@Assertions@ASSERT@': ['history','inspectionReport'],'PrintFactoryA3DPrinter_RunPrintJob_default@ExecutePrinter@RUN@': ['printReport','variants'],'PrintFactoryInspection_RunVisualinspection_default@ExecuteInspection@RUN@': ['inspectionReport'],'PrintFactoryOptimization_RunOptimizationJob_default@ExecuteOptimizer@RUN@': ['corrections']}
     
     def generateTestCases(self):
         i = 0
