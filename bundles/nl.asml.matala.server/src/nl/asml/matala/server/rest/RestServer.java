@@ -55,7 +55,7 @@ import nl.asml.matala.server.impl.FileServerApiImpl;
 public class RestServer {
 
     private static final Logger LOG = LoggerFactory.getLogger(RestServer.class);
-    private static final String ROOT_PATH = System.getProperty("backend.path", "./models");
+    private static final String ROOT_PATH = System.getProperty("repository.path", "./models");
     private static final int DEFAULT_PORT = 2112;
 
     private final Vertx vertx;
