@@ -55,6 +55,7 @@ import nl.asml.matala.server.impl.FileServerApiImpl;
 public class RestServer {
 
     private static final Logger LOG = LoggerFactory.getLogger(RestServer.class);
+    private static final String FILES_ENDPOINT = "/files";
     private static final String ROOT_PATH = System.getProperty("repository.path", "./models");
     private static final int DEFAULT_PORT = 2112;
 
@@ -105,13 +106,13 @@ public class RestServer {
         Router router = Router.router(vertx);
 
         // Body handler for POST/PUT
-        router.post("/files").handler(BodyHandler.create());
-        router.put("/files").handler(BodyHandler.create());
+        router.post(FILES_ENDPOINT).handler(BodyHandler.create());
+        router.put(FILES_ENDPOINT).handler(BodyHandler.create());
 
         // File operation routes
-        router.get("/files").handler(this::handleGet);
-        router.post("/files").handler(this::handlePost);
-        router.put("/files").handler(this::handlePut);
+        router.get(FILES_ENDPOINT).handler(this::handleGet);
+        router.post(FILES_ENDPOINT).handler(this::handlePost);
+        router.put(FILES_ENDPOINT).handler(this::handlePut);
 
         httpServer = vertx.createHttpServer();
         httpServer.requestHandler(router).listen(port, result -> {
@@ -176,7 +177,7 @@ public class RestServer {
         } catch (ServerApiException e) {
             sendError(ctx, e.statusCode, e.getMessage());
         } catch (Exception e) {
-            LOG.error("Error handling GET /files: {}", e.getMessage(), e);
+            LOG.error("Error handling GET {}: {}", FILES_ENDPOINT, e.getMessage(), e);
             sendError(ctx, 500, "Internal server error");
         }
     }
@@ -195,7 +196,7 @@ public class RestServer {
         } catch (ServerApiException e) {
             sendError(ctx, e.statusCode, e.getMessage());
         } catch (Exception e) {
-            LOG.error("Error handling POST /files: {}", e.getMessage(), e);
+            LOG.error("Error handling POST {}: {}", FILES_ENDPOINT, e.getMessage(), e);
             sendError(ctx, 500, "Internal server error");
         }
     }
@@ -214,7 +215,7 @@ public class RestServer {
         } catch (ServerApiException e) {
             sendError(ctx, e.statusCode, e.getMessage());
         } catch (Exception e) {
-            LOG.error("Error handling PUT /files: {}", e.getMessage(), e);
+            LOG.error("Error handling PUT {}: {}", FILES_ENDPOINT, e.getMessage(), e);
             sendError(ctx, 500, "Internal server error");
         }
     }
