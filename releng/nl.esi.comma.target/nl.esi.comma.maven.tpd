@@ -191,4 +191,25 @@ maven MavenCentral scope=compile dependencyDepth=none missingManifest=generate i
         artifactId="reactor-core"
         version="3.6.10"
     }
+    // Vert.x - Event-driven async framework
+    dependency {
+        groupId="io.vertx"
+        artifactId="vertx-core"
+        version="4.5.0"
+    }
+    dependency {
+        groupId="io.vertx"
+        artifactId="vertx-web"
+        version="4.5.0"
+    }
+    dependency {
+        groupId="io.vertx"
+        artifactId="vertx-web-client"
+        version="4.5.0"
+    }
+    dependency {
+        groupId="io.vertx"
+        artifactId="vertx-auth-common"
+        version="4.5.0"
+    }
 }
