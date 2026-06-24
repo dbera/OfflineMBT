@@ -20,10 +20,8 @@ import java.util.HashSet
 import java.util.List
 import java.util.Map
 import java.util.Set
-import nl.esi.xtext.actions.generator.plantuml.ActionsUmlGenerator
 import nl.esi.comma.automata.RelationType
 import nl.esi.comma.automata.Semantics
-import nl.esi.comma.behavior.scl.scl.Actions
 import nl.esi.comma.behavior.scl.scl.AlternatePrecedence
 import nl.esi.comma.behavior.scl.scl.AlternateResponse
 import nl.esi.comma.behavior.scl.scl.AlternateSuccession
@@ -49,12 +47,12 @@ import nl.esi.comma.behavior.scl.scl.Past
 import nl.esi.comma.behavior.scl.scl.Precedence
 import nl.esi.comma.behavior.scl.scl.Ref
 import nl.esi.comma.behavior.scl.scl.RefSequence
-import nl.esi.comma.behavior.scl.scl.RefStep
 import nl.esi.comma.behavior.scl.scl.RespondedExistence
 import nl.esi.comma.behavior.scl.scl.Response
 import nl.esi.comma.behavior.scl.scl.SimpleChoice
 import nl.esi.comma.behavior.scl.scl.Succession
-import nl.esi.comma.behavior.scl.scl.Templates
+import nl.esi.comma.behavior.scl.scl.Template
+import nl.esi.comma.behavior.scl.scl.RefAction
 
 class ConstraintsStateMachineGenerator 
 {
@@ -65,23 +63,21 @@ class ConstraintsStateMachineGenerator
     char fs = '0';
     var Map<String,ConstraintStateMachine> mapContraintToAutomata = new HashMap<String,ConstraintStateMachine>
     
-    def computeActionToExpr(List<Actions> acts) {
-    	for(a : acts) {
-    		for(elm : a.act) {
-    			var ename = elm.name
-    			for(p : elm.actParam) {
-    				for(ia : p.initActions) {
-    					actionToExprMap.put(ename,(new ActionsUmlGenerator().generateAction(ia)).toString)
-    				}
-    			}
-    		}
-    	}
-    }
+//    def computeActionToExpr(List<Action> acts) {
+//		for(elm : acts) {
+//			var ename = elm.name
+//			for(p : elm.actParam) {
+//				for(ia : p.initActions) {
+//					actionToExprMap.put(ename,(new ActionsUmlGenerator().generateAction(ia)).toString)
+//				}
+//			}
+//		}
+//    }
     
     def generateStateMachine(Model model, String path, String name) 
     {
-    	computeActionToExpr(model.actions)
-        if(model.composition.isNullOrEmpty) {
+//    	computeActionToExpr(model.actions)
+        if(model.compositions.isNullOrEmpty) {
             computeStepLabels(model.templates)
             // generate state machine model for elm.name and save file with that name
             // precondition: unicodeMap is ready            
@@ -89,12 +85,12 @@ class ConstraintsStateMachineGenerator
             mapContraintToAutomata.put(name,constraintSMInst)
             
         } else {
-            for(elm : model.composition) {
+            for(elm : model.compositions) {
                 symbol = 'a'
                 activityList = new HashSet<String>();
                 unicodeMap = new HashMap<String,Character>();
                 fs = '0';
-                var templateList = new HashSet<Templates>
+                var templateList = new HashSet<Template>
                 for(t : elm.templates) templateList.add(t)
                 computeStepLabels(templateList.toList)
                
@@ -122,7 +118,7 @@ class ConstraintsStateMachineGenerator
     	else return RelationType.AND
     }
     
-    def computeStateMachine(List<Templates> templateList, String path, String name) 
+    def computeStateMachine(List<Template> templateList, String path, String name) 
     { 
        var sem = new Semantics
        var List<Automaton> automataList = new ArrayList<Automaton>();
@@ -400,7 +396,7 @@ class ConstraintsStateMachineGenerator
         return final_str;
     }*/
     
-    def computeStepLabels(List<Templates> templateList) {
+    def computeStepLabels(List<Template> templateList) {
         for(templates : templateList) {
             for(elm : templates.type) {
             	if(elm instanceof Choice) {
@@ -535,30 +531,16 @@ class ConstraintsStateMachineGenerator
             symbol++
         }
     }
-    
-	def getRefName(Ref ref){
-		var refName = ""
-		if(ref instanceof RefStep){
-			refName = ref.step.name
-		} else {
-			if(ref instanceof RefSequence){
-				refName = ref.seq.name
-			}
-		}
-		return refName
+
+	def getRefName(Ref ref) {
+	    return switch (ref) {
+	    	RefAction: ref.action.name
+            RefSequence: ref.seq.name
+	    	default: ""
+	    }
 	}
 	
-	def getRefName(List<Ref> refList){
-		var refName = new ArrayList<String>
-		for(ref : refList) {
-			if(ref instanceof RefStep){
-				refName.add(ref.step.name)
-			}
-			if(ref instanceof RefSequence){
-				refName.add(ref.seq.name)
-			}
-		}
-		return refName
+	def getRefName(List<Ref> refList) {
+	    return refList.map[refName]
 	}
-	
 }

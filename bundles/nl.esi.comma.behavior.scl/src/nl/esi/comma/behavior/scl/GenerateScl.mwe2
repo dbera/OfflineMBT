@@ -39,7 +39,7 @@ Workflow {
             name = "nl.esi.comma.behavior.scl.Scl"
             fileExtensions = "scl"
 
-            referencedResource = "platform:/resource/nl.esi.xtext.actions/model/generated/Actions.genmodel"
+            referencedResource = "platform:/resource/nl.esi.xtext.expressions/model/generated/Expression.genmodel"
 
             serializer = {
                 generateStub = false
@@ -55,6 +55,9 @@ Workflow {
             }
             junitSupport = {
                 junitVersion = "5"
+            }
+            parserGenerator = {
+                debugGrammar = true
             }
         }
     }

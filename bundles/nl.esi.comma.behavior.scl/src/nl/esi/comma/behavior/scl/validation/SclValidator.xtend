@@ -15,6 +15,10 @@
  */
 package nl.esi.comma.behavior.scl.validation
 
+import nl.esi.comma.behavior.scl.scl.Model
+import nl.esi.comma.behavior.scl.scl.SclPackage
+import org.eclipse.emf.ecore.EClass
+import org.eclipse.xtext.validation.Check
 
 /**
  * This class contains custom validation rules. 
@@ -22,16 +26,15 @@ package nl.esi.comma.behavior.scl.validation
  * See https://www.eclipse.org/Xtext/documentation/303_runtime_concepts.html#validation
  */
 class SclValidator extends AbstractSclValidator {
-	
-//	public static val INVALID_NAME = 'invalidName'
-//
-//	@Check
-//	def checkGreetingStartsWithCapital(Greeting greeting) {
-//		if (!Character.isUpperCase(greeting.name.charAt(0))) {
-//			warning('Name should start with a capital', 
-//					SclPackage.Literals.GREETING__NAME,
-//					INVALID_NAME)
-//		}
-//	}
-	
+    override protected isValidImportType(EClass importType) {
+        return super.isValidImportType(importType) || SclPackage.Literals.MODEL.isSuperTypeOf(importType)
+    }
+
+//    @Check
+//    def checkUniqueConstraints(Model model) {
+//        model.templates.getDuplicatesBy[name].forEach [
+//            error('Constraint ID should be unique', it,
+//                SclPackage.Literals.TEMPLATE__NAME)
+//        ]
+//    }
 }

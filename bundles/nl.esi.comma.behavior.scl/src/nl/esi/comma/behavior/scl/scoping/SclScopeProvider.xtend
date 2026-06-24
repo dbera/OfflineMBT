@@ -15,6 +15,14 @@
  */
 package nl.esi.comma.behavior.scl.scoping
 
+import nl.esi.comma.behavior.scl.scl.RefAction
+import nl.esi.xtext.expressions.expression.ExpressionPackage
+import org.eclipse.emf.ecore.EObject
+import org.eclipse.emf.ecore.EReference
+
+import static org.eclipse.xtext.scoping.Scopes.*
+
+import static extension org.eclipse.xtext.EcoreUtil2.*
 
 /**
  * This class contains custom scoping description.
@@ -23,5 +31,16 @@ package nl.esi.comma.behavior.scl.scoping
  * on how and when to use it.
  */
 class SclScopeProvider extends AbstractSclScopeProvider {
-
+    override getScope(EObject context, EReference reference) {
+        if (reference == ExpressionPackage.Literals.EXPRESSION_VARIABLE__VARIABLE) {
+            val refAction = context.getContainerOfType(RefAction)
+            if (refAction !== null) {
+                val variables = newArrayList
+                variables += refAction.action.inputs
+                variables += refAction.action.outputs
+                return scopeFor(variables, super.getScope(context, reference))
+            }
+        }
+        return super.getScope(context, reference)
+    }
 }

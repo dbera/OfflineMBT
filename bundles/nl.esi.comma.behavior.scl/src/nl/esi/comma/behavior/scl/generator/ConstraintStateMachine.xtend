@@ -49,6 +49,7 @@ class ConstraintStateMachine {
     def getAutomataList() { return automataList }
     
     def getComputedAutomata() { return fa }
+    def getDot() { return transformWithLabels(getComputedAutomata().toDot(), true) }
     
     def getStepName(char c) {
         for(k : unicodeMap.keySet) {

@@ -15,14 +15,14 @@
  */
 package nl.esi.comma.behavior.scl.ui.quickfix
 
-import nl.esi.xtext.actions.ui.quickfix.ActionsQuickfixProvider
+import nl.esi.xtext.expressions.ui.quickfix.ExpressionQuickfixProvider
 
 /**
  * Custom quickfixes.
  *
  * See https://www.eclipse.org/Xtext/documentation/310_eclipse_support.html#quick-fixes
  */
-class SclQuickfixProvider extends ActionsQuickfixProvider {
+class SclQuickfixProvider extends ExpressionQuickfixProvider {
 
 //	@Fix(SclValidator.INVALID_NAME)
 //	def capitalizeName(Issue issue, IssueResolutionAcceptor acceptor) {

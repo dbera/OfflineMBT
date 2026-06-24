@@ -13,27 +13,24 @@
 package nl.esi.comma.behavior.scl.generator
 
 import java.util.ArrayList
-import java.util.HashSet
 import java.util.List
 import java.util.Map
-import org.eclipse.xtext.generator.IFileSystemAccess2
-import nl.esi.comma.behavior.scl.generator.ConstraintStateMachine
-import nl.esi.comma.behavior.scl.scl.Model
-import nl.esi.comma.behavior.scl.scl.Actions
-import nl.esi.comma.behavior.scl.scl.ActionType
 import nl.esi.comma.automata.AlgorithmType
 import nl.esi.comma.automata.EAutomaton
+import nl.esi.comma.behavior.scl.scl.Action
+import nl.esi.comma.behavior.scl.scl.ActionType
+import nl.esi.comma.behavior.scl.scl.Model
+import org.eclipse.xtext.generator.IFileSystemAccess2
 
 class ScenarioGenerator {
 
     def generateTestScenarios(Map<String, ConstraintStateMachine> mapContraintToAutomata, 
-    							List<Actions> actList,
+    							List<Action> acts,
                                 Model constraintSource, int numSCN,
                                 IFileSystemAccess2 fsa, 
                                 String path, String _taskName,
                                 String algorithm) 
     {
-    	var acts = actList.head
         for(constraint : mapContraintToAutomata.keySet) {
             var automata = mapContraintToAutomata.get(constraint).computedAutomata;
             var map = mapContraintToAutomata.get(constraint).unicodeMap;
@@ -79,8 +76,8 @@ class ScenarioGenerator {
         }           
     }
     
-    def getStepType(String step, Actions acts) {
-    	for(a : acts.act) {
+    def getStepType(String step, List<Action> acts) {
+    	for(a : acts) {
     		if(a.name.equals(step))
     			return a.act
     	}
@@ -96,7 +93,7 @@ class ScenarioGenerator {
 
 	
 
-   def generateFeatureFile(String constraint, Actions acts, ArrayList<List<String>> SCNList) {
+   def generateFeatureFile(String constraint, List<Action> acts, ArrayList<List<String>> SCNList) {
         var idx = 0
         var stepIdx = 0
         var ctx = ActionType.PRE_CONDITION
@@ -131,7 +128,7 @@ class ScenarioGenerator {
 		'''
     }
 
-   	def generatePSInit(String constraint, Actions acts, Map<String, String> exprMap, ArrayList<List<String>> SCNList) {
+   	def generatePSInit(String constraint, List<Action> acts, Map<String, String> exprMap, ArrayList<List<String>> SCNList) {
    		var idx = 0
         var stepIdx = 0
         
@@ -153,7 +150,7 @@ class ScenarioGenerator {
 	'''
    	}
 
-   	def generateRecipe(String constraint, Actions acts, Map<String, String> exprMap, ArrayList<List<String>> SCNList) {
+   	def generateRecipe(String constraint, List<Action> acts, Map<String, String> exprMap, ArrayList<List<String>> SCNList) {
         var idx = 0
         var stepIdx = 0
                 
