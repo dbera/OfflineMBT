@@ -6,10 +6,12 @@ specification printer
         inputs
         PrintRequest	printJob
         CorrectionsReport	corrections
+        PrinterVariants	variants
         
         outputs
         Result		printResult
         Report		printReport
+        PrinterVariants		variants
     
         local
         PrintRequest	request
@@ -33,25 +35,44 @@ specification printer
                                          ] 
                            } 
                        }
+        variants := PrinterVariants {
+         version = "PX210",
+         release = "1.0.0"
+        }
+        variants := PrinterVariants {
+         version = "TX500",
+         release = "2.1.0"
+        }
+        variants := PrinterVariants {
+         version = "PX210",
+         release = "1.1.0"
+        }
     
+        suts variants, variants
     
         desc "PrintFactoryA 3D Printer_Model"
         
         action			RunPrintJob
         element-label	"Run Print Job"
         case			default step-type "ExecutePrinter" action-type RUN
-        with-inputs		Flow_1u2qmtt, request
+        with-inputs		Flow_1u2qmtt, request, variants
+        with-guard		(request.resolution == PrintResolution::HIGH and variants.version == "TX500")
+        or
+        (request.resolution != PrintResolution::HIGH and variants.version != "TX500")
         produces-outputs	Event_0jcg6zx suppress
         updates:
             Event_0jcg6zx := Flow_1u2qmtt
         produces-outputs	printResult
         updates:
             printResult := Result { verdict = Outcome::OK }
-        produces-outputs	printReport symbolic-link
+        produces-outputs	printReport symbolic-link suppress(printReport.id)
         updates:
             printReport := Report {
              id = request.id
             }
+        produces-outputs	variants symbolic-link
+        updates:
+            variants := variants
         
         action			ComposePrintJob
         element-label	"Compose Print Job"
@@ -76,15 +97,63 @@ specification printer
         action			RunPrepareJob
         element-label	"Run Prepare Job"
         case			default step-type "ExecutePrinter" action-type RUN
-        with-inputs		Flow_0iaelzn, request
+        with-inputs		Flow_0iaelzn, request, variants
+        with-guard		(request.resolution == PrintResolution::HIGH and variants.version == "TX500")
+        or
+        (request.resolution != PrintResolution::HIGH and variants.version != "TX500")
         produces-outputs	Event_0mxx05p suppress
         updates:
             Event_0mxx05p := Flow_0iaelzn
         produces-outputs	printResult
         updates:
             printResult := Result { verdict = Outcome::OK }
+        produces-outputs	variants symbolic-link
+        updates:
+            variants := variants
     
         element-labels ["PrintFactory", "A 3D Printer"]
+    }
+    
+    system PrintFactoryAssertions
+    {
+        inputs
+        Report	inspectionReport
+        
+        outputs
+        Report		inspectionReport
+    
+        local
+        AssertionsHistory	history
+        
+        UNIT	Event_1bxlea2
+    
+        init
+        history := AssertionsHistory { inspectionReports = <int[]>[] }
+    
+    
+        desc "PrintFactoryAssertions_Model"
+        
+        action			AssertVisualInspection
+        element-label	"Assert Visual Inspection"
+        case			default priority 100 step-type "Assertions" action-type ASSERT
+        with-inputs		inspectionReport, history
+        with-guard		not contains(history.inspectionReports, inspectionReport.id)
+        assertions default {
+            assert_kpi: assert-that (inspectionReport.kpi) {
+              equal-to 9.0 within-margin relative (1.0)
+            }
+        }
+        produces-outputs	Event_1bxlea2 suppress
+        produces-outputs	history symbolic-link
+        updates:
+            history := AssertionsHistory {
+              inspectionReports = add(history.inspectionReports, inspectionReport.id)
+            }
+        produces-outputs	inspectionReport symbolic-link suppress(inspectionReport.id)
+        updates:
+            inspectionReport := inspectionReport
+    
+        element-labels ["PrintFactory", "Assertions"]
     }
     
     system PrintFactoryInspection
@@ -113,7 +182,7 @@ specification printer
         element-label	"Run Visual inspection"
         case			default step-type "ExecuteInspection" action-type RUN
         with-inputs		Flow_07l0yyj, measureRequest
-        produces-outputs	inspectionReport symbolic-link
+        produces-outputs	inspectionReport symbolic-link suppress(inspectionReport.id)
         updates:
             inspectionReport := Report {
              id = measureRequest.id
@@ -131,7 +200,7 @@ specification printer
         produces-outputs	measureRequest
         references {
             reportLinking: measureRequest.printJobReport := printReport
-        } symbolic-link
+        } symbolic-link suppress(measureRequest.printJobReport.id)
         updates:
             measureRequest := inspectionJob
         produces-outputs	printReport symbolic-link suppress
@@ -200,13 +269,11 @@ specification printer
         Result	inspectionResult
         Result	optResult
         PrintRequest	printRequests
-        Report	inspectionReport
         
         outputs
         PrintRequest		printJob
         MeasureRequest		inspectionJob
         OptimizeRequest		optJob
-        Report		inspectionReport
     
         local
         FactoryCtx	Gateway_0p2uo9v
@@ -221,7 +288,6 @@ specification printer
         FactoryCtx	Flow_09b0flo
         FactoryCtx	Flow_1rkhqnd
         FactoryCtx	Flow_1vq9t2p
-        FactoryCtx	Flow_0fe8hce
         FactoryCtx	Flow_1y4bjf4
         FactoryCtx	Flow_1f74bn4
     
@@ -328,16 +394,16 @@ specification printer
         action			SendOptimizationJob
         element-label	"Send Optimization Job"
         case			default
-        with-inputs		Flow_0fe8hce
+        with-inputs		Flow_0kbycuh
         produces-outputs	Flow_01m2s0h
         updates:
-            Flow_01m2s0h := Flow_0fe8hce
+            Flow_01m2s0h := Flow_0kbycuh
         produces-outputs	optJob
         updates:
-            optJob := OptimizeRequest { id = Flow_0fe8hce.id }
+            optJob := OptimizeRequest { id = Flow_0kbycuh.id }
         
-        action			PreparePrinter
-        element-label	"Prepare Printer"
+        action			CleanPrinter
+        element-label	"Clean Printer"
         case			default
         with-inputs		Flow_1f74bn4
         produces-outputs	Flow_1rkhqnd
@@ -353,22 +419,6 @@ specification printer
              opType = OperationType::PREP
             }
         
-        action			AssertVisualInspection
-        element-label	"Assert Visual Inspection"
-        case			default step-type "Assert_Visual_Inspection" action-type ASSERT
-        with-inputs		Flow_0kbycuh, inspectionReport
-        assertions default {
-            assert_kpi: assert-that (inspectionReport.kpi) {
-              equal-to 9.0 within-margin relative (1.0)
-            }
-        }
-        produces-outputs	Flow_0fe8hce
-        updates:
-            Flow_0fe8hce := Flow_0kbycuh
-        produces-outputs	inspectionReport symbolic-link
-        updates:
-            inspectionReport := inspectionReport
-        
         action			SendVisualInspectionJob
         element-label	"Send Visual Inspection Job"
         case			default
@@ -376,14 +426,14 @@ specification printer
         produces-outputs	Flow_1dt29vl
         updates:
             Flow_1dt29vl := Flow_1y4bjf4
-        produces-outputs	inspectionJob
+        produces-outputs	inspectionJob suppress(inspectionJob.printJobReport.id)
         updates:
             inspectionJob := MeasureRequest {
              id = Flow_1y4bjf4.id
             }
         
-        action			WaitforPrepare
-        element-label	"Wait for Prepare"
+        action			WaitforClean
+        element-label	"Wait for Clean"
         case			default
         with-inputs		Flow_1rkhqnd, printResult
         produces-outputs	Flow_1vq9t2p
@@ -401,7 +451,8 @@ specification printer
         element-labels ["PrintFactory", "Factory Automation"]
     }
     
-	SUT-blocks PrintFactoryA3DPrinter PrintFactoryInspection PrintFactoryA3DPrinter PrintFactoryOptimization
+	SUT-blocks PrintFactoryA3DPrinter PrintFactoryInspection PrintFactoryOptimization
 	depth-limits 300
+	state-limits 1000
 	num-tests 1
 }

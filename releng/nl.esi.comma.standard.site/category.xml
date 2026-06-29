@@ -27,7 +27,7 @@
    <bundle id="nl.esi.comma.project.standard.cli">
       <category name="ComMA"/>
    </bundle>
-   <bundle id="nl.asml.matala.product.lsp.server">
+   <bundle id="nl.asml.matala.server">
       <category name="ComMA"/>
    </bundle>
    <category-def name="ComMA" label="ComMA">

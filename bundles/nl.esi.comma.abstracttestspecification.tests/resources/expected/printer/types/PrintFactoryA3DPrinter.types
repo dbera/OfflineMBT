@@ -8,6 +8,7 @@ record ExecutePrinter {
 record ExecutePrinterInput {
     UNIT Flow_1u2qmtt
     PrintRequest request
+    PrinterVariants variants
     UNIT Event_0jcg6zx
     Result printResult
     Report printReport
@@ -20,6 +21,7 @@ record ExecutePrinterInput {
 record ExecutePrinterOutput {
     UNIT Flow_1u2qmtt
     PrintRequest request
+    PrinterVariants variants
     UNIT Event_0jcg6zx
     Result printResult
     Report printReport

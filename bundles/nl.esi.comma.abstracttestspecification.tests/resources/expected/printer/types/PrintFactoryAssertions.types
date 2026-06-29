@@ -1,0 +1,24 @@
+import "../../../input/printer/printer.types"
+
+record Assertions {
+    AssertionsInput input
+    AssertionsOutput output
+}
+
+record AssertionsInput {
+    Report inspectionReport
+    AssertionsHistory history
+    UNIT Event_1bxlea2
+    UNIT Flow_07l0yyj
+    MeasureRequest measureRequest
+    Result inspectionResult
+}
+
+record AssertionsOutput {
+    Report inspectionReport
+    AssertionsHistory history
+    UNIT Event_1bxlea2
+    UNIT Flow_07l0yyj
+    MeasureRequest measureRequest
+    Result inspectionResult
+}

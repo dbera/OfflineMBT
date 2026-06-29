@@ -4,3 +4,4 @@ fastapi
 uvicorn[standard]
 websockets
 python-multipart
+httpx

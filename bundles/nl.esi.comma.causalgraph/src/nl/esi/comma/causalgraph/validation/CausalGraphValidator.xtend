@@ -102,10 +102,6 @@ class CausalGraphValidator extends AbstractCausalGraphValidator {
         ]
     }
 
-    private static def <T> Iterable<T> getDuplicatesBy(Iterable<T> source, (T)=>Object functor) {
-        return source.groupBy(functor).values.filter[size > 1].flatten
-    }
-
     @Check
     def checkLanguageName(CausalGraph _graph) {
         if (_graph.language.isNullOrEmpty && !_graph.eAllContents.filter(LanguageBody).isEmpty) {
