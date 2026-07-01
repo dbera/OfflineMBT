@@ -34,6 +34,14 @@ If you encounter any errors during startup, you can try running the script with 
 start-server.bat --clean
 ```
 
+The BPMN4S editor allows you to load and save BPMN files from a server folder (model repository). By default, this folder is the `models` directory included in the BPMN4S distribution.
+
+To use a different folder for your BPMN models, you can specify a custom model repository path using the `--repository-path` option when starting the server:
+
+```
+start-server.bat --repository-path C:\my\models
+```
+
 ## Starting the BPMN4S editor
 
 The BPMN4S editor will open automatically in your default browser when you run the `start-server.bat` script.
