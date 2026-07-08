@@ -315,28 +315,17 @@ class SnakesHelper {
 	static String action(Action action, Function<String, String> variablePrefix, String indent) {
 		if (action instanceof AssignmentAction) {
 			AssignmentAction a = (AssignmentAction) action;
-			String QUOTE = "\"";
 			// String variable = String.format("%s%s", variablePrefix.apply(a.getAssignment().getName()), a.getAssignment().getName());
 			String variable = String.format("%s", variablePrefix.apply(a.getAssignment().getName()));
 			// if(a.isSymbolic()) return String.format("%s = %s%s%s", variable, QUOTE, expression(a.getExp(), variablePrefix).replace("\"", "\\\""), QUOTE);
-			if(a.isSymbolic()) return String.format("%s = %s%s%s", variable, QUOTE, serialize(a.getExp()).toString().replace("\"", "\\\""), QUOTE);
-			else return String.format("%s = %s", variable, expression(a.getExp(), variablePrefix));
+			return String.format("%s = %s", variable, expression(a.getExp(), variablePrefix));
 		} else if (action instanceof RecordFieldAssignmentAction) {
 			RecordFieldAssignmentAction a = (RecordFieldAssignmentAction) action;
 			ExpressionRecordAccess access = (ExpressionRecordAccess) a.getFieldAccess();
-			String QUOTE = "\"";
-			if(a.isSymbolic()) {
-				String record = serialize(access.getRecord()).toString();
-				String field = access.getField().getName();
-				String value = serialize(a.getExp()).toString();
-				return String.format("%s.%s = %s%s%s", record, field, QUOTE, value.replace("\"", "\\\""), QUOTE);
-				// return QUOTE + (new ActionsUmlGenerator()).generateAction(a).toString() + QUOTE;
-			} else {
-				String record = expression(access.getRecord(), variablePrefix);
-				String field = access.getField().getName();
-				String value = expression(a.getExp(), variablePrefix);
-				return String.format("%s[\"%s\"] = %s", record, field, value);
-			}
+			String record = expression(access.getRecord(), variablePrefix);
+			String field = access.getField().getName();
+			String value = expression(a.getExp(), variablePrefix);
+			return String.format("%s[\"%s\"] = %s", record, field, value);
 		} else if(action instanceof IfAction) {
 			var txt = new String();
 			var act = (IfAction) action;
