@@ -30,11 +30,11 @@ class SclValidator extends AbstractSclValidator {
         return super.isValidImportType(importType) || SclPackage.Literals.MODEL.isSuperTypeOf(importType)
     }
 
-//    @Check
-//    def checkUniqueConstraints(Model model) {
-//        model.templates.getDuplicatesBy[name].forEach [
-//            error('Constraint ID should be unique', it,
-//                SclPackage.Literals.TEMPLATE__NAME)
-//        ]
-//    }
+    @Check
+    def checkUniqueConstraints(Model model) {
+        model.templates.getDuplicatesBy[name].forEach [
+            error('Constraint name should be unique', it,
+                SclPackage.Literals.TEMPLATE__NAME)
+        ]
+    }
 }
