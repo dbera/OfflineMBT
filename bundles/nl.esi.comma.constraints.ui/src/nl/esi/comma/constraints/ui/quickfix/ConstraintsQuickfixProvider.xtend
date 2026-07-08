@@ -20,7 +20,7 @@ import jakarta.inject.Provider
 import java.util.ArrayList
 import java.util.List
 import java.util.regex.Pattern
-import nl.esi.comma.constraints.constraints.Actions
+import nl.esi.comma.constraints.constraints.Action
 import nl.esi.comma.constraints.constraints.Constraints
 import nl.esi.xtext.types.ui.quickfix.TypesQuickfixProvider
 import org.eclipse.emf.ecore.EObject
@@ -74,7 +74,7 @@ class ConstraintsQuickfixProvider extends TypesQuickfixProvider {
 			
 			override apply(EObject element, IModificationContext context) throws Exception {
 				val root = EcoreUtil2.getContainerOfType(element, Constraints)
-				val lastActSeq = root.ssequences.last
+				val lastActSeq = root.sequences.last
 				var offset = 0
 				if (lastActSeq !== null) {
 					offset = getOffset(lastActSeq)
@@ -108,13 +108,13 @@ class ConstraintsQuickfixProvider extends TypesQuickfixProvider {
 			
 			override apply(EObject element, IModificationContext context) throws Exception {
 				val root = EcoreUtil2.getContainerOfType(element, Constraints)
-				val lastActSeq = root.asequences.last
+				val lastActSeq = root.sequences.last
 				var offset = 0
 				if (lastActSeq !== null) {
 					offset = getOffset(lastActSeq)
 				} else {
-					if (root.ssequences.size > 0){
-						offset = getOffset(root.ssequences.last)
+					if (root.sequences.size > 0){
+						offset = getOffset(root.sequences.last)
 					} else {
 						if (root.actions.size > 0){
 							offset = getOffset(root.actions.last) + 3
@@ -148,7 +148,7 @@ class ConstraintsQuickfixProvider extends TypesQuickfixProvider {
 				var offset = 0
 				var fix = ""
 				if (root.actions.size > 0) {
-					val lastAction = (root.actions.get(0) as Actions).act.last
+					val lastAction = root.actions.last
 					if (lastAction !== null) {
 						offset = getOffset(lastAction)
 					} else {
@@ -179,7 +179,7 @@ class ConstraintsQuickfixProvider extends TypesQuickfixProvider {
 				var offset = 0
 				var fix = ""
 				if (root.actions.size > 0) {
-					val lastAction = (root.actions.get(0) as Actions).act.last
+					val lastAction = root.actions.last
 					//System.out.println(lastAction.getName());
 					if (lastAction !== null) {
 						offset = getOffset(lastAction)
@@ -210,7 +210,7 @@ class ConstraintsQuickfixProvider extends TypesQuickfixProvider {
 				var offset = 0
 				var fix = ""
 				if (root.actions.size > 0) {
-					val lastAction = (root.actions.get(0) as Actions).act.last
+					val lastAction = root.actions.last
 					//System.out.println(lastAction.getName());
 					if (lastAction !== null) {
 						offset = getOffset(lastAction)
@@ -255,12 +255,6 @@ class ConstraintsQuickfixProvider extends TypesQuickfixProvider {
 	}
 	
 	def int getOffset(EObject context){
-		var offset = 0
-		if (context instanceof Actions){
-			offset = NodeModelUtils.findActualNodeFor(context).getEndOffset() - 3
-		} else {
-			offset = NodeModelUtils.findActualNodeFor(context).getEndOffset();
-		}
-		return offset
+		return NodeModelUtils.findActualNodeFor(context).getEndOffset()
 	}
 }

@@ -13,6 +13,7 @@
 package nl.esi.comma.constraints.generator;
 
 import java.util.HashMap
+import java.util.HashSet
 import java.util.List
 import java.util.Map
 import nl.esi.comma.automata.AlgorithmType
@@ -20,6 +21,7 @@ import nl.esi.comma.constraints.constraints.Constraints
 import nl.esi.comma.constraints.generator.report.ConformanceReport.ConformanceResults
 import nl.esi.comma.constraints.generator.report.ConformanceReportBuilder
 import nl.esi.comma.constraints.generator.report.ReportWriter
+import nl.esi.comma.constraints.generator.visualize.ConstraintsDependencyVizGenerator
 import nl.esi.comma.scenarios.scenarios.Scenarios
 import nl.esi.comma.steps.step.Steps
 import org.eclipse.core.resources.ResourcesPlugin
@@ -29,10 +31,6 @@ import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.generator.IFileSystemAccess
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IFileSystemAccessExtension2
-import nl.esi.comma.constraints.constraints.Actions
-import nl.esi.xtext.actions.generator.plantuml.ActionsUmlGenerator
-import nl.esi.comma.constraints.generator.visualize.ConstraintsDependencyVizGenerator
-import java.util.HashSet
 
 class ConstraintsAnalysisAndGeneration 
 {
@@ -65,7 +63,6 @@ class ConstraintsAnalysisAndGeneration
 		    var stepModel = getStepModel(constraintsSource) 
             computeStepsMapping(stepModel)
             // computeSequenceMapping(constraintsSource)
-            computeActionToExpr(constraintsSource.actions)
 			// fsa.generateFile(path + "constraints.decl", generateDeclareConstraints(constraintsSource, stepModel))
             mapContraintToAutomata = (new ConstraintsStateMachineGenerator()).generateStateMachine(constraintsSource, stepsMapping, srcGenPath + path, taskName, fsa, isVisualize, printConstraints)
             
@@ -96,11 +93,6 @@ class ConstraintsAnalysisAndGeneration
             }
             // Generate Tests. 
             if(isTestGen) {
-               (new ScenarioGenerator).generateTestScenarios(mapContraintToAutomata, stepModel, 
-                                                constraintsSource,
-                                                numSCN, getConfigurationTags(constraintsSource), 
-                                                getRequirementTags(constraintsSource), getDescTxt(constraintsSource), fsa, path, taskName, algorithm.toString().toLowerCase(), scn)
-
                 var TGReport = (new TestGenerator).generateTestScenarios(mapContraintToAutomata, stepModel, 
                                                 constraintsSource, numSCN, getDescTxt(constraintsSource), 
                                                 fsa, path, taskName, algorithm, k, skipAny, skipDuplicateSelfLoop, skipSelfLoop, scn, timeout, similarity)
@@ -135,22 +127,9 @@ class ConstraintsAnalysisAndGeneration
 		}
 	}
 	
-	def computeActionToExpr(List<Actions> acts) {
-		for (a : acts) {
-			for (elm : a.act) {
-				var ename = elm.name
-				for (p : elm.actParam) {
-					for (ia : p.initActions) {
-						actionToExprMap.put(ename, (new ActionsUmlGenerator().generateAction(ia)).toString)
-					}
-				}
-			}
-		}
-	}
-	
 	def String getDescTxt(Constraints constraintsSource) {
 	    var str = new String
-	    for(elm : constraintsSource.composition) {
+	    for(elm : constraintsSource.compositions) {
 	        str = elm.descTxt
 	    }
 	    return str
@@ -200,7 +179,7 @@ class ConstraintsAnalysisAndGeneration
 	// move this and specialize it for given a composition find set of tags
 	def getRequirementTags(Constraints constraintsSource) {
 	    var tagList = new HashSet<String>
-	    for(elm : constraintsSource.composition) {
+	    for(elm : constraintsSource.compositions) {
             for(f : elm.tagStr)
                tagList.add(f)
         }
@@ -211,13 +190,6 @@ class ConstraintsAnalysisAndGeneration
     // move this and specialize it for given a composition find set of tags	
 	def getConfigurationTags(Constraints constraintsSource) {
 	    var tagList = new HashSet<String>
-	    for(elm : constraintsSource.commonFeatures) {
-	        tagList.add(elm.name)
-	    }
-	    for(elm : constraintsSource.composition) {
-	        for(f : elm.features)
-	           tagList.add(f.name)
-	    }
 	    tagList
 	}
 	

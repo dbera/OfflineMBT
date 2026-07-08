@@ -16,25 +16,17 @@
 package nl.esi.comma.constraints.scoping
 
 import java.util.ArrayList
-import nl.esi.comma.constraints.constraints.ActSequenceDef
 import nl.esi.comma.constraints.constraints.Action
 import nl.esi.comma.constraints.constraints.Constraints
 import nl.esi.comma.constraints.constraints.ConstraintsPackage
-import nl.esi.comma.constraints.constraints.RefActSequence
-import nl.esi.comma.constraints.constraints.RefStep
-import nl.esi.comma.constraints.constraints.RefStepSequence
-import nl.esi.comma.constraints.constraints.StepSequenceDef
-import nl.esi.comma.steps.step.FeatureTag
-import nl.esi.comma.steps.step.StepAction
-import nl.esi.comma.steps.step.Steps
+import nl.esi.comma.constraints.constraints.RefAction
+import nl.esi.comma.constraints.constraints.Sequence
+import nl.esi.xtext.expressions.expression.ExpressionPackage
 import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.EReference
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.scoping.Scopes
-import nl.esi.comma.constraints.constraints.Templates
-import nl.esi.comma.constraints.constraints.RefAction
-import nl.esi.comma.constraints.constraints.Act
 
 /**
  * This class contains custom scoping description.
@@ -45,115 +37,58 @@ import nl.esi.comma.constraints.constraints.Act
 class ConstraintsScopeProvider extends AbstractConstraintsScopeProvider {
 
 	override getScope(EObject context, EReference reference) {
-		if (context instanceof Constraints && reference == ConstraintsPackage.Literals.CONSTRAINTS__COMMON_FEATURES) {
-			return scope_FeatureTag(context as Constraints, reference)
+		if (reference == ConstraintsPackage.Literals.REF_SEQUENCE__SEQUENCE){
+			return scope_Sequences(context, reference)
 		}
-		
-		if (context instanceof RefStep && reference == ConstraintsPackage.Literals.REF_STEP__STEP){
-			return scope_Steps(context, reference)
-		}
-		
-		if (context instanceof StepSequenceDef && reference == ConstraintsPackage.Literals.STEP_SEQUENCE_DEF__STEP_LIST){
-			return scope_Steps(context, reference)
-		}
-		
-		if (context instanceof RefStepSequence && reference == ConstraintsPackage.Literals.REF_STEP_SEQUENCE__SEQ){
-			return scope_StepSequence(context, reference)
-		}
-		
-		if (context instanceof RefActSequence && reference == ConstraintsPackage.Literals.REF_ACT_SEQUENCE__SEQ){
-			return scope_ActSequence(context, reference)
-		}
-		
-		if (context instanceof Templates && reference == ConstraintsPackage.Literals.ACT__ACT){
+		if (reference == ConstraintsPackage.Literals.REF_ACTION__ACTION){
 			return scope_Actions(context, reference)
 		}
 		
-		if (context instanceof RefAction && reference == ConstraintsPackage.Literals.ACT__ACT){
+		if (reference == ConstraintsPackage.Literals.SEQUENCE__ACTIONS){
 			return scope_Actions(context, reference)
 		}
-		
-		if (context instanceof Act && reference == ConstraintsPackage.Literals.ACT__ACT){
-			return scope_Actions(context, reference)
-		}
-		
-		if (context instanceof ActSequenceDef && reference == ConstraintsPackage.Literals.ACT__ACT){
-			return scope_Actions(context, reference)
-		}
+        if (reference == ExpressionPackage.Literals.EXPRESSION_VARIABLE__VARIABLE) {
+            return scope_Variables(context, reference)
+        }
 		return super.getScope(context, reference)
 	}
 	
 	def scope_Actions(EObject context, EReference reference) {
 		val actions = new ArrayList<Action>
 		val container = EcoreUtil2::getContainerOfType(context, Constraints) as Constraints
-		container.actions.forEach[
-			actions.addAll(it.act)
-		]
+		actions.addAll(container.actions)
 		for (imp : container.imports) {
 			val Resource r = EcoreUtil2.getResource(imp.eResource, imp.importURI)
-			if (r !== null){
-				val root = r.allContents.head
-				if (root instanceof Constraints) {
-					root.actions.forEach[
-						actions.addAll(it.act)
-					]
-				}
+			val root = r?.allContents?.head
+			if (root instanceof Constraints) {
+                actions.addAll(root.actions)
 			}
 		}
 		return Scopes.scopeFor(actions)
 	}
 	
-	def scope_ActSequence(EObject context, EReference reference) {
-		val aseq = new ArrayList<ActSequenceDef>
-		val container = EcoreUtil2::getContainerOfType(context, Constraints) as Constraints
-		aseq.addAll(container.asequences)
+	def scope_Sequences(EObject context, EReference reference) {
+		val sequences = new ArrayList<Sequence>
+		val container = EcoreUtil2::getContainerOfType(context, Constraints)
+		sequences.addAll(container.sequences)
 		for (imp : container.imports) {
 			val Resource r = EcoreUtil2.getResource(imp.eResource, imp.importURI)
-			val root = r.allContents.head
+			val root = r?.allContents?.head
 			if (root instanceof Constraints) {
-				aseq.addAll(root.asequences)
+				sequences.addAll(root.sequences)
 			}
 		}
-		return Scopes.scopeFor(aseq)
+		return Scopes.scopeFor(sequences)
 	}
-	
-	def scope_StepSequence(EObject context, EReference reference) {
-		val sseq = new ArrayList<StepSequenceDef>
-		val container = EcoreUtil2::getContainerOfType(context, Constraints) as Constraints
-		sseq.addAll(container.ssequences)
-		for (imp : container.imports) {
-			val Resource r = EcoreUtil2.getResource(imp.eResource, imp.importURI)
-			val root = r.allContents.head
-			if (root instanceof Constraints) {
-				sseq.addAll(root.ssequences)
-			}
-		}
-		return Scopes.scopeFor(sseq)
-	}
-	
-	def scope_Steps(EObject context, EReference reference) {
-		val steps = new ArrayList<StepAction>
-		for (imp : (EcoreUtil2::getContainerOfType(context, Constraints) as Constraints).imports) {
-			val Resource r = EcoreUtil2.getResource(imp.eResource, imp.importURI)
-			val root = r.allContents.head
-			if (root instanceof Steps) {
-				steps.addAll(root.actionList.acts)
-				root.actionList.acts.forEach[s | steps.add(s.stepWithOutData)]
-			}
-		}
-		return Scopes.scopeFor(steps)
-	}
-	
-	def scope_FeatureTag(Constraints constr, EReference reference) {
-		var tags = new ArrayList<FeatureTag>
-		for (imp : constr.imports) {
-			val Resource r = EcoreUtil2.getResource(imp.eResource, imp.importURI)
-			val root = r.allContents.head
-			if (root instanceof Steps) {
-				tags.addAll(root.featureList.featureList)
-			}
-		}
-		return Scopes.scopeFor(tags)
-	}
-	
+
+    def scope_Variables(EObject context, EReference reference) {
+        val refAction = EcoreUtil2.getContainerOfType(context, RefAction)
+        if (refAction !== null) {
+            val variables = newArrayList
+            variables += refAction.action.inputs
+            variables += refAction.action.outputs
+            return Scopes.scopeFor(variables, super.getScope(context, reference))
+        }
+        return super.getScope(context, reference)
+    }
 }
