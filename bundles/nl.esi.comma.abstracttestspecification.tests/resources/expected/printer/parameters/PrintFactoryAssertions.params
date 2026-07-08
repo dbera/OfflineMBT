@@ -1,0 +1,12 @@
+import "../types/PrintFactoryAssertions.types"
+
+data-instances
+AssertionsInput PrintFactoryAssertionsInput
+AssertionsOutput PrintFactoryAssertionsOutput
+
+data-implementation
+// Empty
+
+path-prefix "./dataset/"
+var-ref PrintFactoryAssertionsInput -> file-name "PrintFactoryAssertionsInput.json"
+var-ref PrintFactoryAssertionsOutput -> file-name "PrintFactoryAssertionsOutput.json"

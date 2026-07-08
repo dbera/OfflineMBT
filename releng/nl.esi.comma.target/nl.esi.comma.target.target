@@ -95,7 +95,7 @@
     <location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
       <unit id="nl.esi.xplus.lsp.feature.feature.group" version="0.0.0"/>
       <unit id="nl.esi.xplus.ui.feature.feature.group" version="0.0.0"/>
-      <repository location="https://TNO.github.io/XPlus/releases/v0.2.1/"/>
+      <repository location="https://TNO.github.io/XPlus/nightly/"/>
     </location>
   </locations>
 </target>

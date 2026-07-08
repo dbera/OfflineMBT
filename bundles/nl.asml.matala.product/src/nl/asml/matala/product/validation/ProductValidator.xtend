@@ -17,12 +17,14 @@ package nl.asml.matala.product.validation
 
 import com.google.common.collect.Iterators
 import java.util.HashSet
+import java.util.List
+import java.util.Map
 import java.util.Set
 import nl.asml.matala.product.product.ActionType
 import nl.asml.matala.product.product.Block
+import nl.asml.matala.product.product.DataReferences
 import nl.asml.matala.product.product.Function
 import nl.asml.matala.product.product.ProductPackage
-import nl.asml.matala.product.product.RefConstraint
 import nl.asml.matala.product.product.Update
 import nl.asml.matala.product.product.UpdateOutVar
 import nl.esi.xtext.actions.actions.ActionsPackage
@@ -39,12 +41,15 @@ import nl.esi.xtext.expressions.expression.Field
 import nl.esi.xtext.expressions.expression.Variable
 import nl.esi.xtext.types.types.RecordField
 import nl.esi.xtext.types.types.RecordFieldKind
+import nl.esi.xtext.types.types.RecordTypeDecl
 import org.eclipse.emf.ecore.EObject
 import org.eclipse.xtext.validation.Check
 
 import static extension nl.esi.xtext.actions.utilities.ActionsUtilities.*
+import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
 import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
 import static extension org.eclipse.lsat.common.xtend.Queries.*
+import static extension org.eclipse.xtext.EcoreUtil2.*
 
 /**
  * This class contains custom validation rules. 
@@ -102,6 +107,22 @@ class ProductValidator extends AbstractProductValidator {
             error("Duplicate variable name in local variables: " + localvars.name,
                 ProductPackage.Literals.BLOCK__LOCALVARS, block.localvars.indexOf(localvars))
         ]
+    }
+
+     /**
+     * All block variables should be records with at least 1 concrete field.
+     */
+    @Check
+    def checkBlockVariables(Block block) {
+        for (blockVar : block.invars.union(block.outvars).union(block.localvars)) {
+            if (!blockVar.type.isRecordType) {
+                error("Only record types are allowed for block variables", blockVar,
+                    ExpressionPackage.Literals.VARIABLE__TYPE)
+            } else if ((blockVar.type.type as RecordTypeDecl).allFields.forall[kind != RecordFieldKind::CONCRETE]) {
+                error('''At least 1 field must be concrete for record «blockVar.type.type.name»''', blockVar,
+                    ExpressionPackage.Literals.VARIABLE__TYPE)
+            }
+        }
     }
 
     /**
@@ -233,7 +254,7 @@ class ProductValidator extends AbstractProductValidator {
     @Check
     def checkConcreteVariablesGuard(Update update) {
         if (update.guard !== null) {
-            update.guard.reportWarningOnAccess(RecordFieldKind::SYMBOLIC)[ field | '''Symbolic record field '«field.FQN»' should not be used in guard''']
+            update.guard.reportWarningOnAccess(RecordFieldKind::SYMBOLIC)[ field | '''Symbolic record field  should not be used in guard''']
         }
     }
 
@@ -245,19 +266,43 @@ class ProductValidator extends AbstractProductValidator {
         if (updateOutputVar.act === null) {
             return
         }
-        updateOutputVar.act.actions.forEach [ action |
-            switch (it: action) {
-                AssignmentAction: {
-                    exp.reportWarningOnAccess(RecordFieldKind::SYMBOLIC)[ field | '''Symbolic record field '«field.FQN»' should not be used in concrete update''']
-                }
-                RecordFieldAssignmentAction: {
-                    // LHS check
-                    fieldAccess.reportWarningOnAccess(RecordFieldKind::SYMBOLIC)[ field | '''Symbolic record field '«field.FQN»' should not be assigned in concrete update''']
-                    // RHS check
-                    exp.reportWarningOnAccess(RecordFieldKind::SYMBOLIC)[ field | '''Symbolic record field '«field.FQN»' should not be used in concrete update''']
-                }
-            }
-        ]
+        updateOutputVar.act.actions.forEach[doCheckConcreteVariableUpdate("concrete update")]
+    }
+
+    /**
+     * Variables that are symbolic may not be used in an init
+     */
+    @Check
+    def checkConcreteVariableUpdate(Block block) {
+        block.initActions.forEach[doCheckConcreteVariableUpdate("initialization assignment")]
+    }
+
+    dispatch def private void doCheckConcreteVariableUpdate(IfAction action, String property) {
+        action.guard.reportWarningOnAccess(RecordFieldKind::SYMBOLIC)[ field | '''Symbolic record field should not be used in «property»''']
+        if (action.thenList !== null) {
+            action.thenList.actions.forEach[doCheckConcreteVariableUpdate(property)]
+        }
+        if (action.elseList !== null) {
+            action.elseList.actions.forEach[doCheckConcreteVariableUpdate(property)]
+        }
+    }
+
+    dispatch def private void doCheckConcreteVariableUpdate(ForAction action, String property) {
+        action.exp.reportWarningOnAccess(RecordFieldKind::SYMBOLIC)[ field | '''Symbolic record field should not be used in «property»''']
+        if (action.doList !== null) {
+            action.doList.actions.forEach[doCheckConcreteVariableUpdate(property)]
+        }
+    }
+
+    dispatch def private void doCheckConcreteVariableUpdate(AssignmentAction action, String property) {
+        action.exp.reportWarningOnAccess(RecordFieldKind::SYMBOLIC)[ field | '''Symbolic record field should not be used in «property»''']
+    }
+
+    dispatch def private void doCheckConcreteVariableUpdate(RecordFieldAssignmentAction action, String property) {
+        // LHS check
+        action.fieldAccess.reportWarningOnAccess(RecordFieldKind::SYMBOLIC)[ field | '''Symbolic record field should not be assigned in «property»''']
+        // RHS check
+        action.exp.reportWarningOnAccess(RecordFieldKind::SYMBOLIC)[ field | '''Symbolic record field should not be used in «property»''']
     }
 
     private def reportWarningOnAccess(Expression expression, RecordFieldKind accessKind, (RecordField)=>String messageProducer) {
@@ -273,21 +318,106 @@ class ProductValidator extends AbstractProductValidator {
         ]
     }
 
-    /**
-     * Variables that are concrete may not be assigned in reference updates
-     */
     @Check
-    def checkSymbolicVariableUpdate(RefConstraint refConstraint) {
-        if (refConstraint.act === null) {
-            return
-        }
-        refConstraint.act.actions.filter(RecordFieldAssignmentAction).forEach [
-            if (fields.forall[kind == RecordFieldKind.CONCRETE]) {
-                val field = fields.last
-                warning('''Concrete record field '«field.FQN»' should not be assigned in reference update''', it,
-                    ActionsPackage.Literals.RECORD_FIELD_ASSIGNMENT_ACTION__FIELD_ACCESS)
+    def checkDataReferences(DataReferences dataReferences) {
+        // Validate unique reference names
+        dataReferences.constr.getDuplicatesBy[name].forEach [
+            error('Reference name should be unique', it, ProductPackage.Literals.REF_CONSTRAINT__NAME)
+        ]
+
+        val actions = dataReferences.constr.xcollectOne[act].collect[actions]
+        // All actions in reference updates should be of type RecordFieldAssignmentAction
+        actions.reject(RecordFieldAssignmentAction).forEach[
+            error('''Only record-field assignments are supported in refrence updates''', it, null)
+        ]
+
+        val assignments = actions.filter(RecordFieldAssignmentAction)
+        val singleValueAssignments = newLinkedHashMap
+        assignments.forEach[findAndGroupSingleValueAssignments('', singleValueAssignments)]
+
+        singleValueAssignments.values.filter[size > 1].flatten.forEach[ assignment |
+            val reference = switch (assignment) {
+                RecordFieldAssignmentAction: ActionsPackage.Literals.RECORD_FIELD_ASSIGNMENT_ACTION__FIELD_ACCESS
+                Field: ExpressionPackage.Literals.FIELD__RECORD_FIELD
+            }
+            warning('''Record fields should be assigned only once''', assignment, reference)
+        ]
+
+        // Variables that are concrete should not be assigned in reference updates
+        singleValueAssignments.values.flatten.forEach[ assignment |
+            switch (it: assignment) {
+                RecordFieldAssignmentAction: {
+                    if (field.kind == RecordFieldKind.CONCRETE) {
+                        warning('''Concrete record field should not be assigned in reference update''', it,
+                            ActionsPackage.Literals.RECORD_FIELD_ASSIGNMENT_ACTION__FIELD_ACCESS)
+                    }
+                }
+                Field: {
+                    if (recordField.kind == RecordFieldKind.CONCRETE) {
+                        warning('''Concrete record field should not be assigned in reference update''', it,
+                            ExpressionPackage.Literals.FIELD__RECORD_FIELD)
+                    }
+                }
             }
         ]
+
+        // Variables that are supressed cannot be assigned in reference updates
+        val suppress = dataReferences.getContainerOfType(UpdateOutVar)?.suppress
+        if (suppress === null) {
+            return
+        }
+
+        // Check LHS variables
+        val suppressedVariables = suppress.varFields.filter(ExpressionVariable).map[variable].toSet
+        assignments.filter[suppressedVariables.contains(assignment)].forEach[
+            error('''Suppressed field cannot be assigned in reference update''', it,
+                ActionsPackage.Literals.RECORD_FIELD_ASSIGNMENT_ACTION__FIELD_ACCESS)
+        ]
+
+        // Check LHS record fields
+        val suppressedFields  = suppress.varFields.filter(ExpressionRecordAccess).map[field].toSet
+        assignments.filter[fields.exists[suppressedFields.contains(it)]].forEach[
+            error('''Suppressed field cannot be assigned in reference update''', it,
+                ActionsPackage.Literals.RECORD_FIELD_ASSIGNMENT_ACTION__FIELD_ACCESS)
+        ]
+
+        // Check RHS record fields
+        val rhsFields = dataReferences.eAllContents.filter(Field).toList
+        for (suppressedField : rhsFields.filter[suppressedFields.contains(recordField)]) {
+            error('''Suppressed field cannot be assigned in reference update''', suppressedField,
+                ExpressionPackage.Literals.FIELD__RECORD_FIELD)
+        }
+    }
+
+    private def void findAndGroupSingleValueAssignments(EObject source, String prefix, Map<String, List<EObject>> assignments) {
+        switch (it: source) {
+            RecordFieldAssignmentAction case field.type.isVectorType,
+            RecordFieldAssignmentAction case field.type.isMapType: {
+        		// Skip, not a single value
+        	}
+        	RecordFieldAssignmentAction case field.type.isRecordType && exp instanceof ExpressionRecord: {
+        	    (exp as ExpressionRecord).fields.forEach[ actField |
+                    val fieldPrefix = prefix + fieldAccess.serialize + '.'
+        	        findAndGroupSingleValueAssignments(actField, fieldPrefix, assignments)
+        	    ]
+        	}
+        	RecordFieldAssignmentAction: {
+        	    assignments.computeIfAbsent(prefix + fieldAccess.serialize)[newArrayList] += it
+        	}
+        	Field case recordField.type.isVectorType,
+            Field case recordField.type.isMapType: {
+                // Skip, not a single value
+            }
+            Field case recordField.type.isRecordType && exp instanceof ExpressionRecord: {
+                (exp as ExpressionRecord).fields.forEach[ actField |
+                    val fieldPrefix = prefix + recordField.name + '.'
+                    findAndGroupSingleValueAssignments(actField, fieldPrefix, assignments)
+                ]
+            }
+            Field: {
+                assignments.computeIfAbsent(prefix + recordField.name)[newArrayList] += it
+            }
+        }
     }
 
     /**
@@ -350,6 +480,7 @@ class ProductValidator extends AbstractProductValidator {
             }
         }
     }
+
 /* STRANGE BUG: Output Vars are Empty. Appears in Input Vars. 
  * Not appearing as problem during product generation!
  */

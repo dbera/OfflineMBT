@@ -1,0 +1,20 @@
+record UNIT {
+	int	unit
+}
+
+record Context {
+    int	id
+    Nested	nested
+}
+
+record Data {
+    int	id
+    mixed Nested	nested
+}
+
+record Nested {
+    int	id
+    mixed string	mix
+    symbolic string	symbol
+}
+
