@@ -30,6 +30,7 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>nl.asml.matala.generator.fast</artifactId>
             <version>${project.version}</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 
