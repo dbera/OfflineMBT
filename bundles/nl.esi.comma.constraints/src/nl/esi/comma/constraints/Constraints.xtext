@@ -38,6 +38,7 @@ Constraints returns base::ModelContainer: {Constraints}
     )?
     (
         'Constraints'
+        showWhere?='show-where'?
         (
             templates+=Template |
             sequences+=Sequence

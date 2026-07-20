@@ -70,6 +70,7 @@ class ConstraintsStateMachineGenerator
     var sequenceDefMap = new HashMap<String,List<List<String>>> // list of defined and used macros
     // a -> { b,c,d ; x,y,z } // support non-deterministic mapping
     var compoundUnicodeMap = new HashMap<Character,List<List<Character>>>
+    var showWhere = false
     
     val char INIT_CHAR = 'A'
     var char symbol = INIT_CHAR
@@ -93,6 +94,7 @@ class ConstraintsStateMachineGenerator
 
     def generateStateMachine(Constraints model, Map<String, String> _stepsMapping, String path, String name, IFileSystemAccess2 fsa, boolean display, boolean printConstraints) 
     {
+        showWhere = model.showWhere
         symbol = INIT_CHAR
         fs = INIT_CHAR
         transformMap(_stepsMapping)
@@ -745,7 +747,7 @@ class ConstraintsStateMachineGenerator
 //            for(elm : relatedSteps)
 //                addToUnusedUnicodeMap(elm)
             refName = ref.action.name ?: ""
-            if (!ref.whereArgs.isNullOrEmpty) {
+            if (showWhere && !ref.whereArgs.isNullOrEmpty) {
                 refName += ref.whereArgs.join(" (", " AND ", ")")[EcoreUtil3.serialize(it)]
             }
         }
