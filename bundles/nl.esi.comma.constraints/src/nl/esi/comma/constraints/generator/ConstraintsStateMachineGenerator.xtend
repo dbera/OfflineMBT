@@ -20,6 +20,7 @@ import java.util.HashSet
 import java.util.List
 import java.util.Map
 import java.util.Set
+import nl.esi.comma.constraints.constraints.Action
 import nl.esi.comma.constraints.constraints.AlternatePrecedence
 import nl.esi.comma.constraints.constraints.AlternateResponse
 import nl.esi.comma.constraints.constraints.AlternateSuccession
@@ -45,17 +46,16 @@ import nl.esi.comma.constraints.constraints.Past
 import nl.esi.comma.constraints.constraints.Precedence
 import nl.esi.comma.constraints.constraints.Ref
 import nl.esi.comma.constraints.constraints.RefAction
+import nl.esi.comma.constraints.constraints.RefSequence
 import nl.esi.comma.constraints.constraints.RespondedExistence
 import nl.esi.comma.constraints.constraints.Response
 import nl.esi.comma.constraints.constraints.SimpleChoice
 import nl.esi.comma.constraints.constraints.Succession
 import nl.esi.comma.constraints.constraints.Template
+import nl.esi.xtext.common.lang.utilities.EcoreUtil3
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.generator.IFileSystemAccess2
-import nl.esi.comma.constraints.constraints.RefSequence
-import nl.esi.comma.constraints.constraints.Action
-import org.eclipse.emf.ecore.util.EcoreUtil
 
 class ConstraintsStateMachineGenerator 
 {
@@ -112,7 +112,7 @@ class ConstraintsStateMachineGenerator
                 fs = INIT_CHAR;
                 
                 var templateList = new HashSet<Template>
-                for(t : elm.templates) templateList.add(t)
+                for(t : elm.templates) templateList.add(t.template)
                 computeUnicodeMaps(templateList.toList)
                 computeCompoundUnicodeMap
                 System.out.println(" > Constraint Name: " + elm.name)
@@ -739,11 +739,15 @@ class ConstraintsStateMachineGenerator
     def getRefName(Ref ref){
         var refName = new String
         if(ref instanceof RefAction) {
-            refName = getActionLabel(ref.action)
-            // data support: finding all related steps with different data            
-            var relatedSteps = getRelatedSteps(refName) // for action without data instances
-            for(elm : relatedSteps)
-                addToUnusedUnicodeMap(elm)
+//            refName = getActionLabel(ref.action)
+//            // data support: finding all related steps with different data            
+//            var relatedSteps = getRelatedSteps(refName) // for action without data instances
+//            for(elm : relatedSteps)
+//                addToUnusedUnicodeMap(elm)
+            refName = ref.action.name ?: ""
+            if (!ref.whereArgs.isNullOrEmpty) {
+                refName += ref.whereArgs.join(" (", " AND ", ")")[EcoreUtil3.serialize(it)]
+            }
         }
         if(ref instanceof RefSequence) {
             refName = ref.sequence.name
@@ -759,7 +763,7 @@ class ConstraintsStateMachineGenerator
     }
     
     // construct list of list of actions for each sequence def
-    def getRefActionList(RefSequence actSeq) {
+    private def getRefActionList(RefSequence actSeq) {
         var lstOfList = new ArrayList<List<String>>
         var lst = new ArrayList<String>
         for(act : actSeq.sequence.actions) {

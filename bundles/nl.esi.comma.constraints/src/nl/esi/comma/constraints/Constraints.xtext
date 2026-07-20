@@ -63,8 +63,22 @@ Sequence:
 Ref returns Ref:
     RefSequence | RefAction;
 
+/*
+ * Changed RefAction to have input output pointers to their arguments
+ */
+//RefAction:
+//    ('act')? action=[Action|ID] ('where' '(' args+=Expression (','args+=Expression)*')')? ('with' '(' args+=Expression (','args+=Expression)*')')?;
+
 RefAction:
-    ('act')? action=[Action|ID] ('with' '(' expression=Expression ')')?;
+    ('act')? action=[Action|ID]
+    ('where' '(' whereArgs+=Expression (',' whereArgs+=Expression)* ')')?
+    ('with' '(' withArgs+=Expression (',' withArgs+=Expression)* ')')?
+    ('asserting' '(' assertionRequirements+=AssertionRequirement (',' assertionRequirements+=AssertionRequirement)* ')')?
+;
+
+AssertionRequirement:
+    name=ID? 'assert-that' '(' expression=Expression ')'
+;
 
 RefSequence:
     'seq' sequence=[Sequence|ID] ('with' '(' expression=Expression ')')?;
@@ -76,6 +90,15 @@ ExpressionLevel0 returns expr::Expression: // Left associativity
     ExpressionLevel1 ({ExpressionByReference.left=current} "<-" right=ExpressionLevel1)?
 ;
 
+@Override
+ExpressionVariable returns ExpressionScopedVariable:
+	scope=ExpressionVariableScope? variable=[expr::Variable|ID]
+;
+
+enum ExpressionVariableScope:
+    DERIVED='derived' | INPUT='input' | OUTPUT='output' | LOCAL='local'
+;
+
 /*
  *      templates can be divided into two main groups: existence templates
  *      and relation templates. The former is a set of unary templates. They can be
@@ -84,12 +107,21 @@ ExpressionLevel0 returns expr::Expression: // Left associativity
  *      thus correspond to binary predicates over two variables.
  */
 Composition:
-    'constraint' name=ID 'is-composed-of' '{' templates+=[Template|ID]* '}'
+    // TODO: If we want to support template-parameters, we should update this syntax
+    // Otherwise the 'with-variables' and TemplateRef should be removed.
+    'constraint' name=ID ('(' variables+=Variable (',' variables+=Variable)* ')')?
+    'is-composed-of' '{'
+        templates+=TemplateRef*
+    '}'
     ('description' descTxt=STRING)?
     ('requirement-tags' tagStr+=STRING*)?;
 
+TemplateRef:
+    template=[Template|ID] ('(' args+=Expression (',' args+=Expression)* ')')?
+;
+
 Template:
-    'constraint' name=ID
+    'constraint' name=ID ('(' variables+=Variable (',' variables+=Variable)* ')')?
     variables+=Variable*
     type+=(Dependencies | Past | Future | Choice | Existential)+;
 
@@ -385,7 +417,7 @@ enum Negation:
  * ;
 
  * NotSuccession:
- *      // looser than not coexistance it requires that no b’s occur after a (and therefore no a’s before b).
+ *      // looser than not CoExistance it requires that no b’s occur after a (and therefore no a’s before b).
  *      //  Event B does not follow event A
  *      //refB = [step::StepAction|ID] 'can-never-occur-before' refA = [step::StepAction|ID]
  *      refA = Ref 'can-never-occur-before' refB = Ref
@@ -410,7 +442,7 @@ enum Negation:
  * ;
 
  * Succession:
- *      // stricter than coexistance it requires that b’s occur only after a (and therefore exists a before b).
+ *      // stricter than CoExistance it requires that b’s occur only after a (and therefore exists a before b).
  *      // resp = Response 'and' pre = Precedence
  *      refA = Ref 'occurs-iff-it-is-followed-by' refB = Ref 
  *      // startExposure occurs if and only if it is followed by endExposure

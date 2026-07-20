@@ -19,6 +19,8 @@ import java.util.ArrayList
 import nl.esi.comma.constraints.constraints.Action
 import nl.esi.comma.constraints.constraints.Constraints
 import nl.esi.comma.constraints.constraints.ConstraintsPackage
+import nl.esi.comma.constraints.constraints.ExpressionScopedVariable
+import nl.esi.comma.constraints.constraints.ExpressionVariableScope
 import nl.esi.comma.constraints.constraints.RefAction
 import nl.esi.comma.constraints.constraints.Sequence
 import nl.esi.xtext.expressions.expression.ExpressionPackage
@@ -26,6 +28,7 @@ import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.EReference
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.EcoreUtil2
+import org.eclipse.xtext.scoping.IScope
 import org.eclipse.xtext.scoping.Scopes
 
 /**
@@ -83,12 +86,19 @@ class ConstraintsScopeProvider extends AbstractConstraintsScopeProvider {
 
     def scope_Variables(EObject context, EReference reference) {
         val refAction = EcoreUtil2.getContainerOfType(context, RefAction)
-        if (refAction !== null) {
-            val variables = newArrayList
+
+        val scope = context instanceof ExpressionScopedVariable ? context.scope : ExpressionVariableScope.DERIVED
+        var outerScope = IScope.NULLSCOPE
+        val variables = newArrayList
+        if (refAction !== null && (scope == ExpressionVariableScope.DERIVED || scope == ExpressionVariableScope.INPUT)) {
             variables += refAction.action.inputs
-            variables += refAction.action.outputs
-            return Scopes.scopeFor(variables, super.getScope(context, reference))
         }
-        return super.getScope(context, reference)
+        if (refAction !== null && (scope == ExpressionVariableScope.DERIVED || scope == ExpressionVariableScope.OUTPUT)) {
+            variables += refAction.action.outputs
+        }
+        if (scope == ExpressionVariableScope.DERIVED || scope == ExpressionVariableScope.LOCAL) {
+            outerScope = super.getScope(context, reference)
+        }
+        return Scopes.scopeFor(variables, outerScope)
     }
 }

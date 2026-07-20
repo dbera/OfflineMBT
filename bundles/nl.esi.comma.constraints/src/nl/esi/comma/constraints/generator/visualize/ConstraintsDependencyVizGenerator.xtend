@@ -75,7 +75,7 @@ class ConstraintsDependencyVizGenerator {
 			} else {
 				for(elm : constraintsSource.compositions){
 					var templateList = new HashSet<Template>
-					for(t : elm.templates) {templateList.add(t)}
+					for(t : elm.templates) {templateList.add(t.template)}
 					computeGraph(templateList.toList)
 					graph.computeMissingConstraints
 					var dot = generateDot(fsa)
