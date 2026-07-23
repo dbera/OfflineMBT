@@ -17,7 +17,7 @@ import com.google.inject.Provider
 import java.io.File
 import java.util.Map
 import java.util.Set
-import nl.esi.comma.constraints.constraints.Action
+// import nl.esi.comma.constraints.constraints.Action
 import nl.esi.comma.constraints.constraints.Constraints
 import nl.esi.comma.constraints.constraints.RefAction
 import nl.esi.comma.constraints.constraints.RefSequence
@@ -30,11 +30,12 @@ import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.resource.ResourceSet
 import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.ui.editor.hover.html.DefaultEObjectHoverProvider
+import nl.esi.comma.constraints.constraints.Act
 
 class ConstraintsEObjectHoverProvider extends DefaultEObjectHoverProvider {
 	@Inject extension Provider<ResourceSet> resourceSetProvider
 	protected override String getFirstLine(EObject o) {
-		if (o instanceof Action) {
+		if (o instanceof Act) {
 			var info = getActionWithData(o)
 			return info
 		}
@@ -62,7 +63,7 @@ class ConstraintsEObjectHoverProvider extends DefaultEObjectHoverProvider {
 		return info
 	}
 	
-	def getActionWithData(Action o){
+	def getActionWithData(Act o){
 		var info = "Action <b>" + o.name + "</b><br>"
 		var constraintIDs = getUsageForAction(o)
 		if (constraintIDs.keySet.size > 0){
@@ -102,7 +103,7 @@ class ConstraintsEObjectHoverProvider extends DefaultEObjectHoverProvider {
 		return constraintIDs
 	}
 	
-	def getUsageForAction(Action action) {
+	def getUsageForAction(Act action) {
 		var Map<String, Set<String>> constraintIDs = newHashMap
 		var root = action.eContainer.eContainer as Constraints
 		var models = getRelatedModelsFromProject(root)

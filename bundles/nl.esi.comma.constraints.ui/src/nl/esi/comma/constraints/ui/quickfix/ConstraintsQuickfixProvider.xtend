@@ -20,7 +20,7 @@ import jakarta.inject.Provider
 import java.util.ArrayList
 import java.util.List
 import java.util.regex.Pattern
-import nl.esi.comma.constraints.constraints.Action
+import nl.esi.comma.constraints.constraints.Act
 import nl.esi.comma.constraints.constraints.Constraints
 import nl.esi.xtext.types.ui.quickfix.TypesQuickfixProvider
 import org.eclipse.emf.ecore.EObject

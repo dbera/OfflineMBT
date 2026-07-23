@@ -47,7 +47,7 @@ class SCLSemanticHighlightingCalculator extends DefaultSemanticHighlightingCalcu
 			}
 			var index = 0
 			for (node : NodeModelUtils.findNodesForFeature(actSeqDef, ConstraintsPackage.Literals.SEQUENCE__ACTIONS)) {
-				var n = NodeModelUtils.findNodesForFeature(actSeqDef.actions.get(index), ConstraintsPackage.Literals.ACTION__ACT).get(0)
+				var n = NodeModelUtils.findNodesForFeature(actSeqDef.actions.get(index), ConstraintsPackage.Literals.ACT__ACT).get(0)
 				if (actSeqDef.actions.get(index).act.toString.equals("Observable")) {
 					acceptor.addPosition(node.getOffset(), n.getLength(), SCLHighlightingConfiguration.OBSERVABLE);
 				} else {
@@ -70,7 +70,7 @@ class SCLSemanticHighlightingCalculator extends DefaultSemanticHighlightingCalcu
 		for (ref : EcoreUtil2.getAllContentsOfType(rootObject, Ref)) {
 			for (node : NodeModelUtils.findNodesForFeature(ref, ConstraintsPackage.Literals.REF_ACTION__ACTION)) {
 				if (ref instanceof RefAction) {
-					var n = NodeModelUtils.findNodesForFeature(ref.action, ConstraintsPackage.Literals.ACTION__ACT).head
+					var n = NodeModelUtils.findNodesForFeature(ref.action, ConstraintsPackage.Literals.ACT__ACT).head
 					if (ref.action.act.toString.equals("Observable")){
 						acceptor.addPosition(node.getOffset(), n.getLength(), SCLHighlightingConfiguration.OBSERVABLE);
 					} else {

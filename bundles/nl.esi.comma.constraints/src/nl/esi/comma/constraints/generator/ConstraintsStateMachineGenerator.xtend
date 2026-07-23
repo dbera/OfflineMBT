@@ -20,7 +20,7 @@ import java.util.HashSet
 import java.util.List
 import java.util.Map
 import java.util.Set
-import nl.esi.comma.constraints.constraints.Action
+import nl.esi.comma.constraints.constraints.Act
 import nl.esi.comma.constraints.constraints.AlternatePrecedence
 import nl.esi.comma.constraints.constraints.AlternateResponse
 import nl.esi.comma.constraints.constraints.AlternateSuccession
@@ -759,7 +759,7 @@ class ConstraintsStateMachineGenerator
     }
     
     //use the label instead of name, add "_" and replace data
-    private def getActionLabel(Action action){
+    private def getActionLabel(Act action){
     	val label = action.label ?: action.name ?: ""
     	return label.replaceAll(" ", "_")
     }

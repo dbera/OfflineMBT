@@ -16,7 +16,7 @@
 package nl.esi.comma.constraints.scoping
 
 import java.util.ArrayList
-import nl.esi.comma.constraints.constraints.Action
+import nl.esi.comma.constraints.constraints.Act
 import nl.esi.comma.constraints.constraints.Constraints
 import nl.esi.comma.constraints.constraints.ConstraintsPackage
 import nl.esi.comma.constraints.constraints.ExpressionScopedVariable
@@ -30,6 +30,7 @@ import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.scoping.IScope
 import org.eclipse.xtext.scoping.Scopes
+import nl.esi.comma.constraints.constraints.Act
 
 /**
  * This class contains custom scoping description.
@@ -57,7 +58,7 @@ class ConstraintsScopeProvider extends AbstractConstraintsScopeProvider {
 	}
 	
 	def scope_Actions(EObject context, EReference reference) {
-		val actions = new ArrayList<Action>
+		val actions = new ArrayList<Act>
 		val container = EcoreUtil2::getContainerOfType(context, Constraints) as Constraints
 		actions.addAll(container.actions)
 		for (imp : container.imports) {

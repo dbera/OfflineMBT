@@ -24,7 +24,7 @@ import java.util.ArrayList
 import java.util.HashSet
 import java.util.List
 import java.util.Set
-import nl.esi.comma.constraints.constraints.Action
+import nl.esi.comma.constraints.constraints.Act
 import nl.esi.comma.constraints.constraints.ActionType
 import nl.esi.comma.constraints.constraints.Constraints
 import nl.esi.comma.constraints.constraints.ConstraintsPackage
@@ -107,7 +107,7 @@ class ConstraintsValidator extends AbstractConstraintsValidator {
 		
 		constraints.actions.forEach[
 			if (!refList.contains(it.name)) {
-				warning("Unused action: " + it.name, it, ConstraintsPackage.Literals.ACTION__NAME,
+				warning("Unused action: " + it.name, it, ConstraintsPackage.Literals.ACT__NAME,
 					"unused_action", it.name)
 			}
 		]
@@ -205,8 +205,8 @@ class ConstraintsValidator extends AbstractConstraintsValidator {
 	/*check duplicate names for action */
 	@Check
 	def checkDuplicateNameAction(Constraints constraints){
-		val Set<Action> actions = new HashSet<Action>()
-		EcoreUtil2.getAllContentsOfType(constraints, Action).forEach[actions.add(it)]
+		val Set<Act> actions = new HashSet<Act>()
+		EcoreUtil2.getAllContentsOfType(constraints, Act).forEach[actions.add(it)]
 		for(action:actions){
 			var index = 0
 			if (!constraints.imports.nullOrEmpty){
@@ -225,7 +225,7 @@ class ConstraintsValidator extends AbstractConstraintsValidator {
 				}
 			}
 			if (index > 0){
-				error('Duplicate names.', action, ConstraintsPackage.eINSTANCE.action_Name)
+				error('Duplicate names.', action, ConstraintsPackage.eINSTANCE.act_Name)
 			}
 		}
 	}
@@ -403,7 +403,7 @@ class ConstraintsValidator extends AbstractConstraintsValidator {
 	                                    if (ref instanceof RefAction){
                                             if(ref.action.name.equals(action.name)){
                                                 if (action.act.equals(ActionType.OBSERVABLE)){
-                                                    error('Initial action should have Trigger as Type.', action, ConstraintsPackage.Literals.ACTION__NAME)
+                                                    error('Initial action should have Trigger as Type.', action, ConstraintsPackage.Literals.ACT__NAME)
                                                 }
                                             }
                                         }

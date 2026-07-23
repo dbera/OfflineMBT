@@ -10,7 +10,7 @@
  *
  * SPDX-License-Identifier: MIT
  */
-grammar nl.esi.comma.constraints.Constraints with nl.esi.xtext.expressions.Expression
+grammar nl.esi.comma.constraints.Constraints with nl.esi.xtext.actions.Actions //nl.esi.xtext.expressions.Expression
 
 generate constraints "http://www.esi.nl/comma/constraints/Constraints"
 import "http://www.esi.nl/xtext/common/lang/Base" as base
@@ -29,7 +29,7 @@ Constraints returns base::ModelContainer: {Constraints}
     )?
     (
         'Actions'
-        actions+=Action*
+        actions+=Act*
     )?
     (
         'Requirements'
@@ -48,7 +48,7 @@ Constraints returns base::ModelContainer: {Constraints}
 Actor:
     name=ID (label=STRING)?;
 
-Action:
+Act:
     act=ActionType name=ID (label=STRING)?
     ('inputs' inputs+=Variable*)?
     ('outputs' outputs+=Variable*)?;
@@ -58,7 +58,7 @@ enum ActionType:
 
 Sequence:
     'Sequence' name=ID '{'
-        actions+=[Action|ID]*
+        actions+=[Act|ID]*
     '}';
 
 Ref returns Ref:
@@ -71,9 +71,9 @@ Ref returns Ref:
 //    ('act')? action=[Action|ID] ('where' '(' args+=Expression (','args+=Expression)*')')? ('with' '(' args+=Expression (','args+=Expression)*')')?;
 
 RefAction:
-    ('act')? action=[Action|ID]
+    ('act')? action=[Act|ID]
     ('where' '(' whereArgs+=Expression (',' whereArgs+=Expression)* ')')?
-    ('with' '(' withArgs+=Expression (',' withArgs+=Expression)* ')')?
+    ('with' '(' withArgs+=AssignmentAction (',' withArgs+=AssignmentAction)* ')')?
     ('asserting' '(' assertionRequirements+=AssertionRequirement (',' assertionRequirements+=AssertionRequirement)* ')')?
 ;
 

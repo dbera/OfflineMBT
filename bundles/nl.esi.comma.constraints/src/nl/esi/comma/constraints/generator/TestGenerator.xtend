@@ -20,7 +20,7 @@ import java.util.Map
 import nl.esi.comma.automata.AlgorithmType
 import nl.esi.comma.automata.EAutomaton
 import nl.esi.comma.automata.ScenarioComputeResult
-import nl.esi.comma.constraints.constraints.Action
+import nl.esi.comma.constraints.constraints.Act
 import nl.esi.comma.constraints.constraints.ActionType
 import nl.esi.comma.constraints.constraints.Constraints
 import nl.esi.comma.constraints.generator.report.ConformanceReport.SimScore
@@ -334,7 +334,7 @@ class TestGenerator {
         var stepIdx = 0
         var ctx = StepType.GIVEN
         
-        var actionDef = new ArrayList<Action> // constraintSource.actions
+        var actionDef = new ArrayList<Act> // constraintSource.actions
         if(!constraintSource.actions.isNullOrEmpty) actionDef.addAll(constraintSource.actions)
         var importedConstraintSource = getConstraintsModel(constraintSource)
         for(c : importedConstraintSource) actionDef.addAll(c.actions)
@@ -391,7 +391,7 @@ class TestGenerator {
         
     }
     
-    def getStepType(String step, Steps stepModel, List<Action> actList) {
+    def getStepType(String step, Steps stepModel, List<Act> actList) {
         if(stepModel!== null) {
             for(action : stepModel.actionList.acts) {
                 if(step.equals(action.name)) 
