@@ -72,7 +72,8 @@ Ref returns Ref:
 
 RefAction:
     ('act')? action=[Act|ID]
-    ('where' '(' whereArgs+=Expression (',' whereArgs+=Expression)* ')')?
+    ('where-concrete' '(' whereArgs+=Expression (',' whereArgs+=Expression)* ')')?
+    ('where-correlation' '(' whereOptArgs+=Expression (',' whereOptArgs+=Expression)* ')')?
     ('with' '(' withArgs+=AssignmentAction (',' withArgs+=AssignmentAction)* ')')?
     ('asserting' '(' assertionRequirements+=AssertionRequirement (',' assertionRequirements+=AssertionRequirement)* ')')?
 ;

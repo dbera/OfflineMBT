@@ -66,6 +66,10 @@ class ConstraintsAnalysisAndGeneration
 			// fsa.generateFile(path + "constraints.decl", generateDeclareConstraints(constraintsSource, stepModel))
             mapContraintToAutomata = (new ConstraintsStateMachineGenerator()).generateStateMachine(constraintsSource, stepsMapping, srcGenPath + path, taskName, fsa, isVisualize, printConstraints)
             
+            // Work in Progress //
+            (new CPNTemplateGenerator().generatePS(constraintsSource, fsa))
+            // Work in Progress //
+            
             if(scn!==null && isCoCo) {
                 // old implementation
                 // var crSet = (new ComformanceChecker).checkConformance(scn, mapContraintToAutomata, stepsMapping, seqsMapping, fsa, path)
