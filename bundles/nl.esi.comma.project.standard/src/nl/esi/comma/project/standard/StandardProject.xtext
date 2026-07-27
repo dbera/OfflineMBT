@@ -20,8 +20,18 @@ Project returns base::ModelContainer: {Project}
 	'Project' name = ID '{'
 		(offlineBlocks += OfflineGenerationBlock)*
 		(statemachineBlocks += StateMachineGenerationBlock)*
+		(testConformanceBlocks += TestConformanceBlock)*
 	'}'
 ;
+
+TestConformanceBlock:
+    'Check-Test-Conformance' '{'
+        name = ID '{'
+            'constraints' ('files' constraintsFiles += STRING+ | 'directories' constraintsDirs += FilePath+)
+            ('concrete-test-scenario' tspecFile = STRING)
+        '}'
+    '}'
+; 
 
 OfflineGenerationBlock:
     'Generate' target=OfflineGenerationTarget '{'
@@ -54,6 +64,7 @@ StateMachineGenerationBlock:
 	'Conformance-Coverage-And-Test-Generation' '{'
 		name = ID '{'
 			'constraints' ('files' constraintsFiles += STRING+ | 'directories' constraintsDirs += FilePath+)
+			('concrete-test-scenario' tspecFile = STRING)?
 			(visualizeSM ?= 'visualize-constraints')?
 			(printConstraints ?= 'print-constraints')?
 			(testGen = TestGeneration)?

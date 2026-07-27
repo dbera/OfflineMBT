@@ -13,16 +13,23 @@
  
 package nl.esi.comma.constraints.generator
 
-import com.google.inject.Inject
+import java.util.ArrayList
 import java.util.HashSet
+import java.util.List
 import java.util.Set
 import nl.esi.comma.constraints.constraints.Constraints
 import nl.esi.comma.constraints.constraints.Future
 import nl.esi.comma.constraints.constraints.Ref
 import nl.esi.comma.constraints.constraints.RefAction
 import nl.esi.comma.constraints.constraints.Response
+import nl.esi.comma.constraints.constraints.Template
+import nl.esi.comma.testspecification.testspecification.AssertionStep
+import nl.esi.comma.testspecification.testspecification.RunStep
+import nl.esi.comma.testspecification.testspecification.TestDefinition
 import nl.esi.xtext.actions.actions.AssignmentAction
+import nl.esi.xtext.actions.actions.RecordFieldAssignmentAction
 import nl.esi.xtext.expressions.expression.Expression
+import nl.esi.xtext.expressions.expression.ExpressionRecordAccess
 import nl.esi.xtext.expressions.expression.Variable
 import nl.esi.xtext.types.types.TypesModel
 import org.eclipse.emf.common.util.BasicEList
@@ -35,17 +42,92 @@ import org.eclipse.xtext.serializer.ISerializer
 
 import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
 
+// import static extension org.eclipse.emf.ecore.util.EcoreUtil.*
+// import org.eclipse.emf.common.util.URI
+// import org.eclipse.xtext.resource.XtextResourceSet
+
+
+
 class CPNTemplateGenerator 
 {
-    @Inject extension ISerializer serializer
+    def isStepNamePresent(List<RefInfo> labelList, String name) {
+        for(label : labelList) { if(label.refName.equals(name)) return true }
+        return false
+    }
 
-    def generatePS(Constraints model, IFileSystemAccess2 fsa) 
+    def generateTSpecModel(TestDefinition td, List<RefInfo> labelList) 
     {
-        var typesText = new String
+        var idx = 0
+        for(ss : td.stepSeq) {
+            for(step: ss.step) {
+                if(step instanceof RunStep) {
+                    if(isStepNamePresent(labelList, step.stepVar.name)) idx++
+                }
+                else if(step instanceof AssertionStep) {
+                    if(isStepNamePresent(labelList, step.stepVar.name)) idx++
+                }
+                else {}
+            }
+        }
+        var _idx = 0
+        return
+        '''
+        system RootConcreteTSpec
+        {
+            outputs
+            «FOR l : labelList»
+                «l.refType» «l.refName»
+            «ENDFOR»
+
+            local
+            «FOR i : 0..idx»
+                UNIT p«i»
+            «ENDFOR»
+            
+        init
+            p0 := UNIT { unit = 0 }
+
+            desc "TSpecCPNModel"
+
+            «FOR ss : td.stepSeq»
+                «FOR step : ss.step»
+                    «IF step instanceof RunStep && isStepNamePresent(labelList, step.stepVar.name)»
+                        action «step.type.name»_«_idx»
+                        element-label "«step.type.name»"
+                        case default
+                        with-inputs p«_idx»
+                        produces-outputs «step.stepVar.name»
+                        updates:
+                            // Constructor
+                            «step.stepVar.name» := «Utils.defaultValue(step.stepVar.type.type, step.stepVar.name)»
+                        «FOR elm : step.refStep»
+                            «FOR act : elm.input.actions»
+                                «IF act instanceof RecordFieldAssignmentAction»«IF act.exp instanceof ExpressionRecordAccess»   // ReferenceExp. TODO Skip. «ENDIF»«ENDIF»
+                                «NodeModelUtils.getNode(act).text.replaceAll("(?m)^\\s*$\\R?", "")»
+                            «ENDFOR»
+                        «ENDFOR»
+                        produces-outputs p«_idx+1»
+                        «{_idx++ ""}»
+                    «ELSEIF step instanceof AssertionStep && isStepNamePresent(labelList, step.stepVar.name)»
+                    «ENDIF»
+                «ENDFOR»
+            «ENDFOR»
+        }
+        '''
+    }
+
+    def generatePS(Constraints model, TestDefinition td, IFileSystemAccess2 fsa) 
+    {
+        var typesText = '''''' 
+//        '''
+//        record UNIT {
+//            int unit
+//        }
+//        '''
         var specBody = ''''''
 
-        // get first layer of types definitions
-        typesText = typesText + "\n\n" + generateTypes(model)
+        // get nested type definitions
+        typesText = typesText + "\n" + generateTypes(model)
 
         // parse custom defined types and append to existing type definitions
         for(typ : model.types) {
@@ -54,14 +136,16 @@ class CPNTemplateGenerator
                 typesText = typesText + node.getText()
             }
         }
-        System.out.println(typesText)
         var uri = model.eResource.getURI()
         if (uri === null) return "Unknown URI"
         var fileName = uri.trimFileExtension().lastSegment()
         // generate types file that will be imported into the generated ps file
         fsa.generateFile(fileName + ".types", typesText)
 
-        // start computing the ps file
+        // state computing ps system model based on concrete tspec
+        var tspecModel = generateTSpecModel(td, computeLabelSet(model.templates))
+
+        // start computing ps system model based on declare constraints
         var specPrefix = 
         '''
         import "«fileName».types"
@@ -99,7 +183,7 @@ class CPNTemplateGenerator
         }
 
         '''
-        fsa.generateFile(fileName + ".ps", specPrefix + specBody + specPostfix)
+        fsa.generateFile(fileName + ".ps", specPrefix + tspecModel + specBody + specPostfix)
     }
 
     // function to collect types from imports recursively //
@@ -141,8 +225,40 @@ class CPNTemplateGenerator
         return resultText
     }
 
+    def isRefInfoPresent(ArrayList<RefInfo> labelList, RefInfo refInfo) {
+        for(elm : labelList) {
+            if(refInfo.refName.equals(elm.refName) && refInfo.refType.equals(elm.refType)) {
+                return true
+            }
+        }
+        return false
+    }
+
     // Generate PSpec System for Response Template
     // TODO create class for Declare Template generator functions
+    def computeLabelSet(EList<Template> tlist) {
+        var labelList = new ArrayList<RefInfo>
+        for(t : tlist) {
+            for(elm : t.type) {
+                if(elm instanceof Future) {
+                    for(elmInst : elm.type) {
+                        if(elmInst instanceof Response) {
+                            if(elmInst.refA.head instanceof RefAction) {
+                                if(!isRefInfoPresent(labelList, getRefInputTypeAndVar(elmInst.refA.head)))
+                                    labelList.add(getRefInputTypeAndVar(elmInst.refA.head))
+                            }
+                            if(elmInst.refB.head instanceof RefAction) {
+                                if(!isRefInfoPresent(labelList, getRefInputTypeAndVar(elmInst.refB.head)))
+                                    labelList.add(getRefInputTypeAndVar(elmInst.refB.head))
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return labelList
+    }
+
     def generateResponseTemplate(
         String templateName, Variable correlationVar,
         Ref activationEventInst, RefInfo actEventInfo, String activationEvent, 
@@ -268,6 +384,7 @@ class CPNTemplateGenerator
         val resource = expr.eResource as XtextResource
         val serializer = resource.resourceServiceProvider.get(ISerializer)
         return serializer.serialize(expr).trim
+//        return serialize(expr).trim
     }
 
     def String cleanSerialize(AssignmentAction expr) {
@@ -275,6 +392,7 @@ class CPNTemplateGenerator
         val resource = expr.eResource as XtextResource
         val serializer = resource.resourceServiceProvider.get(ISerializer)
         return serializer.serialize(expr).trim
+//        return serialize(expr).trim
     }
     // End of Utility functions //
 }

@@ -38,6 +38,8 @@ import org.eclipse.xtext.generator.IGeneratorContext
 import org.eclipse.xtext.nodemodel.util.NodeModelUtils
 
 import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
+import nl.esi.comma.testspecification.testspecification.TestDefinition
+import nl.esi.comma.testspecification.testspecification.TSMain
 
 /**
  * Generates code from your model files on save.
@@ -75,6 +77,19 @@ class StateMachineGenerator extends AbstractGenerator {
             if (task.testGen.algorithmPrefixSuffix) algorithm = AlgorithmType.PREFIX_SUFFIX;
             if (task.testGen.algorithmPrefixSuffixMinimized) algorithm = AlgorithmType.PREFIX_SUFFIX_MINIMIZED;
             if (task.testGen.similarity != 0) similarity = task.testGen.similarity 
+        }
+
+        if(task.tspecFile !== null) {
+            var tspecResource = EcoreUtil2.getResource(resource, task.tspecFile)
+            if(tspecResource === null) {
+                throw new Exception(task.tspecFile + " Could not be resolved.")
+            }
+            var tspec = tspecResource.allContents.head
+            if(tspec !== null && tspec instanceof TSMain) {
+                (new ConstraintsAnalysisAndGeneration).generatePSpec(
+                    resource, fsa, constraints, tspec as TSMain
+                )
+            }
         }
 
     	if(task.scenarioFile !== null) {

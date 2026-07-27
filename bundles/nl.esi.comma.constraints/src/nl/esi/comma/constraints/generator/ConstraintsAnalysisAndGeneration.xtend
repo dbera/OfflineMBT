@@ -31,6 +31,8 @@ import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.generator.IFileSystemAccess
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IFileSystemAccessExtension2
+import nl.esi.comma.testspecification.testspecification.TestDefinition
+import nl.esi.comma.testspecification.testspecification.TSMain
 
 class ConstraintsAnalysisAndGeneration 
 {
@@ -39,6 +41,18 @@ class ConstraintsAnalysisAndGeneration
 	// var Map<String, ArrayList<String>> seqsMapping = new HashMap<String, ArrayList<String>>
 	var Map<String, String> actionToExprMap = new HashMap<String, String>
 	
+	/* New Implementation of Declare in terms of Petri nets */	
+	def generatePSpec(
+	    Resource res, IFileSystemAccess2 fsa, 
+	    List<Constraints> constraints,
+	    TSMain tsMain) {
+        for(constraintsSource : constraints){
+            (new CPNTemplateGenerator().generatePS(constraintsSource, tsMain.model as TestDefinition, fsa))
+        }
+	}
+    /* New Implementation of Declare in terms of Petri nets */  	
+
+    // Legacy Implementation. 
 	def generateStateMachine(Resource res, IFileSystemAccess2 fsa, 
 	                         List<Constraints> constraints, 
 	                         String taskName, 
@@ -65,11 +79,7 @@ class ConstraintsAnalysisAndGeneration
             // computeSequenceMapping(constraintsSource)
 			// fsa.generateFile(path + "constraints.decl", generateDeclareConstraints(constraintsSource, stepModel))
             mapContraintToAutomata = (new ConstraintsStateMachineGenerator()).generateStateMachine(constraintsSource, stepsMapping, srcGenPath + path, taskName, fsa, isVisualize, printConstraints)
-            
-            // Work in Progress //
-            (new CPNTemplateGenerator().generatePS(constraintsSource, fsa))
-            // Work in Progress //
-            
+
             if(scn!==null && isCoCo) {
                 // old implementation
                 // var crSet = (new ComformanceChecker).checkConformance(scn, mapContraintToAutomata, stepsMapping, seqsMapping, fsa, path)
