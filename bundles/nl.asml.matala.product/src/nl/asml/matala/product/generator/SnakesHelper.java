@@ -29,6 +29,7 @@ import nl.esi.xtext.expressions.expression.ExpressionAddition;
 import nl.esi.xtext.expressions.expression.ExpressionAnd;
 import nl.esi.xtext.expressions.expression.ExpressionAny;
 import nl.esi.xtext.expressions.expression.ExpressionBracket;
+import nl.esi.xtext.expressions.expression.ExpressionConditional;
 import nl.esi.xtext.expressions.expression.ExpressionConstantBool;
 import nl.esi.xtext.expressions.expression.ExpressionConstantInt;
 import nl.esi.xtext.expressions.expression.ExpressionConstantReal;
@@ -50,6 +51,7 @@ import nl.esi.xtext.expressions.expression.ExpressionModulo;
 import nl.esi.xtext.expressions.expression.ExpressionMultiply;
 import nl.esi.xtext.expressions.expression.ExpressionNEqual;
 import nl.esi.xtext.expressions.expression.ExpressionNot;
+import nl.esi.xtext.expressions.expression.ExpressionNullCoalescing;
 import nl.esi.xtext.expressions.expression.ExpressionNullLiteral;
 import nl.esi.xtext.expressions.expression.ExpressionOr;
 import nl.esi.xtext.expressions.expression.ExpressionPlus;
@@ -144,6 +146,10 @@ class SnakesHelper {
 			return String.format("max(%s, %s)", expression(e.getLeft(), variablePrefix), expression(e.getRight(), variablePrefix));
 		} else if (expression instanceof ExpressionPower e) {
 			return String.format("pow(%s, %s)", expression(e.getLeft(), variablePrefix), expression(e.getRight(), variablePrefix));
+		} else if (expression instanceof ExpressionNullCoalescing e) {
+			return String.format("%s if (%s) is not None else %s", expression(e.getLeft(), variablePrefix), expression(e.getLeft(), variablePrefix), expression(e.getRight(), variablePrefix));
+		} else if (expression instanceof ExpressionConditional e) {
+			return String.format("%s if %s else %s", expression(e.getMiddle(), variablePrefix), expression(e.getLeft(), variablePrefix), expression(e.getRight(), variablePrefix));
 		} else if (expression instanceof ExpressionVariable e) {
 			return String.format("%s", variablePrefix.apply(e.getVariable().getName()));
 		} else if (expression instanceof ExpressionGreater e) {

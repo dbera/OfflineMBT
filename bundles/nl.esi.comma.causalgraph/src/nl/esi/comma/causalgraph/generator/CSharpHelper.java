@@ -29,6 +29,7 @@ import nl.esi.xtext.expressions.expression.ExpressionAddition;
 import nl.esi.xtext.expressions.expression.ExpressionAnd;
 import nl.esi.xtext.expressions.expression.ExpressionAny;
 import nl.esi.xtext.expressions.expression.ExpressionBracket;
+import nl.esi.xtext.expressions.expression.ExpressionConditional;
 import nl.esi.xtext.expressions.expression.ExpressionConstantBool;
 import nl.esi.xtext.expressions.expression.ExpressionConstantInt;
 import nl.esi.xtext.expressions.expression.ExpressionConstantReal;
@@ -50,6 +51,7 @@ import nl.esi.xtext.expressions.expression.ExpressionModulo;
 import nl.esi.xtext.expressions.expression.ExpressionMultiply;
 import nl.esi.xtext.expressions.expression.ExpressionNEqual;
 import nl.esi.xtext.expressions.expression.ExpressionNot;
+import nl.esi.xtext.expressions.expression.ExpressionNullCoalescing;
 import nl.esi.xtext.expressions.expression.ExpressionNullLiteral;
 import nl.esi.xtext.expressions.expression.ExpressionOr;
 import nl.esi.xtext.expressions.expression.ExpressionPlus;
@@ -132,6 +134,10 @@ class CSharpHelper {
 		} else if (expression instanceof ExpressionPower) {
 			ExpressionPower e = (ExpressionPower) expression;
 			return String.format("pow(%s, %s)", expression(e.getLeft(), variablePrefix), expression(e.getRight(), variablePrefix));
+		} else if (expression instanceof ExpressionNullCoalescing e) {
+			return String.format("%s ?? %s", expression(e.getLeft(), variablePrefix), expression(e.getRight(), variablePrefix));
+		} else if (expression instanceof ExpressionConditional e) {
+			return String.format("%s ? %s : %s", expression(e.getLeft(), variablePrefix), expression(e.getMiddle(), variablePrefix), expression(e.getRight(), variablePrefix));
 		} else if (expression instanceof ExpressionVariable) {
 			ExpressionVariable v = (ExpressionVariable) expression;
 			// return String.format("%s%s", variablePrefix.apply(v.getVariable().getName()), v.getVariable().getName());
