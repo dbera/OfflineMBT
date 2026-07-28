@@ -193,21 +193,26 @@ def generate_tests( model_path:str, num_tests:int=1, depth_limit:int=500, state_
         logger.debug("generate_tests stdout: %s", result.stdout.decode('utf-8', errors='replace').rstrip())
     if result.stderr:
         logger.debug("generate_tests stderr: %s", result.stderr.decode('utf-8', errors='replace').rstrip())
-    if result.returncode != 0: 
-        raise utils.BPMN4SException(
-            cliargs={
-                'bpmn-file': model_name,
-                'num-tests': num_tests,
-                'depth-limit': depth_limit,
-                'state-limit': state_limit
-            }, 
-            result=result
-            )
+    cli_args= {
+        'bpmn-file': model_name,
+        'num-tests': num_tests,
+        'depth-limit': depth_limit,
+        'state-limit': state_limit,
+    }
     
+
     # zip filename (without .zip extension)
     zip_filename = os.path.join(model_dir,model_name)
+    # path to root folder
+    root_dir = os.path.join(model_dir,'src-gen')
     # path to directory about to be zipped
-    output_dir = os.path.join(model_dir,'src-gen',taskname)
+    output_dir = os.path.join(root_dir,taskname)
+    os.makedirs(output_dir, exist_ok=True)
+    # the backend generates a report folder in the root_dir (doesn't know taskname), we need to move it to the output_dir
+    os.rename(os.path.join(root_dir,'report'), os.path.join(output_dir,'report'))
+    # store results in the report dir
+    utils.store_results(output_dir, result, cli_args)
+
     # store bpmn and prj files in bpmn directory 
     bpmn_dir = os.path.join(output_dir,'bpmn')
     os.makedirs(bpmn_dir, exist_ok=True)
