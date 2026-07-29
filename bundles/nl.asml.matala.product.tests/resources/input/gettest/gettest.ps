@@ -1,0 +1,38 @@
+import "gettest.types"
+specification gettest
+{
+    system Root
+    {
+        inputs
+        
+        outputs
+    
+        local
+        Test   test
+        Single single
+
+        init
+        test:= Test {
+			aMap=  <map<int,string>>{1 -> "a", 2 -> "b", 3 -> "c"},
+			aList= <int[]>[1, 2, 3]
+        }
+    
+        desc "Root_Model"
+        
+        action			T1
+        element-label	"T1"
+        case			default
+        with-inputs		test
+        produces-outputs	single
+        updates:
+	        single := Single {
+	        	aString = get(test.aMap, 2),
+	        	aInt = get(test.aList, 2)
+	        }
+    }
+    
+	SUT-blocks 
+	depth-limits 300
+	state-limits 1000
+	num-tests 1
+}

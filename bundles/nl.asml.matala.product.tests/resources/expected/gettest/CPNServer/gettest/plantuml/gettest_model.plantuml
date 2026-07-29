@@ -1,0 +1,4 @@
+@startuml
+test --> [Root_T1_default@null@INTERNAL@]
+[Root_T1_default@null@INTERNAL@] --> single
+@enduml
