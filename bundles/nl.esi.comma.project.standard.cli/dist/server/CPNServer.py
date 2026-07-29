@@ -79,7 +79,7 @@ JAVA_REL_PATH = ("jre", "bin", "java.exe")
 JAVA_PATH = os.path.join(SERVER_PATH, *JAVA_REL_PATH)
 
 SYS_TEMP = tempfile.gettempdir()
-BPMN4S_TEMP = os.path.join(sysTemp,'bpmn4s')
+BPMN4S_TEMP = os.path.join(SYS_TEMP,'bpmn4s')
 
 if not os.path.exists(BPMN4S_TEMP):
     os.makedirs(BPMN4S_TEMP)
