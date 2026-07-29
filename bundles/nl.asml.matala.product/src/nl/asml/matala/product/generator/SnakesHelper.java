@@ -59,6 +59,7 @@ import nl.esi.xtext.expressions.expression.ExpressionRecordAccess;
 import nl.esi.xtext.expressions.expression.ExpressionSubtraction;
 import nl.esi.xtext.expressions.expression.ExpressionVariable;
 import nl.esi.xtext.expressions.expression.ExpressionVector;
+import nl.esi.xtext.expressions.utilities.ExpressionsUtilities;
 import nl.esi.xtext.types.types.EnumTypeDecl;
 import nl.esi.xtext.types.types.MapTypeConstructor;
 import nl.esi.xtext.types.types.MapTypeDecl;
@@ -193,9 +194,14 @@ class SnakesHelper {
 				String key = expression(e.getArgs().get(1), variablePrefix);
 				return String.format("(%s in %s)", key, map);
 			} else if (fnName.equals("get")) { // added 18.08.2024
-				String lst = expression(e.getArgs().get(0), variablePrefix);
+				var arg0 = e.getArgs().get(0); 
+				String col = expression(arg0, variablePrefix);
 				String idx = expression(e.getArgs().get(1), variablePrefix);
-				return String.format("%s[%s]", lst, idx);
+				if (TypeUtilities.isMapType(ExpressionsUtilities.typeOf(arg0))) {
+					return String.format("list(%s.items())[%s][1]", col, idx);
+				} else {
+					return String.format("%s[%s]", col, idx);
+				}
 			} else if (fnName.equals("at")) {
 				String lst = expression(e.getArgs().get(0), variablePrefix);
 				String idx = expression(e.getArgs().get(1), variablePrefix);
