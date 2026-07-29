@@ -213,7 +213,7 @@ class ProductGenerator extends AbstractGenerator {
 		//val (String) => String func = [s|block.name+"_"+s]
 		val (String) => String func = [s|s]
 					
-		for(act : block.initActions.map[SnakesHelper.action(it, func, "").split("=",2)].map[get(0) -> get(1)]) {
+		for(act : block.initActions.map[SnakesHelper.action(it, func).split("=",2)].map[get(0) -> get(1)]) {
 			System.out.println(" Init-Action LHS: " + act.key)
 			System.out.println(" Init-Action RHS: " + act.value)
 			
@@ -295,10 +295,10 @@ class ProductGenerator extends AbstractGenerator {
 							
 							for(a : outvar.act.actions) 
 							{ 
-								System.out.println("	> act: " + SnakesHelper.action(a, func,""))
+								System.out.println("	> act: " + SnakesHelper.action(a, func))
 								actTxt +=
 								'''
-								    «SnakesHelper.action(a, func, "")»
+								    «SnakesHelper.action(a, func)»
 								'''
 							}
 						}
