@@ -11,7 +11,7 @@
  * SPDX-License-Identifier: MIT
  */
  
-package nl.esi.comma.constraints.generator
+package nl.esi.comma.constraints.generator.cpn
 
 import java.util.ArrayList
 import java.util.HashSet
@@ -42,15 +42,25 @@ import org.eclipse.xtext.serializer.ISerializer
 
 import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
 import nl.esi.xtext.expressions.expression.ExpressionVariable
+import org.eclipse.emf.ecore.resource.Resource
+import nl.esi.comma.testspecification.testspecification.TSMain
 
 // import static extension org.eclipse.emf.ecore.util.EcoreUtil.*
 // import org.eclipse.emf.common.util.URI
 // import org.eclipse.xtext.resource.XtextResourceSet
 
-
-
 class CPNTemplateGenerator 
 {
+
+    def generatePSpec(
+        Resource res, IFileSystemAccess2 fsa, 
+        List<Constraints> constraints,
+        TSMain tsMain) {
+        for(constraintsSource : constraints){
+            (new CPNTemplateGenerator().generatePS(constraintsSource, tsMain.model as TestDefinition, fsa))
+        }
+    }
+
     def isStepNamePresent(List<RefInfo> labelList, String name) {
         for(label : labelList) { if(label.refName.equals(name)) return true }
         return false

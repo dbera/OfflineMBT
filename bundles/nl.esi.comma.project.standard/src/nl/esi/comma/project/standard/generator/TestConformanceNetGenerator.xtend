@@ -33,7 +33,7 @@ import org.eclipse.emf.common.util.URI
 import org.eclipse.xtext.EcoreUtil2
 
 import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
-import nl.esi.comma.constraints.generator.ConstraintsAnalysisAndGeneration
+import nl.esi.comma.constraints.generator.cpn.CPNTemplateGenerator
 import nl.esi.comma.testspecification.testspecification.TSMain
 
 class TestConformanceNetGenerator  extends AbstractGenerator {
@@ -57,7 +57,7 @@ class TestConformanceNetGenerator  extends AbstractGenerator {
             }
             var tspec = tspecResource.allContents.head
             if(tspec !== null && tspec instanceof TSMain) {
-                (new ConstraintsAnalysisAndGeneration).generatePSpec(
+                (new CPNTemplateGenerator).generatePSpec(
                     resource, fsa, constraints, tspec as TSMain
                 )
             }

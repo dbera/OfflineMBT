@@ -33,6 +33,7 @@ import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IFileSystemAccessExtension2
 import nl.esi.comma.testspecification.testspecification.TestDefinition
 import nl.esi.comma.testspecification.testspecification.TSMain
+import nl.esi.comma.constraints.generator.cpn.CPNTemplateGenerator
 
 class ConstraintsAnalysisAndGeneration 
 {
@@ -42,14 +43,14 @@ class ConstraintsAnalysisAndGeneration
 	var Map<String, String> actionToExprMap = new HashMap<String, String>
 	
 	/* New Implementation of Declare in terms of Petri nets */	
-	def generatePSpec(
-	    Resource res, IFileSystemAccess2 fsa, 
-	    List<Constraints> constraints,
-	    TSMain tsMain) {
-        for(constraintsSource : constraints){
-            (new CPNTemplateGenerator().generatePS(constraintsSource, tsMain.model as TestDefinition, fsa))
-        }
-	}
+//	def generatePSpec(
+//	    Resource res, IFileSystemAccess2 fsa, 
+//	    List<Constraints> constraints,
+//	    TSMain tsMain) {
+//        for(constraintsSource : constraints){
+//            (new CPNTemplateGenerator().generatePS(constraintsSource, tsMain.model as TestDefinition, fsa))
+//        }
+//	}
     /* New Implementation of Declare in terms of Petri nets */  	
 
     // Legacy Implementation. 

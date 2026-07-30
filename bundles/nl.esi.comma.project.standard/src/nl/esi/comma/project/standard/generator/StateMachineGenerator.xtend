@@ -79,18 +79,18 @@ class StateMachineGenerator extends AbstractGenerator {
             if (task.testGen.similarity != 0) similarity = task.testGen.similarity 
         }
 
-        if(task.tspecFile !== null) {
-            var tspecResource = EcoreUtil2.getResource(resource, task.tspecFile)
-            if(tspecResource === null) {
-                throw new Exception(task.tspecFile + " Could not be resolved.")
-            }
-            var tspec = tspecResource.allContents.head
-            if(tspec !== null && tspec instanceof TSMain) {
-                (new ConstraintsAnalysisAndGeneration).generatePSpec(
-                    resource, fsa, constraints, tspec as TSMain
-                )
-            }
-        }
+//        if(task.tspecFile !== null) {
+//            var tspecResource = EcoreUtil2.getResource(resource, task.tspecFile)
+//            if(tspecResource === null) {
+//                throw new Exception(task.tspecFile + " Could not be resolved.")
+//            }
+//            var tspec = tspecResource.allContents.head
+//            if(tspec !== null && tspec instanceof TSMain) {
+//                (new ConstraintsAnalysisAndGeneration).generatePSpec(
+//                    resource, fsa, constraints, tspec as TSMain
+//                )
+//            }
+//        }
 
     	if(task.scenarioFile !== null) {
             scnResource = EcoreUtil2.getResource(resource, task.scenarioFile)

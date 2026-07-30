@@ -11,7 +11,7 @@
  * SPDX-License-Identifier: MIT
  */
  
-package nl.esi.comma.constraints.generator;
+package nl.esi.comma.constraints.generator.cpn;
 
 import nl.esi.xtext.types.types.EnumTypeDecl;
 import nl.esi.xtext.types.types.MapTypeConstructor;
