@@ -41,6 +41,7 @@ import org.eclipse.xtext.resource.XtextResource
 import org.eclipse.xtext.serializer.ISerializer
 
 import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
+import nl.esi.xtext.expressions.expression.ExpressionVariable
 
 // import static extension org.eclipse.emf.ecore.util.EcoreUtil.*
 // import org.eclipse.emf.common.util.URI
@@ -102,7 +103,7 @@ class CPNTemplateGenerator
                             «step.stepVar.name» := «Utils.defaultValue(step.stepVar.type.type, step.stepVar.name)»
                         «FOR elm : step.refStep»
                             «FOR act : elm.input.actions»
-                                «IF act instanceof RecordFieldAssignmentAction»«IF act.exp instanceof ExpressionRecordAccess»   // ReferenceExp. TODO Skip. «ENDIF»«ENDIF»
+                                «IF act instanceof RecordFieldAssignmentAction»«IF act.exp.eAllContents.filter(ExpressionVariable).isEmpty»   // ReferenceExp. TODO Skip. «ENDIF»«ENDIF»
                                 «NodeModelUtils.getNode(act).text.replaceAll("(?m)^\\s*$\\R?", "")»
                             «ENDFOR»
                         «ENDFOR»
