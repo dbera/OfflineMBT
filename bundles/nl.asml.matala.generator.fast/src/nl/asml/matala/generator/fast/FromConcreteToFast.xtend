@@ -753,33 +753,35 @@ class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGe
                 stepInst.type = era.field.type.type.name
     
                 // 4.6) Check if this action is a printable assignment (aka not-a-null assignment)
-                for (field : (act.exp as ExpressionRecord).fields) {
-                    if (isPrintableAssignment(field)) {
-                        var lhs = new KeyValue
-                        // get sut-var field name and assigned value
-                        lhs.key = field.recordField.name
-                        lhs.value = ExpressionsParser::generateExpression(field.exp, '''''').toString
-    
-                        // should it become a file on its own?
-                        var String match = findMatchingRecordName('.' + lhs.key, setup_file_names)
-                        if (match instanceof String) {
-                            // Create new step instance
-                            var new_rstep = new Step
-                            // field name (key), type, and value
-                            new_rstep.id = lhs.key
-                            new_rstep.variableName = lhs.key
-                            new_rstep.type = field.recordField.type.type.name
-                            new_rstep.recordExp = lhs.value
-                            // path for json input_file in "filePath / field name + step ID"
-                            new_rstep.inputFile = new_rstep.inputFile + varId + '_' + new_rstep.id + '_' +  //TODO
-                                stepId + '.json'
-                            // point lhs value to input_file
-                            var format = '''"#valueof(global.params['testcase_data'] + '%s')"'''
-                            lhs.value = String.format(format, new_rstep.inputFile)
-                            // Add to list of step reference of step
-                            stepInst.stepRefs.add(new_rstep)
+                if (isPrintableAssignment(act)) {
+                    for (field : (act.exp as ExpressionRecord).fields) {
+                        if (isPrintableAssignment((field as Action))) {
+                            var lhs = new KeyValue
+                            // get sut-var field name and assigned value
+                            lhs.key = field.recordField.name
+                            lhs.value = ExpressionsParser::generateExpression(field.exp, '''''').toString
+        
+                            // should it become a file on its own?
+                            var String match = findMatchingRecordName('.' + lhs.key, setup_file_names)
+                            if (match instanceof String) {
+                                // Create new step instance
+                                var new_rstep = new Step
+                                // field name (key), type, and value
+                                new_rstep.id = lhs.key
+                                new_rstep.variableName = lhs.key
+                                new_rstep.type = field.recordField.type.type.name
+                                new_rstep.recordExp = lhs.value
+                                // path for json input_file in "filePath / field name + step ID"
+                                new_rstep.inputFile = new_rstep.inputFile + varId + '_' + new_rstep.id + '_' +  //TODO
+                                    stepId + '.json'
+                                // point lhs value to input_file
+                                var format = '''"#valueof(global.params['testcase_data'] + '%s')"'''
+                                lhs.value = String.format(format, new_rstep.inputFile)
+                                // Add to list of step reference of step
+                                stepInst.stepRefs.add(new_rstep)
+                            }
+                            stepInst.parameters.add(lhs)
                         }
-                        stepInst.parameters.add(lhs)
                     }
                 }
                 tsi.indatasuts.add(stepInst)
