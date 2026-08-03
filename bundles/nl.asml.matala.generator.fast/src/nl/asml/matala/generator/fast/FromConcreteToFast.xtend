@@ -693,7 +693,7 @@ class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGe
     }
 
     protected def void _process_Global_Param_Init(TestSpecificationInstance tsi, TSMain modelInst, String testPath) {
-        val Map<String,String> gparams = Map.of("testcase_data", '''"«testPath»/dataset/"''')
+        val Map<String,String> gparams = Map.of("testcase_data", '''"«testPath»dataset/"''')
         for (key : gparams.keySet) {
             var value = gparams.get(key)
             tsi.dataVarToDataInstance.putIfAbsent(key, new ArrayList)
