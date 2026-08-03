@@ -744,6 +744,7 @@ class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGe
     
                 var era = (act.fieldAccess as ExpressionRecordAccess)
                 var stepId = getStepId(era)
+                var varId = getStepId(era)
     
                 // get sut-var name and type
                 var stepInst = new Step
@@ -770,7 +771,7 @@ class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGe
                             new_rstep.type = field.recordField.type.type.name
                             new_rstep.recordExp = lhs.value
                             // path for json input_file in "filePath / field name + step ID"
-                            new_rstep.inputFile = new_rstep.inputFile + new_rstep.id + '_' +
+                            new_rstep.inputFile = new_rstep.inputFile + varId + '_' + new_rstep.id + '_' +  //TODO
                                 stepId + '.json'
                             // point lhs value to input_file
                             var format = '''"#valueof(global.params['testcase_data'] + '%s')"'''
@@ -799,12 +800,17 @@ class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGe
     }
 
     private def String getStepId(ExpressionRecordAccess expr) {
-        var varLabel = expr.field.name
-        var ioLabel = (expr.record as ExpressionRecordAccess).field.name
+        //var ioLabel = (expr.record as ExpressionRecordAccess).field.name
         var stepLabel = ((expr.record as ExpressionRecordAccess).record as ExpressionVariable).variable.name
         return stepLabel
-//        return ioLabel + '_' + stepLabel
     }
+
+    private def String getVarId(ExpressionRecordAccess expr) {
+        var varLabel = expr.field.name
+        return varLabel
+    }
+
+
 
     private def Step createStep(TestSpecificationInstance tsi, TestDefinition model, RunStep s) {
         var stepInst = new Step
