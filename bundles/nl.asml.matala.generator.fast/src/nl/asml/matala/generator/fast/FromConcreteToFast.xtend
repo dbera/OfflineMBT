@@ -755,7 +755,7 @@ class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGe
                 // 4.6) Check if this action is a printable assignment (aka not-a-null assignment)
                 if (isPrintableAssignment(act)) {
                     for (field : (act.exp as ExpressionRecord).fields) {
-                        if (isPrintableAssignment((field as Action))) {
+                        if (isPrintableAssignment(field)) {
                             var lhs = new KeyValue
                             // get sut-var field name and assigned value
                             lhs.key = field.recordField.name
