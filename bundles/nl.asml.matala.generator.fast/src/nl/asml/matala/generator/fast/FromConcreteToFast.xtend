@@ -744,7 +744,7 @@ class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGe
     
                 var era = (act.fieldAccess as ExpressionRecordAccess)
                 var stepId = getStepId(era)
-                var varId = getStepId(era)
+                var varId = getVarId(era)
     
                 // get sut-var name and type
                 var stepInst = new Step
