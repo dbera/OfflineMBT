@@ -816,8 +816,6 @@ class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGe
         return varLabel
     }
 
-
-
     private def Step createStep(TestSpecificationInstance tsi, TestDefinition model, RunStep s) {
         var stepInst = new Step
         stepInst.runStep = s
@@ -874,44 +872,6 @@ class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGe
         // 4.7) update step input_file names, if additional data is specified (parameters). 
         if (!stepInst.parameters.isEmpty) {
             stepInst.inputFile = stepInst.inputFile.replaceFirst("[^/]+\\.json$", stepInst.id + ".json")
-        }
-
-        return stepInst
-    }
-
-    private def Step createDataSuts(TestSpecificationInstance tsi, RecordFieldAssignmentAction act) {
-        var stepInst = new Step
-        var era = (act.fieldAccess as ExpressionRecordAccess)
-        // 4.2) Step ID
-        stepInst.id = era.field.name
-        stepInst.variableName = era.field.name
-        // 4.3) Step type (defined via UI text box, e.g., SUT.OperationName)
-        stepInst.type = era.field.type.type.name
-
-        // 4.6) Check if this action is a printable assignment (aka not-a-null assignment)
-        if (isPrintableAssignment(act)) {
-            for (field : (act.exp as ExpressionRecord).fields) {
-                var lhs = new KeyValue
-                lhs.key = field.recordField.name
-                lhs.value = ExpressionsParser::generateExpression(field.exp, '''''').toString
-                // 4.9) check if record field assignment should be in its own json file
-                var String match = findMatchingRecordName('.' + lhs.key, record_def_file_names)
-                if (match instanceof String) {
-                    // Create new step instance and fill all details there
-                    var new_rstep = new Step
-                    new_rstep.id = lhs.key
-                    new_rstep.variableName = lhs.key
-                    new_rstep.recordExp = lhs.value
-                    new_rstep.type = field.recordField.type.type.name
-                    new_rstep.inputFile = tsi.filePath
-                    new_rstep.parameters.add(lhs) // Added DB 29.05.2025
-                    // Add to list of step reference of step
-                    stepInst.stepRefs.add(new_rstep)
-                } else {
-                    // 4.9.2) record field assignment has it own json
-                    stepInst.parameters.add(lhs)
-                }
-            }
         }
 
         return stepInst
