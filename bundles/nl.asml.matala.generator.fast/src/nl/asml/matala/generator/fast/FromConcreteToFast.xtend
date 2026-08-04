@@ -25,6 +25,7 @@ import nl.asml.matala.generator.docgen.DocGen
 import nl.esi.xtext.actions.actions.Action
 import nl.esi.xtext.actions.actions.AssignmentAction
 import nl.esi.xtext.actions.actions.RecordFieldAssignmentAction
+import nl.esi.xtext.expressions.expression.Field
 import nl.esi.xtext.expressions.expression.Expression
 import nl.esi.xtext.expressions.expression.ExpressionNullLiteral
 import nl.esi.xtext.expressions.expression.ExpressionRecord
@@ -143,7 +144,14 @@ class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGe
         }
         return false
     }
-    
+
+    def boolean isPrintableAssignment(Field field) {
+        return switch (field) {
+            AssignmentAction: !(field.exp instanceof ExpressionNullLiteral)
+            RecordFieldAssignmentAction: !(field.exp instanceof ExpressionNullLiteral)
+            default: false
+        }
+    }
 
     def boolean isPrintableAssignment(Action act) {
         return switch (act) {
