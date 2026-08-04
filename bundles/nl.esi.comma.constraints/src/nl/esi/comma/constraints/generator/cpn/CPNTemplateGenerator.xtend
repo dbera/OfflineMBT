@@ -19,31 +19,25 @@ import java.util.List
 import java.util.Set
 import nl.esi.comma.constraints.constraints.Constraints
 import nl.esi.comma.constraints.constraints.Future
-import nl.esi.comma.constraints.constraints.Ref
 import nl.esi.comma.constraints.constraints.RefAction
 import nl.esi.comma.constraints.constraints.Response
 import nl.esi.comma.constraints.constraints.Template
+import nl.esi.comma.constraints.generator.cpn.model.RefInfo
+import nl.esi.comma.constraints.generator.cpn.templates.FutureTemplates
 import nl.esi.comma.testspecification.testspecification.AssertionStep
 import nl.esi.comma.testspecification.testspecification.RunStep
+import nl.esi.comma.testspecification.testspecification.TSMain
 import nl.esi.comma.testspecification.testspecification.TestDefinition
-import nl.esi.xtext.actions.actions.AssignmentAction
 import nl.esi.xtext.actions.actions.RecordFieldAssignmentAction
-import nl.esi.xtext.expressions.expression.Expression
-import nl.esi.xtext.expressions.expression.ExpressionRecordAccess
-import nl.esi.xtext.expressions.expression.Variable
+import nl.esi.xtext.expressions.expression.ExpressionVariable
 import nl.esi.xtext.types.types.TypesModel
-import org.eclipse.emf.common.util.BasicEList
 import org.eclipse.emf.common.util.EList
 import org.eclipse.emf.ecore.EObject
+import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.nodemodel.util.NodeModelUtils
-import org.eclipse.xtext.resource.XtextResource
-import org.eclipse.xtext.serializer.ISerializer
 
 import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
-import nl.esi.xtext.expressions.expression.ExpressionVariable
-import org.eclipse.emf.ecore.resource.Resource
-import nl.esi.comma.testspecification.testspecification.TSMain
 
 // import static extension org.eclipse.emf.ecore.util.EcoreUtil.*
 // import org.eclipse.emf.common.util.URI
@@ -51,6 +45,8 @@ import nl.esi.comma.testspecification.testspecification.TSMain
 
 class CPNTemplateGenerator 
 {
+    val FutureTemplates futureTemplates = new FutureTemplates
+    val Helpers helpers = new Helpers
 
     def generatePSpec(
         Resource res, IFileSystemAccess2 fsa, 
@@ -165,20 +161,21 @@ class CPNTemplateGenerator
         {
         '''
         // parse declare templates
+        
         for ( t : model.templates) {
             for(elm : t.type) {
                 if(elm instanceof Future) {
                     for(elmInst : elm.type) {
                         if(elmInst instanceof Response) {
-                            specBody = generateResponseTemplate(
+                            specBody = futureTemplates.generateResponseTemplate(
                                 t.name,
                                 t.variables.head,
                                 elmInst.refA.head,
-                                getRefInputTypeAndVar(elmInst.refA.head),
-                                getRefName(elmInst.refA.head),
+                                helpers.getRefInputTypeAndVar(elmInst.refA.head),
+                                helpers.getRefName(elmInst.refA.head),
                                 elmInst.refB.head,
-                                getRefName(elmInst.refB.head),
-                                getRefInputTypeAndVar(elmInst.refB.head)
+                                helpers.getRefName(elmInst.refB.head),
+                                helpers.getRefInputTypeAndVar(elmInst.refB.head)
                             )
                         }
                     }
@@ -255,12 +252,12 @@ class CPNTemplateGenerator
                     for(elmInst : elm.type) {
                         if(elmInst instanceof Response) {
                             if(elmInst.refA.head instanceof RefAction) {
-                                if(!isRefInfoPresent(labelList, getRefInputTypeAndVar(elmInst.refA.head)))
-                                    labelList.add(getRefInputTypeAndVar(elmInst.refA.head))
+                                if(!isRefInfoPresent(labelList, helpers.getRefInputTypeAndVar(elmInst.refA.head)))
+                                    labelList.add(helpers.getRefInputTypeAndVar(elmInst.refA.head))
                             }
                             if(elmInst.refB.head instanceof RefAction) {
-                                if(!isRefInfoPresent(labelList, getRefInputTypeAndVar(elmInst.refB.head)))
-                                    labelList.add(getRefInputTypeAndVar(elmInst.refB.head))
+                                if(!isRefInfoPresent(labelList, helpers.getRefInputTypeAndVar(elmInst.refB.head)))
+                                    labelList.add(helpers.getRefInputTypeAndVar(elmInst.refB.head))
                             }
                         }
                     }
@@ -270,159 +267,82 @@ class CPNTemplateGenerator
         return labelList
     }
 
-    def generateResponseTemplate(
-        String templateName, Variable correlationVar,
-        Ref activationEventInst, RefInfo actEventInfo, String activationEvent, 
-        Ref targetEventInst, String targetEvent, RefInfo targetEventInfo
-    ) 
-    {
-       return
-       '''
-           system RootRESPONSE
-           {
-               inputs
-               «actEventInfo.refType» «actEventInfo.refName»
-               «IF targetEventInfo.refType != actEventInfo.refType && targetEventInfo.refName != actEventInfo.refName»
-                   «targetEventInfo.refType» «targetEventInfo.refName»
-               «ENDIF»
-
-               local
-               «correlationVar.type.type.name» «correlationVar.name»
-               UNIT split
-
-               desc "«templateName»"
-
-               action          UnactivatedTarget
-               element-label   "Unactivated Target"
-               case            default priority 10
-               with-inputs     «targetEventInfo.refName»
-               with-guard      «getRefWhereClause(targetEventInst)»
-
-               action          RepeatedActivation
-               element-label   "Repeated Activation"
-               case            default priority 30
-               with-inputs     split, «actEventInfo.refName», «correlationVar.name»
-               with-guard      «getRefAllWhereClause(activationEventInst)»
-               produces-outputs    split suppress
-               updates:
-                   split := split
-               produces-outputs «correlationVar.name»
-               updates:
-                   «correlationVar.name» := «correlationVar.name»
-
-               action          Target
-               element-label   "Target"
-               case            default priority 20
-               with-inputs     split, «targetEventInfo.refName», «correlationVar.name»
-               with-guard      «getRefWhereClause(targetEventInst)»
-
-               action          Activation
-               element-label   "Activation"
-               case            default priority 20
-               with-inputs     «actEventInfo.refName»
-               with-guard      «getRefWhereClause(activationEventInst)»
-               produces-outputs split suppress
-               produces-outputs «correlationVar.name»
-               updates:
-                   «getRefWithClause(activationEventInst)»
-
-               element-labels ["Root", "RESPONSE"]
-           }
-       ''' 
-    }
-
-    // Helper Functions //
-    // TODO Move to Helper Class
-    def getRefName(Ref ref){
-        var refName = new String
-        if(ref instanceof RefAction) { refName = ref.action.name ?: "" }
-        return refName
-    }
-
-    def getRefInputTypeAndVar(Ref ref) 
-    {
-        var refInfo = new RefInfo
-        if(ref instanceof RefAction) {
-            var inputVar = ref.action.inputs.head
-            refInfo = new RefInfo(inputVar.type.type.name,  inputVar.name)
-        }
-        return refInfo
-    }
-
-    def getRefWhereClause(Ref ref) {
-        if(ref instanceof RefAction) {
-            if (ref.whereArgs !== null) 
-                return getConjunction(ref.whereArgs)
-        }
-        return null
-    }
-
-    def getRefAllWhereClause(Ref ref) {
-        if(ref instanceof RefAction) {
-            val EList<Expression> temp = new BasicEList<Expression>()
-            if (ref.whereArgs !== null) temp.addAll(ref.whereArgs)
-            if (ref.whereOptArgs !== null) temp.addAll(ref.whereOptArgs)
-            return getConjunction(temp)
-        }
-        return null
-    }
-
-    def getRefWithClause(Ref ref) {
-        if(ref instanceof RefAction) {
-            if (ref.withArgs !== null) 
-                return getWithConjunction(ref.withArgs)
-        }
-        return null
-    }
-
-    def getConjunction(EList<Expression> eList) {
-        return
-        '''«FOR e : eList SEPARATOR " and "»«e.cleanSerialize»«ENDFOR»'''
-    }
-
-    def getWithConjunction(EList<AssignmentAction> aList) {
-        return
-        '''
-        «FOR a : aList SEPARATOR " and "»«a.cleanSerialize»«ENDFOR»
-        '''
-    }
-    // End of Helper Functions //
-
-    // Utility function to serialize EObjects //
-    // TODO Move to utility class
-    def String cleanSerialize(Expression expr) {
-        if (expr === null || expr.eResource === null) { return "" }
-        val resource = expr.eResource as XtextResource
-        val serializer = resource.resourceServiceProvider.get(ISerializer)
-        return serializer.serialize(expr).trim
-//        return serialize(expr).trim
-    }
-
-    def String cleanSerialize(AssignmentAction expr) {
-        if (expr === null || expr.eResource === null) { return "" }
-        val resource = expr.eResource as XtextResource
-        val serializer = resource.resourceServiceProvider.get(ISerializer)
-        return serializer.serialize(expr).trim
-//        return serialize(expr).trim
-    }
-    // End of Utility functions //
-}
-
-// Helper Class //
-class RefInfo {
-    var refType = new String
-    var refName = new String
     
-    new() {
-        refType = new String
-        refName = new String
-    }
-    
-    new (String _refType, String _refName) {
-        refType = _refType
-        refName = _refName
-    }
-    
-    def getRefType() { return refType}
-    def getRefName() { return refName}
+//    // Helper Functions //
+//    // TODO Move to Helper Class
+//    def getRefName(Ref ref){
+//        var refName = new String
+//        if(ref instanceof RefAction) { refName = ref.action.name ?: "" }
+//        return refName
+//    }
+//
+//    def getRefInputTypeAndVar(Ref ref) 
+//    {
+//        var refInfo = new RefInfo
+//        if(ref instanceof RefAction) {
+//            var inputVar = ref.action.inputs.head
+//            refInfo = new RefInfo(inputVar.type.type.name,  inputVar.name)
+//        }
+//        return refInfo
+//    }
+//
+//    def getRefWhereClause(Ref ref) {
+//        if(ref instanceof RefAction) {
+//            if (ref.whereArgs !== null) 
+//                return getConjunction(ref.whereArgs)
+//        }
+//        return null
+//    }
+//
+//    def getRefAllWhereClause(Ref ref) {
+//        if(ref instanceof RefAction) {
+//            val EList<Expression> temp = new BasicEList<Expression>()
+//            if (ref.whereArgs !== null) temp.addAll(ref.whereArgs)
+//            if (ref.whereOptArgs !== null) temp.addAll(ref.whereOptArgs)
+//            return getConjunction(temp)
+//        }
+//        return null
+//    }
+//
+//    def getRefWithClause(Ref ref) {
+//        if(ref instanceof RefAction) {
+//            if (ref.withArgs !== null) 
+//                return getWithConjunction(ref.withArgs)
+//        }
+//        return null
+//    }
+//
+//    def getConjunction(EList<Expression> eList) {
+//        return
+//        '''«FOR e : eList SEPARATOR " and "»«e.cleanSerialize»«ENDFOR»'''
+//    }
+//
+//    def getWithConjunction(EList<AssignmentAction> aList) {
+//        return
+//        '''
+//        «FOR a : aList SEPARATOR " and "»«a.cleanSerialize»«ENDFOR»
+//        '''
+//    }
+//    // End of Helper Functions //
+//
+//    // Utility function to serialize EObjects //
+//    // TODO Move to utility class
+//    def String cleanSerialize(Expression expr) {
+//        if (expr === null || expr.eResource === null) { return "" }
+//        val resource = expr.eResource as XtextResource
+//        val serializer = resource.resourceServiceProvider.get(ISerializer)
+//        return serializer.serialize(expr).trim
+////        return serialize(expr).trim
+//    }
+//
+//    def String cleanSerialize(AssignmentAction expr) {
+//        if (expr === null || expr.eResource === null) { return "" }
+//        val resource = expr.eResource as XtextResource
+//        val serializer = resource.resourceServiceProvider.get(ISerializer)
+//        return serializer.serialize(expr).trim
+////        return serialize(expr).trim
+//    }
+//    // End of Utility functions //
+//}
+
 }
