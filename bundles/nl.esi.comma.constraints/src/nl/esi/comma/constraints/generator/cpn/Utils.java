@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) 2024, 2025 TNO-ESI
  *
  * See the NOTICE file(s) distributed with this work for additional
