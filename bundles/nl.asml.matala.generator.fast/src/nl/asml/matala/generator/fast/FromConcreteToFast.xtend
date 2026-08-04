@@ -146,11 +146,7 @@ class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGe
     }
 
     def boolean isPrintableAssignment(Field field) {
-        return switch (field) {
-            AssignmentAction: !(field.exp instanceof ExpressionNullLiteral)
-            RecordFieldAssignmentAction: !(field.exp instanceof ExpressionNullLiteral)
-            default: false
-        }
+        return !(field.exp instanceof ExpressionNullLiteral)
     }
 
     def boolean isPrintableAssignment(Action act) {
