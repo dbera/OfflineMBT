@@ -12,7 +12,6 @@
  */
 package nl.asml.matala.generator.fast
 
-import java.util.List
 import java.util.Map
 import nl.esi.xtext.actions.actions.AssignmentAction
 import nl.esi.xtext.actions.actions.RecordFieldAssignmentAction
@@ -55,6 +54,8 @@ import nl.esi.xtext.expressions.expression.Field
 import nl.esi.xtext.expressions.expression.VectorTypeConstructor
 import nl.esi.xtext.types.types.SimpleTypeDecl
 import nl.esi.xtext.types.types.TypeDecl
+import nl.esi.xtext.expressions.expression.ExpressionNullCoalescing
+import nl.esi.xtext.expressions.expression.ExpressionConditional
 
 class ExpressionsParser {
 	
@@ -147,6 +148,9 @@ class ExpressionsParser {
         return null
     }
 
+    def static dispatch CharSequence generateExpression(ExpressionNullLiteral expr, CharSequence ref)
+    '''null'''
+
 	def static dispatch CharSequence generateExpression(ExpressionConstantReal expr, CharSequence ref)      
 	'''«expr.value»''' 
 
@@ -203,6 +207,12 @@ class ExpressionsParser {
 	''' 
 	def static dispatch CharSequence generateExpression(ExpressionPower expr, CharSequence ref)      
 	'''pow(«generateExpression(expr.left, ref)», «generateExpression(expr.right, ref)»)'''
+
+    def static dispatch CharSequence generateExpression(ExpressionNullCoalescing expr, CharSequence ref)
+    '''«generateExpression(expr.left, ref)» ?? «generateExpression(expr.right, ref)»'''
+
+    def static dispatch CharSequence generateExpression(ExpressionConditional expr, CharSequence ref)      
+    '''«generateExpression(expr.left, ref)» ? «generateExpression(expr.middle, ref)» : «generateExpression(expr.right, ref)»)'''
 
 	def static dispatch CharSequence generateExpression(ExpressionMinus expr, CharSequence ref)      
 	'''-«generateExpression(expr.sub, ref)»''' 
