@@ -34,7 +34,7 @@ class ProductGeneratorTest {
     }
 
     private def void testGenerator(String testcase) {
-        XtextGeneratorTest.regressionTest(new ProductGenerator(), testcase + '.ps')
+        XtextGeneratorTest.regressionTest(new ProductGenerator(false), testcase + '.ps')
     }
 
     @Test
