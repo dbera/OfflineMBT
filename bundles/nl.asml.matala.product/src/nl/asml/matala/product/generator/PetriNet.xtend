@@ -327,7 +327,10 @@ class PetriNet {
         '''
     }
     
+    def getPyComment() { return '''# '''}
+    
     def toSnakes(
+        boolean isReachabilityAnalysisTask,
         String prod_name,
         String topology_name,
         List<String> listOfEnvBlocks,
@@ -573,33 +576,35 @@ class PetriNet {
             # print(" Finished Generation, writing to file.. ")
             print("[INFO] Starting Reachability Graph Generation")
             # pn.generateScenarios(s,0,[],[],[],0,«depth_limit»)
+            «IF !isReachabilityAnalysisTask»
             sys.setrecursionlimit(«depth_limit + 100»)
             pn.generateSCN()
             print('Num Tests: ', pn.numTestCases)
             print("[INFO] Finished.")
+            «ENDIF»
             b = datetime.datetime.now()
-        
+
             # s.goto(0)
-            
+
             fname = p.plantuml_dir / "rg.plantuml"
             with open(fname, 'w') as f:
                 pn.generateReachabilityGraph(f)
                 print("[INFO] Created %s" % (fname,))
             c = datetime.datetime.now()
-        
+
+            «IF !isReachabilityAnalysisTask»
             print("[INFO] Starting Test Generation.")
             pn.initializeTestGeneration()
             pn.generateTestCases()
-            
+
             # print('[INFO] Number-of-generated-scenario files: ',len(pn.visitedTList))
             print("[INFO] Test Generation Finished.")
             d = datetime.datetime.now()
-            
+
             print("[INFO] Creating Structure and Behavior Views in PlantUML.")
             map_block_uml_txt = {}
             for t in pn.n.transition():
                 map_block_uml_txt[t.name.split('_')[0]] = '@startuml\n'
-                
             for t in pn.n.transition():
                 gtxt = map_block_uml_txt.get(t.name.split('_')[0])
                 if 'json.loads' in t.guard._str:
@@ -614,7 +619,6 @@ class PetriNet {
                     gtxt += 'component %s\n' % (t.name)
                     gtxt += 'note right of [%s]\n %s\nendnote\n' % (t.name, t.guard)
                 map_block_uml_txt[t.name.split('_')[0]] = gtxt
-                
             for t in pn.n.transition():
                 for inp in pn.n.pre(t.name):
                     txt = map_block_uml_txt.get(t.name.split('_')[0])
@@ -630,7 +634,6 @@ class PetriNet {
                     else:
                         txt += '[%s] --> %s\n' % (t.name, out)
                     map_block_uml_txt[t.name.split('_')[0]] = txt
-            
             for key in map_block_uml_txt:
                 txt = map_block_uml_txt.get(key)
                 txt += '@enduml\n'
@@ -638,25 +641,27 @@ class PetriNet {
                 fname = p.plantuml_dir / (key + ".plantuml")
                 with open(fname, 'w') as f:
                     f.write(txt)
-            
+            «ENDIF»
             print("[INFO] View Generation Finished.")
             e = datetime.datetime.now()
             print("[INFO] Time Statistics")
             print("[INFO]    * Reachability Computation: %s" % (b - a))
             print("[INFO]    * Reachability PUML Creation: %s" % (c - b))
+            «IF !isReachabilityAnalysisTask»
             print("[INFO]    * Test Generation: %s" % (d - c))
             print("[INFO]    * PlantUML View Generation: %s" % (e - d))
-            
+            «ENDIF»
+
             # print("[INFO] Starting Command-Line Simulation.")
             # simulate(pn.n)
-            
+
             #if not p.no_sim:
             #    print('[SIM] Start Simulation? (Y/N) :')
             #    value = input(" Enter Choice: ")
             #    if value == "Y" or value == "y":
             #        os.system('cls')
             #        simulate(pn.n)
-            
+
             print("[INFO] Exiting..")
     '''
 
@@ -787,6 +792,8 @@ class PetriNet {
                 for transition in enabledTransitions:
                     transitionLabel = transition.name.split('_default@')[0]
                     for mode in transition.modes():
+                        writer.write("'Transition Inputs: %s\n" % (mode))
+                        writer.write("'Marking (State): %s\n" % (self.n.get_marking()))
                         transition.fire(mode)
                         nextMarking = self.n.get_marking()
                         if nextMarking in state_space:

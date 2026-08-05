@@ -21,7 +21,17 @@ Project returns base::ModelContainer: {Project}
 		(offlineBlocks += OfflineGenerationBlock)*
 		(statemachineBlocks += StateMachineGenerationBlock)*
 		(testConformanceBlocks += TestConformanceBlock)*
+		(reachabilityAnalysisBlocks += ReachabilityAnalysisBlock)*
 	'}'
+;
+
+ReachabilityAnalysisBlock:
+    'Perform-Reachability-Analysis' '{'
+        name = ID '{'
+            ('product-file' product = STRING)
+            ('path-to-python-exe' pythonExe = STRING)?
+        '}'
+    '}'
 ;
 
 TestConformanceBlock:

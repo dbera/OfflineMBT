@@ -47,6 +47,12 @@ import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.serialize
  */
  
 class ProductGenerator extends AbstractGenerator {
+    
+    var isReachabilityGenerationTask = false
+    
+    new(boolean _isReachabilityGenerationTask) {
+        isReachabilityGenerationTask = _isReachabilityGenerationTask
+    }
 	
 	override void doGenerate(Resource res, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
 	    res.contents.filter(Product).reject[specification === null].forEach[generatePetriNetAndTestGeneration(res, fsa)]
@@ -169,6 +175,7 @@ class ProductGenerator extends AbstractGenerator {
 			}
 			
 			fsa.generateFile('CPNServer//' + specName + '//' + specName + '.py', pnet.toSnakes(
+			    isReachabilityGenerationTask,
 			    specName, specName, listOfEnvBlocks, listOfAssertTransitions,
 			     mapOfTransitionQnames, mapOfSuppressTransitionVars, inout_places, 
 			    init_places, depth_limit, state_limit, num_tests, sutTransitionMap

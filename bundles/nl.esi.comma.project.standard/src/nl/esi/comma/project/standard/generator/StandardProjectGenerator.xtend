@@ -50,7 +50,8 @@ class StandardProjectGenerator extends AbstractGenerator {
     IStandardProjectGeneratorExtension.Registry generatorExtensions;
 
     override doGenerate(Resource res, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
-        for (project : res.contents.filter(Project)) {
+        for (project : res.contents.filter(Project)) 
+        {
             for (task : project.offlineBlocks) {
                 doGenerate(task, res.resourceSet, fsa.createFolderAccess(task.name), ctx)
             }
@@ -61,6 +62,10 @@ class StandardProjectGenerator extends AbstractGenerator {
 
             for (task : project.testConformanceBlocks) {
                 (new TestConformanceNetGenerator()).doGenerate(task, fsa.createFolderAccess(task.name), ctx)
+            }
+
+            for (task : project.reachabilityAnalysisBlocks) {
+                (new ReachabilityAnalysisGenerator()).doGenerate(task, res.resourceSet, fsa.createFolderAccess(task.name), ctx)
             }
         }
     }
@@ -92,7 +97,7 @@ class StandardProjectGenerator extends AbstractGenerator {
 
         // PspecToPetriNetGenerator
         // Generate CPNServer (a.k.a. abstract Tspec generator) and Petri-nets
-        (new ProductGenerator).doGenerate(productRes, fsa, ctx)
+        (new ProductGenerator(false)).doGenerate(productRes, fsa, ctx)
 
         if (task.target == OfflineGenerationTarget.SIMULATOR) {
             return
