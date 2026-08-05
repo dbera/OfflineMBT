@@ -78,7 +78,13 @@ BPMN4S_GEN = os.path.join(SERVER_PATH, BPMN4S_JAR_NAME)
 JAVA_REL_PATH = ("jre", "bin", "java.exe")
 JAVA_PATH = os.path.join(SERVER_PATH, *JAVA_REL_PATH)
 
-TEMP_FILE   = tempfile.TemporaryDirectory(prefix=f'{utils.gensym(prefix="cpnserver_",timestamp=True)}_', ignore_cleanup_errors=True)
+SYS_TEMP = tempfile.gettempdir()
+BPMN4S_TEMP = os.path.join(SYS_TEMP,'bpmn4s')
+
+if not os.path.exists(BPMN4S_TEMP):
+    os.makedirs(BPMN4S_TEMP)
+
+TEMP_FILE   = tempfile.TemporaryDirectory(prefix=f'{utils.gensym(prefix="cpnserver_",timestamp=True)}_', dir = BPMN4S_TEMP, ignore_cleanup_errors=True)
 TEMP_PATH = os.path.abspath(TEMP_FILE.name)
 sys.path.append(TEMP_PATH)
 

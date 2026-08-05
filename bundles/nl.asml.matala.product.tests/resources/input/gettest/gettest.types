@@ -1,0 +1,13 @@
+record UNIT {
+    int unit
+}
+
+record Test {
+    map<int,string> aMap
+    int[] aList
+}
+
+record Single {
+    string  aString
+    int aInt
+}

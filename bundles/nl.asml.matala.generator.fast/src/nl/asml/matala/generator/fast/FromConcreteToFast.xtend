@@ -25,6 +25,7 @@ import nl.asml.matala.generator.docgen.DocGen
 import nl.esi.xtext.actions.actions.Action
 import nl.esi.xtext.actions.actions.AssignmentAction
 import nl.esi.xtext.actions.actions.RecordFieldAssignmentAction
+import nl.esi.xtext.expressions.expression.Field
 import nl.esi.xtext.expressions.expression.Expression
 import nl.esi.xtext.expressions.expression.ExpressionNullLiteral
 import nl.esi.xtext.expressions.expression.ExpressionRecord
@@ -143,7 +144,10 @@ class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGe
         }
         return false
     }
-    
+
+    def boolean isPrintableAssignment(Field field) {
+        return !(field.exp instanceof ExpressionNullLiteral)
+    }
 
     def boolean isPrintableAssignment(Action act) {
         return switch (act) {
@@ -693,7 +697,7 @@ class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGe
     }
 
     protected def void _process_Global_Param_Init(TestSpecificationInstance tsi, TSMain modelInst, String testPath) {
-        val Map<String,String> gparams = Map.of("testcase_data", '''"«testPath»/dataset/"''')
+        val Map<String,String> gparams = Map.of("testcase_data", '''"«testPath»dataset/"''')
         for (key : gparams.keySet) {
             var value = gparams.get(key)
             tsi.dataVarToDataInstance.putIfAbsent(key, new ArrayList)
@@ -744,6 +748,7 @@ class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGe
     
                 var era = (act.fieldAccess as ExpressionRecordAccess)
                 var stepId = getStepId(era)
+                var varId = getVarId(era)
     
                 // get sut-var name and type
                 var stepInst = new Step
@@ -754,31 +759,33 @@ class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGe
                 // 4.6) Check if this action is a printable assignment (aka not-a-null assignment)
                 if (isPrintableAssignment(act)) {
                     for (field : (act.exp as ExpressionRecord).fields) {
-                        var lhs = new KeyValue
-                        // get sut-var field name and assigned value
-                        lhs.key = field.recordField.name
-                        lhs.value = ExpressionsParser::generateExpression(field.exp, '''''').toString
-    
-                        // should it become a file on its own?
-                        var String match = findMatchingRecordName('.' + lhs.key, setup_file_names)
-                        if (match instanceof String) {
-                            // Create new step instance
-                            var new_rstep = new Step
-                            // field name (key), type, and value
-                            new_rstep.id = lhs.key
-                            new_rstep.variableName = lhs.key
-                            new_rstep.type = field.recordField.type.type.name
-                            new_rstep.recordExp = lhs.value
-                            // path for json input_file in "filePath / field name + step ID"
-                            new_rstep.inputFile = new_rstep.inputFile + new_rstep.id + '_' +
-                                stepId + '.json'
-                            // point lhs value to input_file
-                            var format = '''"#valueof(global.params['testcase_data'] + '%s')"'''
-                            lhs.value = String.format(format, new_rstep.inputFile)
-                            // Add to list of step reference of step
-                            stepInst.stepRefs.add(new_rstep)
+                        if (isPrintableAssignment(field)) {
+                            var lhs = new KeyValue
+                            // get sut-var field name and assigned value
+                            lhs.key = field.recordField.name
+                            lhs.value = ExpressionsParser::generateExpression(field.exp, '''''').toString
+        
+                            // should it become a file on its own?
+                            var String match = findMatchingRecordName('.' + lhs.key, setup_file_names)
+                            if (match instanceof String) {
+                                // Create new step instance
+                                var new_rstep = new Step
+                                // field name (key), type, and value
+                                new_rstep.id = lhs.key
+                                new_rstep.variableName = lhs.key
+                                new_rstep.type = field.recordField.type.type.name
+                                new_rstep.recordExp = lhs.value
+                                // path for json input_file in "filePath / field name + step ID"
+                                new_rstep.inputFile = new_rstep.inputFile + varId + '_' + new_rstep.id + '_' +  //TODO
+                                    stepId + '.json'
+                                // point lhs value to input_file
+                                var format = '''"#valueof(global.params['testcase_data'] + '%s')"'''
+                                lhs.value = String.format(format, new_rstep.inputFile)
+                                // Add to list of step reference of step
+                                stepInst.stepRefs.add(new_rstep)
+                            }
+                            stepInst.parameters.add(lhs)
                         }
-                        stepInst.parameters.add(lhs)
                     }
                 }
                 tsi.indatasuts.add(stepInst)
@@ -799,11 +806,14 @@ class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGe
     }
 
     private def String getStepId(ExpressionRecordAccess expr) {
-        var varLabel = expr.field.name
-        var ioLabel = (expr.record as ExpressionRecordAccess).field.name
+        //var ioLabel = (expr.record as ExpressionRecordAccess).field.name
         var stepLabel = ((expr.record as ExpressionRecordAccess).record as ExpressionVariable).variable.name
         return stepLabel
-//        return ioLabel + '_' + stepLabel
+    }
+
+    private def String getVarId(ExpressionRecordAccess expr) {
+        var varLabel = expr.field.name
+        return varLabel
     }
 
     private def Step createStep(TestSpecificationInstance tsi, TestDefinition model, RunStep s) {
@@ -862,44 +872,6 @@ class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGe
         // 4.7) update step input_file names, if additional data is specified (parameters). 
         if (!stepInst.parameters.isEmpty) {
             stepInst.inputFile = stepInst.inputFile.replaceFirst("[^/]+\\.json$", stepInst.id + ".json")
-        }
-
-        return stepInst
-    }
-
-    private def Step createDataSuts(TestSpecificationInstance tsi, RecordFieldAssignmentAction act) {
-        var stepInst = new Step
-        var era = (act.fieldAccess as ExpressionRecordAccess)
-        // 4.2) Step ID
-        stepInst.id = era.field.name
-        stepInst.variableName = era.field.name
-        // 4.3) Step type (defined via UI text box, e.g., SUT.OperationName)
-        stepInst.type = era.field.type.type.name
-
-        // 4.6) Check if this action is a printable assignment (aka not-a-null assignment)
-        if (isPrintableAssignment(act)) {
-            for (field : (act.exp as ExpressionRecord).fields) {
-                var lhs = new KeyValue
-                lhs.key = field.recordField.name
-                lhs.value = ExpressionsParser::generateExpression(field.exp, '''''').toString
-                // 4.9) check if record field assignment should be in its own json file
-                var String match = findMatchingRecordName('.' + lhs.key, record_def_file_names)
-                if (match instanceof String) {
-                    // Create new step instance and fill all details there
-                    var new_rstep = new Step
-                    new_rstep.id = lhs.key
-                    new_rstep.variableName = lhs.key
-                    new_rstep.recordExp = lhs.value
-                    new_rstep.type = field.recordField.type.type.name
-                    new_rstep.inputFile = tsi.filePath
-                    new_rstep.parameters.add(lhs) // Added DB 29.05.2025
-                    // Add to list of step reference of step
-                    stepInst.stepRefs.add(new_rstep)
-                } else {
-                    // 4.9.2) record field assignment has it own json
-                    stepInst.parameters.add(lhs)
-                }
-            }
         }
 
         return stepInst
