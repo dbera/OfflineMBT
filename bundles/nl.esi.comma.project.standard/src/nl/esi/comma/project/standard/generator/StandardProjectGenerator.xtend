@@ -106,7 +106,7 @@ class StandardProjectGenerator extends AbstractGenerator {
         val specName = product.specification.name
         val petriNetURI = fsa.getURI('''«FOLDER_CPN_SERVER»/«specName»/«specName».py''')
         val absTspecFsa = fsa.createFolderAccess(FOLDER_ABSTRACT_TSPEC)
-        (new PetriNetToAbstractTspecGenerator(task.pythonExe)).doGenerate(rst, petriNetURI, absTspecFsa, ctx)
+        (new PetriNetToAbstractTspecGenerator(task.pythonExe, reporting)).doGenerate(rst, petriNetURI, absTspecFsa, ctx)
 
         for (absTspecFileName : absTspecFsa.list(ROOT_PATH).filter[endsWith('.atspec')]) {
             val tspecName = absTspecFileName.replaceAll('\\.atspec$', '')
