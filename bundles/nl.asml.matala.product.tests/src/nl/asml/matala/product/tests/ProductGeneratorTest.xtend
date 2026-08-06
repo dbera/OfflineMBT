@@ -49,6 +49,7 @@ class ProductGeneratorTest {
 
 //    TODO Commented DB. Could not figure why it fails even though it passes locally 
 //    Manual inspection shows 440 lines in expected output, which was copied from src-gen
+//    Moreover test generation does not succeed in runtime. 
 //    @Test
 //    def void testIssue371() {
 //        testGenerator('issue371');
