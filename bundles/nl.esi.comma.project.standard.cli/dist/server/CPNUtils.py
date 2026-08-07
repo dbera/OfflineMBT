@@ -51,15 +51,13 @@ def store_results( output_dir: str, result : CompletedProcess[bytes], cli_args: 
             'return-code': result.returncode
         }
     }
-    result_report_path = os.path.join(output_dir, 'report')
-    os.makedirs(result_report_path, exist_ok=True)
-    result_stdout_path = os.path.join(result_report_path, 'stdout.txt')
+    result_stdout_path = os.path.join(output_dir, 'stdout.txt')
     with open(result_stdout_path, "w") as file:
         file.write(result.stdout.decode('utf-8').replace('\r\n','\n'))
-    result_stderr_path = os.path.join(result_report_path, 'stderr.txt')
+    result_stderr_path = os.path.join(output_dir, 'stderr.txt')
     with open(result_stderr_path, "w") as file:
         file.write(result.stderr.decode('utf-8').replace('\r\n','\n'))
-    result_process_path = os.path.join(result_report_path, 'process.json')
+    result_process_path = os.path.join(output_dir, 'process.json')
     with open(result_process_path, "w") as file:
         file.write(json.dumps(process, indent=4))
 

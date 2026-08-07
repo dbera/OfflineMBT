@@ -130,6 +130,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["Content-Disposition"],
 )
 
 def build_and_load_model(model_path:str):
@@ -215,9 +216,12 @@ def generate_tests( model_path:str, num_tests:int=1, depth_limit:int=500, state_
     output_dir = os.path.join(root_dir,taskname)
     os.makedirs(output_dir, exist_ok=True)
     # the backend generates a report folder in the root_dir (doesn't know taskname), we need to move it to the output_dir
-    os.rename(os.path.join(root_dir,'report'), os.path.join(output_dir,'report'))
+    report_path = os.path.join(output_dir, 'report')
+    os.rename(os.path.join(root_dir,'report'), report_path)
     # store results in the report dir
-    utils.store_results(output_dir, result, cli_args)
+    utils.store_results(report_path, result, cli_args)
+
+    write_status_report_html(output_dir, report_path)
 
     # store bpmn and prj files in bpmn directory 
     bpmn_dir = os.path.join(output_dir,'bpmn')
@@ -232,6 +236,29 @@ def generate_tests( model_path:str, num_tests:int=1, depth_limit:int=500, state_
     except Exception as e:
         logger.error(f"An error occurred while deleting generated test: {str(e)}", file=sys.stderr)
     return zip_filename, result
+
+def write_status_report_html(output_dir, report_path):
+    """Write a self-contained status report HTML file to the output directory.
+
+    Reads the `status_report.html` template from `WEB_PATH` and embeds the
+    contents of `StatusReport.json` from `report_path` into it. The generated
+    file is fully self-contained, so it can be opened directly from the zip
+    archive without cross-origin or path issues.
+
+    Silently logs a warning if the HTML file cannot be written, but does not raise an exception.
+    """
+    try:
+        status_report_html = os.path.join(WEB_PATH, "status_report.html")
+        #read as string
+        with open(status_report_html, "r") as html_file:
+            status_report_html_str = html_file.read()
+            with open(os.path.join(report_path, "StatusReport.json"), "r") as status_report_json:
+                status_report_json_str = status_report_json.read()
+                status_report_html_str = status_report_html_str.replace("!__STATUS_REPORT_JSON__!", status_report_json_str)
+                with open(os.path.join(output_dir, "status_report.html"), "w") as output_html_file:
+                    output_html_file.write(status_report_html_str)
+    except Exception as e:
+        logger.warning("Could not write status report HTML") 
 
 # The endpoint of our FastAPI app
 @app.post("/BPMNParser")
