@@ -13,16 +13,6 @@
         }
         ,
         {
-            "name": "BlobServer",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "server/BlobTest.py",
-            "console": "integratedTerminal",
-            "args": [],
-            "cwd": "${workspaceFolder}"
-        }
-        ,
-        {
             "name": "CPNServer_cov",
             "type": "debugpy",
             "request": "launch",
