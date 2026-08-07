@@ -48,15 +48,20 @@ class CPNTemplateGenerator
     val FutureTemplates futureTemplates = new FutureTemplates
     val Helpers helpers = new Helpers
 
+// it should generate different pspec files for different constraints in the constraint file
     def generatePSpec(
         Resource res, IFileSystemAccess2 fsa, 
         List<Constraints> constraints,
         TSMain tsMain) {
         for(constraintsSource : constraints){
-            (new CPNTemplateGenerator().generatePS(constraintsSource, tsMain.model as TestDefinition, fsa))
+            for (constraintDef : constraintsSource.templates){
+            new CPNTemplateGenerator().generateConstraintPS(constraintsSource, constraintDef,
+                tsMain.model as TestDefinition, fsa
+            )
+            }
         }
     }
-
+    
     def isStepNamePresent(List<RefInfo> labelList, String name) {
         for(label : labelList) { if(label.refName.equals(name)) return true }
         return false
@@ -64,18 +69,7 @@ class CPNTemplateGenerator
 
     def generateTSpecModel(TestDefinition td, List<RefInfo> labelList) 
     {
-        var idx = 0
-        for(ss : td.stepSeq) {
-            for(step: ss.step) {
-                if(step instanceof RunStep) {
-                    if(isStepNamePresent(labelList, step.stepVar.name)) idx++
-                }
-                else if(step instanceof AssertionStep) {
-                    if(isStepNamePresent(labelList, step.stepVar.name)) idx++
-                }
-                else {}
-            }
-        }
+        var idx = helpers.countTraceSize(td, labelList)
         var _idx = 0
         return
         '''
@@ -97,33 +91,41 @@ class CPNTemplateGenerator
             desc "TSpecCPNModel"
 
             «FOR ss : td.stepSeq»
-                «FOR step : ss.step»
-                    «IF step instanceof RunStep && isStepNamePresent(labelList, step.stepVar.name)»
+                «FOR step : ss.step» 
+                    «IF step instanceof RunStep || step instanceof AssertionStep»
                         action «step.type.name»_«_idx»
                         element-label "«step.type.name»"
                         case default
                         with-inputs p«_idx»
-                        produces-outputs «step.stepVar.name»
-                        updates:
-                            // Constructor
-                            «step.stepVar.name» := «Utils.defaultValue(step.stepVar.type.type, step.stepVar.name)»
-                        «FOR elm : step.refStep»
-                            «FOR act : elm.input.actions»
-                                «IF act instanceof RecordFieldAssignmentAction»«IF act.exp.eAllContents.filter(ExpressionVariable).isEmpty»   // ReferenceExp. TODO Skip. «ENDIF»«ENDIF»
-                                «NodeModelUtils.getNode(act).text.replaceAll("(?m)^\\s*$\\R?", "")»
+                        «IF isStepNamePresent(labelList,step.stepVar.name)»
+                            produces-outputs «step.stepVar.name»
+                            updates:
+                                // Constructor
+                                «step.stepVar.name» := «Utils.defaultValue(step.stepVar.type.type, step.stepVar.name)»
+                            «FOR elm : step.refStep»
+                                «FOR act : elm.input.actions»
+                                    «IF act instanceof RecordFieldAssignmentAction»
+                                        «IF act.exp.eAllContents.filter(ExpressionVariable).isEmpty»
+                                            // ReferenceExp. TODO Skip.
+                                        «ENDIF»
+                                    «ENDIF»
+                                    «NodeModelUtils.getNode(act).text.replaceAll("(?m)^\\s*$\\R?", "")»
+                                «ENDFOR»
                             «ENDFOR»
-                        «ENDFOR»
+                        «ELSE»
+                            produces-outputs any
+                        «ENDIF»
                         produces-outputs p«_idx+1»
                         «{_idx++ ""}»
-                    «ELSEIF step instanceof AssertionStep && isStepNamePresent(labelList, step.stepVar.name)»
                     «ENDIF»
                 «ENDFOR»
             «ENDFOR»
         }
         '''
     }
+    
 
-    def generatePS(Constraints model, TestDefinition td, IFileSystemAccess2 fsa) 
+    def generateConstraintPS(Constraints model, Template currentConstraint, TestDefinition td, IFileSystemAccess2 fsa) 
     {
         var typesText = '''''' 
 //        '''
@@ -131,6 +133,12 @@ class CPNTemplateGenerator
 //            int unit
 //        }
 //        '''
+        typesText = typesText +
+        '''
+        record ANY {
+            int any
+        }
+        '''
         var specBody = ''''''
 
         // get nested type definitions
@@ -150,7 +158,7 @@ class CPNTemplateGenerator
         fsa.generateFile(fileName + ".types", typesText)
 
         // state computing ps system model based on concrete tspec
-        var tspecModel = generateTSpecModel(td, computeLabelSet(model.templates))
+        var tspecModel = generateTSpecModel(td, computeLabelSet(currentConstraint))
 
         // start computing ps system model based on declare constraints
         var specPrefix = 
@@ -161,27 +169,46 @@ class CPNTemplateGenerator
         {
         '''
         // parse declare templates
-        
-        for ( t : model.templates) {
-            for(elm : t.type) {
-                if(elm instanceof Future) {
-                    for(elmInst : elm.type) {
-                        if(elmInst instanceof Response) {
-                            specBody = futureTemplates.generateResponseTemplate(
-                                t.name,
-                                t.variables.head,
-                                elmInst.refA.head,
-                                helpers.getRefInputTypeAndVar(elmInst.refA.head),
-                                helpers.getRefName(elmInst.refA.head),
-                                elmInst.refB.head,
-                                helpers.getRefName(elmInst.refB.head),
-                                helpers.getRefInputTypeAndVar(elmInst.refB.head)
-                            )
-                        }
+        // TODO{we have to make it for each constraint, not template}
+        for(templateGroup : currentConstraint.type) {
+            if(templateGroup instanceof Future) {
+                for(templateType : templateGroup.type) {
+                    if(templateType instanceof Response) {
+                        specBody = futureTemplates.generateResponseTemplate(
+                            currentConstraint.name,
+                            currentConstraint.variables.head,
+                            templateType.refA.head,
+                            helpers.getRefInputTypeAndVar(templateType.refA.head),
+                            helpers.getRefName(templateType.refA.head),
+                            templateType.refB.head,
+                            helpers.getRefName(templateType.refB.head),
+                            helpers.getRefInputTypeAndVar(templateType.refB.head)
+                        )
                     }
                 }
             }
         }
+        
+//        for ( t : model.templates) {
+//            for(elm : t.type) {
+//                if(elm instanceof Future) {
+//                    for(elmInst : elm.type) {
+//                        if(elmInst instanceof Response) {
+//                            specBody = futureTemplates.generateResponseTemplate(
+//                                t.name,
+//                                t.variables.head,
+//                                elmInst.refA.head,
+//                                helpers.getRefInputTypeAndVar(elmInst.refA.head),
+//                                helpers.getRefName(elmInst.refA.head),
+//                                elmInst.refB.head,
+//                                helpers.getRefName(elmInst.refB.head),
+//                                helpers.getRefInputTypeAndVar(elmInst.refB.head)
+//                            )
+//                        }
+//                    }
+//                }
+//            }
+//        }
         var specPostfix = 
         '''
             SUT-blocks 
@@ -191,7 +218,10 @@ class CPNTemplateGenerator
         }
 
         '''
-        fsa.generateFile(fileName + ".ps", specPrefix + tspecModel + specBody + specPostfix)
+        fsa.generateFile(
+            fileName + "_" + currentConstraint.name + ".ps",
+            specPrefix + tspecModel + specBody + specPostfix
+        )
     }
 
     // function to collect types from imports recursively //
@@ -243,106 +273,52 @@ class CPNTemplateGenerator
     }
 
     // Generate PSpec System for Response Template
-    // TODO create class for Declare Template generator functions
-    def computeLabelSet(EList<Template> tlist) {
+    //TODO{discuss: here we need computelabel for each constraint, not combination of all constraints}
+    def computeLabelSet(Template currentConstraint) {
         var labelList = new ArrayList<RefInfo>
-        for(t : tlist) {
-            for(elm : t.type) {
-                if(elm instanceof Future) {
-                    for(elmInst : elm.type) {
-                        if(elmInst instanceof Response) {
-                            if(elmInst.refA.head instanceof RefAction) {
-                                if(!isRefInfoPresent(labelList, helpers.getRefInputTypeAndVar(elmInst.refA.head)))
-                                    labelList.add(helpers.getRefInputTypeAndVar(elmInst.refA.head))
+            for(templateGroup : currentConstraint.type) {
+                if(templateGroup instanceof Future) {
+                    for(templateType : templateGroup.type) {
+                        if(templateType instanceof Response) {
+                            if(templateType.refA.head instanceof RefAction) {
+                                if(!isRefInfoPresent(labelList, helpers.getRefInputTypeAndVar(templateType.refA.head)))
+                                    labelList.add(helpers.getRefInputTypeAndVar(templateType.refA.head))
                             }
-                            if(elmInst.refB.head instanceof RefAction) {
-                                if(!isRefInfoPresent(labelList, helpers.getRefInputTypeAndVar(elmInst.refB.head)))
-                                    labelList.add(helpers.getRefInputTypeAndVar(elmInst.refB.head))
+                            if(templateType.refB.head instanceof RefAction) {
+                                if(!isRefInfoPresent(labelList, helpers.getRefInputTypeAndVar(templateType.refB.head)))
+                                    labelList.add(helpers.getRefInputTypeAndVar(templateType.refB.head))
                             }
                         }
                     }
                 }
             }
-        }
+        val anyInfo = new RefInfo("ANY", "any")
+//        TODO{discuss: emitting ANY here}
+        if(!isRefInfoPresent(labelList, anyInfo))
+            labelList.add(anyInfo)
         return labelList
     }
-
-    
-//    // Helper Functions //
-//    // TODO Move to Helper Class
-//    def getRefName(Ref ref){
-//        var refName = new String
-//        if(ref instanceof RefAction) { refName = ref.action.name ?: "" }
-//        return refName
-//    }
-//
-//    def getRefInputTypeAndVar(Ref ref) 
-//    {
-//        var refInfo = new RefInfo
-//        if(ref instanceof RefAction) {
-//            var inputVar = ref.action.inputs.head
-//            refInfo = new RefInfo(inputVar.type.type.name,  inputVar.name)
-//        }
-//        return refInfo
-//    }
-//
-//    def getRefWhereClause(Ref ref) {
-//        if(ref instanceof RefAction) {
-//            if (ref.whereArgs !== null) 
-//                return getConjunction(ref.whereArgs)
-//        }
-//        return null
-//    }
-//
-//    def getRefAllWhereClause(Ref ref) {
-//        if(ref instanceof RefAction) {
-//            val EList<Expression> temp = new BasicEList<Expression>()
-//            if (ref.whereArgs !== null) temp.addAll(ref.whereArgs)
-//            if (ref.whereOptArgs !== null) temp.addAll(ref.whereOptArgs)
-//            return getConjunction(temp)
-//        }
-//        return null
-//    }
-//
-//    def getRefWithClause(Ref ref) {
-//        if(ref instanceof RefAction) {
-//            if (ref.withArgs !== null) 
-//                return getWithConjunction(ref.withArgs)
-//        }
-//        return null
-//    }
-//
-//    def getConjunction(EList<Expression> eList) {
-//        return
-//        '''«FOR e : eList SEPARATOR " and "»«e.cleanSerialize»«ENDFOR»'''
-//    }
-//
-//    def getWithConjunction(EList<AssignmentAction> aList) {
-//        return
-//        '''
-//        «FOR a : aList SEPARATOR " and "»«a.cleanSerialize»«ENDFOR»
-//        '''
-//    }
-//    // End of Helper Functions //
-//
-//    // Utility function to serialize EObjects //
-//    // TODO Move to utility class
-//    def String cleanSerialize(Expression expr) {
-//        if (expr === null || expr.eResource === null) { return "" }
-//        val resource = expr.eResource as XtextResource
-//        val serializer = resource.resourceServiceProvider.get(ISerializer)
-//        return serializer.serialize(expr).trim
-////        return serialize(expr).trim
-//    }
-//
-//    def String cleanSerialize(AssignmentAction expr) {
-//        if (expr === null || expr.eResource === null) { return "" }
-//        val resource = expr.eResource as XtextResource
-//        val serializer = resource.resourceServiceProvider.get(ISerializer)
-//        return serializer.serialize(expr).trim
-////        return serialize(expr).trim
-//    }
-//    // End of Utility functions //
-//}
-
 }
+//    def computeLabelSet(EList<Template> tlist) {
+//        var labelList = new ArrayList<RefInfo>
+//        for(t : tlist) {
+//            for(elm : t.type) {
+//                if(elm instanceof Future) {
+//                    for(elmInst : elm.type) {
+//                        if(elmInst instanceof Response) {
+//                            if(elmInst.refA.head instanceof RefAction) {
+//                                if(!isRefInfoPresent(labelList, helpers.getRefInputTypeAndVar(elmInst.refA.head)))
+//                                    labelList.add(helpers.getRefInputTypeAndVar(elmInst.refA.head))
+//                            }
+//                            if(elmInst.refB.head instanceof RefAction) {
+//                                if(!isRefInfoPresent(labelList, helpers.getRefInputTypeAndVar(elmInst.refB.head)))
+//                                    labelList.add(helpers.getRefInputTypeAndVar(elmInst.refB.head))
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//        return labelList
+//    }
+//}

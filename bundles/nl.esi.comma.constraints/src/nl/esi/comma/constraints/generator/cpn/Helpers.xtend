@@ -22,6 +22,10 @@ import org.eclipse.emf.common.util.EList
 import org.eclipse.xtext.resource.XtextResource
 import org.eclipse.xtext.serializer.ISerializer
 import nl.esi.xtext.actions.actions.AssignmentAction
+import nl.esi.comma.testspecification.testspecification.TestDefinition
+import java.util.List
+import nl.esi.comma.testspecification.testspecification.RunStep
+import nl.esi.comma.testspecification.testspecification.AssertionStep
 
 class Helpers {
     def getRefName(Ref ref){
@@ -39,25 +43,61 @@ class Helpers {
         }
         return refInfo
     }
+    
+    //TODO{discuss: made this a counting function in the helper class}
+    //Counts the size of a trace here
+    def countTraceSize(TestDefinition td, List<RefInfo> labellist)
+    {
+        var idx = 0
+        
+        for(ss : td.stepSeq) {
+            for(step: ss.step) {
+                if(step instanceof RunStep) {
+                    idx++
+                }
+                else if(step instanceof AssertionStep) {
+                    idx++
+                }
+                else {}
+            }
+        }
+        return idx
+    }
 
-    def getRefWhereClause(Ref ref) {
+//    returns "where-concrete" guard
+//    TODO{it should return "true" if there is no clause}
+    def getRefConcreteWhereClause(Ref ref) {
         if(ref instanceof RefAction) {
             if (ref.whereArgs !== null) 
                 return getConjunction(ref.whereArgs)
+            return "true"
         }
         return null
     }
 
-    def getRefAllWhereClause(Ref ref) {
+//    returns "where-correlation" guard
+    def getRefCorrelationWhereClause(Ref ref) {
+        if(ref instanceof RefAction) {
+            if(ref.whereOptArgs !== null)
+                return getConjunction(ref.whereOptArgs)
+        }
+        return null    
+    }
+
+//  returns combination of "where-concrete" and "where-correlation" guards
+//  TODO{here also if both are not there, "true" should be returned}
+    def getRefCombinedWhereClause(Ref ref) {
         if(ref instanceof RefAction) {
             val EList<Expression> temp = new BasicEList<Expression>()
             if (ref.whereArgs !== null) temp.addAll(ref.whereArgs)
             if (ref.whereOptArgs !== null) temp.addAll(ref.whereOptArgs)
+            if (temp.empty) return "true"
             return getConjunction(temp)
         }
         return null
     }
 
+//  returns "with" bindings
     def getRefWithClause(Ref ref) {
         if(ref instanceof RefAction) {
             if (ref.withArgs !== null) 
