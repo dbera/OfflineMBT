@@ -41,8 +41,22 @@ class ReachabilityAnalysisGenerator extends AbstractGenerator
     }
 
     def doGenerate(ReachabilityAnalysisBlock task, ResourceSet rst, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
-        val productURI = task.eResource.resolveUri(task.product)
-                // Load and validate the (generated) product
+        // val productURI = task.eResource.resolveUri(task.product)
+        val productURI = if (task.bpmn.nullOrEmpty) {
+                task.eResource.resolveUri(task.product)
+            } else {
+                val bpmnUri = task.eResource.resolveUri(task.bpmn)
+                // val numTests = task.numTests <= 0 ? 1 : task.numTests
+                val depthLimit = task.depthLimit <= 0 ? 300 : task.depthLimit
+                val stateLimit = task.stateLimit <= 0 ? 1000 : task.stateLimit
+                val pspecFsa = fsa.createFolderAccess(FOLDER_PSPEC)
+
+                (new Bpmn4sToPspecGenerator(0, depthLimit, stateLimit)).doGenerate(rst, bpmnUri, pspecFsa, ctx)
+
+                pspecFsa.getURI(bpmnUri.trimFileExtension.appendFileExtension('ps').lastSegment)
+            }
+        
+        // Load and validate the (generated) product
         val productRes = rst.getResource(productURI, true)
         val product = productRes.contents.filter(Product).findFirst[specification !== null]
         if (product === null) {

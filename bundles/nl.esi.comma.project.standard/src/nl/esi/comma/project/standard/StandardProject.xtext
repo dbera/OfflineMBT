@@ -28,7 +28,9 @@ Project returns base::ModelContainer: {Project}
 ReachabilityAnalysisBlock:
     'Perform-Reachability-Analysis' '{'
         name = ID '{'
-            ('product-file' product = STRING)
+            (('bpmn-file' bpmn = STRING) | ('product-file' product = STRING))
+            ('depth-limit' depthLimit = INT)?
+            ('state-limit' stateLimit = INT)?
             ('path-to-python-exe' pythonExe = STRING)?
         '}'
     '}'
