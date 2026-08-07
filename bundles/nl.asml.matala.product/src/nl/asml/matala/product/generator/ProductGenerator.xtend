@@ -174,7 +174,7 @@ class ProductGenerator extends AbstractGenerator {
 			    init_places, depth_limit, state_limit, num_tests, sutTransitionMap
 			))
 			fsa.generateFile('CPNServer//' + specName + '//' + specName + '_Simulation.py', pnet.toSnakesSimulation)
-            fsa.generateFile('CPNServer//' + specName + '//' + specName + '_reporting.py', Utils.reportingClass)
+            fsa.generateFile('CPNServer//' + specName + '//' + specName + '_reporting.py', Utils.getReportingClass(specName))
 			fsa.generateFile('CPNServer//' + specName + '//' + specName + '_data.py', Utils.getDataContainerClass(dataGetterTxt, methodTxt))
 			fsa.generateFile('CPNServer//' + specName + '//' + specName + '_TestSCN.py', Utils.generateTestSCNTxt(specName + "_types", prod, resource.URI.lastSegment))
             // generate utils for HTTP server

@@ -796,7 +796,7 @@ class Utils
     }
 
 
-    static def getReportingClass() 
+    static def getReportingClass(String name) 
     {
         return 
         '''
@@ -901,7 +901,7 @@ class Utils
                 root_report = StatusReport(
                     plugin="",
                     severity=root_severity,
-                    message=f"Generation finished with status: {root_severity.name}",
+                    message=f"«name» generation finished with status: {root_severity.name}",
                     source="",
                     code=0,
                     details=None,
