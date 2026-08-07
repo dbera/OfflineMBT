@@ -15,24 +15,6 @@
  */
 package nl.esi.comma.constraints.ui.contentassist
 
-import nl.esi.comma.constraints.constraints.Constraints
-import nl.esi.comma.steps.step.Steps
-import org.eclipse.emf.ecore.EObject
-import org.eclipse.emf.ecore.resource.Resource
-import org.eclipse.jface.resource.ImageDescriptor
-import org.eclipse.jface.viewers.StyledString
-import org.eclipse.swt.graphics.Image
-import org.eclipse.xtext.Assignment
-import org.eclipse.xtext.EcoreUtil2
-import org.eclipse.xtext.ui.editor.contentassist.ConfigurableCompletionProposal
-import org.eclipse.xtext.ui.editor.contentassist.ContentAssistContext
-import org.eclipse.xtext.ui.editor.contentassist.ICompletionProposalAcceptor
-import nl.esi.xtext.types.utilities.XPlusUtilities
-import nl.esi.comma.constraints.constraints.ConstraintsPackage
-import nl.esi.comma.constraints.constraints.StepSequenceDef
-import nl.esi.comma.constraints.constraints.ActSequenceDef
-import nl.esi.comma.constraints.constraints.Act
-
 /**
  * See https://www.eclipse.org/Xtext/documentation/304_ide_concepts.html#content-assist
  * on how to customize the content assistant.
