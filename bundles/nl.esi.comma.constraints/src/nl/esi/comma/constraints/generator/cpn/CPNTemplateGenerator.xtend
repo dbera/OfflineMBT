@@ -55,9 +55,11 @@ class CPNTemplateGenerator
         TSMain tsMain) {
         for(constraintsSource : constraints){
             for (constraintDef : constraintsSource.templates){
-            new CPNTemplateGenerator().generateConstraintPS(constraintsSource, constraintDef,
-                tsMain.model as TestDefinition, fsa
-            )
+                generateConstraintPS(constraintsSource, constraintDef, tsMain.model as TestDefinition, fsa)
+//                TODO{discuss: why new object?}
+//            new CPNTemplateGenerator().generateConstraintPS(constraintsSource, constraintDef,
+//                tsMain.model as TestDefinition, fsa
+//            )
             }
         }
     }
@@ -154,6 +156,7 @@ class CPNTemplateGenerator
         var uri = model.eResource.getURI()
         if (uri === null) return "Unknown URI"
         var fileName = uri.trimFileExtension().lastSegment()
+        val generatedSpecName = fileName + "_" + currentConstraint.name 
         // generate types file that will be imported into the generated ps file
         fsa.generateFile(fileName + ".types", typesText)
 
@@ -165,7 +168,7 @@ class CPNTemplateGenerator
         '''
         import "«fileName».types"
 
-        specification «fileName»
+        specification «generatedSpecName»
         {
         '''
         // parse declare templates
@@ -219,7 +222,7 @@ class CPNTemplateGenerator
 
         '''
         fsa.generateFile(
-            fileName + "_" + currentConstraint.name + ".ps",
+            generatedSpecName + ".ps",
             specPrefix + tspecModel + specBody + specPostfix
         )
     }
@@ -273,7 +276,8 @@ class CPNTemplateGenerator
     }
 
     // Generate PSpec System for Response Template
-    //TODO{discuss: here we need computelabel for each constraint, not combination of all constraints}
+    //TODO{discuss: here we need compute label for each constraint, not combination of all constraints}
+    //TODO{This also can be made more general and moved to helper class. This is not really template specific.}
     def computeLabelSet(Template currentConstraint) {
         var labelList = new ArrayList<RefInfo>
             for(templateGroup : currentConstraint.type) {
