@@ -901,7 +901,7 @@ class Utils
                 root_report = StatusReport(
                     plugin="",
                     severity=root_severity,
-                    message=f"«name» generation finished with status: {root_severity.name}",
+                    message=f"Python generation of «name»",
                     source="",
                     code=0,
                     details=None,
