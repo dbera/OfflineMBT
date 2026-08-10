@@ -17,6 +17,7 @@ import java.util.ArrayList
 import java.util.HashSet
 import java.util.List
 import java.util.Set
+import nl.esi.comma.constraints.constraints.ChainResponse
 import nl.esi.comma.constraints.constraints.Constraints
 import nl.esi.comma.constraints.constraints.Future
 import nl.esi.comma.constraints.constraints.RefAction
@@ -31,13 +32,13 @@ import nl.esi.comma.testspecification.testspecification.TestDefinition
 import nl.esi.xtext.actions.actions.RecordFieldAssignmentAction
 import nl.esi.xtext.expressions.expression.ExpressionVariable
 import nl.esi.xtext.types.types.TypesModel
-import org.eclipse.emf.common.util.EList
 import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.nodemodel.util.NodeModelUtils
 
 import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
+import nl.esi.comma.constraints.constraints.AlternateResponse
 
 // import static extension org.eclipse.emf.ecore.util.EcoreUtil.*
 // import org.eclipse.emf.common.util.URI
@@ -188,6 +189,33 @@ class CPNTemplateGenerator
                             helpers.getRefInputTypeAndVar(templateType.refB.head)
                         )
                     }
+                    else if(templateType instanceof ChainResponse) {
+                        specBody = futureTemplates.generateChainResponseTemplate(
+                            currentConstraint.name,
+                            currentConstraint.variables.head,
+                            templateType.refA.head,
+                            helpers.getRefInputTypeAndVar(templateType.refA.head),
+                            helpers.getRefName(templateType.refA.head),
+                            templateType.refB.head,
+                            helpers.getRefName(templateType.refB.head),
+                            helpers.getRefInputTypeAndVar(templateType.refB.head)
+                        )
+                    }
+                    else if(templateType instanceof AlternateResponse) {
+                        specBody = futureTemplates.generateAlternateResponseTemplate(
+                            currentConstraint.name,
+                            currentConstraint.variables.head,
+                            templateType.refA.head,
+                            helpers.getRefInputTypeAndVar(templateType.refA.head),
+                            helpers.getRefName(templateType.refA.head),
+                            templateType.refB.head,
+                            helpers.getRefName(templateType.refB.head),
+                            helpers.getRefInputTypeAndVar(templateType.refB.head),
+                            templateType.refC.head,
+                            helpers.getRefName(templateType.refC.head),
+                            helpers.getRefInputTypeAndVar(templateType.refC.head)
+                        )
+                    }
                 }
             }
         }
@@ -275,23 +303,70 @@ class CPNTemplateGenerator
         return false
     }
 
-    // Generate PSpec System for Response Template
     //TODO{discuss: here we need compute label for each constraint, not combination of all constraints}
     //TODO{This also can be made more general and moved to helper class. This is not really template specific.}
+    //TODO{Trying to make a more general implementation of this}
+//    def computeLabelSet(Template currentConstraint) {
+//        var labelList = new ArrayList<RefInfo>
+//            for(templateGroup : currentConstraint.type) {
+//                if(templateGroup instanceof Future) {
+//                    for(templateType : templateGroup.type) {
+//                        if(templateType instanceof Response) {
+//                            if(templateType.refA.head instanceof RefAction) {
+//                                if(!isRefInfoPresent(labelList, helpers.getRefInputTypeAndVar(templateType.refA.head)))
+//                                    labelList.add(helpers.getRefInputTypeAndVar(templateType.refA.head))
+//                            }
+//                            if(templateType.refB.head instanceof RefAction) {
+//                                if(!isRefInfoPresent(labelList, helpers.getRefInputTypeAndVar(templateType.refB.head)))
+//                                    labelList.add(helpers.getRefInputTypeAndVar(templateType.refB.head))
+//                            }
+//                        }
+//                        if(templateType instanceof ChainResponse) {
+//                            if(templateType.refA.head instanceof RefAction) {
+//                                if(!isRefInfoPresent(labelList, helpers.getRefInputTypeAndVar(templateType.refA.head)))
+//                                    labelList.add(helpers.getRefInputTypeAndVar(templateType.refA.head))
+//                            }
+//                            if(templateType.refB.head instanceof RefAction) {
+//                                if(!isRefInfoPresent(labelList, helpers.getRefInputTypeAndVar(templateType.refB.head)))
+//                                    labelList.add(helpers.getRefInputTypeAndVar(templateType.refB.head))
+//                            }
+//                        }
+//                        if(templateType instanceof AlternateResponse) {
+//                            if(templateType.refA.head instanceof RefAction) {
+//                                if(!isRefInfoPresent(labelList, helpers.getRefInputTypeAndVar(templateType.refA.head)))
+//                                    labelList.add(helpers.getRefInputTypeAndVar(templateType.refA.head))
+//                            }
+//                            if(templateType.refB.head instanceof RefAction) {
+//                                if(!isRefInfoPresent(labelList, helpers.getRefInputTypeAndVar(templateType.refB.head)))
+//                                    labelList.add(helpers.getRefInputTypeAndVar(templateType.refB.head))
+//                            }
+//                            if(templateType.refC.head instanceof RefAction) {
+//                                if(!isRefInfoPresent(labelList, helpers.getRefInputTypeAndVar(templateType.refC.head)))
+//                                    labelList.add(helpers.getRefInputTypeAndVar(templateType.refC.head))
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        val anyInfo = new RefInfo("ANY", "any")
+////        TODO{discuss: emitting ANY here}
+//        if(!isRefInfoPresent(labelList, anyInfo))
+//            labelList.add(anyInfo)
+//        return labelList
+//    }
+
+//  a smaller generic implementation of computeLabelSet
+//  TODO{discuss: maybe this should also go to helper class?}    
     def computeLabelSet(Template currentConstraint) {
         var labelList = new ArrayList<RefInfo>
             for(templateGroup : currentConstraint.type) {
-                if(templateGroup instanceof Future) {
-                    for(templateType : templateGroup.type) {
-                        if(templateType instanceof Response) {
-                            if(templateType.refA.head instanceof RefAction) {
-                                if(!isRefInfoPresent(labelList, helpers.getRefInputTypeAndVar(templateType.refA.head)))
-                                    labelList.add(helpers.getRefInputTypeAndVar(templateType.refA.head))
-                            }
-                            if(templateType.refB.head instanceof RefAction) {
-                                if(!isRefInfoPresent(labelList, helpers.getRefInputTypeAndVar(templateType.refB.head)))
-                                    labelList.add(helpers.getRefInputTypeAndVar(templateType.refB.head))
-                            }
+                for (templateType : helpers.getTemplateTypes(templateGroup)){
+                    for (ref : helpers.getRefsforTemplate(templateType)){
+                        if (ref instanceof RefAction) {
+                            val info = helpers.getRefInputTypeAndVar(ref)
+                            
+                            if (!isRefInfoPresent(labelList, info))
+                                labelList.add(info)
                         }
                     }
                 }

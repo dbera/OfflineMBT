@@ -26,6 +26,7 @@ import nl.esi.comma.testspecification.testspecification.TestDefinition
 import java.util.List
 import nl.esi.comma.testspecification.testspecification.RunStep
 import nl.esi.comma.testspecification.testspecification.AssertionStep
+import org.eclipse.emf.ecore.EObject
 
 class Helpers {
     def getRefName(Ref ref){
@@ -63,7 +64,31 @@ class Helpers {
         }
         return idx
     }
-
+    //TODO{discuss: adding a helper function to get all refs as a list for a template type}
+    def getRefsforTemplate(EObject templatetype){
+        val reflist = newArrayList
+        for (feature : templatetype.eClass.EAllStructuralFeatures) {
+            if (feature.name.startsWith("ref")) {
+                val refs = templatetype.eGet(feature) as List<Ref>
+                
+                if (!refs.empty)
+                    reflist.add(refs.head)
+            }
+        }
+        return reflist
+    }
+    
+    //TODO{discuss: adding a helper function to get all templatetypes of a templategroup
+    //    as there is no superclass implementation in the grammar}
+    def getTemplateTypes(EObject templateGroup){
+        val feature = templateGroup.eClass.getEStructuralFeature("type")
+        
+        if (feature !== null)
+            return templateGroup.eGet(feature) as List<EObject>
+        else
+            return emptyList
+    }
+    
 //    returns "where-concrete" guard
 //    TODO{it should return "true" if there is no clause}
     def getRefConcreteWhereClause(Ref ref) {
