@@ -19,6 +19,7 @@ import nl.esi.xtext.actions.actions.Action;
 import nl.esi.xtext.actions.actions.ActionList;
 import nl.esi.xtext.actions.actions.AssignmentAction;
 import nl.esi.xtext.actions.actions.ForAction;
+import nl.esi.xtext.actions.actions.FunctionCall;
 import nl.esi.xtext.actions.actions.IfAction;
 import nl.esi.xtext.actions.actions.RecordFieldAssignmentAction;
 import nl.esi.xtext.expressions.expression.Expression;
@@ -273,22 +274,19 @@ class SnakesHelper {
 	}
 	
 	private static String action(Action action, Function<String, String> variableRename, String indent) {
-		if (action instanceof AssignmentAction) {
-			AssignmentAction a = (AssignmentAction) action;
+		if (action instanceof AssignmentAction a) {
 			// String variable = String.format("%s%s", variablePrefix.apply(a.getAssignment().getName()), a.getAssignment().getName());
 			String variable = String.format("%s", variableRename.apply(a.getAssignment().getName()));
 			// if(a.isSymbolic()) return String.format("%s = %s%s%s", variable, QUOTE, expression(a.getExp(), variablePrefix).replace("\"", "\\\""), QUOTE);
 			return String.format("%s = %s", variable, expression(a.getExp(), variableRename));
-		} else if (action instanceof RecordFieldAssignmentAction) {
-			RecordFieldAssignmentAction a = (RecordFieldAssignmentAction) action;
+		} else if (action instanceof RecordFieldAssignmentAction a) {
 			ExpressionRecordAccess access = (ExpressionRecordAccess) a.getFieldAccess();
 			String record = expression(access.getRecord(), variableRename);
 			String field = access.getField().getName();
 			String value = expression(a.getExp(), variableRename);
 			return String.format("%s[\"%s\"] = %s", record, field, value);
-		} else if(action instanceof IfAction) {
+		} else if(action instanceof IfAction act) {
 			var txt = new String();
-			var act = (IfAction) action;
 			txt += String.format("if %s:\n",expression(act.getGuard(), variableRename));
 			txt += indentActionList(act.getThenList(), variableRename, indent);
 			if(act.getElseList()!= null) {
@@ -296,14 +294,16 @@ class SnakesHelper {
 				txt += indentActionList(act.getElseList(), variableRename, indent);
 			}
 			return txt.trim();
-		} else if(action instanceof ForAction) {
+		} else if(action instanceof ForAction act) {
 			var txt = new String();
-			var act = (ForAction) action;
 			txt += String.format("for %s in %s:\n", act.getVar().getName(), expression(act.getExp(), variableRename));
 			txt += indentActionList(act.getDoList(), variableRename, indent);
 			return txt.trim();
-		}
-		
+		} else if(action instanceof FunctionCall functionCall) {
+			var txt = new String();
+			txt += expression(functionCall.getExp());
+			return txt.trim();
+	}
 		throw new RuntimeException("Not supported");
 	}
 
