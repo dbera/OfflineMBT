@@ -473,7 +473,7 @@ class PetriNet {
                 for entry in pn.visitedTList:
                     # txt = ''
                     if entry:
-                        _test_scn = TestSCN(self.map_transition_assert, self.constraint_dict, self.tr_assert_ref_dict)
+                        _test_scn = TestSCN(pspec_path, self.map_transition_assert, self.constraint_dict, self.tr_assert_ref_dict)
                         idx = idx + 1
                         j = 0
                         for step in entry:
@@ -567,11 +567,17 @@ class PetriNet {
                                 default=None,
                                 help="The path to where the status report will be saved")
 
+            parser.add_argument("-pspath","--pspec_path",
+                                type=str,
+                                default="",
+                                help="The relatve path to the pspec file to be used for test generation")
+
             p = parser.parse_args()
             p.tspec_dir.mkdir(exist_ok=True)
             p.plantuml_dir.mkdir(exist_ok=True)
             status_report_file = p.status_report_file if p.status_report_file != None else p.tspec_dir / "status_report.json"
             status_report_file.parent.mkdir(parents=True, exist_ok=True)
+            pspec_path = p.pspec_path
             reporting = initialize_reporting(status_report_file)
 
             try:

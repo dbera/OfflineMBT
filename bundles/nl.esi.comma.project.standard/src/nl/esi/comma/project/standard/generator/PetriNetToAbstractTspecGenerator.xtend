@@ -29,6 +29,7 @@ import org.eclipse.xtext.generator.IGeneratorContext
 
 import static extension nl.esi.xtext.common.lang.generator.FileSystemAccessUtil.*
 import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
+import static extension nl.esi.comma.project.standard.generator.^extension.IStandardProjectGeneratorExtension.FOLDER_PSPEC
 
 class PetriNetToAbstractTspecGenerator extends AbstractGenerator {
     
@@ -52,7 +53,8 @@ class PetriNetToAbstractTspecGenerator extends AbstractGenerator {
             '-no_sim=TRUE',
             '-tsdir=' + fsa.rootURI.toPath,
             '-pudir=' + fsa.getURI('plantuml').toPath,
-            '-srfile=' + statusReportFile
+            '-srfile=' + statusReportFile,
+            '-pspath=' + '../'+ FOLDER_PSPEC+'/'
         ])
         process.inputReader.pipeTo(System.out)
         process.errorReader.pipeTo(System.err)

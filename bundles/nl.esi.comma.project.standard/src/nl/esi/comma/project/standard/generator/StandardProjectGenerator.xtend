@@ -27,9 +27,9 @@ import nl.esi.comma.project.standard.standardProject.OfflineGenerationTarget
 import nl.esi.comma.project.standard.standardProject.Project
 import nl.esi.comma.project.standard.standardProject.TargetConfig
 import nl.esi.comma.testspecification.generator.utils.MergeConcreteDataAssigments
-import nl.esi.xtext.common.lang.base.Import
 import nl.esi.xtext.common.lang.reporting.IStatusReporting
 import nl.esi.xtext.common.lang.reporting.StatusReportHelper
+import nl.esi.xtext.common.lang.utilities.EcoreUtil3
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.emf.ecore.resource.ResourceSet
 import org.eclipse.xtext.generator.AbstractGenerator
@@ -112,14 +112,9 @@ class StandardProjectGenerator extends AbstractGenerator {
             val tspecName = absTspecFileName.replaceAll('\\.atspec$', '')
             val absTspecRes = absTspecFsa.loadResource(absTspecFileName, rst)
 
-            // Fix the pspec import
-            val productImportURI = productURI.deresolve(absTspecRes.URI)
-            absTspecRes.allContents.filter(Import).filter[importURI == productURI.lastSegment].forEach [
-                importURI = productImportURI.toString
-            ]
-            absTspecRes.save(null)
             // Validate the generated abstract tspec, stop this transformation on error
-            if (!absTspecRes.validate) {
+            val  absTspecValid = !absTspecRes.validate
+            if (absTspecValid) {
                 // Generate concrete tspec
                 val conTspecFsa = fsa.createFolderAccess(FOLDER_CONCRETE_TSPEC + '/' + tspecName)
                 val fromAbstractToConcreteGen = new FromAbstractToConcrete()
@@ -127,10 +122,12 @@ class StandardProjectGenerator extends AbstractGenerator {
     
                 val conTspecFileName = tspecName + '.tspec'
                 val conTspecRes = conTspecFsa.loadResource(conTspecFileName, rst)
+                
                 MergeConcreteDataAssigments.transform(conTspecRes)
-                conTspecRes.save(null)
+                val conTspecValid = !conTspecRes.validate
+                trySave(conTspecRes)
                 // Validate the generated conctete tspec, stop this transformation on error
-                if (!conTspecRes.validate){
+                if (conTspecValid){
                     // TODO fetch these FAST configuration parameters from somewhere else (e.g., .prj task)
                     val renamingRules = task.renamingRules !== null ? createPropertiesMap(task.renamingRules) : new HashMap
                     val genParams = task.generatorParams !== null ? createPropertiesMap(task.generatorParams) : new HashMap
@@ -152,6 +149,16 @@ class StandardProjectGenerator extends AbstractGenerator {
         return props
     }
 
+    private def trySave( Resource resource) {
+        try {
+            //try to test serialize the file first as it sweeps the file on save 
+            resource.contents.forEach[EcoreUtil3.serialize(it)]
+            resource.save(null)
+        }
+        catch(Exception e) {
+            reporting.addReport(e)
+        }
+    }
     /**
      * validates the resource
      * returns true when error
