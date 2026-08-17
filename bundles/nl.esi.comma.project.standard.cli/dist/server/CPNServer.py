@@ -77,6 +77,7 @@ BPMN4S_JAR_NAME = "bpmn4s-toolchain.jar"
 BPMN4S_GEN = os.path.join(SERVER_PATH, BPMN4S_JAR_NAME)
 JAVA_REL_PATH = ("jre", "bin", "java.exe")
 JAVA_PATH = os.path.join(SERVER_PATH, *JAVA_REL_PATH)
+JAVA_DEBUG_PORT_LSP = 4000
 
 SYS_TEMP = tempfile.gettempdir()
 BPMN4S_TEMP = os.path.join(SYS_TEMP,'bpmn4s')
@@ -671,6 +672,17 @@ if __name__ == "__main__":
             logger.error(f"Failed to find free port: {e}")
             return None
 
+    def ensure_port_available(port: int, purpose: str) -> bool:
+        """Return whether a fixed port needed for debugging is available."""
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.bind(("127.0.0.1", port))
+            s.close()
+            return True
+        except OSError:
+            logger.warning(f"Port {port} is not available for {purpose}; continuing without Java debugging.")
+            return False
+
     lsp_port = find_free_port()
     if lsp_port is None:
         logger.error("Failed to find an available port for LSP subprocess. Please check your system resources.")
@@ -689,6 +701,15 @@ if __name__ == "__main__":
     # Start Java ServerLauncher which runs both LSP and REST servers
     lsp_command = [
         JAVA_PATH,
+    ]
+
+    if args.debug and ensure_port_available(JAVA_DEBUG_PORT_LSP, "the Java LSP debug agent"):
+        lsp_command.append(
+            f"-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=127.0.0.1:{JAVA_DEBUG_PORT_LSP}"
+        )
+        logger.info(f"Java debug agent listening on 127.0.0.1:{JAVA_DEBUG_PORT_LSP}")
+
+    lsp_command.extend([
         "-cp",
         BPMN4S_GEN,
         "nl.asml.matala.server.ServerLauncher",
@@ -698,7 +719,7 @@ if __name__ == "__main__":
         str(REST_PORT),
         "--repository-path",
         REPOSITORY_PATH_ARG,
-    ]
+    ])
 
     logger.debug(f"LSP command: {' '.join(lsp_command)}")
     logger.debug(f"Using JAVA_PATH: {JAVA_PATH}")
