@@ -366,12 +366,13 @@ class Utils
             constraint_dict = {}
             tr_assert_ref_dict = {}
         
-            def __init__(self, _mapTrAssert, _constraint_dict, _tr_assert_ref_dict):
+            def __init__(self, _pspec_path, _mapTrAssert, _constraint_dict, _tr_assert_ref_dict):
                 self.step_list = []
                 self.step_dependencies = []
                 self.map_transition_assert = _mapTrAssert
                 self.constraint_dict = _constraint_dict
                 self.tr_assert_ref_dict = _tr_assert_ref_dict
+                self.pspec_path = _pspec_path
         
             def generate_viz(self, idx, output_dir):
                 txt = "@startuml\n"
@@ -430,7 +431,7 @@ class Utils
 
             def generateTSpec(self, idx, sutTypesList, sutVarTransitionMap, transitionQnameMap, output_dir):
                 txt = ""
-                txt += "import \"«pSpecFile»\"\n\n"
+                txt += f"""import "{self.pspec_path}«pSpecFile»"\n\n"""
                 «(new Utils()).usageList(prod)»
                 txt += "\nabstract-test-definition\n\n"
                 txt += "Test-Scenario: S%s\n" % idx
