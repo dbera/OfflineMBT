@@ -50,6 +50,7 @@ import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
 import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
 import static extension org.eclipse.lsat.common.xtend.Queries.*
 import static extension org.eclipse.xtext.EcoreUtil2.*
+import nl.esi.xtext.actions.actions.FunctionCall
 
 /**
  * This class contains custom validation rules. 
@@ -129,7 +130,7 @@ class ProductValidator extends AbstractProductValidator {
      * All variables occurring in a guard expression must have been defined as inputs of an action
      */
     @Check
-    def preventIlligalVariableAccess(Function function) {
+    def preventIllegalVariableAccess(Function function) {
         for (update : function.updates) {
             if (update.guard !== null) {
                 val Set<String> inputs = newHashSet
@@ -157,60 +158,64 @@ class ProductValidator extends AbstractProductValidator {
      * Note that attributes of this variable may be referenced in the LHS expression (record field access)
      */
     @Check
-    def void preventIlligalVariableAccess(Update update) {
+    def void preventIllegalVariableAccess(Update update) {
         /* Variables occurring in the RHS of an update expression must have been defined as inputs of an action. */
         for (updateOutVar : update.updateOutputVar.reject[act === null]) {
             val inputs = update.fnInp.map[ref].toSet
             val outputs = updateOutVar.fnOut.map[ref].toSet
-            updateOutVar.act.actions.forEach[preventIlligalVariableAccess(inputs, outputs)]
+            updateOutVar.act.actions.forEach[preventIllegalVariableAccess(inputs, outputs)]
         }
     }
 
-    private dispatch def void preventIlligalVariableAccess(AssignmentAction action, Set<Variable> inputs, Set<Variable> outputs) {
+    private dispatch def void preventIllegalVariableAccess(AssignmentAction action, Set<Variable> inputs, Set<Variable> outputs) {
         if (!outputs.contains(action.assignment)) {
             error('''Variable '«action.assignment.name»' is not defined as an output''', action, ActionsPackage.Literals.ASSIGNMENT_ACTION__ASSIGNMENT)
         }
-        action.exp?.preventIlligalExpressionVariableAccess(inputs, Direction::input)
+        action.exp?.preventIllegalExpressionVariableAccess(inputs, Direction::input)
         // As the variable is now assigned, we can also use it as input (imperative programming)
         inputs += action.assignment
     }
 
-    private dispatch def void preventIlligalVariableAccess(RecordFieldAssignmentAction action, Set<Variable> inputs, Set<Variable> outputs) {
-        action.fieldAccess?.preventIlligalExpressionVariableAccess(outputs, Direction::output)
-        action.exp?.preventIlligalExpressionVariableAccess(inputs, Direction::input)
+    private dispatch def void preventIllegalVariableAccess(RecordFieldAssignmentAction action, Set<Variable> inputs, Set<Variable> outputs) {
+        action.fieldAccess?.preventIllegalExpressionVariableAccess(outputs, Direction::output)
+        action.exp?.preventIllegalExpressionVariableAccess(inputs, Direction::input)
     }
 
-    private dispatch def void preventIlligalVariableAccess(ForAction action, Set<Variable> inputs, Set<Variable> outputs) {
-        action.exp?.preventIlligalExpressionVariableAccess(inputs, Direction::input)
+    private dispatch def void preventIllegalVariableAccess(ForAction action, Set<Variable> inputs, Set<Variable> outputs) {
+        action.exp?.preventIllegalExpressionVariableAccess(inputs, Direction::input)
         if (action.doList !== null) {
             val doInputs = new HashSet(inputs)
             doInputs += action.^var
-            action.doList.actions.forEach[preventIlligalVariableAccess(doInputs, outputs)]
+            action.doList.actions.forEach[preventIllegalVariableAccess(doInputs, outputs)]
         }
     }
 
-    private dispatch def void preventIlligalVariableAccess(IfAction action, Set<Variable> inputs, Set<Variable> outputs) {
-        action.guard?.preventIlligalExpressionVariableAccess(inputs, Direction::input)
+    private dispatch def void preventIllegalVariableAccess(IfAction action, Set<Variable> inputs, Set<Variable> outputs) {
+        action.guard?.preventIllegalExpressionVariableAccess(inputs, Direction::input)
         if (action.thenList !== null) {
-            action.thenList.actions.forEach[preventIlligalVariableAccess(inputs, outputs)]
+            action.thenList.actions.forEach[preventIllegalVariableAccess(inputs, outputs)]
         }
         if (action.thenList !== null) {
-            action.thenList.actions.forEach[preventIlligalVariableAccess(inputs, outputs)]
+            action.thenList.actions.forEach[preventIllegalVariableAccess(inputs, outputs)]
         }
+    }
+
+    private dispatch def void preventIllegalVariableAccess(FunctionCall action, Set<Variable> inputs, Set<Variable> outputs) {
+        action.exp?.preventIllegalExpressionVariableAccess(inputs, Direction::input)
     }
 
     private enum Direction { input, output }
 
-    private dispatch def void preventIlligalExpressionVariableAccess(ExpressionVariable exprVar, Set<Variable> variables, Direction direction) {
+    private dispatch def void preventIllegalExpressionVariableAccess(ExpressionVariable exprVar, Set<Variable> variables, Direction direction) {
         if (!variables.contains(exprVar.variable)) {
             error('''Variable '«exprVar.variable.name»' is not defined as an «direction»''', exprVar, ExpressionPackage.Literals.EXPRESSION_VARIABLE__VARIABLE)
         }
     }
 
-    private dispatch def void preventIlligalExpressionVariableAccess(Expression expr, Set<Variable> variables, Direction direction) {
+    private dispatch def void preventIllegalExpressionVariableAccess(Expression expr, Set<Variable> variables, Direction direction) {
         // Finds child expressions, but allows other classes in between (e.g. Record Field)
         val subExpressions = #[expr as EObject].walkTree[eContents].findNearest(Expression)
-        subExpressions.forEach[preventIlligalExpressionVariableAccess(variables, direction)]
+        subExpressions.forEach[preventIllegalExpressionVariableAccess(variables, direction)]
     }
 
     /**
@@ -302,6 +307,10 @@ class ProductValidator extends AbstractProductValidator {
         // LHS check
         action.fieldAccess.reportWarningOnAccess(RecordFieldKind::SYMBOLIC)[ field | '''Symbolic record field should not be assigned in «property»''']
         // RHS check
+        action.exp.reportWarningOnAccess(RecordFieldKind::SYMBOLIC)[ field | '''Symbolic record field should not be used in «property»''']
+    }
+
+    dispatch def private void doCheckConcreteVariableUpdate(FunctionCall action, String property) {
         action.exp.reportWarningOnAccess(RecordFieldKind::SYMBOLIC)[ field | '''Symbolic record field should not be used in «property»''']
     }
 
