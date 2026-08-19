@@ -15,6 +15,7 @@ package nl.asml.matala.product.generator
 import java.util.ArrayList
 import java.util.HashMap
 import java.util.LinkedHashSet
+import java.util.List
 import java.util.Set
 import nl.asml.matala.product.product.Block
 import nl.asml.matala.product.product.Blocks
@@ -28,9 +29,9 @@ import nl.asml.matala.product.product.SymbConstraint
 import nl.asml.matala.product.product.Update
 import nl.asml.matala.product.product.UpdateOutVar
 import nl.asml.matala.product.product.VarRef
+import nl.esi.comma.assertthat.assertThat.DataAssertions
 import nl.esi.xtext.actions.actions.AssignmentAction
 import nl.esi.xtext.actions.actions.RecordFieldAssignmentAction
-import nl.esi.comma.assertthat.assertThat.DataAssertions
 import nl.esi.xtext.expressions.expression.ExpressionAddition
 import nl.esi.xtext.expressions.expression.ExpressionAnd
 import nl.esi.xtext.expressions.expression.ExpressionAny
@@ -66,13 +67,17 @@ import nl.esi.xtext.expressions.expression.ExpressionVariable
 import nl.esi.xtext.expressions.expression.ExpressionVector
 import nl.esi.xtext.expressions.expression.Field
 import nl.esi.xtext.expressions.expression.Variable
+import org.eclipse.emf.ecore.EObject
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
+import org.eclipse.xtext.nodemodel.util.NodeModelUtils
 
 import static nl.esi.xtext.common.lang.utilities.EcoreUtil3.serialize
 
 class Utils 
 {
+    static val INDENT = 4
+    
     // Added for Asserts
     dispatch def String printConstraint(DataAssertions ref) {
         return printConstraint(ref.eContainer as Update) + "." + ref.name
@@ -658,14 +663,17 @@ class Utils
         '''
     }
     
-   static def getDataContainerClass(String dataGetterTxt, String methodTxt) 
+   static def getDataContainerClass(String prod_name, String dataGetterTxt, String methodTxt) 
     {
         // var data_container_class =
         return 
             '''
             import copy
             import json
-            
+            if __package__ is None or __package__ == '':
+                from «prod_name»_reporting import get_reporting, Location
+            else:
+                from .«prod_name»_reporting import get_reporting, Location
             
             class Data:
                 
@@ -808,12 +816,33 @@ class Utils
         from dataclasses import dataclass, field
         from pathlib import Path
 
+        class StatusException(Exception):
+            def __init__(self, message: str):
+                super().__init__(message)
+          
         class Severity(Enum):
             OK = 0
             INFO = 1
             WARNING = 2
             ERROR = 3
             CANCEL = 4
+            
+        @dataclass 
+        class Location:
+            startLine: int
+            endLine: int
+            offset: int
+            length: int
+            text: str
+            
+            def to_dict(self) -> Dict[str, Any]:
+                return {
+                    'startLine': self.startLine,
+                    'endLine': self.endLine,
+                    'offset': self.offset,
+                    'length': self.length,
+                    'text': self.text,
+                }
 
         @dataclass
         class StatusReport:
@@ -823,7 +852,7 @@ class Utils
             source: str = ""
             code: int = 0
             details: Optional[str] = None
-            location: Optional[str] = None
+            location: Optional[Location] = None
             children: List['StatusReport'] = field(default_factory=list)
             exception: Optional[Exception] = field(default=None, repr=False)
 
@@ -857,7 +886,7 @@ class Utils
                     'source': self.source,
                     'code': self.code,
                     'details': self.details,
-                    'location': self.location,
+                    'location': self.location.to_dict() if self.location else None,
                     'children': [child.to_dict() for child in self.children if child is not None],
                 }
 
@@ -867,7 +896,7 @@ class Utils
                 self.reports: List[StatusReport] = []
 
             def _log(self, severity: Severity, message: str, source: str = "", code: int = 0,
-                     details: Optional[str] = None, exception: Optional[Exception] = None) -> StatusReport:
+                     details: Optional[str] = None, exception: Optional[Exception] = None, location: Optional[Location] = None) -> StatusReport:
                 report = StatusReport(
                     plugin="",
                     severity=severity,
@@ -875,23 +904,26 @@ class Utils
                     source=source,
                     code=code,
                     details=details,
+                    location=location,
                     exception=exception
                 )
                 self.reports.append(report)
                 return report
 
-            def info(self, message: str, source: str = "", code: int = 0, details: Optional[str] = None) -> StatusReport:
-                return self._log(Severity.INFO, message, source, code, details)
+            def info(self, message: str, source: str = "", code: int = 0, details: Optional[str] = None, location: Location = None) -> StatusReport:
+                return self._log(Severity.INFO, message, source, code, details, None, location)
 
-            def warning(self, message: str, source: str = "", code: int = 0, details: Optional[str] = None) -> StatusReport:
-                return self._log(Severity.WARNING, message, source, code, details)
+            def warning(self, message: str, source: str = "", code: int = 0, details: Optional[str] = None, location: Location = None) -> StatusReport:
+                return self._log(Severity.WARNING, message, source, code, details, None, location)
 
             def error(self, message: str, source: str = "", code: int = 0, 
-                      details: Optional[str] = None) -> StatusReport:
-                return self._log(Severity.ERROR, message, source, code, details)
+                      details: Optional[str] = None, location: Location = None) -> StatusReport:
+                return self._log(Severity.ERROR, message, source, code, details, None, location)
 
-            def exception(self, message: str, exception: Exception, source: str = "", code: int = 0) -> StatusReport:
-                return self._log(Severity.ERROR, message, source, code, None, exception)
+            def exception(self, message: str, exception: Exception, source: str = "", details: str = None, code: int = 0, location: Location = None) -> StatusReport:
+                self._log(Severity.ERROR, message, source, code, details, exception, location)
+                #on exception the process is stopped
+                raise StatusException(message)
 
             def save(self) -> Severity:
 
@@ -934,6 +966,69 @@ class Utils
     }
 
 
+    static def String surroundWithTryCatch(EObject ref, int depth, String txt) {
+        var indent = " ".repeat(depth * INDENT)
+        var nextIndent = " ".repeat((depth + 1) * INDENT)
+        var sourceLocation = getSourceLocation(ref).replace("\n", "\n" + nextIndent)
+        var body = txt.trim().replace("\n", "\n" + nextIndent)
+        
+        var result = String.join("\n",
+            indent + "try:",
+            nextIndent + body,
+            indent + "except Exception as e:",
+            nextIndent + sourceLocation,
+            nextIndent + "get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)",
+            ""
+        )
+        return result
+    }
+
+    static def String getSourceLocation(EObject action) {
+        var List<String> result = new ArrayList<String>()
+        
+        var node = NodeModelUtils.getNode(action)
+
+        if (node !== null) {
+            var text = node.getText()
+            // Escape for Python and limit to 50 chars
+            text = escapeAndLimitText(text, 500)
+            var locationStr = "__location = Location(" + node.getStartLine() + "," + node.getEndLine() + "," + 
+                node.getOffset() + "," + node.getLength() + ",\"" + text + "\")"
+            result.add(locationStr)
+        }
+        if (action.eResource() !== null) {
+            result.add("__source_file = \"" + action.eResource().getURI().lastSegment() +'"') 
+        }
+        
+        // Try to get the line number from the ILocationData if available
+        // This depends on your setup - you may need to adjust based on your EMF configuration
+        
+        return String.join("\n", result)
+    }
+
+    static def String escapeAndLimitText(String text, int limit) {
+        if (text === null) {
+            return ""
+        }
+        
+        // Escape special characters for Python
+        var escaped = text.trim()
+            .replaceAll("\\s+", " ")
+            .replace("\\", "\\\\")
+            .replace("\"", "\\\"")
+            .replace("\n", "")
+            .replace("\r", "")
+            .replace("\t", " ")
+        
+        // Limit to specified length with "..." suffix if truncated
+        if (escaped.length() > limit) {
+            escaped = escaped.substring(0, limit - 3) + "..."
+        }
+        
+        return escaped
+    }
+
+
 //  /* TODO Is this deprecated? Who is using this? Commented DB 16.03.2025 */
 //  def Map<String,String> recurseTypes(Type typ) {
 //      var constructors = newLinkedHashMap() 
@@ -954,4 +1049,5 @@ class Utils
 //      }
 //      return constructors
 //  }
+
 }

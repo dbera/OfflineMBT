@@ -175,7 +175,7 @@ class ProductGenerator extends AbstractGenerator {
 			))
 			fsa.generateFile('CPNServer//' + specName + '//' + specName + '_Simulation.py', pnet.toSnakesSimulation)
             fsa.generateFile('CPNServer//' + specName + '//' + specName + '_reporting.py', Utils.getReportingClass(specName))
-			fsa.generateFile('CPNServer//' + specName + '//' + specName + '_data.py', Utils.getDataContainerClass(dataGetterTxt, methodTxt))
+			fsa.generateFile('CPNServer//' + specName + '//' + specName + '_data.py', Utils.getDataContainerClass(specName, dataGetterTxt, methodTxt))
 			fsa.generateFile('CPNServer//' + specName + '//' + specName + '_TestSCN.py', Utils.generateTestSCNTxt(specName + "_types", prod, resource.URI.lastSegment))
             // generate utils for HTTP server
             fsa.generateFile('CPNServer//' + specName + '//' + '__init__.py', 
@@ -298,7 +298,7 @@ class ProductGenerator extends AbstractGenerator {
 								System.out.println("	> act: " + SnakesHelper.action(a, func))
 								actTxt +=
 								'''
-								    «SnakesHelper.action(a, func)»
+								    «Utils.surroundWithTryCatch(a,0,SnakesHelper.action(a, func))»
 								'''
 							}
 						}

@@ -353,12 +353,12 @@ class PetriNet {
         if __package__ is None or __package__ == '':
             from «prod_name»_TestSCN import TestSCN, Step, Tests, Constraint, CEntry
             from «prod_name»_data import Data
-            from «prod_name»_reporting import get_reporting, initialize_reporting
+            from «prod_name»_reporting import get_reporting, initialize_reporting, Location
             from «prod_name»_Simulation import Simulation, simulate
         else:
             from .«prod_name»_TestSCN import TestSCN, Step, Tests, Constraint, CEntry
             from .«prod_name»_data import Data
-            from .«prod_name»_reporting import get_reporting, initialize_reporting
+            from .«prod_name»_reporting import get_reporting, initialize_reporting, Location
             from .«prod_name»_Simulation import Simulation, simulate
         import subprocess
         import copy
@@ -436,7 +436,7 @@ class PetriNet {
                             print("WARN: duplicate modes detected for same transition.")
                             print(k + "_" +elm.__repr__())
                             print("WARN: references to the above transitions are ambiguous!")
-                            get_reporting().warning("Duplicate modes detected for same transition, Check References in Details", details=f"{k}_{str.join("\n",[str(s) for s in elm.items()])}")
+                            get_reporting().warning("Duplicate modes detected for same transition, Check References in Details", details=f"{k}_{str.join('\n',[str(s) for s in elm.items()])}")
                         self.map_transition_modes_to_name[k + "_" +elm.__repr__()] = k + "_" + str(cnt)
                         # self.map_transition_modes_to_name[k + "_" + pprint.pformat(elm.items(), width=60, compact=True,depth=5)] = k + "_" + str(cnt)
                         cnt = cnt + 1
@@ -677,7 +677,8 @@ class PetriNet {
 
             except Exception as e:
                 print("[ERROR] " + str(e))
-                get_reporting().exception(message = e.__class__.__name__, exception = e)
+                if not isinstance(e, StatusException):
+                    get_reporting().exception(message = e.__class__.__name__, exception = e)
             finally:
                 print("[INFO] Saving status_report.json")
                 severity = reporting.save()
