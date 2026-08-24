@@ -173,13 +173,13 @@ class ProductGenerator extends AbstractGenerator {
 			     mapOfTransitionQnames, mapOfSuppressTransitionVars, inout_places, 
 			    init_places, depth_limit, state_limit, num_tests, sutTransitionMap
 			))
-			fsa.generateFile('CPNServer//' + specName + '//' + specName + '_Simulation.py', pnet.toSnakesSimulation)
-            fsa.generateFile('CPNServer//' + specName + '//' + specName + '_reporting.py', Utils.getReportingClass(specName))
-			fsa.generateFile('CPNServer//' + specName + '//' + specName + '_data.py', Utils.getDataContainerClass(specName, dataGetterTxt, methodTxt))
-			fsa.generateFile('CPNServer//' + specName + '//' + specName + '_TestSCN.py', Utils.generateTestSCNTxt(specName + "_types", prod, resource.URI.lastSegment))
+			fsa.generateFile('CPNServer//' + specName + '//' + specName + '_Simulation.py', toUnixLineEndings(pnet.toSnakesSimulation))
+            fsa.generateFile('CPNServer//' + specName + '//' + specName + '_reporting.py', toUnixLineEndings(Utils.getReportingClass(specName)))
+			fsa.generateFile('CPNServer//' + specName + '//' + specName + '_data.py', toUnixLineEndings(Utils.getDataContainerClass(specName, dataGetterTxt, methodTxt)))
+			fsa.generateFile('CPNServer//' + specName + '//' + specName + '_TestSCN.py', toUnixLineEndings(Utils.generateTestSCNTxt(specName + "_types", prod, resource.URI.lastSegment)))
             // generate utils for HTTP server
             fsa.generateFile('CPNServer//' + specName + '//' + '__init__.py', 
-                (new FlaskSimulationGenerator).generateInitForCPNSpecPkg(prod)
+                toUnixLineEndings((new FlaskSimulationGenerator).generateInitForCPNSpecPkg(prod))
             )
 		}
 	}
@@ -482,5 +482,13 @@ class ProductGenerator extends AbstractGenerator {
 	
 	static def Integer intValue(ExpressionConstantInt expr) {
 	    return expr === null ? null : expr.value.intValue
+	}
+	
+	/**
+	 * Converts Windows line endings (CRLF: \r\n) to Unix line endings (LF: \n)
+	 */
+	static def String toUnixLineEndings(CharSequence content) {
+		if (content === null) return null
+		return content.toString.replace("\r\n", "\n")
 	}
 }
