@@ -43,6 +43,8 @@ import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
 import static extension org.eclipse.emf.ecore.util.EcoreUtil.*
 import static extension org.eclipse.xtext.EcoreUtil2.*
 
+import static extension org.eclipse.lsat.common.xtend.Queries.*
+
 /**
  * Generates code from your model files on save.
  * 
@@ -89,9 +91,9 @@ class StandardProjectGenerator extends AbstractGenerator {
             throw new Exception('No product found in resource: ' + productURI)
         }
         productRes.resolveAll()
-        //validate but stop on the first error
-        var error = product.imports.map[productRes.getResource(importURI).validate].findFirst[it]!==null
-        if (error || productRes.validate){
+        // Validate product and its imports, but stop on the first error
+        val productResources = product.imports.map[productRes.getResource(importURI)].union(productRes)
+        if (!productResources.forall[validate]) {
             return
         }
         // PspecToPetriNetGenerator
@@ -113,27 +115,27 @@ class StandardProjectGenerator extends AbstractGenerator {
             val absTspecRes = absTspecFsa.loadResource(absTspecFileName, rst)
 
             // Validate the generated abstract tspec, stop this transformation on error
-            val  absTspecValid = !absTspecRes.validate
-            if (absTspecValid) {
+            if (absTspecRes.validate) {
                 // Generate concrete tspec
                 val conTspecFsa = fsa.createFolderAccess(FOLDER_CONCRETE_TSPEC + '/' + tspecName)
                 val fromAbstractToConcreteGen = new FromAbstractToConcrete()
                 fromAbstractToConcreteGen.doGenerate(absTspecRes, conTspecFsa, ctx)
-    
+
                 val conTspecFileName = tspecName + '.tspec'
                 val conTspecRes = conTspecFsa.loadResource(conTspecFileName, rst)
-                
-                MergeConcreteDataAssigments.transform(conTspecRes)
-                val conTspecValid = !conTspecRes.validate
-                trySave(conTspecRes)
-                // Validate the generated conctete tspec, stop this transformation on error
-                if (conTspecValid){
+                // Only apply concrete tspec post-processing if resource doesn't contain errors
+                if (conTspecRes.errors.isEmpty) {
+                    MergeConcreteDataAssigments.transform(conTspecRes)
+                    conTspecRes.trySave
+                }
+                // Validate the generated concrete tspec, stop this transformation on error
+                if (conTspecRes.validate) {
                     // TODO fetch these FAST configuration parameters from somewhere else (e.g., .prj task)
                     val renamingRules = task.renamingRules !== null ? createPropertiesMap(task.renamingRules) : new HashMap
                     val genParams = task.generatorParams !== null ? createPropertiesMap(task.generatorParams) : new HashMap
                     // TODO fetch this from somewhere else
                     genParams.putIfAbsent('prefixPath', './vfab2_scenario/FAST/testcases/' + specName + '_' + tspecName + '/')
-        
+
                     val extensionContext = new StandardProjectGeneratorContext(ctx?.cancelIndicator, renamingRules, genParams)
                     generatorExtensions.forEach[ doGenerate(conTspecRes, fsa, extensionContext)]
                 }
@@ -149,7 +151,7 @@ class StandardProjectGenerator extends AbstractGenerator {
         return props
     }
 
-    private def trySave( Resource resource) {
+    private def trySave(Resource resource) {
         try {
             //try to test serialize the file first as it sweeps the file on save 
             resource.contents.forEach[EcoreUtil3.serialize(it)]
@@ -161,12 +163,13 @@ class StandardProjectGenerator extends AbstractGenerator {
     }
     /**
      * validates the resource
-     * returns true when error
+     *
+     * @returns <code>false</code> when error
      */
     private def boolean validate(Resource resource) {
         val result = StatusReportHelper.validate(resource)
         reporting.addReport(result)
-        return result.error
+        return !result.error
     }
 }
 
