@@ -25,6 +25,7 @@ snakes.plugins.load('gv', 'snakes.nets', 'nets')
 from nets import *
 # from CPNServer.utils import AbstractCPNControl
 
+LINE_FEED = '\n'
 
 class issue371Model:
     visitedList = set()
@@ -236,7 +237,7 @@ class issue371Model:
                     print("WARN: duplicate modes detected for same transition.")
                     print(k + "_" +elm.__repr__())
                     print("WARN: references to the above transitions are ambiguous!")
-                    get_reporting().warning("Duplicate modes detected for same transition, Check References in Details", details=f"{k}_{str.join('\n',[str(s) for s in elm.items()])}")
+                    get_reporting().warning("Duplicate modes detected for same transition, Check References in Details", details=f"{k}_{str.join(LINE_FEED,[str(s) for s in elm.items()])}")
                 self.map_transition_modes_to_name[k + "_" +elm.__repr__()] = k + "_" + str(cnt)
                 # self.map_transition_modes_to_name[k + "_" + pprint.pformat(elm.items(), width=60, compact=True,depth=5)] = k + "_" + str(cnt)
                 cnt = cnt + 1
