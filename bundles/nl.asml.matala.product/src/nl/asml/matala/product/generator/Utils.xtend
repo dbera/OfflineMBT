@@ -414,14 +414,15 @@ class Utils
                             elif "False" in items:
                                 items = "false"
                             else:
-                                items = f"\"{items}\""
+                                items = '"' +str(items) +'"'
                         case int():
                             items = items
                         case list():
                             items = self.updateDict[prefix].strip()
                         case _:
                             raise TypeError('Unsupported type')
-                    txt += f"    {prefix} := {items}\n"
+                    txt += f"    {prefix} := {items}"
+                    txt += "\n"
                 return txt
 
             def printData(self, idata):
@@ -436,7 +437,7 @@ class Utils
 
             def generateTSpec(self, idx, sutTypesList, sutVarTransitionMap, transitionQnameMap, output_dir):
                 txt = ""
-                txt += f"""import "{self.pspec_path}«pSpecFile»"\n\n"""
+                txt += "import " + '"' + str(self.pspec_path) + "«pSpecFile»" + '"' +"\n\n"
                 «(new Utils()).usageList(prod)»
                 txt += "\nabstract-test-definition\n\n"
                 txt += "Test-Scenario: S%s\n" % idx
@@ -812,21 +813,21 @@ class Utils
         import json
         import traceback
         from enum import Enum
-        from typing import List, Optional, Dict, Any
+        from typing import List, Optional, Dict, Any, NoReturn
         from dataclasses import dataclass, field
         from pathlib import Path
 
         class StatusException(Exception):
             def __init__(self, message: str):
                 super().__init__(message)
-          
+
         class Severity(Enum):
             OK = 0
             INFO = 1
             WARNING = 2
             ERROR = 3
             CANCEL = 4
-            
+
         @dataclass 
         class Location:
             startLine: int
@@ -834,7 +835,7 @@ class Utils
             offset: int
             length: int
             text: str
-            
+
             def to_dict(self) -> Dict[str, Any]:
                 return {
                     'startLine': self.startLine,
@@ -870,12 +871,12 @@ class Utils
                             self.severity = max_child_severity
 
             @staticmethod
-            def _get_stack_trace_as_string(exception: Exception) -> str:
+            def _get_stack_trace_as_string(exception: Optional[Exception]) -> Optional[str]:
                 if exception is None:
                     return None
                 tb_lines = traceback.format_exception(type(exception), exception, exception.__traceback__)
                 if len(tb_lines) > 15:
-                    tb_lines = tb_lines[:15] + [f"\t... {len(tb_lines) - 15} more\n"]
+                    tb_lines = tb_lines[:15] + [f"   ... {len(tb_lines) - 15} more" +"\n"]
                 return "".join(tb_lines)
 
             def to_dict(self) -> Dict[str, Any]:
@@ -910,17 +911,17 @@ class Utils
                 self.reports.append(report)
                 return report
 
-            def info(self, message: str, source: str = "", code: int = 0, details: Optional[str] = None, location: Location = None) -> StatusReport:
+            def info(self, message: str, source: str = "", code: int = 0, details: Optional[str] = None, location: Optional[Location] = None) -> StatusReport:
                 return self._log(Severity.INFO, message, source, code, details, None, location)
 
-            def warning(self, message: str, source: str = "", code: int = 0, details: Optional[str] = None, location: Location = None) -> StatusReport:
+            def warning(self, message: str, source: str = "", code: int = 0, details: Optional[str] = None, location: Optional[Location] = None) -> StatusReport:
                 return self._log(Severity.WARNING, message, source, code, details, None, location)
 
             def error(self, message: str, source: str = "", code: int = 0, 
-                      details: Optional[str] = None, location: Location = None) -> StatusReport:
+                      details: Optional[str] = None, location: Optional[Location] = None) -> StatusReport:
                 return self._log(Severity.ERROR, message, source, code, details, None, location)
 
-            def exception(self, message: str, exception: Exception, source: str = "", details: str = None, code: int = 0, location: Location = None) -> StatusReport:
+            def exception(self, message: str, exception: Exception, source: str = "", details: Optional[str] = None, code: int = 0, location: Optional[Location] = None) -> NoReturn:
                 self._log(Severity.ERROR, message, source, code, details, exception, location)
                 #on exception the process is stopped
                 raise StatusException(message)
@@ -948,7 +949,6 @@ class Utils
                     json.dump(data, f, indent=2)
 
                 return root_severity
-
 
         _status_reporting_instance: Optional[StatusReporting] = None
 
@@ -990,7 +990,7 @@ class Utils
 
         if (node !== null) {
             var text = node.getText()
-            // Escape for Python and limit to 50 chars
+            // Escape for Python and limit to 500 chars
             text = escapeAndLimitText(text, 500)
             var locationStr = "__location = Location(" + node.getStartLine() + "," + node.getEndLine() + "," + 
                 node.getOffset() + "," + node.getLength() + ",\"" + text + "\")"
@@ -999,10 +999,6 @@ class Utils
         if (action.eResource() !== null) {
             result.add("__source_file = \"" + action.eResource().getURI().lastSegment() +'"') 
         }
-        
-        // Try to get the line number from the ILocationData if available
-        // This depends on your setup - you may need to adjust based on your EMF configuration
-        
         return String.join("\n", result)
     }
 
@@ -1010,7 +1006,6 @@ class Utils
         if (text === null) {
             return ""
         }
-        
         // Escape special characters for Python
         var escaped = text.trim()
             .replaceAll("\\s+", " ")
@@ -1019,35 +1014,11 @@ class Utils
             .replace("\n", "")
             .replace("\r", "")
             .replace("\t", " ")
-        
         // Limit to specified length with "..." suffix if truncated
         if (escaped.length() > limit) {
             escaped = escaped.substring(0, limit - 3) + "..."
         }
-        
         return escaped
     }
-
-
-//  /* TODO Is this deprecated? Who is using this? Commented DB 16.03.2025 */
-//  def Map<String,String> recurseTypes(Type typ) {
-//      var constructors = newLinkedHashMap() 
-//      var typ2 = typ.type
-//      if (typ instanceof VectorTypeConstructor) {
-//          if (!typ2.name.equalsIgnoreCase("string")) {
-//              if (typ.eContainer instanceof RecordField) {
-//                  var field = (typ.eContainer as RecordField).name
-//                  var key = typ2.name
-//                  constructors.put(key, field)
-//              }
-//          }
-//      }
-//      if (typ2 instanceof RecordTypeDecl) {
-//          for (f : (typ2 as RecordTypeDecl).fields) {
-//              constructors.putAll(recurseTypes(f.type))
-//          }
-//      }
-//      return constructors
-//  }
 
 }

@@ -31,7 +31,7 @@ class Data:
     	try:
     	    Event_1bks5sc = Event_0o4qsh5
     	except Exception as e:
-    	    __location = Location(26,26,485,30,"Event_1bks5sc := Event_0o4qsh5")
+    	    __location = Location(26,26,510,30,"Event_1bks5sc := Event_0o4qsh5")
     	    __source_file = "issue371.ps"
     	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	try:
@@ -40,21 +40,21 @@ class Data:
     	    else:
     	    	pass
     	except Exception as e:
-    	    __location = Location(27,31,528,90,"if true then // Empty else // Empty fi")
+    	    __location = Location(27,31,554,94,"if true then // Empty else // Empty fi")
     	    __source_file = "issue371.ps"
     	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	try:
     	    for i in list(range(2)):
     	    	pass
     	except Exception as e:
-    	    __location = Location(32,34,631,67,"for int i in range(2) do // Empty end-for")
+    	    __location = Location(32,34,662,69,"for int i in range(2) do // Empty end-for")
     	    __source_file = "issue371.ps"
     	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	try:
     	    if not (False):
     	    	Event_1bks5sc["myField"] = 1
     	except Exception as e:
-    	    __location = Location(35,37,711,73,"if not false then Event_1bks5sc.myField := 1 fi")
+    	    __location = Location(35,37,745,75,"if not false then Event_1bks5sc.myField := 1 fi")
     	    __source_file = "issue371.ps"
     	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(Event_1bks5sc)

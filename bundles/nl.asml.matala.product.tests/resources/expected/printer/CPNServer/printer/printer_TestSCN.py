@@ -65,14 +65,15 @@ class TestSCN:
                     elif "False" in items:
                         items = "false"
                     else:
-                        items = f"\"{items}\""
+                        items = '"' +str(items) +'"'
                 case int():
                     items = items
                 case list():
                     items = self.updateDict[prefix].strip()
                 case _:
                     raise TypeError('Unsupported type')
-            txt += f"    {prefix} := {items}\n"
+            txt += f"    {prefix} := {items}"
+            txt += "\n"
         return txt
 
     def printData(self, idata):
@@ -87,7 +88,7 @@ class TestSCN:
 
     def generateTSpec(self, idx, sutTypesList, sutVarTransitionMap, transitionQnameMap, output_dir):
         txt = ""
-        txt += f"""import "{self.pspec_path}printer.ps"\n\n"""
+        txt += "import " + '"' + str(self.pspec_path) + "printer.ps" + '"' +"\n\n"
         txt += "using printer.PrintFactoryA3DPrinter.printJob\n"
         txt += "using printer.PrintFactoryA3DPrinter.corrections\n"
         txt += "using printer.PrintFactoryA3DPrinter.variants\n"
@@ -335,4 +336,3 @@ class CEntry:
     def __init__(self, n, c):
         self.name = n
         self.constr = c
-
