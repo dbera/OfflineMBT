@@ -84,7 +84,7 @@ class PetriNetToAbstractTspecGenerator extends AbstractGenerator {
             }
             StatusReportHelper.errorReport('Python process exited with exit code ' + process.exitValue, childReports)
         } else {
-            statusReportFile.readReport ?: StatusReportHelper.warningReport('Status report is not available', Collections.emptyList)
+            statusReportFile.readReport ?: StatusReportHelper.warningReport('Python status report is not available', Collections.emptyList)
         }
         reporting.addReport(report)
         // Refresh the files-system to detect the generated files
@@ -100,7 +100,7 @@ class PetriNetToAbstractTspecGenerator extends AbstractGenerator {
             val report = StatusReportHelper.fromJson(Files.readString(statusReportPath))
             return report
         } catch (IOException e) {
-            val report = StatusReportHelper.fromException(e, 'Failed to read status report', Collections.emptyList)
+            val report = StatusReportHelper.fromException(e, 'Failed to read Python status report', Collections.emptyList)
             return report
         }
     }

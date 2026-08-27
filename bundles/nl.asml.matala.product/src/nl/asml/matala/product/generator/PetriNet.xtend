@@ -353,12 +353,12 @@ class PetriNet {
         if __package__ is None or __package__ == '':
             from «prod_name»_TestSCN import TestSCN, Step, Tests, Constraint, CEntry
             from «prod_name»_data import Data
-            from «prod_name»_reporting import get_reporting, initialize_reporting, Location
+            from «prod_name»_reporting import get_reporting, initialize_reporting, Location, Severity
             from «prod_name»_Simulation import Simulation, simulate
         else:
             from .«prod_name»_TestSCN import TestSCN, Step, Tests, Constraint, CEntry
             from .«prod_name»_data import Data
-            from .«prod_name»_reporting import get_reporting, initialize_reporting, Location
+            from .«prod_name»_reporting import get_reporting, initialize_reporting, Location, Severity
             from .«prod_name»_Simulation import Simulation, simulate
         import subprocess
         import copy
@@ -685,7 +685,7 @@ class PetriNet {
                 severity = reporting.save()
                 print("[INFO] Saved status_report.json")
                 print(f"[INFO] Exiting with status: {severity.name}")
-                exit(severity.value)
+                exit(1 if severity == Severity.ERROR else 0)
     '''
 
     def print_SCNGen(int num_tests, int depth_limit, int state_limit) '''

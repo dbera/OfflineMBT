@@ -825,8 +825,7 @@ class Utils
             OK = 0
             INFO = 1
             WARNING = 2
-            ERROR = 3
-            CANCEL = 4
+            ERROR = 4
 
         @dataclass 
         class Location:

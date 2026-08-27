@@ -757,4 +757,4 @@ if __name__ == '__main__':
         severity = reporting.save()
         print("[INFO] Saved status_report.json")
         print(f"[INFO] Exiting with status: {severity.name}")
-        exit(severity.value)
+        exit(1 if severity == Severity.ERROR else 0)
