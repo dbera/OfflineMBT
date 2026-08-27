@@ -1,6 +1,9 @@
 import copy
 import json
-
+if __package__ is None or __package__ == '':
+    from printer_reporting import get_reporting, Location
+else:
+    from .printer_reporting import get_reporting, Location
 
 class Data:
     
@@ -77,180 +80,375 @@ class Data:
     	
     @staticmethod
     def execute_PrintFactoryA3DPrinter_RunPrintJob_default_Event_0jcg6zx(request,Flow_1u2qmtt,variants):
-    	Event_0jcg6zx = Flow_1u2qmtt
+    	try:
+    	    Event_0jcg6zx = Flow_1u2qmtt
+    	except Exception as e:
+    	    __location = Location(64,64,2094,29,"Event_0jcg6zx := Flow_1u2qmtt")
+    	    __source_file = "printer.ps"
+    	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(Event_0jcg6zx)
     
     @staticmethod
     def execute_PrintFactoryA3DPrinter_RunPrintJob_default_printResult(request,Flow_1u2qmtt,variants):
-    	printResult = {"verdict": "Outcome::OK"}
+    	try:
+    	    printResult = {"verdict": "Outcome::OK"}
+    	except Exception as e:
+    	    __location = Location(67,67,2190,47,"printResult := Result { verdict = Outcome::OK }")
+    	    __source_file = "printer.ps"
+    	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(printResult)
     
     @staticmethod
     def execute_PrintFactoryA3DPrinter_RunPrintJob_default_printReport(request,Flow_1u2qmtt,variants):
-    	printReport = {"id": request["id"]}
+    	try:
+    	    printReport = {"id": request["id"]}
+    	except Exception as e:
+    	    __location = Location(70,72,2343,66,"printReport := Report { id = request.id }")
+    	    __source_file = "printer.ps"
+    	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(printReport)
     
     @staticmethod
     def execute_PrintFactoryA3DPrinter_RunPrintJob_default_variants(request,Flow_1u2qmtt,variants):
-    	variants = variants
+    	try:
+    	    variants = variants
+    	except Exception as e:
+    	    __location = Location(75,75,2487,20,"variants := variants")
+    	    __source_file = "printer.ps"
+    	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(variants)
     
     @staticmethod
     def execute_PrintFactoryA3DPrinter_ComposePrintJob_default_request(corrections,printJob):
-    	request = printJob
+    	try:
+    	    request = printJob
+    	except Exception as e:
+    	    __location = Location(85,85,2912,19,"request := printJob")
+    	    __source_file = "printer.ps"
+    	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(request)
     
     @staticmethod
     def execute_PrintFactoryA3DPrinter_ComposePrepareJob_default_request(printJob):
-    	request = printJob
+    	try:
+    	    request = printJob
+    	except Exception as e:
+    	    __location = Location(95,95,3292,19,"request := printJob")
+    	    __source_file = "printer.ps"
+    	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(request)
     
     @staticmethod
     def execute_PrintFactoryA3DPrinter_RunPrepareJob_default_Event_0mxx05p(request,Flow_0iaelzn,variants):
-    	Event_0mxx05p = Flow_0iaelzn
+    	try:
+    	    Event_0mxx05p = Flow_0iaelzn
+    	except Exception as e:
+    	    __location = Location(106,106,3783,29,"Event_0mxx05p := Flow_0iaelzn")
+    	    __source_file = "printer.ps"
+    	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(Event_0mxx05p)
     
     @staticmethod
     def execute_PrintFactoryA3DPrinter_RunPrepareJob_default_printResult(request,Flow_0iaelzn,variants):
-    	printResult = {"verdict": "Outcome::OK"}
+    	try:
+    	    printResult = {"verdict": "Outcome::OK"}
+    	except Exception as e:
+    	    __location = Location(109,109,3879,47,"printResult := Result { verdict = Outcome::OK }")
+    	    __source_file = "printer.ps"
+    	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(printResult)
     
     @staticmethod
     def execute_PrintFactoryA3DPrinter_RunPrepareJob_default_variants(request,Flow_0iaelzn,variants):
-    	variants = variants
+    	try:
+    	    variants = variants
+    	except Exception as e:
+    	    __location = Location(112,112,4004,20,"variants := variants")
+    	    __source_file = "printer.ps"
+    	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(variants)
     
     @staticmethod
     def execute_PrintFactoryAssertions_AssertVisualInspection_default_history(inspectionReport,history):
-    	history = {"inspectionReports": history["inspectionReports"] + [inspectionReport["id"]]}
+    	try:
+    	    history = {"inspectionReports": history["inspectionReports"] + [inspectionReport["id"]]}
+    	except Exception as e:
+    	    __location = Location(149,151,5072,130,"history := AssertionsHistory { inspectionReports = add(history.inspectionReports, inspectionReport.id) }")
+    	    __source_file = "printer.ps"
+    	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(history)
     
     @staticmethod
     def execute_PrintFactoryAssertions_AssertVisualInspection_default_inspectionReport(inspectionReport,history):
-    	inspectionReport = inspectionReport
+    	try:
+    	    inspectionReport = inspectionReport
+    	except Exception as e:
+    	    __location = Location(154,154,5318,36,"inspectionReport := inspectionReport")
+    	    __source_file = "printer.ps"
+    	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(inspectionReport)
     
     @staticmethod
     def execute_PrintFactoryInspection_RunVisualinspection_default_inspectionReport(measureRequest,Flow_07l0yyj):
-    	inspectionReport = {"id": measureRequest["id"]}
+    	try:
+    	    inspectionReport = {"id": measureRequest["id"]}
+    	except Exception as e:
+    	    __location = Location(187,189,6165,78,"inspectionReport := Report { id = measureRequest.id }")
+    	    __source_file = "printer.ps"
+    	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(inspectionReport)
     
     @staticmethod
     def execute_PrintFactoryInspection_RunVisualinspection_default_inspectionResult(measureRequest,Flow_07l0yyj):
-    	inspectionResult = {"verdict": "Outcome::OK"}
+    	try:
+    	    inspectionResult = {"verdict": "Outcome::OK"}
+    	except Exception as e:
+    	    __location = Location(192,192,6315,52,"inspectionResult := Result { verdict = Outcome::OK }")
+    	    __source_file = "printer.ps"
+    	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(inspectionResult)
     
     @staticmethod
     def execute_PrintFactoryInspection_ComposeVisualInspectionJob_default_measureRequest(printReport,inspectionJob):
-    	measureRequest = inspectionJob
+    	try:
+    	    measureRequest = inspectionJob
+    	except Exception as e:
+    	    __location = Location(205,205,6914,31,"measureRequest := inspectionJob")
+    	    __source_file = "printer.ps"
+    	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(measureRequest)
     
     @staticmethod
     def execute_PrintFactoryInspection_ComposeVisualInspectionJob_default_printReport(printReport,inspectionJob):
-    	printReport = printReport
+    	try:
+    	    printReport = printReport
+    	except Exception as e:
+    	    __location = Location(208,208,7035,26,"printReport := printReport")
+    	    __source_file = "printer.ps"
+    	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(printReport)
     
     @staticmethod
     def execute_PrintFactoryOptimization_ComposeOptimizationJob_default_optimizeJob(optJob,inspectionReport):
-    	optimizeJob = optJob
+    	try:
+    	    optimizeJob = optJob
+    	except Exception as e:
+    	    __location = Location(243,243,7953,21,"optimizeJob := optJob")
+    	    __source_file = "printer.ps"
+    	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(optimizeJob)
     
     @staticmethod
     def execute_PrintFactoryOptimization_ComposeOptimizationJob_default_inspectionReport(optJob,inspectionReport):
-    	inspectionReport = inspectionReport
+    	try:
+    	    inspectionReport = inspectionReport
+    	except Exception as e:
+    	    __location = Location(246,246,8069,36,"inspectionReport := inspectionReport")
+    	    __source_file = "printer.ps"
+    	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(inspectionReport)
     
     @staticmethod
     def execute_PrintFactoryOptimization_RunOptimizationJob_default_Event_1oozdnw(optimizeJob,Flow_0y8u5pd):
-    	Event_1oozdnw = Flow_0y8u5pd
+    	try:
+    	    Event_1oozdnw = Flow_0y8u5pd
+    	except Exception as e:
+    	    __location = Location(254,254,8388,29,"Event_1oozdnw := Flow_0y8u5pd")
+    	    __source_file = "printer.ps"
+    	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(Event_1oozdnw)
     
     @staticmethod
     def execute_PrintFactoryOptimization_RunOptimizationJob_default_corrections(optimizeJob,Flow_0y8u5pd):
-    	corrections = {"id": optimizeJob["id"] + 1}
+    	try:
+    	    corrections = {"id": optimizeJob["id"] + 1}
+    	except Exception as e:
+    	    __location = Location(257,259,8498,85,"corrections := CorrectionsReport { id = optimizeJob.id + 1 }")
+    	    __source_file = "printer.ps"
+    	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(corrections)
     
     @staticmethod
     def execute_PrintFactoryFactoryAutomation_SendPrintJob_default_Flow_16s4ey1(printRequests,Gateway_1wpvmtk):
-    	Flow_16s4ey1 = Gateway_1wpvmtk
-    	Flow_16s4ey1["color"] = printRequests["color"]
-    	Flow_16s4ey1["resolution"] = printRequests["resolution"]
-    	Flow_16s4ey1["scale"] = printRequests["scale"]
+    	try:
+    	    Flow_16s4ey1 = Gateway_1wpvmtk
+    	except Exception as e:
+    	    __location = Location(335,335,10613,31,"Flow_16s4ey1 := Gateway_1wpvmtk")
+    	    __source_file = "printer.ps"
+    	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
+    	try:
+    	    Flow_16s4ey1["color"] = printRequests["color"]
+    	except Exception as e:
+    	    __location = Location(336,336,10657,41,"Flow_16s4ey1.color := printRequests.color")
+    	    __source_file = "printer.ps"
+    	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
+    	try:
+    	    Flow_16s4ey1["resolution"] = printRequests["resolution"]
+    	except Exception as e:
+    	    __location = Location(337,337,10711,51,"Flow_16s4ey1.resolution := printRequests.resolution")
+    	    __source_file = "printer.ps"
+    	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
+    	try:
+    	    Flow_16s4ey1["scale"] = printRequests["scale"]
+    	except Exception as e:
+    	    __location = Location(338,338,10775,41,"Flow_16s4ey1.scale := printRequests.scale")
+    	    __source_file = "printer.ps"
+    	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(Flow_16s4ey1)
     
     @staticmethod
     def execute_PrintFactoryFactoryAutomation_SendPrintJob_default_printJob(printRequests,Gateway_1wpvmtk):
-    	printJob = {"id": printRequests["id"], "resolution": printRequests["resolution"], "scale": printRequests["scale"], "color": printRequests["color"], "opType": printRequests["opType"]}
+    	try:
+    	    printJob = {"id": printRequests["id"], "resolution": printRequests["resolution"], "scale": printRequests["scale"], "color": printRequests["color"], "opType": printRequests["opType"]}
+    	except Exception as e:
+    	    __location = Location(341,347,10880,255,"printJob := PrintRequest { id = printRequests.id, resolution = printRequests.resolution, scale = printRequests.scale, color = printRequests.color, opType = printRequests.opType }")
+    	    __source_file = "printer.ps"
+    	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(printJob)
     
     @staticmethod
     def execute_PrintFactoryFactoryAutomation_NextJob_default_Gateway_1wpvmtk(Gateway_0p2uo9v):
-    	Gateway_1wpvmtk = Gateway_0p2uo9v
-    	Gateway_1wpvmtk["id"] = Gateway_1wpvmtk["id"] + 1
+    	try:
+    	    Gateway_1wpvmtk = Gateway_0p2uo9v
+    	except Exception as e:
+    	    __location = Location(355,355,11333,34,"Gateway_1wpvmtk := Gateway_0p2uo9v")
+    	    __source_file = "printer.ps"
+    	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
+    	try:
+    	    Gateway_1wpvmtk["id"] = Gateway_1wpvmtk["id"] + 1
+    	except Exception as e:
+    	    __location = Location(356,356,11380,44,"Gateway_1wpvmtk.id := Gateway_1wpvmtk.id + 1")
+    	    __source_file = "printer.ps"
+    	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(Gateway_1wpvmtk)
     
     @staticmethod
     def execute_PrintFactoryFactoryAutomation_WaitforOptimizationJob_default_Flow_09b0flo(Flow_01m2s0h,optResult):
-    	Flow_09b0flo = Flow_01m2s0h
+    	try:
+    	    Flow_09b0flo = Flow_01m2s0h
+    	except Exception as e:
+    	    __location = Location(364,364,11659,28,"Flow_09b0flo := Flow_01m2s0h")
+    	    __source_file = "printer.ps"
+    	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(Flow_09b0flo)
     
     @staticmethod
     def execute_PrintFactoryFactoryAutomation_Gateway_1f8wap6_default_Gateway_0p2uo9v(Flow_09b0flo,Flow_1vq9t2p):
-    	Gateway_0p2uo9v = Flow_09b0flo
+    	try:
+    	    Gateway_0p2uo9v = Flow_09b0flo
+    	except Exception as e:
+    	    __location = Location(373,373,11960,31,"Gateway_0p2uo9v := Flow_09b0flo")
+    	    __source_file = "printer.ps"
+    	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(Gateway_0p2uo9v)
     
     @staticmethod
     def execute_PrintFactoryFactoryAutomation_Gateway_1j3rupx_default_Flow_1y4bjf4(Flow_1dcdx0e):
-    	Flow_1y4bjf4 = Flow_1dcdx0e
+    	try:
+    	    Flow_1y4bjf4 = Flow_1dcdx0e
+    	except Exception as e:
+    	    __location = Location(381,381,12198,28,"Flow_1y4bjf4 := Flow_1dcdx0e")
+    	    __source_file = "printer.ps"
+    	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(Flow_1y4bjf4)
     
     @staticmethod
     def execute_PrintFactoryFactoryAutomation_Gateway_1j3rupx_default_Flow_1f74bn4(Flow_1dcdx0e):
-    	Flow_1f74bn4 = Flow_1dcdx0e
+    	try:
+    	    Flow_1f74bn4 = Flow_1dcdx0e
+    	except Exception as e:
+    	    __location = Location(384,384,12294,28,"Flow_1f74bn4 := Flow_1dcdx0e")
+    	    __source_file = "printer.ps"
+    	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(Flow_1f74bn4)
     
     @staticmethod
     def execute_PrintFactoryFactoryAutomation_WaitforVisualInspection_default_Flow_0kbycuh(inspectionResult,Flow_1dt29vl):
-    	Flow_0kbycuh = Flow_1dt29vl
+    	try:
+    	    Flow_0kbycuh = Flow_1dt29vl
+    	except Exception as e:
+    	    __location = Location(392,392,12566,28,"Flow_0kbycuh := Flow_1dt29vl")
+    	    __source_file = "printer.ps"
+    	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(Flow_0kbycuh)
     
     @staticmethod
     def execute_PrintFactoryFactoryAutomation_SendOptimizationJob_default_Flow_01m2s0h(Flow_0kbycuh):
-    	Flow_01m2s0h = Flow_0kbycuh
+    	try:
+    	    Flow_01m2s0h = Flow_0kbycuh
+    	except Exception as e:
+    	    __location = Location(400,400,12811,28,"Flow_01m2s0h := Flow_0kbycuh")
+    	    __source_file = "printer.ps"
+    	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(Flow_01m2s0h)
     
     @staticmethod
     def execute_PrintFactoryFactoryAutomation_SendOptimizationJob_default_optJob(Flow_0kbycuh):
-    	optJob = {"id": Flow_0kbycuh["id"]}
+    	try:
+    	    optJob = {"id": Flow_0kbycuh["id"]}
+    	except Exception as e:
+    	    __location = Location(403,403,12901,50,"optJob := OptimizeRequest { id = Flow_0kbycuh.id }")
+    	    __source_file = "printer.ps"
+    	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(optJob)
     
     @staticmethod
     def execute_PrintFactoryFactoryAutomation_CleanPrinter_default_Flow_1rkhqnd(Flow_1f74bn4):
-    	Flow_1rkhqnd = Flow_1f74bn4
+    	try:
+    	    Flow_1rkhqnd = Flow_1f74bn4
+    	except Exception as e:
+    	    __location = Location(411,411,13153,28,"Flow_1rkhqnd := Flow_1f74bn4")
+    	    __source_file = "printer.ps"
+    	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(Flow_1rkhqnd)
     
     @staticmethod
     def execute_PrintFactoryFactoryAutomation_CleanPrinter_default_printJob(Flow_1f74bn4):
-    	printJob = {"id": Flow_1f74bn4["id"], "resolution": Flow_1f74bn4["resolution"], "scale": None, "color": Flow_1f74bn4["color"], "opType": "OperationType::PREP"}
+    	try:
+    	    printJob = {"id": Flow_1f74bn4["id"], "resolution": Flow_1f74bn4["resolution"], "scale": None, "color": Flow_1f74bn4["color"], "opType": "OperationType::PREP"}
+    	except Exception as e:
+    	    __location = Location(414,420,13245,236,"printJob := PrintRequest { id = Flow_1f74bn4.id, resolution = Flow_1f74bn4.resolution, scale = null, color = Flow_1f74bn4.color, opType = OperationType::PREP }")
+    	    __source_file = "printer.ps"
+    	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(printJob)
     
     @staticmethod
     def execute_PrintFactoryFactoryAutomation_SendVisualInspectionJob_default_Flow_1dt29vl(Flow_1y4bjf4):
-    	Flow_1dt29vl = Flow_1y4bjf4
+    	try:
+    	    Flow_1dt29vl = Flow_1y4bjf4
+    	except Exception as e:
+    	    __location = Location(428,428,13707,28,"Flow_1dt29vl := Flow_1y4bjf4")
+    	    __source_file = "printer.ps"
+    	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(Flow_1dt29vl)
     
     @staticmethod
     def execute_PrintFactoryFactoryAutomation_SendVisualInspectionJob_default_inspectionJob(Flow_1y4bjf4):
-    	inspectionJob = {"id": Flow_1y4bjf4["id"]}
+    	try:
+    	    inspectionJob = {"id": Flow_1y4bjf4["id"]}
+    	except Exception as e:
+    	    __location = Location(431,433,13846,81,"inspectionJob := MeasureRequest { id = Flow_1y4bjf4.id }")
+    	    __source_file = "printer.ps"
+    	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(inspectionJob)
     
     @staticmethod
     def execute_PrintFactoryFactoryAutomation_WaitforClean_default_Flow_1vq9t2p(printResult,Flow_1rkhqnd):
-    	Flow_1vq9t2p = Flow_1rkhqnd
+    	try:
+    	    Flow_1vq9t2p = Flow_1rkhqnd
+    	except Exception as e:
+    	    __location = Location(441,441,14143,28,"Flow_1vq9t2p := Flow_1rkhqnd")
+    	    __source_file = "printer.ps"
+    	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(Flow_1vq9t2p)
     
     @staticmethod
     def execute_PrintFactoryFactoryAutomation_WaitforPrintJob_default_Flow_1dcdx0e(printResult,Flow_16s4ey1):
-    	Flow_1dcdx0e = Flow_16s4ey1
+    	try:
+    	    Flow_1dcdx0e = Flow_16s4ey1
+    	except Exception as e:
+    	    __location = Location(449,449,14394,28,"Flow_1dcdx0e := Flow_16s4ey1")
+    	    __source_file = "printer.ps"
+    	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(Flow_1dcdx0e)
     

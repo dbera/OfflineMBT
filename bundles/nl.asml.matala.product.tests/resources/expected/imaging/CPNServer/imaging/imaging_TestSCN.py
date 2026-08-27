@@ -22,12 +22,13 @@ class TestSCN:
     constraint_dict = {}
     tr_assert_ref_dict = {}
 
-    def __init__(self, _mapTrAssert, _constraint_dict, _tr_assert_ref_dict):
+    def __init__(self, _pspec_path, _mapTrAssert, _constraint_dict, _tr_assert_ref_dict):
         self.step_list = []
         self.step_dependencies = []
         self.map_transition_assert = _mapTrAssert
         self.constraint_dict = _constraint_dict
         self.tr_assert_ref_dict = _tr_assert_ref_dict
+        self.pspec_path = _pspec_path
 
     def generate_viz(self, idx, output_dir):
         txt = "@startuml\n"
@@ -64,16 +65,17 @@ class TestSCN:
                     elif "False" in items:
                         items = "false"
                     else:
-                        items = f"\"{items}\""
+                        items = '"' +str(items) +'"'
                 case int():
                     items = items
                 case list():
                     items = self.updateDict[prefix].strip()
                 case _:
                     raise TypeError('Unsupported type')
-            txt += f"    {prefix} := {items}\n"
+            txt += f"    {prefix} := {items}"
+            txt += "\n"
         return txt
-    
+
     def printData(self, idata):
         txt = ""
         for k, v in idata.items():
@@ -83,10 +85,10 @@ class TestSCN:
             # for jk in j.keys():
             #     txt += self.recurseJson(j[jk], "%s.%s" % (k,jk))
         return txt
-        
+
     def generateTSpec(self, idx, sutTypesList, sutVarTransitionMap, transitionQnameMap, output_dir):
         txt = ""
-        txt += "import \"imaging.ps\"\n\n"
+        txt += "import " + '"' + str(self.pspec_path) + "imaging.ps" + '"' +"\n\n"
         txt += "using imaging.SupervisonModelSupervisionImagePreparation.ImagingRequest\n"
         txt += "using imaging.SupervisonModelSupervisionImagePreparation.AcqUpdate\n"
         txt += "using imaging.SupervisonModelSupervisionImagePreparation.EqStatus\n"
@@ -351,8 +353,7 @@ class CEntry:
     name = ""
     constr = ""
 
+
     def __init__(self, n, c):
         self.name = n
         self.constr = c
-
-

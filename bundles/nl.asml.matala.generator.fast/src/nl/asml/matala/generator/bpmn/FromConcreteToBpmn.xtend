@@ -26,6 +26,7 @@ class FromConcreteToBpmn extends AbstractGenerator implements IStandardProjectGe
         val absTspecFsa = fsa.createFolderAccess(FOLDER_ABSTRACT_TSPEC)
         val absTspecURI = conTspecRes.URI.trimFileExtension.appendFileExtension('atspec')
         val absTspecRes = absTspecFsa.loadResource(absTspecURI.lastSegment, conTspecRes.resourceSet)
+        absTspecRes.checkResource()
 
         // Generate bpmn for atspec
         val fromAbstractToBpmn = new FromAbstractToBpmn()

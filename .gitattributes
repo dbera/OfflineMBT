@@ -41,4 +41,24 @@
 *.xls  binary
 *.xlsx binary
 # OfflineMBT
-*.ps text=auto
+*.base_lang text eol=lf
+*.types text eol=lf
+*.expr text eol=lf
+*.act text eol=lf
+*.ps text eol=lf
+*.pspec text eol=lf
+*.param text eol=lf
+*.scn text eol=lf
+*.prj text eol=lf
+*.config text eol=lf
+*.steps text eol=lf
+*.assertthat text eol=lf
+*.constraints text eol=lf
+*.cg text eol=lf
+*.rcg text eol=lf
+*.ucg text eol=lf
+*.bdducg text eol=lf
+*.atspec eol=lf
+*.tspec text eol=lf
+*.ts text eol=lf
+

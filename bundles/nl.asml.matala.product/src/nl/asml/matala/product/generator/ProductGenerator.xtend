@@ -173,13 +173,13 @@ class ProductGenerator extends AbstractGenerator {
 			     mapOfTransitionQnames, mapOfSuppressTransitionVars, inout_places, 
 			    init_places, depth_limit, state_limit, num_tests, sutTransitionMap
 			))
-			fsa.generateFile('CPNServer//' + specName + '//' + specName + '_Simulation.py', pnet.toSnakesSimulation)
-
-			fsa.generateFile('CPNServer//' + specName + '//' + specName + '_data.py', (new Utils()).getDataContainerClass(dataGetterTxt, methodTxt))
-			fsa.generateFile('CPNServer//' + specName + '//' + specName + '_TestSCN.py', (new Utils()).generateTestSCNTxt(specName + "_types", prod, resource.URI.lastSegment))
+			fsa.generateFile('CPNServer//' + specName + '//' + specName + '_Simulation.py', normalize(pnet.toSnakesSimulation))
+            fsa.generateFile('CPNServer//' + specName + '//' + specName + '_reporting.py', normalize(Utils.getReportingClass(specName)))
+			fsa.generateFile('CPNServer//' + specName + '//' + specName + '_data.py', normalize(Utils.getDataContainerClass(specName, dataGetterTxt, methodTxt)))
+			fsa.generateFile('CPNServer//' + specName + '//' + specName + '_TestSCN.py', normalize(Utils.generateTestSCNTxt(specName + "_types", prod, resource.URI.lastSegment)))
             // generate utils for HTTP server
             fsa.generateFile('CPNServer//' + specName + '//' + '__init__.py', 
-                (new FlaskSimulationGenerator).generateInitForCPNSpecPkg(prod)
+                normalize((new FlaskSimulationGenerator).generateInitForCPNSpecPkg(prod))
             )
 		}
 	}
@@ -298,7 +298,7 @@ class ProductGenerator extends AbstractGenerator {
 								System.out.println("	> act: " + SnakesHelper.action(a, func))
 								actTxt +=
 								'''
-								    «SnakesHelper.action(a, func)»
+								    «Utils.surroundWithTryCatch(a,0,SnakesHelper.action(a, func))»
 								'''
 							}
 						}
@@ -477,10 +477,44 @@ class ProductGenerator extends AbstractGenerator {
 	
 	def generateOnlineMBTController(Product envModel, Product sutModel, 
         IFileSystemAccess2 fsa, IGeneratorContext context) {
-	    (new Utils()).generateOnlineMBTController(envModel, sutModel, fsa, context)
+	    Utils.generateOnlineMBTController(envModel, sutModel, fsa, context)
 	}
 	
 	static def Integer intValue(ExpressionConstantInt expr) {
 	    return expr === null ? null : expr.value.intValue
 	}
+	
+	 /**
+     * Converts Windows line endings (CRLF: \r\n) to Unix line endings (LF: \n)
+     * And replace tabs with spaces in a normalized way
+     */
+    def static normalize(CharSequence text) {
+        if (text === null) {
+            return text
+        }
+        text.toString.split("\r?\n").map [
+            val leading = it.replaceFirst("^([ \t]*).*", "$1")
+            val rest = it.substring(leading.length)
+            expandTabs(leading) + rest
+        ].join("\n")
+    }
+
+    def static expandTabs(String line) {
+        val result = new StringBuilder
+        var col = 0
+        for (c : line.toCharArray) {
+            if (c == '\t') {
+                val spaces = 4 - (col % 4)
+                for (i : 0 ..< spaces) {
+                    result.append(' ')
+                }
+                col += spaces
+            } else {
+                result.append(c)
+                col++
+            }
+        }
+        result.toString
+    }
+	
 }

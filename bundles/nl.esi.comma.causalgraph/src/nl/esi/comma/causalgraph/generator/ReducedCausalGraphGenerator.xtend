@@ -12,7 +12,6 @@
  */
 package nl.esi.comma.causalgraph.generator
 
-import nl.esi.xtext.actions.actions.ActionsFactory
 import nl.esi.comma.causalgraph.CausalGraphStandaloneSetup
 import nl.esi.comma.causalgraph.causalGraph.CausalGraphFactory
 import nl.esi.comma.causalgraph.causalGraph.ScenarioStep
@@ -20,8 +19,10 @@ import nl.esi.comma.causalgraph.causalGraph.StepType
 import nl.esi.comma.causalgraph.causalGraph.VariableAccess
 import nl.esi.comma.causalgraph.utilities.CausalGraphRefinements
 import nl.esi.comma.causalgraph.utilities.NodeAttributes
+import nl.esi.xtext.actions.actions.ActionsFactory
 import nl.esi.xtext.expressions.expression.ExpressionFactory
 import nl.esi.xtext.types.BasicTypes
+import nl.esi.xtext.types.types.TypesFactory
 import org.eclipse.emf.common.util.URI
 import org.eclipse.lsat.common.xtend.annotations.IntermediateProperty
 import org.eclipse.xtext.resource.XtextResourceSet
@@ -30,6 +31,7 @@ class ReducedCausalGraphGenerator {
     static extension val CausalGraphFactory m_cg = CausalGraphFactory::eINSTANCE
     static extension val ExpressionFactory m_exp = ExpressionFactory::eINSTANCE
     static extension val ActionsFactory m_act = ActionsFactory::eINSTANCE
+    static extension val TypesFactory m_typ = TypesFactory::eINSTANCE
 
     @IntermediateProperty(ScenarioStep)
     static Boolean function = false

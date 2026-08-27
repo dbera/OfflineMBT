@@ -20,6 +20,7 @@ import nl.esi.xtext.expressions.expression.ExpressionAddition
 import nl.esi.xtext.expressions.expression.ExpressionAnd
 import nl.esi.xtext.expressions.expression.ExpressionAny
 import nl.esi.xtext.expressions.expression.ExpressionBracket
+import nl.esi.xtext.expressions.expression.ExpressionConditional
 import nl.esi.xtext.expressions.expression.ExpressionConstantBool
 import nl.esi.xtext.expressions.expression.ExpressionConstantInt
 import nl.esi.xtext.expressions.expression.ExpressionConstantReal
@@ -41,6 +42,7 @@ import nl.esi.xtext.expressions.expression.ExpressionModulo
 import nl.esi.xtext.expressions.expression.ExpressionMultiply
 import nl.esi.xtext.expressions.expression.ExpressionNEqual
 import nl.esi.xtext.expressions.expression.ExpressionNot
+import nl.esi.xtext.expressions.expression.ExpressionNullCoalescing
 import nl.esi.xtext.expressions.expression.ExpressionNullLiteral
 import nl.esi.xtext.expressions.expression.ExpressionOr
 import nl.esi.xtext.expressions.expression.ExpressionPlus
@@ -51,11 +53,9 @@ import nl.esi.xtext.expressions.expression.ExpressionSubtraction
 import nl.esi.xtext.expressions.expression.ExpressionVariable
 import nl.esi.xtext.expressions.expression.ExpressionVector
 import nl.esi.xtext.expressions.expression.Field
-import nl.esi.xtext.expressions.expression.VectorTypeConstructor
 import nl.esi.xtext.types.types.SimpleTypeDecl
 import nl.esi.xtext.types.types.TypeDecl
-import nl.esi.xtext.expressions.expression.ExpressionNullCoalescing
-import nl.esi.xtext.expressions.expression.ExpressionConditional
+import nl.esi.xtext.types.types.VectorTypeConstructor
 
 class ExpressionsParser {
 	

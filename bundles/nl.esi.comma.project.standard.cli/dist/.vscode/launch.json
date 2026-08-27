@@ -8,7 +8,7 @@
             "request": "launch",
             "program": "server/CPNServer.py",
             "console": "integratedTerminal",
-            "args": ["--web-path", "/bpmn4s-editor/bpmn4s-editor/public", "--server-path", "${workspaceFolder}/../target/dist/server", "--debug"],
+            "args": ["--web-path", "/bpmn4s-editor/bpmn4s-editor/public", "--server-path", "${workspaceFolder}/../target/dist/server", "--repository-path", "${workspaceFolder}/../target/dist/models", "--debug"],
             "cwd": "${workspaceFolder}"
         }
         ,

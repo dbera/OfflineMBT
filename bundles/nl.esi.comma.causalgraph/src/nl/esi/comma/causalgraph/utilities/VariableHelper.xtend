@@ -14,16 +14,16 @@ package nl.esi.comma.causalgraph.utilities
 
 import nl.esi.xtext.actions.actions.ActionsFactory
 import nl.esi.xtext.actions.actions.AssignmentAction
-import nl.esi.comma.causalgraph.causalGraph.CausalGraphFactory
 import nl.esi.xtext.expressions.expression.ExpressionFactory
 import nl.esi.xtext.expressions.expression.Variable
 import nl.esi.xtext.types.BasicTypes
 import nl.esi.xtext.types.types.TypeDecl
+import nl.esi.xtext.types.types.TypesFactory
 
 class VariableHelper {
-    static extension val CausalGraphFactory m_cg = CausalGraphFactory::eINSTANCE
     static extension val ExpressionFactory m_exp = ExpressionFactory::eINSTANCE
     static extension val ActionsFactory m_act = ActionsFactory::eINSTANCE
+    static extension val TypesFactory m_typ = TypesFactory::eINSTANCE
 
     /**
      * Creates a step parameter Variable with the specified name and type by the stepDefinitionAgent.

@@ -353,10 +353,12 @@ class PetriNet {
         if __package__ is None or __package__ == '':
             from «prod_name»_TestSCN import TestSCN, Step, Tests, Constraint, CEntry
             from «prod_name»_data import Data
+            from «prod_name»_reporting import get_reporting, initialize_reporting, Location, Severity
             from «prod_name»_Simulation import Simulation, simulate
         else:
             from .«prod_name»_TestSCN import TestSCN, Step, Tests, Constraint, CEntry
             from .«prod_name»_data import Data
+            from .«prod_name»_reporting import get_reporting, initialize_reporting, Location, Severity
             from .«prod_name»_Simulation import Simulation, simulate
         import subprocess
         import copy
@@ -366,6 +368,7 @@ class PetriNet {
         from nets import *
         # from CPNServer.utils import AbstractCPNControl
         
+        LINE_FEED = '\n'
         
         class «prod_name»Model:
             visitedList = set()
@@ -433,7 +436,8 @@ class PetriNet {
                         if k + "_" +elm.__repr__() in self.map_transition_modes_to_name:
                             print("WARN: duplicate modes detected for same transition.")
                             print(k + "_" +elm.__repr__())
-                            print("WARN: references to the above transitions are ambigous!")
+                            print("WARN: references to the above transitions are ambiguous!")
+                            get_reporting().warning("Duplicate modes detected for same transition, Check References in Details", details=f"{k}_{str.join(LINE_FEED,[str(s) for s in elm.items()])}")
                         self.map_transition_modes_to_name[k + "_" +elm.__repr__()] = k + "_" + str(cnt)
                         # self.map_transition_modes_to_name[k + "_" + pprint.pformat(elm.items(), width=60, compact=True,depth=5)] = k + "_" + str(cnt)
                         cnt = cnt + 1
@@ -470,7 +474,7 @@ class PetriNet {
                 for entry in pn.visitedTList:
                     # txt = ''
                     if entry:
-                        _test_scn = TestSCN(self.map_transition_assert, self.constraint_dict, self.tr_assert_ref_dict)
+                        _test_scn = TestSCN(pspec_path, self.map_transition_assert, self.constraint_dict, self.tr_assert_ref_dict)
                         idx = idx + 1
                         j = 0
                         for step in entry:
@@ -558,106 +562,130 @@ class PetriNet {
                                 type=bool,
                                 default=False,
                                 help="Disable simulation")
-            
+
+            parser.add_argument("-srfile","--status_report_file",
+                                type=Path,
+                                default=None,
+                                help="The path to where the status report will be saved")
+
+            parser.add_argument("-pspath","--pspec_path",
+                                type=str,
+                                default="",
+                                help="The relatve path to the pspec file to be used for test generation")
+
             p = parser.parse_args()
             p.tspec_dir.mkdir(exist_ok=True)
             p.plantuml_dir.mkdir(exist_ok=True)
+            status_report_file = p.status_report_file if p.status_report_file != None else p.tspec_dir / "status_report.json"
+            status_report_file.parent.mkdir(parents=True, exist_ok=True)
+            pspec_path = p.pspec_path
+            reporting = initialize_reporting(status_report_file)
+
+            try:
+                a = datetime.datetime.now()
+                pn = «prod_name»Model()
+                print("[INFO] Loaded CPN model.")
+                # pn.n.draw('net-gv-graph.png')
+                s = StateGraph(pn.n)
+                # s.build()
+                # s.draw('test-gv-graph.png')
+                # print(" Finished Generation, writing to file.. ")
+                print("[INFO] Starting Reachability Graph Generation")
+                # pn.generateScenarios(s,0,[],[],[],0,«depth_limit»)
+                sys.setrecursionlimit(«depth_limit + 100»)
+                pn.generateSCN()
+                print('Num Tests: ', pn.numTestCases)
+                print("[INFO] Finished.")
+                b = datetime.datetime.now()
             
-            a = datetime.datetime.now()
-            pn = «prod_name»Model()
-            print("[INFO] Loaded CPN model.")
-            # pn.n.draw('net-gv-graph.png')
-            s = StateGraph(pn.n)
-            # s.build()
-            # s.draw('test-gv-graph.png')
-            # print(" Finished Generation, writing to file.. ")
-            print("[INFO] Starting Reachability Graph Generation")
-            # pn.generateScenarios(s,0,[],[],[],0,«depth_limit»)
-            sys.setrecursionlimit(«depth_limit + 100»)
-            pn.generateSCN()
-            print('Num Tests: ', pn.numTestCases)
-            print("[INFO] Finished.")
-            b = datetime.datetime.now()
-        
-            # s.goto(0)
-            
-            fname = p.plantuml_dir / "rg.plantuml"
-            with open(fname, 'w') as f:
-                pn.generateReachabilityGraph(f)
-                print("[INFO] Created %s" % (fname,))
-            c = datetime.datetime.now()
-        
-            print("[INFO] Starting Test Generation.")
-            pn.initializeTestGeneration()
-            pn.generateTestCases()
-            
-            # print('[INFO] Number-of-generated-scenario files: ',len(pn.visitedTList))
-            print("[INFO] Test Generation Finished.")
-            d = datetime.datetime.now()
-            
-            print("[INFO] Creating Structure and Behavior Views in PlantUML.")
-            map_block_uml_txt = {}
-            for t in pn.n.transition():
-                map_block_uml_txt[t.name.split('_')[0]] = '@startuml\n'
+                # s.goto(0)
                 
-            for t in pn.n.transition():
-                gtxt = map_block_uml_txt.get(t.name.split('_')[0])
-                if 'json.loads' in t.guard._str:
-                    # print(t.guard._str.replace('json.loads',''))
-                    # print('\n'.join(list(pn.chunkstring(t.guard._str.replace('json.loads','').replace(', object_pairs_hook=Data().int_keys', ''),55))))
-                    gtxt += 'component %s\n' % (t.name)
-                    if len(list(pn.chunkstring(t.guard._str.replace('json.loads','').replace(', object_pairs_hook=Data().int_keys', ''),68))) <= 2:
-                        gtxt += 'note left of [%s]\n %s\nendnote\n' % (t.name, '\n'.join(list(pn.chunkstring(t.guard._str.replace('json.loads','').replace(', object_pairs_hook=Data().int_keys', ''),55))))
-                    else:
-                        gtxt += 'note bottom of [%s]\n %s\nendnote\n' % (t.name, '\n'.join(list(pn.chunkstring(t.guard._str.replace('json.loads','').replace(', object_pairs_hook=Data().int_keys', ''),55))))
-                else:
-                    gtxt += 'component %s\n' % (t.name)
-                    gtxt += 'note right of [%s]\n %s\nendnote\n' % (t.name, t.guard)
-                map_block_uml_txt[t.name.split('_')[0]] = gtxt
-                
-            for t in pn.n.transition():
-                for inp in pn.n.pre(t.name):
-                    txt = map_block_uml_txt.get(t.name.split('_')[0])
-                    if 'local' in inp:
-                        txt += '%s -[#lightgrey]-> [%s]\n' % (inp, t.name)
-                    else:
-                        txt += '%s --> [%s]\n' % (inp, t.name)
-                    map_block_uml_txt[t.name.split('_')[0]] = txt
-                for out in pn.n.post(t.name):
-                    txt = map_block_uml_txt.get(t.name.split('_')[0])
-                    if 'local' in out:
-                        txt += '[%s] -[#lightgrey]-> %s\n' % (t.name, out)
-                    else:
-                        txt += '[%s] --> %s\n' % (t.name, out)
-                    map_block_uml_txt[t.name.split('_')[0]] = txt
-            
-            for key in map_block_uml_txt:
-                txt = map_block_uml_txt.get(key)
-                txt += '@enduml\n'
-                map_block_uml_txt[key] = txt
-                fname = p.plantuml_dir / (key + ".plantuml")
+                fname = p.plantuml_dir / "rg.plantuml"
                 with open(fname, 'w') as f:
-                    f.write(txt)
+                    pn.generateReachabilityGraph(f)
+                    print("[INFO] Created %s" % (fname,))
+                c = datetime.datetime.now()
             
-            print("[INFO] View Generation Finished.")
-            e = datetime.datetime.now()
-            print("[INFO] Time Statistics")
-            print("[INFO]    * Reachability Computation: %s" % (b - a))
-            print("[INFO]    * Reachability PUML Creation: %s" % (c - b))
-            print("[INFO]    * Test Generation: %s" % (d - c))
-            print("[INFO]    * PlantUML View Generation: %s" % (e - d))
-            
-            # print("[INFO] Starting Command-Line Simulation.")
-            # simulate(pn.n)
-            
-            #if not p.no_sim:
-            #    print('[SIM] Start Simulation? (Y/N) :')
-            #    value = input(" Enter Choice: ")
-            #    if value == "Y" or value == "y":
-            #        os.system('cls')
-            #        simulate(pn.n)
-            
-            print("[INFO] Exiting..")
+                print("[INFO] Starting Test Generation.")
+                pn.initializeTestGeneration()
+                pn.generateTestCases()
+                
+                # print('[INFO] Number-of-generated-scenario files: ',len(pn.visitedTList))
+                print("[INFO] Test Generation Finished.")
+                d = datetime.datetime.now()
+                
+                print("[INFO] Creating Structure and Behavior Views in PlantUML.")
+                map_block_uml_txt = {}
+                for t in pn.n.transition():
+                    map_block_uml_txt[t.name.split('_')[0]] = '@startuml\n'
+                    
+                for t in pn.n.transition():
+                    gtxt = map_block_uml_txt.get(t.name.split('_')[0])
+                    if 'json.loads' in t.guard._str:
+                        # print(t.guard._str.replace('json.loads',''))
+                        # print('\n'.join(list(pn.chunkstring(t.guard._str.replace('json.loads','').replace(', object_pairs_hook=Data().int_keys', ''),55))))
+                        gtxt += 'component %s\n' % (t.name)
+                        if len(list(pn.chunkstring(t.guard._str.replace('json.loads','').replace(', object_pairs_hook=Data().int_keys', ''),68))) <= 2:
+                            gtxt += 'note left of [%s]\n %s\nendnote\n' % (t.name, '\n'.join(list(pn.chunkstring(t.guard._str.replace('json.loads','').replace(', object_pairs_hook=Data().int_keys', ''),55))))
+                        else:
+                            gtxt += 'note bottom of [%s]\n %s\nendnote\n' % (t.name, '\n'.join(list(pn.chunkstring(t.guard._str.replace('json.loads','').replace(', object_pairs_hook=Data().int_keys', ''),55))))
+                    else:
+                        gtxt += 'component %s\n' % (t.name)
+                        gtxt += 'note right of [%s]\n %s\nendnote\n' % (t.name, t.guard)
+                    map_block_uml_txt[t.name.split('_')[0]] = gtxt
+                    
+                for t in pn.n.transition():
+                    for inp in pn.n.pre(t.name):
+                        txt = map_block_uml_txt.get(t.name.split('_')[0])
+                        if 'local' in inp:
+                            txt += '%s -[#lightgrey]-> [%s]\n' % (inp, t.name)
+                        else:
+                            txt += '%s --> [%s]\n' % (inp, t.name)
+                        map_block_uml_txt[t.name.split('_')[0]] = txt
+                    for out in pn.n.post(t.name):
+                        txt = map_block_uml_txt.get(t.name.split('_')[0])
+                        if 'local' in out:
+                            txt += '[%s] -[#lightgrey]-> %s\n' % (t.name, out)
+                        else:
+                            txt += '[%s] --> %s\n' % (t.name, out)
+                        map_block_uml_txt[t.name.split('_')[0]] = txt
+                
+                for key in map_block_uml_txt:
+                    txt = map_block_uml_txt.get(key)
+                    txt += '@enduml\n'
+                    map_block_uml_txt[key] = txt
+                    fname = p.plantuml_dir / (key + ".plantuml")
+                    with open(fname, 'w') as f:
+                        f.write(txt)
+                
+                print("[INFO] View Generation Finished.")
+                e = datetime.datetime.now()
+                print("[INFO] Time Statistics")
+                print("[INFO]    * Reachability Computation: %s" % (b - a))
+                print("[INFO]    * Reachability PUML Creation: %s" % (c - b))
+                print("[INFO]    * Test Generation: %s" % (d - c))
+                print("[INFO]    * PlantUML View Generation: %s" % (e - d))
+                
+                # print("[INFO] Starting Command-Line Simulation.")
+                # simulate(pn.n)
+                
+                #if not p.no_sim:
+                #    print('[SIM] Start Simulation? (Y/N) :')
+                #    value = input(" Enter Choice: ")
+                #    if value == "Y" or value == "y":
+                #        os.system('cls')
+                #        simulate(pn.n)
+
+            except Exception as e:
+                print("[ERROR] " + str(e))
+                if not isinstance(e, StatusException):
+                    get_reporting().exception(message = e.__class__.__name__, exception = e)
+            finally:
+                print("[INFO] Saving status_report.json")
+                severity = reporting.save()
+                print("[INFO] Saved status_report.json")
+                print(f"[INFO] Exiting with status: {severity.name}")
+                exit(1 if severity == Severity.ERROR else 0)
     '''
 
     def print_SCNGen(int num_tests, int depth_limit, int state_limit) '''

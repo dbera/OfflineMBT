@@ -64,15 +64,10 @@ ActionParam:
       'init' initActions+=(AssignmentAction | RecordFieldAssignmentAction)+
 ;
 
-@Override
-Table returns base::Table:
-    super::Table | DataTable
-;
-
 DataTable: {DataTable}
     'with-data' (instances?='instances')?
-    header=TableRow
-    rows+=TableRow*;
+    Table
+;
 
 enum ActionType:
     Observable = 'Observable' | Trigger = 'Trigger' | PreCondition = 'Pre-condition' | Conjunction = 'And'

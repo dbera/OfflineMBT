@@ -11,6 +11,8 @@
 # SPDX-License-Identifier: MIT
 #
 
+import json
+import os
 import re
 from subprocess import CompletedProcess
 import typing, types
@@ -18,9 +20,20 @@ import sys, string, shutil, secrets
 import importlib.util
 import glob
 import datetime
+from dataclasses import dataclass
+from dataclasses_json import dataclass_json
 
 from abc import ABC, abstractmethod
 from threading import Lock
+
+@dataclass_json
+@dataclass
+class BPMN4SResult():
+    cliargs: dict
+    returncode: int
+    stdout: str
+    stderr: str
+
 
 class BPMN4SException(Exception):
     def __init__(self,cliargs:dict, result: CompletedProcess[bytes], *args):
@@ -30,6 +43,23 @@ class BPMN4SException(Exception):
         self.stdout = result.stdout.decode('utf-8').replace('\r\n','\n')
         self.stderr = result.stderr.decode('utf-8').replace('\r\n','\n')
         self.returncode = result.returncode
+
+def store_results( output_dir: str, result : CompletedProcess[bytes], cli_args: dict):
+    process={
+        'args': cli_args,
+        'result': {
+            'return-code': result.returncode
+        }
+    }
+    result_stdout_path = os.path.join(output_dir, 'stdout.txt')
+    with open(result_stdout_path, "w") as file:
+        file.write(result.stdout.decode('utf-8').replace('\r\n','\n'))
+    result_stderr_path = os.path.join(output_dir, 'stderr.txt')
+    with open(result_stderr_path, "w") as file:
+        file.write(result.stderr.decode('utf-8').replace('\r\n','\n'))
+    result_process_path = os.path.join(output_dir, 'process.json')
+    with open(result_process_path, "w") as file:
+        file.write(json.dumps(process, indent=4))
 
 
 class AbstractCPNControl(ABC):

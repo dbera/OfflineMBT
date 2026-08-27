@@ -77,6 +77,7 @@ BPMN4S_JAR_NAME = "bpmn4s-toolchain.jar"
 BPMN4S_GEN = os.path.join(SERVER_PATH, BPMN4S_JAR_NAME)
 JAVA_REL_PATH = ("jre", "bin", "java.exe")
 JAVA_PATH = os.path.join(SERVER_PATH, *JAVA_REL_PATH)
+JAVA_DEBUG_PORT_LSP = 4000
 
 SYS_TEMP = tempfile.gettempdir()
 BPMN4S_TEMP = os.path.join(SYS_TEMP,'bpmn4s')
@@ -130,6 +131,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["Content-Disposition"],
 )
 
 def build_and_load_model(model_path:str):
@@ -199,21 +201,29 @@ def generate_tests( model_path:str, num_tests:int=1, depth_limit:int=500, state_
         logger.debug("generate_tests stdout: %s", result.stdout.decode('utf-8', errors='replace').rstrip())
     if result.stderr:
         logger.debug("generate_tests stderr: %s", result.stderr.decode('utf-8', errors='replace').rstrip())
-    if result.returncode != 0: 
-        raise utils.BPMN4SException(
-            cliargs={
-                'bpmn-file': model_name,
-                'num-tests': num_tests,
-                'depth-limit': depth_limit,
-                'state-limit': state_limit
-            }, 
-            result=result
-            )
+    cli_args= {
+        'bpmn-file': model_name,
+        'num-tests': num_tests,
+        'depth-limit': depth_limit,
+        'state-limit': state_limit,
+    }
     
+
     # zip filename (without .zip extension)
     zip_filename = os.path.join(model_dir,model_name)
+    # path to root folder
+    root_dir = os.path.join(model_dir,'src-gen')
     # path to directory about to be zipped
-    output_dir = os.path.join(model_dir,'src-gen',taskname)
+    output_dir = os.path.join(root_dir,taskname)
+    os.makedirs(output_dir, exist_ok=True)
+    # the backend generates a report folder in the root_dir (doesn't know taskname), we need to move it to the output_dir
+    report_path = os.path.join(output_dir, 'report')
+    os.rename(os.path.join(root_dir,'report'), report_path)
+    # store results in the report dir
+    utils.store_results(report_path, result, cli_args)
+
+    write_status_report_html(output_dir, report_path)
+
     # store bpmn and prj files in bpmn directory 
     bpmn_dir = os.path.join(output_dir,'bpmn')
     os.makedirs(bpmn_dir, exist_ok=True)
@@ -227,6 +237,29 @@ def generate_tests( model_path:str, num_tests:int=1, depth_limit:int=500, state_
     except Exception as e:
         logger.error(f"An error occurred while deleting generated test: {str(e)}", file=sys.stderr)
     return zip_filename, result
+
+def write_status_report_html(output_dir, report_path):
+    """Write a self-contained status report HTML file to the output directory.
+
+    Reads the `status_report.html` template from `WEB_PATH` and embeds the
+    contents of `StatusReport.json` from `report_path` into it. The generated
+    file is fully self-contained, so it can be opened directly from the zip
+    archive without cross-origin or path issues.
+
+    Silently logs a warning if the HTML file cannot be written, but does not raise an exception.
+    """
+    try:
+        status_report_html = os.path.join(WEB_PATH, "status_report.html")
+        #read as string
+        with open(status_report_html, "r") as html_file:
+            status_report_html_str = html_file.read()
+            with open(os.path.join(report_path, "StatusReport.json"), "r") as status_report_json:
+                status_report_json_str = status_report_json.read()
+                status_report_html_str = status_report_html_str.replace("!__STATUS_REPORT_JSON__!", status_report_json_str)
+                with open(os.path.join(output_dir, "status_report.html"), "w") as output_html_file:
+                    output_html_file.write(status_report_html_str)
+    except Exception as e:
+        logger.warning("Could not write status report HTML") 
 
 # The endpoint of our FastAPI app
 @app.post("/BPMNParser")
@@ -639,6 +672,17 @@ if __name__ == "__main__":
             logger.error(f"Failed to find free port: {e}")
             return None
 
+    def ensure_port_available(port: int, purpose: str) -> bool:
+        """Return whether a fixed port needed for debugging is available."""
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.bind(("127.0.0.1", port))
+            s.close()
+            return True
+        except OSError:
+            logger.warning(f"Port {port} is not available for {purpose}; continuing without Java debugging.")
+            return False
+
     lsp_port = find_free_port()
     if lsp_port is None:
         logger.error("Failed to find an available port for LSP subprocess. Please check your system resources.")
@@ -657,6 +701,15 @@ if __name__ == "__main__":
     # Start Java ServerLauncher which runs both LSP and REST servers
     lsp_command = [
         JAVA_PATH,
+    ]
+
+    if args.debug and ensure_port_available(JAVA_DEBUG_PORT_LSP, "the Java LSP debug agent"):
+        lsp_command.append(
+            f"-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=127.0.0.1:{JAVA_DEBUG_PORT_LSP}"
+        )
+        logger.info(f"Java debug agent listening on 127.0.0.1:{JAVA_DEBUG_PORT_LSP}")
+
+    lsp_command.extend([
         "-cp",
         BPMN4S_GEN,
         "nl.asml.matala.server.ServerLauncher",
@@ -666,7 +719,7 @@ if __name__ == "__main__":
         str(REST_PORT),
         "--repository-path",
         REPOSITORY_PATH_ARG,
-    ]
+    ])
 
     logger.debug(f"LSP command: {' '.join(lsp_command)}")
     logger.debug(f"Using JAVA_PATH: {JAVA_PATH}")
