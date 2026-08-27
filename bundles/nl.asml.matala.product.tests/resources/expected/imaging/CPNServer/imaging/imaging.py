@@ -10,12 +10,12 @@ from snakes.nets import *
 if __package__ is None or __package__ == '':
     from imaging_TestSCN import TestSCN, Step, Tests, Constraint, CEntry
     from imaging_data import Data
-    from imaging_reporting import get_reporting, initialize_reporting, Location
+    from imaging_reporting import get_reporting, initialize_reporting, Location, Severity
     from imaging_Simulation import Simulation, simulate
 else:
     from .imaging_TestSCN import TestSCN, Step, Tests, Constraint, CEntry
     from .imaging_data import Data
-    from .imaging_reporting import get_reporting, initialize_reporting, Location
+    from .imaging_reporting import get_reporting, initialize_reporting, Location, Severity
     from .imaging_Simulation import Simulation, simulate
 import subprocess
 import copy

@@ -10,12 +10,12 @@ from snakes.nets import *
 if __package__ is None or __package__ == '':
     from printer_TestSCN import TestSCN, Step, Tests, Constraint, CEntry
     from printer_data import Data
-    from printer_reporting import get_reporting, initialize_reporting, Location
+    from printer_reporting import get_reporting, initialize_reporting, Location, Severity
     from printer_Simulation import Simulation, simulate
 else:
     from .printer_TestSCN import TestSCN, Step, Tests, Constraint, CEntry
     from .printer_data import Data
-    from .printer_reporting import get_reporting, initialize_reporting, Location
+    from .printer_reporting import get_reporting, initialize_reporting, Location, Severity
     from .printer_Simulation import Simulation, simulate
 import subprocess
 import copy

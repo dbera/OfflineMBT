@@ -10,12 +10,12 @@ from snakes.nets import *
 if __package__ is None or __package__ == '':
     from issue371_TestSCN import TestSCN, Step, Tests, Constraint, CEntry
     from issue371_data import Data
-    from issue371_reporting import get_reporting, initialize_reporting, Location
+    from issue371_reporting import get_reporting, initialize_reporting, Location, Severity
     from issue371_Simulation import Simulation, simulate
 else:
     from .issue371_TestSCN import TestSCN, Step, Tests, Constraint, CEntry
     from .issue371_data import Data
-    from .issue371_reporting import get_reporting, initialize_reporting, Location
+    from .issue371_reporting import get_reporting, initialize_reporting, Location, Severity
     from .issue371_Simulation import Simulation, simulate
 import subprocess
 import copy
