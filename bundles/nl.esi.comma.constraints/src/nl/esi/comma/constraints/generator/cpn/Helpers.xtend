@@ -90,15 +90,17 @@ class Helpers {
     }
     
 //    returns "where-concrete" guard
-//    TODO{it should return "true" if there is no clause}
+//    TODO{it should return "true" if there is no clause, check the null function}
     def getRefConcreteWhereClause(Ref ref) {
         if(ref instanceof RefAction) {
-            if (ref.whereArgs !== null) 
-                return getConjunction(ref.whereArgs)
-            return "true"
+            if (ref.whereArgs.isNullOrEmpty) 
+                return "true"
+            return getConjunction(ref.whereArgs)
         }
+//        System.out.println("message")
         return null
     }
+    
 
 //    returns "where-correlation" guard
     def getRefCorrelationWhereClause(Ref ref) {
@@ -116,7 +118,8 @@ class Helpers {
             val EList<Expression> temp = new BasicEList<Expression>()
             if (ref.whereArgs !== null) temp.addAll(ref.whereArgs)
             if (ref.whereOptArgs !== null) temp.addAll(ref.whereOptArgs)
-            if (temp.empty) return "true"
+            if (temp.isNullOrEmpty) 
+                return "true"
             return getConjunction(temp)
         }
         return null
@@ -130,6 +133,14 @@ class Helpers {
         }
         return null
     }
+    
+//    TODO{need a helper function to generate correlation clauses for repeated activation}
+//    def getRepeatedActivationGuard(Ref ref, Variable correlationVar) {
+//        if (!(ref instanceof RefAction) || ref.withArgs.isNullOrEmpty)
+//            return "false"
+//
+//         
+//    }
 
     def getConjunction(EList<Expression> eList) {
         return

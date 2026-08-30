@@ -41,6 +41,7 @@ TestConformanceBlock:
         name = ID '{'
             'constraints' ('files' constraintsFiles += STRING+ | 'directories' constraintsDirs += FilePath+)
             ('concrete-test-scenario' tspecFile = STRING)
+            ('path-to-python-exe' pythonExe = STRING)?
         '}'
     '}'
 ; 

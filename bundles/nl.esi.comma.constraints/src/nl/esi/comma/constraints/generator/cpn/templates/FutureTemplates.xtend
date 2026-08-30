@@ -17,6 +17,7 @@ import nl.esi.comma.constraints.constraints.Ref
 import nl.esi.xtext.expressions.expression.Variable
 import nl.esi.comma.constraints.generator.cpn.model.RefInfo
 import nl.esi.comma.constraints.generator.cpn.Helpers
+import nl.esi.comma.constraints.generator.cpn.model.CPNTemplateResult
 
 class FutureTemplates {
     val Helpers helpers = new Helpers
@@ -27,7 +28,7 @@ class FutureTemplates {
         Ref targetEventInst, String targetEvent, RefInfo targetEventInfo
     ) 
     {
-       return
+       val psBody =
        '''
 			system RootRESPONSE
 			{
@@ -108,6 +109,41 @@ class FutureTemplates {
 			     element-labels ["Root", "RESPONSE"]
 			}
 		''' 
+		
+		val acceptanceJson =
+        '''
+        {
+          "schemaType": "matala.constraints.acceptance",
+          "schemaVersion": 1,
+          "templateType": "Response",
+          "constraint": "«templateName»",
+        
+          "graph": {
+            "format": "ltsvisualizer",
+            "version": 1
+          },
+        
+          "monitorPlaces": [
+            "split",
+            "final",
+            "acceptor",
+            "«correlationVar.name»"
+          ],
+        
+          "acceptance": {
+            "scope": "terminalNodes",
+            "emptyPlaces": [
+              ["split"],
+              ["«correlationVar.name»"]
+            ],
+            "nonEmptyPlaces": [
+            ["acceptor", "final"]
+            ]
+          }
+        }
+        '''
+		
+		return new CPNTemplateResult (psBody, acceptanceJson)
     }
     
     
@@ -118,7 +154,7 @@ class FutureTemplates {
         Ref targetEventInst, String targetEvent, RefInfo targetEventInfo
     ) 
     {
-       return
+       val psBody =
        '''
             system RootCHAINRESPONSE
             {
@@ -226,6 +262,10 @@ class FutureTemplates {
                  element-labels ["Root", "CHAINRESPONSE"]
             }
         ''' 
+        val acceptanceJson =
+        '''
+        '''
+        return new CPNTemplateResult (psBody, acceptanceJson)
     }
 
     def generateAlternateResponseTemplate(
@@ -235,7 +275,7 @@ class FutureTemplates {
         Ref intermediateEventInst, String intermediateEvent, RefInfo intermediateEventInfo
     ) 
     {
-       return
+       val psBody =
        '''
             system RootALTERNATERESPONSE
             {
@@ -344,6 +384,11 @@ class FutureTemplates {
                 element-labels ["Root", "ALTERNATERESPONSE"]
             }
         ''' 
+        val acceptanceJson =
+        '''
+        '''
+        return new CPNTemplateResult (psBody, acceptanceJson)
+        
     }
 
 }

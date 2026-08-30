@@ -29,7 +29,7 @@ import nl.esi.comma.project.standard.generator.^extension.IStandardProjectGenera
 
 import static nl.esi.comma.project.standard.generator.^extension.IStandardProjectGeneratorExtension.*;
 import static extension nl.esi.xtext.common.lang.generator.FileSystemAccessUtil.*
-
+import nl.asml.matala.product.generator.ProductGenerationMode
 
 class ReachabilityAnalysisGenerator extends AbstractGenerator 
 {
@@ -67,7 +67,8 @@ class ReachabilityAnalysisGenerator extends AbstractGenerator
         productRes.validate()
 
         // PspecToPetriNetGenerator
-        (new ProductGenerator(true)).doGenerate(productRes, fsa, ctx)
+//        (new ProductGenerator(true)).doGenerate(productRes, fsa, ctx)
+        (new ProductGenerator(ProductGenerationMode.RG_GENERATION)).doGenerate(productRes, fsa, ctx)
 
         // Generate abstract tspec from petri-net
         val specName = product.specification.name

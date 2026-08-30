@@ -17,12 +17,15 @@ import java.util.ArrayList
 import java.util.HashSet
 import java.util.List
 import java.util.Set
+import nl.esi.comma.constraints.constraints.AlternateResponse
 import nl.esi.comma.constraints.constraints.ChainResponse
 import nl.esi.comma.constraints.constraints.Constraints
 import nl.esi.comma.constraints.constraints.Future
 import nl.esi.comma.constraints.constraints.RefAction
 import nl.esi.comma.constraints.constraints.Response
 import nl.esi.comma.constraints.constraints.Template
+import nl.esi.comma.constraints.generator.cpn.model.CPNTemplateResult
+import nl.esi.comma.constraints.generator.cpn.model.ConstraintGenerationResult
 import nl.esi.comma.constraints.generator.cpn.model.RefInfo
 import nl.esi.comma.constraints.generator.cpn.templates.FutureTemplates
 import nl.esi.comma.testspecification.testspecification.AssertionStep
@@ -38,7 +41,6 @@ import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.nodemodel.util.NodeModelUtils
 
 import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
-import nl.esi.comma.constraints.constraints.AlternateResponse
 
 // import static extension org.eclipse.emf.ecore.util.EcoreUtil.*
 // import org.eclipse.emf.common.util.URI
@@ -50,19 +52,17 @@ class CPNTemplateGenerator
     val Helpers helpers = new Helpers
 
 // it should generate different pspec files for different constraints in the constraint file
-    def generatePSpec(
+    def List<ConstraintGenerationResult> generatePSpec(
         Resource res, IFileSystemAccess2 fsa, 
         List<Constraints> constraints,
         TSMain tsMain) {
+        val results = new ArrayList<ConstraintGenerationResult>    
         for(constraintsSource : constraints){
             for (constraintDef : constraintsSource.templates){
-                generateConstraintPS(constraintsSource, constraintDef, tsMain.model as TestDefinition, fsa)
-//                TODO{discuss: why new object?}
-//            new CPNTemplateGenerator().generateConstraintPS(constraintsSource, constraintDef,
-//                tsMain.model as TestDefinition, fsa
-//            )
+                results += generateConstraintPS(constraintsSource, constraintDef, tsMain.model as TestDefinition, fsa)
             }
         }
+        return results
     }
     
     def isStepNamePresent(List<RefInfo> labelList, String name) {
@@ -110,9 +110,10 @@ class CPNTemplateGenerator
                                     «IF act instanceof RecordFieldAssignmentAction»
                                         «IF act.exp.eAllContents.filter(ExpressionVariable).isEmpty»
                                             // ReferenceExp. TODO Skip.
+                                            «NodeModelUtils.getNode(act).text.replaceAll("(?m)^\\s*$\\R?", "")»
                                         «ENDIF»
                                     «ENDIF»
-                                    «NodeModelUtils.getNode(act).text.replaceAll("(?m)^\\s*$\\R?", "")»
+«««                                    «NodeModelUtils.getNode(act).text.replaceAll("(?m)^\\s*$\\R?", "")»
                                 «ENDFOR»
                             «ENDFOR»
                         «ELSE»
@@ -128,7 +129,7 @@ class CPNTemplateGenerator
     }
     
 
-    def generateConstraintPS(Constraints model, Template currentConstraint, TestDefinition td, IFileSystemAccess2 fsa) 
+    def ConstraintGenerationResult generateConstraintPS(Constraints model, Template currentConstraint, TestDefinition td, IFileSystemAccess2 fsa) 
     {
         var typesText = '''''' 
 //        '''
@@ -143,6 +144,7 @@ class CPNTemplateGenerator
         }
         '''
         var specBody = ''''''
+        var acceptanceJson= ''''''
 
         // get nested type definitions
         typesText = typesText + "\n" + generateTypes(model)
@@ -155,14 +157,16 @@ class CPNTemplateGenerator
             }
         }
         var uri = model.eResource.getURI()
-        if (uri === null) return "Unknown URI"
+        if (uri === null) throw new IllegalArgumentException("Constraint resource has no URI")
         var fileName = uri.trimFileExtension().lastSegment()
         val generatedSpecName = fileName + "_" + currentConstraint.name 
+        val constraintFolder = generatedSpecName + "/"
         // generate types file that will be imported into the generated ps file
-        fsa.generateFile(fileName + ".types", typesText)
-
+        fsa.generateFile(constraintFolder + fileName + ".types", typesText)
+        
         // state computing ps system model based on concrete tspec
         var tspecModel = generateTSpecModel(td, computeLabelSet(currentConstraint))
+        var CPNTemplateResult templateResult= null
 
         // start computing ps system model based on declare constraints
         var specPrefix = 
@@ -172,13 +176,11 @@ class CPNTemplateGenerator
         specification «generatedSpecName»
         {
         '''
-        // parse declare templates
-        // TODO{we have to make it for each constraint, not template}
         for(templateGroup : currentConstraint.type) {
             if(templateGroup instanceof Future) {
                 for(templateType : templateGroup.type) {
                     if(templateType instanceof Response) {
-                        specBody = futureTemplates.generateResponseTemplate(
+                        templateResult = futureTemplates.generateResponseTemplate(
                             currentConstraint.name,
                             currentConstraint.variables.head,
                             templateType.refA.head,
@@ -190,7 +192,7 @@ class CPNTemplateGenerator
                         )
                     }
                     else if(templateType instanceof ChainResponse) {
-                        specBody = futureTemplates.generateChainResponseTemplate(
+                        templateResult = futureTemplates.generateChainResponseTemplate(
                             currentConstraint.name,
                             currentConstraint.variables.head,
                             templateType.refA.head,
@@ -202,7 +204,7 @@ class CPNTemplateGenerator
                         )
                     }
                     else if(templateType instanceof AlternateResponse) {
-                        specBody = futureTemplates.generateAlternateResponseTemplate(
+                        templateResult = futureTemplates.generateAlternateResponseTemplate(
                             currentConstraint.name,
                             currentConstraint.variables.head,
                             templateType.refA.head,
@@ -216,6 +218,8 @@ class CPNTemplateGenerator
                             helpers.getRefInputTypeAndVar(templateType.refC.head)
                         )
                     }
+                    specBody = templateResult.getPsBody()
+                    acceptanceJson = templateResult.getAcceptanceJson()
                 }
             }
         }
@@ -249,11 +253,171 @@ class CPNTemplateGenerator
         }
 
         '''
+        val pspecFileName = generatedSpecName+ ".ps"
+        val acceptanceJsonFileName = generatedSpecName + ".acceptance.json"
+        val acceptancePythonFileName = generatedSpecName + ".acceptance.py"
+        
         fsa.generateFile(
-            generatedSpecName + ".ps",
+           constraintFolder + pspecFileName,
             specPrefix + tspecModel + specBody + specPostfix
         )
+        
+        fsa.generateFile(
+            constraintFolder + acceptanceJsonFileName,
+            acceptanceJson
+        )
+    
+        fsa.generateFile(
+            constraintFolder + acceptancePythonFileName,
+            generateAcceptancePythonClass(
+                generatedSpecName,
+                currentConstraint.name
+            )
+        )
+
+
+        return new ConstraintGenerationResult(
+            pspecFileName,
+            acceptanceJsonFileName,
+            acceptancePythonFileName,
+            generatedSpecName
+        )
+//        fsa.generateFile(
+//            generatedSpecName + ".ps",
+//            specPrefix + tspecModel + specBody + specPostfix
+//        )
+//        fsa.generateFile(
+//            generatedSpecName + ".acceptance.json",
+//            acceptanceJson
+//        )
+//        fsa.generateFile(
+//            generatedSpecName + ".acceptance.py",
+//            generateAcceptancePythonClass(generatedSpecName, currentConstraint.name)
+//        )
     }
+    
+//    Generates a python file with the acceptance logic
+    def String generateAcceptancePythonClass(String generatedSpecName, String constraintName) {
+        return
+        '''
+        import json
+        
+        
+        class TemplateConformance:
+            def __init__(self, acceptance_cond):
+                self.acceptance_cond = acceptance_cond
+                self.constraint_name = "«constraintName»"
+                self.pspec_name = "«generatedSpecName»"
+        
+            # evaluates the acceptance condition on the reachability graph
+            def evaluate(self, reachability_graph):
+                acceptance = self.acceptance_cond.get("acceptance", {})
+                scope = acceptance.get("scope")
+                monitor_places= acceptance.get("monitorPlaces",[])
+                empty_place_groups = acceptance.get("emptyPlaces", [])
+                non_empty_place_groups = acceptance.get("nonEmptyPlaces", [])
+        
+                # selects the nodes in scope
+                checked_nodes = self._select_nodes(reachability_graph, scope)
+                violations = []
+                
+                # check the markings for checked nodes and validate them against empty and non-empty place groups
+                # it checks for each group and append if there is any violation (it is an AND over the groups)
+                for node in checked_nodes:
+                    marking = node.get("marking", {})
+                    node_violations = []
+        
+                    for group in empty_place_groups:
+                        if not self._empty_group_satisfied(marking, group):
+                            node_violations.append({
+                                "kind": "emptyPlaces",
+                                "group": group
+                            })
+        
+                    for group in non_empty_place_groups:
+                        if not self._non_empty_group_satisfied(marking, group):
+                            node_violations.append({
+                                "kind": "nonEmptyPlaces",
+                                "group": group
+                            })
+        
+                    if len(node_violations) != 0:
+                        violations.append({
+                            "nodeId": node.get("id"),
+                            "violations": node_violations
+                        })
+        
+                return {
+                    "constraint": self.acceptance_cond.get("constraint"),
+                    "expectedConstraint": self.constraint_name,
+                    "generatedPspec": self.pspec_name,
+                    "templateType": self.acceptance_cond.get("templateType"),
+                    "accepted": len(violations) == 0,
+                    "scope": scope,
+                    "checkedNodeIds": [node.get("id") for node in checked_nodes],
+                    "violations": violations
+                }
+        
+            def _select_nodes(self, reachability_graph, scope):
+                nodes = reachability_graph.get("nodes", [])
+                
+                # collects all terminal nodes which have no outgoing edges
+                # for our purpose, this can only be one node (the last one) but this is a more general implementation
+                if scope == "terminalNodes":
+                    outgoing_sources = set(
+                        edge.get("source")
+                        for edge in reachability_graph.get("edges", [])
+                    )
+                    return [
+                        node
+                        for node in nodes
+                        if node.get("id") not in outgoing_sources
+                    ]
+        
+                if scope == "allNodes":
+                    return nodes
+        
+                raise ValueError("Unsupported acceptance scope: %s" % scope)
+        
+            # check if empty places conditions are satisfied
+            # whenever a place is empty, it satisfies immediately (an OR inside a group)
+            def _empty_group_satisfied(self, marking, group):
+                for place in group:
+                    if self._is_place_empty(marking, place):
+                        return True
+                return False
+        
+            # check if non-empty places conditions are satisfied
+            # an OR inside a group
+            def _non_empty_group_satisfied(self, marking, group):
+                for place in group:
+                    if not self._is_place_empty(marking, place):
+                        return True
+                return False
+                
+            # check if a place in a marking has a token or not 
+            def _is_place_empty(self, marking, place):
+                tokens = marking.get(place, [])
+                return len(tokens) == 0
+        
+        # loads the acceptance condition from the acceptance json file
+        def load_acceptance_analyzer(acceptance_json_path):
+            with open(acceptance_json_path, "r", encoding="utf-8") as reader:
+                acceptance_cond = json.load(reader)
+            return TemplateConformance(acceptance_cond)
+        
+        #directly runs the function with three arguments
+        if __name__ == "__main__":
+            import sys
+            acceptance_json_path, rg_json_path, verdict_json_path = sys.argv[1:4]
+            analyzer = load_acceptance_analyzer(acceptance_json_path)
+            with open(rg_json_path, "r", encoding="utf-8") as reader:
+                graph = json.load(reader)
+            result = analyzer.evaluate(graph)
+            with open(verdict_json_path, "w", encoding="utf-8") as writer:
+                json.dump(result, writer, indent=2)
+        '''
+}
 
     // function to collect types from imports recursively //
     def String generateTypes(EObject rootModel) {
@@ -303,9 +467,28 @@ class CPNTemplateGenerator
         return false
     }
 
-    //TODO{discuss: here we need compute label for each constraint, not combination of all constraints}
-    //TODO{This also can be made more general and moved to helper class. This is not really template specific.}
-    //TODO{Trying to make a more general implementation of this}
+//  compute relevant labels for each constraints (adds ANY)
+    def computeLabelSet(Template currentConstraint) {
+        var labelList = new ArrayList<RefInfo>
+            for(templateGroup : currentConstraint.type) {
+                for (templateType : helpers.getTemplateTypes(templateGroup)){
+                    for (ref : helpers.getRefsforTemplate(templateType)){
+                        if (ref instanceof RefAction) {
+                            val info = helpers.getRefInputTypeAndVar(ref)
+                            
+                            if (!isRefInfoPresent(labelList, info))
+                                labelList.add(info)
+                        }
+                    }
+                }
+            }
+        val anyInfo = new RefInfo("ANY", "any")
+        if(!isRefInfoPresent(labelList, anyInfo))
+            labelList.add(anyInfo)
+        return labelList
+    }
+}
+
 //    def computeLabelSet(Template currentConstraint) {
 //        var labelList = new ArrayList<RefInfo>
 //            for(templateGroup : currentConstraint.type) {
@@ -349,35 +532,11 @@ class CPNTemplateGenerator
 //                }
 //            }
 //        val anyInfo = new RefInfo("ANY", "any")
-////        TODO{discuss: emitting ANY here}
 //        if(!isRefInfoPresent(labelList, anyInfo))
 //            labelList.add(anyInfo)
 //        return labelList
 //    }
 
-//  a smaller generic implementation of computeLabelSet
-//  TODO{discuss: maybe this should also go to helper class?}    
-    def computeLabelSet(Template currentConstraint) {
-        var labelList = new ArrayList<RefInfo>
-            for(templateGroup : currentConstraint.type) {
-                for (templateType : helpers.getTemplateTypes(templateGroup)){
-                    for (ref : helpers.getRefsforTemplate(templateType)){
-                        if (ref instanceof RefAction) {
-                            val info = helpers.getRefInputTypeAndVar(ref)
-                            
-                            if (!isRefInfoPresent(labelList, info))
-                                labelList.add(info)
-                        }
-                    }
-                }
-            }
-        val anyInfo = new RefInfo("ANY", "any")
-//        TODO{discuss: emitting ANY here}
-        if(!isRefInfoPresent(labelList, anyInfo))
-            labelList.add(anyInfo)
-        return labelList
-    }
-}
 //    def computeLabelSet(EList<Template> tlist) {
 //        var labelList = new ArrayList<RefInfo>
 //        for(t : tlist) {

@@ -330,7 +330,8 @@ class PetriNet {
     def getPyComment() { return '''# '''}
     
     def toSnakes(
-        boolean isReachabilityAnalysisTask,
+//        boolean isReachabilityAnalysisTask,
+        ProductGenerationMode generationMode,
         String prod_name,
         String topology_name,
         List<String> listOfEnvBlocks,
@@ -375,6 +376,9 @@ class PetriNet {
             visitedTList = [[]]
             visitedTProdList = [[]]
             rg_txt = ""
+            
+            # load the reachability graph in memory
+            graph_in_memory = None
         
             # test generation data
             sutTypesList = [«FOR elm : sutTransitionMap.keySet SEPARATOR ','»'«elm»'«ENDFOR»]
@@ -576,7 +580,8 @@ class PetriNet {
             # print(" Finished Generation, writing to file.. ")
             print("[INFO] Starting Reachability Graph Generation")
             # pn.generateScenarios(s,0,[],[],[],0,«depth_limit»)
-            «IF !isReachabilityAnalysisTask»
+«««            «IF !isReachabilityAnalysisTask»
+            «IF  generationMode == ProductGenerationMode.TEST_GENERATION»
             sys.setrecursionlimit(«depth_limit + 100»)
             pn.generateSCN()
             print('Num Tests: ', pn.numTestCases)
@@ -592,7 +597,8 @@ class PetriNet {
                 print("[INFO] Created %s" % (fname,))
             c = datetime.datetime.now()
 
-            «IF !isReachabilityAnalysisTask»
+«««            «IF !isReachabilityAnalysisTask»
+            «IF  generationMode == ProductGenerationMode.TEST_GENERATION»
             print("[INFO] Starting Test Generation.")
             pn.initializeTestGeneration()
             pn.generateTestCases()
@@ -647,7 +653,8 @@ class PetriNet {
             print("[INFO] Time Statistics")
             print("[INFO]    * Reachability Computation: %s" % (b - a))
             print("[INFO]    * Reachability PUML Creation: %s" % (c - b))
-            «IF !isReachabilityAnalysisTask»
+«««            «IF !isReachabilityAnalysisTask»
+            «IF  generationMode == ProductGenerationMode.TEST_GENERATION»
             print("[INFO]    * Test Generation: %s" % (d - c))
             print("[INFO]    * PlantUML View Generation: %s" % (e - d))
             «ENDIF»
@@ -961,6 +968,9 @@ class PetriNet {
                     json_graph['edges']
                 )
                 self._writeReachabilityJson(writer, json_graph)
+                
+                #write the graph in memory
+                self.graph_in_memory = json_graph
 
             return nrOfDependencies
     '''
