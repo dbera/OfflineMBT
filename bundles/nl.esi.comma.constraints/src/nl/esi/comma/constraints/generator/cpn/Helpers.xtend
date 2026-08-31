@@ -101,6 +101,24 @@ class Helpers {
         return null
     }
     
+//    returns guard for repeated activation tasks
+    def getRefRepeatedActivationWhereClause(Ref ref) {
+    if(ref instanceof RefAction) {
+        val concreteWhere = getRefConcreteWhereClause(ref)
+        val correlationWhere =
+            if (!ref.whereOptArgs.isNullOrEmpty)
+                getConjunction(ref.whereOptArgs)
+            else if (!ref.withArgs.isNullOrEmpty)
+                getWithConjunction(ref.withArgs).replace(":=", "==").trim
+            else
+                "true"
+    
+        if (concreteWhere == "true") return correlationWhere
+        if (correlationWhere == "true") return concreteWhere
+        return '''«concreteWhere» and «correlationWhere»'''
+        }
+        return null
+    }
 
 //    returns "where-correlation" guard
     def getRefCorrelationWhereClause(Ref ref) {

@@ -58,7 +58,7 @@ class FutureTemplates {
 			    element-label   "Repeated Activation"
 			    case            default priority 50
 			    with-inputs     split, «activationEventInfo.refName», «correlationVar.name»
-			    with-guard      «helpers.getRefCombinedWhereClause(activationEventInst)»
+			    with-guard      «helpers.getRefRepeatedActivationWhereClause(activationEventInst)»
 			    produces-outputs    split suppress
 			    updates:
 			         split := split
@@ -264,6 +264,37 @@ class FutureTemplates {
         ''' 
         val acceptanceJson =
         '''
+        {
+                  "schemaType": "matala.constraints.acceptance",
+                  "schemaVersion": 1,
+                  "templateType": "ChainResponse",
+                  "constraint": "«templateName»",
+                
+                  "graph": {
+                    "format": "ltsvisualizer",
+                    "version": 1
+                  },
+                
+                  "monitorPlaces": [
+                    "split",
+                    "final",
+                    "acceptor",
+                    "«correlationVar.name»",
+                    "blockerseen"
+                  ],
+                
+                  "acceptance": {
+                    "scope": "terminalNodes",
+                    "emptyPlaces": [
+                      ["split"],
+                      ["«correlationVar.name»"],
+                      ["blockerseen"]
+                    ],
+                    "nonEmptyPlaces": [
+                    ["acceptor", "final"]
+                    ]
+                  }
+                }
         '''
         return new CPNTemplateResult (psBody, acceptanceJson)
     }
@@ -304,7 +335,7 @@ class FutureTemplates {
                 element-label   "Repeated Activation"
                 case            default priority 70
                 with-inputs     split, «activationEventInfo.refName», «correlationVar.name»
-                with-guard      «helpers.getRefCombinedWhereClause(activationEventInst)»
+                with-guard      «helpers.getRefRepeatedActivationWhereClause(activationEventInst)»
                 produces-outputs    split suppress
                 updates:
                      split := split
@@ -386,6 +417,37 @@ class FutureTemplates {
         ''' 
         val acceptanceJson =
         '''
+        {
+                          "schemaType": "matala.constraints.acceptance",
+                          "schemaVersion": 1,
+                          "templateType": "AlternateResponse",
+                          "constraint": "«templateName»",
+                        
+                          "graph": {
+                            "format": "ltsvisualizer",
+                            "version": 1
+                          },
+                        
+                          "monitorPlaces": [
+                            "split",
+                            "final",
+                            "acceptor",
+                            "«correlationVar.name»",
+                            "rejecting_tokens"
+                          ],
+                        
+                          "acceptance": {
+                            "scope": "terminalNodes",
+                            "emptyPlaces": [
+                              ["split"],
+                              ["«correlationVar.name»"],
+                              ["rejecting_tokens"]
+                            ],
+                            "nonEmptyPlaces": [
+                            ["acceptor", "final"]
+                            ]
+                          }
+                        }
         '''
         return new CPNTemplateResult (psBody, acceptanceJson)
         

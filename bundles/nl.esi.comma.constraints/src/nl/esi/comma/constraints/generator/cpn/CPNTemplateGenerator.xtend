@@ -39,19 +39,14 @@ import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.nodemodel.util.NodeModelUtils
-
 import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
-
-// import static extension org.eclipse.emf.ecore.util.EcoreUtil.*
-// import org.eclipse.emf.common.util.URI
-// import org.eclipse.xtext.resource.XtextResourceSet
 
 class CPNTemplateGenerator 
 {
     val FutureTemplates futureTemplates = new FutureTemplates
     val Helpers helpers = new Helpers
 
-// it should generate different pspec files for different constraints in the constraint file
+// generates product pspec files for each constraints in the constraint file
     def List<ConstraintGenerationResult> generatePSpec(
         Resource res, IFileSystemAccess2 fsa, 
         List<Constraints> constraints,
@@ -129,7 +124,7 @@ class CPNTemplateGenerator
     }
     
 
-    def ConstraintGenerationResult generateConstraintPS(Constraints model, Template currentConstraint, TestDefinition td, IFileSystemAccess2 fsa) 
+    def generateConstraintPS(Constraints model, Template currentConstraint, TestDefinition td, IFileSystemAccess2 fsa) 
     {
         var typesText = '''''' 
 //        '''
@@ -224,26 +219,6 @@ class CPNTemplateGenerator
             }
         }
         
-//        for ( t : model.templates) {
-//            for(elm : t.type) {
-//                if(elm instanceof Future) {
-//                    for(elmInst : elm.type) {
-//                        if(elmInst instanceof Response) {
-//                            specBody = futureTemplates.generateResponseTemplate(
-//                                t.name,
-//                                t.variables.head,
-//                                elmInst.refA.head,
-//                                helpers.getRefInputTypeAndVar(elmInst.refA.head),
-//                                helpers.getRefName(elmInst.refA.head),
-//                                elmInst.refB.head,
-//                                helpers.getRefName(elmInst.refB.head),
-//                                helpers.getRefInputTypeAndVar(elmInst.refB.head)
-//                            )
-//                        }
-//                    }
-//                }
-//            }
-//        }
         var specPostfix = 
         '''
             SUT-blocks 
@@ -282,21 +257,9 @@ class CPNTemplateGenerator
             acceptancePythonFileName,
             generatedSpecName
         )
-//        fsa.generateFile(
-//            generatedSpecName + ".ps",
-//            specPrefix + tspecModel + specBody + specPostfix
-//        )
-//        fsa.generateFile(
-//            generatedSpecName + ".acceptance.json",
-//            acceptanceJson
-//        )
-//        fsa.generateFile(
-//            generatedSpecName + ".acceptance.py",
-//            generateAcceptancePythonClass(generatedSpecName, currentConstraint.name)
-//        )
     }
     
-//    Generates a python file with the acceptance logic
+//    Generates a python class with the acceptance logic
     def String generateAcceptancePythonClass(String generatedSpecName, String constraintName) {
         return
         '''
@@ -488,75 +451,3 @@ class CPNTemplateGenerator
         return labelList
     }
 }
-
-//    def computeLabelSet(Template currentConstraint) {
-//        var labelList = new ArrayList<RefInfo>
-//            for(templateGroup : currentConstraint.type) {
-//                if(templateGroup instanceof Future) {
-//                    for(templateType : templateGroup.type) {
-//                        if(templateType instanceof Response) {
-//                            if(templateType.refA.head instanceof RefAction) {
-//                                if(!isRefInfoPresent(labelList, helpers.getRefInputTypeAndVar(templateType.refA.head)))
-//                                    labelList.add(helpers.getRefInputTypeAndVar(templateType.refA.head))
-//                            }
-//                            if(templateType.refB.head instanceof RefAction) {
-//                                if(!isRefInfoPresent(labelList, helpers.getRefInputTypeAndVar(templateType.refB.head)))
-//                                    labelList.add(helpers.getRefInputTypeAndVar(templateType.refB.head))
-//                            }
-//                        }
-//                        if(templateType instanceof ChainResponse) {
-//                            if(templateType.refA.head instanceof RefAction) {
-//                                if(!isRefInfoPresent(labelList, helpers.getRefInputTypeAndVar(templateType.refA.head)))
-//                                    labelList.add(helpers.getRefInputTypeAndVar(templateType.refA.head))
-//                            }
-//                            if(templateType.refB.head instanceof RefAction) {
-//                                if(!isRefInfoPresent(labelList, helpers.getRefInputTypeAndVar(templateType.refB.head)))
-//                                    labelList.add(helpers.getRefInputTypeAndVar(templateType.refB.head))
-//                            }
-//                        }
-//                        if(templateType instanceof AlternateResponse) {
-//                            if(templateType.refA.head instanceof RefAction) {
-//                                if(!isRefInfoPresent(labelList, helpers.getRefInputTypeAndVar(templateType.refA.head)))
-//                                    labelList.add(helpers.getRefInputTypeAndVar(templateType.refA.head))
-//                            }
-//                            if(templateType.refB.head instanceof RefAction) {
-//                                if(!isRefInfoPresent(labelList, helpers.getRefInputTypeAndVar(templateType.refB.head)))
-//                                    labelList.add(helpers.getRefInputTypeAndVar(templateType.refB.head))
-//                            }
-//                            if(templateType.refC.head instanceof RefAction) {
-//                                if(!isRefInfoPresent(labelList, helpers.getRefInputTypeAndVar(templateType.refC.head)))
-//                                    labelList.add(helpers.getRefInputTypeAndVar(templateType.refC.head))
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//        val anyInfo = new RefInfo("ANY", "any")
-//        if(!isRefInfoPresent(labelList, anyInfo))
-//            labelList.add(anyInfo)
-//        return labelList
-//    }
-
-//    def computeLabelSet(EList<Template> tlist) {
-//        var labelList = new ArrayList<RefInfo>
-//        for(t : tlist) {
-//            for(elm : t.type) {
-//                if(elm instanceof Future) {
-//                    for(elmInst : elm.type) {
-//                        if(elmInst instanceof Response) {
-//                            if(elmInst.refA.head instanceof RefAction) {
-//                                if(!isRefInfoPresent(labelList, helpers.getRefInputTypeAndVar(elmInst.refA.head)))
-//                                    labelList.add(helpers.getRefInputTypeAndVar(elmInst.refA.head))
-//                            }
-//                            if(elmInst.refB.head instanceof RefAction) {
-//                                if(!isRefInfoPresent(labelList, helpers.getRefInputTypeAndVar(elmInst.refB.head)))
-//                                    labelList.add(helpers.getRefInputTypeAndVar(elmInst.refB.head))
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//        return labelList
-//    }
-//}

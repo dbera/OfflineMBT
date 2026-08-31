@@ -86,7 +86,7 @@ class TestConformanceNetGenerator  extends AbstractGenerator {
                 val generatedConstraints = (new CPNTemplateGenerator).generatePSpec(
                     resource, fsa, constraints, tspec as TSMain
                 )
-//            generating the reachability graph from pspec    
+//          generating the reachability graph from pspec    
             val verdicts = new ArrayList<Pair<String, URI>>
             for (generatedConstraint : generatedConstraints) {
                 val constraintFsa =  fsa.createFolderAccess(generatedConstraint.getConstraintFolderName())
