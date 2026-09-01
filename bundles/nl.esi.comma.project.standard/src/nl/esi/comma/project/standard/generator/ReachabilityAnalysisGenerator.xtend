@@ -13,28 +13,30 @@
  
 package nl.esi.comma.project.standard.generator
 
+import nl.asml.matala.product.generator.ProductGenerationMode
+import nl.asml.matala.product.generator.ProductGenerator
+import nl.asml.matala.product.product.Product
+import nl.esi.comma.project.standard.standardProject.Project
 import nl.esi.comma.project.standard.standardProject.ReachabilityAnalysisBlock
+import nl.esi.xtext.common.lang.reporting.IStatusReporting
+import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.emf.ecore.resource.ResourceSet
+import org.eclipse.xtend.lib.annotations.FinalFieldsConstructor
+import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
-import org.eclipse.xtext.generator.AbstractGenerator
-import org.eclipse.emf.ecore.resource.Resource
-import nl.esi.comma.project.standard.standardProject.Project
 
-import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
-import nl.asml.matala.product.product.Product
-import nl.asml.matala.product.generator.ProductGenerator
-import com.google.inject.Inject
-import nl.esi.comma.project.standard.generator.^extension.IStandardProjectGeneratorExtension
+import static nl.esi.comma.project.standard.generator.^extension.IStandardProjectGeneratorExtension.*
 
-import static nl.esi.comma.project.standard.generator.^extension.IStandardProjectGeneratorExtension.*;
 import static extension nl.esi.xtext.common.lang.generator.FileSystemAccessUtil.*
-import nl.asml.matala.product.generator.ProductGenerationMode
+import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
+import static extension org.eclipse.emf.ecore.util.EcoreUtil.*
+import static extension org.eclipse.xtext.EcoreUtil2.*
 
+@FinalFieldsConstructor
 class ReachabilityAnalysisGenerator extends AbstractGenerator 
 {
-    @Inject
-    IStandardProjectGeneratorExtension.Registry generatorExtensions;
+    val IStatusReporting reporting
 
     override doGenerate(Resource res, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
         res.contents.filter(Project).flatMap[reachabilityAnalysisBlocks].forEach[doGenerate(res, fsa, ctx)]
@@ -74,6 +76,6 @@ class ReachabilityAnalysisGenerator extends AbstractGenerator
         val specName = product.specification.name
         val petriNetURI = fsa.getURI('''«FOLDER_CPN_SERVER»/«specName»/«specName».py''')
         val absTspecFsa = fsa.createFolderAccess(FOLDER_ABSTRACT_TSPEC)
-        (new PetriNetToAbstractTspecGenerator(task.pythonExe)).doGenerate(rst, petriNetURI, absTspecFsa, ctx)
+        (new PetriNetToAbstractTspecGenerator(task.pythonExe, reporting)).doGenerate(rst, petriNetURI, absTspecFsa, ctx)
     }
 }

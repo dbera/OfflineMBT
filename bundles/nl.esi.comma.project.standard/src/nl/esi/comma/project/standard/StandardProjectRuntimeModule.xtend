@@ -21,6 +21,8 @@ import nl.esi.xtext.expressions.functions.ExpressionFunctionLibrariesProvider
 import nl.esi.xtext.expressions.functions.IExpressionFunctionLibrariesProvider
 import nl.esi.xtext.expressions.scoping.ExpressionsImportUriGlobalScopeProvider
 import org.eclipse.xtext.scoping.IGlobalScopeProvider
+import nl.esi.xtext.common.lang.reporting.StatusReportCollector
+import nl.esi.xtext.common.lang.reporting.IStatusReporting
 
 /**
  * Use this class to register components to be used at runtime / without the Equinox extension registry.
@@ -37,6 +39,10 @@ class StandardProjectRuntimeModule extends AbstractStandardProjectRuntimeModule 
 
     def Class<? extends IExpressionConvertersProvider> bindIExpressionConvertersProvider() {
         return ExpressionConvertersProvider
+    }
+
+    def Class<? extends IStatusReporting> bindIStatusReporter() {
+        return StatusReportCollector
     }
 
 }

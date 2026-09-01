@@ -26,11 +26,13 @@ import nl.esi.comma.project.standard.standardProject.FilePath
 import nl.esi.comma.project.standard.standardProject.Project
 import nl.esi.comma.project.standard.standardProject.TestConformanceBlock
 import nl.esi.comma.testspecification.testspecification.TSMain
+import nl.esi.xtext.common.lang.reporting.IStatusReporting
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.emf.common.util.EList
 import org.eclipse.emf.common.util.URI
 import org.eclipse.emf.ecore.resource.Resource
+import org.eclipse.xtend.lib.annotations.FinalFieldsConstructor
 import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
@@ -40,6 +42,7 @@ import org.eclipse.xtext.nodemodel.util.NodeModelUtils
 import static extension nl.esi.xtext.common.lang.generator.FileSystemAccessUtil.*
 import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
 
+@FinalFieldsConstructor
 class TestConformanceNetGenerator  extends AbstractGenerator {
     static val CONFORMANCE_SUMMARY_SCRIPT = '''
     import json
@@ -62,6 +65,8 @@ class TestConformanceNetGenerator  extends AbstractGenerator {
     with open(summary_path, "w", encoding="utf-8") as writer:
         json.dump({"results": results}, writer, indent=2)
     '''
+    val IStatusReporting reporting
+
     var Resource resource
      
     var TestConformanceBlock task
@@ -110,7 +115,7 @@ class TestConformanceNetGenerator  extends AbstractGenerator {
 
                 val petriNetURI = fsa.getURI('''CPNServer/«specName»/«specName».py''')
 
-                (new PetriNetToAbstractTspecGenerator(task.pythonExe)) 
+                (new PetriNetToAbstractTspecGenerator(task.pythonExe, reporting)) 
                     .doGenerate(
                         resource.resourceSet,
                         petriNetURI,

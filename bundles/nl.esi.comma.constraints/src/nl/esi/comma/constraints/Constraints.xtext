@@ -47,7 +47,6 @@ Constraints returns base::ModelContainer: {Constraints}
 
 Actor:
     name=ID (label=STRING)?;
-
 Act:
     act=ActionType name=ID (label=STRING)?
     ('inputs' inputs+=Variable*)?

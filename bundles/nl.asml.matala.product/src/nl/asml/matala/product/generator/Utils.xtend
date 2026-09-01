@@ -15,6 +15,7 @@ package nl.asml.matala.product.generator
 import java.util.ArrayList
 import java.util.HashMap
 import java.util.LinkedHashSet
+import java.util.List
 import java.util.Set
 import nl.asml.matala.product.product.Block
 import nl.asml.matala.product.product.Blocks
@@ -28,9 +29,9 @@ import nl.asml.matala.product.product.SymbConstraint
 import nl.asml.matala.product.product.Update
 import nl.asml.matala.product.product.UpdateOutVar
 import nl.asml.matala.product.product.VarRef
+import nl.esi.comma.assertthat.assertThat.DataAssertions
 import nl.esi.xtext.actions.actions.AssignmentAction
 import nl.esi.xtext.actions.actions.RecordFieldAssignmentAction
-import nl.esi.comma.assertthat.assertThat.DataAssertions
 import nl.esi.xtext.expressions.expression.ExpressionAddition
 import nl.esi.xtext.expressions.expression.ExpressionAnd
 import nl.esi.xtext.expressions.expression.ExpressionAny
@@ -66,13 +67,17 @@ import nl.esi.xtext.expressions.expression.ExpressionVariable
 import nl.esi.xtext.expressions.expression.ExpressionVector
 import nl.esi.xtext.expressions.expression.Field
 import nl.esi.xtext.expressions.expression.Variable
+import org.eclipse.emf.ecore.EObject
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
+import org.eclipse.xtext.nodemodel.util.NodeModelUtils
 
 import static nl.esi.xtext.common.lang.utilities.EcoreUtil3.serialize
 
 class Utils 
 {
+    static val INDENT = 4
+    
     // Added for Asserts
     dispatch def String printConstraint(DataAssertions ref) {
         return printConstraint(ref.eContainer as Update) + "." + ref.name
@@ -339,7 +344,7 @@ class Utils
     }
 
     // The Python Test Scenario Generator Class
-    def generateTestSCNTxt(String name, Product prod, String pSpecFile) {
+    static def generateTestSCNTxt(String name, Product prod, String pSpecFile) {
         return
         '''
         import json
@@ -366,12 +371,13 @@ class Utils
             constraint_dict = {}
             tr_assert_ref_dict = {}
         
-            def __init__(self, _mapTrAssert, _constraint_dict, _tr_assert_ref_dict):
+            def __init__(self, _pspec_path, _mapTrAssert, _constraint_dict, _tr_assert_ref_dict):
                 self.step_list = []
                 self.step_dependencies = []
                 self.map_transition_assert = _mapTrAssert
                 self.constraint_dict = _constraint_dict
                 self.tr_assert_ref_dict = _tr_assert_ref_dict
+                self.pspec_path = _pspec_path
         
             def generate_viz(self, idx, output_dir):
                 txt = "@startuml\n"
@@ -386,12 +392,12 @@ class Utils
                         # txt += "%s" % elm.payload
                         # txt += "\nend note\n"
                 txt += "@enduml"
-        
+
                 fname = output_dir / f"scenario{str(idx)}.plantuml"
                 os.makedirs(os.path.dirname(fname), exist_ok=True)
                 with open(fname, 'w') as f:
                     f.write(txt)
-        
+
             # Deprecated. To be Removed. DB 03.04.2025
             def recurseJson(self, items, prefix):
                 txt = ""
@@ -408,16 +414,17 @@ class Utils
                             elif "False" in items:
                                 items = "false"
                             else:
-                                items = f"\"{items}\""
+                                items = '"' +str(items) +'"'
                         case int():
                             items = items
                         case list():
                             items = self.updateDict[prefix].strip()
                         case _:
                             raise TypeError('Unsupported type')
-                    txt += f"    {prefix} := {items}\n"
+                    txt += f"    {prefix} := {items}"
+                    txt += "\n"
                 return txt
-            
+
             def printData(self, idata):
                 txt = ""
                 for k, v in idata.items():
@@ -427,10 +434,10 @@ class Utils
                     # for jk in j.keys():
                     #     txt += self.recurseJson(j[jk], "%s.%s" % (k,jk))
                 return txt
-                
+
             def generateTSpec(self, idx, sutTypesList, sutVarTransitionMap, transitionQnameMap, output_dir):
                 txt = ""
-                txt += "import \"«pSpecFile»\"\n\n"
+                txt += "import " + '"' + str(self.pspec_path) + "«pSpecFile»" + '"' +"\n\n"
                 «(new Utils()).usageList(prod)»
                 txt += "\nabstract-test-definition\n\n"
                 txt += "Test-Scenario: S%s\n" % idx
@@ -564,22 +571,22 @@ class Utils
                 #    print("%s" % elm.step_name)
                 #    print("%s" % elm.depends_on)
                 #    print("%s" % elm.payload)
-        
-        
+
+
         class Step:
             step_name = ""
             input_data = {}
             output_data = {}
             output_suppress = []
             is_assert = False
-        
+
             def __init__(self, _is_assert):
                 self.step_name = ""
                 self.input_data = {}
                 self.output_data = {}
                 self.output_suppress = []
                 self.is_assert = _is_assert
-        
+
             def compare(self, _step, mapTrAssert):
                 step_dep = StepDependency()
                 isMatched = False
@@ -610,45 +617,45 @@ class Utils
                     return step_dep
                 else:
                     return None
-        
-        
+
+
         class StepDependency:
             step_name = ""
             depends_on = ""
             var_ref = []
             payload = ""
-        
+
             def __init__(self):
                 self.step_name = ""
                 self.depends_on = ""
                 self.var_ref = []
                 self.payload = ""
-        
-        
+
+
         class Constraint:
             var_ref = ""
             dir = ""
             centry = []
-        
+
             def __init__(self, v, d, ce):
                 self.var_ref = v
                 self.dir = d
                 self.centry = ce
-        
-        
+
+
         class CEntry:
             name = ""
             constr = ""
-        
+
+
             def __init__(self, n, c):
                 self.name = n
                 self.constr = c
-        
 
         '''
     }
     
-    def toTypes(String class_name, ArrayList<String> import_list, HashMap<String,String> var_decl_map) {
+    static def toTypes(String class_name, ArrayList<String> import_list, HashMap<String,String> var_decl_map) {
         '''
         class Types:
             def __init__(self):
@@ -657,14 +664,17 @@ class Utils
         '''
     }
     
-    def getDataContainerClass(String dataGetterTxt, String methodTxt) 
+   static def getDataContainerClass(String prod_name, String dataGetterTxt, String methodTxt) 
     {
         // var data_container_class =
         return 
             '''
             import copy
             import json
-            
+            if __package__ is None or __package__ == '':
+                from «prod_name»_reporting import get_reporting, Location
+            else:
+                from .«prod_name»_reporting import get_reporting, Location
             
             class Data:
                 
@@ -685,7 +695,7 @@ class Utils
     }
 
 
-    def generateOnlineMBTController(Product envModel, Product sutModel, 
+    static def generateOnlineMBTController(Product envModel, Product sutModel, 
         IFileSystemAccess2 fsa, IGeneratorContext context
     ) {
         var txt =
@@ -795,24 +805,219 @@ class Utils
         fsa.generateFile('OnlineMBT_Controller.py', txt)
     }
 
-//  /* TODO Is this deprecated? Who is using this? Commented DB 16.03.2025 */
-//  def Map<String,String> recurseTypes(Type typ) {
-//      var constructors = newLinkedHashMap() 
-//      var typ2 = typ.type
-//      if (typ instanceof VectorTypeConstructor) {
-//          if (!typ2.name.equalsIgnoreCase("string")) {
-//              if (typ.eContainer instanceof RecordField) {
-//                  var field = (typ.eContainer as RecordField).name
-//                  var key = typ2.name
-//                  constructors.put(key, field)
-//              }
-//          }
-//      }
-//      if (typ2 instanceof RecordTypeDecl) {
-//          for (f : (typ2 as RecordTypeDecl).fields) {
-//              constructors.putAll(recurseTypes(f.type))
-//          }
-//      }
-//      return constructors
-//  }
+
+    static def getReportingClass(String name) 
+    {
+        return 
+        '''
+        import json
+        import traceback
+        from enum import Enum
+        from typing import List, Optional, Dict, Any, NoReturn
+        from dataclasses import dataclass, field
+        from pathlib import Path
+
+        class StatusException(Exception):
+            def __init__(self, message: str):
+                super().__init__(message)
+
+        class Severity(Enum):
+            OK = 0
+            INFO = 1
+            WARNING = 2
+            ERROR = 4
+
+        @dataclass 
+        class Location:
+            startLine: int
+            endLine: int
+            offset: int
+            length: int
+            text: str
+
+            def to_dict(self) -> Dict[str, Any]:
+                return {
+                    'startLine': self.startLine,
+                    'endLine': self.endLine,
+                    'offset': self.offset,
+                    'length': self.length,
+                    'text': self.text,
+                }
+
+        @dataclass
+        class StatusReport:
+            plugin: str
+            severity: Severity
+            message: str
+            source: str = ""
+            code: int = 0
+            details: Optional[str] = None
+            location: Optional[Location] = None
+            children: List['StatusReport'] = field(default_factory=list)
+            exception: Optional[Exception] = field(default=None, repr=False)
+
+            def __post_init__(self):
+                if self.exception is not None:
+                    if self.details is None:
+                        self.details = self._get_stack_trace_as_string(self.exception)
+                    self.exception = None  # Don't retain non-serializable object
+
+                if self.children:
+                    child_severities = [child.severity for child in self.children if child is not None]
+                    if child_severities:
+                        max_child_severity = max(child_severities, key=lambda s: s.value)
+                        if max_child_severity.value > self.severity.value:
+                            self.severity = max_child_severity
+
+            @staticmethod
+            def _get_stack_trace_as_string(exception: Optional[Exception]) -> Optional[str]:
+                if exception is None:
+                    return None
+                tb_lines = traceback.format_exception(type(exception), exception, exception.__traceback__)
+                if len(tb_lines) > 15:
+                    tb_lines = tb_lines[:15] + [f"   ... {len(tb_lines) - 15} more" +"\n"]
+                return "".join(tb_lines)
+
+            def to_dict(self) -> Dict[str, Any]:
+                return {
+                    'plugin': self.plugin,
+                    'severity': self.severity.name,
+                    'message': self.message,
+                    'source': self.source,
+                    'code': self.code,
+                    'details': self.details,
+                    'location': self.location.to_dict() if self.location else None,
+                    'children': [child.to_dict() for child in self.children if child is not None],
+                }
+
+        class StatusReporting:
+            def __init__(self, save_path: str):
+                self.save_path = Path(save_path)
+                self.reports: List[StatusReport] = []
+
+            def _log(self, severity: Severity, message: str, source: str = "", code: int = 0,
+                     details: Optional[str] = None, exception: Optional[Exception] = None, location: Optional[Location] = None) -> StatusReport:
+                report = StatusReport(
+                    plugin="",
+                    severity=severity,
+                    message=message,
+                    source=source,
+                    code=code,
+                    details=details,
+                    location=location,
+                    exception=exception
+                )
+                self.reports.append(report)
+                return report
+
+            def info(self, message: str, source: str = "", code: int = 0, details: Optional[str] = None, location: Optional[Location] = None) -> StatusReport:
+                return self._log(Severity.INFO, message, source, code, details, None, location)
+
+            def warning(self, message: str, source: str = "", code: int = 0, details: Optional[str] = None, location: Optional[Location] = None) -> StatusReport:
+                return self._log(Severity.WARNING, message, source, code, details, None, location)
+
+            def error(self, message: str, source: str = "", code: int = 0, 
+                      details: Optional[str] = None, location: Optional[Location] = None) -> StatusReport:
+                return self._log(Severity.ERROR, message, source, code, details, None, location)
+
+            def exception(self, message: str, exception: Exception, source: str = "", details: Optional[str] = None, code: int = 0, location: Optional[Location] = None) -> NoReturn:
+                self._log(Severity.ERROR, message, source, code, details, exception, location)
+                #on exception the process is stopped
+                raise StatusException(message)
+
+            def save(self) -> Severity:
+
+                root_severity = Severity.OK
+                if self.reports:
+                    root_severity = max((report.severity for report in self.reports), key=lambda s: s.value)
+
+                root_report = StatusReport(
+                    plugin="",
+                    severity=root_severity,
+                    message=f"Python generation of «name»",
+                    source="",
+                    code=0,
+                    details=None,
+                    location=None,
+                    children=self.reports,
+                    exception=None
+                )
+
+                data = root_report.to_dict()
+                with open(self.save_path, 'w') as f:
+                    json.dump(data, f, indent=2)
+
+                return root_severity
+
+        _status_reporting_instance: Optional[StatusReporting] = None
+
+        def initialize_reporting(save_path: str) -> StatusReporting:
+            global _status_reporting_instance
+            _status_reporting_instance = StatusReporting(save_path)
+            return _status_reporting_instance
+
+        def get_reporting() -> StatusReporting:
+            global _status_reporting_instance
+            if _status_reporting_instance is None:
+                raise RuntimeError("StatusReporting not initialized. Call initialize_reporting() first.")
+            return _status_reporting_instance
+        '''
+    }
+
+
+    static def String surroundWithTryCatch(EObject ref, int depth, String txt) {
+        var indent = " ".repeat(depth * INDENT)
+        var nextIndent = " ".repeat((depth + 1) * INDENT)
+        var sourceLocation = getSourceLocation(ref).replace("\n", "\n" + nextIndent)
+        var body = txt.trim().replace("\n", "\n" + nextIndent)
+        
+        var result = String.join("\n",
+            indent + "try:",
+            nextIndent + body,
+            indent + "except Exception as e:",
+            nextIndent + sourceLocation,
+            nextIndent + "get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)",
+            ""
+        )
+        return result
+    }
+
+    static def String getSourceLocation(EObject action) {
+        var List<String> result = new ArrayList<String>()
+        
+        var node = NodeModelUtils.getNode(action)
+
+        if (node !== null) {
+            var text = node.getText()
+            // Escape for Python and limit to 500 chars
+            text = escapeAndLimitText(text, 500)
+            var locationStr = "__location = Location(" + node.getStartLine() + "," + node.getEndLine() + "," + 
+                node.getOffset() + "," + node.getLength() + ",\"" + text + "\")"
+            result.add(locationStr)
+        }
+        if (action.eResource() !== null) {
+            result.add("__source_file = \"" + action.eResource().getURI().lastSegment() +'"') 
+        }
+        return String.join("\n", result)
+    }
+
+    static def String escapeAndLimitText(String text, int limit) {
+        if (text === null) {
+            return ""
+        }
+        // Escape special characters for Python
+        var escaped = text.trim()
+            .replaceAll("\\s+", " ")
+            .replace("\\", "\\\\")
+            .replace("\"", "\\\"")
+            .replace("\n", "")
+            .replace("\r", "")
+            .replace("\t", " ")
+        // Limit to specified length with "..." suffix if truncated
+        if (escaped.length() > limit) {
+            escaped = escaped.substring(0, limit - 3) + "..."
+        }
+        return escaped
+    }
+
 }

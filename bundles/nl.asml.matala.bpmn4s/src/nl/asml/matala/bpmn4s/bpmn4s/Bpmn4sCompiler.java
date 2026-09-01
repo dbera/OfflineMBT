@@ -948,7 +948,9 @@ public class Bpmn4sCompiler{
 	    FileWriter writer = null;
 	    try {
 	        writer = new FileWriter(file);
-	        writer.write(text);
+	        // Convert Windows line endings (CRLF: \r\n) to Unix line endings (LF: \n)
+	        String unixText = text.replace("\r\n", "\n");
+	        writer.write(unixText);
 	    } catch (IOException e) {
 	        e.printStackTrace();
 	    } finally {
