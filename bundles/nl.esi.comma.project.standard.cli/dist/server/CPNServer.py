@@ -260,9 +260,9 @@ def write_eclipse_project(output_dir, model_name):
 
     try:
         prj_filename:str = os.path.join(output_dir,f'.project')
-    with open(prj_filename, "w") as file1:
-        prj_content = prj_template.format(model_name)
-        file1.write(prj_content)
+        with open(prj_filename, "w") as file1:
+            prj_content = prj_template.format(model_name)
+            file1.write(prj_content)
     except Exception as e:
         logger.warning("Could not write Eclipse project file")
 
