@@ -175,7 +175,7 @@ def build_and_load_model(model_path:str):
     return module, result
 
 def generate_tests( model_path:str, num_tests:int=1, depth_limit:int=500, state_limit:int=1000):
-    
+
     model_dir, model_name = os.path.split(model_path)
     model_name, model_ext = os.path.splitext(model_name)
     model_name = utils.to_valid_variable_name(model_name)
@@ -191,7 +191,7 @@ def generate_tests( model_path:str, num_tests:int=1, depth_limit:int=500, state_
       }}
     }}
     """
-    
+
     prj_filename:str = os.path.join(model_dir,f'{model_name}.prj')
     with open(prj_filename, "w") as file1:
         prj_content = prj_template.format(taskname,model_name,num_tests,depth_limit,state_limit)
@@ -207,7 +207,6 @@ def generate_tests( model_path:str, num_tests:int=1, depth_limit:int=500, state_
         'depth-limit': depth_limit,
         'state-limit': state_limit,
     }
-    
 
     # zip filename (without .zip extension)
     zip_filename = os.path.join(model_dir,model_name)
@@ -222,6 +221,7 @@ def generate_tests( model_path:str, num_tests:int=1, depth_limit:int=500, state_
     # store results in the report dir
     utils.store_results(report_path, result, cli_args)
 
+    write_eclipse_project(output_dir, model_name)
     write_status_report_html(output_dir, report_path)
 
     # store bpmn and prj files in bpmn directory 
@@ -237,6 +237,34 @@ def generate_tests( model_path:str, num_tests:int=1, depth_limit:int=500, state_
     except Exception as e:
         logger.error(f"An error occurred while deleting generated test: {str(e)}", file=sys.stderr)
     return zip_filename, result
+
+def write_eclipse_project(output_dir, model_name):
+    prj_template:str = """<?xml version="1.0" encoding="UTF-8"?>
+    <projectDescription>
+        <name>{0}</name>
+        <comment></comment>
+        <projects>
+        </projects>
+        <buildSpec>
+            <buildCommand>
+                <name>org.eclipse.xtext.ui.shared.xtextBuilder</name>
+                <arguments>
+                </arguments>
+            </buildCommand>
+        </buildSpec>
+        <natures>
+            <nature>org.eclipse.xtext.ui.shared.xtextNature</nature>
+        </natures>
+    </projectDescription>
+    """
+
+    try:
+        prj_filename:str = os.path.join(output_dir,f'.project')
+    with open(prj_filename, "w") as file1:
+        prj_content = prj_template.format(model_name)
+        file1.write(prj_content)
+    except Exception as e:
+        logger.warning("Could not write Eclipse project file")
 
 def write_status_report_html(output_dir, report_path):
     """Write a self-contained status report HTML file to the output directory.
