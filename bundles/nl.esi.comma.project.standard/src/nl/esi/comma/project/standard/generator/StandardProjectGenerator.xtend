@@ -42,6 +42,7 @@ import static extension nl.esi.xtext.common.lang.generator.FileSystemAccessUtil.
 import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
 import static extension org.eclipse.emf.ecore.util.EcoreUtil.*
 import static extension org.eclipse.xtext.EcoreUtil2.*
+import nl.asml.matala.product.generator.ProductGenerationMode
 
 import static extension org.eclipse.lsat.common.xtend.Queries.*
 
@@ -58,13 +59,22 @@ class StandardProjectGenerator extends AbstractGenerator {
     IStatusReporting reporting;
 
     override doGenerate(Resource res, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
-        for (project : res.contents.filter(Project)) {
+        for (project : res.contents.filter(Project)) 
+        {
             for (task : project.offlineBlocks) {
                 doGenerate(task, res.resourceSet, fsa.createFolderAccess(task.name), ctx)
             }
 
             for (task : project.statemachineBlocks) {
                 (new StateMachineGenerator()).doGenerate(task, fsa.createFolderAccess(task.name), ctx)
+            }
+
+            for (task : project.testConformanceBlocks) {
+                (new TestConformanceNetGenerator(reporting)).doGenerate(task, fsa.createFolderAccess(task.name), ctx)
+            }
+
+            for (task : project.reachabilityAnalysisBlocks) {
+                (new ReachabilityAnalysisGenerator(reporting)).doGenerate(task, res.resourceSet, fsa.createFolderAccess(task.name), ctx)
             }
         }
     }
@@ -98,7 +108,8 @@ class StandardProjectGenerator extends AbstractGenerator {
         }
         // PspecToPetriNetGenerator
         // Generate CPNServer (a.k.a. abstract Tspec generator) and Petri-nets
-        (new ProductGenerator).doGenerate(productRes, fsa, ctx)
+//        (new ProductGenerator(false)).doGenerate(productRes, fsa, ctx)
+        (new ProductGenerator(ProductGenerationMode.TEST_GENERATION)).doGenerate(productRes, fsa, ctx)
 
         if (task.target == OfflineGenerationTarget.SIMULATOR) {
             return

@@ -21,7 +21,6 @@ import java.util.List
 import java.util.Map
 import java.util.Set
 import nl.esi.comma.constraints.constraints.Act
-import nl.esi.comma.constraints.constraints.Actions
 import nl.esi.comma.constraints.constraints.AlternatePrecedence
 import nl.esi.comma.constraints.constraints.AlternateResponse
 import nl.esi.comma.constraints.constraints.AlternateSuccession
@@ -46,19 +45,17 @@ import nl.esi.comma.constraints.constraints.NotSuccession
 import nl.esi.comma.constraints.constraints.Past
 import nl.esi.comma.constraints.constraints.Precedence
 import nl.esi.comma.constraints.constraints.Ref
-import nl.esi.comma.constraints.constraints.RefActSequence
 import nl.esi.comma.constraints.constraints.RefAction
-import nl.esi.comma.constraints.constraints.RefStep
-import nl.esi.comma.constraints.constraints.RefStepSequence
+import nl.esi.comma.constraints.constraints.RefSequence
 import nl.esi.comma.constraints.constraints.RespondedExistence
 import nl.esi.comma.constraints.constraints.Response
 import nl.esi.comma.constraints.constraints.SimpleChoice
 import nl.esi.comma.constraints.constraints.Succession
-import nl.esi.comma.constraints.constraints.Templates
+import nl.esi.comma.constraints.constraints.Template
+import nl.esi.xtext.common.lang.utilities.EcoreUtil3
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.generator.IFileSystemAccess2
-import nl.esi.xtext.actions.generator.plantuml.ActionsUmlGenerator
 
 class ConstraintsStateMachineGenerator 
 {
@@ -73,6 +70,7 @@ class ConstraintsStateMachineGenerator
     var sequenceDefMap = new HashMap<String,List<List<String>>> // list of defined and used macros
     // a -> { b,c,d ; x,y,z } // support non-deterministic mapping
     var compoundUnicodeMap = new HashMap<Character,List<List<Character>>>
+    var showWhere = false
     
     val char INIT_CHAR = 'A'
     var char symbol = INIT_CHAR
@@ -93,135 +91,20 @@ class ConstraintsStateMachineGenerator
         }
         // System.out.println(stepDataMap)
     }
-    //Luna 2-8-22, use label with underscore instead of data index
-    def computeActionMap(Constraints model) {
-    	//add local action definition
-        for(acts : model.actions) {
-            addActionsToMap(acts)
-        }
-        //add imported action definition
-        var importedConstraints = getConstraintsModel(model)
-        if(importedConstraints !== null) {
-            for(ic : importedConstraints) {
-                for(acts : ic.actions) {
-                    addActionsToMap(acts)
-                }
-            }
-        }
-        //if composition is not null, add action definition from the references
-        if(!model.composition.isNullOrEmpty){
-			for(comps : model.composition){
-				for(t : comps.templates){
-					if (t.eContainer !== null){
-						for(acts :(t.eContainer as Constraints).actions){
-							addActionsToMap(acts)
-						}
-					}
-				}
-			}
-		}
-        System.out.println("Steps Mapping for Action: " + stepsMapping)
-        System.out.println("Steps Data Map: " + stepDataMap)
-    }
-    
-    def addActionsToMap(Actions acts){
-    	for(act : acts.act) {
-            if(!act.data.nullOrEmpty) {
-                if(act.data.head.instances) {
-                    var dataList = new HashSet<String>
-                    for(r : act.data.head.rows){
-                    	var label = act.label
-                    	for(var i = 0; i < r.cells.size; i++) {
-                    		label = label.replaceAll("<"+act.data.head.header.cells.get(i)+">", r.cells.get(i))
-                    	}
-                    	label = label.replaceAll(" ", "_")
-                    	dataList.add(label)
-                    	stepsMapping.put(label, act.label.replaceAll(" ", "_"))
-                    }
-                    stepDataMap.put(act.label.replaceAll(" ", "_"), dataList)
-                }
-            }
-            if (!act.actParam.nullOrEmpty) {
-				for(p : act.actParam) {
-                    var dataList = new HashSet<String>
-    				for(ia : p.initActions) {
-    					var label = (new ActionsUmlGenerator().generateAction(ia)).toString
-                    	label = label.replaceAll(" ", "_")
-                    	dataList.add(label)    					
-    				}
-					stepDataMap.put(act.label.replaceAll(" ", "_"),dataList)
-    			}
-            }
-        }
-    }
-    /* 
-    def computeActionMap(Constraints model) {
-        for(acts : model.actions) {
-            for(act : acts.act) {
-                if(!act.data.nullOrEmpty) {
-                    if(act.data.head.instances) {
-                        var dataList = new HashSet<String>
-                        for(var i = 0; i < act.data.head.rows.size; i++) {
-                            var idx = i + 1
-                            dataList.add(act.name + "(" + idx + ")")
-                            stepsMapping.put(act.name + "(" + idx + ")", act.name)
-                        }
-                        stepDataMap.put(act.name, dataList)
-                    }
-                }
-            }
-        }
-        var importedConstraints = getConstraintsModel(model)
-        if(importedConstraints !== null) {
-            for(ic : importedConstraints) {
-                for(acts : ic.actions) {
-                    for(act : acts.act) {
-                        if(!act.data.nullOrEmpty) {
-                            if(act.data.head.instances) {
-                                var dataList = new HashSet<String>
-                                for(var i = 0; i < act.data.head.rows.size; i++) {
-                                    var idx = i + 1
-                                    dataList.add(act.name + "(" + idx + ")")
-                                    stepsMapping.put(act.name + "(" + idx + ")", act.name)
-                                }
-                                stepDataMap.put(act.name, dataList)
-                            }
-                        }
-                    }    
-                }
-            }
-        }
-        System.out.println("Steps Mapping for Action: " + stepsMapping)
-        System.out.println("Steps Data Map: " + stepDataMap)
-    }*/
-    
-    def computeActionToExpr(List<Actions> acts) {
-    	for(a : acts) {
-    		for(elm : a.act) {
-    			var ename = elm.name
-    			for(p : elm.actParam) {
-    				for(ia : p.initActions) {
-    					actionToExprMap.put(ename,(new ActionsUmlGenerator().generateAction(ia)).toString)
-    				}
-    			}
-    		}
-    	}
-    }
-    
+
     def generateStateMachine(Constraints model, Map<String, String> _stepsMapping, String path, String name, IFileSystemAccess2 fsa, boolean display, boolean printConstraints) 
     {
+        showWhere = model.showWhere
         symbol = INIT_CHAR
         fs = INIT_CHAR
         transformMap(_stepsMapping)
-        computeActionMap(model)
-        computeActionToExpr(model.actions)
-        if(model.composition.isNullOrEmpty) {
+        if(model.compositions.isNullOrEmpty) {
             computeUnicodeMaps(model.templates)
             computeCompoundUnicodeMap
             var constraintSMInst = computeStateMachine(model.templates, path, name, fsa, display, printConstraints)
             mapContraintToAutomata.put(name,constraintSMInst)
         } else {
-            for(elm : model.composition) {
+            for(elm : model.compositions) {
                 symbol = INIT_CHAR
                 activityList = new HashSet<String>();
                 unicodeMap = new HashMap<String,Character>();
@@ -230,8 +113,8 @@ class ConstraintsStateMachineGenerator
                 compoundUnicodeMap = new HashMap<Character,List<List<Character>>>                
                 fs = INIT_CHAR;
                 
-                var templateList = new HashSet<Templates>
-                for(t : elm.templates) templateList.add(t)
+                var templateList = new HashSet<Template>
+                for(t : elm.templates) templateList.add(t.template)
                 computeUnicodeMaps(templateList.toList)
                 computeCompoundUnicodeMap
                 System.out.println(" > Constraint Name: " + elm.name)
@@ -357,7 +240,7 @@ class ConstraintsStateMachineGenerator
         return strList
     }
     
-    def computeStateMachine(List<Templates> templateList, String path, String name, IFileSystemAccess2 fsa, boolean display, boolean printConstraints) 
+    def computeStateMachine(List<Template> templateList, String path, String name, IFileSystemAccess2 fsa, boolean display, boolean printConstraints) 
     { 
        var sem = new Semantics
        var List<Automaton> automataList = new ArrayList<Automaton>();
@@ -738,7 +621,7 @@ class ConstraintsStateMachineGenerator
     }
     
     // Note that this function also populates the sequenceDefMap
-    def computeUnicodeMaps(List<Templates> templateList) {
+    def computeUnicodeMaps(List<Template> templateList) {
         for(templates : templateList) {
             for(elm : templates.type) {
                 if(elm instanceof Choice) {
@@ -840,21 +723,13 @@ class ConstraintsStateMachineGenerator
         var refName = new ArrayList<String>
         for(ref : refList) 
         {
-            if(ref instanceof RefStepSequence) 
+            if(ref instanceof RefSequence)
             {
-                if(sequenceDefMap.containsKey(ref.seq.name)) {
+                if(sequenceDefMap.containsKey(ref.sequence.name)) {
                     var actList = getRefActionList(ref)
                     for(act : actList) for(a : act) refName.add(a.replaceAll("_", " ").trim)
                 } 
-                else println("    > ERROR: Sequence Name not found in Sequence Def Map! " + ref.seq.name)
-            } 
-            else if(ref instanceof RefActSequence) 
-            {
-                if(sequenceDefMap.containsKey(ref.seq.name)) {
-                    var actList = getRefActionList(ref)
-                    for(act : actList) for(a : act) refName.add(a.replaceAll("_", " ").trim)
-                } 
-                else println("    > ERROR: Sequence Name not found in Sequence Def Map! " + ref.seq.name)
+                else println("    > ERROR: Sequence Name not found in Sequence Def Map! " + ref.sequence.name)
             }
             else refName.add(getRefName(ref).replaceAll("_", " ").trim)
         }
@@ -865,65 +740,35 @@ class ConstraintsStateMachineGenerator
     // populate the sequenceDefMap with list of list of actions
     def getRefName(Ref ref){
         var refName = new String
-        if(ref instanceof RefStep) {
-            refName = ref.step.name
-            // data support: finding all related steps with different data
-            var relatedSteps = getRelatedSteps(refName)
-            for(elm : relatedSteps)
-                addToUnusedUnicodeMap(elm)
-        }
         if(ref instanceof RefAction) {
-            refName = getActionLabel(ref.act)
-            // data support: finding all related steps with different data            
-            var relatedSteps = getRelatedSteps(refName) // for action without data instances
-            for(elm : relatedSteps)
-                addToUnusedUnicodeMap(elm)
+//            refName = getActionLabel(ref.action)
+//            // data support: finding all related steps with different data            
+//            var relatedSteps = getRelatedSteps(refName) // for action without data instances
+//            for(elm : relatedSteps)
+//                addToUnusedUnicodeMap(elm)
+            refName = ref.action.name ?: ""
+            if (showWhere && !ref.whereArgs.isNullOrEmpty) {
+                refName += ref.whereArgs.join(" (", " AND ", ")")[EcoreUtil3.serialize(it)]
+            }
         }
-        if(ref instanceof RefStepSequence) { 
-            refName = ref.seq.name
-            sequenceDefMap.put(ref.seq.name, getRefActionList(ref))
-        }
-        if(ref instanceof RefActSequence) {
-            refName = ref.seq.name
-            sequenceDefMap.put(ref.seq.name, getRefActionList(ref))
+        if(ref instanceof RefSequence) {
+            refName = ref.sequence.name
+            sequenceDefMap.put(ref.sequence.name, getRefActionList(ref))
         }
         return refName
     }
     
     //use the label instead of name, add "_" and replace data
-    def getActionLabel(Act ref){
-    	var label = ref.act.label
-    	if (ref.dataRow.size > 0){
-    		for(d : ref.dataRow){
-	    		if (label.contains(d.name)){
-	    			label = label.replaceAll("<"+d.name+">", d.value)
-	    		}
-    		}
-    	}
-    	label = label.replaceAll(" ", "_")
-    	return label
+    private def getActionLabel(Act action){
+    	val label = action.label ?: action.name ?: ""
+    	return label.replaceAll(" ", "_")
     }
     
     // construct list of list of actions for each sequence def
-    def getRefActionList(RefStepSequence refSeq) {
+    private def getRefActionList(RefSequence actSeq) {
         var lstOfList = new ArrayList<List<String>>
         var lst = new ArrayList<String>
-        for(act : refSeq.seq.stepList) {
-            lst.add(act.name)
-            addToUnusedUnicodeMap(act.name)
-            // data support: finding all related steps relating to this step WO data // experimental DB TODO check
-            var relatedSteps = getRelatedSteps(act.name)
-            for(elm : relatedSteps)
-                addToUnusedUnicodeMap(elm)
-        }
-        lstOfList.add(lst)
-        return lstOfList
-    }
-    
-    def getRefActionList(RefActSequence actSeq) {
-        var lstOfList = new ArrayList<List<String>>
-        var lst = new ArrayList<String>
-        for(act : actSeq.seq.actList) {
+        for(act : actSeq.sequence.actions) {
             lst.add(getActionLabel(act))
             addToUnusedUnicodeMap(getActionLabel(act))
             // data support: finding all related steps relating to this step WO data // experimental DB TODO check
@@ -961,7 +806,7 @@ class ConstraintsStateMachineGenerator
     def getListText(List<String> strList) {
         var str = new String
         for(var idx = 0 ; idx < strList.size; idx++) { 
-            if(idx < strList.size-1) str += strList.get(idx).replaceAll("_", " ").trim + ", " 
+            if(idx < strList.size-1) str += strList.get(idx).replaceAll("_", " ").trim + ", "
             else str += strList.get(idx).replaceAll("_", " ").trim
         }
         return str

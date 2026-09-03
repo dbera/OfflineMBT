@@ -28,6 +28,7 @@ import nl.esi.xtext.expressions.expression.ExpressionConstantInt
 import nl.esi.xtext.expressions.expression.ExpressionMinus
 import nl.esi.xtext.expressions.expression.ExpressionPlus
 import nl.esi.xtext.expressions.expression.Expression
+import nl.esi.xtext.expressions.expression.ExpressionEnumLiteral
 
 /**
  * Parser for json elements, objects, and arrays
@@ -90,6 +91,7 @@ class JsonHelper {
                 ExpressionConstantBool: expr.value.toString
                 ExpressionConstantReal: expr.value.toString
                 ExpressionConstantInt: expr.value.toString
+                ExpressionEnumLiteral:  "" // Added DB. 31.07.2026, attempted to add: expr.literal.value.toString but fails
                 ExpressionMinus: {
                     val sub = expr.sub
                     switch (sub){
