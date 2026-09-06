@@ -102,6 +102,7 @@ class Helpers {
     }
     
 //    returns guard for repeated activation tasks
+//  TODO[check replacement happens only one time, prevents with list multiple times]
     def getRefRepeatedActivationWhereClause(Ref ref) {
     if(ref instanceof RefAction) {
         val concreteWhere = getRefConcreteWhereClause(ref)

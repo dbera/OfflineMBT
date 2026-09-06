@@ -17,33 +17,48 @@ import java.util.ArrayList
 import java.util.HashSet
 import java.util.List
 import java.util.Set
-import nl.esi.comma.constraints.constraints.AlternateResponse
-import nl.esi.comma.constraints.constraints.ChainResponse
-import nl.esi.comma.constraints.constraints.Constraints
-import nl.esi.comma.constraints.constraints.Future
-import nl.esi.comma.constraints.constraints.RefAction
-import nl.esi.comma.constraints.constraints.Response
-import nl.esi.comma.constraints.constraints.Template
-import nl.esi.comma.constraints.generator.cpn.model.CPNTemplateResult
-import nl.esi.comma.constraints.generator.cpn.model.ConstraintGenerationResult
-import nl.esi.comma.constraints.generator.cpn.model.RefInfo
-import nl.esi.comma.constraints.generator.cpn.templates.FutureTemplates
-import nl.esi.comma.testspecification.testspecification.AssertionStep
-import nl.esi.comma.testspecification.testspecification.RunStep
-import nl.esi.comma.testspecification.testspecification.TSMain
-import nl.esi.comma.testspecification.testspecification.TestDefinition
-import nl.esi.xtext.actions.actions.RecordFieldAssignmentAction
-import nl.esi.xtext.expressions.expression.ExpressionVariable
-import nl.esi.xtext.types.types.TypesModel
 import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.nodemodel.util.NodeModelUtils
 import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
 
+import nl.esi.comma.constraints.constraints.Constraints
+import nl.esi.comma.constraints.constraints.Template
+import nl.esi.comma.constraints.constraints.Future
+import nl.esi.comma.constraints.constraints.Past
+import nl.esi.comma.constraints.constraints.RefAction
+
+import nl.esi.comma.constraints.constraints.Response
+import nl.esi.comma.constraints.constraints.ChainResponse
+import nl.esi.comma.constraints.constraints.AlternateResponse
+
+import nl.esi.comma.constraints.constraints.Precedence
+import nl.esi.comma.constraints.constraints.ChainPrecedence
+import nl.esi.comma.constraints.constraints.AlternatePrecedence
+
+
+import nl.esi.comma.constraints.generator.cpn.model.CPNTemplateResult
+import nl.esi.comma.constraints.generator.cpn.model.ConstraintGenerationResult
+import nl.esi.comma.constraints.generator.cpn.model.RefInfo
+
+import nl.esi.comma.constraints.generator.cpn.templates.FutureTemplates
+import nl.esi.comma.constraints.generator.cpn.templates.PastTemplates
+
+import nl.esi.comma.testspecification.testspecification.AssertionStep
+import nl.esi.comma.testspecification.testspecification.RunStep
+import nl.esi.comma.testspecification.testspecification.TSMain
+import nl.esi.comma.testspecification.testspecification.TestDefinition
+
+import nl.esi.xtext.actions.actions.RecordFieldAssignmentAction
+import nl.esi.xtext.expressions.expression.ExpressionVariable
+import nl.esi.xtext.types.types.TypesModel
+
+
 class CPNTemplateGenerator 
 {
     val FutureTemplates futureTemplates = new FutureTemplates
+    val PastTemplates pastTemplates = new PastTemplates
     val Helpers helpers = new Helpers
 
 // generates product pspec files for each constraints in the constraint file
@@ -123,6 +138,63 @@ class CPNTemplateGenerator
         '''
     }
     
+    def generateReversedTSpecModel(TestDefinition td, List<RefInfo> labelList)
+    {
+        var idx = helpers.countTraceSize(td, labelList)
+        var _idx = 0
+        val reversedSteps = td.stepSeq.flatMap[step].toList.reverseView
+        return
+        '''
+        system RootConcreteTSpec
+        {
+            outputs
+            «FOR l : labelList»
+                «l.refType» «l.refName»
+            «ENDFOR»
+
+            local
+            «FOR i : 0..idx»
+                UNIT p«i»
+            «ENDFOR»
+            
+        init
+            p0 := UNIT { unit = 0 }
+
+            desc "TSpecCPNModel"
+
+           
+            «FOR step : reversedSteps» 
+                «IF step instanceof RunStep || step instanceof AssertionStep»
+                    action «step.type.name»_«_idx»
+                    element-label "«step.type.name»"
+                    case default
+                    with-inputs p«_idx»
+                    «IF isStepNamePresent(labelList,step.stepVar.name)»
+                        produces-outputs «step.stepVar.name»
+                        updates:
+                            // Constructor
+                            «step.stepVar.name» := «Utils.defaultValue(step.stepVar.type.type, step.stepVar.name)»
+                        «FOR elm : step.refStep»
+                            «FOR act : elm.input.actions»
+                                «IF act instanceof RecordFieldAssignmentAction»
+                                    «IF act.exp.eAllContents.filter(ExpressionVariable).isEmpty»
+                                        // ReferenceExp. TODO Skip.
+                                        «NodeModelUtils.getNode(act).text.replaceAll("(?m)^\\s*$\\R?", "")»
+                                    «ENDIF»
+                                «ENDIF»
+«««                                    «NodeModelUtils.getNode(act).text.replaceAll("(?m)^\\s*$\\R?", "")»
+                            «ENDFOR»
+                        «ENDFOR»
+                    «ELSE»
+                        produces-outputs any
+                    «ENDIF»
+                    produces-outputs p«_idx+1»
+                    «{_idx++ ""}»
+                «ENDIF»
+            «ENDFOR»
+        }
+        '''
+    }
 
     def generateConstraintPS(Constraints model, Template currentConstraint, TestDefinition td, IFileSystemAccess2 fsa) 
     {
@@ -159,8 +231,16 @@ class CPNTemplateGenerator
         // generate types file that will be imported into the generated ps file
         fsa.generateFile(constraintFolder + fileName + ".types", typesText)
         
-        // state computing ps system model based on concrete tspec
-        var tspecModel = generateTSpecModel(td, computeLabelSet(currentConstraint))
+        // state computing ps system model based on concrete tspec and the type of constraint
+        val isPastConstraint = currentConstraint.type.exists[it instanceof Past]
+
+        var tspecModel =
+            if (isPastConstraint) {
+                generateReversedTSpecModel(td, computeLabelSet(currentConstraint))
+            } else {
+                generateTSpecModel(td, computeLabelSet(currentConstraint))
+            }
+//        var tspecModel = generateTSpecModel(td, computeLabelSet(currentConstraint))
         var CPNTemplateResult templateResult= null
 
         // start computing ps system model based on declare constraints
@@ -208,6 +288,54 @@ class CPNTemplateGenerator
                             templateType.refB.head,
                             helpers.getRefName(templateType.refB.head),
                             helpers.getRefInputTypeAndVar(templateType.refB.head),
+                            templateType.refC.head,
+                            helpers.getRefName(templateType.refC.head),
+                            helpers.getRefInputTypeAndVar(templateType.refC.head)
+                        )
+                    }
+                    
+                    specBody = templateResult.getPsBody()
+                    acceptanceJson = templateResult.getAcceptanceJson()
+                    
+                  }
+                  
+             }
+            else if(templateGroup instanceof Past) {
+                for(templateType : templateGroup.type) {
+                    if(templateType instanceof Precedence) {
+                        templateResult = pastTemplates.generatePrecedenceTemplate(
+                            currentConstraint.name,
+                            currentConstraint.variables.head,
+                            templateType.refB.head,
+                            helpers.getRefInputTypeAndVar(templateType.refB.head),
+                            helpers.getRefName(templateType.refB.head),
+                            templateType.refA.head,
+                            helpers.getRefName(templateType.refA.head),
+                            helpers.getRefInputTypeAndVar(templateType.refA.head)
+                        )
+                    }
+                    else if(templateType instanceof ChainPrecedence) {
+                        templateResult = pastTemplates.generateChainPrecedenceTemplate(
+                            currentConstraint.name,
+                            currentConstraint.variables.head,
+                            templateType.refB.head,
+                            helpers.getRefInputTypeAndVar(templateType.refB.head),
+                            helpers.getRefName(templateType.refB.head),
+                            templateType.refA.head,
+                            helpers.getRefName(templateType.refA.head),
+                            helpers.getRefInputTypeAndVar(templateType.refA.head)
+                        )
+                    }
+                    else if(templateType instanceof AlternatePrecedence) {
+                        templateResult = pastTemplates.generateAlternatePrecedenceTemplate(
+                            currentConstraint.name,
+                            currentConstraint.variables.head,
+                            templateType.refB.head,
+                            helpers.getRefInputTypeAndVar(templateType.refB.head),
+                            helpers.getRefName(templateType.refB.head),
+                            templateType.refA.head,
+                            helpers.getRefName(templateType.refA.head),
+                            helpers.getRefInputTypeAndVar(templateType.refA.head),
                             templateType.refC.head,
                             helpers.getRefName(templateType.refC.head),
                             helpers.getRefInputTypeAndVar(templateType.refC.head)
