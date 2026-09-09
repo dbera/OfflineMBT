@@ -72,7 +72,7 @@ import nl.esi.xtext.types.types.VectorTypeConstructor;
 import nl.esi.xtext.types.types.VectorTypeDecl;
 import nl.esi.xtext.types.utilities.TypeUtilities;
 
-class SnakesHelper {
+public class SnakesHelper {
 	static String defaultValue(Type type, String targetName) {
 		// TypeReference | VectorTypeConstructor | MapTypeConstructor
 		if (type instanceof VectorTypeConstructor) {
@@ -229,11 +229,11 @@ class SnakesHelper {
 				return String.format("{_k: _v for _k, _v in %s.items() if _k != %s}", map, key);
 			} else if (fnName.equals("range")) {
 			    if (e.getArgs().size() == 1) {
-			        return String.format("list(range(%s))", expression(e.getArgs().get(0), variableRename));
+			        return String.format("list(range(int(%s)))", expression(e.getArgs().get(0), variableRename));
 			    } else if (e.getArgs().size() == 2) {
-			        return String.format("list(range(%s, %s))", expression(e.getArgs().get(0), variableRename), expression(e.getArgs().get(1), variableRename));
+			        return String.format("list(range(int(%s), int(%s)))", expression(e.getArgs().get(0), variableRename), expression(e.getArgs().get(1), variableRename));
 			    } else if (e.getArgs().size() == 3) {
-			        return String.format("list(range(%s, %s, %s))", expression(e.getArgs().get(0), variableRename), expression(e.getArgs().get(1), variableRename), expression(e.getArgs().get(2), variableRename));
+			        return String.format("list(range(int(%s), int(%s), int(%s)))", expression(e.getArgs().get(0), variableRename), expression(e.getArgs().get(1), variableRename), expression(e.getArgs().get(2), variableRename));
 			    }
 			} else if (fnName.equals("toString")) {
 			    return String.format("str(%s)", expression(e.getArgs().get(0), variableRename));
@@ -273,7 +273,7 @@ class SnakesHelper {
 		throw new RuntimeException("Not supported");
 	}
 	
-	static String action(Action action) {
+	public static String action(Action action) {
 		return action(action, Function.identity());
 	}
 
