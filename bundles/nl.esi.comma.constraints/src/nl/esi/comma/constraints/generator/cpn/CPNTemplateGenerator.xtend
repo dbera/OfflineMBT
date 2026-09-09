@@ -14,6 +14,7 @@
 package nl.esi.comma.constraints.generator.cpn
 
 import java.util.ArrayList
+
 import java.util.HashSet
 import java.util.List
 import java.util.Set
@@ -37,6 +38,12 @@ import nl.esi.comma.constraints.constraints.Precedence
 import nl.esi.comma.constraints.constraints.ChainPrecedence
 import nl.esi.comma.constraints.constraints.AlternatePrecedence
 
+import nl.esi.comma.constraints.constraints.Existential
+import nl.esi.comma.constraints.constraints.AtLeast
+import nl.esi.comma.constraints.constraints.AtMost
+import nl.esi.comma.constraints.constraints.Exact
+import nl.esi.comma.constraints.constraints.Init
+import nl.esi.comma.constraints.constraints.End
 
 import nl.esi.comma.constraints.generator.cpn.model.CPNTemplateResult
 import nl.esi.comma.constraints.generator.cpn.model.ConstraintGenerationResult
@@ -44,6 +51,7 @@ import nl.esi.comma.constraints.generator.cpn.model.RefInfo
 
 import nl.esi.comma.constraints.generator.cpn.templates.FutureTemplates
 import nl.esi.comma.constraints.generator.cpn.templates.PastTemplates
+import nl.esi.comma.constraints.generator.cpn.templates.ExistentialTemplates
 
 import nl.esi.comma.testspecification.testspecification.AssertionStep
 import nl.esi.comma.testspecification.testspecification.RunStep
@@ -59,6 +67,7 @@ class CPNTemplateGenerator
 {
     val FutureTemplates futureTemplates = new FutureTemplates
     val PastTemplates pastTemplates = new PastTemplates
+    val ExistentialTemplates existentialTemplates = new ExistentialTemplates
     val Helpers helpers = new Helpers
 
 // generates product pspec files for each constraints in the constraint file
@@ -195,6 +204,139 @@ class CPNTemplateGenerator
         }
         '''
     }
+    
+    def generateFirstEventTSpecModel(TestDefinition td, List<RefInfo> labelList, boolean reversed) 
+    {
+        val steps = td.stepSeq.flatMap[step].filter[step |
+                step instanceof RunStep ||
+                step instanceof AssertionStep
+            ].toList
+    
+        val boundaryStep =
+            if (steps.empty) {
+                null
+            } else if (reversed) {
+                steps.last
+            } else {
+                steps.head
+            }
+    
+        return
+        '''
+        system RootConcreteTSpec
+        {
+            outputs
+            «FOR label : labelList»
+                «label.refType» «label.refName»
+            «ENDFOR»
+    
+            local
+            UNIT p0
+            UNIT p1
+    
+            init
+            p0 := UNIT { unit = 0 }
+    
+            desc "TSpecCPNModel"
+    
+            «IF boundaryStep !== null»
+                action «boundaryStep.type.name»_0
+                element-label "«boundaryStep.type.name»"
+                case default
+                with-inputs p0
+                
+                «IF isStepNamePresent(labelList, boundaryStep.stepVar.name)»
+                    produces-outputs «boundaryStep.stepVar.name»
+                    updates:
+                        «boundaryStep.stepVar.name» :=
+                            «Utils.defaultValue(
+                                boundaryStep.stepVar.type.type,
+                                boundaryStep.stepVar.name
+                            )»
+                    «FOR element : boundaryStep.refStep»
+                        «FOR action : element.input.actions»
+                            «IF action instanceof RecordFieldAssignmentAction»
+                                «IF action.exp.eAllContents
+                                    .filter(ExpressionVariable).isEmpty»
+                                    «NodeModelUtils.getNode(action).text
+                                        .replaceAll("(?m)^\\s*$\\R?", "")»
+                                «ENDIF»
+                            «ENDIF»
+                        «ENDFOR»
+                    «ENDFOR»
+                «ELSE»
+                    produces-outputs any
+                «ENDIF»
+                
+                produces-outputs p1
+            «ENDIF»
+        }
+        '''
+    }
+    
+    def generateCountingTSpecModel(TestDefinition td, List<RefInfo> labelList)
+    {
+        var idx = helpers.countTraceSize(td, labelList)
+        var _idx = 0
+    
+        return
+        '''
+        system RootConcreteTSpec
+                {
+                    outputs
+                    «FOR l : labelList»
+                        «l.refType» «l.refName»
+                    «ENDFOR»
+                    EOT endoftrace
+        
+                    local
+                    «FOR i : 0..idx»
+                        UNIT p«i»
+                    «ENDFOR»
+                    
+                init
+                    p0 := UNIT { unit = 0 }
+        
+                    desc "TSpecCPNModel"
+        
+                   
+                    «FOR ss : td.stepSeq»
+                        «FOR step : ss.step» 
+                            «IF step instanceof RunStep || step instanceof AssertionStep»
+                                action «step.type.name»_«_idx»
+                                element-label "«step.type.name»"
+                                case default
+                                with-inputs p«_idx»
+                                «IF isStepNamePresent(labelList,step.stepVar.name)»
+                                    produces-outputs «step.stepVar.name»
+                                    updates:
+                                        «step.stepVar.name» := «Utils.defaultValue(step.stepVar.type.type, step.stepVar.name)»
+                                    «FOR elm : step.refStep»
+                                        «FOR act : elm.input.actions»
+                                            «IF act instanceof RecordFieldAssignmentAction»
+                                                «IF act.exp.eAllContents.filter(ExpressionVariable).isEmpty»
+                                                    // ReferenceExp. TODO Skip.
+                                                    «NodeModelUtils.getNode(act).text.replaceAll("(?m)^\\s*$\\R?", "")»
+                                                «ENDIF»
+                                            «ENDIF»
+        «««                                    «NodeModelUtils.getNode(act).text.replaceAll("(?m)^\\s*$\\R?", "")»
+                                        «ENDFOR»
+                                    «ENDFOR»
+                                «ELSE»
+                                    produces-outputs any
+                                «ENDIF»
+                                
+                                «IF _idx == idx - 1»
+                                    produces-outputs endoftrace
+                                «ENDIF»
+                                produces-outputs p«_idx+1»
+                                «{_idx++ ""}»
+                            «ENDIF»
+                        «ENDFOR»
+                    «ENDFOR»
+                }
+        '''
+    }
 
     def generateConstraintPS(Constraints model, Template currentConstraint, TestDefinition td, IFileSystemAccess2 fsa) 
     {
@@ -208,6 +350,14 @@ class CPNTemplateGenerator
         '''
         record ANY {
             int any
+        }
+        
+        record EOT {
+            int eot
+        }
+        
+        record Counter {
+            int count
         }
         '''
         var specBody = ''''''
@@ -231,13 +381,27 @@ class CPNTemplateGenerator
         // generate types file that will be imported into the generated ps file
         fsa.generateFile(constraintFolder + fileName + ".types", typesText)
         
+       
         // state computing ps system model based on concrete tspec and the type of constraint
         val isPastConstraint = currentConstraint.type.exists[it instanceof Past]
-
+        val isInitConstraint = currentConstraint.type.filter(Existential).exists[existential |
+            existential.type.exists[it instanceof Init]]
+        val isEndConstraint = currentConstraint.type.filter(Existential).exists[existential |
+            existential.type.exists[it instanceof End]]
+        val isCountingConstraint = currentConstraint.type.filter(Existential).exists[existential |
+            existential.type.exists[it instanceof AtLeast || it instanceof AtMost || it instanceof Exact]]
+        
+                
         var tspecModel =
             if (isPastConstraint) {
                 generateReversedTSpecModel(td, computeLabelSet(currentConstraint))
-            } else {
+            } else if (isCountingConstraint) {
+                generateCountingTSpecModel(td, computeLabelSet(currentConstraint)) 
+            } else if (isInitConstraint) {
+                generateFirstEventTSpecModel(td, computeLabelSet(currentConstraint), false)
+            } else if (isEndConstraint) {
+                generateFirstEventTSpecModel(td, computeLabelSet(currentConstraint), true)
+            }else {
                 generateTSpecModel(td, computeLabelSet(currentConstraint))
             }
 //        var tspecModel = generateTSpecModel(td, computeLabelSet(currentConstraint))
@@ -340,6 +504,59 @@ class CPNTemplateGenerator
                             helpers.getRefName(templateType.refC.head),
                             helpers.getRefInputTypeAndVar(templateType.refC.head)
                         )
+                    }
+                    specBody = templateResult.getPsBody()
+                    acceptanceJson = templateResult.getAcceptanceJson()
+                }
+                
+                }
+                else if(templateGroup instanceof Existential) {
+                for(templateType : templateGroup.type) {
+                    if(templateType instanceof AtLeast) {
+                        templateResult = existentialTemplates.generateCountTemplate(
+                            currentConstraint.name,
+                            templateType.ref.head,
+                            helpers.getRefInputTypeAndVar(templateType.ref.head),
+                            helpers.getRefName(templateType.ref.head),
+                            ">=",
+                            templateType.num,
+                            "ATLEAST")
+                    }
+                    else if(templateType instanceof AtMost) {
+                        templateResult = existentialTemplates.generateCountTemplate(
+                            currentConstraint.name,
+                            templateType.ref.head,
+                            helpers.getRefInputTypeAndVar(templateType.ref.head),
+                            helpers.getRefName(templateType.ref.head),
+                            "<=",
+                            templateType.num,
+                            "ATMOST")
+                    }
+                    else if(templateType instanceof Exact) {
+                        templateResult = existentialTemplates.generateCountTemplate(
+                            currentConstraint.name,
+                            templateType.ref.head,
+                            helpers.getRefInputTypeAndVar(templateType.ref.head),
+                            helpers.getRefName(templateType.ref.head),
+                            "==",
+                            templateType.num,
+                            "EXACT")
+                    }
+                    else if(templateType instanceof Init) {
+                        templateResult = existentialTemplates.generateFirstEventTemplate(
+                            currentConstraint.name,
+                            templateType.ref.head,
+                            helpers.getRefInputTypeAndVar(templateType.ref.head),
+                            helpers.getRefName(templateType.ref.head),
+                            "INIT")
+                    }
+                    else if(templateType instanceof End) {
+                        templateResult = existentialTemplates.generateFirstEventTemplate(
+                            currentConstraint.name,
+                            templateType.ref.head,
+                            helpers.getRefInputTypeAndVar(templateType.ref.head),
+                            helpers.getRefName(templateType.ref.head),
+                            "END")
                     }
                     specBody = templateResult.getPsBody()
                     acceptanceJson = templateResult.getAcceptanceJson()
