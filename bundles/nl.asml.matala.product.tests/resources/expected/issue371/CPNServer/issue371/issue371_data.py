@@ -44,7 +44,7 @@ class Data:
     	    __source_file = "issue371.ps"
     	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	try:
-    	    for i in list(range(int(2))):
+    	    for i in list(range(2)):
     	    	pass
     	except Exception as e:
     	    __location = Location(32,34,631,67,"for int i in range(2) do // Empty end-for")

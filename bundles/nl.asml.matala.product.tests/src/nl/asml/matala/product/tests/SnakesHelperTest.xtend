@@ -34,7 +34,7 @@ class SnakesHelperTest {
     ParseHelper<ModelContainer> parseHelper
 
     @Test
-    def void loadRangeGeneration() {
+    def void testRangeGeneration() {
         val result = parseHelper.parse('''
             specification Spec {
                 system Sys {
@@ -59,13 +59,49 @@ class SnakesHelperTest {
         Assertions.assertEquals(3, actions.size)
         val snippets = actions.map[SnakesHelper.action(it)]
         val expected = List.of(
-            "r = list(range(int(0), int(10)))", 
-            "r = list(range(int(0), int(10 / 2), int(2)))", 
-            "r = list(range(int(10)))"
+            "r = list(range(0, 10))", 
+            "r = list(range(0, 10 // 2, 2))", 
+            "r = list(range(10))"
         )
         for(var i=0; i < snippets.size; i++){
             Assertions.assertEquals(expected.get(i), snippets.get(i))
         }
         println(snippets)
     }
+
+    @Test
+    def void testDivision() {
+        val result = parseHelper.parse('''
+            specification Spec {
+                system Sys {
+                    desc "Test system"
+                    inputs 
+                    int i
+                    real r 
+                    
+                    init
+                    i := 10 / 2
+                    r := 10.0 / 2
+                }
+                depth-limits 300
+            }
+        ''') 
+        
+        Assertions.assertNotNull(result)
+        val errors = result.eResource.errors
+        Assertions.assertTrue(errors.isEmpty, '''Unexpected errors: «errors.join(", ")»''')
+        val product = result as Product
+        val actions = product.specification.blocks.get(0).block.initActions
+        Assertions.assertEquals(2, actions.size)
+        val snippets = actions.map[SnakesHelper.action(it)]
+        val expected = List.of(
+            "i = 10 // 2", 
+            "r = 10.0 / 2" 
+        )
+        for(var i=0; i < snippets.size; i++){
+            Assertions.assertEquals(expected.get(i), snippets.get(i))
+        }
+        println(snippets)
+    }
+
 }

@@ -60,6 +60,7 @@ import nl.esi.xtext.expressions.expression.ExpressionSubtraction;
 import nl.esi.xtext.expressions.expression.ExpressionVariable;
 import nl.esi.xtext.expressions.expression.ExpressionVector;
 import nl.esi.xtext.expressions.utilities.ExpressionsUtilities;
+import nl.esi.xtext.types.BasicTypes;
 import nl.esi.xtext.types.types.EnumTypeDecl;
 import nl.esi.xtext.types.types.MapTypeConstructor;
 import nl.esi.xtext.types.types.MapTypeDecl;
@@ -140,6 +141,9 @@ public class SnakesHelper {
 		} else if (expression instanceof ExpressionMultiply e) {
 			return String.format("%s * %s", expression(e.getLeft(), variableRename), expression(e.getRight(), variableRename));
 		} else if (expression instanceof ExpressionDivision e) {
+			if (TypeUtilities.subTypeOf(ExpressionsUtilities.typeOf(e), BasicTypes.getIntType())) {
+				return String.format("%s // %s", expression(e.getLeft(), variableRename), expression(e.getRight(), variableRename));
+			}	
 			return String.format("%s / %s", expression(e.getLeft(), variableRename), expression(e.getRight(), variableRename));
 		} else if (expression instanceof ExpressionModulo e) {
 			return String.format("%s %% %s", expression(e.getLeft(), variableRename), expression(e.getRight(), variableRename));
@@ -229,11 +233,11 @@ public class SnakesHelper {
 				return String.format("{_k: _v for _k, _v in %s.items() if _k != %s}", map, key);
 			} else if (fnName.equals("range")) {
 			    if (e.getArgs().size() == 1) {
-			        return String.format("list(range(int(%s)))", expression(e.getArgs().get(0), variableRename));
+			        return String.format("list(range(%s))", expression(e.getArgs().get(0), variableRename));
 			    } else if (e.getArgs().size() == 2) {
-			        return String.format("list(range(int(%s), int(%s)))", expression(e.getArgs().get(0), variableRename), expression(e.getArgs().get(1), variableRename));
+			        return String.format("list(range(%s, %s))", expression(e.getArgs().get(0), variableRename), expression(e.getArgs().get(1), variableRename));
 			    } else if (e.getArgs().size() == 3) {
-			        return String.format("list(range(int(%s), int(%s), int(%s)))", expression(e.getArgs().get(0), variableRename), expression(e.getArgs().get(1), variableRename), expression(e.getArgs().get(2), variableRename));
+			        return String.format("list(range(%s, %s, %s))", expression(e.getArgs().get(0), variableRename), expression(e.getArgs().get(1), variableRename), expression(e.getArgs().get(2), variableRename));
 			    }
 			} else if (fnName.equals("toString")) {
 			    return String.format("str(%s)", expression(e.getArgs().get(0), variableRename));
