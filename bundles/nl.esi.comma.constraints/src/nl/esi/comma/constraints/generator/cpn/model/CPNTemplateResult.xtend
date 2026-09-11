@@ -16,10 +16,12 @@ package nl.esi.comma.constraints.generator.cpn.model
 class CPNTemplateResult {
     val String psBody
     val String acceptanceJson
+    val String diagnostics
     
-    new(String psBody, String acceptanceJson) {
+    new(String psBody, String acceptanceJson, String diagnostics) {
         this.psBody = psBody
         this.acceptanceJson = acceptanceJson
+        this.diagnostics = diagnostics
     }
     
     def String getPsBody() {
@@ -29,4 +31,8 @@ class CPNTemplateResult {
     def String getAcceptanceJson() {
         return acceptanceJson
     } 
+    
+    def String getDiagnostics() {
+        return diagnostics
+    }
 }

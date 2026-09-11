@@ -31,9 +31,15 @@ class PastTemplates {
         activationEventInst, activationEventInfo, activationEvent,
         targetEventInst, targetEvent, targetEventInfo )
         
+        val diagnostics=
+        '''
+        return []
+        '''
+        
         return new CPNTemplateResult(
             result.psBody,
-            result.acceptanceJson.replace('"templateType": "Response"', '"templateType": "Precedence"')
+            result.acceptanceJson.replace('"templateType": "Response"', '"templateType": "Precedence"'),
+            diagnostics
         )
     }
     
@@ -47,9 +53,15 @@ class PastTemplates {
         activationEventInst, activationEventInfo, activationEvent,
         targetEventInst, targetEvent, targetEventInfo )
         
+        val diagnostics=
+        '''
+        return []
+        '''
+        
         return new CPNTemplateResult(
             result.psBody,
-            result.acceptanceJson.replace('"templateType": "ChainResponse"', '"templateType": "ChainPrecedence"')
+            result.acceptanceJson.replace('"templateType": "ChainResponse"', '"templateType": "ChainPrecedence"'),
+            diagnostics
         )
     }
     
@@ -65,9 +77,15 @@ class PastTemplates {
         targetEventInst, targetEvent, targetEventInfo,
         intermediateEventInst, intermediateEvent, intermediateEventInfo )
         
+        val diagnostics=
+        '''
+        return []
+        '''
+        
         return new CPNTemplateResult(
             result.psBody,
-            result.acceptanceJson.replace('"templateType": "AlternateResponse"', '"templateType": "AlternatePrecedence"')
+            result.acceptanceJson.replace('"templateType": "AlternateResponse"', '"templateType": "AlternatePrecedence"'),
+            diagnostics
         )
     }
 }

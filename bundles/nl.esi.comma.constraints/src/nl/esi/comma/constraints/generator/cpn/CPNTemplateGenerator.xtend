@@ -591,7 +591,8 @@ class CPNTemplateGenerator
             constraintFolder + acceptancePythonFileName,
             generateAcceptancePythonClass(
                 generatedSpecName,
-                currentConstraint.name
+                currentConstraint.name,
+                templateResult.getDiagnostics()
             )
         )
 
@@ -605,7 +606,7 @@ class CPNTemplateGenerator
     }
     
 //    Generates a python class with the acceptance logic
-    def String generateAcceptancePythonClass(String generatedSpecName, String constraintName) {
+    def String generateAcceptancePythonClass(String generatedSpecName, String constraintName, String diagnostics) {
         return
         '''
         import json
@@ -616,6 +617,10 @@ class CPNTemplateGenerator
                 self.acceptance_cond = acceptance_cond
                 self.constraint_name = "«constraintName»"
                 self.pspec_name = "«generatedSpecName»"
+                
+            # pass the diagnostics logic for each template
+            def generate_diagnostics(self, reachability_graph, checked_nodes, violations):
+                «diagnostics»
         
             # evaluates the acceptance condition on the reachability graph
             def evaluate(self, reachability_graph):
@@ -663,7 +668,8 @@ class CPNTemplateGenerator
                     "accepted": len(violations) == 0,
                     "scope": scope,
                     "checkedNodeIds": [node.get("id") for node in checked_nodes],
-                    "violations": violations
+                    "violations": violations,
+                    "diagnostics": self.generate_diagnostics(reachability_graph, checked_nodes, violations)
                 }
         
             def _select_nodes(self, reachability_graph, scope):

@@ -142,8 +142,40 @@ class FutureTemplates {
           }
         }
         '''
+                
+        val diagnostics =
+        '''
+        diagnostics = []
+        place = "«correlationVar.name»"
+
+        failed_node_ids = {
+            violation["nodeId"]
+            for violation in violations
+            if any(
+                condition["kind"] == "emptyPlaces"
+                and condition["group"] == [place]
+                for condition in violation["violations"]
+            )
+        }
+
+        for node in checked_nodes:
+            if node["id"] not in failed_node_ids:
+                continue
+
+            marking = node.get("marking", {})
+            for token in marking.get(place, []):
+                diagnostics.append({
+                    "kind": "unfulfilledResponse",
+                    "nodeId": node["id"],
+                    "place": place,
+                    "token": token
+                })
+
+        return diagnostics
+        '''
+
+        return new CPNTemplateResult (psBody, acceptanceJson, diagnostics)
 		
-		return new CPNTemplateResult (psBody, acceptanceJson)
     }
     
     
@@ -296,7 +328,11 @@ class FutureTemplates {
                   }
                 }
         '''
-        return new CPNTemplateResult (psBody, acceptanceJson)
+        val diagnostics=
+        '''
+        return []
+        '''
+        return new CPNTemplateResult (psBody, acceptanceJson, diagnostics)
     }
 
     def generateAlternateResponseTemplate(
@@ -449,7 +485,12 @@ class FutureTemplates {
                           }
                         }
         '''
-        return new CPNTemplateResult (psBody, acceptanceJson)
+        
+        val diagnostics=
+        '''
+        return []
+        '''
+        return new CPNTemplateResult (psBody, acceptanceJson, diagnostics)
         
     }
 

@@ -102,7 +102,12 @@ class ExistentialTemplates {
         }
         '''
         
-        return new CPNTemplateResult (psBody, acceptanceJson)
+        val diagnostics=
+        '''
+        return []
+        '''
+        
+        return new CPNTemplateResult (psBody, acceptanceJson, diagnostics)
     }
     
     def generateFirstEventTemplate(
@@ -159,8 +164,13 @@ class ExistentialTemplates {
               }
             }
             '''
-        
-            return new CPNTemplateResult(psBody, acceptanceJson)
+            
+            val diagnostics=
+            '''
+            return []
+            '''
+            
+            return new CPNTemplateResult(psBody, acceptanceJson, diagnostics)
         }
     
 }
