@@ -60,6 +60,7 @@ import nl.esi.xtext.expressions.expression.ExpressionSubtraction;
 import nl.esi.xtext.expressions.expression.ExpressionVariable;
 import nl.esi.xtext.expressions.expression.ExpressionVector;
 import nl.esi.xtext.expressions.utilities.ExpressionsUtilities;
+import nl.esi.xtext.types.BasicTypes;
 import nl.esi.xtext.types.types.EnumTypeDecl;
 import nl.esi.xtext.types.types.MapTypeConstructor;
 import nl.esi.xtext.types.types.MapTypeDecl;
@@ -72,7 +73,7 @@ import nl.esi.xtext.types.types.VectorTypeConstructor;
 import nl.esi.xtext.types.types.VectorTypeDecl;
 import nl.esi.xtext.types.utilities.TypeUtilities;
 
-class SnakesHelper {
+public class SnakesHelper {
 	static String defaultValue(Type type, String targetName) {
 		// TypeReference | VectorTypeConstructor | MapTypeConstructor
 		if (type instanceof VectorTypeConstructor) {
@@ -140,6 +141,9 @@ class SnakesHelper {
 		} else if (expression instanceof ExpressionMultiply e) {
 			return String.format("%s * %s", expression(e.getLeft(), variableRename), expression(e.getRight(), variableRename));
 		} else if (expression instanceof ExpressionDivision e) {
+			if (TypeUtilities.subTypeOf(ExpressionsUtilities.typeOf(e), BasicTypes.getIntType())) {
+				return String.format("%s // %s", expression(e.getLeft(), variableRename), expression(e.getRight(), variableRename));
+			}	
 			return String.format("%s / %s", expression(e.getLeft(), variableRename), expression(e.getRight(), variableRename));
 		} else if (expression instanceof ExpressionModulo e) {
 			return String.format("%s %% %s", expression(e.getLeft(), variableRename), expression(e.getRight(), variableRename));
@@ -195,8 +199,16 @@ class SnakesHelper {
 				return String.format("%s in %s", expression(e.getArgs().get(1), variableRename), expression(e.getArgs().get(0), variableRename));
 			} else if (fnName.equals("abs")) {
 				return String.format("abs(%s)", expression(e.getArgs().get(0), variableRename));
+			} else if (fnName.equals("floor")) {
+				return String.format("floor(%s)", expression(e.getArgs().get(0), variableRename));
+			} else if (fnName.equals("ceil")) {
+				return String.format("ceil(%s)", expression(e.getArgs().get(0), variableRename));
+			} else if (fnName.equals("round")) {
+				return String.format("round(%s, %s)", expression(e.getArgs().get(0), variableRename), expression(e.getArgs().get(1), variableRename));
 			} else if (fnName.equals("asReal")) {
 				return String.format("float(%s)", expression(e.getArgs().get(0), variableRename));
+			} else if (fnName.equals("asInt")) {
+				return String.format("int(%s)", expression(e.getArgs().get(0), variableRename));
 			} else if (fnName.equals("hasKey")) {
 				String map = expression(e.getArgs().get(0), variableRename);
 				String key = expression(e.getArgs().get(1), variableRename);
@@ -265,7 +277,7 @@ class SnakesHelper {
 		throw new RuntimeException("Not supported");
 	}
 	
-	static String action(Action action) {
+	public static String action(Action action) {
 		return action(action, Function.identity());
 	}
 

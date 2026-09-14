@@ -5,7 +5,7 @@ Bundle-SymbolicName: nl.asml.matala.server
 Bundle-Vendor: TNO_ESI
 Bundle-Version: 4.2.0.qualifier
 Require-Bundle: nl.esi.xtext.lsp.server,
- nl.asml.matala.product.ide,
+ nl.asml.matala.product,
  slf4j.reload4j,
  com.google.gson,
  wrapped.io.vertx.vertx-core,
@@ -18,11 +18,16 @@ Require-Bundle: nl.esi.xtext.lsp.server,
  io.netty.resolver,
  io.netty.codec-http2,
  io.netty.codec-http,
- io.netty.codec
+ io.netty.codec,
+ com.google.guava,
+ org.eclipse.xtext.xbase.lib,
+ org.eclipse.xtend.lib,
+ org.eclipse.xtend.lib.macro
 Automatic-Module-Name: nl.asml.matala.server
 Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: nl.asml.matala.server,
  nl.asml.matala.server.api,
  nl.asml.matala.server.impl,
- nl.asml.matala.server.rest
+ nl.asml.matala.server.rest,
+ nl.asml.matala.server.types.outline
 Import-Package: org.slf4j
