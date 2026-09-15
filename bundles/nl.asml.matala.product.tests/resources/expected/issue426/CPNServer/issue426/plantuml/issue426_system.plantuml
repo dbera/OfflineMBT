@@ -1,0 +1,8 @@
+@startuml
+node "Issue426" {
+    [Issue426_D_default@TheRun@RUN@]
+    [Issue426_C_default@null@COMPOSE@]
+    [Issue426_A_default@null@INTERNAL@]
+    [Issue426_B_default@null@INTERNAL@]
+}
+@enduml

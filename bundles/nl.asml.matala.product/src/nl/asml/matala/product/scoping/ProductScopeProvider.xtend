@@ -16,18 +16,20 @@
 package nl.asml.matala.product.scoping;
 
 import nl.asml.matala.product.product.Block
-import nl.asml.matala.product.product.RefConstraint
+import nl.asml.matala.product.product.ProductPackage
 import nl.asml.matala.product.product.Update
 import nl.asml.matala.product.product.UpdateOutVar
 import nl.esi.xtext.actions.actions.ActionsPackage
+import nl.esi.xtext.actions.actions.ForAction
 import nl.esi.xtext.expressions.expression.ExpressionPackage
-import nl.esi.xtext.expressions.expression.Variable
 import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.EReference
-import org.eclipse.xtext.EcoreUtil2
+import org.eclipse.emf.ecore.EStructuralFeature
 import org.eclipse.xtext.scoping.IScope
-import org.eclipse.xtext.scoping.Scopes
-import nl.asml.matala.product.product.VarRef
+
+import static org.eclipse.xtext.scoping.Scopes.scopeFor
+
+import static extension org.eclipse.xtext.EcoreUtil2.*
 
 /**
  * This class contains custom scoping description.
@@ -37,28 +39,92 @@ import nl.asml.matala.product.product.VarRef
  * on how and when to use it.
  */
 class ProductScopeProvider extends AbstractProductScopeProvider {
+
     override getScope(EObject context, EReference reference) {
         logScope('Enter', context, reference)
 
-        return switch (context) {
+        switch (context) {
             Update case reference.isTypeDeclReference: {
-                IScope.NULLSCOPE
+                return IScope.NULLSCOPE
             }
-            UpdateOutVar case reference == ActionsPackage.Literals.ASSIGNMENT_ACTION__ASSIGNMENT,
-            UpdateOutVar case reference == ExpressionPackage.Literals.EXPRESSION_VARIABLE__VARIABLE: {
-                Scopes.scopeFor(context.fnOut.map[ref])
+            Block case reference == ProductPackage.Literals.BLOCK__SUTVARS: {
+                return scopeFor(context.localvars + context.invars + context.outvars)
             }
-            RefConstraint case reference == ActionsPackage.Literals.ASSIGNMENT_ACTION__ASSIGNMENT,
-            RefConstraint case reference == ExpressionPackage.Literals.EXPRESSION_VARIABLE__VARIABLE: {
-                Scopes.scopeFor(#[EcoreUtil2.getContainerOfType(context, VarRef).ref])
+            Update case reference == ProductPackage.Literals.VAR_REF__REF: {
+                val block = context.getContainerOfType(Block)
+                return scopeFor(block.localvars + block.invars)
+            }
+            UpdateOutVar case reference == ProductPackage.Literals.VAR_REF__REF: {
+                val block = context.getContainerOfType(Block)
+                return scopeFor(block.localvars + block.outvars)
+            }
+            case reference == ProductPackage.Literals.VAR_REF__REF: {
+                return context.eContainer.getScope(reference)
             }
             case reference.EType == ExpressionPackage.Literals.VARIABLE: {
-                val scope = EcoreUtil2.getContainerOfType(context, Block)
-                scope === null ? IScope.NULLSCOPE : Scopes.scopeFor(EcoreUtil2.getAllContentsOfType(scope, Variable))
-            }
-            default: {
-                super.getScope(context, reference)
+                return context.isAssignmentLHS(reference) ? context.variableScopeLHS : context.variableScopeRHS
             }
         }
+        return super.getScope(context, reference)
+    }
+
+    protected def boolean isAssignmentLHS(EObject context, EStructuralFeature feature) {
+        if (context === null || feature === null) {
+            return false
+        }
+        logScope('isAssignmentLHS', context, feature)
+
+        return switch (context) {
+            case feature == ProductPackage.Literals.UPDATE_OUT_VAR__SUPPRESS,
+            case feature == ActionsPackage.Literals.ASSIGNMENT_ACTION__ASSIGNMENT,
+            case feature == ActionsPackage.Literals.RECORD_FIELD_ASSIGNMENT_ACTION__FIELD_ACCESS: true
+            default: context.eContainer.isAssignmentLHS(context.eContainingFeature)
+        };
+    }
+
+    protected def IScope getVariableScopeLHS(EObject context) {
+        if (context === null) {
+            return IScope.NULLSCOPE
+        }
+        logScope('VariableScopeLHS', context, null)
+
+        switch (context) {
+            Block: {
+                return scopeFor(context.localvars + context.invars)
+            }
+            UpdateOutVar: {
+                val update = context.getContainerOfType(Update)
+                // NOTE: The inputs are not relevant, but we can't prevent them from showing up
+                // due to how expressions are defined. For that reason, we'll just resolve them
+                // with low prio and add a validation that tests if the LHS is an output variable.
+                return scopeFor(context.fnOut.map[ref] + update.fnInp.map[ref])
+            }
+        }
+        return context.eContainer.variableScopeLHS
+    }
+
+    protected def IScope getVariableScopeRHS(EObject context) {
+        if (context === null) {
+            return IScope.NULLSCOPE
+        }
+        logScope('VariableScopeRHS', context, null)
+
+        switch (context) {
+            Block: {
+                return IScope.NULLSCOPE
+            }
+            Update: {
+                return scopeFor(context.fnInp.map[ref])
+            }
+            UpdateOutVar: {
+                val update = context.getContainerOfType(Update)
+                // The input should have prio over the outputs, hence we cannot use outerscope
+                return scopeFor(update.fnInp.map[ref] + context.fnOut.map[ref])
+            }
+            ForAction: {
+                return scopeFor(#{context.^var}, context.eContainer.variableScopeRHS)
+            }
+        }
+        return context.eContainer.variableScopeRHS
     }
 }

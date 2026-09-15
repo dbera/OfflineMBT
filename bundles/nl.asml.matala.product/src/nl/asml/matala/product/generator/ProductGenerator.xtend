@@ -62,7 +62,7 @@ class ProductGenerator extends AbstractGenerator {
 		val inout_places = newArrayList
 		val init_places = newArrayList
 		
-		val depth_limit = prod.specification.depthLimits.intValue
+		val depth_limit = prod.specification.depthLimits.intValue ?: 300
 		
 		val state_limit = prod.specification.stateLimits.intValue ?: 1000;
 		
