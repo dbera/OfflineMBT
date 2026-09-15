@@ -20,8 +20,31 @@ Project returns base::ModelContainer: {Project}
 	'Project' name = ID '{'
 		(offlineBlocks += OfflineGenerationBlock)*
 		(statemachineBlocks += StateMachineGenerationBlock)*
+		(testConformanceBlocks += TestConformanceBlock)*
+		(reachabilityAnalysisBlocks += ReachabilityAnalysisBlock)*
 	'}'
 ;
+
+ReachabilityAnalysisBlock:
+    'Perform-Reachability-Analysis' '{'
+        name = ID '{'
+            (('bpmn-file' bpmn = STRING) | ('product-file' product = STRING))
+            ('depth-limit' depthLimit = INT)?
+            ('state-limit' stateLimit = INT)?
+            ('path-to-python-exe' pythonExe = STRING)?
+        '}'
+    '}'
+;
+
+TestConformanceBlock:
+    'Check-Test-Conformance' '{'
+        name = ID '{'
+            'constraints' ('files' constraintsFiles += STRING+ | 'directories' constraintsDirs += FilePath+)
+            ('concrete-test-scenario' tspecFile = STRING)
+            ('path-to-python-exe' pythonExe = STRING)?
+        '}'
+    '}'
+; 
 
 OfflineGenerationBlock:
     'Generate' target=OfflineGenerationTarget '{'
@@ -54,6 +77,7 @@ StateMachineGenerationBlock:
 	'Conformance-Coverage-And-Test-Generation' '{'
 		name = ID '{'
 			'constraints' ('files' constraintsFiles += STRING+ | 'directories' constraintsDirs += FilePath+)
+			('concrete-test-scenario' tspecFile = STRING)?
 			(visualizeSM ?= 'visualize-constraints')?
 			(printConstraints ?= 'print-constraints')?
 			(testGen = TestGeneration)?

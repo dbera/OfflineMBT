@@ -38,15 +38,31 @@ import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
+import nl.asml.matala.product.generator.ProductGenerationMode
 
 import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.getService
 import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.serialize
-
 /**
  * Generates code from your *.ps model files on save.
  */
  
 class ProductGenerator extends AbstractGenerator {
+    
+//    Old boolean flag implementation
+
+//    var isReachabilityGenerationTask = false
+//    
+//    new(boolean _isReachabilityGenerationTask) {
+//        isReachabilityGenerationTask = _isReachabilityGenerationTask
+//    }
+
+    val ProductGenerationMode generationMode
+    
+    new (ProductGenerationMode generationMode) {
+        this.generationMode = generationMode
+    }
+    
+    
 	
 	override void doGenerate(Resource res, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
 	    res.contents.filter(Product).reject[specification === null].forEach[generatePetriNetAndTestGeneration(res, fsa)]
@@ -169,6 +185,8 @@ class ProductGenerator extends AbstractGenerator {
 			}
 			
 			fsa.generateFile('CPNServer//' + specName + '//' + specName + '.py', pnet.toSnakes(
+//			    isReachabilityGenerationTask,
+			    generationMode,
 			    specName, specName, listOfEnvBlocks, listOfAssertTransitions,
 			     mapOfTransitionQnames, mapOfSuppressTransitionVars, inout_places, 
 			    init_places, depth_limit, state_limit, num_tests, sutTransitionMap

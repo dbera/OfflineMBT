@@ -5,6 +5,10 @@ __pycache__/
 # Ignore plugin.xml_gen and feature.xml_gen files, when build Eclipse Plugin.
 *.xml_gen
 
+# Xtend #
+xtend-gen/
+src-gen/
+
 # Eclipse #
 .metadata
 bin/

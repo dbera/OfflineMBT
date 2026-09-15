@@ -32,6 +32,9 @@ class printerModel:
     visitedTList = [[]]
     visitedTProdList = [[]]
     rg_txt = ""
+    
+    # load the reachability graph in memory
+    graph_in_memory = None
 
     # test generation data
     sutTypesList = ['variants']
@@ -313,12 +316,128 @@ class printerModel:
             self.numTestCases = self.numTestCases + 1
             return
     
-    def generateReachabilityGraph(self, writer, state_space = None, currIndex = 0, level = 0):
+    # Helpers to support JSON Reachability Graph #
+    def _reachabilityJsonValue(self, value):
+        """Convert model data to values supported by the JSON format."""
+        if value is None or isinstance(value, (bool, int, float)):
+            return value
+    
+        if isinstance(value, str):
+            try:
+                return json.loads(value)
+            except (json.JSONDecodeError, TypeError):
+                return value
+    
+        if isinstance(value, dict):
+            return {
+                str(key): self._reachabilityJsonValue(item)
+                for key, item in value.items()
+            }
+    
+        if isinstance(value, (list, tuple, set)):
+            return [self._reachabilityJsonValue(item) for item in value]
+    
+        if hasattr(value, 'dict') and callable(value.dict):
+            try:
+                return self._reachabilityJsonValue(value.dict())
+            except (TypeError, ValueError):
+                pass
+    
+        return str(value)
+    
+    def _reachabilityMultisetToJson(self, multiset):
+        """Convert a SNAKES multiset to a JSON array, preserving tokens."""
+        try:
+            tokens = multiset.items()
+        except (AttributeError, TypeError):
+            try:
+                tokens = list(multiset)
+            except TypeError:
+                tokens = [multiset]
+    
+        return [self._reachabilityJsonValue(token) for token in tokens]
+    
+    def _reachabilityMarkingToJson(self, marking):
+        """Convert a SNAKES marking to place-name to token-array JSON."""
+        return {
+            str(place): self._reachabilityMultisetToJson(tokens)
+            for place, tokens in marking.items()
+        }
+    
+    def _reachabilityModeToJson(self, mode):
+        """Convert a transition substitution to structured input JSON."""
+        result = {}
+        for variable, value in mode.dict().items():
+            name = str(variable)
+            if name.startswith('v_'):
+                name = name[2:]
+            result[name] = self._reachabilityJsonValue(value)
+        return result
+    
+    def _reachabilityEdgeToJson(
+            self, graph, source, target, transition, marked, mode,
+            produced_flow):
+        """Create one LTSVisualizer edge without changing graph traversal."""
+        return {
+            'id': 'edge-%d' % len(graph['edges']),
+            'source': str(source),
+            'target': str(target),
+            'transition': transition,
+            'color': 'darkorange' if marked else None,
+            'inputs_raw': str(mode),
+            'inputs': self._reachabilityModeToJson(mode),
+            'outputs_raw': str(produced_flow),
+            'outputs': self._reachabilityFlowToJson(produced_flow)
+        }
+    
+    def _writeReachabilityJson(self, writer, graph):
+        """Write rg.json next to the PlantUML file when writer has a path."""
+        writer_name = getattr(writer, 'name', None)
+        if not isinstance(writer_name, (str, os.PathLike)):
+            print(' [RG-WARN] Cannot create JSON graph: writer has no file path.')
+            return None
+    
+        puml_path = Path(writer_name)
+        json_path = puml_path.with_suffix('.json')
+        with open(json_path, 'w', encoding='utf-8') as json_writer:
+            json.dump(graph, json_writer, indent=2, ensure_ascii=False)
+            json_writer.write('\n')
+        print("[INFO] Created %s" % (json_path,))
+        return json_path
+    
+    def _reachabilityFlowToJson(self, flow):
+        """Convert a SNAKES produced flow to place-name to token-array JSON."""
+        return {
+            str(place): self._reachabilityMultisetToJson(tokens)
+            for place, tokens in flow.items()
+        }
+    # End of Helpers to support JSON Reachability Graph #
+    
+    def generateReachabilityGraph(self, writer, state_space = None, currIndex = 0, level = 0, json_graph=None):
         nrOfDependencies = 0
         initial = not state_space
         if initial:
             writer.write('@startuml\n')
-            state_space = [self.n.get_marking()]
+            initial_marking = self.n.get_marking()
+            state_space = [initial_marking]
+            json_graph = {
+                'format': 'ltsvisualizer',
+                'version': 1,
+                'type': 'graph',
+                'metadata': {
+                    'title': 'State space',
+                    'stateCount': 0,
+                    'transitionCount': 0
+                },
+                'nodes': [{
+                    'id': '0',
+                    'marking_raw': str(initial_marking),
+                    'marking': self._reachabilityMarkingToJson(
+                        initial_marking
+                    )
+                }],
+                'edges': []
+            }
         elif level > 300:
             writer.write('(%s) #red\n' % (currIndex,))
             print(' [RG-INFO] Depth limit reached! Terminating path.')
@@ -335,22 +454,62 @@ class printerModel:
             for transition in enabledTransitions:
                 transitionLabel = transition.name.split('_default@')[0]
                 for mode in transition.modes():
+                    writer.write("'Transition Inputs: %s\n" % (mode))
+                    writer.write("'Marking (State): %s\n" % (self.n.get_marking()))
+                    produced_flow = transition.flow(mode)[1]
                     transition.fire(mode)
                     nextMarking = self.n.get_marking()
                     if nextMarking in state_space:
                         nextIndex = state_space.index(nextMarking)
                         writer.write('(%s) -%s-> (%s): %s\n' % (currIndex, "[#darkorange]" if mark else "", nextIndex, transitionLabel))
+                        json_graph['edges'].append(
+                            self._reachabilityEdgeToJson(
+                                json_graph,
+                                currIndex,
+                                nextIndex,
+                                transitionLabel,
+                                mark,
+                                mode,
+                                produced_flow
+                            )
+                        )
                         nrOfDependencies += 1
                     else:
                         nextIndex = len(state_space)
                         state_space.append(nextMarking)
                         writer.write('(%s) -%s-> (%s): %s\n' % (currIndex, "[#darkorange]" if mark else "", nextIndex, transitionLabel))
-                        nrOfDependencies += 1 + self.generateReachabilityGraph(writer, state_space, nextIndex, level + 1)
+                        json_graph['nodes'].append({
+                            'id': str(nextIndex),
+                            'marking_raw': str(nextMarking),
+                            'marking': self._reachabilityMarkingToJson(
+                                nextMarking
+                            )
+                        })
+                        json_graph['edges'].append(
+                            self._reachabilityEdgeToJson(
+                                json_graph,
+                                currIndex,
+                                nextIndex,
+                                transitionLabel,
+                                mark,
+                                mode,
+                                produced_flow
+                            )
+                        )
+                        nrOfDependencies += 1 + self.generateReachabilityGraph(writer, state_space, nextIndex, level + 1, json_graph)
                     self.n.set_marking(currMarking)
     
         if initial:
             writer.write('title State space: %d nodes and %d edges\n' % (len(state_space), nrOfDependencies))
             writer.write('@enduml\n')
+            json_graph['metadata']['stateCount'] = len(json_graph['nodes'])
+            json_graph['metadata']['transitionCount'] = len(
+                json_graph['edges']
+            )
+            self._writeReachabilityJson(writer, json_graph)
+            
+            #write the graph in memory
+            self.graph_in_memory = json_graph
     
         return nrOfDependencies
     
@@ -523,10 +682,10 @@ if __name__ == '__main__':
         # print(" Finished Generation, writing to file.. ")
         print("[INFO] Starting Reachability Graph Generation")
         # pn.generateScenarios(s,0,[],[],[],0,300)
-        sys.setrecursionlimit(400)
-        pn.generateSCN()
-        print('Num Tests: ', pn.numTestCases)
-        print("[INFO] Finished.")
+    sys.setrecursionlimit(400)
+    pn.generateSCN()
+    print('Num Tests: ', pn.numTestCases)
+    print("[INFO] Finished.")
         b = datetime.datetime.now()
     
         # s.goto(0)
@@ -537,65 +696,64 @@ if __name__ == '__main__':
             print("[INFO] Created %s" % (fname,))
         c = datetime.datetime.now()
     
-        print("[INFO] Starting Test Generation.")
-        pn.initializeTestGeneration()
-        pn.generateTestCases()
+    print("[INFO] Starting Test Generation.")
+    pn.initializeTestGeneration()
+    pn.generateTestCases()
+    
+    # print('[INFO] Number-of-generated-scenario files: ',len(pn.visitedTList))
+    print("[INFO] Test Generation Finished.")
+    d = datetime.datetime.now()
+    
+    print("[INFO] Creating Structure and Behavior Views in PlantUML.")
+    map_block_uml_txt = {}
+    for t in pn.n.transition():
+        map_block_uml_txt[t.name.split('_')[0]] = '@startuml\n'
         
-        # print('[INFO] Number-of-generated-scenario files: ',len(pn.visitedTList))
-        print("[INFO] Test Generation Finished.")
-        d = datetime.datetime.now()
-        
-        print("[INFO] Creating Structure and Behavior Views in PlantUML.")
-        map_block_uml_txt = {}
-        for t in pn.n.transition():
-            map_block_uml_txt[t.name.split('_')[0]] = '@startuml\n'
-            
-        for t in pn.n.transition():
-            gtxt = map_block_uml_txt.get(t.name.split('_')[0])
-            if 'json.loads' in t.guard._str:
-                # print(t.guard._str.replace('json.loads',''))
-                # print('\n'.join(list(pn.chunkstring(t.guard._str.replace('json.loads','').replace(', object_pairs_hook=Data().int_keys', ''),55))))
-                gtxt += 'component %s\n' % (t.name)
-                if len(list(pn.chunkstring(t.guard._str.replace('json.loads','').replace(', object_pairs_hook=Data().int_keys', ''),68))) <= 2:
-                    gtxt += 'note left of [%s]\n %s\nendnote\n' % (t.name, '\n'.join(list(pn.chunkstring(t.guard._str.replace('json.loads','').replace(', object_pairs_hook=Data().int_keys', ''),55))))
-                else:
-                    gtxt += 'note bottom of [%s]\n %s\nendnote\n' % (t.name, '\n'.join(list(pn.chunkstring(t.guard._str.replace('json.loads','').replace(', object_pairs_hook=Data().int_keys', ''),55))))
+    for t in pn.n.transition():
+        gtxt = map_block_uml_txt.get(t.name.split('_')[0])
+        if 'json.loads' in t.guard._str:
+            # print(t.guard._str.replace('json.loads',''))
+            # print('\n'.join(list(pn.chunkstring(t.guard._str.replace('json.loads','').replace(', object_pairs_hook=Data().int_keys', ''),55))))
+            gtxt += 'component %s\n' % (t.name)
+            if len(list(pn.chunkstring(t.guard._str.replace('json.loads','').replace(', object_pairs_hook=Data().int_keys', ''),68))) <= 2:
+                gtxt += 'note left of [%s]\n %s\nendnote\n' % (t.name, '\n'.join(list(pn.chunkstring(t.guard._str.replace('json.loads','').replace(', object_pairs_hook=Data().int_keys', ''),55))))
             else:
-                gtxt += 'component %s\n' % (t.name)
-                gtxt += 'note right of [%s]\n %s\nendnote\n' % (t.name, t.guard)
-            map_block_uml_txt[t.name.split('_')[0]] = gtxt
-            
-        for t in pn.n.transition():
-            for inp in pn.n.pre(t.name):
-                txt = map_block_uml_txt.get(t.name.split('_')[0])
-                if 'local' in inp:
-                    txt += '%s -[#lightgrey]-> [%s]\n' % (inp, t.name)
-                else:
-                    txt += '%s --> [%s]\n' % (inp, t.name)
-                map_block_uml_txt[t.name.split('_')[0]] = txt
-            for out in pn.n.post(t.name):
-                txt = map_block_uml_txt.get(t.name.split('_')[0])
-                if 'local' in out:
-                    txt += '[%s] -[#lightgrey]-> %s\n' % (t.name, out)
-                else:
-                    txt += '[%s] --> %s\n' % (t.name, out)
-                map_block_uml_txt[t.name.split('_')[0]] = txt
+                gtxt += 'note bottom of [%s]\n %s\nendnote\n' % (t.name, '\n'.join(list(pn.chunkstring(t.guard._str.replace('json.loads','').replace(', object_pairs_hook=Data().int_keys', ''),55))))
+        else:
+            gtxt += 'component %s\n' % (t.name)
+            gtxt += 'note right of [%s]\n %s\nendnote\n' % (t.name, t.guard)
+        map_block_uml_txt[t.name.split('_')[0]] = gtxt
         
-        for key in map_block_uml_txt:
-            txt = map_block_uml_txt.get(key)
-            txt += '@enduml\n'
-            map_block_uml_txt[key] = txt
-            fname = p.plantuml_dir / (key + ".plantuml")
-            with open(fname, 'w') as f:
-                f.write(txt)
-        
+    for t in pn.n.transition():
+        for inp in pn.n.pre(t.name):
+            txt = map_block_uml_txt.get(t.name.split('_')[0])
+            if 'local' in inp:
+                txt += '%s -[#lightgrey]-> [%s]\n' % (inp, t.name)
+            else:
+                txt += '%s --> [%s]\n' % (inp, t.name)
+            map_block_uml_txt[t.name.split('_')[0]] = txt
+        for out in pn.n.post(t.name):
+            txt = map_block_uml_txt.get(t.name.split('_')[0])
+            if 'local' in out:
+                txt += '[%s] -[#lightgrey]-> %s\n' % (t.name, out)
+            else:
+                txt += '[%s] --> %s\n' % (t.name, out)
+            map_block_uml_txt[t.name.split('_')[0]] = txt
+    
+    for key in map_block_uml_txt:
+        txt = map_block_uml_txt.get(key)
+        txt += '@enduml\n'
+        map_block_uml_txt[key] = txt
+        fname = p.plantuml_dir / (key + ".plantuml")
+        with open(fname, 'w') as f:
+            f.write(txt)
         print("[INFO] View Generation Finished.")
         e = datetime.datetime.now()
         print("[INFO] Time Statistics")
         print("[INFO]    * Reachability Computation: %s" % (b - a))
         print("[INFO]    * Reachability PUML Creation: %s" % (c - b))
-        print("[INFO]    * Test Generation: %s" % (d - c))
-        print("[INFO]    * PlantUML View Generation: %s" % (e - d))
+    print("[INFO]    * Test Generation: %s" % (d - c))
+    print("[INFO]    * PlantUML View Generation: %s" % (e - d))
         
         # print("[INFO] Starting Command-Line Simulation.")
         # simulate(pn.n)

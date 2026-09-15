@@ -20,9 +20,11 @@ import java.util.Map
 import nl.esi.comma.automata.AlgorithmType
 import nl.esi.comma.automata.EAutomaton
 import nl.esi.comma.automata.ScenarioComputeResult
+import nl.esi.comma.constraints.constraints.Act
 import nl.esi.comma.constraints.constraints.ActionType
-import nl.esi.comma.constraints.constraints.Actions
 import nl.esi.comma.constraints.constraints.Constraints
+import nl.esi.comma.constraints.generator.report.ConformanceReport.SimScore
+import nl.esi.comma.constraints.generator.report.ConformanceReport.Similarity
 import nl.esi.comma.constraints.generator.report.ConformanceReport.Statistics
 import nl.esi.comma.constraints.generator.report.ConformanceReport.TestGeneration
 import nl.esi.comma.scenarios.scenarios.KEY_ID
@@ -32,8 +34,6 @@ import nl.esi.comma.steps.step.Steps
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.generator.IFileSystemAccess2
-import nl.esi.comma.constraints.generator.report.ConformanceReport.SimScore
-import nl.esi.comma.constraints.generator.report.ConformanceReport.Similarity
 
 class TestGenerator {
  
@@ -267,7 +267,7 @@ class TestGenerator {
             
             if(listOfNewScenarios.size > 0) {
             	//generate feature file with data string between quotes
-				fsa.generateFile(path + "GeneratedFeatures\\" + constraint + ".feature", FeatureGenerator.generateFeatureFileWithData(constraint, stepModel, constraintSource, listOfNewScenarios, configTags, reqTags, descTxt, constraintSM.stepsMapping))
+				//fsa.generateFile(path + "GeneratedFeatures\\" + constraint + ".feature", FeatureGenerator.generateFeatureFileWithData(constraint, stepModel, constraintSource, listOfNewScenarios, configTags, reqTags, descTxt, constraintSM.stepsMapping))
                 //generate feature file without data
                 //fsa.generateFile(path + "GeneratedFeatures\\" + constraint + ".feature", generateFeatureFile(constraint, stepModel, constraintSource, listOfNewScenarios))
                 // TODO generate statistics in new implementation
@@ -305,7 +305,7 @@ class TestGenerator {
     // move this and specialize it for given a composition find set of tags
     def getRequirementTags(Constraints constraintsSource, String constraintName) {
         var tagList = new HashSet<String>
-        for(elm : constraintsSource.composition) {
+        for(elm : constraintsSource.compositions) {
             if(elm.name.equals(constraintName))
                 for(f : elm.tagStr)
                    tagList.add(f)
@@ -314,7 +314,7 @@ class TestGenerator {
     }
 
     def getDescText(Constraints constraintsSource, String constraintName) {
-        for(elm : constraintsSource.composition) {
+        for(elm : constraintsSource.compositions) {
             if(elm.name.equals(constraintName))
                 return elm.descTxt
         }
@@ -324,14 +324,6 @@ class TestGenerator {
     // move this and specialize it for given a composition find set of tags 
     def getConfigurationTags(Constraints constraintsSource, String constraintName) {
         var tagList = new HashSet<String>
-        for(elm : constraintsSource.commonFeatures) {
-            tagList.add(elm.name)
-        }
-        for(elm : constraintsSource.composition) {
-            if(elm.name.equals(constraintName))
-                for(f : elm.features)
-                   tagList.add(f.name)
-        }
         tagList
     }
 
@@ -342,7 +334,7 @@ class TestGenerator {
         var stepIdx = 0
         var ctx = StepType.GIVEN
         
-        var actionDef = new ArrayList<Actions> // constraintSource.actions
+        var actionDef = new ArrayList<Act> // constraintSource.actions
         if(!constraintSource.actions.isNullOrEmpty) actionDef.addAll(constraintSource.actions)
         var importedConstraintSource = getConstraintsModel(constraintSource)
         for(c : importedConstraintSource) actionDef.addAll(c.actions)
@@ -399,7 +391,7 @@ class TestGenerator {
         
     }
     
-    def getStepType(String step, Steps stepModel, List<Actions> actList) {
+    def getStepType(String step, Steps stepModel, List<Act> actList) {
         if(stepModel!== null) {
             for(action : stepModel.actionList.acts) {
                 if(step.equals(action.name)) 
@@ -407,15 +399,11 @@ class TestGenerator {
             }
         }
         //if(actList)
-        for(actl : actList) {
-            for(action : actl.act)
-                if(step.equals(action.name))
-                    if(action.act.equals(ActionType.PRE_CONDITION)) return StepType.GIVEN
-                    else if(action.act.equals(ActionType.TRIGGER)) return StepType.WHEN
-                    else if(action.act.equals(ActionType.OBSERVABLE)) return StepType.THEN
-                    else if(action.act.equals(ActionType.CONJUNCTION)) return StepType.AND
-                    else {}
-        }
+        for(action : actList)
+            if(step.equals(action.name))
+                if(action.act.equals(ActionType.TRIGGER)) return StepType.WHEN
+                else if(action.act.equals(ActionType.OBSERVABLE)) return StepType.THEN
+                else {}
         //System.out.println("Did not find step type during test generation!")
         return StepType.AND
     }
