@@ -104,7 +104,7 @@ class ExistentialTemplates {
         
         val diagnostics=
         '''
-        return []
+        []
         '''
         
         return new CPNTemplateResult (psBody, acceptanceJson, diagnostics)
@@ -167,7 +167,7 @@ class ExistentialTemplates {
             
             val diagnostics=
             '''
-            return []
+            []
             '''
             
             return new CPNTemplateResult(psBody, acceptanceJson, diagnostics)

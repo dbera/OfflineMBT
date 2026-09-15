@@ -59,7 +59,7 @@ class TestConformanceNetGenerator  extends AbstractGenerator {
         results.append({
             "constraint": constraint,
             "accepted": verdict.get("accepted"),
-            "explanation": None
+            "diagnostics": verdict.get("diagnostics",[])
         })
     
     with open(summary_path, "w", encoding="utf-8") as writer:

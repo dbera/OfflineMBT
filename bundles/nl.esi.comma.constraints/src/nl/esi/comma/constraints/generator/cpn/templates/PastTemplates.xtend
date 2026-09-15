@@ -33,7 +33,7 @@ class PastTemplates {
         
         val diagnostics=
         '''
-        return []
+        []
         '''
         
         return new CPNTemplateResult(
@@ -55,7 +55,7 @@ class PastTemplates {
         
         val diagnostics=
         '''
-        return []
+        []
         '''
         
         return new CPNTemplateResult(
@@ -79,7 +79,7 @@ class PastTemplates {
         
         val diagnostics=
         '''
-        return []
+        []
         '''
         
         return new CPNTemplateResult(

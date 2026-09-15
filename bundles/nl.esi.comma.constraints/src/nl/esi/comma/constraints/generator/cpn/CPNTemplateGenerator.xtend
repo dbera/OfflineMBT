@@ -611,6 +611,93 @@ class CPNTemplateGenerator
         '''
         import json
         
+        # used in generating diagnostics   
+        
+        # Token is a dict and this function flattens all its keys and values to strings 
+        def format_value(value):
+                    if isinstance(value, dict):
+                        parts = []
+                
+                        for key, nested_value in value.items():
+                            parts.append(
+                                str(key) + " = " + format_value(nested_value)
+                            )
+                
+                        return "{" + ", ".join(parts) + "}"
+                
+                    if isinstance(value, list):
+                        return "[" + ", ".join(
+                            format_value(item) for item in value
+                        ) + "]"
+                
+                    return str(value)
+                
+        def format_token(token):
+            if isinstance(token, dict):
+                parts = []
+        
+                for key, value in token.items():
+                    parts.append(
+                        str(key) + " = " + format_value(value)
+                    )
+        
+                return ", ".join(parts)
+        
+            return str(token)
+
+        # a place is "dangling" for a node when it alone failed an emptyPlaces check
+        def is_dangling(node_violations, place):
+            for violation in node_violations:
+                if violation["kind"] == "emptyPlaces" and violation["group"] == [place]:
+                    return True
+            return False
+        
+        
+        # look up, for a given node id, the list of violations recorded for it (or None)
+        def find_node_violations(violations, node_id):
+            for violation in violations:
+                if violation["nodeId"] == node_id:
+                    return violation["violations"]
+            return None
+        
+        
+        def build_diagnostics(rules, checked_nodes, violations):
+            diagnostics = []
+        
+            for node in checked_nodes:
+                node_violations = find_node_violations(violations, node["id"])
+        
+                if node_violations is None:
+                    continue
+        
+                marking = node.get("marking", {})
+        
+                for rule in rules:
+                    if not is_dangling(node_violations, rule["tokenPlace"]):
+                        continue
+        
+                    for token in marking.get(rule["tokenPlace"], []):
+                        correlation = format_token(token)
+                        diagnostics.append({
+                            "kind": rule["kind"],
+                            "nodeId": node["id"],
+                            "place": rule["tokenPlace"],
+                            "token": token,
+                            "message": rule["reason"].format(
+                                **rule,
+                                correlation=correlation
+                            )
+«««                            "message": (
+«««                                f"{rule['activationLabel']} with correlation {correlation} "
+«««                                f"{rule['reason']} {rule['targetLabel']} with correlation {correlation}."
+«««                            )
+                        })
+        
+            return diagnostics
+
+        
+                    
+              
         
         class TemplateConformance:
             def __init__(self, acceptance_cond):
@@ -619,8 +706,8 @@ class CPNTemplateGenerator
                 self.pspec_name = "«generatedSpecName»"
                 
             # pass the diagnostics logic for each template
-            def generate_diagnostics(self, reachability_graph, checked_nodes, violations):
-                «diagnostics»
+            def diagnostic_rules(self):
+                return «diagnostics»
         
             # evaluates the acceptance condition on the reachability graph
             def evaluate(self, reachability_graph):
@@ -669,7 +756,7 @@ class CPNTemplateGenerator
                     "scope": scope,
                     "checkedNodeIds": [node.get("id") for node in checked_nodes],
                     "violations": violations,
-                    "diagnostics": self.generate_diagnostics(reachability_graph, checked_nodes, violations)
+                    "diagnostics": build_diagnostics(self.diagnostic_rules(), checked_nodes, violations)
                 }
         
             def _select_nodes(self, reachability_graph, scope):

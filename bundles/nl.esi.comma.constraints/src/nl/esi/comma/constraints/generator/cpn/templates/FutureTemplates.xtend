@@ -142,36 +142,21 @@ class FutureTemplates {
           }
         }
         '''
-                
+
+        val activationLabel = '''(«activationEvent» where «helpers.getRefConcreteWhereClause(activationEventInst)»)'''
+        val targetLabel = '''(«targetEvent» where «helpers.getRefConcreteWhereClause(targetEventInst)»)'''
+        
         val diagnostics =
         '''
-        diagnostics = []
-        place = "«correlationVar.name»"
-
-        failed_node_ids = {
-            violation["nodeId"]
-            for violation in violations
-            if any(
-                condition["kind"] == "emptyPlaces"
-                and condition["group"] == [place]
-                for condition in violation["violations"]
-            )
-        }
-
-        for node in checked_nodes:
-            if node["id"] not in failed_node_ids:
-                continue
-
-            marking = node.get("marking", {})
-            for token in marking.get(place, []):
-                diagnostics.append({
-                    "kind": "unfulfilledResponse",
-                    "nodeId": node["id"],
-                    "place": place,
-                    "token": token
-                })
-
-        return diagnostics
+        [
+            {
+                "kind": "unfulfilledResponse",
+                "tokenPlace": "«correlationVar.name»",
+                "activationLabel": "«activationLabel»",
+                "targetLabel": "«targetLabel»",
+                "reason": "{activationLabel} with correlation {correlation} was not eventually followed by {targetLabel} with correlation {correlation}."
+            }
+        ]
         '''
 
         return new CPNTemplateResult (psBody, acceptanceJson, diagnostics)
@@ -328,10 +313,22 @@ class FutureTemplates {
                   }
                 }
         '''
-        val diagnostics=
+       
+        val activationLabel = '''(«activationEvent» where «helpers.getRefConcreteWhereClause(activationEventInst)»)'''
+        val targetLabel = '''(«targetEvent» where «helpers.getRefConcreteWhereClause(targetEventInst)»)'''
+        
+        val diagnostics =
         '''
-        return []
-        '''
+        [
+            {
+                "kind": "unfulfilledChainResponse",
+                "tokenPlace": "«correlationVar.name»",
+                "activationLabel": "«activationLabel»",
+                "targetLabel": "«targetLabel»",
+                "reason": "{activationLabel} with correlation {correlation} was not immediately followed by {targetLabel} with correlation {correlation}."
+             } 
+        ]
+        '''        
         return new CPNTemplateResult (psBody, acceptanceJson, diagnostics)
     }
 
@@ -486,10 +483,32 @@ class FutureTemplates {
                         }
         '''
         
-        val diagnostics=
+        val activationLabel = '''(«activationEvent» where «helpers.getRefConcreteWhereClause(activationEventInst)»)'''
+        val targetLabel = '''(«targetEvent» where «helpers.getRefConcreteWhereClause(targetEventInst)»)'''
+        val intermediateLabel = '''(«intermediateEvent» where «helpers.getRefConcreteWhereClause(intermediateEventInst)»)'''
+        
+        val diagnostics =
         '''
-        return []
+        [
+            {
+                "kind": "unfulfilledAlternateResponse",
+                "tokenPlace": "«correlationVar.name»",
+                "activationLabel": "«activationLabel»",
+                "targetLabel": "«targetLabel»",
+                "intermediateLabel": "«intermediateLabel»",
+                "reason": "{activationLabel} with correlation {correlation} was not eventually followed by {targetLabel} with correlation {correlation}."
+            },
+            {
+                "kind": "unfulfilledAlternateResponse",
+                "tokenPlace": "rejecting_tokens",
+                "activationLabel": "«activationLabel»",
+                "targetLabel": "«targetLabel»",
+                "intermediateLabel": "«intermediateLabel»",
+                "reason": "{activationLabel} with correlation {correlation} was seen but then was followed by {intermediateLabel} with correlation {correlation} before {targetLabel} with correlation {correlation}"
+            }
+        ]
         '''
+
         return new CPNTemplateResult (psBody, acceptanceJson, diagnostics)
         
     }
