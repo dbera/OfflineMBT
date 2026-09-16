@@ -102,9 +102,27 @@ class ExistentialTemplates {
         }
         '''
         
+        val requirementText =
+            switch constraintType {
+                case "ATLEAST": '''at least «number» times'''
+                case "ATMOST": '''at most «number» times'''
+                case "EXACT": '''exactly «number» times'''
+                default: '''«operator» «number» times'''
+            }
+        
+        val eventLabel = '''(«event» where «helpers.getRefConcreteWhereClause(eventInst)»)'''
         val diagnostics=
         '''
-        []
+        [
+            {
+                "kind": "unfulfilledCount",
+                "valueKind": "count",
+                "eventLabel": "«eventLabel»",
+                "triggerPlace": "endoftrace",
+                "tokenPlace": "Countctx",
+                "message": "{eventLabel} occurred {actualCount} times, but it must occur «requirementText»."
+            }
+        ]
         '''
         
         return new CPNTemplateResult (psBody, acceptanceJson, diagnostics)
@@ -164,10 +182,26 @@ class ExistentialTemplates {
               }
             }
             '''
+            val boundaryDescription =
+                if (constraintType == "INIT") {
+                    "start with"
+                } else {
+                    "end with"
+                }
             
-            val diagnostics=
+            val eventLabel = '''(«event» where «helpers.getRefConcreteWhereClause(eventInst)»)'''
+            val diagnostics =
             '''
-            []
+            [
+                {
+                    "kind": "missingBoundaryEvent",
+                    "valueKind": "none",
+                    "eventLabel": "«eventLabel»",
+                    "triggerPlace": "final",
+                    "violationKind": "nonEmptyPlaces",
+                    "message": "The trace does not «boundaryDescription» {eventLabel}."
+                }
+            ]
             '''
             
             return new CPNTemplateResult(psBody, acceptanceJson, diagnostics)

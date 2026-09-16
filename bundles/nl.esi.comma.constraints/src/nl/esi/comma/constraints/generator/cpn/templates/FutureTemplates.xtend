@@ -151,10 +151,11 @@ class FutureTemplates {
         [
             {
                 "kind": "unfulfilledResponse",
+                "valueKind": "correlation",
                 "tokenPlace": "«correlationVar.name»",
                 "activationLabel": "«activationLabel»",
                 "targetLabel": "«targetLabel»",
-                "reason": "{activationLabel} with correlation {correlation} was not eventually followed by {targetLabel} with correlation {correlation}."
+                "message": "{activationLabel} with correlation {correlation} was not eventually followed by {targetLabel} with correlation {correlation}."
             }
         ]
         '''
@@ -322,10 +323,11 @@ class FutureTemplates {
         [
             {
                 "kind": "unfulfilledChainResponse",
+                "valueKind": "correlation",
                 "tokenPlace": "«correlationVar.name»",
                 "activationLabel": "«activationLabel»",
                 "targetLabel": "«targetLabel»",
-                "reason": "{activationLabel} with correlation {correlation} was not immediately followed by {targetLabel} with correlation {correlation}."
+                "message": "{activationLabel} with correlation {correlation} was not immediately followed by {targetLabel} with correlation {correlation}."
              } 
         ]
         '''        
@@ -492,19 +494,21 @@ class FutureTemplates {
         [
             {
                 "kind": "unfulfilledAlternateResponse",
+                "valueKind": "correlation",
                 "tokenPlace": "«correlationVar.name»",
                 "activationLabel": "«activationLabel»",
                 "targetLabel": "«targetLabel»",
                 "intermediateLabel": "«intermediateLabel»",
-                "reason": "{activationLabel} with correlation {correlation} was not eventually followed by {targetLabel} with correlation {correlation}."
+                "message": "{activationLabel} with correlation {correlation} was not eventually followed by {targetLabel} with correlation {correlation}."
             },
             {
                 "kind": "unfulfilledAlternateResponse",
+                "valueKind": "correlation",
                 "tokenPlace": "rejecting_tokens",
                 "activationLabel": "«activationLabel»",
                 "targetLabel": "«targetLabel»",
                 "intermediateLabel": "«intermediateLabel»",
-                "reason": "{activationLabel} with correlation {correlation} was seen but then was followed by {intermediateLabel} with correlation {correlation} before {targetLabel} with correlation {correlation}"
+                "message": "{activationLabel} with correlation {correlation} was seen but then was followed by a blocker before {targetLabel} with correlation {correlation}"
             }
         ]
         '''

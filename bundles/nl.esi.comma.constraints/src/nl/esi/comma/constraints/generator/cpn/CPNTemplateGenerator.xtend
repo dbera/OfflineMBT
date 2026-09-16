@@ -644,14 +644,17 @@ class CPNTemplateGenerator
                 return ", ".join(parts)
         
             return str(token)
-
-        # a place is "dangling" for a node when it alone failed an emptyPlaces check
-        def is_dangling(node_violations, place):
+            
+        def violation_exists(node_violations, violation_kind, place):
             for violation in node_violations:
-                if violation["kind"] == "emptyPlaces" and violation["group"] == [place]:
+                if (
+                    violation["kind"] == violation_kind
+                    and violation["group"] == [place]
+                ):
                     return True
-            return False
         
+            return False
+
         
         # look up, for a given node id, the list of violations recorded for it (or None)
         def find_node_violations(violations, node_id):
@@ -673,26 +676,37 @@ class CPNTemplateGenerator
                 marking = node.get("marking", {})
         
                 for rule in rules:
-                    if not is_dangling(node_violations, rule["tokenPlace"]):
+                    violation_kind = rule.get("violationKind", "emptyPlaces")
+                    trigger_place = rule.get("triggerPlace", rule.get("tokenPlace"))
+                    
+                    if not violation_exists(node_violations, violation_kind, trigger_place):
+                        continue
+                    
+                    token_place= rule.get("tokenPlace")
+                    
+                    if token_place is None:
+                        diagnostics.append({
+                           "kind": rule["kind"],
+                           "nodeId": node["id"],
+                           "place": trigger_place,
+                           "message": rule["message"].format(**rule)
+                        })
                         continue
         
-                    for token in marking.get(rule["tokenPlace"], []):
-                        correlation = format_token(token)
+                    for token in marking.get(token_place, []):
+                        values = dict(rule)
+                        values["correlation"] = format_token(token)
+                        
+                        if rule.get("valueKind") == "count":
+                            values["actualCount"] = token.get("count", 0)
+                        
                         diagnostics.append({
                             "kind": rule["kind"],
                             "nodeId": node["id"],
-                            "place": rule["tokenPlace"],
+                            "place": token_place,
                             "token": token,
-                            "message": rule["reason"].format(
-                                **rule,
-                                correlation=correlation
-                            )
-«««                            "message": (
-«««                                f"{rule['activationLabel']} with correlation {correlation} "
-«««                                f"{rule['reason']} {rule['targetLabel']} with correlation {correlation}."
-«««                            )
+                            "message": rule["message"].format(**values)
                         })
-        
             return diagnostics
 
         
