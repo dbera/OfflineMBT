@@ -61,31 +61,8 @@ the Department of Electrical Engineering of Eindhoven University of Technology.
 
    <requires>
       <import plugin="nl.esi.xtext.lsp.server" version="0.0.0" match="greaterOrEqual"/>
+      <import feature="nl.esi.xplus.feature" version="0.0.0" match="greaterOrEqual"/>
    </requires>
-
-   <plugin
-         id="nl.esi.xtext.types.ide"
-         version="0.0.0"/>
-
-   <plugin
-         id="nl.esi.xtext.types"
-         version="0.0.0"/>
-
-   <plugin
-         id="nl.esi.xtext.actions"
-         version="0.0.0"/>
-
-   <plugin
-         id="nl.esi.xtext.expressions"
-         version="0.0.0"/>
-
-   <plugin
-         id="nl.esi.xtext.expressions.ide"
-         version="0.0.0"/>
-
-   <plugin
-         id="nl.esi.xtext.actions.ide"
-         version="0.0.0"/>
 
    <plugin
          id="nl.esi.comma.testspecification"
@@ -105,14 +82,6 @@ the Department of Electrical Engineering of Eindhoven University of Technology.
 
    <plugin
          id="nl.esi.comma.automata"
-         version="0.0.0"/>
-
-   <plugin
-         id="nl.esi.comma.behavior.scl"
-         version="0.0.0"/>
-
-   <plugin
-         id="nl.esi.comma.behavior.scl.ide"
          version="0.0.0"/>
 
    <plugin

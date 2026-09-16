@@ -22,13 +22,17 @@ Require-Bundle: nl.esi.xtext.actions;visibility:=reexport,
  com.google.gson;bundle-version="2.8.2",
  org.eclipse.core.expressions;bundle-version="3.8.100",
  nl.esi.comma.constraints.dashboard,
- nl.esi.comma.automata
+ nl.esi.comma.automata,
+ nl.esi.comma.testspecification;bundle-version="4.2.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: nl.esi.comma.constraints,
  nl.esi.comma.constraints.constraints,
  nl.esi.comma.constraints.constraints.impl,
  nl.esi.comma.constraints.constraints.util,
  nl.esi.comma.constraints.generator,
+ nl.esi.comma.constraints.generator.cpn,
+ nl.esi.comma.constraints.generator.cpn.model,
+ nl.esi.comma.constraints.generator.cpn.templates,
  nl.esi.comma.constraints.generator.report,
  nl.esi.comma.constraints.generator.visualize,
  nl.esi.comma.constraints.parser.antlr,
