@@ -1001,10 +1001,15 @@ class Utils
         return String.join("\n", result)
     }
 
-    static def String escapeAndLimitText(String text, int limit) {
-        if (text === null) {
+    static def String escapeAndLimitText(String inputText, int limit) {
+        if (inputText === null) {
             return ""
         }
+        var text = inputText 
+        if (text.length() > limit) {
+            text = text.substring(0, limit - 3) + "..."
+        }
+
         // Escape special characters for Python
         var escaped = text.trim()
             .replaceAll("\\s+", " ")
@@ -1013,10 +1018,6 @@ class Utils
             .replace("\n", "")
             .replace("\r", "")
             .replace("\t", " ")
-        // Limit to specified length with "..." suffix if truncated
-        if (escaped.length() > limit) {
-            escaped = escaped.substring(0, limit - 3) + "..."
-        }
         return escaped
     }
 
