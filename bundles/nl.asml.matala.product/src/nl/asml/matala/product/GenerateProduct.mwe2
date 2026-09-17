@@ -58,10 +58,10 @@ Workflow {
 			junitSupport = {
 				junitVersion = "5"
 			}
-            contentAssist = nl.esi.xtext.lsp.generator.ide.contentassist.IdeContentAssistFragment2 {
+            contentAssist = nl.esi.xplus.xtext.generator.ide.contentassist.IdeContentAssistFragment2 {
                 generateXtendStub = true
             }
-			fragment = nl.esi.xtext.lsp.generator.lezer.LezerGrammarFragment {
+			fragment = nl.esi.xplus.xtext.generator.lezer.LezerGrammarFragment {
                 absolutePath = "${rootPath}/nl.asml.matala.product/target/lezer-grammar"
                 override = true
 			}
