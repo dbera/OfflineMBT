@@ -28,6 +28,7 @@ OfflineGenerationBlock:
         name = ID '{'
             (('bpmn-file' bpmn = STRING) | ('product-file' product = STRING))
             ('num-tests' numTests = INT)?
+            ('prefix-tests' prefixTests = STRING)?
             ('depth-limit' depthLimit = INT)?
             ('state-limit' stateLimit = INT)?
             ('path-to-python-exe' pythonExe = STRING)?

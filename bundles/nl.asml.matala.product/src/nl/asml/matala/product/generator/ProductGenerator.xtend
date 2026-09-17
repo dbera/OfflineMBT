@@ -47,6 +47,15 @@ import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.serialize
  */
  
 class ProductGenerator extends AbstractGenerator {
+    val String scenarioPrefix;
+
+    new() {
+        this(null)
+    }
+
+    new(String scenarioPrefix) {
+        this.scenarioPrefix = scenarioPrefix
+    }
 	
 	override void doGenerate(Resource res, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
 	    res.contents.filter(Product).reject[specification === null].forEach[generatePetriNetAndTestGeneration(res, fsa)]
@@ -176,7 +185,7 @@ class ProductGenerator extends AbstractGenerator {
 			fsa.generateFile('CPNServer//' + specName + '//' + specName + '_Simulation.py', normalize(pnet.toSnakesSimulation))
             fsa.generateFile('CPNServer//' + specName + '//' + specName + '_reporting.py', normalize(Utils.getReportingClass(specName)))
 			fsa.generateFile('CPNServer//' + specName + '//' + specName + '_data.py', normalize(Utils.getDataContainerClass(specName, dataGetterTxt, methodTxt)))
-			fsa.generateFile('CPNServer//' + specName + '//' + specName + '_TestSCN.py', normalize(Utils.generateTestSCNTxt(specName + "_types", prod, resource.URI.lastSegment)))
+			fsa.generateFile('CPNServer//' + specName + '//' + specName + '_TestSCN.py', normalize(Utils.generateTestSCNTxt(specName + "_types", prod, resource.URI.lastSegment, scenarioPrefix)))
             // generate utils for HTTP server
             fsa.generateFile('CPNServer//' + specName + '//' + '__init__.py', 
                 normalize((new FlaskSimulationGenerator).generateInitForCPNSpecPkg(prod))

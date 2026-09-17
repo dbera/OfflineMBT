@@ -2,7 +2,13 @@ record UNIT {
 	int	unit
 }
 
-record ProdReport {
+record ProdCons1 {
+    string	part1
+    int	id
+}
+
+record ProdCons2 {
+    string	part2
     int	id
 }
 
@@ -12,13 +18,7 @@ record ProdCtx {
     bool	loop
 }
 
-record ProdCons1 {
-    string	part1
-    int	id
-}
-
-record ProdCons2 {
-    string	part2
+record ProdReport {
     int	id
 }
 

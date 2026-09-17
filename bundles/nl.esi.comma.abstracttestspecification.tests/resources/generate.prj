@@ -1,0 +1,38 @@
+Project bpmn4s2pspec {
+	Generate Tests {
+		imaging {
+			product-file "input/imaging/imaging.ps"
+			prefix-tests "imaging_"
+		}
+	}
+	Generate Tests {
+		issue249 {
+			bpmn-file "input/issue249/issue249.bpmn"
+			prefix-tests "issue249_"
+		}
+	}
+	Generate Tests {
+		issue299 {
+			bpmn-file "input/issue299/issue299.bpmn"
+			prefix-tests "issue299_"
+		}
+	}
+	Generate Tests {
+		issue367 {
+			bpmn-file "input/issue367/issue367.bpmn"
+			prefix-tests "issue367_"
+		}
+	}
+	Generate Tests {
+		issue379 {
+			bpmn-file "input/issue379/issue379.bpmn"
+			prefix-tests "issue379_"
+		}
+	}
+	Generate Tests {
+		printer {
+			product-file "input/printer/printer.ps"
+			prefix-tests "printer_"
+		}
+	}
+}
