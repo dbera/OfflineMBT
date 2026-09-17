@@ -17,6 +17,8 @@ import static nl.esi.xtext.lsp.server.WebSocketServerLauncher.PORT;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.inject.Injector;
+
 import nl.asml.matala.server.rest.RestServer;
 import nl.asml.matala.server.rest.RestServer.ServerStartupException;
 
@@ -36,17 +38,20 @@ public class ServerLauncher extends nl.esi.xtext.lsp.server.ServerLauncher {
     private static final String REST_PORT = "--rest-port";
 	private static final String LSP_PORT = "--lsp-port";
 	private static final String REPOSITORY_PATH = "--repository-path";
+	private static final String OUTPUT_PATH = "--output-path";
 	private static final int DEFAULT_REST_PORT = 9091;
     private static final int DEFAULT_LSP_PORT = 9092;
     private static final String DEFAULT_REPOSITORY_PATH = "models";
+    private static final String DEFAULT_OUTPUT_PATH = "output";
 
-    public static void main(String[] args) {
+    public static void launch(String[] args, Injector injector) {
         var launcher = new ServerLauncher();
 
-        // Start REST file server (Vert.x — non-blocking)
+        // Start REST file server (Vert.x - non-blocking)
         int restPort = getArgValue(args, REST_PORT, DEFAULT_REST_PORT);
         String repositoryPath = getArgString(args, REPOSITORY_PATH, DEFAULT_REPOSITORY_PATH);
-        var restServer = new RestServer(restPort, repositoryPath);
+        String outputPath = getArgString(args, OUTPUT_PATH, DEFAULT_OUTPUT_PATH);
+        var restServer = new RestServer(restPort, repositoryPath, outputPath, injector);
 
         try {
             LOG.info("Starting REST file server on port {}", restPort);
@@ -69,10 +74,10 @@ public class ServerLauncher extends nl.esi.xtext.lsp.server.ServerLauncher {
             }
         }, "ServerShutdownHook"));
 
-        // Start LSP WebSocket server (Java-WebSocket — blocking, Xtext-native)
+        // Start LSP WebSocket server (Java-WebSocket - blocking, Xtext-native)
         int lspPort = getArgValue(args, LSP_PORT, DEFAULT_LSP_PORT);
         LOG.info("Starting LSP WebSocket server on port {}", lspPort);
-        launcher.launch(new String[]{WEB_SOCKET, PORT, String.valueOf(lspPort)});
+        launcher.launch(new String[] { WEB_SOCKET, PORT, String.valueOf(lspPort) });
     }
 
     private static int getArgValue(String[] args, String flag, int defaultValue) {

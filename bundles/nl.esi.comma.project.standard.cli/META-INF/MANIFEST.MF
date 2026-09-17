@@ -4,9 +4,11 @@ Bundle-Name: nl.esi.comma.project.standard.cli
 Bundle-SymbolicName: nl.esi.comma.project.standard.cli
 Bundle-Vendor: TNO-ESI
 Bundle-Version: 4.2.0.qualifier
-Export-Package: nl.esi.comma.project.standard.cli
+Export-Package: nl.esi.comma.project.standard.cli,
+ nl.esi.comma.project.standard.cli.server
 Import-Package: io.github.classgraph;version="[4.8.0,5.0.0)",
- org.aopalliance.intercept;version="1.0.0"
+ org.aopalliance.intercept;version="1.0.0",
+ org.slf4j;version="[2.0.0,3.0.0)"
 Require-Bundle: nl.esi.comma.project.standard;visibility:=reexport,
  com.google.inject,
  org.eclipse.xtext.ide,
@@ -16,6 +18,7 @@ Require-Bundle: nl.esi.comma.project.standard;visibility:=reexport,
  nl.esi.comma.testspecification.ide,
  nl.esi.comma.constraints.ide,
  nl.esi.comma.scenarios.ide,
- nl.asml.matala.server
+ nl.asml.matala.server,
+ org.eclipse.xtext
 Automatic-Module-Name: nl.esi.comma.project.standard.cli
 Bundle-RequiredExecutionEnvironment: JavaSE-21

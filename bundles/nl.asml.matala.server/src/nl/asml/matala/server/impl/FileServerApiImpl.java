@@ -17,7 +17,10 @@ import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import nl.asml.matala.server.api.FileContent;
 import nl.asml.matala.server.api.FileServerApi;
+import nl.asml.matala.server.api.FileWriteResult;
+import nl.asml.matala.server.api.ServerApiException;
 
 /**
  * File-system-backed implementation of {@link FileServerApi}.
@@ -26,14 +29,15 @@ import nl.asml.matala.server.api.FileServerApi;
 public class FileServerApiImpl implements FileServerApi {
 
     /** Root directory — all client paths are resolved relative to this. */
-    private final Path rootPath;
+    private Path rootPath;
 
     /** Maximum file size to read (100 MB). Prevents DoS attacks via large file requests. */
     private static final long MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 MB
 
-    public FileServerApiImpl(String rootPath) {
-        this.rootPath = Path.of(rootPath).toAbsolutePath();
-    }
+
+    public void init(String rootPath) {
+		this.rootPath = Path.of(rootPath).toAbsolutePath();
+	}
 
     @Override
     public FileResult listOrReadFiles(String path, String extension) throws ServerApiException {
