@@ -1,13 +1,13 @@
 /**
  * Copyright (c) 2024, 2025 TNO-ESI
- *
+ * 
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
- *
+ * 
  * This program and the accompanying materials are made available
  * under the terms of the MIT License which is available at
  * https://opensource.org/licenses/MIT
- *
+ * 
  * SPDX-License-Identifier: MIT
  */
 /*
@@ -15,23 +15,20 @@
  */
 package nl.esi.comma.assertthat.validation
 
+import nl.esi.comma.assertthat.assertThat.AssertThatPackage
+import nl.esi.comma.assertthat.assertThat.DataAssertions
+import org.eclipse.xtext.validation.Check
 
 /**
  * This class contains custom validation rules. 
- *
+ * 
  * See https://www.eclipse.org/Xtext/documentation/303_runtime_concepts.html#validation
  */
 class AssertThatValidator extends AbstractAssertThatValidator {
-	
-//	public static val INVALID_NAME = 'invalidName'
-//
-//	@Check
-//	def checkGreetingStartsWithCapital(Greeting greeting) {
-//		if (!Character.isUpperCase(greeting.name.charAt(0))) {
-//			warning('Name should start with a capital', 
-//					AssertThatPackage.Literals.GREETING__NAME,
-//					INVALID_NAME)
-//		}
-//	}
-	
+    @Check
+    def checkGreetingStartsWithCapital(DataAssertions dataAssertions) {
+        if (dataAssertions.constr.isNullOrEmpty) {
+            error('At least 1 assertion is required', AssertThatPackage.Literals.DATA_ASSERTIONS__CONSTR)
+        }
+    }
 }
