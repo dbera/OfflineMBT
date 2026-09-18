@@ -89,11 +89,11 @@ class TestSCN:
     def generateTSpec(self, idx, sutTypesList, sutVarTransitionMap, transitionQnameMap, output_dir):
         txt = ""
         txt += "import " + '"' + str(self.pspec_path) + "printer.ps" + '"' +"\n\n"
+        txt += "using printer.PrintFactoryA3DPrinter.variants\n"
         txt += "using printer.PrintFactoryA3DPrinter.printJob\n"
         txt += "using printer.PrintFactoryA3DPrinter.corrections\n"
-        txt += "using printer.PrintFactoryA3DPrinter.variants\n"
-        txt += "using printer.PrintFactoryA3DPrinter.printResult\n"
         txt += "using printer.PrintFactoryA3DPrinter.printReport\n"
+        txt += "using printer.PrintFactoryA3DPrinter.printResult\n"
         txt += "using printer.PrintFactoryA3DPrinter.request\n"
         txt += "using printer.PrintFactoryA3DPrinter.Event_0mxx05p\n"
         txt += "using printer.PrintFactoryA3DPrinter.Event_0jcg6zx\n"

@@ -51,10 +51,14 @@ class ProductGeneratorTest {
     def void testIssue371() {
         testGenerator('issue371');
     }
-    
+
+    @Test
+    def void testIssue426() {
+        testGenerator('issue426');
+    }
+
     @Test
     def void testGetGeneration() {
         testGenerator('gettest');
     }
-    
 }

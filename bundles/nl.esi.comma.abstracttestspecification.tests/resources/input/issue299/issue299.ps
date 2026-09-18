@@ -7,10 +7,9 @@ specification issue299
         JobA	jobA
         
         outputs
-        InputJobA		job_a_input
+        InputJobA	job_a_input
     
         local
-        
         UNIT	Event_0ww9k8j
     
         // init
@@ -36,10 +35,9 @@ specification issue299
         InputJobA	job_a_input
         
         outputs
-        ReportJobA		job_a_report
+        ReportJobA	job_a_report
     
         local
-        
         UNIT	Event_0t40etv
     
         // init
@@ -62,16 +60,16 @@ specification issue299
     system Issue299C3ComposeJobB
     {
         inputs
-        ReportJobA	job_a_report
         JobB	jobB
+        ReportJobA	job_a_report
         
         outputs
-        InputJobB		job_b_input
+        InputJobB	job_b_input
+        ReportJobA	job_a_report
     
         local
         TempInputJobB	temp_job_b_input
         ContextComposeJobB	Gateway_0uysc4w
-        
         ContextComposeJobB	Event_1880doa
     
         // init
@@ -161,10 +159,9 @@ specification issue299
         InputJobB	job_b_input
         
         outputs
-        ReportJobB		job_b_report
+        ReportJobB	job_b_report
     
         local
-        
         UNIT	Event_18fn07m
     
         // init
@@ -190,13 +187,12 @@ specification issue299
         Parameters	model_parameters
         
         outputs
-        JobA		jobA
-        JobB		jobB
+        JobB	jobB
+        JobA	jobA
     
         local
         ContextController	Gateway_0r5pxtv
         ContextController	Gateway_1habvb7
-        
         ContextController	Event_0rch5hf
         ContextController	Flow_1ngqot2
     
@@ -269,6 +265,7 @@ specification issue299
     }
     
 	SUT-blocks Issue299C2RunJobA Issue299C3RunJobB
-	depth-limits 3000
+	depth-limits 300
+	state-limits 1000
 	num-tests 1
 }
