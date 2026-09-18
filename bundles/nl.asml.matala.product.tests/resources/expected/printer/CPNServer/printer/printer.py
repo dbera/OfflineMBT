@@ -63,11 +63,11 @@ class printerModel:
         self.n = PetriNet('printer')
         self.n.globals["Data"] = Data
         self.n.globals.declare("import json")
+        self.n.add_place(Place('variants'))
         self.n.add_place(Place('printJob'))
         self.n.add_place(Place('corrections'))
-        self.n.add_place(Place('variants'))
-        self.n.add_place(Place('printResult'))
         self.n.add_place(Place('printReport'))
+        self.n.add_place(Place('printResult'))
         self.n.add_place(Place('request'))
         self.n.add_place(Place('Event_0mxx05p'))
         self.n.add_place(Place('Event_0jcg6zx'))
