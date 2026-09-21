@@ -4,19 +4,17 @@ specification imaging
     system SupervisonModelSupervisionImagePreparation
     {
         inputs
-        ImgReq	ImagingRequest
         AcqResp	AcqUpdate
         EquipmentStatus	EqStatus
+        ImgReq	ImagingRequest
         
         outputs
-        ImgResp		ImagingUpdate
-        AcqReq		AcquisitionReq
-        EquipmentStatus		EqStatus
+        ImgResp	ImagingUpdate
+        AcqReq	AcquisitionReq
+        EquipmentStatus	EqStatus
     
         local
         UNIT	Gateway_102q82v
-        
-        
         UNIT	Flow_0kkvgdv
         UNIT	Flow_1kpcqqf
     
@@ -100,12 +98,10 @@ specification imaging
         PumpReq	PumpRequest
         
         outputs
-        PumpResp		PumpUpdate
+        PumpResp	PumpUpdate
     
         local
         CTX	Gateway_0td58pc
-        
-        
         CTX	Flow_0x0gs9b
         CTX	Flow_104f6k4
     
@@ -163,7 +159,7 @@ specification imaging
         ImgResp	ImagingUpdate
         
         outputs
-        ImgReq		ImagingRequest
+        ImgReq	ImagingRequest
     
         local
         CTX	Gateway_0i3nw09
@@ -171,8 +167,6 @@ specification imaging
         CTX	Gateway_0kvhy0o
         CTX	Gateway_08l0os0
         CTX	Gateway_0xpxevh
-        
-        
         CTX	Flow_1k04xzh
         CTX	Flow_029nrs5
         CTX	Flow_0ncxpgd
@@ -298,20 +292,18 @@ specification imaging
     system SupervisonModelSupervisionPressureHandler
     {
         inputs
-        VacReq	VacuumRequest
         PumpResp	PumpUpdate
+        VacReq	VacuumRequest
         EquipmentStatus	EqStatus
         
         outputs
-        PumpReq		PumpRequest
-        VacResp		VacuumUpdate
-        EquipmentStatus		EqStatus
+        VacResp	VacuumUpdate
+        PumpReq	PumpRequest
+        EquipmentStatus	EqStatus
     
         local
         CTX	Gateway_1i0qy9g
         CTX	Gateway_1j81da5
-        
-        
         CTX	Flow_1wguswc
         CTX	Flow_0balrow
         CTX	Flow_0cjhiik
@@ -404,17 +396,16 @@ specification imaging
     system SupervisonModelTemperatureController
     {
         inputs
-        TempResp	TempUpdate
         TempResp	temp_achieved
+        TempResp	TempUpdate
         
         outputs
-        TempReq		TempRequest
+        TempReq	TempRequest
     
         local
         CTX	Gateway_1sv33t8
         CTX	Gateway_12yhscn
         CTX	Event_1r2zvr6
-        
         CTX	Flow_0estwso
         CTX	Flow_0ay6jpo
         CTX	Flow_01g3o4k
@@ -500,13 +491,11 @@ specification imaging
         VacResp	VacuumUpdate
         
         outputs
-        VacReq		VacuumRequest
+        VacReq	VacuumRequest
     
         local
         CTX	Gateway_0mqr7c2
         CTX	Gateway_07w0e8f
-        
-        
         CTX	Flow_1phqrfh
         CTX	Flow_1erv6vq
         CTX	Flow_1dvvja5
@@ -574,13 +563,11 @@ specification imaging
         AcqReq	AcquisitionReq
         
         outputs
-        AcqResp		AcqUpdate
-        AcqData		ImageData
+        AcqResp	AcqUpdate
+        AcqData	ImageData
     
         local
         CTX	Gateway_0h81kts
-        
-        
         CTX	Flow_084nmm6
         CTX	Flow_1rusz82
         CTX	Flow_1w9tlf4
@@ -661,20 +648,18 @@ specification imaging
         inputs
         ImgReq	ImagingRequest
         AcqResp	AcqUpdate
-        EquipmentStatus	EqStatus
         AcqData	ImageData
+        EquipmentStatus	EqStatus
         
         outputs
-        ImgResp		ImagingUpdate
-        AcqReq		AcquisitionReq
-        EquipmentStatus		EqStatus
+        ImgResp	ImagingUpdate
+        AcqReq	AcquisitionReq
+        EquipmentStatus	EqStatus
     
         local
         ImgReq	LastAcqReq
         UNIT	Gateway_16m9e4j
         UNIT	Gateway_0qg69ul
-        
-        
         UNIT	Flow_0678bm1
         UNIT	Flow_1bajtwc
     
@@ -795,18 +780,17 @@ specification imaging
     system SupervisonModelSupervisionTemperatureHandler
     {
         inputs
-        TempReq	TempRequest
         EquipmentStatus	EqStatus
+        TempReq	TempRequest
         
         outputs
-        TempResp		TempUpdate
-        TempResp		temp_achieved
-        EquipmentStatus		EqStatus
+        EquipmentStatus	EqStatus
+        TempResp	temp_achieved
+        TempResp	TempUpdate
     
         local
         TempReq	TempCMD
         UNIT	Gateway_1qk9wqe
-        
         UNIT	Event_13ys7sy
     
         // init
@@ -862,7 +846,8 @@ specification imaging
         element-labels ["SupervisonModel", "Supervision", "Temperature Handler"]
     }
     
-	SUT-blocks SupervisonModelPumpController SupervisonModelAcquisitionController SupervisonModelAcquisitionController SupervisonModelSupervisionTemperatureHandler SupervisonModelPumpController SupervisonModelAcquisitionController
+	SUT-blocks SupervisonModelPumpController SupervisonModelAcquisitionController SupervisonModelSupervisionTemperatureHandler
 	depth-limits 300
+	state-limits 1000
 	num-tests 1
 }

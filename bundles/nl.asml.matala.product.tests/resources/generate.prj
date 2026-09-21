@@ -1,0 +1,39 @@
+/**
+ * Copyright (c) 2024, 2025 TNO-ESI
+ *
+ * See the NOTICE file(s) distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This program and the accompanying materials are made available
+ * under the terms of the MIT License which is available at
+ * https://opensource.org/licenses/MIT
+ *
+ * SPDX-License-Identifier: MIT
+ */
+Project bpmn4s2pspec {
+	Generate Simulator {
+		gettest {
+			product-file "input/gettest/gettest.ps"
+		}
+	}
+	Generate Simulator {
+		imaging {
+			product-file "input/imaging/imaging.ps"
+		}
+	}
+	Generate Simulator {
+		issue371 {
+			bpmn-file "input/issue371/issue371.bpmn"
+		}
+	}
+	Generate Simulator {
+		issue426 {
+			bpmn-file "input/issue426/issue426.bpmn"
+		}
+	}
+	Generate Simulator {
+		printer {
+			product-file "input/printer/printer.ps"
+		}
+	}
+}
