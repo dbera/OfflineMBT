@@ -32,6 +32,8 @@ import java.util.stream.Collectors;
 
 import org.eclipse.xtext.xbase.lib.IterableExtensions;
 
+import com.google.common.base.Strings;
+
 import nl.asml.matala.bpmn4s.Logging;
 
 
@@ -119,9 +121,9 @@ public class Bpmn4sCompiler{
 				Element src = model.getElementById(srcId);
 				Element tar = model.getElementById(tarId);
 				if(model.isActivity(srcId) || model.isActivity(tarId)) {
-				src.dataOutputs.remove(e);
-				tar.dataInputs.remove(e);
-				removeDataEdges.add(e);
+					src.dataOutputs.remove(e);
+					tar.dataInputs.remove(e);
+					removeDataEdges.add(e);
 				}
 			}
 		}
@@ -263,19 +265,22 @@ public class Bpmn4sCompiler{
 	 * @return a String with the input/output section.
 	 */
 	private String fabSpecInputOutput(Element c) {
-		String inStr = "inputs\n";
-		String outStr = "outputs\n";
+		LinkedHashSet<String> inputs = new LinkedHashSet<String>();
+		LinkedHashSet<String> outputs = new LinkedHashSet<String>();
 		
-		for (Edge e: c.getDataInputs()) {
-			Element node = model.elements.get(e.getSrc());
-			inStr += node.getDataType() + "\t" + compile(node.getId()) + "\n";
+		for (Element data: model.elements.values()) {
+			if (isParentComponent(c, data) && model.isData(data.getId()) && data.isReferenceData()) {
+				if (!data.getDataOutputs().isEmpty()) {
+					inputs.add(tabulate(mapType(data.getDataType()), compile(data.getId())));
+				}
+				if (!data.getDataInputs().isEmpty()) {
+					outputs.add(tabulate(mapType(data.getDataType()), compile(data.getId())));
+				}
+			}
 		}
-		for (Edge e: c.getDataOutputs()) {
-			Element node = model.elements.get(e.getTar());
-			outStr += node.getDataType() + "\t\t" + compile(node.getId()) + "\n";
-		}
-		if (c.getDataInputs().isEmpty()) { inStr = "//" + inStr; }
-		if (c.getDataOutputs().isEmpty()) { outStr = "//" + outStr; }
+		
+		String inStr = inputs.isEmpty() ? "// inputs\n" : "inputs\n" + String.join("\n", inputs) + "\n";
+		String outStr = outputs.isEmpty() ? "// outputs\n" : "outputs\n" + String.join("\n", outputs) + "\n";
 		return inStr + "\n" + outStr;
 	}
 	
@@ -296,15 +301,11 @@ public class Bpmn4sCompiler{
 	 * @return the locals section for the system corresponding to c.
 	 */
 	private String fabSpecLocal(Element c) {
-		String locals = "";
+		LinkedHashSet<String> locals = new LinkedHashSet<String>();
 		// All data nodes are places (except for input/outputs)
 		for (Element data: model.elements.values()) {
-			if (isParentComponent(c, data) 
-					&& model.isData(data.getId()) 
-					&& !data.isReferenceData())
-			{
-				String t = mapType(data.getDataType());
-				locals += tabulate(t, repr(data)) + "\n";
+			if (isParentComponent(c, data) && model.isData(data.getId()) && !data.isReferenceData()) {
+				locals.add(tabulate(mapType(data.getDataType()), repr(data)));
 			}
 		}
 		// XOR gates introduce a place (Maximal Connected Components of XOR gates for optimization)
@@ -315,14 +316,14 @@ public class Bpmn4sCompiler{
 				String datatype = mapType(c.context.dataType != "" ? c.context.dataType : UNIT_TYPE);
 				if (!visited.contains(cGateName)) {
 					visited.add(cGateName);
-					locals += tabulate(datatype, sanitize(cGateName)) + "\n";
+					locals.add(tabulate(datatype, sanitize(cGateName)));
 				}
 			}
 		}
 		// Start Events
-		locals += String.join("\n", localsFromStartEvents(c)) + "\n";
+		locals.addAll(localsFromStartEvents(c));
 		// End Events
-		locals += String.join("\n", localsFromEndEvents(c)) + "\n";
+		locals.addAll(localsFromEndEvents(c));
 		// Edges between transitions (tasks and parallel gates) introduce places. 
 		for (Edge e: model.edges) {
 			String srcId = e.getSrc();
@@ -333,13 +334,10 @@ public class Bpmn4sCompiler{
 					&& (model.isAnd(srcId) || model.isTask(srcId))
 					&& (model.isAnd(tarId) || model.isTask(tarId))){
 				String datatype = mapType(c.context.dataType != "" ? c.context.dataType : UNIT_TYPE);
-				locals += tabulate(datatype, sanitize(namePlaceBetweenTransitions(e.getId(), repr(src), repr(tar)))) + "\n";
+				locals.add(tabulate(datatype, sanitize(namePlaceBetweenTransitions(e.getId(), repr(src), repr(tar)))));
 			}
 		}
-		if (!locals.isBlank()) {
-			locals = "local\n" + locals;
-		}
-		return locals;
+		return locals.isEmpty() ? "// local\n" : "local\n" + String.join("\n", locals) + "\n";
 	}
 	
 	
@@ -419,28 +417,16 @@ public class Bpmn4sCompiler{
 		}
 		
 		// Add data store inputs that have not been initialized somewhere else
-		for (Edge e: c.getDataInputs()) {
-			Element node = model.elements.get(e.getSrc());
-			if (node.getType() == ElementType.DATASTORE  && !initialized.contains(node.getOriginDataNodeId())) {
-				initialized.add(node.getOriginDataNodeId());
-				String nodeInit = node.getInit();
-				if (node.isReferenceData()) {
-					nodeInit = model.getElementById(node.getOriginDataNodeId()).getInit();
+		for (Element ds : model.elements.values()) {
+			if (ds.getType() == ElementType.DATASTORE && isImmediateParentComponent(cId, ds) && !ds.getDataOutputs().isEmpty()) {
+				// Found an input data store, let's see if we need to initialize it
+				// First find the root data-store, as the init is stored on that node
+				while (ds.isReferenceData()) {
+					ds =  model.getElementById(ds.getOriginDataNodeId());
 				}
-				if (nodeInit != null && nodeInit != "") {
-					init += nodeInit + "\n";
-					replaceMap.put(node.getName(), compile(node.getId()));
-				}
-			}
-		}
-				
-		// add locally declared data stores initializations
-		for (Element ds: model.elements.values()) {
-			if(ds.getType() == ElementType.DATASTORE  
-				&& !ds.isReferenceData()
-				&& isImmediateParentComponent(cId, ds)) {
 				String dsInit = ds.getInit();
-				if (dsInit != null && dsInit != "") {
+				// Make sure that data-stores are initialized only once!
+				if (!Strings.isNullOrEmpty(dsInit) && initialized.add(ds.getId())) {
 					init += dsInit + "\n";
 					replaceMap.put(ds.getName(), compile(ds.getId()));
 				}

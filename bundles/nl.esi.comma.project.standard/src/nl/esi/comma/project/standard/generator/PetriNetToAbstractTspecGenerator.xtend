@@ -16,6 +16,7 @@ import java.io.BufferedReader
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.PrintStream
+import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.Collections
@@ -30,11 +31,8 @@ import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
 
-import static nl.esi.comma.project.standard.generator.^extension.IStandardProjectGeneratorExtension.*
-
 import static extension nl.esi.xtext.common.lang.generator.FileSystemAccessUtil.*
 import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
-import java.nio.charset.StandardCharsets
 
 class PetriNetToAbstractTspecGenerator extends AbstractGenerator {
 
@@ -47,19 +45,29 @@ class PetriNetToAbstractTspecGenerator extends AbstractGenerator {
     }
 
     override doGenerate(Resource res, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
-        doGenerate(res.resourceSet, res.URI, fsa, ctx)
+        val resourceSet = res.resourceSet
+        val petriNetURI = res.URI
+        val productName = petriNetURI.trimFileExtension.appendFileExtension('ps').lastSegment
+        val productURI = resourceSet.resources.map[URI].findFirst[lastSegment == productName]
+        if (productURI === null) {
+            reporting.addReport(StatusReportHelper.errorReport(
+                '''Product file «productName» not found in resource set.''', newArrayList()))
+        } else {
+            doGenerate(resourceSet, petriNetURI, productURI, fsa, ctx)
+        }
     }
 
-    def void doGenerate(ResourceSet rst, URI uri, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
-        val statusReportFile = fsa.rootURI.appendSegment("status_report.json").toPath
+    def void doGenerate(ResourceSet rst, URI petriNetURI, URI productURI, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
+        val statusReportFile = fsa.getURI("status_report.json").toPath
+        val pspath = productURI.trimSegments(1).appendSegment("").deresolve(fsa.getURI("dummy.atspec"), true, true, true)
         val process = Runtime.getRuntime().exec(#[
             pythonExe,
-            uri.toPath,
+            petriNetURI.toPath,
             '-no_sim=TRUE',
             '-tsdir=' + fsa.rootURI.toPath,
             '-pudir=' + fsa.getURI('plantuml').toPath,
             '-srfile=' + statusReportFile,
-            '-pspath=' + '../' + FOLDER_PSPEC + '/'
+            '-pspath=' + pspath
         ])
         val errOut = new ByteArrayOutputStream
         process.inputReader.pipeTo(System.out)

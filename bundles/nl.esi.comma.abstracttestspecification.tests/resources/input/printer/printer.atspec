@@ -1,10 +1,10 @@
 import "printer.ps"
 
+using printer.PrintFactoryA3DPrinter.variants
 using printer.PrintFactoryA3DPrinter.printJob
 using printer.PrintFactoryA3DPrinter.corrections
-using printer.PrintFactoryA3DPrinter.variants
-using printer.PrintFactoryA3DPrinter.printResult
 using printer.PrintFactoryA3DPrinter.printReport
+using printer.PrintFactoryA3DPrinter.printResult
 using printer.PrintFactoryA3DPrinter.request
 using printer.PrintFactoryA3DPrinter.Event_0mxx05p
 using printer.PrintFactoryA3DPrinter.Event_0jcg6zx

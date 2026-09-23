@@ -344,7 +344,7 @@ class Utils
     }
 
     // The Python Test Scenario Generator Class
-    static def generateTestSCNTxt(String name, Product prod, String pSpecFile) {
+    static def generateTestSCNTxt(String name, Product prod, String pSpecFile, String scenarioPrefix) {
         return
         '''
         import json
@@ -538,7 +538,7 @@ class Utils
                             txt += "%s\n" % self.tr_assert_ref_dict[name.rsplit("_",1)[0]]
                         txt += "\n"
                 txt += '\ngenerate-file "./dataset/"\n\n'
-                fname = output_dir / f"_scenario{str(idx)}.atspec"
+                fname = output_dir / f"«scenarioPrefix ?: '_scenario'»{str(idx)}.atspec"
                 print(str(fname))
                 os.makedirs(os.path.dirname(fname), exist_ok=True)
                 with open(fname, 'w') as f:
@@ -551,7 +551,7 @@ class Utils
                         'transition' : step[1].name,
                         'substitution' : step[2].dict()
                     }
-                fname = output_dir / f"_scenario{str(idx)}.json"
+                fname = output_dir / f"«scenarioPrefix ?: '_scenario'»{str(idx)}.json"
                 print(str(fname))
                 os.makedirs(os.path.dirname(fname), exist_ok=True)
                 with open(fname, 'w') as f:
@@ -1001,10 +1001,15 @@ class Utils
         return String.join("\n", result)
     }
 
-    static def String escapeAndLimitText(String text, int limit) {
-        if (text === null) {
+    static def String escapeAndLimitText(String inputText, int limit) {
+        if (inputText === null) {
             return ""
         }
+        var text = inputText 
+        if (text.length() > limit) {
+            text = text.substring(0, limit - 3) + "..."
+        }
+
         // Escape special characters for Python
         var escaped = text.trim()
             .replaceAll("\\s+", " ")
@@ -1013,10 +1018,6 @@ class Utils
             .replace("\n", "")
             .replace("\r", "")
             .replace("\t", " ")
-        // Limit to specified length with "..." suffix if truncated
-        if (escaped.length() > limit) {
-            escaped = escaped.substring(0, limit - 3) + "..."
-        }
         return escaped
     }
 
