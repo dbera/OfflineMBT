@@ -31,6 +31,7 @@ import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.ide.editor.contentassist.ContentAssistContext
 
 import static extension nl.esi.xtext.actions.utilities.ActionsUtilities.*
+import nl.esi.comma.assertthat.assertThat.DataAssertions
 
 /**
  * See https://www.eclipse.org/Xtext/documentation/310_eclipse_support.html#content-assist
@@ -49,7 +50,7 @@ class ProductIdeProposalProvider extends AbstractProductIdeProposalProvider {
             case expressionGrammarAccess.expressionLevel8Access.fieldRecordFieldCrossReference_1_0_2_0,
             case actionsGrammarAccess.fieldAccessExpAccess.fieldRecordFieldCrossReference_1_2_0: [
                 val field = EObjectOrProxy as RecordField
-                return context.isReferenceUpdate
+                return context.isReferenceUpdate || context.isAssertion
                     ? !context.suppressedFields.contains(field)
                     : field.kind != RecordFieldKind.SYMBOLIC
             ]
@@ -75,6 +76,10 @@ class ProductIdeProposalProvider extends AbstractProductIdeProposalProvider {
 
     protected def boolean isReferenceUpdate(ContentAssistContext context) {
         return EcoreUtil2.getContainerOfType(context.currentModel, DataReferences) !== null
+    }
+
+    protected def boolean isAssertion(ContentAssistContext context) {
+        return EcoreUtil2.getContainerOfType(context.currentModel, DataAssertions) !== null
     }
 
     protected def getSuppressedFields(ContentAssistContext context) {
