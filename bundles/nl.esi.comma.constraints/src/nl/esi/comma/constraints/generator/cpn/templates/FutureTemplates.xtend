@@ -38,12 +38,18 @@ class FutureTemplates {
 			    	«targetEventInfo.refType» «targetEventInfo.refName»
 			    «ENDIF»
 			    ANY any
+			    StepMetaData StepMetaData
+			    
+			    outputs
+			    StepMetaData StepMetaData
 			
 			    local
 			    «correlationVar.type.type.name» «correlationVar.name»
 			    UNIT split
 			    UNIT acceptor
 			    UNIT final
+			    
+			    
 			    
 			    desc "«templateName»"
 			    
@@ -57,14 +63,24 @@ class FutureTemplates {
 			    action          RepeatedActivation
 			    element-label   "Repeated Activation"
 			    case            default priority 50
-			    with-inputs     split, «activationEventInfo.refName», «correlationVar.name»
+			    with-inputs     split, «activationEventInfo.refName», «correlationVar.name», StepMetaData
 			    with-guard      «helpers.getRefRepeatedActivationWhereClause(activationEventInst)»
 			    produces-outputs    split suppress
 			    updates:
 			         split := split
 			    produces-outputs    «correlationVar.name»
 			    updates:
-			         «correlationVar.name» := «correlationVar.name»
+			         «correlationVar.name».MetaData := 
+			             <map<string,string[]>>{
+			                 "activationIds" ->
+			                     add(
+			                         «correlationVar.name».MetaData["activationIds"],
+			                         StepMetaData.steps["stepid"]
+			                        )
+			             }
+			    produces-outputs     StepMetaData
+			    updates:
+			         StepMetaData := StepMetaData
 			          
 			     action          UnactivatedTarget
 			     element-label   "Unactivated Target"
@@ -85,12 +101,20 @@ class FutureTemplates {
 			     action          Activation
 			     element-label   "Activation"
 			     case            default priority 40
-			     with-inputs     «activationEventInfo.refName»
+			     with-inputs     «activationEventInfo.refName», StepMetaData
 			     with-guard      «helpers.getRefConcreteWhereClause(activationEventInst)»
 			     produces-outputs    split suppress
 			     produces-outputs    «correlationVar.name»
 			     updates:
 			         «helpers.getRefWithClause(activationEventInst)»
+			         «correlationVar.name».MetaData :=
+			             <map<string,string[]>>{
+			                 "activationIds" ->
+			                 <string[]>[StepMetaData.steps["stepid"]]
+			              }
+			     produces-outputs    StepMetaData
+			     updates:
+			         StepMetaData := StepMetaData
 			         
 			     action           UnmatchedTarget
 			     element-label    "Unmatched Target"

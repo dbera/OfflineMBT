@@ -599,13 +599,12 @@ class PetriNet {
                 # print(" Finished Generation, writing to file.. ")
                 print("[INFO] Starting Reachability Graph Generation")
                 # pn.generateScenarios(s,0,[],[],[],0,«depth_limit»)
-«««            «IF !isReachabilityAnalysisTask»
-            «IF  generationMode == ProductGenerationMode.TEST_GENERATION»
-                sys.setrecursionlimit(«depth_limit + 100»)
-                pn.generateSCN()
-                print('Num Tests: ', pn.numTestCases)
-                print("[INFO] Finished.")
-            «ENDIF»
+                «IF  generationMode == ProductGenerationMode.TEST_GENERATION»
+                    sys.setrecursionlimit(«depth_limit + 100»)
+                    pn.generateSCN()
+                    print('Num Tests: ', pn.numTestCases)
+                    print("[INFO] Finished.")
+                «ENDIF»
                 b = datetime.datetime.now()
             
                 # s.goto(0)
@@ -615,71 +614,68 @@ class PetriNet {
                     pn.generateReachabilityGraph(f)
                     print("[INFO] Created %s" % (fname,))
                 c = datetime.datetime.now()
-            
-«««            «IF !isReachabilityAnalysisTask»
-            «IF  generationMode == ProductGenerationMode.TEST_GENERATION»
-                print("[INFO] Starting Test Generation.")
-                pn.initializeTestGeneration()
-                pn.generateTestCases()
-                
-                # print('[INFO] Number-of-generated-scenario files: ',len(pn.visitedTList))
-                print("[INFO] Test Generation Finished.")
-                d = datetime.datetime.now()
-                
-                print("[INFO] Creating Structure and Behavior Views in PlantUML.")
-                map_block_uml_txt = {}
-                for t in pn.n.transition():
-                    map_block_uml_txt[t.name.split('_')[0]] = '@startuml\n'
+                «IF  generationMode == ProductGenerationMode.TEST_GENERATION»
+                    print("[INFO] Starting Test Generation.")
+                    pn.initializeTestGeneration()
+                    pn.generateTestCases()
                     
-                for t in pn.n.transition():
-                    gtxt = map_block_uml_txt.get(t.name.split('_')[0])
-                    if 'json.loads' in t.guard._str:
-                        # print(t.guard._str.replace('json.loads',''))
-                        # print('\n'.join(list(pn.chunkstring(t.guard._str.replace('json.loads','').replace(', object_pairs_hook=Data().int_keys', ''),55))))
-                        gtxt += 'component %s\n' % (t.name)
-                        if len(list(pn.chunkstring(t.guard._str.replace('json.loads','').replace(', object_pairs_hook=Data().int_keys', ''),68))) <= 2:
-                            gtxt += 'note left of [%s]\n %s\nendnote\n' % (t.name, '\n'.join(list(pn.chunkstring(t.guard._str.replace('json.loads','').replace(', object_pairs_hook=Data().int_keys', ''),55))))
-                        else:
-                            gtxt += 'note bottom of [%s]\n %s\nendnote\n' % (t.name, '\n'.join(list(pn.chunkstring(t.guard._str.replace('json.loads','').replace(', object_pairs_hook=Data().int_keys', ''),55))))
-                    else:
-                        gtxt += 'component %s\n' % (t.name)
-                        gtxt += 'note right of [%s]\n %s\nendnote\n' % (t.name, t.guard)
-                    map_block_uml_txt[t.name.split('_')[0]] = gtxt
+                    # print('[INFO] Number-of-generated-scenario files: ',len(pn.visitedTList))
+                    print("[INFO] Test Generation Finished.")
+                    d = datetime.datetime.now()
                     
-                for t in pn.n.transition():
-                    for inp in pn.n.pre(t.name):
-                        txt = map_block_uml_txt.get(t.name.split('_')[0])
-                        if 'local' in inp:
-                            txt += '%s -[#lightgrey]-> [%s]\n' % (inp, t.name)
+                    print("[INFO] Creating Structure and Behavior Views in PlantUML.")
+                    map_block_uml_txt = {}
+                    for t in pn.n.transition():
+                        map_block_uml_txt[t.name.split('_')[0]] = '@startuml\n'
+                        
+                    for t in pn.n.transition():
+                        gtxt = map_block_uml_txt.get(t.name.split('_')[0])
+                        if 'json.loads' in t.guard._str:
+                            # print(t.guard._str.replace('json.loads',''))
+                            # print('\n'.join(list(pn.chunkstring(t.guard._str.replace('json.loads','').replace(', object_pairs_hook=Data().int_keys', ''),55))))
+                            gtxt += 'component %s\n' % (t.name)
+                            if len(list(pn.chunkstring(t.guard._str.replace('json.loads','').replace(', object_pairs_hook=Data().int_keys', ''),68))) <= 2:
+                                gtxt += 'note left of [%s]\n %s\nendnote\n' % (t.name, '\n'.join(list(pn.chunkstring(t.guard._str.replace('json.loads','').replace(', object_pairs_hook=Data().int_keys', ''),55))))
+                            else:
+                                gtxt += 'note bottom of [%s]\n %s\nendnote\n' % (t.name, '\n'.join(list(pn.chunkstring(t.guard._str.replace('json.loads','').replace(', object_pairs_hook=Data().int_keys', ''),55))))
                         else:
-                            txt += '%s --> [%s]\n' % (inp, t.name)
-                        map_block_uml_txt[t.name.split('_')[0]] = txt
-                    for out in pn.n.post(t.name):
-                        txt = map_block_uml_txt.get(t.name.split('_')[0])
-                        if 'local' in out:
-                            txt += '[%s] -[#lightgrey]-> %s\n' % (t.name, out)
-                        else:
-                            txt += '[%s] --> %s\n' % (t.name, out)
-                        map_block_uml_txt[t.name.split('_')[0]] = txt
-                
-                for key in map_block_uml_txt:
-                    txt = map_block_uml_txt.get(key)
-                    txt += '@enduml\n'
-                    map_block_uml_txt[key] = txt
-                    fname = p.plantuml_dir / (key + ".plantuml")
-                    with open(fname, 'w') as f:
-                        f.write(txt)
-            «ENDIF»
+                            gtxt += 'component %s\n' % (t.name)
+                            gtxt += 'note right of [%s]\n %s\nendnote\n' % (t.name, t.guard)
+                        map_block_uml_txt[t.name.split('_')[0]] = gtxt
+                        
+                    for t in pn.n.transition():
+                        for inp in pn.n.pre(t.name):
+                            txt = map_block_uml_txt.get(t.name.split('_')[0])
+                            if 'local' in inp:
+                                txt += '%s -[#lightgrey]-> [%s]\n' % (inp, t.name)
+                            else:
+                                txt += '%s --> [%s]\n' % (inp, t.name)
+                            map_block_uml_txt[t.name.split('_')[0]] = txt
+                        for out in pn.n.post(t.name):
+                            txt = map_block_uml_txt.get(t.name.split('_')[0])
+                            if 'local' in out:
+                                txt += '[%s] -[#lightgrey]-> %s\n' % (t.name, out)
+                            else:
+                                txt += '[%s] --> %s\n' % (t.name, out)
+                            map_block_uml_txt[t.name.split('_')[0]] = txt
+                    
+                    for key in map_block_uml_txt:
+                        txt = map_block_uml_txt.get(key)
+                        txt += '@enduml\n'
+                        map_block_uml_txt[key] = txt
+                        fname = p.plantuml_dir / (key + ".plantuml")
+                        with open(fname, 'w') as f:
+                            f.write(txt)
+                «ENDIF»
                 print("[INFO] View Generation Finished.")
                 e = datetime.datetime.now()
                 print("[INFO] Time Statistics")
                 print("[INFO]    * Reachability Computation: %s" % (b - a))
                 print("[INFO]    * Reachability PUML Creation: %s" % (c - b))
-«««            «IF !isReachabilityAnalysisTask»
-            «IF  generationMode == ProductGenerationMode.TEST_GENERATION»
-                print("[INFO]    * Test Generation: %s" % (d - c))
-                print("[INFO]    * PlantUML View Generation: %s" % (e - d))
-            «ENDIF»
+                «IF  generationMode == ProductGenerationMode.TEST_GENERATION»
+                    print("[INFO]    * Test Generation: %s" % (d - c))
+                    print("[INFO]    * PlantUML View Generation: %s" % (e - d))
+                «ENDIF»
                 
                 # print("[INFO] Starting Command-Line Simulation.")
                 # simulate(pn.n)

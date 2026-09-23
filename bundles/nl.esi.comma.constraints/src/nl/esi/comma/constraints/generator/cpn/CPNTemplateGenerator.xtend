@@ -97,10 +97,13 @@ class CPNTemplateGenerator
         '''
         system RootConcreteTSpec
         {
+            inputs
+                StepMetaData StepMetaData
             outputs
             «FOR l : labelList»
                 «l.refType» «l.refName»
             «ENDFOR»
+            StepMetaData StepMetaData
 
             local
             «FOR i : 0..idx»
@@ -109,6 +112,7 @@ class CPNTemplateGenerator
             
         init
             p0 := UNIT { unit = 0 }
+            StepMetaData:=StepMetaData { steps = <map<string,string>>{} }
 
             desc "TSpecCPNModel"
 
@@ -118,7 +122,7 @@ class CPNTemplateGenerator
                         action «step.type.name»_«_idx»
                         element-label "«step.type.name»"
                         case default
-                        with-inputs p«_idx»
+                        with-inputs p«_idx», StepMetaData
                         «IF isStepNamePresent(labelList,step.stepVar.name)»
                             produces-outputs «step.stepVar.name»
                             updates:
@@ -138,6 +142,18 @@ class CPNTemplateGenerator
                         «ELSE»
                             produces-outputs any
                         «ENDIF»
+                        produces-outputs StepMetaData
+                        updates:
+                            «IF step instanceof RunStep»
+                                StepMetaData := StepMetaData {
+                                    steps = <map<string,string>>{
+                                        "stepid" -> "«step.inputVar.name»"
+                                    }
+                                }
+                            «ELSE»
+                                StepMetaData := StepMetaData
+                            «ENDIF»
+                             
                         produces-outputs p«_idx+1»
                         «{_idx++ ""}»
                     «ENDIF»
@@ -156,10 +172,13 @@ class CPNTemplateGenerator
         '''
         system RootConcreteTSpec
         {
+            inputs
+                StepMetaData StepMetaData
             outputs
             «FOR l : labelList»
                 «l.refType» «l.refName»
             «ENDFOR»
+            StepMetaData StepMetaData
 
             local
             «FOR i : 0..idx»
@@ -168,6 +187,7 @@ class CPNTemplateGenerator
             
         init
             p0 := UNIT { unit = 0 }
+            StepMetaData:=StepMetaData { steps = <map<string,string>>{} }
 
             desc "TSpecCPNModel"
 
@@ -177,7 +197,7 @@ class CPNTemplateGenerator
                     action «step.type.name»_«_idx»
                     element-label "«step.type.name»"
                     case default
-                    with-inputs p«_idx»
+                    with-inputs p«_idx», StepMetaData
                     «IF isStepNamePresent(labelList,step.stepVar.name)»
                         produces-outputs «step.stepVar.name»
                         updates:
@@ -197,6 +217,17 @@ class CPNTemplateGenerator
                     «ELSE»
                         produces-outputs any
                     «ENDIF»
+                    produces-outputs StepMetaData
+                    updates:
+                        «IF step instanceof RunStep»
+                            StepMetaData := StepMetaData {
+                                steps = <map<string,string>>{
+                                    "stepid" -> "«step.inputVar.name»"
+                                }
+                            }
+                        «ELSE»
+                            StepMetaData := StepMetaData
+                        «ENDIF»
                     produces-outputs p«_idx+1»
                     «{_idx++ ""}»
                 «ENDIF»
@@ -225,10 +256,13 @@ class CPNTemplateGenerator
         '''
         system RootConcreteTSpec
         {
+            inputs
+                StepMetaData StepMetaData
             outputs
             «FOR label : labelList»
                 «label.refType» «label.refName»
             «ENDFOR»
+            StepMetaData StepMetaData
     
             local
             UNIT p0
@@ -236,6 +270,7 @@ class CPNTemplateGenerator
     
             init
             p0 := UNIT { unit = 0 }
+            StepMetaData:=StepMetaData { steps = <map<string,string>>{} }
     
             desc "TSpecCPNModel"
     
@@ -243,7 +278,7 @@ class CPNTemplateGenerator
                 action «boundaryStep.type.name»_0
                 element-label "«boundaryStep.type.name»"
                 case default
-                with-inputs p0
+                with-inputs p0, StepMetaData
                 
                 «IF isStepNamePresent(labelList, boundaryStep.stepVar.name)»
                     produces-outputs «boundaryStep.stepVar.name»
@@ -267,7 +302,18 @@ class CPNTemplateGenerator
                 «ELSE»
                     produces-outputs any
                 «ENDIF»
-                
+                produces-outputs StepMetaData
+                updates:
+                    «IF boundaryStep instanceof RunStep»
+                        StepMetaData := StepMetaData {
+                            steps = <map<string,string>>{
+                                "stepid" -> "«boundaryStep.inputVar.name»"
+                            }
+                        }
+                    «ELSE»
+                        StepMetaData := StepMetaData
+                    «ENDIF»
+
                 produces-outputs p1
             «ENDIF»
         }
@@ -283,10 +329,13 @@ class CPNTemplateGenerator
         '''
         system RootConcreteTSpec
                 {
+                    inputs
+                    StepMetaData StepMetaData
                     outputs
                     «FOR l : labelList»
                         «l.refType» «l.refName»
                     «ENDFOR»
+                    StepMetaData StepMetaData
                     EOT endoftrace
         
                     local
@@ -294,19 +343,18 @@ class CPNTemplateGenerator
                         UNIT p«i»
                     «ENDFOR»
                     
-                init
+                    init
                     p0 := UNIT { unit = 0 }
-        
+                    StepMetaData:=StepMetaData { steps = <map<string,string>>{} }
+
                     desc "TSpecCPNModel"
-        
-                   
                     «FOR ss : td.stepSeq»
                         «FOR step : ss.step» 
                             «IF step instanceof RunStep || step instanceof AssertionStep»
                                 action «step.type.name»_«_idx»
                                 element-label "«step.type.name»"
                                 case default
-                                with-inputs p«_idx»
+                                with-inputs p«_idx»,StepMetaData
                                 «IF isStepNamePresent(labelList,step.stepVar.name)»
                                     produces-outputs «step.stepVar.name»
                                     updates:
@@ -325,7 +373,18 @@ class CPNTemplateGenerator
                                 «ELSE»
                                     produces-outputs any
                                 «ENDIF»
-                                
+                                produces-outputs StepMetaData
+                                updates:
+                                    «IF step instanceof RunStep»
+                                        StepMetaData := StepMetaData {
+                                            steps = <map<string,string>>{
+                                                "stepid" -> "«step.inputVar.name»"
+                                            }
+                                        }
+                                    «ELSE»
+                                        StepMetaData := StepMetaData
+                                    «ENDIF»
+                
                                 «IF _idx == idx - 1»
                                     produces-outputs endoftrace
                                 «ENDIF»
@@ -350,6 +409,10 @@ class CPNTemplateGenerator
         '''
         record ANY {
             int any
+        }
+        
+        record StepMetaData {
+            map<string,string> steps
         }
         
         record EOT {
@@ -695,7 +758,18 @@ class CPNTemplateGenerator
         
                     for token in marking.get(token_place, []):
                         values = dict(rule)
-                        values["correlation"] = format_token(token)
+                        if isinstance(token, dict):
+                            metadata = token.get("MetaData", {})
+                            correlation_token = {
+                                key: value
+                                for key, value in token.items()
+                                if key != "MetaData"
+                            }
+                        else:
+                            metadata = {}
+                            correlation_token = token
+                        
+                        values["correlation"] = format_token(correlation_token)
                         
                         if rule.get("valueKind") == "count":
                             values["actualCount"] = token.get("count", 0)
@@ -705,6 +779,7 @@ class CPNTemplateGenerator
                             "nodeId": node["id"],
                             "place": token_place,
                             "token": token,
+                            "metadata": metadata,
                             "message": rule["message"].format(**values)
                         })
             return diagnostics
