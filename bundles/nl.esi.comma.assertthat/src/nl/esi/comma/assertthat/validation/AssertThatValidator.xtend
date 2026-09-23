@@ -26,7 +26,7 @@ import org.eclipse.xtext.validation.Check
  */
 class AssertThatValidator extends AbstractAssertThatValidator {
     @Check
-    def checkGreetingStartsWithCapital(DataAssertions dataAssertions) {
+    def checkMinimalOneAssertion(DataAssertions dataAssertions) {
         if (dataAssertions.constr.isNullOrEmpty) {
             error('At least 1 assertion is required', AssertThatPackage.Literals.DATA_ASSERTIONS__CONSTR)
         }
