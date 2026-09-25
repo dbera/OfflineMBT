@@ -13,6 +13,26 @@
         }
         ,
         {
+            "name": "CPNServer no web",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "server/CPNServer.py",
+            "console": "integratedTerminal",
+            "args": ["--web-path", "/unknown", "--server-path", "${workspaceFolder}/../target/dist/server", "--repository-path", "${workspaceFolder}/../target/dist/models", "--debug"],
+            "cwd": "${workspaceFolder}"
+        }
+        ,
+        {
+            "name": "CPNServer web",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "server/CPNServer.py",
+            "console": "integratedTerminal",
+            "args": ["--web-path", "/web", "--server-path", "${workspaceFolder}/../target/dist/server", "--repository-path", "${workspaceFolder}/../target/dist/models", "--debug"],
+            "cwd": "${workspaceFolder}"
+        }
+        ,
+        {
             "name": "CPNServer_cov",
             "type": "debugpy",
             "request": "launch",
