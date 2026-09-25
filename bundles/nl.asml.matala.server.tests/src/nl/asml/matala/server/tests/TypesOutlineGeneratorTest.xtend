@@ -29,7 +29,7 @@ import org.junit.jupiter.api.^extension.ExtendWith
 
 import nl.esi.xtext.common.lang.utilities.EcoreUtil3
 import static extension nl.asml.matala.server.types.outline.TypesOutlineGenerator.*
-import nl.asml.matala.server.types.outline.DataTypeListEntry
+import nl.asml.matala.server.types.outline.DataTypeOutlineEntry
 
 /**
  * Tests transformation from TypesModel to DataTypeListSchema.
@@ -67,11 +67,95 @@ class TypesOutlineGeneratorTest {
         Assertions.assertTrue(errors.isEmpty, '''Unexpected errors: «errors.join(", ")»''')
     }
     
-	
+	@Test
+    def void loadContext() {
+        val typesCode = '''
+        @id("DataType_02hh0t9")
+        record Fries {
+          concrete Topping dressing
+          concrete string client_id
+        }
+        @id("DataType_17t5tar")
+        @typeAlias("Context")
+        record FriesContext {
+          concrete string client_id
+        }
+        @id("DataType_1jk4lpg")
+        enum Sauce {
+          Ketchup
+          Mayo
+        }
+        @id("DataType_2v8mfd7")
+        record Topping {
+          concrete FriesContext ctx
+          concrete Sauce sauce
+        }  
+        '''
+        val expected = '''
+        [
+          {
+            "nodeType": "Context",
+            "id": "DataType_17t5tar",
+            "name": "FriesContext",
+            "label": "FriesContext : Context",
+            "children": [
+              {
+                "nodeType": "Context",
+                "name": "client_id",
+                "label": "client_id : String",
+                "kind": "concrete",
+                "children": []
+              }
+            ]
+          }
+        ]
+        '''
+        val resource = resourceSet.createResource(URI.createURI("test.types"))
+        resource.load(new ByteArrayInputStream(typesCode.bytes), null)
+        
+        val typesModel = resource.contents.filter(TypesModel).head
+        Assertions.assertNotNull(typesModel, "TypesModel should be parsed from types syntax")
+        val errors = resource.errors
+        Assertions.assertTrue(errors.isEmpty, '''Unexpected errors: «errors.join(", ")»''')
+        compare("FriesContext", typesModel, expected )
+   
+    }
+   
 	@Test
 	def void loadTypesModel() {
 		val typesCode = '''
-			enum Color { RED GREEN BLUE }        
+        @id("aap")
+        enum Color { RED GREEN BLUE }        
+		'''
+		val expected = '''
+        [
+          {
+            "nodeType": "Enum",
+            "id": "aap",
+            "name": "Color",
+            "label": "Color : Enum",
+            "children": [
+              {
+                "nodeType": "enum-literal",
+                "name": "BLUE",
+                "label": "BLUE",
+                "children": []
+              },
+              {
+                "nodeType": "enum-literal",
+                "name": "GREEN",
+                "label": "GREEN",
+                "children": []
+              },
+              {
+                "nodeType": "enum-literal",
+                "name": "RED",
+                "label": "RED",
+                "children": []
+              }
+            ]
+          }
+        ]
 		'''
 		val resource = resourceSet.createResource(URI.createURI("test.types"))
 		resource.load(new ByteArrayInputStream(typesCode.bytes), null)
@@ -80,6 +164,7 @@ class TypesOutlineGeneratorTest {
 		Assertions.assertNotNull(typesModel, "TypesModel should be parsed from types syntax")
 		val errors = resource.errors
 		Assertions.assertTrue(errors.isEmpty, '''Unexpected errors: «errors.join(", ")»''')
+		compare("Color", typesModel, expected )
 	}
 	
 	@Test
@@ -99,7 +184,7 @@ class TypesOutlineGeneratorTest {
 		Assertions.assertNotNull(entries)
 		Assertions.assertFalse(entries.isEmpty, "Schema should have entries")
 		
-		val colorEntry = entries.head
+		val colorEntry = entries.head.children.head
 		Assertions.assertEquals("RED", colorEntry.label)
 	}
 
@@ -112,96 +197,96 @@ class TypesOutlineGeneratorTest {
     @Test
     def void transformPrinterPrintRequest() {
         val compare = '''
-			[
-			  {
-			    "nodeType": "record-field",
-			    "id": "undefined-field0",
-			    "label": "id : Int",
-			    "autoOpen": false,
-			    "children": []
-			  },
-			  {
-			    "nodeType": "record-field",
-			    "id": "undefined-field1",
-			    "label": "resolution : PrintResolution",
-			    "autoOpen": true,
-			    "children": [
-			      {
-			        "nodeType": "enum-literal",
-			        "id": "undefined-field1-literal0",
-			        "label": "LOW",
-			        "autoOpen": false,
-			        "children": []
-			      },
-			      {
-			        "nodeType": "enum-literal",
-			        "id": "undefined-field1-literal1",
-			        "label": "MED",
-			        "autoOpen": false,
-			        "children": []
-			      },
-			      {
-			        "nodeType": "enum-literal",
-			        "id": "undefined-field1-literal2",
-			        "label": "HIGH",
-			        "autoOpen": false,
-			        "children": []
-			      }
-			    ]
-			  },
-			  {
-			    "nodeType": "record-field",
-			    "id": "undefined-field2",
-			    "label": "scale : Float",
-			    "autoOpen": false,
-			    "children": []
-			  },
-			  {
-			    "nodeType": "record-field",
-			    "id": "undefined-field3",
-			    "label": "color : ColorType",
-			    "autoOpen": true,
-			    "children": [
-			      {
-			        "nodeType": "enum-literal",
-			        "id": "undefined-field3-literal0",
-			        "label": "MONOCHROME",
-			        "autoOpen": false,
-			        "children": []
-			      },
-			      {
-			        "nodeType": "enum-literal",
-			        "id": "undefined-field3-literal1",
-			        "label": "COLOR",
-			        "autoOpen": false,
-			        "children": []
-			      }
-			    ]
-			  },
-			  {
-			    "nodeType": "record-field",
-			    "id": "undefined-field4",
-			    "label": "opType : OperationType",
-			    "autoOpen": true,
-			    "children": [
-			      {
-			        "nodeType": "enum-literal",
-			        "id": "undefined-field4-literal0",
-			        "label": "PREP",
-			        "autoOpen": false,
-			        "children": []
-			      },
-			      {
-			        "nodeType": "enum-literal",
-			        "id": "undefined-field4-literal1",
-			        "label": "PRINT",
-			        "autoOpen": false,
-			        "children": []
-			      }
-			    ]
-			  }
-			]
-		'''
+        [
+          {
+            "nodeType": "Record",
+            "name": "PrintRequest",
+            "label": "PrintRequest : Record",
+            "children": [
+              {
+                "nodeType": "record-field",
+                "name": "color",
+                "label": "color : ColorType : Enum",
+                "kind": "concrete",
+                "children": [
+                  {
+                    "nodeType": "enum-literal",
+                    "name": "COLOR",
+                    "label": "COLOR",
+                    "children": []
+                  },
+                  {
+                    "nodeType": "enum-literal",
+                    "name": "MONOCHROME",
+                    "label": "MONOCHROME",
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "nodeType": "record-field",
+                "name": "id",
+                "label": "id : Int",
+                "kind": "concrete",
+                "children": []
+              },
+              {
+                "nodeType": "record-field",
+                "name": "opType",
+                "label": "opType : OperationType : Enum",
+                "kind": "concrete",
+                "children": [
+                  {
+                    "nodeType": "enum-literal",
+                    "name": "PREP",
+                    "label": "PREP",
+                    "children": []
+                  },
+                  {
+                    "nodeType": "enum-literal",
+                    "name": "PRINT",
+                    "label": "PRINT",
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "nodeType": "record-field",
+                "name": "resolution",
+                "label": "resolution : PrintResolution : Enum",
+                "kind": "concrete",
+                "children": [
+                  {
+                    "nodeType": "enum-literal",
+                    "name": "HIGH",
+                    "label": "HIGH",
+                    "children": []
+                  },
+                  {
+                    "nodeType": "enum-literal",
+                    "name": "LOW",
+                    "label": "LOW",
+                    "children": []
+                  },
+                  {
+                    "nodeType": "enum-literal",
+                    "name": "MED",
+                    "label": "MED",
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "nodeType": "record-field",
+                "name": "scale",
+                "label": "scale : Float",
+                "kind": "concrete",
+                "children": []
+              }
+            ]
+          }
+        ]
+        '''
         transformPrinter("PrintRequest", compare)
     }
     
@@ -210,46 +295,51 @@ class TypesOutlineGeneratorTest {
         val value = "«value»"
         val element = "«element»"
         val compare = '''
-			[
-			  {
-			    "nodeType": "record-field",
-			    "id": "undefined-field0",
-			    "label": "correctionsMap : Map<Int, List<CorrectionItem>>",
-			    "autoOpen": true,
-			    "children": [
-			      {
-			        "nodeType": "map-value",
-			        "id": "undefined-field0-value",
-			        "label": "«value» : List<CorrectionItem>",
-			        "autoOpen": true,
-			        "children": [
-			          {
-			            "nodeType": "collection-element",
-			            "id": "undefined-field0-value-elem",
-			            "label": "«element» : CorrectionItem",
-			            "autoOpen": true,
-			            "children": [
-			              {
-			                "nodeType": "record-field",
-			                "id": "undefined-field0-value-elem-field0",
-			                "label": "data : String",
-			                "autoOpen": false,
-			                "children": []
-			              }
-			            ]
-			          }
-			        ]
-			      }
-			    ]
-			  },
-			  {
-			    "nodeType": "record-field",
-			    "id": "undefined-field1",
-			    "label": "id : Int",
-			    "autoOpen": false,
-			    "children": []
-			  }
-			]
+        [
+          {
+            "nodeType": "Record",
+            "name": "CorrectionsReport",
+            "label": "CorrectionsReport : Record",
+            "children": [
+              {
+                "nodeType": "record-field",
+                "name": "correctionsMap",
+                "label": "correctionsMap : Map<Int, List<CorrectionItem : Record>>",
+                "kind": "mixed",
+                "children": [
+                  {
+                    "nodeType": "map-value",
+                    "name": "value",
+                    "label": "«value» : List<CorrectionItem : Record>",
+                    "children": [
+                      {
+                        "nodeType": "collection-element",
+                        "name": "element",
+                        "label": "«element» : CorrectionItem : Record",
+                        "children": [
+                          {
+                            "nodeType": "record-field",
+                            "name": "data",
+                            "label": "data : String",
+                            "kind": "concrete",
+                            "children": []
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "nodeType": "record-field",
+                "name": "id",
+                "label": "id : Int",
+                "kind": "concrete",
+                "children": []
+              }
+            ]
+          }
+        ]
 		'''
         transformPrinter("CorrectionsReport", compare)
     }
@@ -261,7 +351,10 @@ class TypesOutlineGeneratorTest {
         resource.load(this.class.getResourceAsStream(fileName), null)
         EcoreUtil3.resolveAll(resourceSet)
         val typesModel = resource.contents.filter(TypesModel).head
-        
+        compare(typeName, typesModel, expectJsonString)
+    }
+    
+    def void compare(String typeName, TypesModel typesModel, String expectJsonString){
         EcoreUtil3.validate(typesModel)
         Assertions.assertNotNull(typesModel, "TypesModel should parse successfully")
         val actual = typesModel.getOutline(typeName)
@@ -271,25 +364,26 @@ class TypesOutlineGeneratorTest {
             compare(expected, actual)
         }
     }
-    private static def void sortRecursively(List<DataTypeListEntry> list) {
+    private static def void sortRecursively(List<DataTypeOutlineEntry> list) {
         if (!list.isEmpty) {
             list.sort[a, b | a.label.compareTo(b.label)]
             list.forEach[children.sortRecursively]
         }
     }
     
-    private static def List<String> equalsIgnoringId(DataTypeListEntry a, DataTypeListEntry b) {
+    private static def List<String> equal(DataTypeOutlineEntry a, DataTypeOutlineEntry b) {
         val mismatch = newArrayList
         if (a.nodeType != b.nodeType) mismatch += "NodeType"
         if (a.label != b.label) mismatch += "Label"
-        if (a.autoOpen != b.autoOpen) mismatch += "AutoOpen"
+        if (a.name != b.name) mismatch += "Name"
+        if (a.id != b.id) mismatch += "Id"
         if (a.children.size != b.children.size) mismatch += "Size"
         
         if (!mismatch.empty) {
             return mismatch
         }
         for (var i = 0; i < a.children.size; i++) {
-            val cMismatch = a.children.get(i).equalsIgnoringId(b.children.get(i))
+            val cMismatch = a.children.get(i).equal(b.children.get(i))
             if (!cMismatch.empty){
                 return cMismatch
             }
@@ -297,16 +391,16 @@ class TypesOutlineGeneratorTest {
         return mismatch
     }
     
-    private static def void compare(List<DataTypeListEntry> expected, List<DataTypeListEntry> actual){
+    private static def void compare(List<DataTypeOutlineEntry> expected, List<DataTypeOutlineEntry> actual){
         expected.sortRecursively
         actual.sortRecursively
         // Compare structure (ignoring id differences)
         Assertions.assertEquals(actual.size, expected.size, 
             "Entry count mismatch. Expected: " + expected.size + ", Got: " + actual.size)
         for (exp: expected) {
-            val act = actual.findFirst[label == exp.label]
+            val act = actual.findFirst[name == exp.name]
             Assertions.assertNotNull(act)
-            val matches = act.equalsIgnoringId(exp)
+            val matches = act.equal(exp)
             if (!matches.empty) {
                 println("Mismatch in " + matches.join(",") + ", label " + act.label + ":")
                 println("Expected: " + newArrayList(exp).toJson)

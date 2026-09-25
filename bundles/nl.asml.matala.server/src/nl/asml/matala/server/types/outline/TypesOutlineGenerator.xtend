@@ -20,6 +20,8 @@ import com.google.gson.reflect.TypeToken
 import java.util.ArrayList
 import java.util.List
 import java.util.Map
+import nl.esi.xtext.common.lang.base.Annotatable
+import nl.esi.xtext.common.lang.utilities.AnnotationUtil
 import nl.esi.xtext.types.types.EnumTypeDecl
 import nl.esi.xtext.types.types.MapTypeDecl
 import nl.esi.xtext.types.types.RecordTypeDecl
@@ -28,7 +30,9 @@ import nl.esi.xtext.types.types.TypeDecl
 import nl.esi.xtext.types.types.TypeObject
 import nl.esi.xtext.types.types.TypesModel
 import nl.esi.xtext.types.types.VectorTypeDecl
+import org.eclipse.emf.ecore.EObject
 
+import static extension nl.esi.xtext.common.lang.utilities.AnnotationUtil.*
 import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
 
 /**
@@ -48,21 +52,21 @@ class TypesOutlineGenerator {
     /**
      * Transforms a TypesModel into a DataTypeListSchema with structured entries.
      */
-    def static String toJson(List<DataTypeListEntry> model) {
-        return GSON.toJson(model, new TypeToken<List<DataTypeListEntry>>(){}.getType())
+    def static String toJson(List<DataTypeOutlineEntry> model) {
+        return GSON.toJson(model, new TypeToken<List<DataTypeOutlineEntry>>(){}.getType())
     }
 
     /**
      * Deserializes a JSON string into a List of DataTypeListEntry.
      */
-    def static List<DataTypeListEntry> fromJson(String jsonString) {
-        return GSON.fromJson(jsonString, new TypeToken<List<DataTypeListEntry>>(){}.getType())
+    def static List<DataTypeOutlineEntry> fromJson(String jsonString) {
+        return GSON.fromJson(jsonString, new TypeToken<List<DataTypeOutlineEntry>>(){}.getType())
     }
 
     /**
      * Transforms a full TypesModel into a DataTypeListSchema with structured entries.
      */
-    def static List<DataTypeListEntry>  getOutline(TypesModel model) {
+    def static List<DataTypeOutlineEntry>  getOutline(TypesModel model) {
         return model.getOutline(null)
     }
 
@@ -70,116 +74,138 @@ class TypesOutlineGenerator {
      * Transforms a TypesModel into a DataTypeListSchema with structured entries.
      * Top-level records/enums return their children directly (fields/literals) without wrapper node.
      */
-    def static List<DataTypeListEntry> getOutline(TypesModel model, String typeName) {
+    def static List<DataTypeOutlineEntry> getOutline(TypesModel model, String typeName) {
         if (model === null || model.types === null) {
            return List.of
         }
 
         val transformer = new TypesOutlineGenerator()
         // return the children only if complex type else the complete entry simple type (no children)
-        val rootName = typeName === null ? "undefined" : typeName
-        return model.types.filter[typeName === null || name == typeName ].map[transformer.doTransform(it, rootName)].flatMap[children.empty? List.of : children].toList
+        return model.types.filter[typeName === null || name == typeName ].map[transformer.doTransform(it)].toList
     }
 
     /**
      * Base dispatch method - should not be called directly.
      */
-    private def dispatch DataTypeListEntry doTransform(TypeDecl type, String parentId) {
-        return new DataTypeListEntry(null, parentId + '-' + type.translatedTypeName, "?", false, emptyList)
+    private def dispatch DataTypeOutlineEntry doTransform(TypeDecl type) {
+        return new DataTypeOutlineEntry(null, type.annotatedId, type.name, "?", emptyList)
     }
 
     /**
      * Transform SimpleTypeDecl - creates a primitive type entry.
      */
-    private def dispatch DataTypeListEntry doTransform(SimpleTypeDecl type, String parentId) {
+    private def dispatch DataTypeOutlineEntry doTransform(SimpleTypeDecl type) {
         var label = type.translatedTypeName 
         if (type.base !== null ) {
-            label += " based on "  + doTransform(type.base, "").label
-        } 
-        return DataTypeListEntry.primitiveBasedOn(parentId, label)
+            label += " based on "  + doTransform(type.base).label
+        }
+        val nodeType = type.typeOrAlias(DataTypeOutlineEntry.PRIMITIVE_BASED_ON)
+        return new DataTypeOutlineEntry(nodeType, type.annotatedId, type.name, label, emptyList)
     }
 
     /**
      * Transform EnumTypeDecl - creates an enum entry with literal children.
      */
-    private def dispatch DataTypeListEntry doTransform(EnumTypeDecl type, String parentId) {
-        val literals = new ArrayList<DataTypeListEntry>
+    private def dispatch DataTypeOutlineEntry doTransform(EnumTypeDecl type) {
+        val literals = new ArrayList<DataTypeOutlineEntry>
         val enums = type.literals
+        val literalNodeType = type.typeOrAlias(DataTypeOutlineEntry.ENUM_LITERAL)
         for (var int index = 0; index < enums.size; index++) {
             val literal = enums.get(index)
             val name  = literal.name
             //val value = literal.value
-            literals.add(DataTypeListEntry.enumLiteral(parentId + "-literal" + index, name))
+            literals.add(new DataTypeOutlineEntry(literalNodeType, literal.annotatedId, name, name, emptyList))
         }
-        return new DataTypeListEntry(null, type.name, type.name, !literals.isEmpty, literals)
+        val nodeType = type.typeOrAlias(DataTypeOutlineEntry.ENUM)
+        return new DataTypeOutlineEntry(nodeType, type.annotatedId, type.name, type.name + " : " + nodeType, literals)
     }
 
     /**
      * Transform RecordTypeDecl - creates a record entry with field children.
      */
-    private def dispatch DataTypeListEntry doTransform(RecordTypeDecl type, String parentId) {
-        val fields = new ArrayList<DataTypeListEntry>
-        val id = parentId  // Use parentId directly, don't add type name
+    private def dispatch DataTypeOutlineEntry doTransform(RecordTypeDecl type) {
+        val fields = new ArrayList<DataTypeOutlineEntry>
         val recordFields = type.fields
+        val fieldNodeType = type.typeOrAlias(DataTypeOutlineEntry.RECORD_FIELD)
         for (var int index = 0; index < recordFields.size; index++) {
             val field = recordFields.get(index)
+            val kind = field.kind?.literal
             val fName = field.name
             val fType = field.type
-            val fieldId = if (id.empty) "field" + index else id + "-field" + index
-            val fieldStructure = fType.typeObject?.asTypeDecl?.doTransform(fieldId)
+            val fieldStructure = fType.typeObject?.asTypeDecl?.doTransform()
             val children = fieldStructure === null ? emptyList:  fieldStructure.children
-            fields.add(DataTypeListEntry.recordField(fieldId, fName +" : "+fieldStructure.label, children))
+            fields.add(new DataTypeOutlineEntry(fieldNodeType, field.annotatedId, fName, fName +" : "+fieldStructure.label, kind, children))
         }
-        return new DataTypeListEntry(null, id, type.name, !fields.isEmpty, fields)
+        val nodeType = type.typeOrAlias(DataTypeOutlineEntry.RECORD)
+        return new DataTypeOutlineEntry(nodeType, type.annotatedId, type.name, type.name + " : " + nodeType, fields)
     }
 
     /**
      * Transform VectorTypeDecl - creates a collection element entry.
      */
-    private def dispatch DataTypeListEntry doTransform(VectorTypeDecl type, String parentId) {
-        val children = new ArrayList<DataTypeListEntry>
+    private def dispatch DataTypeOutlineEntry doTransform(VectorTypeDecl type) {
+        val children = new ArrayList<DataTypeOutlineEntry>
         val elementType = type.elementType
         var childLabel = "?"
+        val elementNodeType = type.typeOrAlias(DataTypeOutlineEntry.COLLECTION_ELEMENT)
         if (elementType !== null) {
-            val child = doTransform(elementType.asTypeDecl, parentId + "-elem")
+            val child = doTransform(elementType.asTypeDecl)
             childLabel = child.label
-            children.add(DataTypeListEntry.collectionElement(parentId + "-elem", "«element» : " + child.label, child.children))
+            children.add(new DataTypeOutlineEntry(elementNodeType, elementType.annotatedId, "element", "«element» : " + child.label, child.children))
         }
-        return new DataTypeListEntry(null, parentId, '''List<«childLabel»>''', !children.isEmpty, children)
+        val nodeType = type.typeOrAlias(DataTypeOutlineEntry.LIST)
+        return new DataTypeOutlineEntry(nodeType, type.annotatedId, type.name, '''List<«childLabel»>''', children)
     }
 
     /**
      * Transform MapTypeDecl - creates a map entry with key and value children.
      */
-    private def dispatch DataTypeListEntry doTransform(MapTypeDecl type, String parentId) {
-        val result = new ArrayList<DataTypeListEntry>
+    private def dispatch DataTypeOutlineEntry doTransform(MapTypeDecl type) {
+        val result = new ArrayList<DataTypeOutlineEntry>
         var labels = newArrayList
         // Handle key type
         val keyType = type.keyType
         if (keyType !== null) {
-            val keyId = parentId + "-key"
-            val child = keyType.asTypeDecl?.doTransform(keyId)
+            val child = keyType.asTypeDecl?.doTransform()
             // don't add key, only the label is needed
-            // result.add(DataTypeListEntry.mapKey(keyId, "«key» : " + child.label, child.children))
+            // val mapKeyNodeType = type.typeOrAlias(DataTypeOutlineEntry.MAP_KEY)
+            // result.add(new DataTypeOutlineEntry(mapKeyNodeType, keyId, "key", "«key» : " + child.label, child.children))
             labels.add(child.label)
         }
         // Handle value type
         val valueType = type.valueType
+        val mapValueNodeType = type.typeOrAlias(DataTypeOutlineEntry.MAP_VALUE)
         if (valueType !== null) {
-            val valueId = parentId + "-value"
-            val child = valueType.asTypeDecl?.doTransform(valueId)
+            val child = valueType.asTypeDecl?.doTransform()
             labels.add(child.label)
-            result.add(DataTypeListEntry.mapValue(valueId, "«value» : " + child.label, child.children))
+            result.add(new DataTypeOutlineEntry(mapValueNodeType, valueType.annotatedId, "value", "«value» : " + child.label, child.children))
         }
         
-        return new DataTypeListEntry(null, parentId, '''Map<«labels.join(", ")»>''', !result.isEmpty, result)
+        val nodeType = type.typeOrAlias(DataTypeOutlineEntry.MAP)
+        return new DataTypeOutlineEntry(nodeType, type.annotatedId, type.name, '''Map<«labels.join(", ")»>''', result)
+    }
+
+    private def String getAnnotatedId(EObject type) {
+        if (type instanceof Annotatable){
+            val annotated = AnnotationUtil.getAnnotationValue(type, "id").orElse(null)
+            return annotated
+        }
+        return null
+    }
+
+    private def String typeOrAlias(TypeDecl type, String standard) {
+        if (type instanceof Annotatable){
+            val annotated = AnnotationUtil.getAnnotationValue(type, "typeAlias").orElse(null)
+            if (annotated !==null){
+                return annotated
+            }
+        }
+        return standard
     }
 
     private def String translatedTypeName(TypeObject type) {
         val name = type.typeName
         return TRANSLATE_TYPE.getOrDefault(name,name)
     }
-    
-    
 
 }
