@@ -64,6 +64,7 @@ import java.util.LinkedHashMap
 import java.util.Map
 import java.util.Set
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.StepReference
+import nl.esi.comma.abstracttestspecification.abstractTestspecification.ChainedStep
 
 class Utils 
 {
@@ -75,20 +76,19 @@ class Utils
         return atd.testSeq.flatMap[step]
     }
 
-    static def getSystem(RunStep step) {
-        return step.name.split('_').get(0)
-    }
-    static def getSystem(AssertionStep step) {
-        return step.name.split('_').get(0)
-    }
-    static def getSystem(ExecutableStep step) {
+    static def getSystem(AbstractStep step) {
         return step.name.split('_').get(0)
     }
 
     static def getInputVar(ExecutableStep rstep) '''«rstep.system»Input'''
 
+    @Deprecated
     static def getComposeStepRefs(RunStep step) {
         return step.stepRef.filter[refStep instanceof ComposeStep]
+    }
+
+    static def getChainedStepRefs(ExecutableStep step) {
+        return step.stepRef.filter[refStep instanceof ChainedStep]
     }
 
     static def getRunStepRefs(AssertionStep step) {

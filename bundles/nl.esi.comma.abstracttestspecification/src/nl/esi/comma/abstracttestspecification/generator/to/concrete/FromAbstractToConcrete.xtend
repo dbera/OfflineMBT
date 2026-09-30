@@ -29,13 +29,13 @@ import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
 
 import static extension nl.esi.comma.abstracttestspecification.generator.utils.Utils.*
-import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
 import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
+import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
 
 class FromAbstractToConcrete extends AbstractGenerator {
     
     override doGenerate(Resource res, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
-        val atd = res.contents.filter(TSMain).map[model].filter(AbstractTestDefinition).head
+        val atd = res.contents.filter(TSMain).map[model].head
         if (atd === null) {
             throw new Exception('No abstract tspec found in resource: ' + res.URI)
         }
@@ -48,7 +48,7 @@ class FromAbstractToConcrete extends AbstractGenerator {
             fsa.generateFile(typesFile, atd.generateTypesFile(sys, typesImports))
             fsa.generateFile('''parameters/«sys».params''', atd.generateParamsFile(sys))
         }
-        val conTspecFileName = res.URI.lastSegment.replaceAll('\\.atspec$','.tspec')
+        val conTspecFileName = res.URI.trimFileExtension.appendFileExtension('tspec').lastSegment
         fsa.generateFile(conTspecFileName, atd.generateConcreteTest())
  
     }
@@ -70,8 +70,7 @@ class FromAbstractToConcrete extends AbstractGenerator {
             }
             
             step-sequence test_single_sequence {
-            «FOR step : executableSteps»
-                
+            «FOR step : executableSteps SEPARATOR '\n'»
                 «printStep(step)»
             «ENDFOR»
             }
@@ -79,10 +78,10 @@ class FromAbstractToConcrete extends AbstractGenerator {
             generate-file "«atd.filePath»"
             
             «IF !executableSteps.isEmpty»
-            step-parameters
-            «FOR step : executableSteps»
-                «step.stepType.get(0)» step_«step.name»
-            «ENDFOR»
+                step-parameters
+                «FOR step : executableSteps»
+                    «step.stepType» step_«step.name»
+                «ENDFOR»
             «ENDIF»
             
             «IF !sutexpr.empty»
@@ -95,50 +94,37 @@ class FromAbstractToConcrete extends AbstractGenerator {
             «ENDIF»
         '''
     }
-    
-    def printStep(ExecutableStep step) {
-        return switch (step) {
-        	RunStep: printStep(step as RunStep)
-        	AssertionStep: printStep(step as AssertionStep)
-            default: throw new UnsupportedOperationException("Unsupported ExecutableStep sub-type")
-        }
-    }
-    def printStep(RunStep step) '''
+
+    private def dispatch printStep(RunStep step) '''
         step-id    step_«step.name»
-        step-type  «step.stepType.get(0)»
+        step-type  «step.stepType»
         step-input «step.system»Input
-        «IF !_printOutputs_(step).toString.nullOrEmpty»
-            ref-to-step-output
-                «_printOutputs_(step)»
-        «ENDIF»
+        «printOutputs(step)»
     '''
 
-    def printStep(AssertionStep step) '''
+    private def dispatch printStep(AssertionStep step) '''
         assertion-id    step_«step.name»
-        assertion-type  «step.stepType.get(0)»
+        assertion-type  «step.stepType»
         assertion-input «step.system»Input
-        «IF !step.asserts.nullOrEmpty»
-        «_printAssertions(step)»
-        «ENDIF»
-        «IF !_printOutputs_(step).toString.nullOrEmpty»
-            ref-to-step-output
-                «_printOutputs_(step)»
-        «ENDIF»
-    '''
-    
-    def _printAssertions(AssertionStep step) '''
-    assertion-items {
-    «FOR ce : step.asserts.flatMap[ce]»
-        assertions «ce.name» { 
-            «FOR dai: ce.constr»
-                «printDai(dai, step)»
-            «ENDFOR»
-         }
-    «ENDFOR»
-    }
+        «printAssertions(step)»
+        «printOutputs(step)»
     '''
 
-    def printDai(DataAssertionItem item, AssertionStep step) {
+    def private printAssertions(AssertionStep step) '''
+        «IF !step.asserts.nullOrEmpty»
+            assertion-items {
+                «FOR ce : step.asserts.flatMap[ce]»
+                    assertions «ce.name» {
+                        «FOR dai: ce.constr»
+                            «printDai(dai, step)»
+                        «ENDFOR»
+                    }
+                «ENDFOR»
+            }
+        «ENDIF»
+    '''
+
+    def private printDai(DataAssertionItem item, AssertionStep step) {
         return item.serializeXtext[
             val gaExpression = semanticElement.getService(ExpressionGrammarAccess)
             if (gaExpression === null) {
@@ -153,57 +139,38 @@ class FromAbstractToConcrete extends AbstractGenerator {
         ]
     }
 
-    def private _printOutputs_(RunStep rstep) {
+    def private String printOutputs(ExecutableStep estep) {
         // Get text for concrete data expressions
-        var conDataExpr = (new ConcreteExpressionHandler()).prepareStepInputExpressions(rstep, rstep.composeStepRefs)
+        var conDataExpr = (new ConcreteExpressionHandler()).prepareStepInputExpressions(estep, estep.stepRef)
         // Append text for reference data expressions
-        val refDataExpr = (new ReferenceExpressionHandler()).resolveStepReferenceExpressions(rstep)
+        val refDataExpr = (new ReferenceExpressionHandler()).resolveStepReferenceExpressions(estep)
+
+        if (conDataExpr.isEmpty && refDataExpr.isEmpty) {
+            return null
+        }
 
         return '''
-            «conDataExpr»
-            «FOR entry : refDataExpr.entrySet»
-                «FOR v : entry.value»
-                    «entry.key» := «v»
+            ref-to-step-output
+                «IF !conDataExpr.isEmpty»«conDataExpr»«ENDIF»
+                «FOR entry : refDataExpr.entrySet»
+                    «FOR v : entry.value»
+                        «entry.key» := «v»
+                    «ENDFOR»
                 «ENDFOR»
-            «ENDFOR»
-        '''
-    }
-
-    def private _printOutputs_(AssertionStep astep) {
-        // At most one (TODO validate this)
-        // Observation: when multiple steps have indistinguishable outputs, 
-        // multiple consumes from is possible. TODO Warn user.   
-        val runStepRefs = astep.runStepRefs
-        // Get text for concrete data expressions
-        var conDataExpr = (new ConcreteExpressionHandler()).prepareStepInputExpressions(astep, runStepRefs)
-
-        return '''
-            «conDataExpr»
         '''
     }
 
     // Generate Types File for Concrete TSpec
-    def generateTypesFile(AbstractTestDefinition atd, String system, Iterable<String> typesImports) {
+    def private generateTypesFile(AbstractTestDefinition atd, String system, Iterable<String> typesImports) {
         var type = ''
         val ios = newLinkedHashMap
-        for (rstep : atd.getRunSteps(system)) {
-            if (!rstep.stepType.isEmpty) {
-                type = rstep.stepType.last
+        for (estep : atd.getExecutableSteps(system)) {
+            if (!estep.stepType.isNullOrEmpty) {
+                type = estep.stepType
             }
-            rstep.input.forEach[i|ios.putIfAbsent(i.name, i)]
-            rstep.output.forEach[o|ios.putIfAbsent(o.name, o)]
-            for (cstep : rstep.composeStepRefs.map[refStep]) {
-                cstep.input.forEach[i|ios.putIfAbsent(i.name, i)]
-                cstep.output.forEach[o|ios.putIfAbsent(o.name, o)]
-            }
-        }
-        for (astep : atd.getAssertionSteps(system)) {
-            if (!astep.stepType.isEmpty) {
-                type = astep.stepType.last
-            }
-            astep.input.forEach[i|ios.putIfAbsent(i.name, i)]
-            astep.output.forEach[o|ios.putIfAbsent(o.name, o)]
-            for (cstep : astep.runStepRefs.map[refStep]) {
+            estep.input.forEach[i|ios.putIfAbsent(i.name, i)]
+            estep.output.forEach[o|ios.putIfAbsent(o.name, o)]
+            for (cstep : estep.chainedStepRefs.map[refStep]) {
                 cstep.input.forEach[i|ios.putIfAbsent(i.name, i)]
                 cstep.output.forEach[o|ios.putIfAbsent(o.name, o)]
             }
@@ -239,9 +206,9 @@ class FromAbstractToConcrete extends AbstractGenerator {
     def private generateParamsFile(AbstractTestDefinition atd, String system) {
         var paramTxt = ''
         val processedTypes = new HashSet<String>()
-        for (step : atd.getExecutableSteps(system)) {
-            for (type : step.stepType.filter[processedTypes.add(it)]) {
-                paramTxt += printParams(atd, step, type)
+        for (step : atd.getExecutableSteps(system).reject[stepType.isNullOrEmpty]) {
+            if (processedTypes.add(step.stepType)) {
+                paramTxt += printParams(atd, step, step.stepType)
             }
         }
         return paramTxt
@@ -264,14 +231,6 @@ class FromAbstractToConcrete extends AbstractGenerator {
     
     def private getSystems(AbstractTestDefinition atd) {
         return atd.steps.filter(ExecutableStep).map[system].toSet
-    }
-
-    def private getRunSteps(AbstractTestDefinition atd, String sys) {
-        return atd.steps.filter(RunStep).filter[system == sys]
-    }
-
-    def private getAssertionSteps(AbstractTestDefinition atd, String sys) {
-        return atd.steps.filter(AssertionStep).filter[system == sys]
     }
 
     def private getExecutableSteps(AbstractTestDefinition atd, String sys) {

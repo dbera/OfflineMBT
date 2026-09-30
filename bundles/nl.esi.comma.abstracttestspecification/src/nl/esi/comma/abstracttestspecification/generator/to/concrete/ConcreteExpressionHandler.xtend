@@ -19,7 +19,7 @@ import java.util.Set
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AssertionStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.Binding
-import nl.esi.comma.abstracttestspecification.abstractTestspecification.RunStep
+import nl.esi.comma.abstracttestspecification.abstractTestspecification.ExecutableStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.StepReference
 import nl.esi.comma.assertthat.assertThat.JsonValue
 import nl.esi.xtext.expressions.expression.ExpressionVariable
@@ -37,11 +37,11 @@ import org.eclipse.emf.common.util.EList
 import static extension nl.esi.comma.abstracttestspecification.generator.utils.Utils.*
 
 class ConcreteExpressionHandler {
-    def prepareStepInputExpressions(RunStep rstep, Iterable<StepReference> composeStepRefs) {
-        val suppressVars = composeStepRefs.flatMap[suppressedVarFields].map[rstep.inputVar + '.' + it].toSet
+    def prepareStepInputExpressions(ExecutableStep estep, Iterable<StepReference> chainedStepRefs) {
+        val suppressVars = chainedStepRefs.flatMap[suppressedVarFields].map[estep.inputVar + '.' + it].toSet
         return '''
-            «FOR output : composeStepRefs.flatMap[refStep.output].reject[suppressVars.contains(rstep.inputVar + '.' + it.name.name)]»
-                «printVariable(rstep.inputVar + '.' + output.name.name, output.name.type, output.jsonvals, suppressVars)»
+            «FOR output : chainedStepRefs.flatMap[refStep.output].reject[suppressVars.contains(estep.inputVar + '.' + it.name.name)]»
+                «printVariable(estep.inputVar + '.' + output.name.name, output.name.type, output.jsonvals, suppressVars)»
             «ENDFOR»
         '''
     }
@@ -68,15 +68,6 @@ class ConcreteExpressionHandler {
             }
         }
         return varDefs
-    }
-
-    def prepareStepInputExpressions(AssertionStep astep, Iterable<StepReference> runStepRefs) {
-        val suppressVars = runStepRefs.flatMap[suppressedVarFields].map[astep.inputVar + '.' + it].toSet
-        return '''
-            «FOR output : runStepRefs.flatMap[refStep.output].reject[suppressVars.contains(astep.inputVar + '.' + it.name.name)]»
-                «printVariable(astep.inputVar + '.' + output.name.name, output.name.type, output.jsonvals, suppressVars)»
-            «ENDFOR»
-        '''
     }
 
     def private String printVariable(String name, Type type, JsonValue value, Set<String> suppressVars) '''
