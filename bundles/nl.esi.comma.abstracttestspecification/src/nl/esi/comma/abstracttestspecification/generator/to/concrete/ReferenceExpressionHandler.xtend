@@ -16,11 +16,14 @@ import java.util.List
 import java.util.Map
 import java.util.Set
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractStep
-import nl.esi.comma.abstracttestspecification.abstractTestspecification.ComposeStep
-import nl.esi.comma.abstracttestspecification.abstractTestspecification.RunStep
+import nl.esi.comma.abstracttestspecification.abstractTestspecification.ChainedStep
+import nl.esi.comma.abstracttestspecification.abstractTestspecification.ExecutableStep
 import nl.esi.xtext.actions.actions.Action
+import nl.esi.xtext.actions.actions.ActionList
 import nl.esi.xtext.actions.actions.ActionsFactory
 import nl.esi.xtext.actions.actions.AssignmentAction
+import nl.esi.xtext.actions.actions.ForAction
+import nl.esi.xtext.actions.actions.IfAction
 import nl.esi.xtext.actions.actions.RecordFieldAssignmentAction
 import nl.esi.xtext.common.lang.utilities.EcoreUtil3
 import nl.esi.xtext.expressions.evaluation.ExpressionEvaluator
@@ -29,31 +32,29 @@ import nl.esi.xtext.expressions.expression.ExpressionRecord
 import nl.esi.xtext.expressions.expression.ExpressionVariable
 import nl.esi.xtext.types.types.RecordFieldKind
 
+import static extension nl.esi.comma.abstracttestspecification.generator.utils.Utils.*
 import static extension nl.esi.comma.assertthat.utilities.AssertThatUtilities.*
+import static extension nl.esi.xtext.actions.utilities.ActionsUtilities.*
 import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
 import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
 import static extension org.eclipse.emf.ecore.util.EcoreUtil.*
 import static extension org.eclipse.lsat.common.xtend.Queries.*
-import nl.esi.xtext.actions.actions.ActionList
-import static extension nl.esi.xtext.actions.utilities.ActionsUtilities.*
-import nl.esi.xtext.actions.actions.IfAction
-import nl.esi.xtext.actions.actions.ForAction
 
 class ReferenceExpressionHandler {
     
-    def resolveStepReferenceExpressions(RunStep rstep) {
-        debug(" [INFO] Resolving references for Run Step: " + rstep.name)
+    def resolveStepReferenceExpressions(ExecutableStep estep) {
+        debug(" [INFO] Resolving references for Executable Step: " + estep.name)
         val Map<String, List<String>> mapLHStoRHS = newLinkedHashMap
         val Set<String> nestedFieldPrefixes = newHashSet
 
-        for (cstep : rstep.referencedComposeSteps) {
-            debug(" [INFO] > Referenced Compose Step: " + cstep.name)
-            // Run block input data structure = Concrete TSpec step input data structure
-            cstep.evaluateReferenceConstrains('''«rstep.name.split("_").get(0)»Input.''', mapLHStoRHS)
+        for (cstep : estep.referencedChainedSteps) {
+            debug(" [INFO] > Referenced Chained Step: " + cstep.name)
+            // Executable block input data structure = Concrete TSpec step input data structure
+            cstep.evaluateReferenceConstrains('''«estep.system»Input.''', mapLHStoRHS)
 
-            for (nestedcstep : #[cstep].closure[referencedComposeSteps]) {
-                debug(" [INFO] --> Nested Compose Step: " + nestedcstep.name)
-                // Run block input data structure = Concrete TSpec step input data structure
+            for (nestedcstep : #[cstep].closure[referencedChainedSteps]) {
+                debug(" [INFO] --> Nested Chained Step: " + nestedcstep.name)
+                // Executable block input data structure = Concrete TSpec step input data structure
                 val fieldPrefix = '''step_«nestedcstep.name».output.'''
                 nestedFieldPrefixes += fieldPrefix
                 nestedcstep.evaluateReferenceConstrains(fieldPrefix, mapLHStoRHS)
@@ -79,11 +80,11 @@ class ReferenceExpressionHandler {
         // println(message)
     }
 
-    private def getReferencedComposeSteps(AbstractStep step) {
-        return step.stepRef.map[refStep].filter(ComposeStep)
+    private def getReferencedChainedSteps(AbstractStep step) {
+        return step.stepRef.map[refStep].filter(ChainedStep)
     }
 
-    private def void evaluateReferenceConstrains(ComposeStep cstep, String fieldPrefix, Map<String, List<String>> mapLHStoRHS) {
+    private def void evaluateReferenceConstrains(ChainedStep cstep, String fieldPrefix, Map<String, List<String>> mapLHStoRHS) {
         val expressionEvaluator = EcoreUtil3.getService(cstep, ExpressionEvaluator)
 
         // Iterate all record field assignments of all constraints
