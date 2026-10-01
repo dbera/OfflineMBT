@@ -121,20 +121,27 @@ class ExistentialTemplates {
             }
         
         val eventLabel = '''(«event» where «helpers.getRefConcreteWhereClause(eventInst)»)'''
-        val diagnostics=
+        
+        val diagnostics =
         '''
         [
             {
                 "kind": "unfulfilledCount",
                 "valueKind": "count",
+                "includeRawToken": False,
                 "eventLabel": "«helpers.escapePythonString(eventLabel)»",
+                "event": {
+                    "name": "«helpers.escapePythonString(event)»",
+                    "whereConcrete": "«helpers.escapePythonString(helpers.getRefConcreteWhereClause(eventInst))»",
+                    "stepIdsFrom": "eventIds"
+                },
                 "triggerPlace": "endoftrace",
                 "tokenPlace": "Countctx",
-                "message": "{eventLabel} occurred {actualCount} times, but it must occur «requirementText»."
+                "requirement": "«requirementText»",
+                "message": "The step was observed {actualCount} times; expected {requirement}."
             }
         ]
-        '''
-        
+        '''        
         return new CPNTemplateResult (psBody, acceptanceJson, diagnostics)
     }
     
@@ -198,22 +205,36 @@ class ExistentialTemplates {
                 } else {
                     "end with"
                 }
-            
+            val boundaryPosition =
+                if (constraintType == "INIT") {
+                    "first"
+                } else {
+                    "last"
+                }
             val eventLabel = '''(«event» where «helpers.getRefConcreteWhereClause(eventInst)»)'''
+            
             val diagnostics =
             '''
             [
                 {
                     "kind": "missingBoundaryEvent",
                     "valueKind": "none",
+                    "includeRawToken": False,
                     "eventLabel": "«helpers.escapePythonString(eventLabel)»",
+                    "event": {
+                        "name": "«helpers.escapePythonString(event)»",
+                        "whereConcrete": "«helpers.escapePythonString(helpers.getRefConcreteWhereClause(eventInst))»"
+                    },
+                    "violationStep": {
+                        "relation": "testCaseBoundary",
+                        "position": "«boundaryPosition»"
+                    },
                     "triggerPlace": "final",
                     "violationKind": "nonEmptyPlaces",
-                    "message": "The trace does not «boundaryDescription» {eventLabel}."
+                    "message": "The trace does not «boundaryDescription» the required test step."
                 }
             ]
             '''
-            
             return new CPNTemplateResult(psBody, acceptanceJson, diagnostics)
         }
     

@@ -42,10 +42,22 @@ class PastTemplates {
             {
                 "kind": "unfulfilledPrecedence",
                 "valueKind": "correlation",
+                "includeRawToken": False,
                 "tokenPlace": "«correlationVar.name»",
                 "activationLabel": "«helpers.escapePythonString(activationLabel)»",
                 "targetLabel": "«helpers.escapePythonString(targetLabel)»",
-                "message": "{activationLabel} with correlation {correlation} was not preceded by {targetLabel} with correlation {correlation}."
+                "activationEvent": {
+                    "name": "«helpers.escapePythonString(activationEvent)»",
+                    "whereConcrete": "«helpers.escapePythonString(helpers.getRefConcreteWhereClause(activationEventInst))»",
+                    "correlationBinding": "«helpers.escapePythonString(helpers.getRefWithClause(activationEventInst).trim)»",
+                    "stepIdsFrom": "activationIds"
+                },
+                "targetEvent": {
+                    "name": "«helpers.escapePythonString(targetEvent)»",
+                    "whereConcrete": "«helpers.escapePythonString(helpers.getRefConcreteWhereClause(targetEventInst))»",
+                    "whereCorrelation": "«helpers.escapePythonString(helpers.getRefCorrelationWhereClause(targetEventInst))»"
+                },
+                "message": "The triggering event occurred without its required prior event."
             }
         ]
         '''
@@ -76,10 +88,26 @@ class PastTemplates {
             {
                 "kind": "unfulfilledChainPrecedence",
                 "valueKind": "correlation",
+                "includeRawToken": False,
                 "tokenPlace": "«correlationVar.name»",
                 "activationLabel": "«helpers.escapePythonString(activationLabel)»",
                 "targetLabel": "«helpers.escapePythonString(targetLabel)»",
-                "message": "{activationLabel} with correlation {correlation} was not immediately preceded by {targetLabel} with correlation {correlation}."
+                "activationEvent": {
+                    "name": "«helpers.escapePythonString(activationEvent)»",
+                    "whereConcrete": "«helpers.escapePythonString(helpers.getRefConcreteWhereClause(activationEventInst))»",
+                    "correlationBinding": "«helpers.escapePythonString(helpers.getRefWithClause(activationEventInst).trim)»",
+                    "stepIdsFrom": "activationIds"
+                },
+                "targetEvent": {
+                    "name": "«helpers.escapePythonString(targetEvent)»",
+                    "whereConcrete": "«helpers.escapePythonString(helpers.getRefConcreteWhereClause(targetEventInst))»",
+                    "whereCorrelation": "«helpers.escapePythonString(helpers.getRefCorrelationWhereClause(targetEventInst))»"
+                },
+                "violationStep": {
+                    "relation": "immediatePredecessor",
+                    "of": "activationEvent"
+                },
+                "message": "The triggering event was not immediately preceded by its required event."
             }
         ]
         '''
@@ -107,30 +135,61 @@ class PastTemplates {
         val activationLabel = '''(«activationEvent» where «helpers.getRefConcreteWhereClause(activationEventInst)»)'''
         val targetLabel = '''(«targetEvent» where «helpers.getRefConcreteWhereClause(targetEventInst)»)'''
         val intermediateLabel = '''(«intermediateEvent» where «helpers.getRefConcreteWhereClause(intermediateEventInst)»)'''
+        
         val diagnostics =
         '''
         [
             {
                 "kind": "unfulfilledAlternatePrecedence",
                 "valueKind": "correlation",
+                "includeRawToken": False,
                 "tokenPlace": "«correlationVar.name»",
                 "activationLabel": "«helpers.escapePythonString(activationLabel)»",
                 "targetLabel": "«helpers.escapePythonString(targetLabel)»",
                 "intermediateLabel": "«helpers.escapePythonString(intermediateLabel)»",
-                "message": "{activationLabel} with correlation {correlation} was not preceded by {targetLabel} with correlation {correlation}."
+                "activationEvent": {
+                    "name": "«helpers.escapePythonString(activationEvent)»",
+                    "whereConcrete": "«helpers.escapePythonString(helpers.getRefConcreteWhereClause(activationEventInst))»",
+                    "correlationBinding": "«helpers.escapePythonString(helpers.getRefWithClause(activationEventInst).trim)»",
+                    "stepIdsFrom": "activationIds"
+                },
+                "targetEvent": {
+                    "name": "«helpers.escapePythonString(targetEvent)»",
+                    "whereConcrete": "«helpers.escapePythonString(helpers.getRefConcreteWhereClause(targetEventInst))»",
+                    "whereCorrelation": "«helpers.escapePythonString(helpers.getRefCorrelationWhereClause(targetEventInst))»"
+                },
+                "message": "The triggering event occurred without its required earlier event."
             },
             {
                 "kind": "unfulfilledAlternatePrecedence",
                 "valueKind": "correlation",
+                "includeRawToken": False,
                 "tokenPlace": "rejecting_tokens",
                 "activationLabel": "«helpers.escapePythonString(activationLabel)»",
                 "targetLabel": "«helpers.escapePythonString(targetLabel)»",
                 "intermediateLabel": "«helpers.escapePythonString(intermediateLabel)»",
-                "message": "{activationLabel} with correlation {correlation} was seen but then was preceded by a blocker before {targetLabel} with correlation {correlation}"
+                "activationEvent": {
+                    "name": "«helpers.escapePythonString(activationEvent)»",
+                    "whereConcrete": "«helpers.escapePythonString(helpers.getRefConcreteWhereClause(activationEventInst))»",
+                    "correlationBinding": "«helpers.escapePythonString(helpers.getRefWithClause(activationEventInst).trim)»",
+                    "stepIdsFrom": "activationIds"
+                },
+                "targetEvent": {
+                    "name": "«helpers.escapePythonString(targetEvent)»",
+                    "whereConcrete": "«helpers.escapePythonString(helpers.getRefConcreteWhereClause(targetEventInst))»",
+                    "whereCorrelation": "«helpers.escapePythonString(helpers.getRefCorrelationWhereClause(targetEventInst))»"
+                },
+                "blockerEvent": {
+                    "name": "«helpers.escapePythonString(intermediateEvent)»",
+                    "whereConcrete": "«helpers.escapePythonString(helpers.getRefConcreteWhereClause(intermediateEventInst))»",
+                    "whereCorrelation": "«helpers.escapePythonString(helpers.getRefCorrelationWhereClause(intermediateEventInst))»",
+                    "stepIdsFrom": "blockerIds"
+                },
+                "message": "A blocker prevented the required earlier event."
             }
         ]
         '''
-        
+             
         return new CPNTemplateResult(
             result.psBody,
             result.acceptanceJson.replace('"templateType": "AlternateResponse"', '"templateType": "AlternatePrecedence"'),

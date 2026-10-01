@@ -176,10 +176,22 @@ class FutureTemplates {
             {
                 "kind": "unfulfilledResponse",
                 "valueKind": "correlation",
+                "includeRawToken": False,
                 "tokenPlace": "«correlationVar.name»",
                 "activationLabel": "«helpers.escapePythonString(activationLabel)»",
                 "targetLabel": "«helpers.escapePythonString(targetLabel)»",
-                "message": "{activationLabel} with correlation {correlation} was not eventually followed by {targetLabel} with correlation {correlation}."
+                "activationEvent": {
+                    "name": "«helpers.escapePythonString(activationEvent)»",
+                    "whereConcrete": "«helpers.escapePythonString(helpers.getRefConcreteWhereClause(activationEventInst))»",
+                    "correlationBinding": "«helpers.escapePythonString(helpers.getRefWithClause(activationEventInst).trim)»",
+                    "stepIdsFrom": "activationIds"
+                },
+                "targetEvent": {
+                    "name": "«helpers.escapePythonString(targetEvent)»",
+                    "whereConcrete": "«helpers.escapePythonString(helpers.getRefConcreteWhereClause(targetEventInst))»",
+                    "whereCorrelation": "«helpers.escapePythonString(helpers.getRefCorrelationWhereClause(targetEventInst))»"
+                },
+                "message": "Activation was not eventually followed by a Target with matching correlation."
             }
         ]
         '''
@@ -361,10 +373,26 @@ class FutureTemplates {
             {
                 "kind": "unfulfilledChainResponse",
                 "valueKind": "correlation",
+                "includeRawToken": False,
                 "tokenPlace": "«correlationVar.name»",
                 "activationLabel": "«helpers.escapePythonString(activationLabel)»",
                 "targetLabel": "«helpers.escapePythonString(targetLabel)»",
-                "message": "{activationLabel} with correlation {correlation} was not immediately followed by {targetLabel} with correlation {correlation}."
+                "activationEvent": {
+                    "name": "«helpers.escapePythonString(activationEvent)»",
+                    "whereConcrete": "«helpers.escapePythonString(helpers.getRefConcreteWhereClause(activationEventInst))»",
+                    "correlationBinding": "«helpers.escapePythonString(helpers.getRefWithClause(activationEventInst).trim)»",
+                    "stepIdsFrom": "activationIds"
+                },
+                "targetEvent": {
+                    "name": "«helpers.escapePythonString(targetEvent)»",
+                    "whereConcrete": "«helpers.escapePythonString(helpers.getRefConcreteWhereClause(targetEventInst))»",
+                    "whereCorrelation": "«helpers.escapePythonString(helpers.getRefCorrelationWhereClause(targetEventInst))»"
+                },
+                "violationStep": {
+                    "relation": "immediateSuccessor",
+                    "after": "activationEvent"
+                },
+                "message": "Activation was not immediately followed by Target with matching correlation."
              } 
         ]
         '''        
@@ -557,20 +585,50 @@ class FutureTemplates {
             {
                 "kind": "unfulfilledAlternateResponse",
                 "valueKind": "correlation",
+                "includeRawToken": False,
                 "tokenPlace": "«correlationVar.name»",
                 "activationLabel": "«helpers.escapePythonString(activationLabel)»",
                 "targetLabel": "«helpers.escapePythonString(targetLabel)»",
                 "intermediateLabel": "«helpers.escapePythonString(intermediateLabel)»",
-                "message": "{activationLabel} with correlation {correlation} was not eventually followed by {targetLabel} with correlation {correlation}."
+                "activationEvent": {
+                    "name": "«helpers.escapePythonString(activationEvent)»",
+                    "whereConcrete": "«helpers.escapePythonString(helpers.getRefConcreteWhereClause(activationEventInst))»",
+                    "correlationBinding": "«helpers.escapePythonString(helpers.getRefWithClause(activationEventInst).trim)»",
+                    "stepIdsFrom": "activationIds"
+                },
+                "targetEvent": {
+                    "name": "«helpers.escapePythonString(targetEvent)»",
+                    "whereConcrete": "«helpers.escapePythonString(helpers.getRefConcreteWhereClause(targetEventInst))»",
+                    "whereCorrelation": "«helpers.escapePythonString(helpers.getRefCorrelationWhereClause(targetEventInst))»"
+                },
+                "message": "Activation was not eventually followed by a Target with matching correlation."
             },
             {
                 "kind": "unfulfilledAlternateResponse",
                 "valueKind": "correlation",
+                "includeRawToken": False,
                 "tokenPlace": "rejecting_tokens",
                 "activationLabel": "«helpers.escapePythonString(activationLabel)»",
                 "targetLabel": "«helpers.escapePythonString(targetLabel)»",
                 "intermediateLabel": "«helpers.escapePythonString(intermediateLabel)»",
-                "message": "{activationLabel} with correlation {correlation} was seen but then was followed by a blocker before {targetLabel} with correlation {correlation}"
+                "activationEvent": {
+                    "name": "«helpers.escapePythonString(activationEvent)»",
+                    "whereConcrete": "«helpers.escapePythonString(helpers.getRefConcreteWhereClause(activationEventInst))»",
+                    "correlationBinding": "«helpers.escapePythonString(helpers.getRefWithClause(activationEventInst).trim)»",
+                    "stepIdsFrom": "activationIds"
+                },
+                "targetEvent": {
+                    "name": "«helpers.escapePythonString(targetEvent)»",
+                    "whereConcrete": "«helpers.escapePythonString(helpers.getRefConcreteWhereClause(targetEventInst))»",
+                    "whereCorrelation": "«helpers.escapePythonString(helpers.getRefCorrelationWhereClause(targetEventInst))»"
+                },
+                "blockerEvent": {
+                    "name": "«helpers.escapePythonString(intermediateEvent)»",
+                    "whereConcrete": "«helpers.escapePythonString(helpers.getRefConcreteWhereClause(intermediateEventInst))»",
+                    "whereCorrelation": "«helpers.escapePythonString(helpers.getRefCorrelationWhereClause(intermediateEventInst))»",
+                    "stepIdsFrom": "blockerIds"
+                },
+                "message": "Activation was followed by a blocker before a matching Target."
             }
         ]
         '''

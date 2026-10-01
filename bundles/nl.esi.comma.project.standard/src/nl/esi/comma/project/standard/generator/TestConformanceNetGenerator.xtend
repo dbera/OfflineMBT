@@ -49,7 +49,9 @@ class TestConformanceNetGenerator  extends AbstractGenerator {
     import sys
     
     summary_path = sys.argv[1]
-    pairs = sys.argv[2:]
+    testcase_path = sys.argv[2]
+    constraint_file_path = sys.argv[3]
+    pairs = sys.argv[4:]
     results = []
     for i in range(0, len(pairs), 2):
         constraint = pairs[i]
@@ -57,13 +59,20 @@ class TestConformanceNetGenerator  extends AbstractGenerator {
         with open(verdict_path, "r", encoding="utf-8") as reader:
             verdict = json.load(reader)
         results.append({
-            "constraint": constraint,
+«««            "constraint": verdict["constraint"],
+            "constraintName": verdict.get("constraint", constraint),
+            "templateType": verdict.get("templateType"),
             "accepted": verdict.get("accepted"),
-            "diagnostics": verdict.get("diagnostics",[])
+            "diagnostics": verdict.get("diagnostics", [])
         })
+«««        results.append({
+«««            "constraint": constraint,
+«««            "accepted": verdict.get("accepted"),
+«««            "diagnostics": verdict.get("diagnostics",[])
+«««        })
     
     with open(summary_path, "w", encoding="utf-8") as writer:
-        json.dump({"results": results}, writer, indent=2)
+        json.dump({"testCasePath": testcase_path, "constraintFilePath": constraint_file_path, "results": results}, writer, indent=2)
     '''
     val IStatusReporting reporting
 
@@ -146,6 +155,8 @@ class TestConformanceNetGenerator  extends AbstractGenerator {
         args.add(pythonExe)
         args.add(scriptUri.toPath)
         args.add(summaryUri.toPath)
+        args.add(task.tspecFile)
+        args.add(task.constraintsFiles.head)
         for (verdict : verdicts) {
             args.add(verdict.key)
             args.add(verdict.value.toPath)

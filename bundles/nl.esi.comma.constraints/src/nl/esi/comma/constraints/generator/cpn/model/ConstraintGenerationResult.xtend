@@ -17,6 +17,7 @@ class ConstraintGenerationResult {
     val String acceptanceJsonFileName
     val String acceptancePythonFileName
     val String constraintFolderName
+    val String constraintSourceUri
     
     
 
@@ -24,12 +25,14 @@ class ConstraintGenerationResult {
         String pspecFileName,
         String acceptanceJsonFileName,
         String acceptancePythonFileName,
-        String constraintFolderName
+        String constraintFolderName,
+        String constraintSourceUri
     ) {
         this.pspecFileName = pspecFileName
         this.acceptanceJsonFileName = acceptanceJsonFileName
         this.acceptancePythonFileName = acceptancePythonFileName
         this.constraintFolderName = constraintFolderName
+        this.constraintSourceUri = constraintSourceUri
     }
 
     def String getPspecFileName() {
@@ -47,4 +50,8 @@ class ConstraintGenerationResult {
     def String getConstraintFolderName() {
         constraintFolderName
     }
+    
+    def String getConstraintSourceUri() {
+    constraintSourceUri
+}
 }

@@ -349,7 +349,7 @@ class CPNTemplateGenerator
 
                     desc "TSpecCPNModel"
                     «FOR ss : td.stepSeq»
-                        «FOR step : ss.step» 
+                        «FOR step : ss.step»
                             «IF step instanceof RunStep || step instanceof AssertionStep»
                                 action «step.type.name»_«_idx»
                                 element-label "«step.type.name»"
@@ -665,7 +665,8 @@ class CPNTemplateGenerator
             pspecFileName,
             acceptanceJsonFileName,
             acceptancePythonFileName,
-            generatedSpecName
+            generatedSpecName,
+            model.eResource.URI.toString
         )
     }
     
@@ -749,14 +750,20 @@ class CPNTemplateGenerator
                     token_place= rule.get("tokenPlace")
                     
                     if token_place is None:
-                        diagnostics.append({
-                           "kind": rule["kind"],
-                           "nodeId": node["id"],
-                           "place": trigger_place,
-                           "message": rule["message"].format(**rule)
-                        })
+                        diagnostic = {
+                            "kind": rule["kind"],
+                            "nodeId": node["id"],
+                            "place": trigger_place,
+                            "message": rule["message"].format(**rule)
+                        }
+                    
+                        for field_name in ("event", "violationStep"):
+                            if field_name in rule:
+                                diagnostic[field_name] = dict(rule[field_name])
+                    
+                        diagnostics.append(diagnostic)
                         continue
-        
+                                
                     for token in marking.get(token_place, []):
                         values = dict(rule)
                         if isinstance(token, dict):
@@ -775,14 +782,39 @@ class CPNTemplateGenerator
                         if rule.get("valueKind") == "count":
                             values["actualCount"] = token.get("count", 0)
                         
-                        diagnostics.append({
+                        diagnostic = {
                             "kind": rule["kind"],
                             "nodeId": node["id"],
                             "place": token_place,
                             "token": token,
                             "metadata": metadata,
                             "message": rule["message"].format(**values)
-                        })
+                        }
+                        
+                        if rule.get("valueKind") == "count":
+                            diagnostic["actualCount"] = values["actualCount"]
+                            diagnostic["requirement"] = values["requirement"]
+                        
+                        for event_name in ("event", "activationEvent", "targetEvent", "blockerEvent"):
+                            if event_name in rule:
+                                event = dict(rule[event_name])
+                                metadata_key = event.pop("stepIdsFrom", None)
+                                if metadata_key is not None:
+                                    event["stepIds"] = metadata.get(metadata_key, [])
+                                diagnostic[event_name] = event
+                        
+                        if "violationStep" in rule:
+                            diagnostic["violationStep"] = dict(rule["violationStep"])
+                            
+                        if rule.get("valueKind") == "correlation":
+                            diagnostic["correlation"] = correlation_token
+                        
+                        if not rule.get("includeRawToken", True):
+                            diagnostic.pop("token", None)
+                            diagnostic.pop("metadata", None)
+                        
+                        diagnostics.append(diagnostic)
+                        
             return diagnostics
 
         
