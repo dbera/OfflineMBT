@@ -43,8 +43,8 @@ class PastTemplates {
                 "kind": "unfulfilledPrecedence",
                 "valueKind": "correlation",
                 "tokenPlace": "«correlationVar.name»",
-                "activationLabel": "«activationLabel»",
-                "targetLabel": "«targetLabel»",
+                "activationLabel": "«helpers.escapePythonString(activationLabel)»",
+                "targetLabel": "«helpers.escapePythonString(targetLabel)»",
                 "message": "{activationLabel} with correlation {correlation} was not preceded by {targetLabel} with correlation {correlation}."
             }
         ]
@@ -77,8 +77,8 @@ class PastTemplates {
                 "kind": "unfulfilledChainPrecedence",
                 "valueKind": "correlation",
                 "tokenPlace": "«correlationVar.name»",
-                "activationLabel": "«activationLabel»",
-                "targetLabel": "«targetLabel»",
+                "activationLabel": "«helpers.escapePythonString(activationLabel)»",
+                "targetLabel": "«helpers.escapePythonString(targetLabel)»",
                 "message": "{activationLabel} with correlation {correlation} was not immediately preceded by {targetLabel} with correlation {correlation}."
             }
         ]
@@ -114,18 +114,18 @@ class PastTemplates {
                 "kind": "unfulfilledAlternatePrecedence",
                 "valueKind": "correlation",
                 "tokenPlace": "«correlationVar.name»",
-                "activationLabel": "«activationLabel»",
-                "targetLabel": "«targetLabel»",
-                "intermediateLabel": "«intermediateLabel»",
+                "activationLabel": "«helpers.escapePythonString(activationLabel)»",
+                "targetLabel": "«helpers.escapePythonString(targetLabel)»",
+                "intermediateLabel": "«helpers.escapePythonString(intermediateLabel)»",
                 "message": "{activationLabel} with correlation {correlation} was not preceded by {targetLabel} with correlation {correlation}."
             },
             {
                 "kind": "unfulfilledAlternatePrecedence",
                 "valueKind": "correlation",
                 "tokenPlace": "rejecting_tokens",
-                "activationLabel": "«activationLabel»",
-                "targetLabel": "«targetLabel»",
-                "intermediateLabel": "«intermediateLabel»",
+                "activationLabel": "«helpers.escapePythonString(activationLabel)»",
+                "targetLabel": "«helpers.escapePythonString(targetLabel)»",
+                "intermediateLabel": "«helpers.escapePythonString(intermediateLabel)»",
                 "message": "{activationLabel} with correlation {correlation} was seen but then was preceded by a blocker before {targetLabel} with correlation {correlation}"
             }
         ]

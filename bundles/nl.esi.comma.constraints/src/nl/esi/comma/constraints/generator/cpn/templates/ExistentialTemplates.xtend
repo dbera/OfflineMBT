@@ -33,6 +33,10 @@ class ExistentialTemplates {
                 «eventInfo.refType» «eventInfo.refName»
                 ANY any
                 EOT endoftrace
+                StepMetaData    StepMetaData
+                
+                outputs
+                StepMetaData    StepMetaData
             
                 local
                 Counter Countctx
@@ -41,19 +45,25 @@ class ExistentialTemplates {
                 UNIT final
                 
                 init
-                Countctx:= Counter { count = 0 }
+                Countctx:= Counter { count = 0, MetaData= <map<string,string[]>>{"eventIds" -> <string[]>[]}  }
                 
                 desc "«templateName»"
                 
                 action           CountOccurrence
                 element-label    "Count Occurrence"
                 case             default priority 10
-                with-inputs      «eventInfo.refName», Countctx
+                with-inputs      «eventInfo.refName», Countctx, StepMetaData
                 with-guard       «helpers.getRefConcreteWhereClause(eventInst)»
                 produces-outputs    Countctx
                 updates:
-                    Countctx:= Counter { count = Countctx.count + 1 }
-                    
+                    Countctx:= Counter { 
+                                count = Countctx.count + 1,
+                                MetaData = <map<string,string[]>>{"eventIds" -> add (Countctx.MetaData["eventIds"], StepMetaData.steps["stepid"])}
+                    }
+                produces-outputs    StepMetaData
+                updates:
+                    StepMetaData := StepMetaData
+                        
                 action           CounterValidator
                 element-label    "Counter Validator"
                 case             default priority 10
@@ -117,7 +127,7 @@ class ExistentialTemplates {
             {
                 "kind": "unfulfilledCount",
                 "valueKind": "count",
-                "eventLabel": "«eventLabel»",
+                "eventLabel": "«helpers.escapePythonString(eventLabel)»",
                 "triggerPlace": "endoftrace",
                 "tokenPlace": "Countctx",
                 "message": "{eventLabel} occurred {actualCount} times, but it must occur «requirementText»."
@@ -196,7 +206,7 @@ class ExistentialTemplates {
                 {
                     "kind": "missingBoundaryEvent",
                     "valueKind": "none",
-                    "eventLabel": "«eventLabel»",
+                    "eventLabel": "«helpers.escapePythonString(eventLabel)»",
                     "triggerPlace": "final",
                     "violationKind": "nonEmptyPlaces",
                     "message": "The trace does not «boundaryDescription» {eventLabel}."

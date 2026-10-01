@@ -189,4 +189,11 @@ class Helpers {
 //        return serialize(expr).trim
     }
     
+    def escapePythonString(String value) {
+    value
+        .replace("\\", "\\\\")
+        .replace("\"", "\\\"")
+        .replace("\r", "\\r")
+        .replace("\n", "\\n")
+    }
 }

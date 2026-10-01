@@ -177,8 +177,8 @@ class FutureTemplates {
                 "kind": "unfulfilledResponse",
                 "valueKind": "correlation",
                 "tokenPlace": "«correlationVar.name»",
-                "activationLabel": "«activationLabel»",
-                "targetLabel": "«targetLabel»",
+                "activationLabel": "«helpers.escapePythonString(activationLabel)»",
+                "targetLabel": "«helpers.escapePythonString(targetLabel)»",
                 "message": "{activationLabel} with correlation {correlation} was not eventually followed by {targetLabel} with correlation {correlation}."
             }
         ]
@@ -206,6 +206,10 @@ class FutureTemplates {
                     «targetEventInfo.refType» «targetEventInfo.refName»
                 «ENDIF»
                 ANY any
+                StepMetaData    StepMetaData
+                
+                outputs
+                StepMetaData StepMetaData
             
                 local
                 «correlationVar.type.type.name» «correlationVar.name»
@@ -214,6 +218,7 @@ class FutureTemplates {
                 UNIT acceptor
                 UNIT final
                 
+               
                 desc "«templateName»"
                 
                 action           UnmatchedActivation1
@@ -278,12 +283,20 @@ class FutureTemplates {
                  action          Activation
                  element-label   "Activation"
                  case            default priority 60
-                 with-inputs     «activationEventInfo.refName»
+                 with-inputs     «activationEventInfo.refName», StepMetaData
                  with-guard      «helpers.getRefConcreteWhereClause(activationEventInst)»
                  produces-outputs    split suppress
                  produces-outputs    «correlationVar.name»
                  updates:
                      «helpers.getRefWithClause(activationEventInst)»
+                      «correlationVar.name».MetaData :=
+                          <map<string,string[]>>{
+                              "activationIds" ->
+                              <string[]>[StepMetaData.steps["stepid"]]
+                           }
+                 produces-outputs   StepMetaData
+                 updates:
+                    StepMetaData := StepMetaData 
                      
                  action           UnmatchedActivation2
                  element-label    "Unmatched Activation2"
@@ -349,8 +362,8 @@ class FutureTemplates {
                 "kind": "unfulfilledChainResponse",
                 "valueKind": "correlation",
                 "tokenPlace": "«correlationVar.name»",
-                "activationLabel": "«activationLabel»",
-                "targetLabel": "«targetLabel»",
+                "activationLabel": "«helpers.escapePythonString(activationLabel)»",
+                "targetLabel": "«helpers.escapePythonString(targetLabel)»",
                 "message": "{activationLabel} with correlation {correlation} was not immediately followed by {targetLabel} with correlation {correlation}."
              } 
         ]
@@ -380,6 +393,10 @@ class FutureTemplates {
                     «ENDIF»
                 «ENDIF»
                 ANY any
+                StepMetaData    StepMetaData
+                
+                outputs
+                StepMetaData    StepMetaData
             
                 local
                 «correlationVar.type.type.name» «correlationVar.name»
@@ -393,14 +410,24 @@ class FutureTemplates {
                 action          RepeatedActivation
                 element-label   "Repeated Activation"
                 case            default priority 70
-                with-inputs     split, «activationEventInfo.refName», «correlationVar.name»
+                with-inputs     split, «activationEventInfo.refName», «correlationVar.name», StepMetaData
                 with-guard      «helpers.getRefRepeatedActivationWhereClause(activationEventInst)»
                 produces-outputs    split suppress
                 updates:
                      split := split
                 produces-outputs    «correlationVar.name»
                 updates:
-                     «correlationVar.name» := «correlationVar.name»
+                      «correlationVar.name».MetaData := 
+                          <map<string,string[]>>{
+                              "activationIds" ->
+                                  add(
+                                      «correlationVar.name».MetaData["activationIds"],
+                                      StepMetaData.steps["stepid"]
+                                     )
+                          }
+                produces-outputs    StepMetaData
+                updates:
+                    StepMetaData := StepMetaData    
                       
                 action          UnactivatedTarget
                 element-label   "Unactivated Target"
@@ -435,12 +462,16 @@ class FutureTemplates {
                 action          Activation
                 element-label   "Activation"
                 case            default priority 60
-                with-inputs     «activationEventInfo.refName»
+                with-inputs     «activationEventInfo.refName», StepMetaData
                 with-guard      «helpers.getRefConcreteWhereClause(activationEventInst)»
                 produces-outputs    split suppress
                 produces-outputs    «correlationVar.name»
                 updates:
                     «helpers.getRefWithClause(activationEventInst)»
+                     «correlationVar.name».MetaData := <map<string,string[]>>{"activationIds" -> <string[]>[StepMetaData.steps["stepid"]] }
+                produces-outputs    StepMetaData
+                updates:
+                    StepMetaData := StepMetaData
                  
                 action          ANY
                 element-label   "ANY"
@@ -465,12 +496,19 @@ class FutureTemplates {
                 action         Blocker
                 element-label  "Blocker"
                 case           default priority 80
-                with-inputs    split, «intermediateEventInfo.refName», «correlationVar.name»
+                with-inputs    split, «intermediateEventInfo.refName», «correlationVar.name», StepMetaData
                 with-guard     «helpers.getRefCombinedWhereClause(intermediateEventInst)»
                 produces-outputs   rejecting_tokens
                 updates:
                    rejecting_tokens := «correlationVar.name»
-                   
+                   «correlationVar.name».MetaData := <map<string,string[]>>{
+                                                                    "activationIds" -> «correlationVar.name».MetaData ["activationIds"],
+                                                                    "blockerIds" -><string[]>[StepMetaData.steps["stepid"]] 
+                                                                            }
+                produces-outputs        StepMetaData
+                updates:
+                    StepMetaData := StepMetaData
+
                 element-labels ["Root", "ALTERNATERESPONSE"]
             }
         ''' 
@@ -520,18 +558,18 @@ class FutureTemplates {
                 "kind": "unfulfilledAlternateResponse",
                 "valueKind": "correlation",
                 "tokenPlace": "«correlationVar.name»",
-                "activationLabel": "«activationLabel»",
-                "targetLabel": "«targetLabel»",
-                "intermediateLabel": "«intermediateLabel»",
+                "activationLabel": "«helpers.escapePythonString(activationLabel)»",
+                "targetLabel": "«helpers.escapePythonString(targetLabel)»",
+                "intermediateLabel": "«helpers.escapePythonString(intermediateLabel)»",
                 "message": "{activationLabel} with correlation {correlation} was not eventually followed by {targetLabel} with correlation {correlation}."
             },
             {
                 "kind": "unfulfilledAlternateResponse",
                 "valueKind": "correlation",
                 "tokenPlace": "rejecting_tokens",
-                "activationLabel": "«activationLabel»",
-                "targetLabel": "«targetLabel»",
-                "intermediateLabel": "«intermediateLabel»",
+                "activationLabel": "«helpers.escapePythonString(activationLabel)»",
+                "targetLabel": "«helpers.escapePythonString(targetLabel)»",
+                "intermediateLabel": "«helpers.escapePythonString(intermediateLabel)»",
                 "message": "{activationLabel} with correlation {correlation} was seen but then was followed by a blocker before {targetLabel} with correlation {correlation}"
             }
         ]

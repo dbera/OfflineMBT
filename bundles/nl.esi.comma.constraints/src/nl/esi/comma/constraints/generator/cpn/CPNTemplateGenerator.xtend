@@ -421,6 +421,7 @@ class CPNTemplateGenerator
         
         record Counter {
             int count
+            map<string,string[]> MetaData
         }
         '''
         var specBody = ''''''
