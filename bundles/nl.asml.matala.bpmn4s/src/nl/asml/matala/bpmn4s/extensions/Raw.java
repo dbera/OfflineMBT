@@ -12,11 +12,8 @@
  */
 package nl.asml.matala.bpmn4s.extensions;
 
-import java.util.Collection;
-
 import org.camunda.bpm.model.bpmn.instance.BpmnModelElementInstance;
 
-public interface DataTypes extends BpmnModelElementInstance { 
-	public String getTypes();
-	public Collection<DataType> getDataType();
+public interface Raw extends BpmnModelElementInstance {
+	String getValue();
 }

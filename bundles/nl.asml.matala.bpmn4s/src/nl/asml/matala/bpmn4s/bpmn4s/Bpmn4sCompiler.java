@@ -21,6 +21,7 @@ import java.util.AbstractMap;
 import java.util.AbstractSet;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -43,7 +44,7 @@ import nl.asml.matala.bpmn4s.Logging;
  */
 public class Bpmn4sCompiler{
 	
-	protected final String UNIT_TYPE = "UNIT";
+	protected final static String UNIT_TYPE = "UNIT";
 	private final String UNIT_INIT = "UNIT { unit = 0 }";
 	
 	private final DataExpressionsHelper DATA_EXPR_HLPR = new DataExpressionsHelper();
@@ -93,7 +94,7 @@ public class Bpmn4sCompiler{
 		flattenActivities();
 		
 		ps.append(generatePspec());
-		types.append(generateTypes());
+		types.append(model.rawTypes);
 	}
 
 	/**
@@ -810,18 +811,19 @@ public class Bpmn4sCompiler{
 			return compile(tarId);
 		}
 	}
-
-	public String generateTypes() {
+	
+	public static String generateTypes(Collection<Bpmn4sDataType> dataTypes ) {
 		String types = new String("");
 		// UNIT_TYPE is the type for undefined contexts.
 		types += String.format("record %s {\n\tint\tunit\n}\n\n", UNIT_TYPE);
-		for (Bpmn4sDataType dataType: IterableExtensions.sortBy(model.dataSchema.values(), Bpmn4sDataType::getName)) {
+		var sorted = IterableExtensions.sortBy(dataTypes,Bpmn4sDataType::getName);
+		for (var dataType : sorted) {
 			if(dataType instanceof RecordType recType) {
 				String type = "record " + recType.getName() + " {\n";
 				String parameters = "";
 				for (RecordField field: recType.fields) {
 					String fieldName = field.getName();
-					String fieldTypeName = typeToString(field.getType());
+					String fieldTypeName = typeToString(dataTypes, field.getType());
 					String fieldKind = field.getKind() == RecordFieldKind.Concrete ? "" : field.getKind().name().toLowerCase() + " ";
 					parameters += fieldKind + fieldTypeName + "\t" + fieldName + "\n";
 				}
@@ -838,7 +840,7 @@ public class Bpmn4sCompiler{
 				String type = String.format("enum %s {%s }\n", enumType.getName(), literals);
 				types += type + "\n";
 			} else if(dataType instanceof BaseType) {
-				String type = String.format("type %s based on %s\n", dataType.getName(), typeToString(dataType.getType()));
+				String type = String.format("type %s based on %s\n", dataType.getName(), typeToString(dataTypes, dataType.getType()));
 				types += type + "\n";
 			} else {
 //				NOTE:  I am not compiling data types that are not records or enumerations.
@@ -848,21 +850,21 @@ public class Bpmn4sCompiler{
 		return types;
 	}
 
-	private String typeToString(String dataTypeName) {
-		Bpmn4sDataType dataType = model.dataSchema.get(dataTypeName);
+	private static String typeToString(Collection<Bpmn4sDataType> dataTypes, String dataTypeName) {
+		Bpmn4sDataType dataType =dataTypes.stream().filter(dt->dt.getName().equals(dataTypeName)).findFirst().orElse(null);
 		String result = "";
 		if (dataType == null) {
 			return mapType(dataTypeName);
 		} else {
 			if (dataType instanceof ListType) {
 				ListType lst = ListType.class.cast(dataType);
-				result = String.format("%s[]" , typeToString(lst.valueType)); 
+				result = String.format("%s[]" , typeToString(dataTypes, lst.valueType)); 
 			} else if (dataType instanceof MapType) {
 				MapType mp = MapType.class.cast(dataType);
-				result = String.format("map<%s,%s>", typeToString(mp.keyType), typeToString(mp.valueType));
+				result = String.format("map<%s,%s>", typeToString(dataTypes, mp.keyType), typeToString(dataTypes, mp.valueType));
 			} else if (dataType instanceof SetType) {
 				SetType st = SetType.class.cast(dataType);			
-				result = String.format("set<%s>" , typeToString(st.valueType));
+				result = String.format("set<%s>" , typeToString(dataTypes, st.valueType));
 			} else {
 				// record, enumerations and basic types go here
 				result = mapType(dataType.getName()); 
@@ -875,7 +877,7 @@ public class Bpmn4sCompiler{
 	 * Basic types in BPMN4S editor start with upper case, 
 	 * while in pspec they are lower cased.
 	 */
-	protected String mapType(String name) {
+	protected static String mapType(String name) {
 		return switch (name) {
 			case "Int", "String" -> name.toLowerCase();
 			case "Boolean" -> "bool";
@@ -971,11 +973,11 @@ public class Bpmn4sCompiler{
 		return result;
 	}
 
-	private String indent(String str) {
+	private static String indent(String str) {
 		return str.replaceAll("(?m)^", "    ");
 	}
 
-	protected String tabulate (String... strings) {
+	protected static String tabulate (String... strings) {
 		return String.join("\t", strings);
 	}
 

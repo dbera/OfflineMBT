@@ -15,6 +15,7 @@ package nl.asml.matala.bpmn4s.bpmn4s;
 public abstract class Bpmn4sDataType {
 	
 	public static final String ENUM_TYPE = "Enumeration";
+	public static final String ENUM = "Enum";
 	public static final String CONTEXT_TYPE = "Context";
 	public static final String RECORD_TYPE = "Record";
 	public static final String LIST_TYPE = "List";

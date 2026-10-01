@@ -20,9 +20,9 @@ import org.eclipse.xtext.resource.XtextResourceSet;
 
 import nl.asml.matala.server.api.ServerApiException;
 import nl.asml.matala.server.api.TypesApi;
-import nl.asml.matala.server.types.outline.TypesOutlineGenerator;
 import nl.esi.xtext.common.lang.utilities.EcoreUtil3;
 import nl.esi.xtext.common.lang.utilities.EcoreUtil3.ValidationException;
+import nl.esi.xtext.types.generator.DataTypesOutlineGenerator;
 import nl.esi.xtext.types.types.TypesModel;
 
 /**
@@ -41,7 +41,7 @@ public class TypesApiImpl implements TypesApi {
 			var typesModel = resource.getContents().stream().filter(TypesModel.class::isInstance)
 					.map(TypesModel.class::cast).findFirst()
 					.orElseThrow(() -> new ServerApiException(500, "No types model found"));
-			return TypesOutlineGenerator.toJson(TypesOutlineGenerator.getOutline(typesModel, typeName));
+			return DataTypesOutlineGenerator.toJson(DataTypesOutlineGenerator.getOutline(typesModel, typeName));
 			
 		} catch (IOException e) {
 			throw new ServerApiException(500, "Failed to parse types: " + e.getMessage());

@@ -5,6 +5,7 @@ Bundle-SymbolicName: nl.asml.matala.server
 Bundle-Vendor: TNO_ESI
 Bundle-Version: 4.2.0.qualifier
 Require-Bundle: nl.esi.xtext.lsp.server,
+ nl.esi.xtext.types,
  nl.asml.matala.product,
  slf4j.reload4j,
  com.google.gson,
@@ -28,6 +29,5 @@ Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: nl.asml.matala.server,
  nl.asml.matala.server.api,
  nl.asml.matala.server.impl,
- nl.asml.matala.server.rest,
- nl.asml.matala.server.types.outline
+ nl.asml.matala.server.rest
 Import-Package: org.slf4j

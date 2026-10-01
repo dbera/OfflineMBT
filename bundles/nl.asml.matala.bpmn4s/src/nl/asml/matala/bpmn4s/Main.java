@@ -20,6 +20,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.camunda.bpm.model.bpmn.Bpmn;
 import org.camunda.bpm.model.bpmn.BpmnModelInstance;
@@ -56,14 +57,17 @@ import nl.asml.matala.bpmn4s.bpmn4s.MapType;
 import nl.asml.matala.bpmn4s.bpmn4s.RecordFieldKind;
 import nl.asml.matala.bpmn4s.bpmn4s.RecordType;
 import nl.asml.matala.bpmn4s.bpmn4s.SetType;
-import nl.asml.matala.bpmn4s.extensions.DataType;
 import nl.asml.matala.bpmn4s.extensions.DataTypeImpl;
 import nl.asml.matala.bpmn4s.extensions.DataTypesImpl;
 import nl.asml.matala.bpmn4s.extensions.Field;
 import nl.asml.matala.bpmn4s.extensions.FieldImpl;
 import nl.asml.matala.bpmn4s.extensions.Literal;
 import nl.asml.matala.bpmn4s.extensions.LiteralImpl;
+import nl.asml.matala.bpmn4s.extensions.Raw;
+import nl.asml.matala.bpmn4s.extensions.RawImpl;
 import nl.asml.matala.bpmn4s.extensions.TargetDataRefImpl;
+import nl.esi.xtext.types.generator.DataType;
+import nl.esi.xtext.types.generator.DataTypesOutlineGenerator;
 
 
 public class Main {
@@ -146,6 +150,7 @@ public class Main {
 
 	private static void registerModelExtensionTypes() {
 		ModelBuilder modelBuilder = Bpmn.INSTANCE.getBpmnModelBuilder();
+		RawImpl.registerType(modelBuilder);
 		DataTypeImpl.registerType(modelBuilder);
 		DataTypesImpl.registerType(modelBuilder);
 		FieldImpl.registerType(modelBuilder);
@@ -158,46 +163,74 @@ public class Main {
 	 * bpmn4s data structure (i.e. this.model).
 	 */
 	public static void parseBPMN(BpmnModelInstance modelInst) {
-			
-		Map<String, DataType> datatypes = from(modelInst.getModelElementsByType(DataType.class)).toMap(DataType::getId);
-		for (DataType dt: datatypes.values()) {
-			parseDataType(dt, datatypes);
+
+		String rawTypesString = null;
+		Map<String, String> idNameMapping = null;
+		
+		try {
+			// try to get the raw types from the model, if they are present 
+			// else fall back to parsing the data types from the model, may be removed in the future
+			var rawTypes = modelInst.getModelElementsByType(Raw.class);
+			rawTypesString = rawTypes.stream().map(Raw::getValue).findFirst().orElse("");
+		} catch (Exception e) {
+			System.out.println("Raw types not found in model, falling back to parsing the data types from the model.");
+		}
+		if (rawTypesString == null || rawTypesString.isEmpty()) {
+			// falling back to parsing the data types from the model, may be removed in the future
+			Map<String, nl.asml.matala.bpmn4s.extensions.DataType> dataTypes = from(modelInst.getModelElementsByType(nl.asml.matala.bpmn4s.extensions.DataType.class)).toMap(nl.asml.matala.bpmn4s.extensions.DataType::getId);
+			for (nl.asml.matala.bpmn4s.extensions.DataType dt: dataTypes.values()) {
+				oldParseDataType(dt, dataTypes);
+			}
+			// this looks weird but it this we can re-use the new way of working to the max
+			rawTypesString = Bpmn4sCompiler.generateTypes(model.dataSchema.values());
+			// here we have real ids that are part of the bpmn data
+			idNameMapping = dataTypes.values().stream().collect(Collectors.toMap(nl.asml.matala.bpmn4s.extensions.DataType::getId, nl.asml.matala.bpmn4s.extensions.DataType::getName));
+			model.dataSchema.clear();
 		}
 		
+		model.rawTypes = rawTypesString;
+		var dataTypesList = DataTypesOutlineGenerator.fromTypes(rawTypesString);
+		dataTypesList.forEach(Main::parseDataType);
+		
+		if(idNameMapping == null) {
+			// For backwards compatibility, we create a mapping from id to name for the data types.
+			idNameMapping = dataTypesList.stream().collect(Collectors.toMap(dt-> dt.getId() != null ? dt.getId() : dt.getName(), dt->dt.getName()));
+		}
+
 		Collection<DataStoreReference> dataStores = modelInst.getModelElementsByType(DataStoreReference.class);
 		for (DataStoreReference ds: dataStores) {
-			makeDataNode(ds, ElementType.DATASTORE, datatypes); 
+			makeDataNode(ds, ElementType.DATASTORE, idNameMapping); 
 		}
 		
 		Collection<DataObjectReference> dataObjects = modelInst.getModelElementsByType(DataObjectReference.class);
 		// In BPMN4S these are message queues
 		for (DataObjectReference dor: dataObjects) {
 			if (!model.elements.containsKey(dor.getName())) {
-				makeDataNode(dor, ElementType.MSGQUEUE, datatypes); 
+				makeDataNode(dor, ElementType.MSGQUEUE, idNameMapping); 
 			}
 		}
 		
 		// Activities and Components
 		Collection<Process> process = modelInst.getModelElementsByType(Process.class);
-		for (Process sp: process) {	parseProcess(sp, datatypes); }
+		for (Process sp: process) {	parseProcess(sp, idNameMapping); }
 		
 		Collection<SubProcess> subprocesses = modelInst.getModelElementsByType(SubProcess.class);
-		for (SubProcess sp: subprocesses) {	parseSubprocess(sp, datatypes); }
+		for (SubProcess sp: subprocesses) {	parseSubprocess(sp, idNameMapping); }
 		
 		Collection<Task> tasks = modelInst.getModelElementsByType(Task.class);
-		for (Task task: tasks) { parseTask(task, datatypes); }
+		for (Task task: tasks) { parseTask(task, idNameMapping); }
 		
 		Collection<StartEvent> sevents = modelInst.getModelElementsByType(StartEvent.class);
-		for (StartEvent ev: sevents) { parseEvent(ev, ElementType.START_EVENT, datatypes); };
+		for (StartEvent ev: sevents) { parseEvent(ev, ElementType.START_EVENT, idNameMapping); };
 		
 		Collection<EndEvent> eevents = modelInst.getModelElementsByType(EndEvent.class);
-		for (EndEvent ev: eevents) { parseEvent(ev, ElementType.END_EVENT, datatypes); }; 
+		for (EndEvent ev: eevents) { parseEvent(ev, ElementType.END_EVENT, idNameMapping); }; 
 		
 		Collection<ExclusiveGateway> xor = modelInst.getModelElementsByType(ExclusiveGateway.class);
-		for (ExclusiveGateway ev: xor) {makeActionNode(ev, ElementType.XOR_GATE, datatypes); }
+		for (ExclusiveGateway ev: xor) {makeActionNode(ev, ElementType.XOR_GATE, idNameMapping); }
 		
 		Collection<ParallelGateway> and = modelInst.getModelElementsByType(ParallelGateway.class);
-		for (ParallelGateway ev: and) { makeActionNode(ev, ElementType.AND_GATE, datatypes); }
+		for (ParallelGateway ev: and) { makeActionNode(ev, ElementType.AND_GATE, idNameMapping); }
 		
 		// relate nodes to edges
 		for (Edge e: model.edges) {
@@ -216,7 +249,7 @@ public class Main {
 	/*
 	 * Parse and add DataStores and MessageQueues.
 	 */
-	static void makeDataNode(ItemAwareElement elem, ElementType type, Map<String, DataType> datatypes) {
+	static void makeDataNode(ItemAwareElement elem, ElementType type, Map<String, String> idNameMapping) {
 		String name = NameResolver.getName(elem);
 		String id = elem.getId();
 		Element node = new Element(type, name, id);
@@ -226,7 +259,7 @@ public class Main {
 		node.setParent(getParentId(elem));
 		node.setComponent(getParentComponents(elem));
 		String datatyperef = elem.getAttributeValueNs("http://bpmn4s", "dataTypeRef");
-		String dtname = resolveTypeRef(datatyperef, datatypes);
+		String dtname = idNameMapping.get(datatyperef);
 		node.setDataType(dtname);
 		String init = elem.getAttributeValueNs("http://bpmn4s", "init");
 		node.setInit(init);
@@ -248,7 +281,7 @@ public class Main {
 		return value == null ? new String[0] : value.split("\\s+");
 	}
 	
-	public static void parseTask(Task t, Map<String, DataType> datatypes) {
+	public static void parseTask(Task t, Map<String, String> idNameMapping) {
 		String subTypeString = t.getAttributeValueNs("http://bpmn4s", "subType");
 		ElementType taskType = ElementType.NONE;;
 		if(subTypeString != null) {
@@ -260,23 +293,24 @@ public class Main {
 				taskType = ElementType.ASSERT_TASK;
 			}
 		}
-		makeActionNode(t, ElementType.TASK, taskType, datatypes);
+		makeActionNode(t, ElementType.TASK, taskType, idNameMapping);
 		parseDataAssociations(t);
 	}
 
-	static void parseEvent(Event ev, ElementType type, Map<String, DataType> datatypes) {
-		makeActionNode(ev, type, datatypes);
+	static void parseEvent(Event ev, ElementType type, Map<String, String> idNameMapping) {
+		makeActionNode(ev, type, idNameMapping);
 	}
 
-	public static void parseDataType(DataType dt, Map<String, DataType> datatypes) {
-		String type = dt.getType();
+	public static void parseDataType(DataType dt) {
+		String type = dt.getNodeType();
 		Bpmn4sDataType datatype = switch (type) {
 			case Bpmn4sDataType.RECORD_TYPE,
-			     Bpmn4sDataType.CONTEXT_TYPE -> parseRecord(dt, datatypes);
-			case Bpmn4sDataType.LIST_TYPE -> parseList(dt, datatypes);
-			case Bpmn4sDataType.SET_TYPE -> parseSet(dt, datatypes);
-			case Bpmn4sDataType.MAP_TYPE -> parseMap(dt, datatypes);
-			case Bpmn4sDataType.ENUM_TYPE -> parseEnum(dt);
+			     Bpmn4sDataType.CONTEXT_TYPE -> parseRecord(dt);
+			case Bpmn4sDataType.LIST_TYPE -> parseList(dt);
+			case Bpmn4sDataType.SET_TYPE -> parseSet(dt);
+			case Bpmn4sDataType.MAP_TYPE -> parseMap(dt);
+			case Bpmn4sDataType.ENUM_TYPE, 
+			     Bpmn4sDataType.ENUM -> parseEnum(dt);
 			case Bpmn4sDataType.STRING_TYPE,
 			     Bpmn4sDataType.INT_TYPE,
 			     Bpmn4sDataType.BOOLEAN_TYPE,
@@ -284,17 +318,78 @@ public class Main {
 			default -> null;
 		};
 		if (datatype == null) {
-			Logging.logError(String.format("Skipping unsuported datatype %s.", type));
+			Logging.logError(String.format("Skipping unsupported datatype %s.", type));
 		} else {
-			model.dataSchema.put(datatype.getName(), datatype);
+			model.dataSchema.put(dt.getId() != null ? dt.getId() : dt.getName(), datatype);
 		}
 	}
 	
 	public static BaseType parseBase(DataType dt) {
-		return new BaseType(dt.getName(), dt.getType());
+		return new BaseType(dt.getName(), dt.getNodeType());
 	}
 
 	public static EnumerationType parseEnum(DataType dt) {
+		EnumerationType result = new EnumerationType(dt.getName());
+		for(var lit: dt.getChildren()) {
+			String name = lit.getName();
+			String value = lit.getName();
+			result.addLiteral(name, value);
+		}
+		return result;
+	}
+	
+	public static RecordType parseRecord(DataType dt) {
+		String name = dt.getName();
+		RecordType rec = new RecordType(name);
+		for(var f: dt.getChildren()) {
+			//TODO how to get this
+			var fSuppress = f.getAnnotations() instanceof Map map ? map.containsKey("suppressUpdate") : Boolean.FALSE;
+			RecordFieldKind fKind = RecordFieldKind.parse(f.getKind());
+			rec.addField(f.getName(), f.getType(), fKind, fSuppress);
+		}
+		return rec;
+	}
+
+
+	public static ListType parseList (DataType dt) {
+		return new ListType(dt.getName(), dt.getChildren().get(0).getType());
+	}
+	
+	public static SetType parseSet (DataType dt) {
+		return new SetType(dt.getName(), dt.getChildren().get(0).getType());
+	}
+	
+	public static MapType parseMap (DataType dt) {
+		return new MapType(dt.getName(), dt.getChildren().get(0).getType(), dt.getChildren().get(1).getType());
+	}
+
+	public static void oldParseDataType(nl.asml.matala.bpmn4s.extensions.DataType dt, Map<String, nl.asml.matala.bpmn4s.extensions.DataType> idNameMapping) {
+		String type = dt.getType();
+		Bpmn4sDataType datatype = switch (type) {
+			case Bpmn4sDataType.RECORD_TYPE,
+			     Bpmn4sDataType.CONTEXT_TYPE -> oldParseRecord(dt, idNameMapping);
+			case Bpmn4sDataType.LIST_TYPE -> oldParseList(dt, idNameMapping);
+			case Bpmn4sDataType.SET_TYPE -> oldParseSet(dt, idNameMapping);
+			case Bpmn4sDataType.MAP_TYPE -> oldParseMap(dt, idNameMapping);
+			case Bpmn4sDataType.ENUM_TYPE -> oldParseEnum(dt);
+			case Bpmn4sDataType.STRING_TYPE,
+			     Bpmn4sDataType.INT_TYPE,
+			     Bpmn4sDataType.BOOLEAN_TYPE,
+			     Bpmn4sDataType.FLOAT_TYPE -> oldParseBase(dt);
+			default -> null;
+		};
+		if (datatype == null) {
+			Logging.logError(String.format("Skipping unsuported datatype %s.", type));
+		} else {
+			model.dataSchema.put(dt.getId(), datatype);
+		}
+	}
+	
+	public static BaseType oldParseBase(nl.asml.matala.bpmn4s.extensions.DataType dt) {
+		return new BaseType(dt.getName(), dt.getType());
+	}
+
+	public static EnumerationType oldParseEnum(nl.asml.matala.bpmn4s.extensions.DataType dt) {
 		EnumerationType result = new EnumerationType(dt.getName());
 		for(Literal lit: dt.getChildElementsByType(Literal.class)) {
 			String name = lit.getName();
@@ -304,7 +399,7 @@ public class Main {
 		return result;
 	}
 	
-	public static RecordType parseRecord(DataType dt, Map<String, DataType> datatypes) {
+	public static RecordType oldParseRecord(nl.asml.matala.bpmn4s.extensions.DataType dt, Map<String, nl.asml.matala.bpmn4s.extensions.DataType> idNameMapping) {
 		String name = dt.getName();
 		RecordType rec = new RecordType(name);
 		for(Field f: dt.getChildElementsByType(Field.class)) {
@@ -312,7 +407,7 @@ public class Main {
 			// tref is either a string representing a basic type (such as int or string) or
 			// an id referencing a user defined data type. We assume the later and fall back 
 			// on the former case.
-			String ftype = resolveTypeRef(f.getTypeRef(), datatypes);
+			String ftype = oldResolveTypeRef(f.getTypeRef(), idNameMapping);
 			RecordFieldKind fKind = RecordFieldKind.parse(f.getAttributeValueNs("http://bpmn4s", "kind"));
 			Boolean fSuppress = "true".equalsIgnoreCase(f.getAttributeValueNs("http://bpmn4s", "suppressUpdate"));
 			rec.addField(fname, ftype, fKind, fSuppress);
@@ -320,33 +415,34 @@ public class Main {
 		return rec;
 	}
 	
-	public static String resolveTypeRef(String typeRef, Map<String, DataType> datatypes) {
-		return datatypes.containsKey(typeRef) ? datatypes.get(typeRef).getName() : typeRef;
+	public static String oldResolveTypeRef(String typeRef, Map<String, nl.asml.matala.bpmn4s.extensions.DataType> idNameMapping) {
+		return idNameMapping.containsKey(typeRef) ? idNameMapping.get(typeRef).getName() : typeRef;
 	}
 	
-	public static ListType parseList (DataType dt, Map<String, DataType> datatypes) {
-		return new ListType(dt.getName(), resolveTypeRef(dt.getValueTypeRef(), datatypes));
+	public static ListType oldParseList (nl.asml.matala.bpmn4s.extensions.DataType dt, Map<String, nl.asml.matala.bpmn4s.extensions.DataType> idNameMapping) {
+		return new ListType(dt.getName(), oldResolveTypeRef(dt.getValueTypeRef(), idNameMapping));
 	}
 	
-	public static SetType parseSet (DataType dt, Map<String, DataType> datatypes) {
-		return new SetType(dt.getName(), resolveTypeRef(dt.getValueTypeRef(), datatypes));
+	public static SetType oldParseSet (nl.asml.matala.bpmn4s.extensions.DataType dt, Map<String, nl.asml.matala.bpmn4s.extensions.DataType> idNameMapping) {
+		return new SetType(dt.getName(), oldResolveTypeRef(dt.getValueTypeRef(), idNameMapping));
 	}
 	
-	public static MapType parseMap (DataType dt, Map<String, DataType> datatypes) {
-		return new MapType(dt.getName(), dt.getKeyTypeRef(), resolveTypeRef(dt.getValueTypeRef(), datatypes));
+	public static MapType oldParseMap (nl.asml.matala.bpmn4s.extensions.DataType dt, Map<String, nl.asml.matala.bpmn4s.extensions.DataType> idNameMapping) {
+		return new MapType(dt.getName(), dt.getKeyTypeRef(), oldResolveTypeRef(dt.getValueTypeRef(), idNameMapping));
 	}
 
-	public static void parseProcess(Process p, Map<String, DataType> datatypes) {
-		makeActionNode(p, ElementType.COMPONENT, datatypes);
+	public static void parseProcess(Process p, Map<String, String> idNameMapping) {
+		makeActionNode(p, ElementType.COMPONENT, idNameMapping);
 	}	
 	
-	public static void parseSubprocess(SubProcess sp, Map<String, DataType> datatypes) {
+	
+	public static void parseSubprocess(SubProcess sp, Map<String, String> idNameMapping) {
 		String subtype = sp.getAttributeValueNs("http://bpmn4s", "subType");
 		if (subtype != null && subtype.equals(SUBTYPE_COMPONENT)) {
-			makeActionNode(sp, ElementType.COMPONENT, datatypes);
+			makeActionNode(sp, ElementType.COMPONENT, idNameMapping);
 			parseDataAssociations(sp);
 		} else {
-			makeActionNode(sp, ElementType.ACTIVITY, datatypes);
+			makeActionNode(sp, ElementType.ACTIVITY, idNameMapping);
 			parseDataAssociations(sp);
 		}
 	}	
@@ -391,8 +487,8 @@ public class Main {
 		
 	}
 	
-	public static void makeActionNode(BaseElement elem, ElementType type, Map<String, DataType> datatypes) {
-		makeActionNode(elem, type, ElementType.NONE, datatypes);
+	public static void makeActionNode(BaseElement elem, ElementType type, Map<String, String> idNameMapping) {
+		makeActionNode(elem, type, ElementType.NONE, idNameMapping);
 	}
 	
 	/**
@@ -400,7 +496,7 @@ public class Main {
 	 * Task elements may have a taskType such as COMPOSE or RUN, to indicate 
 	 * they are part of generated tests.
 	 */
-	public static void makeActionNode(BaseElement elem, ElementType type, ElementType taskType, Map<String, DataType> datatypes) {
+	public static void makeActionNode(BaseElement elem, ElementType type, ElementType taskType, Map<String, String> idNameMapping) {
 		String name = elem.getAttributeValue("name");
 		String id = elem.getId();
 		Element node = new Element(type, taskType, name);
@@ -417,7 +513,7 @@ public class Main {
 		String contextTypeId = elem.getAttributeValueNs("http://bpmn4s", "ctxTypeRef");
 		String contextTypeName = "";
 		if (contextTypeId != null) {
-			contextTypeName = resolveTypeRef(contextTypeId, datatypes);
+			contextTypeName = idNameMapping.get(contextTypeId);
 		}
 		if(contextInit != null && contextInit.startsWith("=")) {
 			contextInit = contextInit.substring(1); // FIXME due to issues with bpmn4s editor lsp integration

@@ -56,6 +56,7 @@ import nl.asml.matala.bpmn4s.extensions.Bpmn4sModel;
 import nl.asml.matala.bpmn4s.extensions.DataType;
 import nl.asml.matala.bpmn4s.extensions.DataTypes;
 import nl.asml.matala.bpmn4s.extensions.Field;
+import nl.asml.matala.bpmn4s.extensions.Raw;
 import nl.asml.matala.product.product.Block;
 import nl.asml.matala.product.product.Function;
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractStep;
@@ -376,6 +377,9 @@ public class CamundaParser {
 	private static void createDataTypes(BpmnModelInstance modelInstance, Process process) {
 		ExtensionElements extElem = modelInstance.newInstance(ExtensionElements.class);
 		DataTypes dtype_list = modelInstance.newInstance(DataTypes.class);
+
+		Raw dt_raw = modelInstance.newInstance(Raw.class);
+		extElem.addChildElement(dt_raw);
 
 		DataType dt_dataset = modelInstance.newInstance(DataType.class);
 		dt_dataset.setAttributeValue("id", "dataset_id");
