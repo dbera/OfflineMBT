@@ -152,6 +152,23 @@ class Helpers {
         }
         return null
     }
+
+//    Overloading the function to handle no correlation    
+    def String getRefWithClause(
+        Ref ref,
+        RefInfo correlationInfo,
+        boolean hasCorrelation
+    ) {
+        if (hasCorrelation) {
+            return getRefWithClause(ref)
+        }
+    
+        return '''
+            «correlationInfo.refName» := «correlationInfo.refType» {
+                MetaData = <map<string,string[]>>{}
+            }
+        '''
+    }
     
 //    TODO{need a helper function to generate correlation clauses for repeated activation}
 //    def getRepeatedActivationGuard(Ref ref, Variable correlationVar) {
@@ -191,9 +208,8 @@ class Helpers {
     
     def escapePythonString(String value) {
     value
+        .replaceAll("[ \\t]*[\\r\\n]+[ \\t]*", " ")
         .replace("\\", "\\\\")
         .replace("\"", "\\\"")
-        .replace("\r", "\\r")
-        .replace("\n", "\\n")
     }
 }

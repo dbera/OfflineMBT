@@ -70,7 +70,7 @@ class CPNTemplateGenerator
     val ExistentialTemplates existentialTemplates = new ExistentialTemplates
     val Helpers helpers = new Helpers
 
-// generates product pspec files for each constraints in the constraint file
+//  generates product pspec files for each constraints in the constraint file
     def List<ConstraintGenerationResult> generatePSpec(
         Resource res, IFileSystemAccess2 fsa, 
         List<Constraints> constraints,
@@ -442,6 +442,39 @@ class CPNTemplateGenerator
         var fileName = uri.trimFileExtension().lastSegment()
         val generatedSpecName = fileName + "_" + currentConstraint.name 
         val constraintFolder = generatedSpecName + "/"
+                
+//        Check if correlation variable has been declared by the user or not
+//        Otherwise creates a dummy variable with metadata after checking if this name already exists or not
+        val hasCorrelation = !currentConstraint.variables.empty
+        val templateInputNames = computeLabelSet(currentConstraint).map[refName].toSet
+        
+        var dummyTypeName = generatedSpecName + "_CorrelationMetadata"
+        var dummyContextName = generatedSpecName + "_correlationMetadata"
+        var suffix = 1
+        
+        while (typesText.contains(dummyTypeName) ||
+               templateInputNames.contains(dummyContextName)) {
+            dummyTypeName = generatedSpecName + "_CorrelationMetadata_" + suffix
+            dummyContextName = generatedSpecName + "_correlationMetadata_" + suffix
+            suffix++
+        }
+        
+        val correlationInfo =
+            if (hasCorrelation) {
+                val variable = currentConstraint.variables.head
+                new RefInfo(variable.type.type.name, variable.name)
+            } else {
+                new RefInfo(dummyTypeName, dummyContextName)
+            }
+        
+        if (!hasCorrelation) {
+            typesText = typesText +
+            '''
+            record «correlationInfo.refType» {
+                map<string,string[]> MetaData
+            }
+            '''
+        }
         // generate types file that will be imported into the generated ps file
         fsa.generateFile(constraintFolder + fileName + ".types", typesText)
         
@@ -485,7 +518,7 @@ class CPNTemplateGenerator
                     if(templateType instanceof Response) {
                         templateResult = futureTemplates.generateResponseTemplate(
                             currentConstraint.name,
-                            currentConstraint.variables.head,
+                            correlationInfo, hasCorrelation,
                             templateType.refA.head,
                             helpers.getRefInputTypeAndVar(templateType.refA.head),
                             helpers.getRefName(templateType.refA.head),
@@ -497,7 +530,7 @@ class CPNTemplateGenerator
                     else if(templateType instanceof ChainResponse) {
                         templateResult = futureTemplates.generateChainResponseTemplate(
                             currentConstraint.name,
-                            currentConstraint.variables.head,
+                            correlationInfo, hasCorrelation,
                             templateType.refA.head,
                             helpers.getRefInputTypeAndVar(templateType.refA.head),
                             helpers.getRefName(templateType.refA.head),
@@ -509,7 +542,7 @@ class CPNTemplateGenerator
                     else if(templateType instanceof AlternateResponse) {
                         templateResult = futureTemplates.generateAlternateResponseTemplate(
                             currentConstraint.name,
-                            currentConstraint.variables.head,
+                            correlationInfo, hasCorrelation,
                             templateType.refA.head,
                             helpers.getRefInputTypeAndVar(templateType.refA.head),
                             helpers.getRefName(templateType.refA.head),
@@ -533,7 +566,7 @@ class CPNTemplateGenerator
                     if(templateType instanceof Precedence) {
                         templateResult = pastTemplates.generatePrecedenceTemplate(
                             currentConstraint.name,
-                            currentConstraint.variables.head,
+                            correlationInfo, hasCorrelation,
                             templateType.refB.head,
                             helpers.getRefInputTypeAndVar(templateType.refB.head),
                             helpers.getRefName(templateType.refB.head),
@@ -545,7 +578,7 @@ class CPNTemplateGenerator
                     else if(templateType instanceof ChainPrecedence) {
                         templateResult = pastTemplates.generateChainPrecedenceTemplate(
                             currentConstraint.name,
-                            currentConstraint.variables.head,
+                            correlationInfo, hasCorrelation,
                             templateType.refB.head,
                             helpers.getRefInputTypeAndVar(templateType.refB.head),
                             helpers.getRefName(templateType.refB.head),
@@ -557,7 +590,7 @@ class CPNTemplateGenerator
                     else if(templateType instanceof AlternatePrecedence) {
                         templateResult = pastTemplates.generateAlternatePrecedenceTemplate(
                             currentConstraint.name,
-                            currentConstraint.variables.head,
+                            correlationInfo, hasCorrelation,
                             templateType.refB.head,
                             helpers.getRefInputTypeAndVar(templateType.refB.head),
                             helpers.getRefName(templateType.refB.head),
@@ -801,12 +834,17 @@ class CPNTemplateGenerator
                                 metadata_key = event.pop("stepIdsFrom", None)
                                 if metadata_key is not None:
                                     event["stepIds"] = metadata.get(metadata_key, [])
+                                
+                                if not rule.get("hasCorrelation", True):
+                                    event.pop("correlationBinding", None)
+                                    event.pop("whereCorrelation", None)
                                 diagnostic[event_name] = event
                         
                         if "violationStep" in rule:
                             diagnostic["violationStep"] = dict(rule["violationStep"])
                             
-                        if rule.get("valueKind") == "correlation":
+                        if (rule.get("valueKind") == "correlation" and rule.get("hasCorrelation", True)):
+                        
                             diagnostic["correlation"] = correlation_token
                         
                         if not rule.get("includeRawToken", True):

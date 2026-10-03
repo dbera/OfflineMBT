@@ -14,22 +14,21 @@
 package nl.esi.comma.constraints.generator.cpn.templates
 
 import nl.esi.comma.constraints.constraints.Ref
+import nl.esi.comma.constraints.generator.cpn.Helpers
 import nl.esi.comma.constraints.generator.cpn.model.CPNTemplateResult
 import nl.esi.comma.constraints.generator.cpn.model.RefInfo
-import nl.esi.xtext.expressions.expression.Variable
-import nl.esi.comma.constraints.generator.cpn.Helpers
 
 class PastTemplates {
     val FutureTemplates futuretemplates = new FutureTemplates
     val Helpers helpers = new Helpers
     
     def generatePrecedenceTemplate(
-        String templateName, Variable correlationVar,
+        String templateName, RefInfo correlationInfo, boolean hasCorrelation,
         Ref activationEventInst, RefInfo activationEventInfo, String activationEvent,
         Ref targetEventInst, String targetEvent, RefInfo targetEventInfo
     )
     {
-        val result = futuretemplates.generateResponseTemplate(templateName, correlationVar,
+        val result = futuretemplates.generateResponseTemplate(templateName, correlationInfo, hasCorrelation,
         activationEventInst, activationEventInfo, activationEvent,
         targetEventInst, targetEvent, targetEventInfo )
         
@@ -42,8 +41,9 @@ class PastTemplates {
             {
                 "kind": "unfulfilledPrecedence",
                 "valueKind": "correlation",
+                "hasCorrelation": «IF hasCorrelation»True«ELSE»False«ENDIF»,
                 "includeRawToken": False,
-                "tokenPlace": "«correlationVar.name»",
+                "tokenPlace": "«correlationInfo.refName»",
                 "activationLabel": "«helpers.escapePythonString(activationLabel)»",
                 "targetLabel": "«helpers.escapePythonString(targetLabel)»",
                 "activationEvent": {
@@ -57,7 +57,7 @@ class PastTemplates {
                     "whereConcrete": "«helpers.escapePythonString(helpers.getRefConcreteWhereClause(targetEventInst))»",
                     "whereCorrelation": "«helpers.escapePythonString(helpers.getRefCorrelationWhereClause(targetEventInst))»"
                 },
-                "message": "The triggering event occurred without its required prior event."
+                "message": "The triggering event occurred without its required prior event «IF hasCorrelation» with matching correlation«ENDIF»."
             }
         ]
         '''
@@ -70,12 +70,12 @@ class PastTemplates {
     }
     
     def generateChainPrecedenceTemplate(
-        String templateName, Variable correlationVar,
+        String templateName, RefInfo correlationInfo, boolean hasCorrelation,
         Ref activationEventInst, RefInfo activationEventInfo, String activationEvent,
         Ref targetEventInst, String targetEvent, RefInfo targetEventInfo
     )
     {
-        val result = futuretemplates.generateChainResponseTemplate(templateName, correlationVar,
+        val result = futuretemplates.generateChainResponseTemplate(templateName, correlationInfo, hasCorrelation,
         activationEventInst, activationEventInfo, activationEvent,
         targetEventInst, targetEvent, targetEventInfo )
         
@@ -88,8 +88,9 @@ class PastTemplates {
             {
                 "kind": "unfulfilledChainPrecedence",
                 "valueKind": "correlation",
+                "hasCorrelation": «IF hasCorrelation»True«ELSE»False«ENDIF»,
                 "includeRawToken": False,
-                "tokenPlace": "«correlationVar.name»",
+                "tokenPlace": "«correlationInfo.refName»",
                 "activationLabel": "«helpers.escapePythonString(activationLabel)»",
                 "targetLabel": "«helpers.escapePythonString(targetLabel)»",
                 "activationEvent": {
@@ -107,7 +108,7 @@ class PastTemplates {
                     "relation": "immediatePredecessor",
                     "of": "activationEvent"
                 },
-                "message": "The triggering event was not immediately preceded by its required event."
+                "message": "The triggering event was not immediately preceded by its required event «IF hasCorrelation» with matching correlation«ENDIF»."
             }
         ]
         '''
@@ -120,13 +121,13 @@ class PastTemplates {
     }
     
     def generateAlternatePrecedenceTemplate(
-        String templateName, Variable correlationVar,
+        String templateName, RefInfo correlationInfo, boolean hasCorrelation,
         Ref activationEventInst, RefInfo activationEventInfo, String activationEvent,
         Ref targetEventInst, String targetEvent, RefInfo targetEventInfo,
         Ref intermediateEventInst, String intermediateEvent, RefInfo intermediateEventInfo
     )
     {
-        val result = futuretemplates.generateAlternateResponseTemplate(templateName, correlationVar,
+        val result = futuretemplates.generateAlternateResponseTemplate(templateName, correlationInfo, hasCorrelation,
         activationEventInst, activationEventInfo, activationEvent,
         targetEventInst, targetEvent, targetEventInfo,
         intermediateEventInst, intermediateEvent, intermediateEventInfo )
@@ -142,8 +143,9 @@ class PastTemplates {
             {
                 "kind": "unfulfilledAlternatePrecedence",
                 "valueKind": "correlation",
+                "hasCorrelation": «IF hasCorrelation»True«ELSE»False«ENDIF»,
                 "includeRawToken": False,
-                "tokenPlace": "«correlationVar.name»",
+                "tokenPlace": "«correlationInfo.refName»",
                 "activationLabel": "«helpers.escapePythonString(activationLabel)»",
                 "targetLabel": "«helpers.escapePythonString(targetLabel)»",
                 "intermediateLabel": "«helpers.escapePythonString(intermediateLabel)»",
@@ -158,11 +160,12 @@ class PastTemplates {
                     "whereConcrete": "«helpers.escapePythonString(helpers.getRefConcreteWhereClause(targetEventInst))»",
                     "whereCorrelation": "«helpers.escapePythonString(helpers.getRefCorrelationWhereClause(targetEventInst))»"
                 },
-                "message": "The triggering event occurred without its required earlier event."
+                "message": "The triggering event occurred without its required earlier event «IF hasCorrelation» with matching correlation«ENDIF»."
             },
             {
                 "kind": "unfulfilledAlternatePrecedence",
                 "valueKind": "correlation",
+                "hasCorrelation": «IF hasCorrelation»True«ELSE»False«ENDIF»,
                 "includeRawToken": False,
                 "tokenPlace": "rejecting_tokens",
                 "activationLabel": "«helpers.escapePythonString(activationLabel)»",

@@ -14,16 +14,15 @@
 package nl.esi.comma.constraints.generator.cpn.templates
 
 import nl.esi.comma.constraints.constraints.Ref
-import nl.esi.xtext.expressions.expression.Variable
-import nl.esi.comma.constraints.generator.cpn.model.RefInfo
 import nl.esi.comma.constraints.generator.cpn.Helpers
 import nl.esi.comma.constraints.generator.cpn.model.CPNTemplateResult
+import nl.esi.comma.constraints.generator.cpn.model.RefInfo
 
 class FutureTemplates {
     val Helpers helpers = new Helpers
     
     def generateResponseTemplate(
-        String templateName, Variable correlationVar,
+        String templateName, RefInfo correlationInfo, boolean hasCorrelation,
         Ref activationEventInst, RefInfo activationEventInfo, String activationEvent, 
         Ref targetEventInst, String targetEvent, RefInfo targetEventInfo
     ) 
@@ -44,7 +43,7 @@ class FutureTemplates {
 			    StepMetaData StepMetaData
 			
 			    local
-			    «correlationVar.type.type.name» «correlationVar.name»
+			    «correlationInfo.refType» «correlationInfo.refName»
 			    UNIT split
 			    UNIT acceptor
 			    UNIT final
@@ -63,18 +62,18 @@ class FutureTemplates {
 			    action          RepeatedActivation
 			    element-label   "Repeated Activation"
 			    case            default priority 50
-			    with-inputs     split, «activationEventInfo.refName», «correlationVar.name», StepMetaData
+			    with-inputs     split, «activationEventInfo.refName», «correlationInfo.refName», StepMetaData
 			    with-guard      «helpers.getRefRepeatedActivationWhereClause(activationEventInst)»
 			    produces-outputs    split suppress
 			    updates:
 			         split := split
-			    produces-outputs    «correlationVar.name»
+			    produces-outputs    «correlationInfo.refName»
 			    updates:
-			         «correlationVar.name».MetaData := 
+			         «correlationInfo.refName».MetaData := 
 			             <map<string,string[]>>{
 			                 "activationIds" ->
 			                     add(
-			                         «correlationVar.name».MetaData["activationIds"],
+			                         «correlationInfo.refName».MetaData["activationIds"],
 			                         StepMetaData.steps["stepid"]
 			                        )
 			             }
@@ -92,7 +91,7 @@ class FutureTemplates {
 			     action          Target
 			     element-label   "Target"
 			     case            default priority 40
-			     with-inputs     split, «targetEventInfo.refName», «correlationVar.name»
+			     with-inputs     split, «targetEventInfo.refName», «correlationInfo.refName»
 			     with-guard      «helpers.getRefCombinedWhereClause(targetEventInst)»
 			     produces-outputs    final suppress
 			     updates:
@@ -104,10 +103,10 @@ class FutureTemplates {
 			     with-inputs     «activationEventInfo.refName», StepMetaData
 			     with-guard      «helpers.getRefConcreteWhereClause(activationEventInst)»
 			     produces-outputs    split suppress
-			     produces-outputs    «correlationVar.name»
+			     produces-outputs    «correlationInfo.refName»
 			     updates:
-			         «helpers.getRefWithClause(activationEventInst)»
-			         «correlationVar.name».MetaData :=
+			         «helpers.getRefWithClause(activationEventInst, correlationInfo, hasCorrelation)»
+			         «correlationInfo.refName».MetaData :=
 			             <map<string,string[]>>{
 			                 "activationIds" ->
 			                 <string[]>[StepMetaData.steps["stepid"]]
@@ -151,14 +150,14 @@ class FutureTemplates {
             "split",
             "final",
             "acceptor",
-            "«correlationVar.name»"
+            "«correlationInfo.refName»"
           ],
         
           "acceptance": {
             "scope": "terminalNodes",
             "emptyPlaces": [
               ["split"],
-              ["«correlationVar.name»"]
+              ["«correlationInfo.refName»"]
             ],
             "nonEmptyPlaces": [
             ["acceptor", "final"]
@@ -176,8 +175,9 @@ class FutureTemplates {
             {
                 "kind": "unfulfilledResponse",
                 "valueKind": "correlation",
+                "hasCorrelation": «IF hasCorrelation»True«ELSE»False«ENDIF»,
                 "includeRawToken": False,
-                "tokenPlace": "«correlationVar.name»",
+                "tokenPlace": "«correlationInfo.refName»",
                 "activationLabel": "«helpers.escapePythonString(activationLabel)»",
                 "targetLabel": "«helpers.escapePythonString(targetLabel)»",
                 "activationEvent": {
@@ -191,7 +191,7 @@ class FutureTemplates {
                     "whereConcrete": "«helpers.escapePythonString(helpers.getRefConcreteWhereClause(targetEventInst))»",
                     "whereCorrelation": "«helpers.escapePythonString(helpers.getRefCorrelationWhereClause(targetEventInst))»"
                 },
-                "message": "Activation was not eventually followed by a Target with matching correlation."
+                "message": "Activation was not eventually followed by a Target «IF hasCorrelation» with matching correlation«ENDIF»."
             }
         ]
         '''
@@ -203,7 +203,7 @@ class FutureTemplates {
     
 
     def generateChainResponseTemplate(
-        String templateName, Variable correlationVar,
+        String templateName, RefInfo correlationInfo, boolean hasCorrelation,
         Ref activationEventInst, RefInfo activationEventInfo, String activationEvent, 
         Ref targetEventInst, String targetEvent, RefInfo targetEventInfo
     ) 
@@ -224,7 +224,7 @@ class FutureTemplates {
                 StepMetaData StepMetaData
             
                 local
-                «correlationVar.type.type.name» «correlationVar.name»
+                «correlationInfo.refType» «correlationInfo.refName»
                 UNIT split
                 UNIT blockerseen
                 UNIT acceptor
@@ -243,14 +243,14 @@ class FutureTemplates {
                 action          RepeatedActivation
                 element-label   "Repeated Activation"
                 case            default priority 70
-                with-inputs     split, «activationEventInfo.refName», «correlationVar.name»
+                with-inputs     split, «activationEventInfo.refName», «correlationInfo.refName»
                 with-guard      «helpers.getRefConcreteWhereClause(activationEventInst)»
                 produces-outputs    blockerseen suppress
                 updates:
                      blockerseen := split
-                produces-outputs    «correlationVar.name»
+                produces-outputs    «correlationInfo.refName»
                 updates:
-                     «correlationVar.name» := «correlationVar.name»
+                     «correlationInfo.refName» := «correlationInfo.refName»
                       
                  action          UnactivatedTarget
                  element-label   "Unactivated Target"
@@ -271,7 +271,7 @@ class FutureTemplates {
                  action          Target
                  element-label   "Target"
                  case            default priority 80
-                 with-inputs     split, «targetEventInfo.refName», «correlationVar.name»
+                 with-inputs     split, «targetEventInfo.refName», «correlationInfo.refName»
                  with-guard      «helpers.getRefCombinedWhereClause(targetEventInst)»
                  produces-outputs    final suppress
                  updates:
@@ -298,10 +298,10 @@ class FutureTemplates {
                  with-inputs     «activationEventInfo.refName», StepMetaData
                  with-guard      «helpers.getRefConcreteWhereClause(activationEventInst)»
                  produces-outputs    split suppress
-                 produces-outputs    «correlationVar.name»
+                 produces-outputs    «correlationInfo.refName»
                  updates:
-                     «helpers.getRefWithClause(activationEventInst)»
-                      «correlationVar.name».MetaData :=
+                     «helpers.getRefWithClause(activationEventInst, correlationInfo, hasCorrelation)»
+                      «correlationInfo.refName».MetaData :=
                           <map<string,string[]>>{
                               "activationIds" ->
                               <string[]>[StepMetaData.steps["stepid"]]
@@ -346,7 +346,7 @@ class FutureTemplates {
                     "split",
                     "final",
                     "acceptor",
-                    "«correlationVar.name»",
+                    "«correlationInfo.refName»",
                     "blockerseen"
                   ],
                 
@@ -354,7 +354,7 @@ class FutureTemplates {
                     "scope": "terminalNodes",
                     "emptyPlaces": [
                       ["split"],
-                      ["«correlationVar.name»"],
+                      ["«correlationInfo.refName»"],
                       ["blockerseen"]
                     ],
                     "nonEmptyPlaces": [
@@ -373,8 +373,9 @@ class FutureTemplates {
             {
                 "kind": "unfulfilledChainResponse",
                 "valueKind": "correlation",
+                "hasCorrelation": «IF hasCorrelation»True«ELSE»False«ENDIF»,
                 "includeRawToken": False,
-                "tokenPlace": "«correlationVar.name»",
+                "tokenPlace": "«correlationInfo.refName»",
                 "activationLabel": "«helpers.escapePythonString(activationLabel)»",
                 "targetLabel": "«helpers.escapePythonString(targetLabel)»",
                 "activationEvent": {
@@ -392,7 +393,7 @@ class FutureTemplates {
                     "relation": "immediateSuccessor",
                     "after": "activationEvent"
                 },
-                "message": "Activation was not immediately followed by Target with matching correlation."
+                "message": "Activation was not immediately followed by Target «IF hasCorrelation» with matching correlation«ENDIF»"
              } 
         ]
         '''        
@@ -400,7 +401,7 @@ class FutureTemplates {
     }
 
     def generateAlternateResponseTemplate(
-        String templateName, Variable correlationVar,
+        String templateName, RefInfo correlationInfo, boolean hasCorrelation,
         Ref activationEventInst, RefInfo activationEventInfo, String activationEvent, 
         Ref targetEventInst, String targetEvent, RefInfo targetEventInfo,
         Ref intermediateEventInst, String intermediateEvent, RefInfo intermediateEventInfo
@@ -427,8 +428,8 @@ class FutureTemplates {
                 StepMetaData    StepMetaData
             
                 local
-                «correlationVar.type.type.name» «correlationVar.name»
-                «correlationVar.type.type.name» rejecting_tokens
+                «correlationInfo.refType» «correlationInfo.refName»
+                «correlationInfo.refType» rejecting_tokens
                 UNIT split
                 UNIT acceptor
                 UNIT final
@@ -438,18 +439,18 @@ class FutureTemplates {
                 action          RepeatedActivation
                 element-label   "Repeated Activation"
                 case            default priority 70
-                with-inputs     split, «activationEventInfo.refName», «correlationVar.name», StepMetaData
+                with-inputs     split, «activationEventInfo.refName», «correlationInfo.refName», StepMetaData
                 with-guard      «helpers.getRefRepeatedActivationWhereClause(activationEventInst)»
                 produces-outputs    split suppress
                 updates:
                      split := split
-                produces-outputs    «correlationVar.name»
+                produces-outputs    «correlationInfo.refName»
                 updates:
-                      «correlationVar.name».MetaData := 
+                      «correlationInfo.refName».MetaData := 
                           <map<string,string[]>>{
                               "activationIds" ->
                                   add(
-                                      «correlationVar.name».MetaData["activationIds"],
+                                      «correlationInfo.refName».MetaData["activationIds"],
                                       StepMetaData.steps["stepid"]
                                      )
                           }
@@ -467,7 +468,7 @@ class FutureTemplates {
                 action          Target
                 element-label   "Target"
                 case            default priority 60
-                with-inputs     split, «targetEventInfo.refName», «correlationVar.name»
+                with-inputs     split, «targetEventInfo.refName», «correlationInfo.refName»
                 with-guard      «helpers.getRefCombinedWhereClause(targetEventInst)»
                 produces-outputs    final suppress
                 updates:
@@ -493,10 +494,10 @@ class FutureTemplates {
                 with-inputs     «activationEventInfo.refName», StepMetaData
                 with-guard      «helpers.getRefConcreteWhereClause(activationEventInst)»
                 produces-outputs    split suppress
-                produces-outputs    «correlationVar.name»
+                produces-outputs    «correlationInfo.refName»
                 updates:
-                    «helpers.getRefWithClause(activationEventInst)»
-                     «correlationVar.name».MetaData := <map<string,string[]>>{"activationIds" -> <string[]>[StepMetaData.steps["stepid"]] }
+                    «helpers.getRefWithClause(activationEventInst, correlationInfo, hasCorrelation)»
+                     «correlationInfo.refName».MetaData := <map<string,string[]>>{"activationIds" -> <string[]>[StepMetaData.steps["stepid"]] }
                 produces-outputs    StepMetaData
                 updates:
                     StepMetaData := StepMetaData
@@ -524,13 +525,13 @@ class FutureTemplates {
                 action         Blocker
                 element-label  "Blocker"
                 case           default priority 80
-                with-inputs    split, «intermediateEventInfo.refName», «correlationVar.name», StepMetaData
+                with-inputs    split, «intermediateEventInfo.refName», «correlationInfo.refName», StepMetaData
                 with-guard     «helpers.getRefCombinedWhereClause(intermediateEventInst)»
                 produces-outputs   rejecting_tokens
                 updates:
-                   rejecting_tokens := «correlationVar.name»
-                   «correlationVar.name».MetaData := <map<string,string[]>>{
-                                                                    "activationIds" -> «correlationVar.name».MetaData ["activationIds"],
+                   rejecting_tokens := «correlationInfo.refName»
+                   «correlationInfo.refName».MetaData := <map<string,string[]>>{
+                                                                    "activationIds" -> «correlationInfo.refName».MetaData ["activationIds"],
                                                                     "blockerIds" -><string[]>[StepMetaData.steps["stepid"]] 
                                                                             }
                 produces-outputs        StepMetaData
@@ -557,7 +558,7 @@ class FutureTemplates {
                             "split",
                             "final",
                             "acceptor",
-                            "«correlationVar.name»",
+                            "«correlationInfo.refName»",
                             "rejecting_tokens"
                           ],
                         
@@ -565,7 +566,7 @@ class FutureTemplates {
                             "scope": "terminalNodes",
                             "emptyPlaces": [
                               ["split"],
-                              ["«correlationVar.name»"],
+                              ["«correlationInfo.refName»"],
                               ["rejecting_tokens"]
                             ],
                             "nonEmptyPlaces": [
@@ -585,8 +586,9 @@ class FutureTemplates {
             {
                 "kind": "unfulfilledAlternateResponse",
                 "valueKind": "correlation",
+                "hasCorrelation": «IF hasCorrelation»True«ELSE»False«ENDIF»,
                 "includeRawToken": False,
-                "tokenPlace": "«correlationVar.name»",
+                "tokenPlace": "«correlationInfo.refName»",
                 "activationLabel": "«helpers.escapePythonString(activationLabel)»",
                 "targetLabel": "«helpers.escapePythonString(targetLabel)»",
                 "intermediateLabel": "«helpers.escapePythonString(intermediateLabel)»",
@@ -601,11 +603,12 @@ class FutureTemplates {
                     "whereConcrete": "«helpers.escapePythonString(helpers.getRefConcreteWhereClause(targetEventInst))»",
                     "whereCorrelation": "«helpers.escapePythonString(helpers.getRefCorrelationWhereClause(targetEventInst))»"
                 },
-                "message": "Activation was not eventually followed by a Target with matching correlation."
+                "message": "Activation was not eventually followed by a Target «IF hasCorrelation» with matching correlation«ENDIF»"
             },
             {
                 "kind": "unfulfilledAlternateResponse",
                 "valueKind": "correlation",
+                "hasCorrelation": «IF hasCorrelation»True«ELSE»False«ENDIF»,
                 "includeRawToken": False,
                 "tokenPlace": "rejecting_tokens",
                 "activationLabel": "«helpers.escapePythonString(activationLabel)»",
