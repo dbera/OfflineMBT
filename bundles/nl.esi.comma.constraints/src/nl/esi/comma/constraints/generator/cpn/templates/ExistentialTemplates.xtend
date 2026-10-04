@@ -39,13 +39,13 @@ class ExistentialTemplates {
                 StepMetaData    StepMetaData
             
                 local
-                Counter Countctx
+                ConformanceCountState Countctx
 
                 UNIT acceptor
                 UNIT final
                 
                 init
-                Countctx:= Counter { count = 0, MetaData= <map<string,string[]>>{"eventIds" -> <string[]>[]}  }
+                Countctx:= ConformanceCountState { count = 0, MetaData= <map<string,string[]>>{"eventIds" -> <string[]>[]}  }
                 
                 desc "«templateName»"
                 
@@ -56,7 +56,7 @@ class ExistentialTemplates {
                 with-guard       «helpers.getRefConcreteWhereClause(eventInst)»
                 produces-outputs    Countctx
                 updates:
-                    Countctx:= Counter { 
+                    Countctx:= ConformanceCountState {
                                 count = Countctx.count + 1,
                                 MetaData = <map<string,string[]>>{"eventIds" -> add (Countctx.MetaData["eventIds"], StepMetaData.steps["stepid"])}
                     }

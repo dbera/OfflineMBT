@@ -419,7 +419,7 @@ class CPNTemplateGenerator
             int eot
         }
         
-        record Counter {
+        record ConformanceCountState {
             int count
             map<string,string[]> MetaData
         }

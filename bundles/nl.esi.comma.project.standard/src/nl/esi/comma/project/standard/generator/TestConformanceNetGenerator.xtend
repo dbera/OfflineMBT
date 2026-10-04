@@ -42,6 +42,11 @@ import org.eclipse.xtext.nodemodel.util.NodeModelUtils
 import static extension nl.esi.xtext.common.lang.generator.FileSystemAccessUtil.*
 import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
 
+//for conformance dashboard
+import java.nio.file.Files
+import java.nio.file.Path
+import nl.esi.comma.constraints.generator.cpn.dashboard.ConformanceDashboardRenderer
+
 @FinalFieldsConstructor
 class TestConformanceNetGenerator  extends AbstractGenerator {
     static val CONFORMANCE_SUMMARY_SCRIPT = '''
@@ -59,18 +64,11 @@ class TestConformanceNetGenerator  extends AbstractGenerator {
         with open(verdict_path, "r", encoding="utf-8") as reader:
             verdict = json.load(reader)
         results.append({
-«««            "constraint": verdict["constraint"],
             "constraintName": verdict.get("constraint", constraint),
             "templateType": verdict.get("templateType"),
             "accepted": verdict.get("accepted"),
             "diagnostics": verdict.get("diagnostics", [])
         })
-«««        results.append({
-«««            "constraint": constraint,
-«««            "accepted": verdict.get("accepted"),
-«««            "diagnostics": verdict.get("diagnostics",[])
-«««        })
-    
     with open(summary_path, "w", encoding="utf-8") as writer:
         json.dump({"testCasePath": testcase_path, "constraintFilePath": constraint_file_path, "results": results}, writer, indent=2)
     '''
@@ -140,6 +138,16 @@ class TestConformanceNetGenerator  extends AbstractGenerator {
                 verdicts.add(generatedConstraint.getConstraintFolderName() -> verdictUri)
              }
             writeConformanceSummary(fsa, verdicts)
+            val summaryUri = fsa.getURI("conformance.summary.json")
+            val summaryJson = Files.readString(Path.of(summaryUri.toPath))
+            val concreteTspecText = NodeModelUtils.getNode(tspec).text
+            val constraintSourceText = NodeModelUtils.getNode(constraints.head).text
+            val dashboardHtml = new ConformanceDashboardRenderer().render(
+                summaryJson,
+                concreteTspecText,
+                constraintSourceText
+            )
+            fsa.generateFile("conformance.dashboard.html", dashboardHtml)
             }
         }
     }
