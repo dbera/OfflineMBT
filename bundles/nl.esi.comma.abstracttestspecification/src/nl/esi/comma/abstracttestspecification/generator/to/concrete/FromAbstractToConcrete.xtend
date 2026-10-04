@@ -21,7 +21,6 @@ import nl.esi.comma.abstracttestspecification.abstractTestspecification.RunStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.TSMain
 import nl.esi.comma.assertthat.assertThat.DataAssertionItem
 import nl.esi.xtext.expressions.expression.ExpressionVariable
-import nl.esi.xtext.expressions.services.ExpressionGrammarAccess
 import org.eclipse.emf.common.util.URI
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.generator.AbstractGenerator
@@ -116,7 +115,7 @@ class FromAbstractToConcrete extends AbstractGenerator {
                 «FOR ce : step.asserts.flatMap[ce]»
                     assertions «ce.name» {
                         «FOR dai: ce.constr»
-                            «printDai(dai, step)»
+                            «step.printDai(dai)»
                         «ENDFOR»
                     }
                 «ENDFOR»
@@ -124,17 +123,11 @@ class FromAbstractToConcrete extends AbstractGenerator {
         «ENDIF»
     '''
 
-    def private printDai(DataAssertionItem item, AssertionStep step) {
-        return item.serializeXtext[
-            val gaExpression = semanticElement.getService(ExpressionGrammarAccess)
-            if (gaExpression === null) {
-                return null
-            }
-            var abs_assert = step
-            var cexpr_handler = new ConcreteExpressionHandler()
-            if (grammarElement == gaExpression.expressionLevel9Access.expressionVariableParserRuleCall_7) {
-                val exprVar = semanticElement as ExpressionVariable
-                return cexpr_handler.prepareAssertionStepExpressions(abs_assert, exprVar)
+    def private String printDai(AssertionStep step, DataAssertionItem item) {
+        return item.serialize[ obj |
+            if (obj instanceof ExpressionVariable) {
+                val vname = obj.variable.name
+                return '''«step.system»Input.«vname»'''
             }
         ]
     }
