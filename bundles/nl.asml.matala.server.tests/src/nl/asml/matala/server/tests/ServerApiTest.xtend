@@ -18,10 +18,9 @@ package nl.asml.matala.server.tests
 import org.junit.jupiter.api.Test
 
 /**
- * Tests transformation from TypesModel to DataTypeListSchema.
- * Directly creates ResourceSet with Types language support to parse .types files.
+ *   Dummy for now.
  */
-class Empty {
+class ServerApiTest {
 
    @Test
 	def void doNothing() {

@@ -53,6 +53,7 @@ record PrinterVariants {
 }
 
 record Report {
+    @suppressUpdate
     int	id
     symbolic string	payload
     symbolic real	kpi
