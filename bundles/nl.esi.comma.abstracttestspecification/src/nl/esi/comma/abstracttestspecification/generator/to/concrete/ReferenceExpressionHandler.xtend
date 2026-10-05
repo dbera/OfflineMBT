@@ -18,6 +18,7 @@ import java.util.Set
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.ChainedStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.ExecutableStep
+import nl.esi.comma.abstracttestspecification.abstractTestspecification.RunStep
 import nl.esi.xtext.actions.actions.Action
 import nl.esi.xtext.actions.actions.ActionList
 import nl.esi.xtext.actions.actions.ActionsFactory
@@ -31,6 +32,9 @@ import nl.esi.xtext.expressions.expression.ExpressionFactory
 import nl.esi.xtext.expressions.expression.ExpressionRecord
 import nl.esi.xtext.expressions.expression.ExpressionVariable
 import nl.esi.xtext.types.types.RecordFieldKind
+import nl.esi.xtext.types.types.RecordTypeDecl
+import nl.esi.xtext.types.types.Type
+import nl.esi.xtext.types.types.TypeReference
 
 import static extension nl.esi.comma.abstracttestspecification.generator.utils.Utils.*
 import static extension nl.esi.comma.assertthat.utilities.AssertThatUtilities.*
@@ -50,14 +54,22 @@ class ReferenceExpressionHandler {
         for (cstep : estep.referencedChainedSteps) {
             debug(" [INFO] > Referenced Chained Step: " + cstep.name)
             // Executable block input data structure = Concrete TSpec step input data structure
-            cstep.evaluateReferenceConstrains('''«estep.system»Input.''', mapLHStoRHS)
+            cstep.evaluateReferenceConstrains('''«estep.inputVar».''', mapLHStoRHS)
 
             for (nestedcstep : #[cstep].closure[referencedChainedSteps]) {
                 debug(" [INFO] --> Nested Chained Step: " + nestedcstep.name)
                 // Executable block input data structure = Concrete TSpec step input data structure
-                val fieldPrefix = '''step_«nestedcstep.name».output.'''
+                val fieldPrefix = '''«nestedcstep.outputVar».'''
                 nestedFieldPrefixes += fieldPrefix
                 nestedcstep.evaluateReferenceConstrains(fieldPrefix, mapLHStoRHS)
+            }
+        }
+
+        for (rstepRef : estep.stepRef.filter[refStep instanceof RunStep]) {
+            val rstep = rstepRef.refStep as RunStep
+            val suppressedOutputs = rstepRef.suppressedVarFields.map['''«rstep.outputVar».«it»'''].toSet
+            for (output : rstep.output.reject[suppressedOutputs.contains('''«rstep.outputVar».«name.name»''')]) {
+                evaluateReferenceConstrains(estep.inputVar + '.' + output.name.name, rstep.outputVar + '.' + output.name.name, output.name.type, suppressedOutputs, mapLHStoRHS)
             }
         }
 
@@ -110,13 +122,23 @@ class ReferenceExpressionHandler {
                     val vname = obj.variable.name
                     val stepRef = cstep.stepRef.findFirst[refData.exists[name == vname]]
                     if (stepRef !== null) {
-                        return '''step_«stepRef.refStep.name».output.«vname»'''
+                        return '''«stepRef.refStep.outputVar».«vname»'''
                     }
                 }
             ]
             action.exp = orgExp
 
             mapLHStoRHS.computeIfAbsent(field)[newArrayList] += value
+        }
+    }
+
+    private def void evaluateReferenceConstrains(String inputName, String outputName, Type type, Set<String> suppressedOutput, Map<String, List<String>> mapLHStoRHS) {
+        if (type instanceof TypeReference && type.type instanceof RecordTypeDecl) {
+            for (field : (type.type as RecordTypeDecl).fields.reject[kind == RecordFieldKind.CONCRETE].reject[suppressedOutput.contains(outputName + '.' + it.name)]) {
+                evaluateReferenceConstrains(inputName + '.' + field.name, outputName + '.' + field.name, field.type, suppressedOutput, mapLHStoRHS)
+            }
+        } else {
+            mapLHStoRHS.computeIfAbsent(inputName)[newArrayList] += outputName
         }
     }
 

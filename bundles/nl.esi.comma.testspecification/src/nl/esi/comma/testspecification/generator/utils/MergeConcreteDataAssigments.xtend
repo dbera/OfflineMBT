@@ -12,22 +12,22 @@
  */
 package nl.esi.comma.testspecification.generator.utils
 
-import nl.esi.xtext.actions.actions.AssignmentAction
+import nl.esi.comma.testspecification.testspecification.AbstractStep
+import nl.esi.comma.testspecification.testspecification.TSMain
+import nl.esi.comma.testspecification.testspecification.TestDefinition
 import nl.esi.xtext.actions.actions.RecordFieldAssignmentAction
 import nl.esi.xtext.expressions.expression.Expression
 import nl.esi.xtext.expressions.expression.ExpressionMap
+import nl.esi.xtext.expressions.expression.ExpressionNullLiteral
 import nl.esi.xtext.expressions.expression.ExpressionRecord
 import nl.esi.xtext.expressions.expression.ExpressionRecordAccess
 import nl.esi.xtext.expressions.expression.ExpressionVector
 import nl.esi.xtext.expressions.utilities.ProposalHelper
-import nl.esi.comma.testspecification.testspecification.RefStep
-import nl.esi.comma.testspecification.testspecification.TSMain
-import nl.esi.comma.testspecification.testspecification.TestDefinition
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.emf.ecore.util.EcoreUtil
 
 import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
-import nl.esi.xtext.expressions.expression.ExpressionNullLiteral
+import java.util.ArrayList
 
 class MergeConcreteDataAssigments {
     def static void transform(Resource resource) {
@@ -35,32 +35,14 @@ class MergeConcreteDataAssigments {
     }
 
     def static void transform(TestDefinition ctd) {
-        ctd.stepSeq.flatMap[step].flatMap[refStep].forEach[mergeDataAssignments]
+        ctd.stepSeq.flatMap[step].forEach[mergeDataAssignments]
     }
 
-    def private static void mergeDataAssignments(RefStep refStep) {
-        val assignments = newHashMap
-        refStep.input.actions.filter(AssignmentAction).toList.forEach[ action |
-            action.mergeData(assignments.putIfAbsent(action.assignment.serialize(true), action))
+    def private static void mergeDataAssignments(AbstractStep step) {
+        val inputAssignments = newHashMap
+        new ArrayList(step.input).forEach[ action |
+            action.mergeData(inputAssignments.putIfAbsent(action.fieldAccess.serialize(true), action))
         ]
-
-        val recordFieldAssignments = newHashMap
-        refStep.input.actions.filter(RecordFieldAssignmentAction).toList.forEach[ action |
-            action.mergeData(recordFieldAssignments.putIfAbsent(action.fieldAccess.serialize(true), action))
-        ]
-    }
-
-    def private static mergeData(AssignmentAction left, AssignmentAction right) {
-        if (left === null || right === null) {
-            return
-        }
-        val defaultValue = ProposalHelper.defaultValue(right.assignment.type, right.assignment.name)
-        try {
-            right.exp = mergeData(left.exp, right.exp, defaultValue)
-            EcoreUtil.delete(left)
-        } catch (RuntimeException e) {
-            System.err.println('Failed to merge values for ' + right.assignment.serialize.unformat)
-        }
     }
 
     def private static mergeData(RecordFieldAssignmentAction left, RecordFieldAssignmentAction right) {
@@ -79,13 +61,25 @@ class MergeConcreteDataAssigments {
     }
 
     def dispatch private static Expression mergeData(Expression left, Expression right, String defaultValue) {
-        return if (left.serialize.unformat == defaultValue.unformat || left instanceof ExpressionNullLiteral) {
-            right
-        } else if (right.serialize.unformat == defaultValue.unformat || right instanceof ExpressionNullLiteral) {
-            left
-        } else {
-            throw new RuntimeException()
+        if (left instanceof ExpressionNullLiteral) {
+            return right
         }
+        if (right instanceof ExpressionNullLiteral) {
+            return left
+        }
+        val unfDefault = defaultValue.unformat
+        val unfLeft = left.serialize.unformat
+        if (unfLeft == unfDefault) {
+            return right
+        }
+        val unfRight = right.serialize.unformat
+        if (unfRight == unfDefault) {
+            return left
+        }
+        if (unfLeft == unfRight) {
+            return left
+        }
+        throw new RuntimeException('Cannot merge')
     }
 
     def dispatch private static Expression mergeData(ExpressionVector left, ExpressionVector right, String defaultValue) {

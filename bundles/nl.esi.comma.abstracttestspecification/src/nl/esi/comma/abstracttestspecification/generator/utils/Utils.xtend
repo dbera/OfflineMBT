@@ -80,7 +80,9 @@ class Utils
         return step.name.split('_').get(0)
     }
 
-    static def getInputVar(ExecutableStep rstep) '''«rstep.system»Input'''
+    static def getInputVar(AbstractStep step) '''«step.system»Input'''
+
+    static def getOutputVar(AbstractStep step) '''step_«step.name».output'''
 
     @Deprecated
     static def getComposeStepRefs(RunStep step) {

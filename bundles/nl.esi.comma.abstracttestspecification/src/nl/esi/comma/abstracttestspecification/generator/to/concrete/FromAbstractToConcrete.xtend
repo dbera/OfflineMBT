@@ -32,7 +32,7 @@ import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
 import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
 
 class FromAbstractToConcrete extends AbstractGenerator {
-    
+
     override doGenerate(Resource res, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
         val atd = res.contents.filter(TSMain).map[model].head
         if (atd === null) {
@@ -52,61 +52,35 @@ class FromAbstractToConcrete extends AbstractGenerator {
  
     }
 
-    def private generateConcreteTest(AbstractTestDefinition atd) {
-        val executableSteps = atd.testSeq.flatMap[step].filter(ExecutableStep).toList
-        val sutexpr = extractSUTVarExpressions(atd)
-
-        return '''
-            «FOR sys : atd.systems»
-                import "parameters/«sys».params"
-            «ENDFOR»
-            
-            Test-Purpose    "The purpose of this test is..."
-            Background      "The background of this test is..."
-            
-            test-sequence from_abstract_to_concrete {
-                test_single_sequence
-            }
-            
-            step-sequence test_single_sequence {
-            «FOR step : executableSteps SEPARATOR '\n'»
-                «printStep(step)»
-            «ENDFOR»
-            }
-            
-            generate-file "«atd.filePath»"
-            
-            «IF !executableSteps.isEmpty»
-                step-parameters
-                «FOR step : executableSteps»
-                    «step.stepType» step_«step.name»
-                «ENDFOR»
-            «ENDIF»
-            
-            «IF !sutexpr.empty»
-                sut-param-init 
-                «FOR lhs: sutexpr.keySet»
-                    «FOR rhs: sutexpr.get(lhs)»
-                        «lhs» := «rhs»
-                    «ENDFOR»
-                «ENDFOR»
-            «ENDIF»
-        '''
-    }
+    def private generateConcreteTest(AbstractTestDefinition atd) '''
+        «FOR sys : atd.systems»
+            import "parameters/«sys».params"
+        «ENDFOR»
+        
+        test-sequence from_abstract_to_concrete {
+            test_single_sequence
+        }
+        
+        step-sequence test_single_sequence {
+        «FOR step : atd.steps.filter(ExecutableStep) SEPARATOR '\n'»
+            «printStep(step)»
+        «ENDFOR»
+        }
+        
+        generate-file "«atd.filePath»"
+    '''
 
     private def dispatch printStep(RunStep step) '''
         step-id    step_«step.name»
         step-type  «step.stepType»
-        step-input «step.system»Input
-        «printOutputs(step)»
+        «step.printInputs('step')»
     '''
 
     private def dispatch printStep(AssertionStep step) '''
         assertion-id    step_«step.name»
         assertion-type  «step.stepType»
-        assertion-input «step.system»Input
-        «printAssertions(step)»
-        «printOutputs(step)»
+        «step.printAssertions()»
+        «step.printInputs('assertion')»
     '''
 
     def private printAssertions(AssertionStep step) '''
@@ -129,10 +103,15 @@ class FromAbstractToConcrete extends AbstractGenerator {
                 val vname = obj.variable.name
                 return '''«step.system»Input.«vname»'''
             }
-        ]
+        ].trimIndentation()
     }
 
-    def private String printOutputs(ExecutableStep estep) {
+    def private static String trimIndentation(String input) {
+        // TODO: trim indentation
+        return input.trim()
+    }
+
+    def private String printInputs(ExecutableStep estep, String type) {
         // Get text for concrete data expressions
         var conDataExpr = (new ConcreteExpressionHandler()).prepareStepInputExpressions(estep, estep.stepRef)
         // Append text for reference data expressions
@@ -143,7 +122,7 @@ class FromAbstractToConcrete extends AbstractGenerator {
         }
 
         return '''
-            ref-to-step-output
+            «type»-input
                 «IF !conDataExpr.isEmpty»«conDataExpr»«ENDIF»
                 «FOR entry : refDataExpr.entrySet»
                     «FOR v : entry.value»

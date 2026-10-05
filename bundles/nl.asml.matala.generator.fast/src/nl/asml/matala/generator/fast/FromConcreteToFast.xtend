@@ -174,13 +174,13 @@ class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGe
         var test_single_sequence = td.testSeq.head
         for (ss : test_single_sequence.stepSeqRef) {
             for (step : ss.step){
-                var mat = pat.matcher(step.inputVar.name); mat.find
+                var mat = pat.matcher(step.stepVar.name); mat.find
                 var prefix =  switch(step) {
                     RunStep: 'step'
                     AssertionStep: 'assertion'
                     default: throw new UnsupportedOperationException("Unsupported type")
                 }
-                step.inputVar.name = prefix + mat.group
+                step.stepVar.name = prefix + mat.group
             }
         }
         return listStepSequence
@@ -735,7 +735,7 @@ class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGe
 
     protected def void _process_Sut_Param_Init(TestSpecificationInstance tsi, TSMain modelInst, Map<String, String> renamingRules) {
         val model = modelInst.model as TestDefinition
-        var sutInitInput = model.sutInitActions.filter[isInputDataSut(it)]
+        var sutInitInput = model.stepSeq.flatMap[step].flatMap[sut].filter[isInputDataSut(it)]
 
         var indatasuts = sutInitInput.filter[isInDataSuts(it)].filter(RecordFieldAssignmentAction)
         var uniqueDataSuts = new HashSet()
@@ -820,52 +820,50 @@ class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGe
         var stepInst = new Step
         stepInst.runStep = s
         // 4.2) Step ID
-        stepInst.id = s.inputVar.name
+        stepInst.id = s.stepVar.name
         // 4.3) Step type (defined via UI text box, e.g., SUT.OperationName)
-        stepInst.type = s.type.name
+        stepInst.type = s.stepVar.type.type.name
         // 4.4) Step input file path+name
         stepInst.inputFile = tsi.dataImplToFilename.get(s.stepVar.name).head
 
         // 4.5) For each action in ref-to-step-output section ...
-        for (ref : s.refStep) {
-            for (act : ref.input.actions) {
-                // 4.6) Check if this action is a printable assignment (aka not-a-null assignment)
-                if (isPrintableAssignment(act)) {
-                    // 4.6.1) make strings for LHS and RHS ( flattened / fully-qualified)
-                    var mapLHStoRHS = tsi.generateInitAssignmentAction(act)
-                    // 4.6.2) fetch step-input variable and record field
-                    var lhs = getLHS(act) // note key = record variable, and value = recExp
-                    stepInst.variableName = lhs.key // Note DB: This is the same for all actions
-                    stepInst.recordExp = lhs.value // Note DB: This keeps overwriting (record prefix)
-                    // 4.6.3) check if record field assignment should be in its own json file
-                    var String match = findMatchingRecordName(lhs.value, record_def_file_names)
-                    // Note DD: Retrieves step comments from fields with `type Comment based on string`. 
-                    //        : Field is be suppressed 
-                    var boolean isComment = isCommentBasedOnString(act)
-                    if(isComment){
-                        stepInst.comment += mapLHStoRHS.value.replaceAll("(?m)^", "//")+'\n'
-                    } else if (match instanceof String) {
-                        // 4.6.3.1) record field is part of step input_file
-                        if (stepInst.isStepRefPresent(lhs.value)) {
-                            var rStep = stepInst.getStepRefs(lhs.value)
-                            rStep.parameters.add(mapLHStoRHS)
-                        } else {
-                            // Create new step instance and fill all details there
-                            var new_rstep = new Step
-                            new_rstep.id = lhs.value
-                            new_rstep.runStep = stepInst.runStep
-                            new_rstep.type = stepInst.runStep?.type.name
-                            new_rstep.inputFile = ''
-                            new_rstep.variableName = match
-                            new_rstep.recordExp = stepInst.id
-                            new_rstep.parameters.add(mapLHStoRHS) // Added DB 29.05.2025
-                            // Add to list of step reference of step
-                            stepInst.stepRefs.add(new_rstep)
-                        }
+        for (act : s.input) {
+            // 4.6) Check if this action is a printable assignment (aka not-a-null assignment)
+            if (isPrintableAssignment(act)) {
+                // 4.6.1) make strings for LHS and RHS ( flattened / fully-qualified)
+                var mapLHStoRHS = tsi.generateInitAssignmentAction(act)
+                // 4.6.2) fetch step-input variable and record field
+                var lhs = getLHS(act) // note key = record variable, and value = recExp
+                stepInst.variableName = lhs.key // Note DB: This is the same for all actions
+                stepInst.recordExp = lhs.value // Note DB: This keeps overwriting (record prefix)
+                // 4.6.3) check if record field assignment should be in its own json file
+                var String match = findMatchingRecordName(lhs.value, record_def_file_names)
+                // Note DD: Retrieves step comments from fields with `type Comment based on string`. 
+                //        : Field is be suppressed 
+                var boolean isComment = isCommentBasedOnString(act)
+                if(isComment){
+                    stepInst.comment += mapLHStoRHS.value.replaceAll("(?m)^", "//")+'\n'
+                } else if (match instanceof String) {
+                    // 4.6.3.1) record field is part of step input_file
+                    if (stepInst.isStepRefPresent(lhs.value)) {
+                        var rStep = stepInst.getStepRefs(lhs.value)
+                        rStep.parameters.add(mapLHStoRHS)
                     } else {
-                        // 4.6.3.2) record field assignment has it own json
-                        stepInst.parameters.add(mapLHStoRHS)
+                        // Create new step instance and fill all details there
+                        var new_rstep = new Step
+                        new_rstep.id = lhs.value
+                        new_rstep.runStep = stepInst.runStep
+                        new_rstep.type = stepInst.runStep?.stepVar?.type?.type?.name
+                        new_rstep.inputFile = ''
+                        new_rstep.variableName = match
+                        new_rstep.recordExp = stepInst.id
+                        new_rstep.parameters.add(mapLHStoRHS) // Added DB 29.05.2025
+                        // Add to list of step reference of step
+                        stepInst.stepRefs.add(new_rstep)
                     }
+                } else {
+                    // 4.6.3.2) record field assignment has it own json
+                    stepInst.parameters.add(mapLHStoRHS)
                 }
             }
         }

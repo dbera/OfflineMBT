@@ -15,17 +15,17 @@
  */
 package nl.esi.comma.testspecification.validation
 
-import nl.esi.xtext.actions.actions.ActionsPackage
-import nl.esi.xtext.actions.actions.AssignmentAction
-import nl.esi.xtext.actions.actions.RecordFieldAssignmentAction
+import java.util.List
 import nl.esi.comma.inputspecification.inputSpecification.InputSpecificationPackage
-import nl.esi.comma.testspecification.testspecification.RefStep
+import nl.esi.comma.testspecification.testspecification.AbstractStep
 import nl.esi.comma.testspecification.testspecification.StepSequence
+import nl.esi.comma.testspecification.testspecification.TestspecificationPackage
+import nl.esi.xtext.actions.actions.ActionsPackage
+import nl.esi.xtext.actions.actions.RecordFieldAssignmentAction
 import org.eclipse.emf.ecore.EClass
 import org.eclipse.xtext.validation.Check
 
 import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.serialize
-import nl.esi.comma.testspecification.testspecification.TestspecificationPackage
 
 /**
  * This class contains custom validation rules. 
@@ -39,22 +39,18 @@ class TestspecificationValidator extends AbstractTestspecificationValidator {
     }
 
     @Check
-    def protected void checkDataOverwrite(RefStep refStep) {
+    def protected void checkDataOverwrite(AbstractStep step) {
+        step.context.checkDataOverwrite
+        step.input.checkDataOverwrite
+        step.sut.checkDataOverwrite
+    }
+
+    def protected void checkDataOverwrite(List<RecordFieldAssignmentAction> actions) {
         val assignments = newHashSet
-        for (action : refStep.input.actions.reverseView) {
-            switch action {
-                AssignmentAction: {
-                    if (!assignments.add(action.assignment.serialize)) {
-                        warning('Value is ignored as it is overwritten later', action,
-                            ActionsPackage.Literals.ASSIGNMENT_ACTION__ASSIGNMENT)
-                    }
-                }
-                RecordFieldAssignmentAction: {
-                    if (!assignments.add(action.fieldAccess.serialize)) {
-                        warning('Value is ignored as it is overwritten later', action,
-                            ActionsPackage.Literals.RECORD_FIELD_ASSIGNMENT_ACTION__FIELD_ACCESS)
-                    }
-                }
+        for (action : actions.reverseView) {
+            if (!assignments.add(action.fieldAccess.serialize)) {
+                warning('Value is ignored as it is overwritten later', action,
+                    ActionsPackage.Literals.RECORD_FIELD_ASSIGNMENT_ACTION__FIELD_ACCESS)
             }
         }
     }
