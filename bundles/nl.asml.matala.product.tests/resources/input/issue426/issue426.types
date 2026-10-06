@@ -1,0 +1,9 @@
+record UNIT {
+	int	unit
+}
+
+record TheType {
+    int	id
+    int	counter
+}
+

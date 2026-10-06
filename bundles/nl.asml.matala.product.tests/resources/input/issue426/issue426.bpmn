@@ -1,0 +1,110 @@
+<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:bpmn4s="http://bpmn4s" id="sample-diagram" targetNamespace="http://bpmn.io/schema/bpmn" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd">
+  <bpmn2:process bpmn4s:ctxName="ctx" bpmn4s:ctxTypeRef="DataType_0d4mvpm" id="BPMN4S_root" isExecutable="false" name="Issue426">
+    <bpmn2:extensionElements>
+      <bpmn4s:dataTypes>
+        <bpmn4s:dataType id="DataType_0d4mvpm" name="TheType" type="Context">
+          <bpmn4s:field name="id" typeRef="Int"/>
+          <bpmn4s:field name="counter" typeRef="Int"/>
+        </bpmn4s:dataType>
+      </bpmn4s:dataTypes>
+    </bpmn2:extensionElements>
+    <bpmn2:startEvent bpmn4s:ctxInit="ctx := TheType {&#10; id = 1,&#10; counter = 0&#10;}" id="Event_01uaof6">
+      <bpmn2:outgoing>Flow_0px7k4f</bpmn2:outgoing>
+    </bpmn2:startEvent>
+    <bpmn2:task bpmn4s:ctxUpdate="for int idx in range(0, 5) do&#10;  ctx.counter := ctx.counter + idx&#10;end-for" id="Activity_08glxmf" name="A">
+      <bpmn2:incoming>Flow_0px7k4f</bpmn2:incoming>
+      <bpmn2:outgoing>Flow_1ew3pv8</bpmn2:outgoing>
+    </bpmn2:task>
+    <bpmn2:sequenceFlow id="Flow_0px7k4f" sourceRef="Event_01uaof6" targetRef="Activity_08glxmf"/>
+    <bpmn2:sequenceFlow id="Flow_1ew3pv8" sourceRef="Activity_08glxmf" targetRef="Activity_0zy51nw"/>
+    <bpmn2:sequenceFlow id="Flow_11d1u6w" sourceRef="Activity_0ktztsg" targetRef="Activity_02t5igj"/>
+    <bpmn2:endEvent id="Event_04j9655">
+      <bpmn2:incoming>Flow_04seali</bpmn2:incoming>
+    </bpmn2:endEvent>
+    <bpmn2:sequenceFlow id="Flow_04seali" sourceRef="Activity_02t5igj" targetRef="Event_04j9655"/>
+    <bpmn2:task bpmn4s:stepType="TheRun" bpmn4s:subType="RunTask" id="Activity_02t5igj" name="D">
+      <bpmn2:incoming>Flow_11d1u6w</bpmn2:incoming>
+      <bpmn2:outgoing>Flow_04seali</bpmn2:outgoing>
+      <bpmn2:property id="Property_1snmaxy" name="__targetRef_placeholder"/>
+      <bpmn2:dataInputAssociation id="DataInputAssociation_0h8rbp2">
+        <bpmn2:sourceRef>DataStoreReference_1eevurg</bpmn2:sourceRef>
+        <bpmn2:targetRef>Property_1snmaxy</bpmn2:targetRef>
+      </bpmn2:dataInputAssociation>
+    </bpmn2:task>
+    <bpmn2:task bpmn4s:subType="ComposeTask" bpmn4s:suppressUpdate="false" id="Activity_0ktztsg" name="C">
+      <bpmn2:incoming>Flow_109yqzk</bpmn2:incoming>
+      <bpmn2:outgoing>Flow_11d1u6w</bpmn2:outgoing>
+      <bpmn2:dataOutputAssociation bpmn4s:update="params := TheType {&#10; id = ctx.id,&#10; counter = ctx.counter&#10;}" id="DataOutputAssociation_1p9xoc6">
+        <bpmn2:targetRef>DataStoreReference_1eevurg</bpmn2:targetRef>
+      </bpmn2:dataOutputAssociation>
+    </bpmn2:task>
+    <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_0d4mvpm" id="DataStoreReference_1eevurg" name="params"/>
+    <bpmn2:task bpmn4s:ctxUpdate="for int idx in range(5, 10) do&#10;  ctx.counter := ctx.counter + idx&#10;end-for" id="Activity_0zy51nw" name="B">
+      <bpmn2:incoming>Flow_1ew3pv8</bpmn2:incoming>
+      <bpmn2:outgoing>Flow_109yqzk</bpmn2:outgoing>
+    </bpmn2:task>
+    <bpmn2:sequenceFlow id="Flow_109yqzk" sourceRef="Activity_0zy51nw" targetRef="Activity_0ktztsg"/>
+  </bpmn2:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_root">
+    <bpmndi:BPMNPlane bpmnElement="BPMN4S_root" id="BPMNPlane_root">
+      <bpmndi:BPMNShape bpmnElement="Activity_08glxmf" id="Activity_08glxmf_di">
+        <dc:Bounds height="80" width="100" x="310" y="160"/>
+        <bpmndi:BPMNLabel/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="Activity_0zy51nw" id="Activity_0zy51nw_di">
+        <dc:Bounds height="80" width="100" x="470" y="160"/>
+        <bpmndi:BPMNLabel/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="Activity_02t5igj" id="Activity_1a950fo_di">
+        <dc:Bounds height="80" width="100" x="790" y="160"/>
+        <bpmndi:BPMNLabel/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="Activity_0ktztsg" id="Activity_1wt6002_di">
+        <dc:Bounds height="80" width="100" x="630" y="160"/>
+        <bpmndi:BPMNLabel/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="DataStoreReference_1eevurg" id="DataStoreReference_1eevurg_di">
+        <dc:Bounds height="50" width="50" x="735" y="285"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="14" width="38" x="741" y="342"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="Event_01uaof6" id="Event_01uaof6_di">
+        <dc:Bounds height="36" width="36" x="222" y="182"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="Event_04j9655" id="Event_04j9655_di">
+        <dc:Bounds height="36" width="36" x="952" y="182"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge bpmnElement="DataInputAssociation_0h8rbp2" id="DataInputAssociation_0h8rbp2_di">
+        <di:waypoint x="785" y="310"/>
+        <di:waypoint x="840" y="310"/>
+        <di:waypoint x="840" y="240"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="DataOutputAssociation_1p9xoc6" id="DataOutputAssociation_1p9xoc6_di">
+        <di:waypoint x="680" y="240"/>
+        <di:waypoint x="680" y="310"/>
+        <di:waypoint x="735" y="310"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="Flow_04seali" id="Flow_04seali_di">
+        <di:waypoint x="890" y="200"/>
+        <di:waypoint x="952" y="200"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="Flow_0px7k4f" id="Flow_0px7k4f_di">
+        <di:waypoint x="258" y="200"/>
+        <di:waypoint x="310" y="200"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="Flow_109yqzk" id="Flow_109yqzk_di">
+        <di:waypoint x="570" y="200"/>
+        <di:waypoint x="630" y="200"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="Flow_11d1u6w" id="Flow_11d1u6w_di">
+        <di:waypoint x="730" y="200"/>
+        <di:waypoint x="790" y="200"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="Flow_1ew3pv8" id="Flow_1ew3pv8_di">
+        <di:waypoint x="410" y="200"/>
+        <di:waypoint x="470" y="200"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn2:definitions>

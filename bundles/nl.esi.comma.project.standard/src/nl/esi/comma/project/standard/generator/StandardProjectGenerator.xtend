@@ -41,10 +41,8 @@ import static nl.esi.comma.project.standard.generator.^extension.IStandardProjec
 import static extension nl.esi.xtext.common.lang.generator.FileSystemAccessUtil.*
 import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
 import static extension org.eclipse.emf.ecore.util.EcoreUtil.*
-import static extension org.eclipse.xtext.EcoreUtil2.*
-import nl.asml.matala.product.generator.ProductGenerationMode
-
 import static extension org.eclipse.lsat.common.xtend.Queries.*
+import static extension org.eclipse.xtext.EcoreUtil2.*
 
 /**
  * Generates code from your model files on save.
@@ -108,8 +106,7 @@ class StandardProjectGenerator extends AbstractGenerator {
         }
         // PspecToPetriNetGenerator
         // Generate CPNServer (a.k.a. abstract Tspec generator) and Petri-nets
-//        (new ProductGenerator(false)).doGenerate(productRes, fsa, ctx)
-        (new ProductGenerator(ProductGenerationMode.TEST_GENERATION)).doGenerate(productRes, fsa, ctx)
+        (new ProductGenerator(task.prefixTests)).doGenerate(productRes, fsa, ctx)
 
         if (task.target == OfflineGenerationTarget.SIMULATOR) {
             return
@@ -119,7 +116,7 @@ class StandardProjectGenerator extends AbstractGenerator {
         val specName = product.specification.name
         val petriNetURI = fsa.getURI('''«FOLDER_CPN_SERVER»/«specName»/«specName».py''')
         val absTspecFsa = fsa.createFolderAccess(FOLDER_ABSTRACT_TSPEC)
-        (new PetriNetToAbstractTspecGenerator(task.pythonExe, reporting)).doGenerate(rst, petriNetURI, absTspecFsa, ctx)
+        (new PetriNetToAbstractTspecGenerator(task.pythonExe, reporting)).doGenerate(rst, petriNetURI, productURI, absTspecFsa, ctx)
 
         for (absTspecFileName : absTspecFsa.list(ROOT_PATH).filter[endsWith('.atspec')]) {
             val tspecName = absTspecFileName.replaceAll('\\.atspec$', '')

@@ -1,0 +1,78 @@
+import "issue426.types"
+specification issue426
+{
+    system Issue426
+    {
+        // inputs
+        
+        // outputs
+    
+        local
+        TheType	params
+        TheType	Event_01uaof6
+        TheType	Event_04j9655
+        TheType	Flow_1ew3pv8
+        TheType	Flow_11d1u6w
+        TheType	Flow_109yqzk
+    
+        init
+        Event_01uaof6 := TheType {
+         id = 1,
+         counter = 0
+        }
+    
+    
+        desc "Issue426_Model"
+        
+        action			D
+        element-label	"D"
+        case			default step-type "TheRun" action-type RUN
+        with-inputs		Flow_11d1u6w, params
+        produces-outputs	Event_04j9655
+        updates:
+            Event_04j9655 := Flow_11d1u6w
+        
+        action			C
+        element-label	"C"
+        case			default step-type "null" action-type COMPOSE
+        with-inputs		Flow_109yqzk
+        produces-outputs	Flow_11d1u6w
+        updates:
+            Flow_11d1u6w := Flow_109yqzk
+        produces-outputs	params symbolic-link
+        updates:
+            params := TheType {
+             id = Flow_109yqzk.id,
+             counter = Flow_109yqzk.counter
+            }
+        
+        action			A
+        element-label	"A"
+        case			default
+        with-inputs		Event_01uaof6
+        produces-outputs	Flow_1ew3pv8
+        updates:
+            Flow_1ew3pv8 := Event_01uaof6
+            for int idx in range(0, 5) do
+              Flow_1ew3pv8.counter := Flow_1ew3pv8.counter + idx
+            end-for
+        
+        action			B
+        element-label	"B"
+        case			default
+        with-inputs		Flow_1ew3pv8
+        produces-outputs	Flow_109yqzk
+        updates:
+            Flow_109yqzk := Flow_1ew3pv8
+            for int idx in range(5, 10) do
+              Flow_109yqzk.counter := Flow_109yqzk.counter + idx
+            end-for
+    
+        element-labels ["Issue426"]
+    }
+    
+	SUT-blocks Issue426
+	depth-limits 300
+	state-limits 1000
+	num-tests 1
+}

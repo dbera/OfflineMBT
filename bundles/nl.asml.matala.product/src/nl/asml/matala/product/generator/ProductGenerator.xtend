@@ -47,6 +47,17 @@ import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.serialize
  */
  
 class ProductGenerator extends AbstractGenerator {
+    val String scenarioPrefix;
+
+    new() {
+        this(null, ProductGenerationMode.TEST_GENERATION)
+    }
+
+    // TODO: Remove constructor
+    @Deprecated
+    new(String scenarioPrefix) {
+        this(scenarioPrefix, ProductGenerationMode.TEST_GENERATION)
+    }
     
 //    Old boolean flag implementation
 
@@ -57,12 +68,17 @@ class ProductGenerator extends AbstractGenerator {
 //    }
 
     val ProductGenerationMode generationMode
-    
+
+    // TODO: Remove constructor
+    @Deprecated
     new (ProductGenerationMode generationMode) {
+        this(null, generationMode)
+    }
+
+    private new (String scenarioPrefix, ProductGenerationMode generationMode) {
+        this.scenarioPrefix = scenarioPrefix
         this.generationMode = generationMode
     }
-    
-    
 	
 	override void doGenerate(Resource res, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
 	    res.contents.filter(Product).reject[specification === null].forEach[generatePetriNetAndTestGeneration(res, fsa)]
@@ -78,7 +94,7 @@ class ProductGenerator extends AbstractGenerator {
 		val inout_places = newArrayList
 		val init_places = newArrayList
 		
-		val depth_limit = prod.specification.depthLimits.intValue
+		val depth_limit = prod.specification.depthLimits.intValue ?: 300
 		
 		val state_limit = prod.specification.stateLimits.intValue ?: 1000;
 		
@@ -194,7 +210,7 @@ class ProductGenerator extends AbstractGenerator {
 			fsa.generateFile('CPNServer//' + specName + '//' + specName + '_Simulation.py', normalize(pnet.toSnakesSimulation))
             fsa.generateFile('CPNServer//' + specName + '//' + specName + '_reporting.py', normalize(Utils.getReportingClass(specName)))
 			fsa.generateFile('CPNServer//' + specName + '//' + specName + '_data.py', normalize(Utils.getDataContainerClass(specName, dataGetterTxt, methodTxt)))
-			fsa.generateFile('CPNServer//' + specName + '//' + specName + '_TestSCN.py', normalize(Utils.generateTestSCNTxt(specName + "_types", prod, resource.URI.lastSegment)))
+			fsa.generateFile('CPNServer//' + specName + '//' + specName + '_TestSCN.py', normalize(Utils.generateTestSCNTxt(specName + "_types", prod, resource.URI.lastSegment, scenarioPrefix)))
             // generate utils for HTTP server
             fsa.generateFile('CPNServer//' + specName + '//' + '__init__.py', 
                 normalize((new FlaskSimulationGenerator).generateInitForCPNSpecPkg(prod))

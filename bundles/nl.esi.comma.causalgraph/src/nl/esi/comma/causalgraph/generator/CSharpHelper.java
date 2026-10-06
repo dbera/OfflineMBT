@@ -198,8 +198,16 @@ class CSharpHelper {
 				return String.format("%s in %s", expression(e.getArgs().get(1), variablePrefix), expression(e.getArgs().get(0), variablePrefix));
 			} else if (fnName.equals("abs")) {
 				return String.format("abs(%s)", expression(e.getArgs().get(0), variablePrefix));
+			} else if (fnName.equals("floor")) {
+				return String.format("floor(%s)", expression(e.getArgs().get(0), variablePrefix));
+			} else if (fnName.equals("ceil")) {
+				return String.format("ceil(%s)", expression(e.getArgs().get(0), variablePrefix));
+			} else if (fnName.equals("round")) {
+				return String.format("round(%s, %s)", expression(e.getArgs().get(0), variablePrefix), expression(e.getArgs().get(1), variablePrefix));
 			} else if (fnName.equals("asReal")) {
 				return String.format("float(%s)", expression(e.getArgs().get(0), variablePrefix));
+			} else if (fnName.equals("asInt")) {
+				return String.format("int(%s)", expression(e.getArgs().get(0), variablePrefix));
 			} else if (fnName.equals("hasKey")) {
 				String map = expression(e.getArgs().get(0), variablePrefix);
 				String key = expression(e.getArgs().get(1), variablePrefix);

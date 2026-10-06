@@ -126,6 +126,7 @@ class TestConformanceNetGenerator  extends AbstractGenerator {
                     .doGenerate(
                         resource.resourceSet,
                         petriNetURI,
+                        pspecURI,
                         constraintFsa,
                         ctx
                     )

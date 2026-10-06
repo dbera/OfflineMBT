@@ -3,11 +3,11 @@ specification issue249
 {
     system ContextIssueProducer
     {
-        //inputs
+        // inputs
         
         outputs
-        ProdCons1		part1
-        ProdCons2		part2
+        ProdCons2	part2
+        ProdCons1	part1
     
         local
         ProdCtx	sutConf
@@ -111,13 +111,12 @@ specification issue249
     system ContextIssueConsumer
     {
         inputs
-        ProdCons1	part1
         ProdCons2	part2
+        ProdCons1	part1
         
-        //outputs
+        // outputs
     
         local
-        
         UNIT	Event_0fmv4m5
     
         // init
@@ -137,5 +136,6 @@ specification issue249
     
 	SUT-blocks ContextIssueConsumer ContextIssueProducer
 	depth-limits 300
+	state-limits 1000
 	num-tests 1
 }

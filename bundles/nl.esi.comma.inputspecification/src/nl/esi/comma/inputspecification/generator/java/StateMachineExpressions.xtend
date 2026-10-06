@@ -179,8 +179,14 @@ class StateMachineExpressions
     		return '''smVarContainer.add(«generateExpression(expr.args.get(0), ref)», «generateExpression(expr.args.get(1), ref)»)'''
     	else if(fnName.equals('asReal')) 
     		return '''(double)(«generateExpression(expr.args.get(0), ref)»)'''
-    	else if(fnName.equals('abs')) 
-    		return '''Math.abs(«generateExpression(expr.args.get(0), ref)»)'''
+        else if(fnName.equals('asInt')) 
+            return '''(int)(«generateExpression(expr.args.get(0), ref)»)'''
+        else if(fnName.equals('abs')) 
+            return '''Math.abs(«generateExpression(expr.args.get(0), ref)»)'''
+        else if(fnName.equals('floor')) 
+            return '''Math.floor(«generateExpression(expr.args.get(0), ref)»)'''
+        else if(fnName.equals('ceil')) 
+            return '''Math.ceil(«generateExpression(expr.args.get(0), ref)»)'''
     	else 
     		return '''UNSUPPORTED FUNCTION NAME: «fnName»'''
     }

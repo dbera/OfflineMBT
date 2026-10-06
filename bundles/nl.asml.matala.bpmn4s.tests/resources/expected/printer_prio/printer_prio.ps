@@ -8,12 +8,11 @@ specification printer_prio
         CorrectionsReport	corrections
         
         outputs
-        Result		printResult
-        Report		printReport
+        Report	printReport
+        Result	printResult
     
         local
         PrintRequest	request
-        
         UNIT	Event_0mxx05p
         UNIT	Event_0jcg6zx
         UNIT	Flow_1u2qmtt
@@ -93,11 +92,10 @@ specification printer_prio
         Report	inspectionReport
         
         outputs
-        Report		inspectionReport
+        Report	inspectionReport
     
         local
         AssertionsHistory	history
-        
         UNIT	Event_1bxlea2
     
         init
@@ -132,18 +130,16 @@ specification printer_prio
     system PrintFactoryInspection
     {
         inputs
-        Report	printReport
         MeasureRequest	inspectionJob
+        Report	printReport
         
         outputs
-        Report		inspectionReport
-        Result		inspectionResult
-        Report		printReport
+        Report	inspectionReport
+        Report	printReport
+        Result	inspectionResult
     
         local
         MeasureRequest	measureRequest
-        
-        
         UNIT	Flow_07l0yyj
     
         // init
@@ -186,17 +182,16 @@ specification printer_prio
     system PrintFactoryOptimization
     {
         inputs
-        OptimizeRequest	optJob
         Report	inspectionReport
+        OptimizeRequest	optJob
         
         outputs
-        Result		optResult
-        CorrectionsReport		corrections
-        Report		inspectionReport
+        CorrectionsReport	corrections
+        Report	inspectionReport
+        Result	optResult
     
         local
         OptimizeRequest	optimizeJob
-        
         UNIT	Event_1oozdnw
         UNIT	Flow_0y8u5pd
     
@@ -238,21 +233,19 @@ specification printer_prio
     system PrintFactoryFactoryAutomation
     {
         inputs
-        Result	printResult
-        Result	inspectionResult
-        Result	optResult
         PrintRequest	printRequests
+        Result	inspectionResult
+        Result	printResult
+        Result	optResult
         
         outputs
-        PrintRequest		printJob
-        MeasureRequest		inspectionJob
-        OptimizeRequest		optJob
+        PrintRequest	printJob
+        MeasureRequest	inspectionJob
+        OptimizeRequest	optJob
     
         local
         FactoryCtx	Gateway_0p2uo9v
         FactoryCtx	Gateway_1wpvmtk
-        
-        
         FactoryCtx	Flow_16s4ey1
         FactoryCtx	Flow_1dcdx0e
         FactoryCtx	Flow_1dt29vl

@@ -51,7 +51,7 @@ Workflow {
 				generateDeprecationValidation = true
 			}
 			generator = null
-            contentAssist = nl.esi.xtext.lsp.generator.ide.contentassist.IdeContentAssistFragment2 {
+            contentAssist = nl.esi.xplus.xtext.generator.ide.contentassist.IdeContentAssistFragment2 {
                 generateXtendStub = true
             }
 			junitSupport = {
