@@ -18,6 +18,7 @@ class ConformanceDashboardRenderer {
     }
 
     def String render(String summaryJson, String concreteTspecText, String constraintSourceText) {
+        // Embed source as text, not markup, while keeping the summary valid JSON in the page.
         val safeSummary = summaryJson.replace("<", "\\u003c")
         val safeConstraintText = constraintSourceText
             .replace("&", "&amp;")
@@ -34,7 +35,7 @@ class ConformanceDashboardRenderer {
         <head>
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1">
-            <title>Conformance</title>
+            <title>Conformance Checking with Constraints</title>
             <style>
                 :root {
                     font-family: "Segoe UI", sans-serif;
@@ -165,6 +166,9 @@ class ConformanceDashboardRenderer {
                     cursor: pointer;
                     overflow-wrap: anywhere;
                 }
+                .trace-step[open] summary {
+                    font: 13px/1.5 Consolas, monospace;
+                }
                 .trace-step .step-id,
                 .trace-step .step-type {
                     display: block;
@@ -172,6 +176,12 @@ class ConformanceDashboardRenderer {
                 }
                 .trace-step .step-id { font-weight: 600; }
                 .trace-step .step-type { color: #5c696d; font-size: 12px; }
+                .trace-step[open] .step-id,
+                .trace-step[open] .step-type {
+                    color: inherit;
+                    font-size: inherit;
+                    font-weight: 700;
+                }
                 .trace-step.highlighted {
                     background: #fff1cf;
                     border-color: #c78b25;
@@ -267,8 +277,33 @@ class ConformanceDashboardRenderer {
                     padding: 7px 9px;
                     overflow-wrap: anywhere;
                     border-left: 4px solid;
-                    white-space: pre-wrap;
                     font: 12px/1.5 Consolas, monospace;
+                }
+                .diagnostic-event-heading {
+                    display: grid;
+                    grid-template-columns: minmax(112px, 145px) minmax(0, 1fr);
+                    gap: 8px;
+                    margin-bottom: 4px;
+                    font-weight: 700;
+                }
+                .diagnostic-event-fields {
+                    display: grid;
+                    gap: 4px;
+                }
+                .diagnostic-field {
+                    display: grid;
+                    grid-template-columns: minmax(112px, 145px) minmax(0, 1fr);
+                    gap: 8px;
+                    align-items: start;
+                }
+                .diagnostic-field-label {
+                    color: #526166;
+                    font: 11px/1.6 "Segoe UI", sans-serif;
+                }
+                .diagnostic-field-value {
+                    min-width: 0;
+                    white-space: pre-wrap;
+                    overflow-wrap: anywhere;
                 }
                 .diagnostic-event.role-activation {
                     color: #204e69;
@@ -354,11 +389,11 @@ class ConformanceDashboardRenderer {
                 <aside id="constraints-panel">
                     <nav aria-label="Constraints">
                         <section>
-                            <h2>Not Conforming</h2>
+                            <h2>Violated Constraints</h2>
                             <div id="failed"></div>
                         </section>
                         <section>
-                            <h2>Accepted</h2>
+                            <h2>Accepted Constraints</h2>
                             <div id="accepted"></div>
                         </section>
                     </nav>
@@ -402,6 +437,7 @@ class ConformanceDashboardRenderer {
                 let contexts = [];
                 let contextIndex = -1;
 
+                // TSpec has no JSON structure here; step marker lines delimit each block.
                 function parseTrace(text) {
                     const lines = text.split("\n");
                     const preamble = [];
@@ -412,11 +448,26 @@ class ConformanceDashboardRenderer {
 
                     function finishCurrentStep() {
                         if (!current) return;
+                        const bodyLines = current.lines.slice(2);
+                        let commonIndent = null;
+                        for (const line of bodyLines) {
+                            if (!line.trim()) continue;
+                            const indentation = line.match(/^[ \t]*/)[0].length;
+                            commonIndent = commonIndent === null
+                                ? indentation
+                                : Math.min(commonIndent, indentation);
+                        }
+                        if (commonIndent === null) commonIndent = 0;
+
                         steps.push({
                             id: current.id,
                             type: current.type,
                             kind: current.kind,
-                            content: current.lines.slice(2).join("\n")
+                            content: bodyLines.map(line => {
+                                if (!line.trim()) return "";
+                                const indentation = line.match(/^[ \t]*/)[0].length;
+                                return line.slice(Math.min(commonIndent, indentation));
+                            }).join("\n").trimEnd()
                         });
                         current = null;
                     }
@@ -481,6 +532,15 @@ class ConformanceDashboardRenderer {
 
                 const trace = parseTrace(traceText);
 
+                // Shorten generated type qualifiers for display only; keep the source and IDs intact.
+                function shortenInputTypeNames(text) {
+                    return text.replace(
+                        /\b[A-Z][A-Za-z0-9_]*Input\./g,
+                        ""
+                    );
+                }
+
+                // Map diagnostic step IDs to roles and group related steps into one navigation context.
                 function diagnosticTraceData(result) {
                     const roles = new Map();
                     const contextsByFocus = new Map();
@@ -608,6 +668,7 @@ class ConformanceDashboardRenderer {
                             : "No matching steps";
                 }
 
+                // Keep large step bodies out of the DOM until the user opens that step.
                 function renderTrace() {
                     traceView.replaceChildren();
 
@@ -712,6 +773,62 @@ class ConformanceDashboardRenderer {
                     }
                 }
 
+                // Put conjunctions on separate rows without splitting text inside quoted values.
+                function formatConjunctions(text) {
+                    const parts = [];
+                    let start = 0;
+                    let quote = "";
+                    let escaped = false;
+
+                    for (let index = 0; index < text.length; index++) {
+                        const character = text[index];
+                        if (quote) {
+                            if (escaped) {
+                                escaped = false;
+                            } else if (character === "\\") {
+                                escaped = true;
+                            } else if (character === quote) {
+                                quote = "";
+                            }
+                            continue;
+                        }
+                        if (character === "\"" || character === "'") {
+                            quote = character;
+                            continue;
+                        }
+
+                        if (
+                            text.startsWith("and", index) &&
+                            index > 0 && /\s/.test(text[index - 1]) &&
+                            index + 3 < text.length && /\s/.test(text[index + 3])
+                        ) {
+                            parts.push(text.slice(start, index).trim());
+                            start = index;
+                            index += 2;
+                        }
+                    }
+
+                    parts.push(text.slice(start).trim());
+                    return parts.join("\n");
+                }
+
+                function appendDiagnosticField(container, label, value) {
+                    const field = document.createElement("div");
+                    field.className = "diagnostic-field";
+
+                    const fieldLabel = document.createElement("span");
+                    fieldLabel.className = "diagnostic-field-label";
+                    fieldLabel.textContent = label;
+
+                    const fieldValue = document.createElement("span");
+                    fieldValue.className = "diagnostic-field-value";
+                    fieldValue.textContent = formatConjunctions(value);
+
+                    field.append(fieldLabel, fieldValue);
+                    container.append(field);
+                }
+
+                // Build the selected constraint's diagnostic panel from structured verdict fields.
                 function showResult(result) {
                     detail.replaceChildren();
 
@@ -736,7 +853,9 @@ class ConformanceDashboardRenderer {
                         }
                         appendColoredMessage(
                             narrative,
-                            diagnostic.message || diagnostic.kind
+                            shortenInputTypeNames(
+                                diagnostic.message || diagnostic.kind
+                            )
                         );
                         message.append(narrative);
 
@@ -744,7 +863,7 @@ class ConformanceDashboardRenderer {
                             ["activationEvent", "activation", "Activation"],
                             ["targetEvent", "target", "Target"],
                             ["blockerEvent", "blocker", "Blocker"],
-                            ["event", "event", "Event"]
+                            ["event", "event", "Step type"]
                         ]) {
                             const eventInfo = diagnostic[eventName];
                             if (!eventInfo) continue;
@@ -752,20 +871,46 @@ class ConformanceDashboardRenderer {
                             const eventDetail = document.createElement("span");
                             eventDetail.className =
                                 "diagnostic-event role-" + role;
-                            const parts = [label + ": " + (eventInfo.name || "")];
+                            const heading = document.createElement("div");
+                            heading.className = "diagnostic-event-heading";
+                            const roleLabel = document.createElement("span");
+                            roleLabel.textContent = label;
+                            const eventDisplayName = document.createElement("span");
+                            eventDisplayName.textContent = eventInfo.name || "";
+                            heading.append(roleLabel, eventDisplayName);
+                            eventDetail.append(heading);
+
+                            const fields = document.createElement("div");
+                            fields.className = "diagnostic-event-fields";
                             if (eventInfo.whereConcrete) {
-                                parts.push("where-concrete " + eventInfo.whereConcrete);
+                                appendDiagnosticField(
+                                    fields,
+                                    "Where concrete",
+                                    shortenInputTypeNames(eventInfo.whereConcrete)
+                                );
                             }
                             if (eventInfo.correlationBinding) {
-                                parts.push("with " + eventInfo.correlationBinding);
+                                appendDiagnosticField(
+                                    fields,
+                                    "Correlation binding",
+                                    shortenInputTypeNames(eventInfo.correlationBinding)
+                                );
                             }
                             if (eventInfo.whereCorrelation) {
-                                parts.push("where-correlation " + eventInfo.whereCorrelation);
+                                appendDiagnosticField(
+                                    fields,
+                                    "Where correlation",
+                                    shortenInputTypeNames(eventInfo.whereCorrelation)
+                                );
                             }
                             if (eventInfo.stepIds?.length) {
-                                parts.push("steps: " + eventInfo.stepIds.join(", "));
+                                appendDiagnosticField(
+                                    fields,
+                                    "Test steps",
+                                    eventInfo.stepIds.join(", ")
+                                );
                             }
-                            eventDetail.textContent = parts.join("\n");
+                            eventDetail.append(fields);
                             message.append(eventDetail);
                         }
                         detail.append(message);
@@ -781,6 +926,7 @@ class ConformanceDashboardRenderer {
                     renderTrace();
                 }
 
+                // The summary stores the full constraint file; select only the clicked declaration.
                 function extractConstraintDefinition(name) {
                     if (!name || !constraintSourceText) return "";
 
@@ -805,6 +951,7 @@ class ConformanceDashboardRenderer {
                         .trim();
                 }
 
+                // Give temporal indicators, event roles, and their conditions distinct visual rows.
                 function renderConstraintDefinition(sourceText) {
                     const definition = document.createElement("div");
                     definition.className = "constraint-definition";
@@ -897,7 +1044,7 @@ class ConformanceDashboardRenderer {
                         lineLabel.textContent = label;
                         line.append(lineLabel);
                         const lineText = document.createElement("span");
-                        lineText.textContent = text;
+                        lineText.textContent = shortenInputTypeNames(text);
                         line.append(lineText);
                         definition.append(line);
                     }
@@ -911,6 +1058,7 @@ class ConformanceDashboardRenderer {
                     return definition;
                 }
 
+                // Each result keeps its diagnostic button and source disclosure together in the list.
                 function addGroup(targetId, results, accepted) {
                     const target = document.querySelector(targetId);
 
