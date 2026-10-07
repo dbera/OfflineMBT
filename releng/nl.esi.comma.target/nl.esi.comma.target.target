@@ -96,7 +96,7 @@
       <unit id="nl.esi.xplus.lsp.feature.feature.group" version="0.0.0"/>
       <unit id="nl.esi.xplus.ui.feature.feature.group" version="0.0.0"/>
       <unit id="nl.esi.xplus.xtext.generator" version="0.0.0"/>
-      <repository location="https://TNO.github.io/XPlus/releases/v0.5.0-M1"/>
+      <repository location="https://tno.github.io/XPlus/releases/v0.5.0-M1"/>
     </location>
   </locations>
 </target>
