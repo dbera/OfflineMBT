@@ -96,6 +96,9 @@ public class Bpmn4sCompiler{
 		flattenActivities();
 		
 		ps.append(generatePspec());
+		// UNIT_TYPE is the type for undefined contexts.
+		var unit =  String.format("record %s {\n\tint\tunit\n}\n\n", UNIT_TYPE);
+		types.append(unit);
 		types.append(model.rawTypes);
 	}
 
@@ -800,8 +803,6 @@ public class Bpmn4sCompiler{
 	
 	public static String generateTypes(Collection<Bpmn4sDataType> dataTypes ) {
 		String types = new String("");
-		// UNIT_TYPE is the type for undefined contexts.
-		types += String.format("record %s {\n\tint\tunit\n}\n\n", UNIT_TYPE);
 		var sorted = IterableExtensions.sortBy(dataTypes,Bpmn4sDataType::getName);
 		for (var dataType : sorted) {
 			if(dataType instanceof RecordType recType) {

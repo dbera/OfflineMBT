@@ -33,7 +33,7 @@ public class RawImpl extends ExtensionElementsImpl implements Raw{
 	}
 	
 	public static void registerType(ModelBuilder modelBuilder) {
-		ModelElementTypeBuilder typeBuilder = modelBuilder.defineType(DataType.class, RAW_TYPE)
+		ModelElementTypeBuilder typeBuilder = modelBuilder.defineType(Raw.class, RAW_TYPE)
 	      .namespaceUri(BPMN4S_NS)
 	      .instanceProvider(new ModelTypeInstanceProvider<Raw>() {
 	        public Raw newInstance(ModelTypeInstanceContext instanceContext) {
