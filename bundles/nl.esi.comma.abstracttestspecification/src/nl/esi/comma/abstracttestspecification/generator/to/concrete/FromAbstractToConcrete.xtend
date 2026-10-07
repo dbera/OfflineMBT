@@ -27,6 +27,7 @@ import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
 
+import static extension nl.esi.comma.abstracttestspecification.generator.to.concrete.ConcreteExpressionHandler.addConcreteDataAssignments
 import static extension nl.esi.comma.abstracttestspecification.generator.utils.Utils.*
 import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
 import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
@@ -75,9 +76,12 @@ class FromAbstractToConcrete extends AbstractGenerator {
 
         val inputAssignments = newTreeMap(String.CASE_INSENSITIVE_ORDER)
         // Get text for concrete data expressions
-        ConcreteExpressionHandler.collectStepInputAssignments(step, inputAssignments)
+        inputAssignments.addConcreteDataAssignments(step, step.inputData)
         // Get text for reference data expressions
         ReferenceExpressionHandler.collectStepInputAssignments(step, inputAssignments)
+
+        val sutAssignments = newTreeMap(String.CASE_INSENSITIVE_ORDER)
+        sutAssignments.addConcreteDataAssignments(step, step.SUTData)
 
         return '''
             «type»-id    step_«step.name»
@@ -94,9 +98,8 @@ class FromAbstractToConcrete extends AbstractGenerator {
                 }
             «ENDIF»
 «««            «type»-context
-            «type»-input
-                «inputAssignments.printAssignments»
-«««            «type»-sut
+            «inputAssignments.printAssignments(type + '-input')»
+            «sutAssignments.printAssignments(type + '-sut')»
         '''
     }
 
@@ -109,12 +112,15 @@ class FromAbstractToConcrete extends AbstractGenerator {
         ].stripIndent().trim()
     }
 
-    def private printAssignments(Map<String, ? extends Iterable<String>> assignments) '''
-        «FOR entry : assignments.entrySet»
-            «FOR rhs : entry.value»
-                «entry.key» := «rhs»
-            «ENDFOR»
-        «ENDFOR»
+    def private printAssignments(Map<String, ? extends Iterable<String>> assignments, String type) '''
+        «IF !assignments.isEmpty»
+            «type»
+                «FOR entry : assignments.entrySet»
+                    «FOR rhs : entry.value»
+                        «entry.key» := «rhs»
+                    «ENDFOR»
+                «ENDFOR»
+        «ENDIF»
     '''
 
     // Generate Types File for Concrete TSpec
