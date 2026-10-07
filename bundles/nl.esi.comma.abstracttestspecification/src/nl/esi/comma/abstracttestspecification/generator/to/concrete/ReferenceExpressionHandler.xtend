@@ -45,8 +45,7 @@ import static extension org.eclipse.emf.ecore.util.EcoreUtil.*
 import static extension org.eclipse.lsat.common.xtend.Queries.*
 
 class ReferenceExpressionHandler {
-    
-    def resolveStepReferenceExpressions(ExecutableStep estep) {
+    static def void collectStepInputAssignments(ExecutableStep estep, Map<String, Set<String>> assignments) {
         debug(" [INFO] Resolving references for Executable Step: " + estep.name)
         val Map<String, List<String>> mapLHStoRHS = newLinkedHashMap
         val Set<String> nestedFieldPrefixes = newHashSet
@@ -85,18 +84,20 @@ class ReferenceExpressionHandler {
         // and were only used for rewriting the RHS expressions
         mapLHStoRHS.keySet.removeIf(field | nestedFieldPrefixes.exists[ prefix | field.startsWith(prefix)])
 
-        return mapLHStoRHS
+        mapLHStoRHS.forEach[lhs, rhs |
+            assignments.computeIfAbsent(lhs)[newLinkedHashSet] += rhs
+        ]
     }
 
-    private def debug(String message) {
+    private static def debug(String message) {
         // println(message)
     }
 
-    private def getReferencedChainedSteps(AbstractStep step) {
+    private static def getReferencedChainedSteps(AbstractStep step) {
         return step.stepRef.map[refStep].filter(ChainedStep)
     }
 
-    private def void evaluateReferenceConstrains(ChainedStep cstep, String fieldPrefix, Map<String, List<String>> mapLHStoRHS) {
+    private static def void evaluateReferenceConstrains(ChainedStep cstep, String fieldPrefix, Map<String, List<String>> mapLHStoRHS) {
         val expressionEvaluator = EcoreUtil3.getService(cstep, ExpressionEvaluator)
 
         // Iterate all record field assignments of all constraints
@@ -132,7 +133,7 @@ class ReferenceExpressionHandler {
         }
     }
 
-    private def void evaluateReferenceConstrains(String inputName, String outputName, Type type, Set<String> suppressedOutput, Map<String, List<String>> mapLHStoRHS) {
+    private static def void evaluateReferenceConstrains(String inputName, String outputName, Type type, Set<String> suppressedOutput, Map<String, List<String>> mapLHStoRHS) {
         if (type instanceof TypeReference && type.type instanceof RecordTypeDecl) {
             for (field : (type.type as RecordTypeDecl).fields.reject[kind == RecordFieldKind.CONCRETE].reject[suppressedOutput.contains(outputName + '.' + it.name)]) {
                 evaluateReferenceConstrains(inputName + '.' + field.name, outputName + '.' + field.name, field.type, suppressedOutput, mapLHStoRHS)
@@ -194,7 +195,7 @@ class ReferenceExpressionHandler {
         return flattened
     }
 
-    private def void rewriteVariableReferences(Map<String, List<String>> mapLHStoRHS) {
+    private static def void rewriteVariableReferences(Map<String, List<String>> mapLHStoRHS) {
         for (expressions : mapLHStoRHS.values) {
             for (var i = 0; i < expressions.size; i++) {
                 val expression = expressions.get(i)

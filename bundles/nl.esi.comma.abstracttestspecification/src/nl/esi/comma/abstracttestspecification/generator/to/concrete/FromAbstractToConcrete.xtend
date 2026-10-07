@@ -13,11 +13,11 @@
 package nl.esi.comma.abstracttestspecification.generator.to.concrete
 
 import java.util.HashSet
+import java.util.Map
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractTestDefinition
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AssertionStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.Binding
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.ExecutableStep
-import nl.esi.comma.abstracttestspecification.abstractTestspecification.RunStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.TSMain
 import nl.esi.comma.assertthat.assertThat.DataAssertionItem
 import nl.esi.xtext.expressions.expression.ExpressionVariable
@@ -70,67 +70,52 @@ class FromAbstractToConcrete extends AbstractGenerator {
         generate-file "«atd.filePath»"
     '''
 
-    private def dispatch printStep(RunStep step) '''
-        step-id    step_«step.name»
-        step-type  «step.stepType»
-        «step.printInputs('step')»
-    '''
+    private def printStep(ExecutableStep step) {
+        val type = step instanceof AssertionStep ? 'assertion' : 'step'
 
-    private def dispatch printStep(AssertionStep step) '''
-        assertion-id    step_«step.name»
-        assertion-type  «step.stepType»
-        «step.printAssertions()»
-        «step.printInputs('assertion')»
-    '''
+        val inputAssignments = newTreeMap(String.CASE_INSENSITIVE_ORDER)
+        // Get text for concrete data expressions
+        ConcreteExpressionHandler.collectStepInputAssignments(step, inputAssignments)
+        // Get text for reference data expressions
+        ReferenceExpressionHandler.collectStepInputAssignments(step, inputAssignments)
 
-    def private printAssertions(AssertionStep step) '''
-        «IF !step.asserts.nullOrEmpty»
-            assertion-items {
-                «FOR ce : step.asserts.flatMap[ce]»
-                    assertions «ce.name» {
-                        «FOR dai: ce.constr»
-                            «step.printDai(dai)»
-                        «ENDFOR»
-                    }
-                «ENDFOR»
-            }
-        «ENDIF»
-    '''
+        return '''
+            «type»-id    step_«step.name»
+            «type»-type  «step.stepType»
+            «IF step instanceof AssertionStep»
+                assertion-items {
+                    «FOR ce : step.asserts.flatMap[ce]»
+                        assertions «ce.name» {
+                            «FOR dai: ce.constr»
+                                «step.printDai(dai)»
+                            «ENDFOR»
+                        }
+                    «ENDFOR»
+                }
+            «ENDIF»
+«««            «type»-context
+            «type»-input
+                «inputAssignments.printAssignments»
+«««            «type»-sut
+        '''
+    }
 
     def private String printDai(AssertionStep step, DataAssertionItem item) {
         return item.serialize[ obj |
             if (obj instanceof ExpressionVariable) {
                 val vname = obj.variable.name
-                return '''«step.system»Input.«vname»'''
+                return '''«step.inputVar».«vname»'''
             }
-        ].trimIndentation()
+        ].stripIndent().trim()
     }
 
-    def private static String trimIndentation(String input) {
-        // TODO: trim indentation
-        return input.trim()
-    }
-
-    def private String printInputs(ExecutableStep estep, String type) {
-        // Get text for concrete data expressions
-        var conDataExpr = (new ConcreteExpressionHandler()).prepareStepInputExpressions(estep, estep.stepRef)
-        // Append text for reference data expressions
-        val refDataExpr = (new ReferenceExpressionHandler()).resolveStepReferenceExpressions(estep)
-
-        if (conDataExpr.isEmpty && refDataExpr.isEmpty) {
-            return null
-        }
-
-        return '''
-            «type»-input
-                «IF !conDataExpr.isEmpty»«conDataExpr»«ENDIF»
-                «FOR entry : refDataExpr.entrySet»
-                    «FOR v : entry.value»
-                        «entry.key» := «v»
-                    «ENDFOR»
-                «ENDFOR»
-        '''
-    }
+    def private printAssignments(Map<String, ? extends Iterable<String>> assignments) '''
+        «FOR entry : assignments.entrySet»
+            «FOR rhs : entry.value»
+                «entry.key» := «rhs»
+            «ENDFOR»
+        «ENDFOR»
+    '''
 
     // Generate Types File for Concrete TSpec
     def private generateTypesFile(AbstractTestDefinition atd, String system, Iterable<String> typesImports) {

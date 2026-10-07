@@ -229,18 +229,18 @@ class Utils
         return jsonValsList
     }
 
-    static def Map<String,Set<String>> extractSUTVarExpressions(AbstractTestDefinition atd){
-        var ceh = new ConcreteExpressionHandler
-        var Map<String,Set<String>> sutexpr = new LinkedHashMap
-
-        for (testseq : atd.testSeq) {
-            for (step : testseq.step) {
-                ceh.prepareSutVariableExpressions(step, sutexpr, true)
-                ceh.prepareSutVariableExpressions(step, sutexpr, false)
-            }
-        }
-        return sutexpr
-    }
+//    static def Map<String,Set<String>> extractSUTVarExpressions(AbstractTestDefinition atd){
+//        var ceh = new ConcreteExpressionHandler
+//        var Map<String,Set<String>> sutexpr = new LinkedHashMap
+//
+//        for (testseq : atd.testSeq) {
+//            for (step : testseq.step) {
+//                ceh.prepareSutVariableExpressions(step, sutexpr, true)
+//                ceh.prepareSutVariableExpressions(step, sutexpr, false)
+//            }
+//        }
+//        return sutexpr
+//    }
 
     static def List<Binding> getSUTData(AbstractStep astep) { getSUTData(astep, true) }
     static def List<Binding> getSUTData(AbstractStep astep, boolean fromInput) {

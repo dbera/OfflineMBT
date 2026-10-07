@@ -12,18 +12,10 @@
  */
 package nl.esi.comma.abstracttestspecification.generator.to.concrete
 
-import java.util.LinkedHashMap
-import java.util.LinkedHashSet
 import java.util.Map
 import java.util.Set
-import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractStep
-import nl.esi.comma.abstracttestspecification.abstractTestspecification.AssertionStep
-import nl.esi.comma.abstracttestspecification.abstractTestspecification.Binding
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.ExecutableStep
-import nl.esi.comma.abstracttestspecification.abstractTestspecification.StepReference
 import nl.esi.comma.assertthat.assertThat.JsonValue
-import nl.esi.xtext.expressions.expression.ExpressionVariable
-import nl.esi.xtext.expressions.expression.Variable
 import nl.esi.xtext.types.types.EnumTypeDecl
 import nl.esi.xtext.types.types.MapTypeConstructor
 import nl.esi.xtext.types.types.RecordTypeDecl
@@ -32,55 +24,29 @@ import nl.esi.xtext.types.types.Type
 import nl.esi.xtext.types.types.TypeDecl
 import nl.esi.xtext.types.types.TypeReference
 import nl.esi.xtext.types.types.VectorTypeConstructor
-import org.eclipse.emf.common.util.EList
 
 import static extension nl.esi.comma.abstracttestspecification.generator.utils.Utils.*
 
 class ConcreteExpressionHandler {
-    def prepareStepInputExpressions(ExecutableStep estep, Iterable<StepReference> chainedStepRefs) {
-        val suppressVars = chainedStepRefs.flatMap[suppressedVarFields].map[estep.inputVar + '.' + it].toSet
-        return '''
-            «FOR output : chainedStepRefs.flatMap[refStep.output].reject[suppressVars.contains(estep.inputVar + '.' + it.name.name)]»
-                «printVariable(estep.inputVar + '.' + output.name.name, output.name.type, output.jsonvals, suppressVars)»
-            «ENDFOR»
-        '''
-    }
-
-    def Map<String,Set<String>> prepareSutVariableExpressions(AbstractStep astep, boolean fromInput) {
-        var Map<String,Set<String>> varDefs = new LinkedHashMap
-        return prepareSutVariableExpressions(astep, varDefs, fromInput)
-    }
-
-    def Map<String,Set<String>> prepareSutVariableExpressions(AbstractStep astep, Map<String,Set<String>> varDefs, boolean fromInput) {
-
-        var EList<Variable> sutvars = astep.varID
-        var EList<Binding> bindings = fromInput? astep.input : astep.output
-        var String io_label = fromInput? '.input.' : '.output.'
-
-        for(svar: sutvars){
-            val sv_name = svar.name
-            val sv_def = 'step_' +astep.name+ io_label+sv_name
-            for(bind: bindings.filter[name.name == sv_name]) {
-                var type = bind.name.type.type
-                var json = bind.jsonvals
-                var exp_str = type.createDeclValue(json)
-                varDefs.computeIfAbsent(sv_def, [new LinkedHashSet<String>]) += exp_str
-            }
+    static def void collectStepInputAssignments(ExecutableStep step, Map<String, Set<String>> assignments) {
+        val inputVarPrefix = step.inputVar + '.'
+        val suppressedVars = step.stepRef.flatMap[suppressedVarFields].map[inputVarPrefix + it].toSet
+        for (output : step.stepRef.flatMap[refStep.output].reject[suppressedVars.contains(inputVarPrefix + it.name.name)]) {
+            assignments.putVariables(inputVarPrefix + output.name.name, output.name.type, output.jsonvals, suppressedVars)
         }
-        return varDefs
     }
 
-    def private String printVariable(String name, Type type, JsonValue value, Set<String> suppressVars) '''
-        «IF type instanceof TypeReference && type.type instanceof RecordTypeDecl»
-            «FOR field : (type.type as RecordTypeDecl).fields.filter[f|value.hasMemberValue(f.name)].reject[suppressVars.contains(name + '.' + it.name)]»
-                «printVariable(name + '.' + field.name, field.type, value.getMemberValue(field.name), suppressVars)»
-            «ENDFOR»
-        «ELSE»
-            «name» := «type.createValue(value)»
-        «ENDIF»
-    '''
+    private static def void putVariables(Map<String, Set<String>> assignments, String name, Type type, JsonValue value, Set<String> suppressedVars) {
+        if (type instanceof TypeReference && type.type instanceof RecordTypeDecl) {
+            for (field : (type.type as RecordTypeDecl).fields.filter[f|value.hasMemberValue(f.name)].reject[suppressedVars.contains(name + '.' + it.name)]) {
+                assignments.putVariables(name + '.' + field.name, field.type, value.getMemberValue(field.name), suppressedVars)
+            }
+        } else {
+            assignments.computeIfAbsent(name)[newLinkedHashSet] += type.createValue(value)
+        }
+    }
 
-    private def String createValue(Type type, JsonValue value) {
+    private static def String createValue(Type type, JsonValue value) {
         if (value.isNullLiteral) {
             return value.stringValue
         }
@@ -100,7 +66,7 @@ class ConcreteExpressionHandler {
         }
     }
 
-    private def String createDeclValue(TypeDecl type, JsonValue value) {
+    private static def String createDeclValue(TypeDecl type, JsonValue value) {
         if (value.isNullLiteral) {
             return value.stringValue
         }
@@ -123,20 +89,5 @@ class ConcreteExpressionHandler {
                 }
             '''
         }
-    }
-
-    def String createTypeDeclValue(TypeDecl type, JsonValue value) {
-        return type.createDeclValue(value)
-    }
-
-    // Prepend the Run Step name to the ExpressionVariable name 
-    def prepareAssertionStepExpressions(AssertionStep astep, ExpressionVariable variable) {
-        val var_name = variable.variable.name
-        var rstep = astep.stepRef                                // in the (abstract) AssertionStep 
-                         .findFirst[                             // look for the (abstract) Run Step
-                             it.refData.exists[name == var_name] // from which @variable
-                         ].refStep                               // is consumed-from
-        var infix = rstep.name // get name of run step from which @variable is consumed from
-        return 'step_'+ infix + '.output.'+ var_name
     }
 }
