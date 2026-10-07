@@ -15,6 +15,7 @@ package nl.asml.matala.testutils
 import java.nio.file.Path
 import java.util.Map
 import java.util.TreeMap
+import nl.esi.xtext.common.lang.utilities.EcoreUtil3
 import org.apache.commons.io.FileUtils
 import org.apache.commons.io.FilenameUtils
 import org.eclipse.emf.ecore.util.EcoreUtil
@@ -25,6 +26,7 @@ import org.eclipse.xtext.util.CancelIndicator
 import static org.junit.jupiter.api.Assertions.*
 
 import static extension java.nio.file.Files.*
+import nl.esi.xtext.types.BasicTypes
 
 class XtextGeneratorTest {
     static def void regressionTest(AbstractGenerator generator, String fileName) {
@@ -44,6 +46,7 @@ class XtextGeneratorTest {
         val inputResource = resourceSet.getResource(TestFileSystemAccess.getURI(inputFile), true)
         assertTrue(inputResource.errors.isEmpty, '''Input «inputFile» contains errors: «inputResource.errors.join(', ')[message]»''')
         EcoreUtil.resolveAll(inputResource)
+        resourceSet.resources.reject[URI == BasicTypes.TYPES_URI].forEach[EcoreUtil3.validate(it)]
 
         val actualDir = resourcesDir.resolve('''actual/«baseName»«variant»''')
         if (actualDir.exists) {

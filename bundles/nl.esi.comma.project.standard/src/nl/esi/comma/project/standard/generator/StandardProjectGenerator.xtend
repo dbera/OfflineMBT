@@ -98,7 +98,7 @@ class StandardProjectGenerator extends AbstractGenerator {
         }
         // PspecToPetriNetGenerator
         // Generate CPNServer (a.k.a. abstract Tspec generator) and Petri-nets
-        (new ProductGenerator).doGenerate(productRes, fsa, ctx)
+        (new ProductGenerator(task.prefixTests)).doGenerate(productRes, fsa, ctx)
 
         if (task.target == OfflineGenerationTarget.SIMULATOR) {
             return
@@ -108,7 +108,7 @@ class StandardProjectGenerator extends AbstractGenerator {
         val specName = product.specification.name
         val petriNetURI = fsa.getURI('''«FOLDER_CPN_SERVER»/«specName»/«specName».py''')
         val absTspecFsa = fsa.createFolderAccess(FOLDER_ABSTRACT_TSPEC)
-        (new PetriNetToAbstractTspecGenerator(task.pythonExe, reporting)).doGenerate(rst, petriNetURI, absTspecFsa, ctx)
+        (new PetriNetToAbstractTspecGenerator(task.pythonExe, reporting)).doGenerate(rst, petriNetURI, productURI, absTspecFsa, ctx)
 
         for (absTspecFileName : absTspecFsa.list(ROOT_PATH).filter[endsWith('.atspec')]) {
             val tspecName = absTspecFileName.replaceAll('\\.atspec$', '')

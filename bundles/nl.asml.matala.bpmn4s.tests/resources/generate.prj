@@ -1,0 +1,44 @@
+/**
+ * Copyright (c) 2024, 2025 TNO-ESI
+ *
+ * See the NOTICE file(s) distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This program and the accompanying materials are made available
+ * under the terms of the MIT License which is available at
+ * https://opensource.org/licenses/MIT
+ *
+ * SPDX-License-Identifier: MIT
+ */
+Project bpmn4s2pspec {
+	Generate Simulator {
+		fries_comp {
+			bpmn-file "input/fries_comp.bpmn"
+		}
+	}
+	Generate Simulator {
+		fries_flat {
+			bpmn-file "input/fries_flat.bpmn"
+		}
+	}
+	Generate Simulator {
+		fries_sub {
+			bpmn-file "input/fries_sub.bpmn"
+		}
+	}
+	Generate Simulator {
+		imaging {
+			bpmn-file "input/imaging.bpmn"
+		}
+	}
+	Generate Simulator {
+		printer_prio {
+			bpmn-file "input/printer_prio.bpmn"
+		}
+	}
+	Generate Simulator {
+		printer {
+			bpmn-file "input/printer.bpmn"
+		}
+	}
+}

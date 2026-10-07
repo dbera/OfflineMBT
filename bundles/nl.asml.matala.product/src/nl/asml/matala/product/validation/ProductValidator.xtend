@@ -25,11 +25,14 @@ import nl.asml.matala.product.product.Block
 import nl.asml.matala.product.product.DataReferences
 import nl.asml.matala.product.product.Function
 import nl.asml.matala.product.product.ProductPackage
+import nl.asml.matala.product.product.Specification
 import nl.asml.matala.product.product.Update
 import nl.asml.matala.product.product.UpdateOutVar
+import nl.asml.matala.product.product.VarRef
 import nl.esi.xtext.actions.actions.ActionsPackage
 import nl.esi.xtext.actions.actions.AssignmentAction
 import nl.esi.xtext.actions.actions.ForAction
+import nl.esi.xtext.actions.actions.FunctionCall
 import nl.esi.xtext.actions.actions.IfAction
 import nl.esi.xtext.actions.actions.RecordFieldAssignmentAction
 import nl.esi.xtext.expressions.expression.Expression
@@ -50,7 +53,6 @@ import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
 import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
 import static extension org.eclipse.lsat.common.xtend.Queries.*
 import static extension org.eclipse.xtext.EcoreUtil2.*
-import nl.esi.xtext.actions.actions.FunctionCall
 
 /**
  * This class contains custom validation rules. 
@@ -58,6 +60,26 @@ import nl.esi.xtext.actions.actions.FunctionCall
  * See https://www.eclipse.org/Xtext/documentation/303_runtime_concepts.html#validation
  */
 class ProductValidator extends AbstractProductValidator {
+    @Check
+    def checkSystemBlockNotEmpty(Specification specification) {
+        if (specification.blocks.isEmpty) {
+            error('At least one block is required', ProductPackage.Literals.SPECIFICATION__BLOCKS)
+        }
+    }
+
+    @Check
+    def checkSystemInterfaces(Specification specification) {
+        val interfaces = specification.blocks.map[block ?: refBlock.system].flatMap[invars + outvars].groupBy[name]
+        for (interface : interfaces.values.filter[size > 1]) {
+            val interfaceType = interface.head.type.typeObject
+            if (!interface.tail.forall[type.typeObject.identical(interfaceType)]) {
+                interface.forEach [
+                    error('Types should be identical for system interface ' + name, it, null)
+                ]
+            }
+        }
+    }
+
     /**
      * Prevent Duplicate Updates in Actions
      */
@@ -168,7 +190,7 @@ class ProductValidator extends AbstractProductValidator {
     }
 
     private dispatch def void preventIllegalVariableAccess(AssignmentAction action, Set<Variable> inputs, Set<Variable> outputs) {
-        if (!outputs.contains(action.assignment)) {
+        if (!action.assignment.eIsProxy && !outputs.contains(action.assignment)) {
             error('''Variable '«action.assignment.name»' is not defined as an output''', action, ActionsPackage.Literals.ASSIGNMENT_ACTION__ASSIGNMENT)
         }
         action.exp?.preventIllegalExpressionVariableAccess(inputs, Direction::input)
@@ -207,7 +229,7 @@ class ProductValidator extends AbstractProductValidator {
     private enum Direction { input, output }
 
     private dispatch def void preventIllegalExpressionVariableAccess(ExpressionVariable exprVar, Set<Variable> variables, Direction direction) {
-        if (!variables.contains(exprVar.variable)) {
+        if (!exprVar.variable.eIsProxy && !variables.contains(exprVar.variable)) {
             error('''Variable '«exprVar.variable.name»' is not defined as an «direction»''', exprVar, ExpressionPackage.Literals.EXPRESSION_VARIABLE__VARIABLE)
         }
     }
@@ -341,6 +363,11 @@ class ProductValidator extends AbstractProductValidator {
         ]
 
         val assignments = actions.filter(RecordFieldAssignmentAction)
+
+        val inputs = dataReferences.getContainerOfType(Update).fnInp.map[ref].toSet
+        val outputs = #{dataReferences.getContainerOfType(VarRef).ref}
+        assignments.forEach[preventIllegalVariableAccess(inputs, outputs)]
+
         val singleValueAssignments = newLinkedHashMap
         assignments.forEach[findAndGroupSingleValueAssignments('', singleValueAssignments)]
 

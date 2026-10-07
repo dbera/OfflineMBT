@@ -1,7 +1,7 @@
 import "issue249.ps"
 
-using issue249.ContextIssueProducer.part1
 using issue249.ContextIssueProducer.part2
+using issue249.ContextIssueProducer.part1
 using issue249.ContextIssueProducer.sutConf
 using issue249.ContextIssueProducer.report
 using issue249.ContextIssueProducer.message
