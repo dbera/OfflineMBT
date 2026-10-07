@@ -125,10 +125,22 @@ class ProductValidator extends AbstractProductValidator {
      */
     @Check
     def checkLocalDuplication(Block block) {
-        val existingLocalvars = block.localvars.groupBy[localvars|localvars.name]
-        existingLocalvars.values.filter[size > 1].flatten.forEach [ localvars |
-            error("Duplicate variable name in local variables: " + localvars.name,
-                ProductPackage.Literals.BLOCK__LOCALVARS, block.localvars.indexOf(localvars))
+        val existingLocalvars = block.localvars.groupBy[name]
+        existingLocalvars.values.filter[size > 1].flatten.forEach [ localvar |
+            error("Duplicate variable name in local variables: " + localvar.name,
+                ProductPackage.Literals.BLOCK__LOCALVARS, block.localvars.indexOf(localvar))
+        ]
+    }
+
+    /**
+     * Check the duplication of variables in Context
+     */
+    @Check
+    def checkContextDuplication(Block block) {
+        val existingContextvars = block.contextvars.groupBy[name]
+        existingContextvars.values.filter[size > 1].flatten.forEach [ contextvar |
+            error("Duplicate variable name in context variables: " + contextvar.name,
+                ProductPackage.Literals.BLOCK__CONTEXTVARS, block.contextvars.indexOf(contextvar))
         ]
     }
 
@@ -137,7 +149,7 @@ class ProductValidator extends AbstractProductValidator {
      */
     @Check
     def checkBlockVariables(Block block) {
-        for (blockVar : block.invars.union(block.outvars).union(block.localvars)) {
+        for (blockVar : block.invars.union(block.outvars).union(block.localvars).union(block.contextvars)) {
             if (!blockVar.type.isRecordType) {
                 error("Only record types are allowed for block variables", blockVar,
                     ExpressionPackage.Literals.VARIABLE__TYPE)

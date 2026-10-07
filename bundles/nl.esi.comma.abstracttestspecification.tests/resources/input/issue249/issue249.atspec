@@ -35,7 +35,7 @@ message : {
     "id": 0,
     "part1": "Hello Message!"
 }
-suppress(Gateway_1ww9hic.id, Gateway_1ww9hic.loop, message.id)
+suppress(message.id)
 
 run-step-name: ContextIssueProducer_RunLocal_default_0 step-type: "ProducerRunType"
 action-case: issue249.ContextIssueProducer.RunLocal.default
@@ -66,7 +66,6 @@ Flow_168eaxr : {
     "loop": false,
     "prod_field": "Hello Consumer!"
 }
-suppress(Flow_168eaxr.id, Flow_168eaxr.loop)
 sut-var: { sutConf  }
 
 compose-step-name: ContextIssueProducer_Compose_default_0
@@ -94,7 +93,7 @@ part2 : {
     "id": 0,
     "part2": "Hello Consumer!_2"
 }
-suppress(Event_0m7n0r6.id, Event_0m7n0r6.loop, part1.id, part2.id)
+suppress(part1.id, part2.id)
 
 run-step-name: ContextIssueConsumer_ConsumerRun_default_0 step-type: "ConsumerRunType"
 action-case: issue249.ContextIssueConsumer.ConsumerRun.default
@@ -112,7 +111,6 @@ output-data:
 Event_0fmv4m5 : {
     "unit": 0
 }
-suppress(Event_0fmv4m5)
 
 generate-file "./dataset/"
 
