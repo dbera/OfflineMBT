@@ -155,14 +155,14 @@ class FromConcreteToDocumentation extends AbstractGenerator
                     
                     testDefFilePath = model.filePath
                     //for(gpars : model.gparams) { addMapLocalDataVarToDataInstance(gpars.name, new String) }
-                    for(steppars : model.stepparams) { 
+                    for(steppars : modelInst.model.stepSeq.flatMap[step].map[stepVar]) { 
                         tsInst.addMapLocalStepInstance(steppars.name, steppars.type.type.name)
                     }
                     //for(sutpars : model.sutparams) { addMapLocalSUTVarToDataInstance(sutpars.name, new String) }
-                    for(act : model.gparamsInitActions) {
-                        var mapLHStoRHS = (new ExpressionHandler).generateInitAssignmentAction(act, tsInst.dataVarToDataInstance, tsInst.stepVarNameToType)
-                        tsInst.addMapLocalDataVarToDataInstance(mapLHStoRHS.key, mapLHStoRHS.value)
-                    }
+//                    for(act : model.gparamsInitActions) {
+//                        var mapLHStoRHS = (new ExpressionHandler).generateInitAssignmentAction(act, tsInst.dataVarToDataInstance, tsInst.stepVarNameToType)
+//                        tsInst.addMapLocalDataVarToDataInstance(mapLHStoRHS.key, mapLHStoRHS.value)
+//                    }
                     for(act : model.stepSeq.flatMap[step].flatMap[sut]) {
                         var mapLHStoRHS = (new ExpressionHandler).generateInitAssignmentAction(act, tsInst.dataVarToDataInstance, tsInst.stepVarNameToType)
                         tsInst.addMapLocalSUTVarToDataInstance(mapLHStoRHS.key, mapLHStoRHS.value)

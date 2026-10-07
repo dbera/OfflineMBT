@@ -58,20 +58,20 @@ class ConcreteExpressionHandler {
             '''
             MapTypeConstructor: '''
                 <«type.typeName»>{
-                    «FOR memberValue : value.memberValues SEPARATOR ','»«createDeclValue(type.type, memberValue.key.toJsonString)» -> «createValue(type.valueType, memberValue.value)»«ENDFOR»
+                    «FOR memberValue : value.memberValues SEPARATOR ','»«createTypeDeclValue(type.type, memberValue.key.toJsonString)» -> «createValue(type.valueType, memberValue.value)»«ENDFOR»
                 }
             '''
             default:
-                createDeclValue(type.type, value)
+                createTypeDeclValue(type.type, value)
         }
     }
 
-    private static def String createDeclValue(TypeDecl type, JsonValue value) {
+    static def String createTypeDeclValue(TypeDecl type, JsonValue value) {
         if (value.isNullLiteral) {
             return value.stringValue
         }
         return switch (type) {
-            SimpleTypeDecl case type.base !== null: type.base.createDeclValue(value)
+            SimpleTypeDecl case type.base !== null: type.base.createTypeDeclValue(value)
             SimpleTypeDecl case type.name == 'int',
             SimpleTypeDecl case type.name == 'real',
             SimpleTypeDecl case type.name == 'bool': value.stringValue

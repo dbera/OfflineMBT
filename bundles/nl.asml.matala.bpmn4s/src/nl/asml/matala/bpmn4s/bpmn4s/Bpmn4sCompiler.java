@@ -641,8 +641,8 @@ public class Bpmn4sCompiler{
 								task += DATA_EXPR_HLPR.processRefUpdate(e.getRefUpdate(), replaceMap);
 							}
 							Set<String> suppressedFields = collectSuppressedFields(
-									model.getElementById(e.getTar()).getDataType(),
-									sanitize(compile(e.getTar())) + '.',
+									model.getElementById(cId).getContextDataType(),
+									postCtxName + '.',
 									new HashSet<String>());
 							if (!suppressedFields.isEmpty()) {
 								task += suppressedFields.stream().collect(Collectors.joining(", "," suppress(", ")"));

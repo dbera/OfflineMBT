@@ -687,8 +687,7 @@ class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGe
     }
 
     protected def void _process_Step_Parameters(TestSpecificationInstance tsi, TSMain modelInst) {
-        val model = modelInst.model as TestDefinition
-        for (steppars : model.stepparams) {
+        for (steppars : modelInst.model.stepSeq.flatMap[step].map[stepVar]) {
             var key = steppars.name
             var value = steppars.type.type.name
             tsi.stepVarNameToType.putIfAbsent(key, new ArrayList)

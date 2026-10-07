@@ -34,10 +34,7 @@ TestDefinition:
     ('Stakeholders' stakeholder+=StakeHolder+)?
     testSeq+=TestSequence*
     stepSeq+=StepSequence*
-    'generate-file' filePath=STRING
-    ('global-parameters' gparams+=Variable+)?
-    ('step-parameters' stepparams+=Variable+)?
-    ('global-param-init' gparamsInitActions+=(AssignmentAction | RecordFieldAssignmentAction)+)?;
+    'generate-file' filePath=STRING;
 
 StakeHolder:
     'stakeholder-name' name=STRING
