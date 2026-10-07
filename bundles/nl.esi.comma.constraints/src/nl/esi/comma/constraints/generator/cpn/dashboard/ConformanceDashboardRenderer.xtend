@@ -234,7 +234,39 @@ class ConformanceDashboardRenderer {
                     font: 12px/1.5 Consolas, monospace;
                 }
                 .constraint-entry { margin: 5px 0; }
-                .constraint-entry > button { margin: 0; }
+                .constraint-entry-header { display: flex; align-items: stretch; }
+                .constraint-entry-header > button { margin: 0; }
+                .constraint-entry-header > .constraint-select { flex: 1; }
+                .constraint-entry-header > .focus-toggle {
+                    width: auto;
+                    padding: 0 14px;
+                    color: #24766b;
+                    border-left: 1px solid #d5ddda;
+                    font-weight: 600;
+                    text-align: center;
+                }
+                #constraints-panel.focus-mode .constraint-entry:not(.focused),
+                #constraints-panel.focus-mode #accepted-section,
+                #constraints-panel:not(.focus-mode) #detail {
+                    display: none;
+                }
+                .focus-diagnostics {
+                    background: white;
+                    border: 1px solid #d5ddda;
+                    border-top: 0;
+                }
+                .focus-diagnostics > summary {
+                    padding: 8px 10px;
+                    color: #5c696d;
+                    cursor: pointer;
+                    font-size: 13px;
+                }
+                .focus-diagnostics #detail {
+                    max-height: none;
+                    margin: 0;
+                    border: 0;
+                    border-top: 1px solid #d5ddda;
+                }
                 .constraint-source {
                     background: white;
                     border: 1px solid #d5ddda;
@@ -392,7 +424,7 @@ class ConformanceDashboardRenderer {
                             <h2>Violated Constraints</h2>
                             <div id="failed"></div>
                         </section>
-                        <section>
+                        <section id="accepted-section">
                             <h2>Accepted Constraints</h2>
                             <div id="accepted"></div>
                         </section>
@@ -1058,6 +1090,38 @@ class ConformanceDashboardRenderer {
                     return definition;
                 }
 
+                const constraintsPanel = document.querySelector("#constraints-panel");
+                let focusedEntry = null;
+
+                // The diagnostics panel is moved under the focused entry and back again on exit.
+                function exitFocus() {
+                    if (!focusedEntry) return;
+                    constraintsPanel.append(detail);
+                    focusedEntry.querySelector(".focus-diagnostics")?.remove();
+                    focusedEntry.querySelector(".focus-toggle").textContent = "Show";
+                    focusedEntry.classList.remove("focused");
+                    constraintsPanel.classList.remove("focus-mode");
+                    focusedEntry = null;
+                }
+
+                function enterFocus(entry) {
+                    exitFocus();
+                    focusedEntry = entry;
+                    entry.classList.add("focused");
+                    constraintsPanel.classList.add("focus-mode");
+
+                    const diagnosticsDetails = document.createElement("details");
+                    diagnosticsDetails.className = "focus-diagnostics";
+                    diagnosticsDetails.open = true;
+                    const diagnosticsSummary = document.createElement("summary");
+                    diagnosticsSummary.textContent = "Diagnostics";
+                    diagnosticsDetails.append(diagnosticsSummary, detail);
+                    entry.append(diagnosticsDetails);
+
+                    entry.querySelector(".focus-toggle").textContent = "Hide";
+                    entry.scrollIntoView({ block: "start" });
+                }
+
                 // Each result keeps its diagnostic button and source disclosure together in the list.
                 function addGroup(targetId, results, accepted) {
                     const target = document.querySelector(targetId);
@@ -1074,7 +1138,9 @@ class ConformanceDashboardRenderer {
                         const constraintName =
                             result.constraintName || result.constraint || "Constraint";
                         const button = document.createElement("button");
-                        button.className = accepted ? "" : "failed";
+                        button.className = accepted
+                            ? "constraint-select"
+                            : "constraint-select failed";
                         button.type = "button";
                         button.innerHTML = "<strong></strong><span></span>";
                         button.querySelector("strong").textContent =
@@ -1091,7 +1157,25 @@ class ConformanceDashboardRenderer {
 
                         const entry = document.createElement("div");
                         entry.className = "constraint-entry";
-                        entry.append(button);
+                        const entryHeader = document.createElement("div");
+                        entryHeader.className = "constraint-entry-header";
+                        entryHeader.append(button);
+                        if (!accepted) {
+                            const focusToggle = document.createElement("button");
+                            focusToggle.className = "focus-toggle";
+                            focusToggle.type = "button";
+                            focusToggle.textContent = "Show";
+                            focusToggle.addEventListener("click", () => {
+                                if (focusedEntry === entry) {
+                                    exitFocus();
+                                    return;
+                                }
+                                button.click();
+                                enterFocus(entry);
+                            });
+                            entryHeader.append(focusToggle);
+                        }
+                        entry.append(entryHeader);
 
                         const sourceDetails = document.createElement("details");
                         sourceDetails.className = "constraint-source";
@@ -1130,7 +1214,7 @@ class ConformanceDashboardRenderer {
 
                 if (failed.length) {
                     const firstFailedButton =
-                        document.querySelector("#failed .constraint-entry > button");
+                        document.querySelector("#failed .constraint-select");
                     if (firstFailedButton) {
                         firstFailedButton.setAttribute("aria-current", "true");
                     }
