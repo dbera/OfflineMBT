@@ -255,6 +255,10 @@ public class Element {
 	
 	// For data nodes
 	
+	public boolean isData() {
+		return type == ElementType.DATASTORE || type == ElementType.MSGQUEUE;
+	}
+
 	public void setDataType(String dt) {
 		this.dataType = dt;
 	}

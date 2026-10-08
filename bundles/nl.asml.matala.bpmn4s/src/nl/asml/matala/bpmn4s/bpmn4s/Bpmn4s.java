@@ -123,9 +123,8 @@ public class Bpmn4s {
 	}
 	
 	public Boolean isData (String id) {
-		return elements.get(id) != null && 
-				(elements.get(id).getType() == ElementType.DATASTORE || 
-				 elements.get(id).getType() == ElementType.MSGQUEUE);
+		Element element = elements.get(id);
+		return element != null && element.isData();
 	}
 	
 	public Boolean isReferenceData (String id) {
