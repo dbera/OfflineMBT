@@ -13,6 +13,7 @@
 package nl.esi.comma.abstracttestspecification.generator.to.concrete
 
 import java.util.HashSet
+import java.util.List
 import java.util.Map
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractTestDefinition
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AssertionStep
@@ -27,7 +28,8 @@ import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
 
-import static extension nl.esi.comma.abstracttestspecification.generator.to.concrete.ConcreteExpressionHandler.addConcreteDataAssignments
+import static extension nl.esi.comma.abstracttestspecification.generator.to.concrete.ConcreteExpressionHandler.*
+import static extension nl.esi.comma.abstracttestspecification.generator.to.concrete.ReferenceExpressionHandler.*
 import static extension nl.esi.comma.abstracttestspecification.generator.utils.Utils.*
 import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
 import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
@@ -74,14 +76,13 @@ class FromAbstractToConcrete extends AbstractGenerator {
     private def printStep(ExecutableStep step) {
         val type = step instanceof AssertionStep ? 'assertion' : 'step'
 
-        val inputAssignments = newTreeMap(String.CASE_INSENSITIVE_ORDER)
-        // Get text for concrete data expressions
-        inputAssignments.addConcreteDataAssignments(step, step.inputData)
-        // Get text for reference data expressions
-        ReferenceExpressionHandler.collectStepInputAssignments(step, inputAssignments)
+        val contextAssignments = step.collectConcreteDataAssignments(step.contextData)
+        val sutAssignments = step.collectConcreteDataAssignments(step.SUTData)
 
-        val sutAssignments = newTreeMap(String.CASE_INSENSITIVE_ORDER)
-        sutAssignments.addConcreteDataAssignments(step, step.SUTData)
+        // Get assignments for concrete data input
+        val inputAssignments = step.collectConcreteDataAssignments(step.inputData)
+        // Add assignments for reference data input
+        inputAssignments.mergeAll(step.collectReferenceDataAssignments)
 
         return '''
             «type»-id    step_«step.name»
@@ -97,7 +98,7 @@ class FromAbstractToConcrete extends AbstractGenerator {
                     «ENDFOR»
                 }
             «ENDIF»
-«««            «type»-context
+            «contextAssignments.printAssignments(type + '-context')»
             «inputAssignments.printAssignments(type + '-input')»
             «sutAssignments.printAssignments(type + '-sut')»
         '''
@@ -112,7 +113,7 @@ class FromAbstractToConcrete extends AbstractGenerator {
         ].stripIndent().trim()
     }
 
-    def private printAssignments(Map<String, ? extends Iterable<String>> assignments, String type) '''
+    def private printAssignments(Map<String, List<String>> assignments, String type) '''
         «IF !assignments.isEmpty»
             «type»
                 «FOR entry : assignments.entrySet»
@@ -122,6 +123,15 @@ class FromAbstractToConcrete extends AbstractGenerator {
                 «ENDFOR»
         «ENDIF»
     '''
+
+    def void mergeAll(Map<String, List<String>> source, Map<String, List<String>> addition) {
+        addition.forEach[k, v |
+            source.merge(k, v) [ v1, v2 |
+                v1 += v2
+                return v1
+            ]
+        ]
+    }
 
     // Generate Types File for Concrete TSpec
     def private generateTypesFile(AbstractTestDefinition atd, String system, Iterable<String> typesImports) {

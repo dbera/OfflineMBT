@@ -66,9 +66,10 @@ class Utils
     static def getOutputVar(AbstractStep step) '''step_«step.name».output'''
 
     static def List<Binding> getContextData(AbstractStep step) {
-        // TODO: Filter context binding
         // Try exclusion: all bindings except input and sut?
-        return step.input
+        val nonContext = step.varID.map[name].toSet
+        nonContext += step.stepRef.flatMap[refData].map[name]
+        return step.input.reject[nonContext.contains(name.name)].toList
     }
 
     static def List<Binding> getInputData(AbstractStep step) {

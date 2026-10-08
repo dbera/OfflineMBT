@@ -45,9 +45,9 @@ import static extension org.eclipse.emf.ecore.util.EcoreUtil.*
 import static extension org.eclipse.lsat.common.xtend.Queries.*
 
 class ReferenceExpressionHandler {
-    static def void collectStepInputAssignments(ExecutableStep estep, Map<String, Set<String>> assignments) {
+    static def Map<String, List<String>> collectReferenceDataAssignments(ExecutableStep estep) {
         debug(" [INFO] Resolving references for Executable Step: " + estep.name)
-        val Map<String, List<String>> mapLHStoRHS = newLinkedHashMap
+        val Map<String, List<String>> mapLHStoRHS = newTreeMap(String.CASE_INSENSITIVE_ORDER)
         val Set<String> nestedFieldPrefixes = newHashSet
 
         for (cstep : estep.referencedChainedSteps) {
@@ -84,9 +84,7 @@ class ReferenceExpressionHandler {
         // and were only used for rewriting the RHS expressions
         mapLHStoRHS.keySet.removeIf(field | nestedFieldPrefixes.exists[ prefix | field.startsWith(prefix)])
 
-        mapLHStoRHS.forEach[lhs, rhs |
-            assignments.computeIfAbsent(lhs)[newLinkedHashSet] += rhs
-        ]
+        return mapLHStoRHS
     }
 
     private static def debug(String message) {

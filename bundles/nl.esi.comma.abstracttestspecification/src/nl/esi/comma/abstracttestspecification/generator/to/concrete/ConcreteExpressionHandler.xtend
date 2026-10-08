@@ -12,6 +12,7 @@
  */
 package nl.esi.comma.abstracttestspecification.generator.to.concrete
 
+import java.util.List
 import java.util.Map
 import java.util.Set
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractStep
@@ -29,25 +30,25 @@ import nl.esi.xtext.types.types.VectorTypeConstructor
 import static extension nl.esi.comma.abstracttestspecification.generator.utils.Utils.*
 
 class ConcreteExpressionHandler {
-//    static def void collectStepInputAssignments(ExecutableStep step, Map<String, Set<String>> assignments) {
-//        assignments.addConcreteDataAssignments(step, step.inputData)
-//    }
+    static def Map<String, List<String>>  collectConcreteDataAssignments(AbstractStep step, Iterable<Binding> bindings) {
+        val Map<String, List<String>> mapLHStoRHS = newTreeMap(String.CASE_INSENSITIVE_ORDER)
 
-    static def void addConcreteDataAssignments(Map<String, Set<String>> assignments, AbstractStep step, Iterable<Binding> bindings) {
         val inputVarPrefix = step.inputVar + '.'
         val suppressedVarFields = step.stepRef.flatMap[suppressedVarFields].map[inputVarPrefix + it].toSet
         for (binding : bindings.reject[suppressedVarFields.contains(inputVarPrefix + it.name.name)]) {
-            assignments.putVariables(inputVarPrefix + binding.name.name, binding.name.type, binding.jsonvals, suppressedVarFields)
+            mapLHStoRHS.putVariables(inputVarPrefix + binding.name.name, binding.name.type, binding.jsonvals, suppressedVarFields)
         }
+
+        return mapLHStoRHS
     }
 
-    private static def void putVariables(Map<String, Set<String>> assignments, String name, Type type, JsonValue value, Set<String> suppressedVarFields) {
+    private static def void putVariables(Map<String, List<String>> assignments, String name, Type type, JsonValue value, Set<String> suppressedVarFields) {
         if (type instanceof TypeReference && type.type instanceof RecordTypeDecl) {
             for (field : (type.type as RecordTypeDecl).fields.filter[f|value.hasMemberValue(f.name)].reject[suppressedVarFields.contains(name + '.' + it.name)]) {
                 assignments.putVariables(name + '.' + field.name, field.type, value.getMemberValue(field.name), suppressedVarFields)
             }
         } else {
-            assignments.computeIfAbsent(name)[newLinkedHashSet] += type.createValue(value)
+            assignments.computeIfAbsent(name)[newArrayList] += type.createValue(value)
         }
     }
 
