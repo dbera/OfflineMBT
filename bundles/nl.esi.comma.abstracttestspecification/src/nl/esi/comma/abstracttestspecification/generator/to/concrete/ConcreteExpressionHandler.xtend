@@ -34,7 +34,7 @@ class ConcreteExpressionHandler {
         val Map<String, List<String>> mapLHStoRHS = newTreeMap(String.CASE_INSENSITIVE_ORDER)
 
         val inputVarPrefix = step.inputVar + '.'
-        val suppressedVarFields = step.stepRef.flatMap[suppressedVarFields].map[inputVarPrefix + it].toSet
+        val suppressedVarFields = step.stepRef.flatMap[refStep.suppressedVarFields].map[inputVarPrefix + it].toSet
         for (binding : bindings.reject[suppressedVarFields.contains(inputVarPrefix + it.name.name)]) {
             mapLHStoRHS.putVariables(inputVarPrefix + binding.name.name, binding.name.type, binding.jsonvals, suppressedVarFields)
         }
@@ -42,13 +42,13 @@ class ConcreteExpressionHandler {
         return mapLHStoRHS
     }
 
-    private static def void putVariables(Map<String, List<String>> assignments, String name, Type type, JsonValue value, Set<String> suppressedVarFields) {
+    private static def void putVariables(Map<String, List<String>> mapLHStoRHS, String name, Type type, JsonValue value, Set<String> suppressedVarFields) {
         if (type instanceof TypeReference && type.type instanceof RecordTypeDecl) {
             for (field : (type.type as RecordTypeDecl).fields.filter[f|value.hasMemberValue(f.name)].reject[suppressedVarFields.contains(name + '.' + it.name)]) {
-                assignments.putVariables(name + '.' + field.name, field.type, value.getMemberValue(field.name), suppressedVarFields)
+                mapLHStoRHS.putVariables(name + '.' + field.name, field.type, value.getMemberValue(field.name), suppressedVarFields)
             }
         } else {
-            assignments.computeIfAbsent(name)[newArrayList] += type.createValue(value)
+            mapLHStoRHS.computeIfAbsent(name)[newArrayList] += type.createValue(value)
         }
     }
 

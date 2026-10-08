@@ -7,14 +7,18 @@
           <bpmn4s:field kind="Symbolic" name="param" suppressUpdate="false" typeRef="String"/>
         </bpmn4s:dataType>
         <bpmn4s:dataType id="DataType_0791dbl" name="History" type="Record">
-          <bpmn4s:field name="ids" typeRef="DataType_38oggtn"/>
+          <bpmn4s:field name="ids" suppressUpdate="false" typeRef="DataType_38oggtn"/>
         </bpmn4s:dataType>
         <bpmn4s:dataType id="DataType_07f4b2c" name="TestContext" type="Context">
-          <bpmn4s:field name="id" typeRef="String"/>
+          <bpmn4s:field name="id" suppressUpdate="false" typeRef="String"/>
         </bpmn4s:dataType>
         <bpmn4s:dataType id="DataType_15gnioa" name="Report" type="Record">
           <bpmn4s:field name="id" suppressUpdate="false" typeRef="Int"/>
           <bpmn4s:field kind="Symbolic" name="result" suppressUpdate="false" typeRef="String"/>
+        </bpmn4s:dataType>
+        <bpmn4s:dataType id="DataType_2gshgc1" name="Variant" type="Record">
+          <bpmn4s:field name="id" suppressUpdate="true" typeRef="Int"/>
+          <bpmn4s:field name="param" typeRef="String"/>
         </bpmn4s:dataType>
         <bpmn4s:dataType id="DataType_38n3lc9" name="ConcreteParams" type="Record">
           <bpmn4s:field name="id" typeRef="Int"/>
@@ -52,7 +56,7 @@
         </bpmn2:task>
         <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_38n3lc9" id="DataStoreReference_0jdahzt" name="params_1_1_2"/>
         <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_15gnioa" bpmn4s:originDataReference="DataStoreReference_1t5fpct" id="DataStoreReference_0s5z9wk" name="report_1_1_2"/>
-        <bpmn2:task bpmn4s:guard="false" bpmn4s:subType="ComposeTask" id="Activity_1g9cqfi" name="Compose 1:1:1">
+        <bpmn2:task bpmn4s:guard="true" bpmn4s:subType="ComposeTask" id="Activity_1g9cqfi" name="Compose 1:1:1">
           <bpmn2:incoming>Flow_1sm8rur</bpmn2:incoming>
           <bpmn2:outgoing>Flow_0nosmsl</bpmn2:outgoing>
           <bpmn2:dataOutputAssociation bpmn4s:update="params_1_1_2 := ConcreteParams {&#10; id = 1,&#10; param = ctx.id&#10;}" id="DataOutputAssociation_0fagiiv">
@@ -250,7 +254,7 @@
           <bpmn2:incoming>Flow_0aydbe1</bpmn2:incoming>
         </bpmn2:endEvent>
         <bpmn2:sequenceFlow id="Flow_0aydbe1" sourceRef="Activity_1wogupx" targetRef="Event_0zgsfij"/>
-        <bpmn2:task bpmn4s:assertions="reporta_id: assert-that (report_3_1_2a.id) {&#10;  equal-to 0&#10;}&#10;reportb_result: assert-that (report_3_1_2b.result) {&#10;  match-regex &quot;\\w+&quot;&#10;}" bpmn4s:stepType="Assert_3_2_1" bpmn4s:subType="AssertTask" id="Activity_1wogupx" name="Assert 3:2:1">
+        <bpmn2:task bpmn4s:assertions="report_id: assert-that (report_3_1_2a.id) {&#10;  equal-to report_3_1_2b.id&#10;}&#10;report_result: assert-that (report_3_1_2a.result) {&#10;  equal-to report_3_1_2b.result&#10;}" bpmn4s:stepType="Assert_3_2_1" bpmn4s:subType="AssertTask" id="Activity_1wogupx" name="Assert 3:2:1">
           <bpmn2:outgoing>Flow_0aydbe1</bpmn2:outgoing>
           <bpmn2:property id="Property_01fsd98" name="__targetRef_placeholder"/>
           <bpmn2:dataInputAssociation id="DataInputAssociation_0hxbqj8">
@@ -339,7 +343,7 @@
           <bpmn2:incoming>Flow_020xy04</bpmn2:incoming>
         </bpmn2:endEvent>
         <bpmn2:sequenceFlow id="Flow_020xy04" sourceRef="Activity_1yoy8aa" targetRef="Event_1cztdmu"/>
-        <bpmn2:task bpmn4s:guard="false" bpmn4s:subType="ComposeTask" id="Activity_0l6nt2u" name="Compose 5:1:1">
+        <bpmn2:task bpmn4s:guard="true" bpmn4s:subType="ComposeTask" id="Activity_0l6nt2u" name="Compose 5:1:1">
           <bpmn2:incoming>Flow_04li0wb</bpmn2:incoming>
           <bpmn2:outgoing>Flow_0f2471h</bpmn2:outgoing>
           <bpmn2:dataOutputAssociation bpmn4s:update="params_5_1_2 := ConcreteParams {&#10; id = 5,&#10; param = &quot;5_1_2&quot;&#10;}" id="DataOutputAssociation_136z37i">
@@ -470,11 +474,14 @@
           <bpmn2:incoming>Flow_131n57x</bpmn2:incoming>
         </bpmn2:endEvent>
         <bpmn2:sequenceFlow id="Flow_131n57x" sourceRef="Activity_1v4ru0v" targetRef="Event_1y5r7sr"/>
-        <bpmn2:task bpmn4s:guard="false" bpmn4s:subType="ComposeTask" id="Activity_0vlqlcc" name="Compose 7:1">
+        <bpmn2:task bpmn4s:guard="true" bpmn4s:subType="ComposeTask" id="Activity_0vlqlcc" name="Compose 7:1">
           <bpmn2:incoming>Flow_0t7emqq</bpmn2:incoming>
           <bpmn2:outgoing>Flow_1kfq18j</bpmn2:outgoing>
+          <bpmn2:dataOutputAssociation bpmn4s:update="params_7_2 := ConcreteParams {&#10; id = 7,&#10; param = &quot;7_2&quot;&#10;}" id="DataOutputAssociation_0jxyfwr">
+            <bpmn2:targetRef>DataStoreReference_0o0vtgd</bpmn2:targetRef>
+          </bpmn2:dataOutputAssociation>
         </bpmn2:task>
-        <bpmn2:task bpmn4s:stepType="Run_7_2" bpmn4s:subType="RunTask" id="Activity_1v4ru0v" name="Run 7:2">
+        <bpmn2:task bpmn4s:guard="toString(variants.id) == ctx.id" bpmn4s:stepType="Run_7_2" bpmn4s:subType="RunTask" id="Activity_1v4ru0v" name="Run 7:2">
           <bpmn2:incoming>Flow_1kfq18j</bpmn2:incoming>
           <bpmn2:outgoing>Flow_131n57x</bpmn2:outgoing>
           <bpmn2:property id="Property_0ptf9yr" name="__targetRef_placeholder"/>
@@ -482,10 +489,20 @@
             <bpmn2:sourceRef>DataStoreReference_0zg7kki</bpmn2:sourceRef>
             <bpmn2:targetRef>Property_0ptf9yr</bpmn2:targetRef>
           </bpmn2:dataInputAssociation>
+          <bpmn2:dataInputAssociation id="DataInputAssociation_1n1b497">
+            <bpmn2:sourceRef>DataStoreReference_0o0vtgd</bpmn2:sourceRef>
+            <bpmn2:targetRef>Property_0ptf9yr</bpmn2:targetRef>
+          </bpmn2:dataInputAssociation>
+          <bpmn2:dataInputAssociation id="DataInputAssociation_1n8nd5f">
+            <bpmn2:sourceRef>DataStoreReference_0z83mxp</bpmn2:sourceRef>
+            <bpmn2:targetRef>Property_0ptf9yr</bpmn2:targetRef>
+          </bpmn2:dataInputAssociation>
         </bpmn2:task>
-        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_38n3lc9" bpmn4s:originDataReference="DataStoreReference_1vemqoz" id="DataStoreReference_0zg7kki" name="variants"/>
+        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_2gshgc1" bpmn4s:originDataReference="DataStoreReference_1vemqoz" bpmn4s:sutConfigurations="true" id="DataStoreReference_0zg7kki" name="variants"/>
+        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_38n3lc9" id="DataStoreReference_0o0vtgd" name="params_7_2"/>
+        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_38n3lc9" bpmn4s:init="extContext := ConcreteParams {&#10; id = 100,&#10; param = &quot;Extra Context&quot;&#10;}" id="DataStoreReference_0z83mxp" name="extContext"/>
       </bpmn2:subProcess>
-      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_38n3lc9" bpmn4s:init="variants := ConcreteParams {&#10; id = 7,&#10; param = &quot;SUT_7&quot;&#10;}" bpmn4s:linkedDataReferences="DataStoreReference_0zg7kki" id="DataStoreReference_1vemqoz" name="variants"/>
+      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_2gshgc1" bpmn4s:init="variants := Variant {&#10; id = 7,&#10; param = &quot;SUT_7&quot;&#10;}&#10;variants := Variant {&#10; id = 8,&#10; param = &quot;SUT_8&quot;&#10;}" bpmn4s:linkedDataReferences="DataStoreReference_0zg7kki" bpmn4s:sutConfigurations="true" id="DataStoreReference_1vemqoz" name="variants"/>
     </bpmn2:subProcess>
     <bpmn2:textAnnotation id="TextAnnotation_1i1q37n">
       <bpmn2:text>Legacy: Run and Assert in own component</bpmn2:text>
@@ -1420,10 +1437,22 @@
       <bpmndi:BPMNShape bpmnElement="Activity_0vlqlcc" id="Activity_1j4e7yz_di">
         <dc:Bounds height="80" width="100" x="240" y="150"/>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape bioc:fill="#e1bee7" bioc:stroke="#5b176d" bpmnElement="DataStoreReference_0zg7kki" color:background-color="#e1bee7" color:border-color="#5b176d" id="DataStoreReference_0zg7kki_di">
-        <dc:Bounds height="50" width="50" x="425" y="295"/>
+      <bpmndi:BPMNShape bpmnElement="DataStoreReference_0o0vtgd" id="DataStoreReference_0o0vtgd_di">
+        <dc:Bounds height="50" width="50" x="345" y="275"/>
         <bpmndi:BPMNLabel>
-          <dc:Bounds height="14" width="39" x="431" y="352"/>
+          <dc:Bounds height="14" width="62" x="339" y="332"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="DataStoreReference_0z83mxp" id="DataStoreReference_0z83mxp_di">
+        <dc:Bounds height="50" width="50" x="525" y="35"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="14" width="54" x="523" y="5"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bioc:fill="#e1bee7" bioc:stroke="#5b176d" bpmnElement="DataStoreReference_0zg7kki" color:background-color="#e1bee7" color:border-color="#5b176d" id="DataStoreReference_0zg7kki_di">
+        <dc:Bounds height="50" width="50" x="345" y="35"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="14" width="39" x="350" y="3"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape bpmnElement="Event_0yxeb2y" id="Event_0yxeb2y_di">
@@ -1432,9 +1461,27 @@
       <bpmndi:BPMNShape bpmnElement="Event_1y5r7sr" id="Event_1y5r7sr_di">
         <dc:Bounds height="36" width="36" x="562" y="172"/>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNEdge bpmnElement="DataInputAssociation_1qe4cgl" id="DataInputAssociation_1qe4cgl_di">
-        <di:waypoint x="450" y="295"/>
+      <bpmndi:BPMNEdge bpmnElement="DataInputAssociation_1n1b497" id="DataInputAssociation_1n1b497_di">
+        <di:waypoint x="395" y="300"/>
+        <di:waypoint x="450" y="300"/>
         <di:waypoint x="450" y="230"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="DataInputAssociation_1n8nd5f" id="DataInputAssociation_1n8nd5f_di">
+        <di:waypoint x="550" y="85"/>
+        <di:waypoint x="550" y="118"/>
+        <di:waypoint x="480" y="118"/>
+        <di:waypoint x="480" y="150"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="DataInputAssociation_1qe4cgl" id="DataInputAssociation_1qe4cgl_di">
+        <di:waypoint x="370" y="85"/>
+        <di:waypoint x="370" y="118"/>
+        <di:waypoint x="430" y="118"/>
+        <di:waypoint x="430" y="150"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="DataOutputAssociation_0jxyfwr" id="DataOutputAssociation_0jxyfwr_di">
+        <di:waypoint x="290" y="230"/>
+        <di:waypoint x="290" y="300"/>
+        <di:waypoint x="345" y="300"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge bpmnElement="Flow_0t7emqq" id="Flow_0t7emqq_di">
         <di:waypoint x="188" y="190"/>

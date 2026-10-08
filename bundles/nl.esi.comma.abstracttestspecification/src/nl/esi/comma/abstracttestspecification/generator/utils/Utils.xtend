@@ -15,12 +15,12 @@ package nl.esi.comma.abstracttestspecification.generator.utils
 
 import java.util.Collections
 import java.util.List
+import java.util.Set
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractTestDefinition
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.Binding
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.ChainedStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.ExecutableStep
-import nl.esi.comma.abstracttestspecification.abstractTestspecification.StepReference
 import nl.esi.comma.assertthat.assertThat.AssertThatFactory
 import nl.esi.comma.assertthat.assertThat.JsonArray
 import nl.esi.comma.assertthat.assertThat.JsonExpression
@@ -87,21 +87,12 @@ class Utils
         return step.stepRef.filter[refStep instanceof ChainedStep]
     }
 
-    static def List<String> getSuppressedVarFields(StepReference stepRef) {
-        val fields = newArrayList
-        val suppress = stepRef.refStep.suppress
-        if (suppress !== null) {
-            if (suppress.varFields.isEmpty) {
-                // All outputs need to be suppressed
-                return stepRef.refStep.output.map[it.name.name]
-            }
-            // Suppress the marked variable(-fields)
-            fields += stepRef.refStep.suppress.varFields.map[it.serialize]
+    static def Set<String> getSuppressedVarFields(AbstractStep step) {
+        return switch (it: step.suppress) {
+            case null: Collections.emptySet
+            case varFields.isEmpty: (step.input + step.output).map[it.name.name].toSet
+            default: varFields.map[it.serialize].toSet
         }
-        // Also suppress all unreferenced output variables
-        val unreferencedOutputs = stepRef.refStep.output.reject[stepRef.refData.contains(name)]
-        fields += unreferencedOutputs.map[it.name.name]
-        return fields
     }
 
     dispatch static def String printField(ExpressionRecordAccess exp) {
