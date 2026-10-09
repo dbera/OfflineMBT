@@ -273,7 +273,7 @@ public class Bpmn4sCompiler{
 		LinkedHashSet<String> outputs = new LinkedHashSet<String>();
 		
 		for (Element data: model.elements.values()) {
-			if (isParentComponent(c, data) && model.isData(data.getId()) && data.isReferenceData()) {
+			if (data.isData() && isReferenceDataIn(data, c)) {
 				if (!data.getDataOutputs().isEmpty()) {
 					inputs.add(tabulate(mapType(data.getDataType()), compile(data.getId())));
 				}
@@ -286,6 +286,17 @@ public class Bpmn4sCompiler{
 		String inStr = inputs.isEmpty() ? "// inputs\n" : "inputs\n" + String.join("\n", inputs) + "\n";
 		String outStr = outputs.isEmpty() ? "// outputs\n" : "outputs\n" + String.join("\n", outputs) + "\n";
 		return inStr + "\n" + outStr;
+	}
+	
+	private Boolean isReferenceDataIn(Element data, Element parent) {
+		Element origin = data;
+		while (origin.isReferenceData()) {
+			if (parent.getId().equals(origin.getParent())) {
+				return true;
+			}
+			origin = model.getElementById(origin.getOriginDataNodeId());
+		}
+		return false;
 	}
 	
 	/**
