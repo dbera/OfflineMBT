@@ -22,18 +22,13 @@ import "http://www.esi.nl/comma/assertthat/AssertThat" as assertthat
 TSMain returns base::ModelContainer: {TSMain}
     imports += Import*
     namespace += NameSpace*
-    model = ModelType
+    model = AbstractTestDefinition
 ;
 
 @Override
 NamedElement returns base::NamedElement:
     name=QualifiedName | Variable
 ;
-
-ModelType:
-    AbstractTestDefinition
-;
-
 
 AbstractTestDefinition:
     {AbstractTestDefinition} 'abstract-test-definition'
@@ -43,12 +38,12 @@ AbstractTestDefinition:
 
 AbstractTestSequence:
     'Test-Scenario' ':' name = ID
-        step += AbstractStep+  
+        step += AbstractStep+
 ;
 
 ConstraintStep:
     'data-references' ':' name = ID
-    ce += [prod::RefConstraint|QualifiedName]+  
+    ce += [prod::RefConstraint|QualifiedName]+
 ;
 
 AssertStep:
@@ -64,6 +59,14 @@ ExecutableStep:
     RunStep | AssertionStep
 ;
 
+ChainedStep returns AbstractStep: {ChainedStep}
+    refs += ConstraintStep*
+;
+
+ConcreteChainedStep returns ChainedStep:
+    ComposeStep | AssertionStep
+;
+
 ComposeStep:
     'compose-step-name' ':' name = ID
     ('action-case' ':' caseRef = [prod::Update|QualifiedName] ) ?
@@ -76,7 +79,7 @@ ComposeStep:
 
 RunStep:
     'run-step-name' ':' name = ID
-    ('step-type' ':' stepType += STRING)?
+    ('step-type' ':' stepType = STRING)?
     ('action-case' ':' caseRef = [prod::Update|QualifiedName] ) ?
     stepRef += StepReference*
     'input-binding' ':' input += Binding+
@@ -86,11 +89,12 @@ RunStep:
 
 AssertionStep:
     'assert-step-name' ':' name = ID
-    ('assert-type' ':' stepType += STRING)?
+    ('assert-type' ':' stepType = STRING)?
     ('action-case' ':' caseRef = [prod::Update|QualifiedName] ) ?
     stepRef += StepReference*
     'input-binding' ':' input += Binding+
     'output-data' ':' output += Binding+ (suppress=Suppress)? // do not generate these in concrete TSpec
+    refs += ConstraintStep*
     asserts += AssertStep+
     ('sut-var' ':' '{' varID += [expr::Variable|QualifiedName]+ '}')?
 ;
@@ -114,7 +118,7 @@ SuppressVarFieldExp returns expr::Expression:
 // Json Grammar
 
 @Override
-JsonExpression returns assertthat::JsonExpression: 
+JsonExpression returns assertthat::JsonExpression:
     expr = AbstractTestExpressionConstants
 ;
 

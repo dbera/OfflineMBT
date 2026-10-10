@@ -328,6 +328,7 @@ class Utils
             varSet.addAll(b.invars)
             varSet.addAll(b.outvars)
             varSet.addAll(b.localvars)
+            varSet.addAll(b.contextvars)
         }
         for (v : varSet) {
             var notInUniqueSet = true

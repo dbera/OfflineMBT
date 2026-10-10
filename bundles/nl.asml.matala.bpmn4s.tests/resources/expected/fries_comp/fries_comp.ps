@@ -11,6 +11,8 @@ specification fries_comp
     
         local
         FriesDelivery	table
+    
+        context ctx
         ClientContext	ChooseStyle
         ClientContext	ChooseSize
         ClientContext	Event_022qurv
@@ -158,6 +160,8 @@ specification fries_comp
     
         local
         FriesDelivery	friesReady
+    
+        context ctx
         DeliveryServiceContext	Event_00idax9
         DeliveryServiceContext	Flow_1b6215f
         DeliveryServiceContext	Flow_0happwq
@@ -210,7 +214,9 @@ specification fries_comp
         outputs
         FriesDelivery	deliveryRequest
     
-        local
+        // local
+    
+        context ctx
         SnackbarContext	Endofshift_QMK_
         SnackbarContext	Event_0uxsyhg
         SnackbarContext	Event_04cb9z0

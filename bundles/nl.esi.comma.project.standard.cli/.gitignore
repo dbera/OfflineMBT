@@ -1,0 +1,3 @@
+dist/.venv/
+dist/web/
+dist/start-server-*.bat

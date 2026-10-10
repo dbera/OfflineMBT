@@ -37,7 +37,7 @@ data : {
         "symbol": "My Concrete Symbol"
     }
 }
-suppress(Flow_056jr2e.nested.id, data.nested.id)
+suppress(data.nested.id)
 data-references: data
 issue379.Root.Compose.default.r1
 issue379.Root.Compose.default.r2
@@ -73,7 +73,6 @@ Event_16rbmqm : {
         "symbol": "My Init Symbol"
     }
 }
-suppress(Event_16rbmqm.nested.id)
 
 generate-file "./dataset/"
 

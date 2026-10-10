@@ -218,6 +218,7 @@ public class Bpmn4sCompiler{
 				component += "system " + sanitize(cname) + "\r\n{\r\n";
 				String inOut = fabSpecInputOutput(c);
 				String local = fabSpecLocal(c);
+				String context = fabSpecContext(c);
 				String init = fabSpecInit(c.getId());
 				List<String> sutConfVars = fabSpecSutConfs(c.getId());
 				String sutConfs = sutConfVars.isEmpty() ? "" : "suts " + String.join(", ", sutConfVars) + "\n";
@@ -225,6 +226,8 @@ public class Bpmn4sCompiler{
 				component += indent(inOut);
 				component += "\n";
 				component += indent(local);
+				component += "\n";
+				component += indent(context);
 				component += "\n";
 				component += indent(init);
 				component += "\n";
@@ -319,22 +322,34 @@ public class Bpmn4sCompiler{
 				locals.add(tabulate(mapType(data.getDataType()), repr(data)));
 			}
 		}
+		return locals.isEmpty() ? "// local\n" : "local\n" + String.join("\n", locals) + "\n";
+	}
+	
+	/**
+	 * Build the context declaration section for a pspec system. FIXME!
+	 * @param c is the component that corresponds one to one with a pspec system.
+	 * @return the context section for the system corresponding to c.
+	 */
+	private String fabSpecContext(Element c) {
+		String contextName = c.context.name;
+		String contextType = mapType(c.context.dataType != "" ? c.context.dataType : UNIT_TYPE);
+
+		LinkedHashSet<String> contextVars = new LinkedHashSet<String>();
 		// XOR gates introduce a place (Maximal Connected Components of XOR gates for optimization)
 		AbstractSet<String> visited = new HashSet<String>();
 		for (Element xor: model.elements.values()) {
 			if (model.isXor(xor.getId()) && isParentComponent( c, xor)) {
 				String cGateName = getCompiledXorName(xor.getId()); 
-				String datatype = mapType(c.context.dataType != "" ? c.context.dataType : UNIT_TYPE);
 				if (!visited.contains(cGateName)) {
 					visited.add(cGateName);
-					locals.add(tabulate(datatype, sanitize(cGateName)));
+					contextVars.add(tabulate(contextType, sanitize(cGateName)));
 				}
 			}
 		}
 		// Start Events
-		locals.addAll(localsFromStartEvents(c));
+		contextVars.addAll(contextFromStartEvents(c));
 		// End Events
-		locals.addAll(localsFromEndEvents(c));
+		contextVars.addAll(contextFromEndEvents(c));
 		// Edges between transitions (tasks and parallel gates) introduce places. 
 		for (Edge e: model.edges) {
 			String srcId = e.getSrc();
@@ -344,13 +359,26 @@ public class Bpmn4sCompiler{
 			if (isParentComponent( c, src)
 					&& (model.isAnd(srcId) || model.isTask(srcId))
 					&& (model.isAnd(tarId) || model.isTask(tarId))){
-				String datatype = mapType(c.context.dataType != "" ? c.context.dataType : UNIT_TYPE);
-				locals.add(tabulate(datatype, sanitize(namePlaceBetweenTransitions(e.getId(), repr(src), repr(tar)))));
+				contextVars.add(tabulate(contextType, sanitize(namePlaceBetweenTransitions(e.getId(), repr(src), repr(tar)))));
 			}
 		}
-		return locals.isEmpty() ? "// local\n" : "local\n" + String.join("\n", locals) + "\n";
+
+		StringBuilder context = new StringBuilder();
+		if (contextVars.isEmpty()) {
+			context.append("// ");
+		}
+		context.append("context");
+		if (contextName != null && !contextName.isBlank()) {
+			context.append(" ");
+			context.append(contextName);
+		}
+		context.append("\n");
+		for (String contextVar : contextVars) {
+			context.append(contextVar);
+			context.append("\n");
+		}
+		return context.toString();
 	}
-	
 	
 	/**
 	 * START_EVENTs introduce a place if followed by a transition in the target PN. 
@@ -358,7 +386,7 @@ public class Bpmn4sCompiler{
 	 * @param c
 	 * @return
 	 */
-	protected List<String> localsFromStartEvents (Element c) {
+	protected List<String> contextFromStartEvents (Element c) {
 		List<String> result = new ArrayList<String>();
 		for (Element se: model.elements.values()) {
 			if (se.getType().equals(ElementType.START_EVENT) && isParentComponent( c, se)) { 
@@ -380,7 +408,7 @@ public class Bpmn4sCompiler{
 	 * @param c
 	 * @return
 	 */	
-	protected List<String> localsFromEndEvents (Element c) {
+	protected List<String> contextFromEndEvents (Element c) {
 		List<String> result = new ArrayList<String>();
 		for (Element ee: model.elements.values()) {
 			String datatype = mapType(c.context.dataType != "" ? c.context.dataType : UNIT_TYPE);
@@ -592,12 +620,11 @@ public class Bpmn4sCompiler{
 							if (e.getRefUpdate() != null && e.getRefUpdate() != "") {
 								task += DATA_EXPR_HLPR.processRefUpdate(e.getRefUpdate(), replaceMap);
 							}
-							if (model.isExecutionTask(node.getId())) {
-								boolean isSymbolicLink = getAllDataOutputs(e.getTar()).stream().anyMatch(
-										d -> model.isExecutionTask(d.getTar()));
-								if (isSymbolicLink) {
-									task += " symbolic-link";
-								}
+							boolean isSymbolicLink = !e.isPersistent()
+									&& model.isExecutionTask(node.getId())
+									&& getAllDataOutputs(e.getTar()).stream().anyMatch(d -> model.isExecutionTask(d.getTar()));
+							if (isSymbolicLink) {
+								task += " symbolic-link";
 							}
 							if (e.isSuppressed()) {
 								task += " suppress";
@@ -613,8 +640,7 @@ public class Bpmn4sCompiler{
 							task += "\n";
 							if (e.isPersistent()) {
 								task += "updates:\n" + indent(compile(e.getTar()) + " := " + compile(e.getTar())) + "\n";
-							}
-							if (e.getUpdate() != null && e.getUpdate() != "" ) {
+							} else if (e.getUpdate() != null && e.getUpdate() != "" ) {
 								task += DATA_EXPR_HLPR.processUpdate(e.getUpdate(), replaceMap);
 							}
 						} else { // then its context
@@ -625,18 +651,12 @@ public class Bpmn4sCompiler{
 							if (e.getRefUpdate() != null && e.getRefUpdate() != "") {
 								task += DATA_EXPR_HLPR.processRefUpdate(e.getRefUpdate(), replaceMap);
 							}
-							if (node.isContextSuppressed() || // Modeler suppresses this context
-								!model.componentDefinesContext(cId) // Auto constructed context is always suppressed
-								) {
-								task += " suppress";
-							} else {
-								Set<String> suppressedFields = collectSuppressedFields(
-										model.getElementById(cId).getContextDataType(),
-										postCtxName + '.',
-										new HashSet<String>());
-								if (!suppressedFields.isEmpty()) {
-									task += suppressedFields.stream().collect(Collectors.joining(", "," suppress(", ")"));
-								}
+							Set<String> suppressedFields = collectSuppressedFields(
+									model.getElementById(cId).getContextDataType(),
+									postCtxName + '.',
+									new HashSet<String>());
+							if (!suppressedFields.isEmpty()) {
+								task += suppressedFields.stream().collect(Collectors.joining(", "," suppress(", ")"));
 							}
 							task += "\n";
 							String updates = "";

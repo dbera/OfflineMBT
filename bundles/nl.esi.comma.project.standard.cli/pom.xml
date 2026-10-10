@@ -53,6 +53,7 @@
                                     <directory>${basedir}/dist</directory>
                                     <includes>
                                         <include>server/**</include>
+                                        <include>web/**</include>
                                         <include>*</include>
                                     </includes>
                                 </resource>

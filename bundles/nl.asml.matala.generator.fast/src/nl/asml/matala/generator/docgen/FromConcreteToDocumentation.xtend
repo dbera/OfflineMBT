@@ -155,15 +155,15 @@ class FromConcreteToDocumentation extends AbstractGenerator
                     
                     testDefFilePath = model.filePath
                     //for(gpars : model.gparams) { addMapLocalDataVarToDataInstance(gpars.name, new String) }
-                    for(steppars : model.stepparams) { 
+                    for(steppars : modelInst.model.stepSeq.flatMap[step].map[stepVar]) { 
                         tsInst.addMapLocalStepInstance(steppars.name, steppars.type.type.name)
                     }
                     //for(sutpars : model.sutparams) { addMapLocalSUTVarToDataInstance(sutpars.name, new String) }
-                    for(act : model.gparamsInitActions) {
-                        var mapLHStoRHS = (new ExpressionHandler).generateInitAssignmentAction(act, tsInst.dataVarToDataInstance, tsInst.stepVarNameToType)
-                        tsInst.addMapLocalDataVarToDataInstance(mapLHStoRHS.key, mapLHStoRHS.value)
-                    }
-                    for(act : model.sutInitActions) {
+//                    for(act : model.gparamsInitActions) {
+//                        var mapLHStoRHS = (new ExpressionHandler).generateInitAssignmentAction(act, tsInst.dataVarToDataInstance, tsInst.stepVarNameToType)
+//                        tsInst.addMapLocalDataVarToDataInstance(mapLHStoRHS.key, mapLHStoRHS.value)
+//                    }
+                    for(act : model.stepSeq.flatMap[step].flatMap[sut]) {
                         var mapLHStoRHS = (new ExpressionHandler).generateInitAssignmentAction(act, tsInst.dataVarToDataInstance, tsInst.stepVarNameToType)
                         tsInst.addMapLocalSUTVarToDataInstance(mapLHStoRHS.key, mapLHStoRHS.value)
                     }
@@ -172,19 +172,19 @@ class FromConcreteToDocumentation extends AbstractGenerator
                     val stepSequence = getStepSequence(model, mapStepSeqToSteps, featureList) // resolve test sequence to step sequences
                     for(s : stepSequence) 
                     {
-                        if(isConfigurationEnabled(featureList, s.featuresForStep))  
-                        {
+//                        if(isConfigurationEnabled(featureList, s.featuresForStep))  
+//                        {
                             var stepInst = new Step
-                            stepInst.id = s.inputVar.name //stepVar.name // was identifier
-                            stepInst.type = s.type.name
+                            stepInst.id = s.stepVar.name // was identifier
+                            stepInst.type = s.stepVar.type.type.name
                             stepInst.inputFile = tsInst.dataImplToFilename.get(s.stepVar.name).head
                             // check if additional data was specified in a step
-                            for(ref : s.refStep) {
-                            //if(s.input!==null) {
-                                // ref.featuresToOutput
-                                if(isConfigurationEnabled(featureList, ref.featuresToOutput)) 
-                                {
-                                    for(act : ref.input.actions) {
+//                            for(ref : s.refStep) {
+//                            //if(s.input!==null) {
+//                                // ref.featuresToOutput
+//                                if(isConfigurationEnabled(featureList, ref.featuresToOutput)) 
+//                                {
+                                    for(act : s.input) {
                                         if( act instanceof AssignmentAction || act instanceof RecordFieldAssignmentAction) 
                                         {
                                             var mapLHStoRHS = (new ExpressionHandler).generateInitAssignmentAction(act, 
@@ -198,14 +198,12 @@ class FromConcreteToDocumentation extends AbstractGenerator
                                             stepInst.recordExp = lhs.value  
                                         }
                                     }
-                                }
-                            } //else {
+//                                }
+//                            } //else {
                                 // assign stepInst.variableName
-                            if(s.refStep.isNullOrEmpty) {
-                                stepInst.variableName = s.stepVar.name
-                            }
+                            stepInst.variableName = s.stepVar.name
                             tsInst.steps.add(stepInst)
-                        } // end-if config enabled
+//                        } // end-if config enabled
                     } // End for step-sequence
                 } // Finished Parsing TSPEC File
                 
@@ -241,7 +239,7 @@ class FromConcreteToDocumentation extends AbstractGenerator
         if(td.testSeq.empty) {
             for(ss : td.stepSeq) {
                 for(step : ss.step.filter(RunStep)) {
-                    if(isConfigurationEnabled(featureList, step.featuresForStep)) 
+//                    if(isConfigurationEnabled(featureList, step.featuresForStep)) 
                         listStepSequence.add(step)
                 }
             }
@@ -250,11 +248,11 @@ class FromConcreteToDocumentation extends AbstractGenerator
             for(ts : td.testSeq) {
                 for(ss : ts.stepSeqRef) {
                     for(step : ss.step.filter(RunStep)) {
-                        if(isConfigurationEnabled(featureList, step.featuresForStep)) {
+//                        if(isConfigurationEnabled(featureList, step.featuresForStep)) {
                             listStepSequence.add(step)
-                            addToMapStepSeqToSteps(ss.name, step.inputVar.name, mapStepSeqToSteps)
+                            addToMapStepSeqToSteps(ss.name, step.stepVar.name, mapStepSeqToSteps)
                         }
-                    }
+//                    }
                 }
             }
         }
