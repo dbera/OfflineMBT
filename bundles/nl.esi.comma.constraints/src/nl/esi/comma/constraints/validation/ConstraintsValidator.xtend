@@ -25,20 +25,14 @@ import java.util.HashSet
 import java.util.List
 import java.util.Set
 import nl.esi.comma.constraints.constraints.Act
-import nl.esi.comma.constraints.constraints.ActSequenceDef
-import nl.esi.comma.constraints.constraints.Action
-import nl.esi.comma.constraints.constraints.ActionData
 import nl.esi.comma.constraints.constraints.ActionType
 import nl.esi.comma.constraints.constraints.Constraints
 import nl.esi.comma.constraints.constraints.ConstraintsPackage
-import nl.esi.comma.constraints.constraints.DataTable
 import nl.esi.comma.constraints.constraints.Existential
 import nl.esi.comma.constraints.constraints.Init
-import nl.esi.comma.constraints.constraints.RefActSequence
 import nl.esi.comma.constraints.constraints.RefAction
-import nl.esi.comma.constraints.constraints.RefStep
-import nl.esi.comma.constraints.constraints.RefStepSequence
-import nl.esi.comma.constraints.constraints.StepSequenceDef
+import nl.esi.comma.constraints.constraints.RefSequence
+import nl.esi.comma.constraints.constraints.Sequence
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.emf.common.util.URI
@@ -47,6 +41,7 @@ import org.eclipse.emf.ecore.resource.ResourceSet
 import org.eclipse.emf.ecore.util.EcoreUtil
 import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.validation.Check
+import org.eclipse.emf.ecore.EClass
 
 /**
  * This class contains custom validation rules. 
@@ -56,50 +51,17 @@ import org.eclipse.xtext.validation.Check
 class ConstraintsValidator extends AbstractConstraintsValidator {
 	
 	@Inject extension Provider<ResourceSet> resourceSetProvider
-	Set<RefStepSequence> refStepSeq = new HashSet<RefStepSequence>
-	Set<RefActSequence> refActSeq = new HashSet<RefActSequence>
-	Set<Act> refAct = new HashSet<Act>
-	Set<RefStep> refStep = new HashSet<RefStep>
-	
-//	@Check
-//	def checkImportForValidity(Import imp){
-//		if (! EcoreUtil2.isValidUri(imp, URI.createURI(imp.importURI))){
-//			error("Invalid resource", imp, ConstraintsPackage.eINSTANCE.import_ImportURI)
-//		} else {
-//			val Resource r = EcoreUtil2.getResource(imp.eResource, imp.importURI)
-//			val root = r.allContents.head
-//			if (! (root instanceof Steps || root instanceof Constraints) )
-//				error("The imported resource is not a valid step or constraints definition.", imp,
-//					ConstraintsPackage.eINSTANCE.import_ImportURI)
-//		}
-//	}
-	
+	Set<RefSequence> refActSeq = new HashSet<RefSequence>
+	Set<RefAction> refAct = new HashSet<RefAction>
+
+    override protected isValidImportType(EClass importType) {
+        super.isValidImportType(importType) || ConstraintsPackage.Literals.CONSTRAINTS.isSuperTypeOf(importType)
+    }
+
 	@Check
-	def checkActionData(Act act) {
-		if (act.dataRow.size > 0){
-			var dataRow = act.dataRow
-			if (act.act.data.size > 0) {
-				var dataTable = act.act.data.head
-				if (!validateData(dataTable, dataRow)){
-					error('Action Data is not valid. Please check the data table.', ConstraintsPackage.eINSTANCE.act_Act)
-				}
-			} else {
-				error('The Action does not have any data.', ConstraintsPackage.eINSTANCE.act_Act)
-			}
-		}
-	}
-	
-	@Check
-	def checkStepSequenceIsEmpty(StepSequenceDef sseq){
-		if (sseq.stepList.size == 0){
-			warning('The step sequence is empty.', ConstraintsPackage.eINSTANCE.stepSequenceDef_Name)
-		}
-	}
-	
-	@Check
-	def checkActSequenceIsEmpty(ActSequenceDef aseq){
-		if (aseq.actList.size == 0){
-			warning('The action sequence is empty.', ConstraintsPackage.eINSTANCE.actSequenceDef_Name)
+	def checkActSequenceIsEmpty(Sequence aseq){
+		if (aseq.actions.isNullOrEmpty) {
+			warning('The action sequence is empty.', ConstraintsPackage.Literals.SEQUENCE__ACTIONS)
 		}
 	}
 	
@@ -110,29 +72,29 @@ class ConstraintsValidator extends AbstractConstraintsValidator {
 		val refList = newHashSet
 		// check local ref
 		EcoreUtil2.getAllContentsOfType(constraints, RefAction).forEach[
-			refList.add(it.act.act.name)
+			refList.add(it.action.name)
 		]
 		// ref in action sequence
-		EcoreUtil2.getAllContentsOfType(constraints, ActSequenceDef).forEach[
-			it.actList.forEach[ref|
-				refList.add(ref.act.name)
+		EcoreUtil2.getAllContentsOfType(constraints, Sequence).forEach[
+			it.actions.forEach[ref|
+				refList.add(ref.name)
 			]
 		]
 		//check import models
 		if (!refAct.nullOrEmpty) {
 			refAct.toList.forEach[ref|
-				if (ref.act.name !== null){
-					refList.add(ref.act.name)
+				if (ref.action.name !== null){
+					refList.add(ref.action.name)
 				} else {
 					if (!sclmodels.nullOrEmpty){
 						sclmodels.toList.forEach[
-							var refAct = EcoreUtil.resolve(ref, it) as Act
-							if (refAct.act.name !== null){
-								refList.add(refAct.act.name)
+							var refAct = EcoreUtil.resolve(ref, it) as RefAction
+							if (refAct.action.name !== null){
+								refList.add(refAct.action.name)
 							}
-							EcoreUtil2.getAllContentsOfType(it, ActSequenceDef).forEach[
-								it.actList.forEach[act|
-									refList.add(act.act.name)
+							EcoreUtil2.getAllContentsOfType(it, Sequence).forEach[
+								it.actions.forEach[act|
+									refList.add(act.name)
 								]
 							]
 						]
@@ -144,41 +106,10 @@ class ConstraintsValidator extends AbstractConstraintsValidator {
 		}
 		
 		constraints.actions.forEach[
-			act.forEach[
-				if (!refList.contains(it.name)) {
-					warning("Unused action: " + it.name, it, ConstraintsPackage.eINSTANCE.action_Name,
-						"unused_action", it.name)
-				}
-			]
-		]
-	}
-	
-	/* warning on unused Step Sequence */
-	@Check
-	def checkStepSequenceIsUsed(Constraints constraints){
-		val sclmodels = getAllRootModelFromProject(constraints)
-		val refList = newHashSet
-		if (!refStepSeq.nullOrEmpty) {
-			refStepSeq.toList.forEach[ref|
-				if (ref.seq.name !== null){
-					refList.add(ref.seq.name)
-				} else {
-					if (!sclmodels.nullOrEmpty){
-						sclmodels.toList.forEach[
-							var refSseq = EcoreUtil.resolve(ref, it) as RefStepSequence
-							if (refSseq.seq.name !== null){
-								refList.add(refSseq.seq.name)
-							}
-						]
-					}
-				}
-			]
-		}
-		
-		constraints.ssequences.forEach[
 			if (!refList.contains(it.name)) {
-				warning("Unused step sequence: " + it.name, it, ConstraintsPackage.eINSTANCE.stepSequenceDef_Name,
-						"unused_step_sequence", it.name)}
+				warning("Unused action: " + it.name, it, ConstraintsPackage.Literals.ACT__NAME,
+					"unused_action", it.name)
+			}
 		]
 	}
 	
@@ -189,14 +120,14 @@ class ConstraintsValidator extends AbstractConstraintsValidator {
 		val refList = newHashSet
 		if (!refActSeq.nullOrEmpty) {
 			refActSeq.toList.forEach[ref|
-				if (ref.seq.name !== null){
-					refList.add(ref.seq.name)
+				if (ref.sequence.name !== null){
+					refList.add(ref.sequence.name)
 				} else {
 					if (!sclmodels.nullOrEmpty){
 						sclmodels.toList.forEach[
-							var refAseq = EcoreUtil.resolve(ref, it) as RefActSequence
-							if (refAseq.seq.name !== null){
-								refList.add(refAseq.seq.name)
+							var refAseq = EcoreUtil.resolve(ref, it) as RefSequence
+							if (refAseq.sequence.name !== null){
+								refList.add(refAseq.sequence.name)
 							}
 						]
 					}
@@ -204,44 +135,11 @@ class ConstraintsValidator extends AbstractConstraintsValidator {
 			]
 		}
 		
-		constraints.asequences.forEach[
+		constraints.sequences.forEach[
 			if (!refList.contains(it.name)) {
-				warning("Unused action sequence: " + it.name, it, ConstraintsPackage.eINSTANCE.actSequenceDef_Name,
+				warning("Unused action sequence: " + it.name, it, ConstraintsPackage.Literals.SEQUENCE__NAME,
 						"unused_act_sequence", it.name)}
 		]
-	}
-	
-	/* warning for step already exists in sequence, user may use the sequence instead of the step  */
-	@Check
-	def checkStepUsedInSequence(Constraints constraints){
-		val Set<RefStep> usedSteps = new HashSet<RefStep>()
-		var warning = false
-		var Set<String> sseqs = newHashSet
-		var sclmodels = getAllRootModelFromProject(constraints)
-		EcoreUtil2.getAllContentsOfType(constraints, RefStep).forEach[usedSteps.add(it)]
-		for (step : usedSteps){
-			if (!sclmodels.nullOrEmpty){
-				for (model : sclmodels){
-					for (sseq : model.ssequences){
-						for (s : sseq.stepList){
-							if (s.name.equals(step.step.name)){
-								warning = true
-								sseqs.add(sseq.name)
-							}
-						}
-					}
-				}
-			}
-			if (warning){
-				var message = "The step <" + step.step.name + "> is used in the following Step Sequence\r\n"
-				for(sseq : sseqs){
-					message += sseq + "\r\n"
-				}
-				warning(message, step, ConstraintsPackage.eINSTANCE.refStep_Step,
-							"step_seq_defined", "")
-			}
-			warning = false
-		}
 	}
 	
 	/* warning for action already exists in sequence, user may use the sequence instead of the action  */
@@ -255,9 +153,9 @@ class ConstraintsValidator extends AbstractConstraintsValidator {
 		for (action : usedActions){
 			if (!sclmodels.nullOrEmpty){
 				for (model : sclmodels){
-					for (aseq : model.asequences){
-						for (act : aseq.actList){
-							if (act.act.name.equals(action.act.act.name)){
+					for (aseq : model.sequences){
+						for (act : aseq.actions){
+							if (act.name.equals(action.action.name)){
 								warning = true
 								aseqs.add(aseq.name)
 							}
@@ -266,49 +164,22 @@ class ConstraintsValidator extends AbstractConstraintsValidator {
 				}
 			}
 			if (warning){
-				var message = "The action <" + action.act.act.name + "> is used in the following Action Sequence\r\n"
+				var message = "The action <" + action.action.name + "> is used in the following Action Sequence\r\n"
 				for(aseq : aseqs){
 					message += aseq + "\r\n"
 				}
-				warning(message, action, ConstraintsPackage.eINSTANCE.refAction_Act,
+				warning(message, action, ConstraintsPackage.Literals.REF_ACTION__ACTION,
 							"act_seq_defined", "")
 			}
 			warning = false
 		}
 	}
 	
-	/*check duplicate names for step seq */
-	@Check
-	def checkDuplicateNameStepSequence(Constraints constraints){
-		val Set<StepSequenceDef> sseqs = new HashSet<StepSequenceDef>()
-		EcoreUtil2.getAllContentsOfType(constraints, StepSequenceDef).forEach[sseqs.add(it)]
-		for (sseqDef: sseqs) {
-			var index = 0
-			if (!constraints.imports.nullOrEmpty){
-				for (imp : constraints.imports){
-					val Resource r = EcoreUtil2.getResource(imp.eResource, imp.importURI)
-					if (r !== null){
-						val root = r.allContents.head
-						if (root instanceof Constraints) {
-							for (stepSeq : root.ssequences){
-								if (sseqDef.name.equals(stepSeq.name)){
-									index++
-								}
-							}
-						}
-					}
-				}
-			}
-			if (index > 0){
-				error('Duplicate names.', sseqDef, ConstraintsPackage.eINSTANCE.stepSequenceDef_Name)
-			}
-		}
-	}
 	/*check duplicate names for action seq */
 	@Check
 	def checkDuplicateNameActSequence(Constraints constraints){
-		val Set<ActSequenceDef> aseqs = new HashSet<ActSequenceDef>()
-		EcoreUtil2.getAllContentsOfType(constraints, ActSequenceDef).forEach[aseqs.add(it)]
+		val Set<Sequence> aseqs = new HashSet<Sequence>()
+		EcoreUtil2.getAllContentsOfType(constraints, Sequence).forEach[aseqs.add(it)]
 		for (aseqDef: aseqs) {
 			var index = 0
 			if (!constraints.imports.nullOrEmpty){
@@ -317,7 +188,7 @@ class ConstraintsValidator extends AbstractConstraintsValidator {
 					if (r !== null){
 						val root = r.allContents.head
 						if (root instanceof Constraints) {
-							for (actSeq : root.asequences){
+							for (actSeq : root.sequences){
 								if (aseqDef.name.equals(actSeq.name)){
 									index++
 								}
@@ -327,15 +198,15 @@ class ConstraintsValidator extends AbstractConstraintsValidator {
 				}
 			}
 			if (index > 0){
-				error('Duplicate names.', aseqDef, ConstraintsPackage.eINSTANCE.actSequenceDef_Name)
+				error('Duplicate names.', aseqDef, ConstraintsPackage.Literals.SEQUENCE__NAME)
 			}
 		}
 	}
 	/*check duplicate names for action */
 	@Check
 	def checkDuplicateNameAction(Constraints constraints){
-		val Set<Action> actions = new HashSet<Action>()
-		EcoreUtil2.getAllContentsOfType(constraints, Action).forEach[actions.add(it)]
+		val Set<Act> actions = new HashSet<Act>()
+		EcoreUtil2.getAllContentsOfType(constraints, Act).forEach[actions.add(it)]
 		for(action:actions){
 			var index = 0
 			if (!constraints.imports.nullOrEmpty){
@@ -344,11 +215,9 @@ class ConstraintsValidator extends AbstractConstraintsValidator {
 					if (r !== null){
 						val root = r.allContents.head
 						if (root instanceof Constraints) {
-							for (acts : root.actions){
-								for(act: acts.act){
-									if (act.name.equals(action.name)){
-										index++
-									}
+							for (act : root.actions){
+								if (act.name.equals(action.name)){
+									index++
 								}
 							}
 						}
@@ -356,16 +225,14 @@ class ConstraintsValidator extends AbstractConstraintsValidator {
 				}
 			}
 			if (index > 0){
-				error('Duplicate names.', action, ConstraintsPackage.eINSTANCE.action_Name)
+				error('Duplicate names.', action, ConstraintsPackage.eINSTANCE.act_Name)
 			}
 		}
 	}
 	
 	def getAllRootModelFromProject(Constraints constraints) {
-		refStepSeq = new HashSet<RefStepSequence>
-		refActSeq = new HashSet<RefActSequence>
-		refAct = new HashSet<Act>
-		refStep = new HashSet<RefStep>
+		refActSeq = new HashSet<RefSequence>
+		refAct = new HashSet<RefAction>
 		var ArrayList<Constraints> constraintsModel = newArrayList
 		val platformString = constraints.eResource.URI.toPlatformString(true);
 		val file = ResourcesPlugin.workspace.root.findMember(platformString) as IFile
@@ -391,17 +258,11 @@ class ConstraintsValidator extends AbstractConstraintsValidator {
 			}
 		}
 		for (res : constraintsModel){
-			EcoreUtil2.getAllContentsOfType(res, RefStepSequence).forEach[
-				refStepSeq.add(it)
-			]
-			EcoreUtil2.getAllContentsOfType(res, RefActSequence).forEach[
+			EcoreUtil2.getAllContentsOfType(res, RefSequence).forEach[
 				refActSeq.add(it)
 			]
-			EcoreUtil2.getAllContentsOfType(res, Act).forEach[
+			EcoreUtil2.getAllContentsOfType(res, RefAction).forEach[
 				refAct.add(it)
-			]
-			EcoreUtil2.getAllContentsOfType(res, RefStep).forEach[
-				refStep.add(it)
 			]
 		}
 		return constraintsModel
@@ -442,27 +303,6 @@ class ConstraintsValidator extends AbstractConstraintsValidator {
 			}
 		}
 		return constraintsModel
-	}
-	
-	def validateData(DataTable dataTable, List<ActionData> data){
-		if(data.size !== dataTable.header.cells.size){
-			return false
-		}
-		for (row : dataTable.rows) {
-			if(matchDataRow(row.cells, data)){
-				return true
-			}
-		}
-		return false
-	}
-	
-	def matchDataRow(List<String> cells, List<ActionData> data){
-		for (var i =0; i<cells.size; i++){
-			if (!cells.get(i).equals(data.get(i).value)){
-				return false
-			}
-		}
-		return true
 	}
 	
 	def static resolveUri(Resource context, String path) {
@@ -561,16 +401,15 @@ class ConstraintsValidator extends AbstractConstraintsValidator {
 	                            if(subType instanceof Init){
 	                                for(ref:subType.ref){
 	                                    if (ref instanceof RefAction){
-                                            var act = action.act.get(0)
-                                            if(ref.act.act.name.equals(act.name)){
-                                                if (act.act.equals(ActionType.OBSERVABLE)||act.act.equals(ActionType.CONJUNCTION)){
-                                                    error('Initial action should have either Pre-condition or Trigger as Type.', act, ConstraintsPackage.eINSTANCE.action_Name)
+                                            if(ref.action.name.equals(action.name)){
+                                                if (action.act.equals(ActionType.OBSERVABLE)){
+                                                    error('Initial action should have Trigger as Type.', action, ConstraintsPackage.Literals.ACT__NAME)
                                                 }
                                             }
                                         }
 	                                }
 	                            }
-	                        }	                
+	                        }
 	                    }
 	                }
 	            }

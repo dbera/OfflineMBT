@@ -242,7 +242,7 @@ class ConstraintStateMachine
             //System.out.println(line);
         } while (line!==null)
         /*String path = "C:\\Users\\berad\\Desktop\\ContentsFeb2021\\JavaAndCSharpSources\\JavaWorkspace2020\\wrkspace\\DemoRegExp\\g.dot.png";*/
-        var String expr1 = "dot -Tpng " + path + fname + " -O " + fname;
+        var String expr1 = "\"C:\\Program Files\\Graphviz\\bin\\dot.exe\" -Tpng " + path + fname + " -O " + fname;
         //String apath = path + "g.dot.png";
         var String expr2 = "rundll32.exe \"C:\\Program Files\\Windows Photo Viewer\\PhotoViewer.dll\", ImageView_Fullscreen " + path + fname + ".png";
         try { Runtime.getRuntime().exec(expr1); } catch (IOException e) { e.printStackTrace(); }

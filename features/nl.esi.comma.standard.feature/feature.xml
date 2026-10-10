@@ -64,6 +64,7 @@ the Department of Electrical Engineering of Eindhoven University of Technology.
 
    <requires>
       <import feature="net.sourceforge.plantuml.feature" version="1.1.0" match="greaterOrEqual"/>
+      <import feature="nl.esi.xplus.ui.feature" version="0.0.0" match="greaterOrEqual"/>
    </requires>
 
    <plugin
@@ -71,15 +72,7 @@ the Department of Electrical Engineering of Eindhoven University of Technology.
          version="0.0.0"/>
 
    <plugin
-         id="nl.esi.xtext.actions.ui"
-         version="0.0.0"/>
-
-   <plugin
          id="nl.esi.comma.assertthat.ui"
-         version="0.0.0"/>
-
-   <plugin
-         id="nl.esi.comma.behavior.scl.ui"
          version="0.0.0"/>
 
    <plugin
@@ -92,10 +85,6 @@ the Department of Electrical Engineering of Eindhoven University of Technology.
 
    <plugin
          id="nl.esi.comma.constraints.ui"
-         version="0.0.0"/>
-
-   <plugin
-         id="nl.esi.xtext.expressions.ui"
          version="0.0.0"/>
 
    <plugin
@@ -124,10 +113,6 @@ the Department of Electrical Engineering of Eindhoven University of Technology.
 
    <plugin
          id="nl.esi.comma.testspecification.ui"
-         version="0.0.0"/>
-
-   <plugin
-         id="nl.esi.xtext.types.ui"
          version="0.0.0"/>
 
    <plugin

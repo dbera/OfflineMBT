@@ -17,14 +17,12 @@ import com.google.inject.Provider
 import java.io.File
 import java.util.Map
 import java.util.Set
-import nl.esi.comma.constraints.constraints.ActSequenceDef
-import nl.esi.comma.constraints.constraints.Action
+// import nl.esi.comma.constraints.constraints.Action
 import nl.esi.comma.constraints.constraints.Constraints
-import nl.esi.comma.constraints.constraints.RefActSequence
 import nl.esi.comma.constraints.constraints.RefAction
-import nl.esi.comma.constraints.constraints.RefStepSequence
-import nl.esi.comma.constraints.constraints.StepSequenceDef
-import nl.esi.comma.constraints.constraints.Templates
+import nl.esi.comma.constraints.constraints.RefSequence
+import nl.esi.comma.constraints.constraints.Sequence
+import nl.esi.comma.constraints.constraints.Template
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.emf.common.util.URI
@@ -32,27 +30,24 @@ import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.resource.ResourceSet
 import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.ui.editor.hover.html.DefaultEObjectHoverProvider
+import nl.esi.comma.constraints.constraints.Act
 
 class ConstraintsEObjectHoverProvider extends DefaultEObjectHoverProvider {
 	@Inject extension Provider<ResourceSet> resourceSetProvider
 	protected override String getFirstLine(EObject o) {
-		if (o instanceof Action) {
+		if (o instanceof Act) {
 			var info = getActionWithData(o)
 			return info
 		}
-		if (o instanceof StepSequenceDef) {
-			var info = getSseqUsage(o)
-			return info
-		}
-		if (o instanceof ActSequenceDef) {
+		if (o instanceof Sequence) {
 			var info = getAseqUsage(o)
 			return info
 		}
 		return super.getFirstLine(o);
 	}
 	
-	def getAseqUsage(ActSequenceDef aseq) {
-		var info = "ActSequenceDef <b>" + aseq.name + "</b><br>"
+	def getAseqUsage(Sequence aseq) {
+		var info = "Sequence <b>" + aseq.name + "</b><br>"
 		var constraintIDs = getUsageForAseqDef(aseq)
 		if (constraintIDs.keySet.size > 0){
 			info += "used in<br>"
@@ -68,43 +63,8 @@ class ConstraintsEObjectHoverProvider extends DefaultEObjectHoverProvider {
 		return info
 	}
 	
-	def getSseqUsage(StepSequenceDef sseq){
-		var info = "StepSequenceDef <b>" + sseq.name + "</b><br>"
-		var constraintIDs = getUsageForSseqDef(sseq)
-		if (constraintIDs.keySet.size > 0){
-			info += "used in<br>"
-			for (file : constraintIDs.keySet) {
-				info += file + "<br>"
-				info += "<ul>"
-				for (id : constraintIDs.get(file)){
-					info += "<li>Constraint Id: " + id + "</li>"
-				}
-				info += "</ul>"
-			}
-		}
-		return info
-	}
-	
-	def getActionWithData(Action o){
+	def getActionWithData(Act o){
 		var info = "Action <b>" + o.name + "</b><br>"
-		if (o.data.size !== 0) {
-			var index = 0
-			info += "Data<br>"
-			var header = o.data.head.header
-			info += "  <b>"
-			for(cell : header.cells){
-				info += cell
-			}
-			info += "|</b><br>"
-			for(row : o.data.head.rows){
-				info += "|" + index
-				for(cell : row.cells){
-					info += cell
-				}
-				info += "|<br>"
-				index++
-			}
-		}
 		var constraintIDs = getUsageForAction(o)
 		if (constraintIDs.keySet.size > 0){
 			info += "used in<br>"
@@ -120,16 +80,16 @@ class ConstraintsEObjectHoverProvider extends DefaultEObjectHoverProvider {
 		return info
 	}
 	
-	def getUsageForAseqDef(ActSequenceDef aseq){
+	def getUsageForAseqDef(Sequence aseq){
 		var Map<String, Set<String>> constraintIDs = newHashMap
 		var root = aseq.eContainer as Constraints
 		var models = getRelatedModelsFromProject(root)
 		for (constraints : models){
-			var refAseq = EcoreUtil2.getAllContentsOfType(constraints, RefActSequence)
+			var refAseq = EcoreUtil2.getAllContentsOfType(constraints, RefSequence)
 			for (ref : refAseq) {
-				if (ref.seq.name !== null) {
-					if (ref.seq.name.equals(aseq.name)){
-						var template = ref.eContainer.eContainer.eContainer as Templates
+				if (ref.sequence.name !== null) {
+					if (ref.sequence.name.equals(aseq.name)){
+						var template = ref.eContainer.eContainer.eContainer as Template
 						var URI targetURI = EcoreUtil2.getPlatformResourceOrNormalizedURI(template)
 						var fileName = targetURI.lastSegment
 						if (constraintIDs.get(fileName) === null){
@@ -143,39 +103,16 @@ class ConstraintsEObjectHoverProvider extends DefaultEObjectHoverProvider {
 		return constraintIDs
 	}
 	
-	def getUsageForSseqDef(StepSequenceDef sseq){
-		var Map<String, Set<String>> constraintIDs = newHashMap
-		var root = sseq.eContainer as Constraints
-		var models = getRelatedModelsFromProject(root)
-		for (constraints : models){
-			var refSseq = EcoreUtil2.getAllContentsOfType(constraints, RefStepSequence)
-			for (ref : refSseq) {
-				if (ref.seq.name !== null) {
-					if (ref.seq.name.equals(sseq.name)){
-						var template = ref.eContainer.eContainer.eContainer as Templates
-						var URI targetURI = EcoreUtil2.getPlatformResourceOrNormalizedURI(template)
-						var fileName = targetURI.lastSegment
-						if (constraintIDs.get(fileName) === null){
-							constraintIDs.put(fileName, newHashSet)
-						}
-						constraintIDs.get(fileName).add(template.name)
-					}
-				}
-			}
-		}
-		return constraintIDs
-	}
-	
-	def getUsageForAction(Action action) {
+	def getUsageForAction(Act action) {
 		var Map<String, Set<String>> constraintIDs = newHashMap
 		var root = action.eContainer.eContainer as Constraints
 		var models = getRelatedModelsFromProject(root)
 		for (constraints : models){
 			var refAct = EcoreUtil2.getAllContentsOfType(constraints, RefAction)
 			for (ref : refAct) {
-				if (ref.act.act.name !== null){
-					if (ref.act.act.name.equals(action.name)){
-						var template = ref.eContainer.eContainer.eContainer as Templates
+				if (ref.action.name !== null){
+					if (ref.action.name.equals(action.name)){
+						var template = ref.eContainer.eContainer.eContainer as Template
 						var URI targetURI = EcoreUtil2.getPlatformResourceOrNormalizedURI(template)
 						var fileName = targetURI.lastSegment
 						if (constraintIDs.get(fileName) === null){
