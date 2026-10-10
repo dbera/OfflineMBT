@@ -45,7 +45,7 @@ class ProductIdeProposalProvider extends AbstractProductIdeProposalProvider {
 
     override protected getCrossrefFilter(CrossReference reference, ContentAssistContext context) {
         return switch (reference) {
-            case expressionGrammarAccess.fieldAccess.recordFieldRecordFieldCrossReference_0_0,
+            case expressionGrammarAccess.fieldAccess.recordFieldRecordFieldCrossReference_1_0,
             case expressionGrammarAccess.expressionLevel8Access.fieldRecordFieldCrossReference_1_0_2_0,
             case actionsGrammarAccess.fieldAccessExpAccess.fieldRecordFieldCrossReference_1_2_0: [
                 val field = EObjectOrProxy as RecordField
