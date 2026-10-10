@@ -18,10 +18,8 @@ import static nl.asml.matala.bpmn4s.extensions.Constants.DATATYPES_TYPE;
 import java.util.Collection;
 
 import org.camunda.bpm.model.bpmn.impl.instance.ExtensionElementsImpl;
-import org.camunda.bpm.model.bpmn.instance.ExtensionElements;
 import org.camunda.bpm.model.xml.ModelBuilder;
 import org.camunda.bpm.model.xml.impl.instance.ModelTypeInstanceContext;
-import org.camunda.bpm.model.xml.type.ModelElementType;
 import org.camunda.bpm.model.xml.type.ModelElementTypeBuilder;
 import org.camunda.bpm.model.xml.type.ModelElementTypeBuilder.ModelTypeInstanceProvider;
 import org.camunda.bpm.model.xml.type.child.ChildElement;
@@ -30,6 +28,7 @@ public class DataTypesImpl extends ExtensionElementsImpl implements DataTypes {
 
 
 	private static ChildElement<DataType> datatype;
+	private static ChildElement<Raw> rawType;
 
 	public DataTypesImpl(ModelTypeInstanceContext instanceContext) {
 		super(instanceContext);
@@ -45,6 +44,7 @@ public class DataTypesImpl extends ExtensionElementsImpl implements DataTypes {
 				});
 
 		datatype = typeBuilder.sequence().element(DataType.class).build();
+		rawType = typeBuilder.sequence().element(Raw.class).maxOccurs(1).build();
 		typeBuilder.build();
 
 	}
@@ -52,6 +52,12 @@ public class DataTypesImpl extends ExtensionElementsImpl implements DataTypes {
 	@Override
 	public Collection<DataType> getDataType() {
 		return datatype.get(this);
+	}
+	
+	@Override
+	public String getTypes() {
+		var rawElement = rawType.get(this);
+		return rawElement.stream().findFirst().map(Raw::getValue).orElse("");
 	}
 
 }

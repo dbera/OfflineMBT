@@ -22,8 +22,13 @@ import org.junit.jupiter.api.Test
 import static org.junit.jupiter.api.Assertions.*
 
 import static extension java.nio.file.Files.*
+import nl.esi.xtext.types.TypesStandaloneSetup
 
 class Bpmn4sCompilerTest {
+    
+    new(){
+        new TypesStandaloneSetup().createInjectorAndDoEMFRegistration
+    }
     def void testCompilation(String fileName) {
         val resourcesDir = Path.of('resources').toRealPath
         assertTrue(resourcesDir.isDirectory)

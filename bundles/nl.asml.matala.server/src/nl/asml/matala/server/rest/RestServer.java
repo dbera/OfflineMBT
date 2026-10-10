@@ -12,7 +12,9 @@
  */
 package nl.asml.matala.server.rest;
 
-import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -22,18 +24,22 @@ import org.slf4j.LoggerFactory;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.google.inject.Injector;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServer;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
+import nl.asml.matala.server.api.FileContent;
 import nl.asml.matala.server.api.FileServerApi;
 import nl.asml.matala.server.api.FileServerApi.DirectoryListing;
-import nl.asml.matala.server.api.FileServerApi.FileContent;
 import nl.asml.matala.server.api.FileServerApi.FileResult;
-import nl.asml.matala.server.api.FileServerApi.FileWriteResult;
-import nl.asml.matala.server.api.FileServerApi.ServerApiException;
+import nl.asml.matala.server.api.FileWriteResult;
+import nl.asml.matala.server.api.GeneratorApi;
+import nl.asml.matala.server.api.GeneratorApi.GenerationTarget;
+import nl.asml.matala.server.api.ServerApiException;
+import nl.asml.matala.server.api.TypesApi;
 import nl.asml.matala.server.impl.FileServerApiImpl;
 
 /**
@@ -56,22 +62,18 @@ public class RestServer {
 
     private static final Logger LOG = LoggerFactory.getLogger(RestServer.class);
     private static final String FILES_ENDPOINT = "/files";
-    private static final String ROOT_PATH = System.getProperty("repository.path", "./models");
+    private static final String BPMN_ENDPOINT = "/generate";
+    private static final String TYPES_OUTLINE_ENDPOINT = "/types/outline";
     private static final int DEFAULT_PORT = 2112;
 
     private final Vertx vertx;
     private final int port;
-    private final FileServerApi fileServerApi;
+    private final Path tempPath;
+    
     private HttpServer httpServer;
-
-    /**
-     * Create a new REST server with default configuration.
-     *
-     * @param port the port to listen on
-     */
-    public RestServer(int port) {
-        this(port, new FileServerApiImpl(ROOT_PATH));
-    }
+    private final GeneratorApi generatorApi;
+    private final FileServerApi fileServerApi;
+	private final TypesApi typesApi;
 
     /**
      * Create a new REST server with a custom repository path.
@@ -79,19 +81,15 @@ public class RestServer {
      * @param port the port to listen on
      * @param repositoryPath the root directory for file operations
      */
-    public RestServer(int port, String repositoryPath) {
-        this(port, new FileServerApiImpl(repositoryPath));
-    }
-
-    /**
-     * Create a new REST server with custom file API.
-     *
-     * @param port the port to listen on
-     * @param fileServerApi the file operations implementation
-     */
-    public RestServer(int port, FileServerApi fileServerApi) {
+    public RestServer(int port, String modelPath, String tempPath, Injector injector) {
         this.port = port > 0 ? port : DEFAULT_PORT;
-        this.fileServerApi = fileServerApi;
+        this.fileServerApi = injector.getInstance(FileServerApi.class);
+        if(this.fileServerApi instanceof FileServerApiImpl fileServerApiImpl) {
+			fileServerApiImpl.init(modelPath);
+		}
+        this.generatorApi = injector.getInstance(GeneratorApi.class);
+        this.typesApi = injector.getInstance(TypesApi.class);
+        this.tempPath = Path.of(tempPath);
         this.vertx = Vertx.vertx();
     }
 
@@ -110,9 +108,19 @@ public class RestServer {
         router.put(FILES_ENDPOINT).handler(BodyHandler.create());
 
         // File operation routes
-        router.get(FILES_ENDPOINT).handler(this::handleGet);
-        router.post(FILES_ENDPOINT).handler(this::handlePost);
-        router.put(FILES_ENDPOINT).handler(this::handlePut);
+        router.get(FILES_ENDPOINT).handler(this::handleFilesGet);
+        router.post(FILES_ENDPOINT).handler(this::handleFilesPost);
+        router.put(FILES_ENDPOINT).handler(this::handleFilesPut);
+
+		// Handle processing of project files
+        if (generatorApi != null) {
+			router.post(BPMN_ENDPOINT).handler(this::handleGeneratePost);
+		}
+        
+        if (typesApi != null) {
+        	router.post(TYPES_OUTLINE_ENDPOINT).handler(BodyHandler.create());
+			router.post(TYPES_OUTLINE_ENDPOINT).handler(this::handleTypesOutline);
+        }
 
         httpServer = vertx.createHttpServer();
         httpServer.requestHandler(router).listen(port, result -> {
@@ -149,7 +157,7 @@ public class RestServer {
 
     // ---- HTTP Handlers ----
 
-    private void handleGet(RoutingContext ctx) {
+    private void handleFilesGet(RoutingContext ctx) {
         try {
             String path = ctx.request().getParam("path");
             String extension = ctx.request().getParam("extension");
@@ -157,7 +165,7 @@ public class RestServer {
             if (path == null || path.isEmpty()) {
                 path = ".";
             }
-
+            
             FileResult result = fileServerApi.listOrReadFiles(path, extension);
 
             switch (result) {
@@ -182,7 +190,7 @@ public class RestServer {
         }
     }
 
-    private void handlePost(RoutingContext ctx) {
+    private void handleFilesPost(RoutingContext ctx) {
         try {
             String path = ctx.request().getParam("path");
             if (path == null || path.isEmpty()) {
@@ -201,7 +209,7 @@ public class RestServer {
         }
     }
 
-    private void handlePut(RoutingContext ctx) {
+    private void handleFilesPut(RoutingContext ctx) {
         try {
             String path = ctx.request().getParam("path");
             if (path == null || path.isEmpty()) {
@@ -219,6 +227,64 @@ public class RestServer {
             sendError(ctx, 500, "Internal server error");
         }
     }
+    
+	private void handleGeneratePost(RoutingContext ctx) {
+        try {
+            String path = ctx.request().getParam("path");
+            if (path == null || path.isEmpty()) {
+                sendError(ctx, 400, "path parameter is required");
+                return;
+            }
+            String taskName = ctx.request().getParam("taskName");
+            if (taskName == null || taskName.isEmpty()) {
+                sendError(ctx, 400, "taskName parameter is required");
+                return;
+            }
+            String outputPath = ctx.request().getParam("outputPath");
+            if (outputPath == null || outputPath.isEmpty()) {
+                sendError(ctx, 400, "outputPath parameter is required");
+                return;
+            }
+            
+            var absOutputPath = this.tempPath.resolve(outputPath);
+
+            String target = ctx.request().getParam("target");
+            if (target == null || target.isEmpty()) {
+                sendError(ctx, 400, "target parameter is required");
+                return;
+            }
+            GenerationTarget targetEnum;
+			try {
+				targetEnum = GenerationTarget.valueOf(target.toUpperCase());
+			} catch (Exception e) {
+                sendError(ctx, 400, "target parameter must be one of " + String.join(",", Arrays.stream( GenerationTarget.values()).map(Object::toString).toList()));
+                return;
+			}
+
+            byte[] content = ctx.body().buffer().getBytes();
+            FileWriteResult result = generatorApi.generate(absOutputPath, path, content, taskName, targetEnum );
+            sendWriteResult(ctx, 201, result);
+        } catch (ServerApiException e) {
+            sendError(ctx, e.statusCode, e.getMessage());
+        } catch (Exception e) {
+            LOG.error("Error handling POST {}: {}", FILES_ENDPOINT, e.getMessage(), e);
+            sendError(ctx, 500, "Internal server error");
+        }
+	}
+
+	private void handleTypesOutline(RoutingContext ctx) {
+        String typeName = ctx.request().getParam("typeName");
+        try {
+        	var types = new String(ctx.body().buffer().getBytes(), StandardCharsets.UTF_8);
+        	var result = typesApi.getOutline(types, typeName);
+        	sendJson(ctx, 200, result);
+        } catch (ServerApiException e) {
+            sendError(ctx, e.statusCode, e.getMessage());
+		} catch (Exception e) {
+			LOG.error("Error handling POST {}: {}", TYPES_OUTLINE_ENDPOINT, e.getMessage(), e);
+			sendError(ctx, 500, "Internal server error");
+		}
+	}
 
     // ---- Response Helpers ----
 
@@ -249,16 +315,7 @@ public class RestServer {
         return array;
     }
 
-    // ---- Entry Point ----
-
-    public static void main(String[] args) throws IOException, ServerStartupException {
-        int port = args.length > 0 ? Integer.parseInt(args[0]) : DEFAULT_PORT;
-        RestServer server = new RestServer(port);
-        server.start();
-        Runtime.getRuntime().addShutdownHook(new Thread(server::stop));
-    }
-
-    /**
+     /**
      * Exception thrown when the REST server fails to start.
      */
     public static class ServerStartupException extends Exception {
@@ -275,4 +332,5 @@ public class RestServer {
             super(message, cause);
         }
     }
+
 }

@@ -44,6 +44,7 @@ public class Bpmn4s {
 	public AbstractMap<String, Element> 		elements	= new HashMap<String, Element>();
 	public List<Edge> 							edges 		= new ArrayList<Edge>();
 	public AbstractMap<String, Bpmn4sDataType> 	dataSchema  = new HashMap<String, Bpmn4sDataType>();
+	public String rawTypes;
 	public int depthLimit = 100;
 	public int stateLimit = 1000;
 	private int numOfTests = 1;

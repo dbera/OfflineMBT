@@ -16,6 +16,11 @@ public enum RecordFieldKind {
 	Concrete, Mixed, Symbolic;
 	
 	public static RecordFieldKind parse(String attribute) {
-		return attribute == null ? RecordFieldKind.Concrete : RecordFieldKind.valueOf(attribute);
+		for(var value:  values()) {
+			if(value.name().equalsIgnoreCase(attribute)) {
+				return value;
+			}
+		}
+		return RecordFieldKind.Concrete;
 	}
 }
