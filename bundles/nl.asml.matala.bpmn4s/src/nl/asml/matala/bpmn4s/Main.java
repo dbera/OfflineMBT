@@ -342,8 +342,7 @@ public class Main {
 		String name = dt.getName();
 		RecordType rec = new RecordType(name);
 		for(var f: dt.getChildren()) {
-			//TODO how to get this
-			var fSuppress = f.getAnnotations() instanceof Map map ? map.containsKey("suppressUpdate") : Boolean.FALSE;
+			var fSuppress = f.getAnnotations() instanceof Map map ? map.containsKey("suppress") : Boolean.FALSE;
 			RecordFieldKind fKind = RecordFieldKind.parse(f.getKind());
 			rec.addField(f.getName(), f.getType(), fKind, fSuppress);
 		}

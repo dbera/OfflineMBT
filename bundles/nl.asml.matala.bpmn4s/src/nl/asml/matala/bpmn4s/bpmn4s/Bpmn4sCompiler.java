@@ -823,7 +823,7 @@ public class Bpmn4sCompiler{
 					String fieldName = field.getName();
 					String fieldTypeName = typeToString(dataTypes, field.getType());
 					String fieldKind = field.getKind() == RecordFieldKind.Concrete ? "" : field.getKind().name().toLowerCase() + " ";
-					var suppress = field.isSuppressed() ? 	"@suppressUpdate\n" : "";
+					var suppress = field.isSuppressed() ? 	"@suppress\n" : "";
 					parameters += suppress + fieldKind + fieldTypeName + "\t" + fieldName + "\n";
 				}
 				type += indent(parameters) + "}\n";
