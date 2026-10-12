@@ -28,15 +28,17 @@ import nl.esi.xtext.types.types.TypeReference
 import nl.esi.xtext.types.types.VectorTypeConstructor
 
 import static extension nl.esi.comma.abstracttestspecification.generator.utils.Utils.*
+import static extension org.eclipse.lsat.common.xtend.Queries.*
+import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
 
 class ConcreteExpressionHandler {
     static def Map<String, List<String>>  collectConcreteDataAssignments(AbstractStep step, Iterable<Binding> bindings) {
         val Map<String, List<String>> mapLHStoRHS = newTreeMap(String.CASE_INSENSITIVE_ORDER)
 
         val inputVarPrefix = step.inputVar + '.'
-        val suppressedVarFields = step.stepRef.flatMap[refStep.suppressedVarFields].map[inputVarPrefix + it].toSet
-        for (binding : bindings.reject[suppressedVarFields.contains(inputVarPrefix + it.name.name)]) {
-            mapLHStoRHS.putVariables(inputVarPrefix + binding.name.name, binding.name.type, binding.jsonvals, suppressedVarFields)
+        val suppressedVarFields = step.stepRef.map[refStep].union(step).flatMap[suppressedVarFields].map[inputVarPrefix + it].toSet
+        for (binding : bindings.reject[suppressedVarFields.contains(inputVarPrefix + varField)]) {
+            mapLHStoRHS.putVariables(inputVarPrefix + binding.varField, binding.name.type, binding.jsonvals, suppressedVarFields)
         }
 
         return mapLHStoRHS
@@ -58,12 +60,12 @@ class ConcreteExpressionHandler {
         }
         return switch (type) {
             VectorTypeConstructor: '''
-                <«type.typeName»>[
+                <«type.typeObject.typeName»>[
                     «FOR itemValue : value.itemValues SEPARATOR ','»«createValue(type.outerDimension, itemValue)»«ENDFOR»
                 ]
             '''
             MapTypeConstructor: '''
-                <«type.typeName»>{
+                <«type.typeObject.typeName»>{
                     «FOR memberValue : value.memberValues SEPARATOR ','»«createTypeDeclValue(type.type, memberValue.key.toJsonString)» -> «createValue(type.valueType, memberValue.value)»«ENDFOR»
                 }
             '''

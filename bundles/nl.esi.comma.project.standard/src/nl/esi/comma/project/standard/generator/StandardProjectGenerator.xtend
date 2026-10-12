@@ -117,7 +117,7 @@ class StandardProjectGenerator extends AbstractGenerator {
             // Validate the generated abstract tspec, stop this transformation on error
             if (absTspecRes.validate) {
                 // Generate concrete tspec
-                val conTspecFsa = fsa.createFolderAccess(FOLDER_CONCRETE_TSPEC + '/' + tspecName)
+                val conTspecFsa = fsa.createFolderAccess(FOLDER_CONCRETE_TSPEC)
                 val fromAbstractToConcreteGen = new FromAbstractToConcrete()
                 fromAbstractToConcreteGen.doGenerate(absTspecRes, conTspecFsa, ctx)
 

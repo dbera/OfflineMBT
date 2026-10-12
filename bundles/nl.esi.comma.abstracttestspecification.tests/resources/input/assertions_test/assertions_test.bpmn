@@ -11,6 +11,7 @@
         </bpmn4s:dataType>
         <bpmn4s:dataType id="DataType_07f4b2c" name="TestContext" type="Context">
           <bpmn4s:field name="id" suppressUpdate="false" typeRef="String"/>
+          <bpmn4s:field name="hidden" suppressUpdate="true" typeRef="Int"/>
         </bpmn4s:dataType>
         <bpmn4s:dataType id="DataType_15gnioa" name="Report" type="Record">
           <bpmn4s:field name="id" suppressUpdate="false" typeRef="Int"/>
@@ -33,7 +34,7 @@
         <bpmn2:dataOutputAssociation id="DataOutputAssociation_0bhms9e">
           <bpmn2:targetRef>DataStoreReference_1t5fpct</bpmn2:targetRef>
         </bpmn2:dataOutputAssociation>
-        <bpmn2:startEvent bpmn4s:ctxInit="ctx := TestContext { id = &quot;Test 1&quot; }" id="Event_0c9egwi">
+        <bpmn2:startEvent bpmn4s:ctxInit="ctx := TestContext {&#10; id = &quot;Test 1&quot;,&#10; hidden = 0&#10;}" id="Event_0c9egwi">
           <bpmn2:outgoing>Flow_1sm8rur</bpmn2:outgoing>
         </bpmn2:startEvent>
         <bpmn2:sequenceFlow id="Flow_1sm8rur" sourceRef="Event_0c9egwi" targetRef="Activity_1g9cqfi"/>
@@ -91,7 +92,7 @@
           <bpmn2:targetRef>DataStoreReference_1xnyiju</bpmn2:targetRef>
         </bpmn2:dataOutputAssociation>
         <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_15gnioa" bpmn4s:originDataReference="DataStoreReference_1xnyiju" id="DataStoreReference_1ueloas" name="report_2_1_2"/>
-        <bpmn2:startEvent bpmn4s:ctxInit="ctx := TestContext { id = &quot;Test 2&quot; }" id="Event_0a8ipfe">
+        <bpmn2:startEvent bpmn4s:ctxInit="ctx := TestContext {&#10; id = &quot;Test 2&quot;,&#10; hidden = 0&#10;}" id="Event_0a8ipfe">
           <bpmn2:outgoing>Flow_1ss6s14</bpmn2:outgoing>
         </bpmn2:startEvent>
         <bpmn2:sequenceFlow id="Flow_1ss6s14" sourceRef="Event_0a8ipfe" targetRef="Activity_1tn52op"/>
@@ -193,7 +194,7 @@
         <bpmn2:dataOutputAssociation id="DataOutputAssociation_19ft2h2">
           <bpmn2:targetRef>DataStoreReference_0s4e4in</bpmn2:targetRef>
         </bpmn2:dataOutputAssociation>
-        <bpmn2:startEvent bpmn4s:ctxInit="ctx := TestContext { id = &quot;Test 3&quot; }" id="Event_12g0zs1">
+        <bpmn2:startEvent bpmn4s:ctxInit="ctx := TestContext {&#10; id = &quot;Test 3&quot;,&#10; hidden = 0&#10;}" id="Event_12g0zs1">
           <bpmn2:outgoing>Flow_0njq3gz</bpmn2:outgoing>
         </bpmn2:startEvent>
         <bpmn2:sequenceFlow id="Flow_0njq3gz" sourceRef="Event_12g0zs1" targetRef="Activity_1tpt4rx"/>
@@ -269,7 +270,7 @@
       </bpmn2:subProcess>
     </bpmn2:subProcess>
     <bpmn2:subProcess bpmn4s:ctxName="ctx" bpmn4s:ctxTypeRef="DataType_07f4b2c" bpmn4s:priority="4" bpmn4s:subType="Component" id="Activity_12npz9u" name="Test 4">
-      <bpmn2:startEvent bpmn4s:ctxInit="ctx := TestContext { id = &quot;Test 4&quot; }" id="Event_0f3gr38">
+      <bpmn2:startEvent bpmn4s:ctxInit="ctx := TestContext {&#10; id = &quot;Test 4&quot;,&#10; hidden = 0&#10;}" id="Event_0f3gr38">
         <bpmn2:outgoing>Flow_05z9qk9</bpmn2:outgoing>
       </bpmn2:startEvent>
       <bpmn2:sequenceFlow id="Flow_05z9qk9" sourceRef="Event_0f3gr38" targetRef="Activity_17idubh"/>
@@ -280,7 +281,7 @@
         <bpmn2:incoming>Flow_0sh0hkp</bpmn2:incoming>
       </bpmn2:endEvent>
       <bpmn2:sequenceFlow id="Flow_0sh0hkp" sourceRef="Activity_0pfyo0m" targetRef="Event_0utv02f"/>
-      <bpmn2:task bpmn4s:guard="false" bpmn4s:subType="ComposeTask" id="Activity_17idubh" name="Compose 4:1">
+      <bpmn2:task bpmn4s:guard="true" bpmn4s:subType="ComposeTask" id="Activity_17idubh" name="Compose 4:1">
         <bpmn2:incoming>Flow_05z9qk9</bpmn2:incoming>
         <bpmn2:outgoing>Flow_191w3xb</bpmn2:outgoing>
         <bpmn2:dataOutputAssociation bpmn4s:update="params_4_3 := ConcreteParams {&#10; id = 4,&#10; param = &quot;4_3&quot;&#10;}" id="DataOutputAssociation_0iao3ki">
@@ -334,7 +335,7 @@
           <bpmn2:targetRef>DataStoreReference_00e8a25</bpmn2:targetRef>
         </bpmn2:dataOutputAssociation>
         <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_15gnioa" bpmn4s:originDataReference="DataStoreReference_00e8a25" id="DataStoreReference_1qgxjyw" name="report_5_1_2"/>
-        <bpmn2:startEvent bpmn4s:ctxInit="ctx := TestContext { id = &quot;Test 5&quot; }" id="Event_16rld86">
+        <bpmn2:startEvent bpmn4s:ctxInit="ctx := TestContext {&#10; id = &quot;Test 5&quot;,&#10; hidden = 0&#10;}" id="Event_16rld86">
           <bpmn2:outgoing>Flow_04li0wb</bpmn2:outgoing>
         </bpmn2:startEvent>
         <bpmn2:sequenceFlow id="Flow_04li0wb" sourceRef="Event_16rld86" targetRef="Activity_0l6nt2u"/>
@@ -392,7 +393,7 @@
           <bpmn2:targetRef>DataStoreReference_0506r1u</bpmn2:targetRef>
         </bpmn2:dataOutputAssociation>
         <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_38n3lc9" bpmn4s:originDataReference="DataStoreReference_0506r1u" id="DataStoreReference_0ajyalm" name="params_6_3_1"/>
-        <bpmn2:startEvent bpmn4s:ctxInit="ctx := TestContext { id = &quot;Test 6a&quot; }&#10;ctx := TestContext { id = &quot;Test 6b&quot; }" id="Event_0hbwt0f">
+        <bpmn2:startEvent bpmn4s:ctxInit="ctx := TestContext {&#10; id = &quot;Test 6a&quot;,&#10; hidden = 0&#10;}&#10;ctx := TestContext {&#10; id = &quot;Test 6b&quot;,&#10; hidden = 1&#10;}" id="Event_0hbwt0f">
           <bpmn2:outgoing>Flow_0xdqp17</bpmn2:outgoing>
         </bpmn2:startEvent>
         <bpmn2:sequenceFlow id="Flow_0xdqp17" sourceRef="Event_0hbwt0f" targetRef="Activity_0cunttg"/>
@@ -465,7 +466,7 @@
           <bpmn2:sourceRef>DataStoreReference_1vemqoz</bpmn2:sourceRef>
           <bpmn2:targetRef>Property_0xtfofq</bpmn2:targetRef>
         </bpmn2:dataInputAssociation>
-        <bpmn2:startEvent bpmn4s:ctxInit="ctx := TestContext { id = &quot;7&quot; }" id="Event_0yxeb2y">
+        <bpmn2:startEvent bpmn4s:ctxInit="ctx := TestContext {&#10; id = &quot;7&quot;,&#10; hidden = 0&#10;}" id="Event_0yxeb2y">
           <bpmn2:outgoing>Flow_0t7emqq</bpmn2:outgoing>
         </bpmn2:startEvent>
         <bpmn2:sequenceFlow id="Flow_0t7emqq" sourceRef="Event_0yxeb2y" targetRef="Activity_0vlqlcc"/>

@@ -66,7 +66,7 @@ class ReferenceExpressionHandler {
 
         for (rstep : estep.stepRef.map[refStep].filter(RunStep)) {
             val suppressedOutputs = rstep.suppressedVarFields.map['''«rstep.outputVar».«it»'''].toSet
-            for (output : rstep.output.reject[suppressedOutputs.contains('''«rstep.outputVar».«name.name»''')]) {
+            for (output : rstep.output.reject[suppressedOutputs.contains('''«rstep.outputVar».«varField»''')]) {
                 evaluateReferenceConstrains(estep.inputVar + '.' + output.name.name, rstep.outputVar + '.' + output.name.name, output.name.type, suppressedOutputs, mapLHStoRHS)
             }
         }

@@ -16,6 +16,8 @@ package nl.esi.comma.abstracttestspecification.generator.utils
 import java.util.Collections
 import java.util.List
 import java.util.Set
+import nl.asml.matala.product.product.Block
+import nl.asml.matala.product.product.ProductPackage
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractTestDefinition
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.Binding
@@ -38,9 +40,8 @@ import nl.esi.xtext.expressions.expression.ExpressionNullLiteral
 import nl.esi.xtext.expressions.expression.ExpressionPlus
 import nl.esi.xtext.expressions.expression.ExpressionRecordAccess
 import nl.esi.xtext.expressions.expression.ExpressionVariable
-import nl.esi.xtext.types.types.MapTypeConstructor
+import nl.esi.xtext.expressions.expression.Variable
 import nl.esi.xtext.types.types.Type
-import nl.esi.xtext.types.types.TypeReference
 import nl.esi.xtext.types.types.TypesFactory
 import nl.esi.xtext.types.types.VectorTypeConstructor
 import org.eclipse.emf.ecore.util.EcoreUtil
@@ -61,9 +62,20 @@ class Utils
         return step.name.split('_').get(0)
     }
 
-    static def getInputVar(AbstractStep step) '''«step.system»Input'''
+    static def String getInputVar(AbstractStep step) '''step_«step.name».input'''
 
-    static def getOutputVar(AbstractStep step) '''step_«step.name».output'''
+    static def String getOutputVar(AbstractStep step) '''step_«step.name».output'''
+
+    static def String getVarField(Binding binding) {
+        return binding.name.varField
+    }
+
+    static def String getVarField(Variable variable) {
+        if (variable.eContainingFeature === ProductPackage.Literals.BLOCK__CONTEXTVARS) {
+            return (variable.eContainer as Block).contextname ?: variable.name
+        }
+        return variable.name
+    }
 
     static def List<Binding> getContextData(AbstractStep step) {
         // Try exclusion: all bindings except input and sut?
@@ -90,8 +102,12 @@ class Utils
     static def Set<String> getSuppressedVarFields(AbstractStep step) {
         return switch (it: step.suppress) {
             case null: Collections.emptySet
-            case varFields.isEmpty: (step.input + step.output).map[it.name.name].toSet
-            default: varFields.map[it.serialize].toSet
+            case varFields.isEmpty: (step.input + step.output).map[varField].toSet
+            default: varFields.map[serialize[ expr |
+                if (expr instanceof ExpressionVariable) {
+                    return expr.variable.varField
+                }
+            ]].toSet
         }
     }
 
@@ -116,15 +132,6 @@ class Utils
             ]
         }
     }
-
-    dispatch static def String getTypeName(TypeReference type) '''
-        «type.type.name»'''
-
-    dispatch static def String getTypeName(VectorTypeConstructor type) '''
-        «type.type.name»«FOR dimension : type.dimensions»[]«ENDFOR»'''
-
-    dispatch static def String getTypeName(MapTypeConstructor type) '''
-        map<«type.type.name», «type.valueType.typeName»>'''
 
     // JSON utilities
 
@@ -195,43 +202,4 @@ class Utils
             expr = ExpressionFactory.eINSTANCE.createExpressionConstantString => [ value = text ]
         ]
     }
-    
-//    static def List<JsonCollection> extractSUTVars(AbstractTestDefinition atd){
-//        var stepSutDataIn = new ArrayList<Binding>()
-//        var stepSutDataOut = new ArrayList<Binding>()
-//        for (testseq : atd.testSeq) {
-//            for (step : testseq.step) {
-//                stepSutDataIn.addAll(getSUTData(step))
-//                stepSutDataOut.addAll(getSUTData(step, false))
-//            }
-//        }
-//        val stepSutData = removeDuplicates(stepSutDataIn,stepSutDataOut)
-//        var jsonValsList = stepSutData.map(obj | obj.jsonvals as JsonCollection).toList
-//        return jsonValsList
-//    }
-
-//    static def Map<String,Set<String>> extractSUTVarExpressions(AbstractTestDefinition atd){
-//        var ceh = new ConcreteExpressionHandler
-//        var Map<String,Set<String>> sutexpr = new LinkedHashMap
-//
-//        for (testseq : atd.testSeq) {
-//            for (step : testseq.step) {
-//                ceh.prepareSutVariableExpressions(step, sutexpr, true)
-//                ceh.prepareSutVariableExpressions(step, sutexpr, false)
-//            }
-//        }
-//        return sutexpr
-//    }
-
-//    static def List<Binding> removeDuplicates(List<Binding> inData, List<Binding> outData) {
-//        var join = new TreeSet<Binding>(new BindingComparator())
-//        for (element : inData) {
-//            join.add(element)
-//        }
-//        for (element : outData) {
-//            join.add(element)
-//        }
-//        return join.toList
-//    }
-    
 }

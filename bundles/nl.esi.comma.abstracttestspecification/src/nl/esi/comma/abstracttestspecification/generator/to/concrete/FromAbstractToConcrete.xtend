@@ -12,12 +12,10 @@
  */
 package nl.esi.comma.abstracttestspecification.generator.to.concrete
 
-import java.util.HashSet
 import java.util.List
 import java.util.Map
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractTestDefinition
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AssertionStep
-import nl.esi.comma.abstracttestspecification.abstractTestspecification.Binding
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.ExecutableStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.TSMain
 import nl.esi.comma.assertthat.assertThat.DataAssertionItem
@@ -42,23 +40,15 @@ class FromAbstractToConcrete extends AbstractGenerator {
             throw new Exception('No abstract tspec found in resource: ' + res.URI)
         }
 
-        val typesImportURIs = getTypesImports(res)
-        for (sys : atd.systems) {
-            val typesFile = '''types/«sys».types'''
-            val typesURI = fsa.getURI(typesFile)
-            val typesImports = typesImportURIs.map[resolve(res.URI).deresolve(typesURI).toString].toSet
-            fsa.generateFile(typesFile, atd.generateTypesFile(sys, typesImports))
-            fsa.generateFile('''parameters/«sys».params''', atd.generateParamsFile(sys))
-        }
-        val conTspecFileName = res.URI.trimFileExtension.appendFileExtension('tspec').lastSegment
-        fsa.generateFile(conTspecFileName, atd.generateConcreteTest())
- 
+        val baseName = res.URI.trimFileExtension.lastSegment
+        val typesFile = baseName + '.types'
+        val typesImports = getTypesImports(res).map[resolve(res.URI).deresolve(fsa.getURI(typesFile)).toString].toSet
+        fsa.generateFile(typesFile, atd.generateTypesFile(typesImports))
+        fsa.generateFile(baseName + '.tspec', atd.generateConcreteTest(typesFile))
     }
 
-    def private generateConcreteTest(AbstractTestDefinition atd) '''
-        «FOR sys : atd.systems»
-            import "parameters/«sys».params"
-        «ENDFOR»
+    def private generateConcreteTest(AbstractTestDefinition atd, String typesFile) '''
+        import "«typesFile»"
         
         test-sequence from_abstract_to_concrete {
             test_single_sequence
@@ -134,81 +124,69 @@ class FromAbstractToConcrete extends AbstractGenerator {
     }
 
     // Generate Types File for Concrete TSpec
-    def private generateTypesFile(AbstractTestDefinition atd, String system, Iterable<String> typesImports) {
-        var type = ''
-        val ios = newLinkedHashMap
-        for (estep : atd.getExecutableSteps(system)) {
-            if (!estep.stepType.isNullOrEmpty) {
-                type = estep.stepType
-            }
-            estep.input.forEach[i|ios.putIfAbsent(i.name, i)]
-            estep.output.forEach[o|ios.putIfAbsent(o.name, o)]
-            for (cstep : estep.chainedStepRefs.map[refStep]) {
-                cstep.input.forEach[i|ios.putIfAbsent(i.name, i)]
-                cstep.output.forEach[o|ios.putIfAbsent(o.name, o)]
-            }
-        }
-        return printTypes(ios.values, type, typesImports)
-    }
+    def private generateTypesFile(AbstractTestDefinition atd, Iterable<String> typesImports) {
+        val sysStepTypes = atd.steps.filter(ExecutableStep).reject[stepType.isNullOrEmpty].groupBy[stepType]
+        val sysStepTypeInputs = sysStepTypes.mapValues[it.flatMap[input].map['''«name.type.typeName» «varField»''']]
+        val sysStepTypeOutputs = sysStepTypes.mapValues[it.flatMap[output].map['''«name.type.typeName» «varField»''']]
 
-    // Print types for each step
-    def private printTypes(Iterable<Binding> ios, String type, Iterable<String> typesImports) '''
-        «FOR ti : typesImports»
-            import "«ti»"
-        «ENDFOR»
-        
-        record «type» {
-            «type»Input input
-            «type»Output output
-        }
-        
-        record «type»Input {
-            «FOR i : ios» 
-                «i.name.type.type.name» «i.name.name»
+        return '''
+            «FOR ti : typesImports»
+                import "«ti»"
             «ENDFOR»
-        }
-        
-        record «type»Output {
-            «FOR o : ios» 
-                «o.name.type.type.name» «o.name.name»
+
+            «FOR stepType : sysStepTypes.keySet SEPARATOR '\n'»
+                record «stepType» {
+                    «IF !sysStepTypeInputs.get(stepType).nullOrEmpty»«stepType»Input input«ENDIF»
+                    «IF !sysStepTypeOutputs.get(stepType).nullOrEmpty»«stepType»Output output«ENDIF»
+                }
+
+                «IF !sysStepTypeInputs.get(stepType).nullOrEmpty»
+                    record «stepType»Input {
+                        «sysStepTypeInputs.get(stepType).toSet.join('\n')»
+                    }
+                «ENDIF»
+
+                «IF !sysStepTypeOutputs.get(stepType).nullOrEmpty»
+                    record «stepType»Output {
+                        «sysStepTypeOutputs.get(stepType).toSet.join('\n')»
+                    }
+                «ENDIF»
             «ENDFOR»
-        }
-    '''
-
-    // Generate Parameters File for Concrete TSpec
-    def private generateParamsFile(AbstractTestDefinition atd, String system) {
-        var paramTxt = ''
-        val processedTypes = new HashSet<String>()
-        for (step : atd.getExecutableSteps(system).reject[stepType.isNullOrEmpty]) {
-            if (processedTypes.add(step.stepType)) {
-                paramTxt += printParams(atd, step, step.stepType)
-            }
-        }
-        return paramTxt
+        '''
     }
 
-    def private printParams(AbstractTestDefinition atd, ExecutableStep step, String type) '''
-        import "../types/«step.system».types"
-        
-        data-instances
-        «type»Input «step.system»Input
-        «type»Output «step.system»Output
-        
-        data-implementation
-        // Empty
-        
-        path-prefix "«atd.filePath»"
-        var-ref «step.system»Input -> file-name "«step.system»Input.json"
-        var-ref «step.system»Output -> file-name "«step.system»Output.json"
-    '''
-    
-    def private getSystems(AbstractTestDefinition atd) {
-        return atd.steps.filter(ExecutableStep).map[system].toSet
-    }
-
-    def private getExecutableSteps(AbstractTestDefinition atd, String sys) {
-        return atd.steps.filter(ExecutableStep).filter[system == sys]
-    }
+// FIXME: Remove params language!
+//    // Generate Parameters File for Concrete TSpec
+//    def private generateParamsFile(AbstractTestDefinition atd, String system) {
+//        val steps = atd.getExecutableSteps(system).reject[stepType.isNullOrEmpty]
+//
+//        return '''
+//            import "../types/«system».types"
+//            
+//            data-instances
+//            «FOR step : steps»
+//                «step.stepType»Input «step.inputVar»
+//                «step.stepType»Output «step.outputVar»
+//            «ENDFOR»
+//            
+//            data-implementation
+//            // Empty
+//            
+//            path-prefix "«atd.filePath»"
+//            «FOR step : steps»
+//                var-ref «step.inputVar» -> file-name "«step.inputVar».json"
+//                var-ref «step.outputVar» -> file-name "«step.outputVar».json"
+//            «ENDFOR»
+//        '''
+//    }
+//    
+//    def private getSystems(AbstractTestDefinition atd) {
+//        return atd.steps.filter(ExecutableStep).map[system].toSet
+//    }
+//
+//    def private getExecutableSteps(AbstractTestDefinition atd, String sys) {
+//        return atd.steps.filter(ExecutableStep).filter[system == sys]
+//    }
 
     def private Iterable<URI> getTypesImports(Resource res) {
         val typesImports = newLinkedHashSet
