@@ -22,17 +22,6 @@ import java.util.Map
 import java.util.Set
 import java.util.regex.Pattern
 import nl.asml.matala.generator.docgen.DocGen
-import nl.esi.xtext.actions.actions.Action
-import nl.esi.xtext.actions.actions.AssignmentAction
-import nl.esi.xtext.actions.actions.RecordFieldAssignmentAction
-import nl.esi.xtext.expressions.expression.Field
-import nl.esi.xtext.expressions.expression.Expression
-import nl.esi.xtext.expressions.expression.ExpressionNullLiteral
-import nl.esi.xtext.expressions.expression.ExpressionRecord
-import nl.esi.xtext.expressions.expression.ExpressionRecordAccess
-import nl.esi.xtext.expressions.expression.ExpressionVariable
-import nl.esi.comma.inputspecification.inputSpecification.APIDefinition
-import nl.esi.comma.inputspecification.inputSpecification.Main
 import nl.esi.comma.project.standard.generator.^extension.IStandardProjectGeneratorExtension
 import nl.esi.comma.project.standard.generator.^extension.StandardProjectGeneratorContext
 import nl.esi.comma.testspecification.generator.utils.JSONData
@@ -43,6 +32,15 @@ import nl.esi.comma.testspecification.testspecification.AssertionStep
 import nl.esi.comma.testspecification.testspecification.RunStep
 import nl.esi.comma.testspecification.testspecification.TSMain
 import nl.esi.comma.testspecification.testspecification.TestDefinition
+import nl.esi.xtext.actions.actions.Action
+import nl.esi.xtext.actions.actions.AssignmentAction
+import nl.esi.xtext.actions.actions.RecordFieldAssignmentAction
+import nl.esi.xtext.expressions.expression.Expression
+import nl.esi.xtext.expressions.expression.ExpressionNullLiteral
+import nl.esi.xtext.expressions.expression.ExpressionRecord
+import nl.esi.xtext.expressions.expression.ExpressionRecordAccess
+import nl.esi.xtext.expressions.expression.ExpressionVariable
+import nl.esi.xtext.expressions.expression.Field
 import nl.esi.xtext.types.types.SimpleTypeDecl
 import nl.esi.xtext.types.types.TypeDecl
 import org.eclipse.emf.ecore.resource.Resource
@@ -50,8 +48,8 @@ import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
 
-import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
 import static extension nl.esi.xtext.common.lang.generator.FileSystemAccessUtil.*
+import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
 import static extension org.eclipse.emf.ecore.util.EcoreUtil.*
 
 class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGeneratorExtension {
@@ -290,22 +288,22 @@ class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGe
             val inputResource = imp.resource
             var input = inputResource.contents.head
             var JSONDataFileContents = new ArrayList<JSONData>
-            if (input instanceof Main) {
-                if (input.model instanceof APIDefinition) {
-                    val apiDef = input.model as APIDefinition
-                    var dataInst = new JSONData
-                    for (act : apiDef.initActions) {
-                        if (act instanceof AssignmentAction || act instanceof RecordFieldAssignmentAction) {
-                            val mapLHStoRHS = tsi.generateInitAssignmentAction(act)
-                            // variable is initialized in param file
-                            listOfSteps = listOfSteps.stream().filter(t|t.variableName == mapLHStoRHS.key).toList
-                            dataInst.getKvList.add(mapLHStoRHS)
-                        }
-                    }
-                    // dataInst.display
-                    JSONDataFileContents.add(dataInst)
-                }
-            }
+//            if (input instanceof Main) {
+//                if (input.model instanceof APIDefinition) {
+//                    val apiDef = input.model as APIDefinition
+//                    var dataInst = new JSONData
+//                    for (act : apiDef.initActions) {
+//                        if (act instanceof AssignmentAction || act instanceof RecordFieldAssignmentAction) {
+//                            val mapLHStoRHS = tsi.generateInitAssignmentAction(act)
+//                            // variable is initialized in param file
+//                            listOfSteps = listOfSteps.stream().filter(t|t.variableName == mapLHStoRHS.key).toList
+//                            dataInst.getKvList.add(mapLHStoRHS)
+//                        }
+//                    }
+//                    // dataInst.display
+//                    JSONDataFileContents.add(dataInst)
+//                }
+//            }
 
             // Merge Contents and Generate JSON File //
             // ASSUMPTION: Data Extensions on Record Fields of Steps API should not overlap 
@@ -668,21 +666,21 @@ class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGe
         for (imp : model.imports) {
             val inputResource = imp.resource
             var input = inputResource.contents.head
-            if (input instanceof Main) {
-                if (input.model instanceof APIDefinition) {
-                    val apidef = input.model as APIDefinition
-                    for (api : apidef.apiImpl) {
-                        for (elm : api.di) {
-                            var filepath = elm.fname
-                            var key = elm.^var.name
-                            tsi.dataImplToFilename.putIfAbsent(key, new ArrayList)
-                            tsi.dataImplToFilename.get(key).add(filepath)
-                        }
-                    }
-                } else {
-                    System.out.println("Error: Unhandled Model Type! ")
-                }
-            }
+//            if (input instanceof Main) {
+//                if (input.model instanceof APIDefinition) {
+//                    val apidef = input.model as APIDefinition
+//                    for (api : apidef.apiImpl) {
+//                        for (elm : api.di) {
+//                            var filepath = elm.fname
+//                            var key = elm.^var.name
+//                            tsi.dataImplToFilename.putIfAbsent(key, new ArrayList)
+//                            tsi.dataImplToFilename.get(key).add(filepath)
+//                        }
+//                    }
+//                } else {
+                    System.err.println("Error: Unhandled Model Type! ")
+//                }
+//            }
         }
     }
 
@@ -823,7 +821,8 @@ class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGe
         // 4.3) Step type (defined via UI text box, e.g., SUT.OperationName)
         stepInst.type = s.stepVar.type.type.name
         // 4.4) Step input file path+name
-        stepInst.inputFile = tsi.dataImplToFilename.get(s.stepVar.name).head
+//        stepInst.inputFile = tsi.dataImplToFilename.get(s.stepVar.name).head
+        stepInst.inputFile = s.stepVar.name + '.json'
 
         // 4.5) For each action in ref-to-step-output section ...
         for (act : s.input) {

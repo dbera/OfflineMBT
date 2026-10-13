@@ -16,13 +16,11 @@
 package nl.esi.comma.testspecification.validation
 
 import java.util.List
-import nl.esi.comma.inputspecification.inputSpecification.InputSpecificationPackage
 import nl.esi.comma.testspecification.testspecification.AbstractStep
 import nl.esi.comma.testspecification.testspecification.StepSequence
 import nl.esi.comma.testspecification.testspecification.TestspecificationPackage
 import nl.esi.xtext.actions.actions.ActionsPackage
 import nl.esi.xtext.actions.actions.RecordFieldAssignmentAction
-import org.eclipse.emf.ecore.EClass
 import org.eclipse.xtext.validation.Check
 
 import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.serialize
@@ -33,10 +31,6 @@ import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.serialize
  * See https://www.eclipse.org/Xtext/documentation/303_runtime_concepts.html#validation
  */
 class TestspecificationValidator extends AbstractTestspecificationValidator {
-
-    override protected isValidImportType(EClass importType) {
-        return InputSpecificationPackage.Literals.MAIN.isSuperTypeOf(importType)
-    }
 
     @Check
     def protected void checkDataOverwrite(AbstractStep step) {

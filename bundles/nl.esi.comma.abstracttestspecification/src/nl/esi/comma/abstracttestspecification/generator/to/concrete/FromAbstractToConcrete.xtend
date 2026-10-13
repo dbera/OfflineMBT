@@ -155,39 +155,6 @@ class FromAbstractToConcrete extends AbstractGenerator {
         '''
     }
 
-// FIXME: Remove params language!
-//    // Generate Parameters File for Concrete TSpec
-//    def private generateParamsFile(AbstractTestDefinition atd, String system) {
-//        val steps = atd.getExecutableSteps(system).reject[stepType.isNullOrEmpty]
-//
-//        return '''
-//            import "../types/«system».types"
-//            
-//            data-instances
-//            «FOR step : steps»
-//                «step.stepType»Input «step.inputVar»
-//                «step.stepType»Output «step.outputVar»
-//            «ENDFOR»
-//            
-//            data-implementation
-//            // Empty
-//            
-//            path-prefix "«atd.filePath»"
-//            «FOR step : steps»
-//                var-ref «step.inputVar» -> file-name "«step.inputVar».json"
-//                var-ref «step.outputVar» -> file-name "«step.outputVar».json"
-//            «ENDFOR»
-//        '''
-//    }
-//    
-//    def private getSystems(AbstractTestDefinition atd) {
-//        return atd.steps.filter(ExecutableStep).map[system].toSet
-//    }
-//
-//    def private getExecutableSteps(AbstractTestDefinition atd, String sys) {
-//        return atd.steps.filter(ExecutableStep).filter[system == sys]
-//    }
-
     def private Iterable<URI> getTypesImports(Resource res) {
         val typesImports = newLinkedHashSet
         for (psImport : res.getImports('ps')) {

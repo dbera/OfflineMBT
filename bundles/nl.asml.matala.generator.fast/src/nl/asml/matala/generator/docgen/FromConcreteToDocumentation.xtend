@@ -15,16 +15,14 @@ package nl.asml.matala.generator.docgen
 import java.util.ArrayList
 import java.util.HashMap
 import java.util.List
-import nl.esi.xtext.actions.actions.AssignmentAction
-import nl.esi.xtext.actions.actions.RecordFieldAssignmentAction
-import nl.esi.xtext.expressions.expression.Variable
-import nl.esi.comma.inputspecification.inputSpecification.APIDefinition
-import nl.esi.comma.inputspecification.inputSpecification.Main
 import nl.esi.comma.testspecification.generator.utils.Step
 import nl.esi.comma.testspecification.generator.utils.TestSpecificationInstance
 import nl.esi.comma.testspecification.testspecification.RunStep
 import nl.esi.comma.testspecification.testspecification.TSMain
 import nl.esi.comma.testspecification.testspecification.TestDefinition
+import nl.esi.xtext.actions.actions.AssignmentAction
+import nl.esi.xtext.actions.actions.RecordFieldAssignmentAction
+import nl.esi.xtext.expressions.expression.Variable
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.generator.AbstractGenerator
@@ -44,7 +42,7 @@ class FromConcreteToDocumentation extends AbstractGenerator
                 for(imp : modelInst.imports) {
                     val inputResource = EcoreUtil2.getResource(resource, imp.importURI)
                     var input = inputResource.allContents.head
-                    if( input instanceof Main) {
+//                    if( input instanceof Main) {
                         /*if(input.model instanceof APIDefinition) {
                             val apidef = input.model as APIDefinition
                             for(api : apidef.apiImpl) {
@@ -53,7 +51,7 @@ class FromConcreteToDocumentation extends AbstractGenerator
                             }
                         } */
                         // else { System.out.println("Error: Unhandled Model Type! ")}
-                    } // Processed Input Specification
+//                    } // Processed Input Specification
                 } // Finished Processing Imports (input specifications)
             }
         }
@@ -124,16 +122,18 @@ class FromConcreteToDocumentation extends AbstractGenerator
                 for(imp : modelInst.imports) {
                     val inputResource = EcoreUtil2.getResource(resource, imp.importURI)
                     var input = inputResource.allContents.head
-                    if( input instanceof Main) {
-                        if(input.model instanceof APIDefinition) {
-                            val apidef = input.model as APIDefinition
-                            for(api : apidef.apiImpl) {
-                                for(elm : api.di) 
-                                    tsInst.addMapDataInstanceToFile(elm.^var.name, api.path + elm.fname)
-                            }
-                        } 
-                        else { System.out.println("Error: Unhandled Model Type! ")}
-                    } // Processed Input Specification
+//                    if( input instanceof Main) {
+//                        if(input.model instanceof APIDefinition) {
+//                            val apidef = input.model as APIDefinition
+//                            for(api : apidef.apiImpl) {
+//                                for(elm : api.di) 
+//                                    tsInst.addMapDataInstanceToFile(elm.^var.name, api.path + elm.fname)
+//                            }
+//                        } 
+//                        else { 
+                            System.err.println("Error: Unhandled Model Type! ")
+//                        }
+//                    } // Processed Input Specification
                 } // Finished Processing Imports (input specifications)
                 
                 // Parse TSPEC Test Definition
@@ -177,7 +177,8 @@ class FromConcreteToDocumentation extends AbstractGenerator
                             var stepInst = new Step
                             stepInst.id = s.stepVar.name // was identifier
                             stepInst.type = s.stepVar.type.type.name
-                            stepInst.inputFile = tsInst.dataImplToFilename.get(s.stepVar.name).head
+//                            stepInst.inputFile = tsInst.dataImplToFilename.get(s.stepVar.name).head
+                            stepInst.inputFile = s.stepVar.name + '.json'
                             // check if additional data was specified in a step
 //                            for(ref : s.refStep) {
 //                            //if(s.input!==null) {
