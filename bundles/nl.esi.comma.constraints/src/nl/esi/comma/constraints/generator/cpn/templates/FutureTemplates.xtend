@@ -22,7 +22,7 @@ class FutureTemplates {
     val Helpers helpers = new Helpers
     
     def generateResponseTemplate(
-        String templateName, RefInfo correlationInfo, boolean hasCorrelation,
+        String templateName, RefInfo correlationInfo, boolean hasCorrelation, boolean negated,
         Ref activationEventInst, RefInfo activationEventInfo, String activationEvent, 
         Ref targetEventInst, String targetEvent, RefInfo targetEventInfo
     ) 
@@ -47,6 +47,7 @@ class FutureTemplates {
 			    UNIT split
 			    UNIT acceptor
 			    UNIT final
+			    ConformanceMatchedPair matchedPairs
 			    
 			    
 			    
@@ -91,11 +92,20 @@ class FutureTemplates {
 			     action          Target
 			     element-label   "Target"
 			     case            default priority 40
-			     with-inputs     split, «targetEventInfo.refName», «correlationInfo.refName»
+			     with-inputs     split, «targetEventInfo.refName», «correlationInfo.refName», StepMetaData
 			     with-guard      «helpers.getRefCombinedWhereClause(targetEventInst)»
 			     produces-outputs    final suppress
 			     updates:
 			         final := split
+			     produces-outputs    matchedPairs
+			     updates:
+			         matchedPairs := ConformanceMatchedPair {
+			                 activationIds = «correlationInfo.refName».MetaData["activationIds"],
+			                 targetId = StepMetaData.steps["stepid"]
+			             }
+			     produces-outputs    StepMetaData
+			     updates:
+			         StepMetaData := StepMetaData
 			      
 			     action          Activation
 			     element-label   "Activation"
@@ -149,19 +159,27 @@ class FutureTemplates {
           "monitorPlaces": [
             "split",
             "final",
+            "matchedPairs",
             "acceptor",
             "«correlationInfo.refName»"
           ],
         
           "acceptance": {
             "scope": "terminalNodes",
-            "emptyPlaces": [
-              ["split"],
-              ["«correlationInfo.refName»"]
-            ],
-            "nonEmptyPlaces": [
-            ["acceptor", "final"]
-            ]
+            «IF negated»
+                "emptyPlaces": [
+                    ["matchedPairs"]
+                ],
+                "nonEmptyPlaces": []
+            «ELSE»
+                "emptyPlaces": [
+                  ["split"],
+                  ["«correlationInfo.refName»"]
+                ],
+                "nonEmptyPlaces": [
+                ["acceptor", "final"]
+                ]
+            «ENDIF»
           }
         }
         '''
@@ -193,6 +211,15 @@ class FutureTemplates {
                 },
                 "message": "Activation was not eventually followed by a Target «IF hasCorrelation» with matching correlation«ENDIF»."
             }
+            «IF negated»,
+            {
+                "kind": "forbiddenResponse",
+                "valueKind": "matchedPair",
+                "violationKind": "emptyPlaces",
+                "tokenPlace": "matchedPairs",
+                "message": "A forbidden Response match occurred."
+            }
+             «ENDIF»
         ]
         '''
 
@@ -203,7 +230,7 @@ class FutureTemplates {
     
 
     def generateChainResponseTemplate(
-        String templateName, RefInfo correlationInfo, boolean hasCorrelation,
+        String templateName, RefInfo correlationInfo, boolean hasCorrelation, boolean negated,
         Ref activationEventInst, RefInfo activationEventInfo, String activationEvent, 
         Ref targetEventInst, String targetEvent, RefInfo targetEventInfo
     ) 
@@ -229,6 +256,7 @@ class FutureTemplates {
                 UNIT blockerseen
                 UNIT acceptor
                 UNIT final
+                ConformanceMatchedPair matchedPairs
                 
                
                 desc "«templateName»"
@@ -271,11 +299,21 @@ class FutureTemplates {
                  action          Target
                  element-label   "Target"
                  case            default priority 80
-                 with-inputs     split, «targetEventInfo.refName», «correlationInfo.refName»
+                 with-inputs     split, «targetEventInfo.refName», «correlationInfo.refName», StepMetaData
                  with-guard      «helpers.getRefCombinedWhereClause(targetEventInst)»
                  produces-outputs    final suppress
                  updates:
                      final := split
+                 produces-outputs    matchedPairs
+                  updates:
+                      matchedPairs := ConformanceMatchedPair {
+                              activationIds = «correlationInfo.refName».MetaData["activationIds"],
+                              targetId = StepMetaData.steps["stepid"]
+                          }
+                  produces-outputs    StepMetaData
+                  updates:
+                      StepMetaData := StepMetaData
+             
                      
                  action           ANY2
                  element-label    "ANY2"
@@ -346,20 +384,28 @@ class FutureTemplates {
                     "split",
                     "final",
                     "acceptor",
+                    "matchedPairs",
                     "«correlationInfo.refName»",
                     "blockerseen"
                   ],
                 
                   "acceptance": {
                     "scope": "terminalNodes",
-                    "emptyPlaces": [
-                      ["split"],
-                      ["«correlationInfo.refName»"],
-                      ["blockerseen"]
-                    ],
-                    "nonEmptyPlaces": [
-                    ["acceptor", "final"]
-                    ]
+                    «IF negated»
+                        "emptyPlaces": [
+                            ["matchedPairs"]
+                        ],
+                        "nonEmptyPlaces": []
+                    «ELSE»
+                        "emptyPlaces": [
+                              ["split"],
+                              ["«correlationInfo.refName»"],
+                              ["blockerseen"]
+                            ],
+                            "nonEmptyPlaces": [
+                            ["acceptor", "final"]
+                            ]
+                    «ENDIF»
                   }
                 }
         '''
@@ -394,7 +440,16 @@ class FutureTemplates {
                     "after": "activationEvent"
                 },
                 "message": "Activation was not immediately followed by Target «IF hasCorrelation» with matching correlation«ENDIF»"
-             } 
+             }
+             «IF negated»,
+             {
+                 "kind": "forbiddenChainResponse",
+                 "valueKind": "matchedPair",
+                 "violationKind": "emptyPlaces",
+                 "tokenPlace": "matchedPairs",
+                 "message": "A forbidden ChainResponse match occurred."
+             }
+             «ENDIF»
         ]
         '''        
         return new CPNTemplateResult (psBody, acceptanceJson, diagnostics)
@@ -433,6 +488,7 @@ class FutureTemplates {
                 UNIT split
                 UNIT acceptor
                 UNIT final
+                ConformanceMatchedPair matchedPairs
                 
                 desc "«templateName»"
                 
@@ -468,11 +524,21 @@ class FutureTemplates {
                 action          Target
                 element-label   "Target"
                 case            default priority 60
-                with-inputs     split, «targetEventInfo.refName», «correlationInfo.refName»
+                with-inputs     split, «targetEventInfo.refName», «correlationInfo.refName», StepMetaData
                 with-guard      «helpers.getRefCombinedWhereClause(targetEventInst)»
                 produces-outputs    final suppress
                 updates:
                     final := split
+                 produces-outputs    matchedPairs
+                  updates:
+                      matchedPairs := ConformanceMatchedPair {
+                              activationIds = «correlationInfo.refName».MetaData["activationIds"],
+                              targetId = StepMetaData.steps["stepid"]
+                          }
+                  produces-outputs    StepMetaData
+                  updates:
+                      StepMetaData := StepMetaData
+
                  
                 action           UnmatchedActivation
                 element-label    "Unmatched Activation"

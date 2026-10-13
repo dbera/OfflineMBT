@@ -23,12 +23,12 @@ class PastTemplates {
     val Helpers helpers = new Helpers
     
     def generatePrecedenceTemplate(
-        String templateName, RefInfo correlationInfo, boolean hasCorrelation,
+        String templateName, RefInfo correlationInfo, boolean hasCorrelation, boolean negated,
         Ref activationEventInst, RefInfo activationEventInfo, String activationEvent,
         Ref targetEventInst, String targetEvent, RefInfo targetEventInfo
     )
     {
-        val result = futuretemplates.generateResponseTemplate(templateName, correlationInfo, hasCorrelation,
+        val result = futuretemplates.generateResponseTemplate(templateName, correlationInfo, hasCorrelation, negated,
         activationEventInst, activationEventInfo, activationEvent,
         targetEventInst, targetEvent, targetEventInfo )
         
@@ -59,6 +59,15 @@ class PastTemplates {
                 },
                 "message": "The triggering event occurred without its required prior event «IF hasCorrelation» with matching correlation«ENDIF»."
             }
+            «IF negated»,
+            {
+                "kind": "forbiddenPrecedence",
+                "valueKind": "matchedPair",
+                "violationKind": "emptyPlaces",
+                "tokenPlace": "matchedPairs",
+                "message": "A forbidden Precedence match occurred."
+            }
+            «ENDIF»
         ]
         '''
         
@@ -70,12 +79,12 @@ class PastTemplates {
     }
     
     def generateChainPrecedenceTemplate(
-        String templateName, RefInfo correlationInfo, boolean hasCorrelation,
+        String templateName, RefInfo correlationInfo, boolean hasCorrelation, boolean negated,
         Ref activationEventInst, RefInfo activationEventInfo, String activationEvent,
         Ref targetEventInst, String targetEvent, RefInfo targetEventInfo
     )
     {
-        val result = futuretemplates.generateChainResponseTemplate(templateName, correlationInfo, hasCorrelation,
+        val result = futuretemplates.generateChainResponseTemplate(templateName, correlationInfo, hasCorrelation, negated,
         activationEventInst, activationEventInfo, activationEvent,
         targetEventInst, targetEvent, targetEventInfo )
         
@@ -110,6 +119,15 @@ class PastTemplates {
                 },
                 "message": "The triggering event was not immediately preceded by its required event «IF hasCorrelation» with matching correlation«ENDIF»."
             }
+            «IF negated»,
+            {
+                "kind": "forbiddenChainPrecedence",
+                "valueKind": "matchedPair",
+                "violationKind": "emptyPlaces",
+                "tokenPlace": "matchedPairs",
+                "message": "A forbidden ChainPrecedence match occurred."
+            }
+            «ENDIF»
         ]
         '''
         

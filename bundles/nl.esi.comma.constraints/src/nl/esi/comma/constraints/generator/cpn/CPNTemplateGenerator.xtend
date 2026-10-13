@@ -411,6 +411,11 @@ class CPNTemplateGenerator
             int any
         }
         
+        record ConformanceMatchedPair {
+            string[] activationIds
+            string targetId
+        }
+        
         record StepMetaData {
             map<string,string> steps
         }
@@ -518,7 +523,7 @@ class CPNTemplateGenerator
                     if(templateType instanceof Response) {
                         templateResult = futureTemplates.generateResponseTemplate(
                             currentConstraint.name,
-                            correlationInfo, hasCorrelation,
+                            correlationInfo, hasCorrelation, templateType.not,
                             templateType.refA.head,
                             helpers.getRefInputTypeAndVar(templateType.refA.head),
                             helpers.getRefName(templateType.refA.head),
@@ -530,7 +535,7 @@ class CPNTemplateGenerator
                     else if(templateType instanceof ChainResponse) {
                         templateResult = futureTemplates.generateChainResponseTemplate(
                             currentConstraint.name,
-                            correlationInfo, hasCorrelation,
+                            correlationInfo, hasCorrelation, templateType.not,
                             templateType.refA.head,
                             helpers.getRefInputTypeAndVar(templateType.refA.head),
                             helpers.getRefName(templateType.refA.head),
@@ -566,7 +571,7 @@ class CPNTemplateGenerator
                     if(templateType instanceof Precedence) {
                         templateResult = pastTemplates.generatePrecedenceTemplate(
                             currentConstraint.name,
-                            correlationInfo, hasCorrelation,
+                            correlationInfo, hasCorrelation, templateType.not,
                             templateType.refB.head,
                             helpers.getRefInputTypeAndVar(templateType.refB.head),
                             helpers.getRefName(templateType.refB.head),
@@ -578,7 +583,7 @@ class CPNTemplateGenerator
                     else if(templateType instanceof ChainPrecedence) {
                         templateResult = pastTemplates.generateChainPrecedenceTemplate(
                             currentConstraint.name,
-                            correlationInfo, hasCorrelation,
+                            correlationInfo, hasCorrelation, templateType.not,
                             templateType.refB.head,
                             helpers.getRefInputTypeAndVar(templateType.refB.head),
                             helpers.getRefName(templateType.refB.head),
@@ -798,6 +803,17 @@ class CPNTemplateGenerator
                         continue
                                 
                     for token in marking.get(token_place, []):
+                        if rule.get("valueKind") == "matchedPair":
+                            pair = token if isinstance(token, dict) else {}
+                            diagnostics.append({
+                                "kind": rule["kind"],
+                                "nodeId": node["id"],
+                                "place": token_place,
+                                "activationIds": pair.get("activationIds", []),
+                                "targetId": pair.get("targetId"),
+                                "message": rule["message"]
+                            })
+                            continue
                         values = dict(rule)
                         if isinstance(token, dict):
                             metadata = token.get("MetaData", {})
