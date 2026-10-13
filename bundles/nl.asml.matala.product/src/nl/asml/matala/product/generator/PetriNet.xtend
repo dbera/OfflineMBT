@@ -379,10 +379,7 @@ class PetriNet {
             visitedTList = [[]]
             visitedTProdList = [[]]
             rg_txt = ""
-            
-            # load the reachability graph in memory
-            graph_in_memory = None
-        
+
             # test generation data
             sutTypesList = [«FOR elm : sutTransitionMap.keySet SEPARATOR ','»'«elm»'«ENDFOR»]
             sutVarTransitionMap = {}
@@ -606,9 +603,7 @@ class PetriNet {
                     print("[INFO] Finished.")
                 «ENDIF»
                 b = datetime.datetime.now()
-            
                 # s.goto(0)
-                
                 fname = p.plantuml_dir / "rg.plantuml"
                 with open(fname, 'w') as f:
                     pn.generateReachabilityGraph(f)
@@ -676,7 +671,6 @@ class PetriNet {
                     print("[INFO]    * Test Generation: %s" % (d - c))
                     print("[INFO]    * PlantUML View Generation: %s" % (e - d))
                 «ENDIF»
-                
                 # print("[INFO] Starting Command-Line Simulation.")
                 # simulate(pn.n)
                 
@@ -995,10 +989,6 @@ class PetriNet {
                     json_graph['edges']
                 )
                 self._writeReachabilityJson(writer, json_graph)
-                
-                #write the graph in memory
-                self.graph_in_memory = json_graph
-
             return nrOfDependencies
     '''
     
