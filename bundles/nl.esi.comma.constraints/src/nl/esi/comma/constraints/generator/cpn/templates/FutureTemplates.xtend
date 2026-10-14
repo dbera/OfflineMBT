@@ -47,7 +47,7 @@ class FutureTemplates {
 			    UNIT split
 			    UNIT acceptor
 			    UNIT final
-			    ConformanceMatchedPair matchedPairs
+			    «correlationInfo.refType» matchedPairs
 			    
 			    
 			    
@@ -99,9 +99,10 @@ class FutureTemplates {
 			         final := split
 			     produces-outputs    matchedPairs
 			     updates:
-			         matchedPairs := ConformanceMatchedPair {
-			                 activationIds = «correlationInfo.refName».MetaData["activationIds"],
-			                 targetId = StepMetaData.steps["stepid"]
+			         matchedPairs := «correlationInfo.refName»
+			         matchedPairs.MetaData := <map<string,string[]>>{
+			             "activationIds" -> «correlationInfo.refName».MetaData["activationIds"],
+			             "targetIds" -> <string[]>[StepMetaData.steps["stepid"]]
 			             }
 			     produces-outputs    StepMetaData
 			     updates:
@@ -190,6 +191,30 @@ class FutureTemplates {
         val diagnostics =
         '''
         [
+        «IF negated»
+            {
+             "kind": "forbiddenResponse",
+             "valueKind": "correlation",
+             "hasCorrelation": «IF hasCorrelation»True«ELSE»False«ENDIF»,
+             "includeRawToken": False,
+             "tokenPlace": "matchedPairs",
+             "activationLabel": "«helpers.escapePythonString(activationLabel)»",
+             "targetLabel": "«helpers.escapePythonString(targetLabel)»",
+             "activationEvent": {
+                 "name": "«helpers.escapePythonString(activationEvent)»",
+                 "whereConcrete": "«helpers.escapePythonString(helpers.getRefConcreteWhereClause(activationEventInst))»",
+                 "correlationBinding": "«helpers.escapePythonString(helpers.getRefWithClause(activationEventInst).trim)»",
+                 "stepIdsFrom": "activationIds"
+             },
+             "targetEvent": {
+                 "name": "«helpers.escapePythonString(targetEvent)»",
+                 "whereConcrete": "«helpers.escapePythonString(helpers.getRefConcreteWhereClause(targetEventInst))»",
+                 "whereCorrelation": "«helpers.escapePythonString(helpers.getRefCorrelationWhereClause(targetEventInst))»",
+                 "stepIdsFrom": "targetIds"
+             },
+             "message": "Activation was eventually followed by a forbidden Target «IF hasCorrelation» with matching correlation«ENDIF»."   
+            }
+        «ELSE»
             {
                 "kind": "unfulfilledResponse",
                 "valueKind": "correlation",
@@ -211,15 +236,7 @@ class FutureTemplates {
                 },
                 "message": "Activation was not eventually followed by a Target «IF hasCorrelation» with matching correlation«ENDIF»."
             }
-            «IF negated»,
-            {
-                "kind": "forbiddenResponse",
-                "valueKind": "matchedPair",
-                "violationKind": "emptyPlaces",
-                "tokenPlace": "matchedPairs",
-                "message": "A forbidden Response match occurred."
-            }
-             «ENDIF»
+        «ENDIF»
         ]
         '''
 
@@ -256,7 +273,7 @@ class FutureTemplates {
                 UNIT blockerseen
                 UNIT acceptor
                 UNIT final
-                ConformanceMatchedPair matchedPairs
+                «correlationInfo.refType» matchedPairs
                 
                
                 desc "«templateName»"
@@ -306,9 +323,10 @@ class FutureTemplates {
                      final := split
                  produces-outputs    matchedPairs
                   updates:
-                      matchedPairs := ConformanceMatchedPair {
-                              activationIds = «correlationInfo.refName».MetaData["activationIds"],
-                              targetId = StepMetaData.steps["stepid"]
+                     matchedPairs := «correlationInfo.refName»
+                     matchedPairs.MetaData := <map<string,string[]>>{
+                         "activationIds" -> «correlationInfo.refName».MetaData["activationIds"],
+                         "targetIds" -> <string[]>[StepMetaData.steps["stepid"]]
                           }
                   produces-outputs    StepMetaData
                   updates:
@@ -416,6 +434,30 @@ class FutureTemplates {
         val diagnostics =
         '''
         [
+        «IF negated»
+            {
+             "kind": "forbiddenChainResponse",
+             "valueKind": "correlation",
+             "hasCorrelation": «IF hasCorrelation»True«ELSE»False«ENDIF»,
+             "includeRawToken": False,
+             "tokenPlace": "matchedPairs",
+             "activationLabel": "«helpers.escapePythonString(activationLabel)»",
+             "targetLabel": "«helpers.escapePythonString(targetLabel)»",
+             "activationEvent": {
+                 "name": "«helpers.escapePythonString(activationEvent)»",
+                 "whereConcrete": "«helpers.escapePythonString(helpers.getRefConcreteWhereClause(activationEventInst))»",
+                 "correlationBinding": "«helpers.escapePythonString(helpers.getRefWithClause(activationEventInst).trim)»",
+                 "stepIdsFrom": "activationIds"
+             },
+             "targetEvent": {
+                 "name": "«helpers.escapePythonString(targetEvent)»",
+                 "whereConcrete": "«helpers.escapePythonString(helpers.getRefConcreteWhereClause(targetEventInst))»",
+                 "whereCorrelation": "«helpers.escapePythonString(helpers.getRefCorrelationWhereClause(targetEventInst))»",
+                 "stepIdsFrom": "targetIds"
+             },
+             "message": "Activation was immediately followed by a forbidden Target «IF hasCorrelation» with matching correlation«ENDIF»."   
+            }
+        «ELSE»        
             {
                 "kind": "unfulfilledChainResponse",
                 "valueKind": "correlation",
@@ -441,17 +483,9 @@ class FutureTemplates {
                 },
                 "message": "Activation was not immediately followed by Target «IF hasCorrelation» with matching correlation«ENDIF»"
              }
-             «IF negated»,
-             {
-                 "kind": "forbiddenChainResponse",
-                 "valueKind": "matchedPair",
-                 "violationKind": "emptyPlaces",
-                 "tokenPlace": "matchedPairs",
-                 "message": "A forbidden ChainResponse match occurred."
-             }
-             «ENDIF»
+        «ENDIF»
         ]
-        '''        
+        '''       
         return new CPNTemplateResult (psBody, acceptanceJson, diagnostics)
     }
 
@@ -488,7 +522,7 @@ class FutureTemplates {
                 UNIT split
                 UNIT acceptor
                 UNIT final
-                ConformanceMatchedPair matchedPairs
+                «correlationInfo.refType» matchedPairs
                 
                 desc "«templateName»"
                 
@@ -531,9 +565,10 @@ class FutureTemplates {
                     final := split
                  produces-outputs    matchedPairs
                   updates:
-                      matchedPairs := ConformanceMatchedPair {
-                              activationIds = «correlationInfo.refName».MetaData["activationIds"],
-                              targetId = StepMetaData.steps["stepid"]
+                     matchedPairs := «correlationInfo.refName»
+                     matchedPairs.MetaData := <map<string,string[]>>{
+                         "activationIds" -> «correlationInfo.refName».MetaData["activationIds"],
+                         "targetIds" -> <string[]>[StepMetaData.steps["stepid"]]
                           }
                   produces-outputs    StepMetaData
                   updates:

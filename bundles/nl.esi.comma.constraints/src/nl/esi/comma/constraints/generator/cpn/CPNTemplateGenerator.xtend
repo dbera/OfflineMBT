@@ -411,11 +411,6 @@ class CPNTemplateGenerator
             int any
         }
         
-        record ConformanceMatchedPair {
-            string[] activationIds
-            string targetId
-        }
-        
         record StepMetaData {
             map<string,string> steps
         }
@@ -803,17 +798,6 @@ class CPNTemplateGenerator
                         continue
                                 
                     for token in marking.get(token_place, []):
-                        if rule.get("valueKind") == "matchedPair":
-                            pair = token if isinstance(token, dict) else {}
-                            diagnostics.append({
-                                "kind": rule["kind"],
-                                "nodeId": node["id"],
-                                "place": token_place,
-                                "activationIds": pair.get("activationIds", []),
-                                "targetId": pair.get("targetId"),
-                                "message": rule["message"]
-                            })
-                            continue
                         values = dict(rule)
                         if isinstance(token, dict):
                             metadata = token.get("MetaData", {})

@@ -73,12 +73,17 @@ RefAction:
     ('act')? action=[Act|ID]
     ('where-concrete' '(' whereArgs+=Expression (',' whereArgs+=Expression)* ')')?
     ('where-correlation' '(' whereOptArgs+=Expression (',' whereOptArgs+=Expression)* ')')?
-    ('with' '(' withArgs+=AssignmentAction (',' withArgs+=AssignmentAction)* ')')?
+    ('with-correlation' '(' withArgs+=AssignmentAction (',' withArgs+=AssignmentAction)* ')')?
+    ('consumes' '(' links+=ReferenceLink (',' links+=ReferenceLink)* ')')?
     ('asserting' '(' assertionRequirements+=AssertionRequirement (',' assertionRequirements+=AssertionRequirement)* ')')?
 ;
 
 AssertionRequirement:
     name=ID? 'assert-that' '(' expression=Expression ')'
+;
+
+ReferenceLink:
+    target=Expression 'from' source=Expression
 ;
 
 RefSequence:

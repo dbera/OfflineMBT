@@ -621,9 +621,10 @@ class ConformanceDashboardRenderer {
                     for (const diagnostic of result.diagnostics || []) {
                         const activationIds =
                             diagnostic.activationEvent?.stepIds || [];
+                        const focusId = activationIds[0];
                         for (const id of activationIds) {
                             addRole(id, "activation");
-                            contextFor(id);
+                            contextFor(focusId).stepIds.add(id);
                         }
 
                         for (const [eventName, role] of [
@@ -632,10 +633,14 @@ class ConformanceDashboardRenderer {
                             ["blockerEvent", "blocker"]
                         ]) {
                             for (const id of diagnostic[eventName]?.stepIds || []) {
-                                attachToNearestActivation(id, role, activationIds);
+                                if (focusId) {
+                                    addRole(id, role);
+                                    contextFor(focusId).stepIds.add(id);
+                                } else {
+                                    attachToNearestActivation(id, role, activationIds);
+                                }
                             }
                         }
-
                         if (!activationIds.length) {
                             for (const id of diagnostic.event?.stepIds || []) {
                                 addRole(id, "event");
@@ -674,7 +679,7 @@ class ConformanceDashboardRenderer {
                                 const relatedStep = trace.steps[index + offset];
                                 if (relatedStep) {
                                     addRole(relatedStep.id, "target");
-                                    contextFor(activationId).stepIds.add(relatedStep.id);
+                                    contextFor(activationIds[0]).stepIds.add(relatedStep.id);
                                 }
                             }
                         }

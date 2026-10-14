@@ -38,39 +38,54 @@ class PastTemplates {
         val diagnostics =
         '''
         [
+        «IF negated»
             {
-                "kind": "unfulfilledPrecedence",
-                "valueKind": "correlation",
-                "hasCorrelation": «IF hasCorrelation»True«ELSE»False«ENDIF»,
-                "includeRawToken": False,
-                "tokenPlace": "«correlationInfo.refName»",
-                "activationLabel": "«helpers.escapePythonString(activationLabel)»",
-                "targetLabel": "«helpers.escapePythonString(targetLabel)»",
-                "activationEvent": {
-                    "name": "«helpers.escapePythonString(activationEvent)»",
-                    "whereConcrete": "«helpers.escapePythonString(helpers.getRefConcreteWhereClause(activationEventInst))»",
-                    "correlationBinding": "«helpers.escapePythonString(helpers.getRefWithClause(activationEventInst).trim)»",
-                    "stepIdsFrom": "activationIds"
-                },
-                "targetEvent": {
-                    "name": "«helpers.escapePythonString(targetEvent)»",
-                    "whereConcrete": "«helpers.escapePythonString(helpers.getRefConcreteWhereClause(targetEventInst))»",
-                    "whereCorrelation": "«helpers.escapePythonString(helpers.getRefCorrelationWhereClause(targetEventInst))»"
-                },
-                "message": "The triggering event occurred without its required prior event «IF hasCorrelation» with matching correlation«ENDIF»."
+             "kind": "forbiddenPrecedence",
+             "valueKind": "correlation",
+             "hasCorrelation": «IF hasCorrelation»True«ELSE»False«ENDIF»,
+             "includeRawToken": False,
+             "tokenPlace": "matchedPairs",
+             "activationLabel": "«helpers.escapePythonString(activationLabel)»",
+             "targetLabel": "«helpers.escapePythonString(targetLabel)»",
+             "activationEvent": {
+                 "name": "«helpers.escapePythonString(activationEvent)»",
+                 "whereConcrete": "«helpers.escapePythonString(helpers.getRefConcreteWhereClause(activationEventInst))»",
+                 "correlationBinding": "«helpers.escapePythonString(helpers.getRefWithClause(activationEventInst).trim)»",
+                 "stepIdsFrom": "activationIds"
+             },
+             "targetEvent": {
+                 "name": "«helpers.escapePythonString(targetEvent)»",
+                 "whereConcrete": "«helpers.escapePythonString(helpers.getRefConcreteWhereClause(targetEventInst))»",
+                 "whereCorrelation": "«helpers.escapePythonString(helpers.getRefCorrelationWhereClause(targetEventInst))»",
+                 "stepIdsFrom": "targetIds"
+             },
+             "message": "Activation was eventually preceded by a forbidden Target «IF hasCorrelation» with matching correlation«ENDIF»."   
             }
-            «IF negated»,
+        «ELSE»        
             {
-                "kind": "forbiddenPrecedence",
-                "valueKind": "matchedPair",
-                "violationKind": "emptyPlaces",
-                "tokenPlace": "matchedPairs",
-                "message": "A forbidden Precedence match occurred."
+            "kind": "unfulfilledPrecedence",
+            "valueKind": "correlation",
+            "hasCorrelation": «IF hasCorrelation»True«ELSE»False«ENDIF»,
+            "includeRawToken": False,
+            "tokenPlace": "«correlationInfo.refName»",
+            "activationLabel": "«helpers.escapePythonString(activationLabel)»",
+            "targetLabel": "«helpers.escapePythonString(targetLabel)»",
+            "activationEvent": {
+                "name": "«helpers.escapePythonString(activationEvent)»",
+                "whereConcrete": "«helpers.escapePythonString(helpers.getRefConcreteWhereClause(activationEventInst))»",
+                "correlationBinding": "«helpers.escapePythonString(helpers.getRefWithClause(activationEventInst).trim)»",
+                "stepIdsFrom": "activationIds"
+            },
+            "targetEvent": {
+                "name": "«helpers.escapePythonString(targetEvent)»",
+                "whereConcrete": "«helpers.escapePythonString(helpers.getRefConcreteWhereClause(targetEventInst))»",
+                "whereCorrelation": "«helpers.escapePythonString(helpers.getRefCorrelationWhereClause(targetEventInst))»"
+            },
+            "message": "The triggering event occurred without its required prior event «IF hasCorrelation» with matching correlation«ENDIF»."
             }
-            «ENDIF»
+        «ENDIF»
         ]
         '''
-        
         return new CPNTemplateResult(
             result.psBody,
             result.acceptanceJson.replace('"templateType": "Response"', '"templateType": "Precedence"'),
@@ -94,40 +109,56 @@ class PastTemplates {
         val diagnostics =
         '''
         [
+        «IF negated»
             {
-                "kind": "unfulfilledChainPrecedence",
-                "valueKind": "correlation",
-                "hasCorrelation": «IF hasCorrelation»True«ELSE»False«ENDIF»,
-                "includeRawToken": False,
-                "tokenPlace": "«correlationInfo.refName»",
-                "activationLabel": "«helpers.escapePythonString(activationLabel)»",
-                "targetLabel": "«helpers.escapePythonString(targetLabel)»",
-                "activationEvent": {
-                    "name": "«helpers.escapePythonString(activationEvent)»",
-                    "whereConcrete": "«helpers.escapePythonString(helpers.getRefConcreteWhereClause(activationEventInst))»",
-                    "correlationBinding": "«helpers.escapePythonString(helpers.getRefWithClause(activationEventInst).trim)»",
-                    "stepIdsFrom": "activationIds"
-                },
-                "targetEvent": {
-                    "name": "«helpers.escapePythonString(targetEvent)»",
-                    "whereConcrete": "«helpers.escapePythonString(helpers.getRefConcreteWhereClause(targetEventInst))»",
-                    "whereCorrelation": "«helpers.escapePythonString(helpers.getRefCorrelationWhereClause(targetEventInst))»"
-                },
-                "violationStep": {
-                    "relation": "immediatePredecessor",
-                    "of": "activationEvent"
-                },
-                "message": "The triggering event was not immediately preceded by its required event «IF hasCorrelation» with matching correlation«ENDIF»."
+             "kind": "forbiddenChainPrecedence",
+             "valueKind": "correlation",
+             "hasCorrelation": «IF hasCorrelation»True«ELSE»False«ENDIF»,
+             "includeRawToken": False,
+             "tokenPlace": "matchedPairs",
+             "activationLabel": "«helpers.escapePythonString(activationLabel)»",
+             "targetLabel": "«helpers.escapePythonString(targetLabel)»",
+             "activationEvent": {
+                 "name": "«helpers.escapePythonString(activationEvent)»",
+                 "whereConcrete": "«helpers.escapePythonString(helpers.getRefConcreteWhereClause(activationEventInst))»",
+                 "correlationBinding": "«helpers.escapePythonString(helpers.getRefWithClause(activationEventInst).trim)»",
+                 "stepIdsFrom": "activationIds"
+             },
+             "targetEvent": {
+                 "name": "«helpers.escapePythonString(targetEvent)»",
+                 "whereConcrete": "«helpers.escapePythonString(helpers.getRefConcreteWhereClause(targetEventInst))»",
+                 "whereCorrelation": "«helpers.escapePythonString(helpers.getRefCorrelationWhereClause(targetEventInst))»",
+                 "stepIdsFrom": "targetIds"
+             },
+             "message": "Activation was immediately preceded by a forbidden Target «IF hasCorrelation» with matching correlation«ENDIF»."   
             }
-            «IF negated»,
+        «ELSE»                
             {
-                "kind": "forbiddenChainPrecedence",
-                "valueKind": "matchedPair",
-                "violationKind": "emptyPlaces",
-                "tokenPlace": "matchedPairs",
-                "message": "A forbidden ChainPrecedence match occurred."
+            "kind": "unfulfilledChainPrecedence",
+            "valueKind": "correlation",
+            "hasCorrelation": «IF hasCorrelation»True«ELSE»False«ENDIF»,
+            "includeRawToken": False,
+            "tokenPlace": "«correlationInfo.refName»",
+            "activationLabel": "«helpers.escapePythonString(activationLabel)»",
+            "targetLabel": "«helpers.escapePythonString(targetLabel)»",
+            "activationEvent": {
+                "name": "«helpers.escapePythonString(activationEvent)»",
+                "whereConcrete": "«helpers.escapePythonString(helpers.getRefConcreteWhereClause(activationEventInst))»",
+                "correlationBinding": "«helpers.escapePythonString(helpers.getRefWithClause(activationEventInst).trim)»",
+                "stepIdsFrom": "activationIds"
+            },
+            "targetEvent": {
+                "name": "«helpers.escapePythonString(targetEvent)»",
+                "whereConcrete": "«helpers.escapePythonString(helpers.getRefConcreteWhereClause(targetEventInst))»",
+                "whereCorrelation": "«helpers.escapePythonString(helpers.getRefCorrelationWhereClause(targetEventInst))»"
+            },
+            "violationStep": {
+                "relation": "immediatePredecessor",
+                "of": "activationEvent"
+            },
+            "message": "The triggering event was not immediately preceded by its required event «IF hasCorrelation» with matching correlation«ENDIF»."
             }
-            «ENDIF»
+        «ENDIF»
         ]
         '''
         
