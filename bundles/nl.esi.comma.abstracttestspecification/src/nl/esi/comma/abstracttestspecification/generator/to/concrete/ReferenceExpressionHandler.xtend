@@ -19,17 +19,9 @@ import nl.esi.comma.abstracttestspecification.abstractTestspecification.Abstract
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.ChainedStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.ExecutableStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.RunStep
-import nl.esi.xtext.actions.actions.Action
-import nl.esi.xtext.actions.actions.ActionList
-import nl.esi.xtext.actions.actions.ActionsFactory
-import nl.esi.xtext.actions.actions.AssignmentAction
-import nl.esi.xtext.actions.actions.ForAction
-import nl.esi.xtext.actions.actions.IfAction
 import nl.esi.xtext.actions.actions.RecordFieldAssignmentAction
 import nl.esi.xtext.common.lang.utilities.EcoreUtil3
 import nl.esi.xtext.expressions.evaluation.ExpressionEvaluator
-import nl.esi.xtext.expressions.expression.ExpressionFactory
-import nl.esi.xtext.expressions.expression.ExpressionRecord
 import nl.esi.xtext.expressions.expression.ExpressionVariable
 import nl.esi.xtext.types.types.RecordFieldKind
 import nl.esi.xtext.types.types.RecordTypeDecl
@@ -38,7 +30,6 @@ import nl.esi.xtext.types.types.TypeReference
 
 import static extension nl.esi.comma.abstracttestspecification.generator.utils.Utils.*
 import static extension nl.esi.comma.assertthat.utilities.AssertThatUtilities.*
-import static extension nl.esi.xtext.actions.utilities.ActionsUtilities.*
 import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
 import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
 import static extension org.eclipse.emf.ecore.util.EcoreUtil.*
@@ -67,7 +58,9 @@ class ReferenceExpressionHandler {
         for (rstep : estep.stepRef.map[refStep].filter(RunStep)) {
             val suppressedOutputs = rstep.suppressedVarFields.map['''«rstep.outputVar».«it»'''].toSet
             for (output : rstep.output.reject[suppressedOutputs.contains('''«rstep.outputVar».«varField»''')]) {
-                evaluateReferenceConstrains(estep.inputVar + '.' + output.name.name, rstep.outputVar + '.' + output.name.name, output.name.type, suppressedOutputs, mapLHStoRHS)
+                evaluateReferenceConstrains(estep.inputVar + '.' + output.name.name,
+                        rstep.outputVar + '.' + output.name.name, output.name.type, suppressedOutputs, mapLHStoRHS
+                )
             }
         }
 
@@ -98,7 +91,7 @@ class ReferenceExpressionHandler {
         val expressionEvaluator = EcoreUtil3.getService(cstep, ExpressionEvaluator)
 
         // Iterate all record field assignments of all constraints
-        for (action : cstep.refs.flatMap[ce].flatMap[act.flattenAssignments.actions.filter(RecordFieldAssignmentAction)]) {
+        for (action : cstep.refs.flatMap[ce].flatMap[act.actions].filter(RecordFieldAssignmentAction)) {
             // Run block input data structure = Concrete TSpec step input data structure
             // TODO: Actions formatter doesn't seem to be applied resulting in unwanted spaces.
             //       Using a simple replace for now
@@ -138,58 +131,6 @@ class ReferenceExpressionHandler {
         } else {
             mapLHStoRHS.computeIfAbsent(inputName)[newArrayList] += outputName
         }
-    }
-
-    private static def ActionList flattenAssignments(ActionList actionList) {
-        if (actionList === null) {
-            return actionList
-        }
-        val flattened = actionList.actions.flatMap[flattenAssignments].toList
-        actionList.actions.clear
-        actionList.actions += flattened
-        return actionList
-    }
-
-    private static def List<Action> flattenAssignments(Action action) {
-        val flattened = newLinkedList
-        switch (action) {
-            AssignmentAction case action.assignment.type.isRecordType && action.exp instanceof ExpressionRecord: {
-                flattened += (action.exp as ExpressionRecord).fields.flatMap [ actField |
-                    flattenAssignments(ActionsFactory.eINSTANCE.createRecordFieldAssignmentAction => [
-                        fieldAccess = ExpressionFactory.eINSTANCE.createExpressionRecordAccess => [
-                            record = ExpressionFactory.eINSTANCE.createExpressionVariable => [
-                                variable = action.assignment
-                            ]
-                            field = actField.recordField
-                        ]
-                        exp = actField.exp.copy
-                    ])
-                ]
-            }
-            RecordFieldAssignmentAction case action.field.type.isRecordType && action.exp instanceof ExpressionRecord: {
-                flattened += (action.exp as ExpressionRecord).fields.flatMap [ actField |
-                    flattenAssignments(ActionsFactory.eINSTANCE.createRecordFieldAssignmentAction => [
-                        fieldAccess = ExpressionFactory.eINSTANCE.createExpressionRecordAccess => [
-                            record = action.fieldAccess.copy
-                            field = actField.recordField
-                        ]
-                        exp = actField.exp.copy
-                    ])
-                ]
-            }
-            IfAction: {
-                flattenAssignments(action.thenList)
-                flattenAssignments(action.elseList)
-                flattened += action
-            }
-            ForAction: {
-                flattenAssignments(action.doList)
-                flattened += action
-            }
-            default:
-                flattened += action
-        }
-        return flattened
     }
 
     private static def void rewriteVariableReferences(Map<String, List<String>> mapLHStoRHS) {
