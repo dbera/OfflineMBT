@@ -306,7 +306,7 @@ public class Main {
 		Bpmn4sDataType datatype = switch (type) {
 			case Bpmn4sDataType.RECORD_TYPE,
 			     Bpmn4sDataType.CONTEXT_TYPE -> parseRecord(dt);
-			case Bpmn4sDataType.LIST_TYPE -> parseList(dt);
+			case Bpmn4sDataType.LIST_TYPE -> dt.getAnnotations().containsKey("set") ? parseSet(dt) : parseList(dt);
 			case Bpmn4sDataType.SET_TYPE -> parseSet(dt);
 			case Bpmn4sDataType.MAP_TYPE -> parseMap(dt);
 			case Bpmn4sDataType.ENUM_TYPE, 
@@ -342,8 +342,16 @@ public class Main {
 		String name = dt.getName();
 		RecordType rec = new RecordType(name);
 		for(var f: dt.getChildren()) {
+			var fKindMixed = f.getAnnotations() instanceof Map map ? map.containsKey("mixed") : Boolean.FALSE;
+			var fKindSymbolic = f.getAnnotations() instanceof Map map ? map.containsKey("symbolic") : Boolean.FALSE;
 			var fSuppress = f.getAnnotations() instanceof Map map ? map.containsKey("suppress") : Boolean.FALSE;
-			RecordFieldKind fKind = RecordFieldKind.parse(f.getKind());
+			RecordFieldKind fKind = RecordFieldKind.Concrete;
+			if (fKindMixed) {
+				fKind = RecordFieldKind.Mixed;
+			}
+			else if (fKindSymbolic) {
+				fKind = RecordFieldKind.Symbolic;
+			}
 			rec.addField(f.getName(), f.getType(), fKind, fSuppress);
 		}
 		return rec;

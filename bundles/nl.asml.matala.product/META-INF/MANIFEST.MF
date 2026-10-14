@@ -16,17 +16,18 @@ Require-Bundle: nl.esi.comma.assertthat;visibility:=reexport,
  org.eclipse.emf.common,
  org.antlr.runtime;bundle-version="[3.2.0,3.2.1)",
  org.eclipse.xtend.lib;bundle-version="2.36.0",
- org.eclipse.lsat.common.xtend
+ org.eclipse.lsat.common.xtend,
+ nl.esi.xplus.extensions
 Bundle-RequiredExecutionEnvironment: JavaSE-21
-Export-Package: nl.asml.matala.product.product.util,
- nl.asml.matala.product.parser.antlr.internal,
- nl.asml.matala.product.services,
- nl.asml.matala.product.serializer,
- nl.asml.matala.product.product,
- nl.asml.matala.product.parser.antlr,
- nl.asml.matala.product.scoping,
- nl.asml.matala.product,
- nl.asml.matala.product.validation,
+Export-Package: nl.asml.matala.product,
  nl.asml.matala.product.generator,
- nl.asml.matala.product.product.impl
+ nl.asml.matala.product.parser.antlr,
+ nl.asml.matala.product.parser.antlr.internal,
+ nl.asml.matala.product.product,
+ nl.asml.matala.product.product.impl,
+ nl.asml.matala.product.product.util,
+ nl.asml.matala.product.scoping,
+ nl.asml.matala.product.serializer,
+ nl.asml.matala.product.services,
+ nl.asml.matala.product.validation
 Import-Package: org.apache.log4j

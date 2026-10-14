@@ -46,7 +46,8 @@ Require-Bundle: org.eclipse.xtext,
  io.netty.codec-http2,
  io.projectreactor.netty.reactor-netty-core,
  io.projectreactor.netty.reactor-netty-http,
- io.projectreactor.reactor-core
+ io.projectreactor.reactor-core,
+ nl.esi.xplus.extensions
 Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: nl.esi.comma.causalgraph,
  nl.esi.comma.causalgraph.agents,

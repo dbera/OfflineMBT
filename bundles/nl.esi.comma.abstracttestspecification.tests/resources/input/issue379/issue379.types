@@ -9,12 +9,12 @@ record Context {
 
 record Data {
     int	id
-    mixed Nested	nested
+    @mixed Nested	nested
 }
 
 record Nested {
     int	id
-    mixed string	mix
-    symbolic string	symbol
+    @mixed string	mix
+    @symbolic  string	symbol
 }
 

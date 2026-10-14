@@ -19,17 +19,18 @@ import com.google.inject.Inject
 import java.util.Collections
 import nl.asml.matala.product.product.DataReferences
 import nl.asml.matala.product.product.UpdateOutVar
+import nl.esi.xplus.extensions.types.RecordFieldKind
 import nl.esi.xtext.actions.services.ActionsGrammarAccess
 import nl.esi.xtext.expressions.expression.TypeAnnotation
 import nl.esi.xtext.expressions.services.ExpressionGrammarAccess
 import nl.esi.xtext.expressions.utilities.ProposalHelper
 import nl.esi.xtext.types.types.RecordField
-import nl.esi.xtext.types.types.RecordFieldKind
 import nl.esi.xtext.types.types.Type
 import org.eclipse.xtext.CrossReference
 import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.ide.editor.contentassist.ContentAssistContext
 
+import static extension nl.esi.xplus.extensions.types.TypesExtensionUtil.getKind
 import static extension nl.esi.xtext.actions.utilities.ActionsUtilities.*
 
 /**

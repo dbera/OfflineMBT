@@ -1,0 +1,15 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: XPlus Extension for OfflineMBT
+Bundle-SymbolicName: nl.esi.xplus.extensions;singleton:=true
+Bundle-Vendor: TNO_ESI
+Bundle-Version: 4.2.0.qualifier
+Require-Bundle: nl.esi.xtext.actions,
+ com.google.guava,
+ org.eclipse.xtext.xbase.lib,
+ org.eclipse.xtend.lib,
+ org.eclipse.xtend.lib.macro
+Automatic-Module-Name: nl.esi.xplus.extensions
+Bundle-RequiredExecutionEnvironment: JavaSE-21
+Export-Package: nl.esi.xplus.extensions.types
+Import-Package: org.slf4j

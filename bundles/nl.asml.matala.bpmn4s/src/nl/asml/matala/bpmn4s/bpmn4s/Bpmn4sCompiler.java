@@ -815,6 +815,8 @@ public class Bpmn4sCompiler{
 	public static String generateTypes(Collection<Bpmn4sDataType> dataTypes ) {
 		String types = new String("");
 		var sorted = IterableExtensions.sortBy(dataTypes,Bpmn4sDataType::getName);
+		var sets = sorted.stream().filter(dt -> dt instanceof SetType).map(Bpmn4sDataType::getName).toList();
+
 		for (var dataType : sorted) {
 			if(dataType instanceof RecordType recType) {
 				String type = "record " + recType.getName() + " {\n";
@@ -822,9 +824,10 @@ public class Bpmn4sCompiler{
 				for (RecordField field: recType.fields) {
 					String fieldName = field.getName();
 					String fieldTypeName = typeToString(dataTypes, field.getType());
-					String fieldKind = field.getKind() == RecordFieldKind.Concrete ? "" : field.getKind().name().toLowerCase() + " ";
-					var suppress = field.isSuppressed() ? 	"@suppress\n" : "";
-					parameters += suppress + fieldKind + fieldTypeName + "\t" + fieldName + "\n";
+					String set = sets.contains(field.getType()) ? "@set ": "";
+					String fieldKind = field.getKind() == RecordFieldKind.Concrete ? "" : "@"+field.getKind().name().toLowerCase() + " ";
+					var suppress = field.isSuppressed() ? 	"@suppress " : "";
+					parameters += suppress + set + fieldKind + fieldTypeName + "\t" + fieldName + "\n";
 				}
 				type += indent(parameters) + "}\n";
 				types += type + "\n";
@@ -855,7 +858,7 @@ public class Bpmn4sCompiler{
 		if (dataType == null) {
 			return mapType(dataTypeName);
 		} else {
-			if (dataType instanceof ListType) {
+			if (dataType instanceof ListType ) {
 				ListType lst = ListType.class.cast(dataType);
 				result = String.format("%s[]" , typeToString(dataTypes, lst.valueType)); 
 			} else if (dataType instanceof MapType) {
@@ -863,7 +866,7 @@ public class Bpmn4sCompiler{
 				result = String.format("map<%s,%s>", typeToString(dataTypes, mp.keyType), typeToString(dataTypes, mp.valueType));
 			} else if (dataType instanceof SetType) {
 				SetType st = SetType.class.cast(dataType);			
-				result = String.format("set<%s>" , typeToString(dataTypes, st.valueType));
+				result = String.format("@set %s[]" , typeToString(dataTypes, st.valueType)); 
 			} else {
 				// record, enumerations and basic types go here
 				result = mapType(dataType.getName()); 

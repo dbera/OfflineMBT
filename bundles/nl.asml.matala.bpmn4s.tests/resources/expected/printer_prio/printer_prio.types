@@ -13,7 +13,7 @@ record CorrectionItem {
 }
 
 record CorrectionsReport {
-    mixed map<int,CorrectionItem[]>	correctionsMap
+    @mixed map<int,CorrectionItem[]>	correctionsMap
     int	id
 }
 
@@ -26,7 +26,7 @@ record FactoryCtx {
 
 record MeasureRequest {
     int	id
-    mixed Report	printJobReport
+    @mixed Report	printJobReport
 }
 
 enum OperationType { PREP PRINT }
@@ -49,8 +49,8 @@ enum PrintResolution { LOW MED HIGH }
 
 record Report {
     int	id
-    symbolic string	payload
-    symbolic real	kpi
+    @symbolic string	payload
+    @symbolic real	kpi
 }
 
 record Result {
