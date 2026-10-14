@@ -38,10 +38,10 @@ import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
+import nl.asml.matala.product.generator.ProductGenerationMode
 
 import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.getService
 import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.serialize
-
 /**
  * Generates code from your *.ps model files on save.
  */
@@ -50,11 +50,34 @@ class ProductGenerator extends AbstractGenerator {
     val String scenarioPrefix;
 
     new() {
-        this(null)
+        this(null, ProductGenerationMode.TEST_GENERATION)
     }
 
+    // TODO: Remove constructor
+    @Deprecated
     new(String scenarioPrefix) {
+        this(scenarioPrefix, ProductGenerationMode.TEST_GENERATION)
+    }
+    
+//    Old boolean flag implementation
+
+//    var isReachabilityGenerationTask = false
+//    
+//    new(boolean _isReachabilityGenerationTask) {
+//        isReachabilityGenerationTask = _isReachabilityGenerationTask
+//    }
+
+    val ProductGenerationMode generationMode
+
+    // TODO: Remove constructor
+    @Deprecated
+    new (ProductGenerationMode generationMode) {
+        this(null, generationMode)
+    }
+
+    private new (String scenarioPrefix, ProductGenerationMode generationMode) {
         this.scenarioPrefix = scenarioPrefix
+        this.generationMode = generationMode
     }
 	
 	override void doGenerate(Resource res, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
@@ -178,6 +201,8 @@ class ProductGenerator extends AbstractGenerator {
 			}
 			
 			fsa.generateFile('CPNServer//' + specName + '//' + specName + '.py', pnet.toSnakes(
+//			    isReachabilityGenerationTask,
+			    generationMode,
 			    specName, specName, listOfEnvBlocks, listOfAssertTransitions,
 			     mapOfTransitionQnames, mapOfSuppressTransitionVars, inout_places, 
 			    init_places, depth_limit, state_limit, num_tests, sutTransitionMap

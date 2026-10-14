@@ -185,7 +185,6 @@
                                 <inputFile>${project.build.directory}/meta-models/nl.esi.comma.assertthat/model/generated/AssertThat.ecore</inputFile>
                                 <inputFile>${project.build.directory}/meta-models/nl.asml.matala.product/model/generated/Product.ecore</inputFile>
                                 <inputFile>${project.build.directory}/meta-models/nl.esi.comma.abstracttestspecification/model/generated/AbstractTestspecification.ecore</inputFile>
-                                <inputFile>${project.build.directory}/meta-models/nl.esi.comma.behavior.scl/model/generated/Scl.ecore</inputFile>
                                 <inputFile>${project.build.directory}/meta-models/nl.esi.comma.causalgraph/model/generated/CausalGraph.ecore</inputFile>
                                 <inputFile>${project.build.directory}/meta-models/nl.esi.comma.constraints/model/generated/Constraints.ecore</inputFile>
                                 <inputFile>${project.build.directory}/meta-models/nl.esi.comma.inputspecification/model/generated/InputSpecification.ecore</inputFile>
