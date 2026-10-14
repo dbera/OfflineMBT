@@ -15,14 +15,11 @@ package nl.esi.comma.abstracttestspecification.generator.utils
 
 import java.util.Collections
 import java.util.List
-import java.util.Set
 import nl.asml.matala.product.product.Block
 import nl.asml.matala.product.product.ProductPackage
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractTestDefinition
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.Binding
-import nl.esi.comma.abstracttestspecification.abstractTestspecification.ChainedStep
-import nl.esi.comma.abstracttestspecification.abstractTestspecification.ExecutableStep
 import nl.esi.comma.assertthat.assertThat.AssertThatFactory
 import nl.esi.comma.assertthat.assertThat.JsonArray
 import nl.esi.comma.assertthat.assertThat.JsonExpression
@@ -41,12 +38,14 @@ import nl.esi.xtext.expressions.expression.ExpressionPlus
 import nl.esi.xtext.expressions.expression.ExpressionRecordAccess
 import nl.esi.xtext.expressions.expression.ExpressionVariable
 import nl.esi.xtext.expressions.expression.Variable
+import nl.esi.xtext.types.types.RecordTypeDecl
 import nl.esi.xtext.types.types.Type
 import nl.esi.xtext.types.types.TypesFactory
 import nl.esi.xtext.types.types.VectorTypeConstructor
 import org.eclipse.emf.ecore.util.EcoreUtil
 
-import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.serialize
+import static extension nl.esi.comma.assertthat.utilities.AssertThatUtilities.isSuppressed
+import static extension org.eclipse.xtext.EcoreUtil2.*
 
 class Utils 
 {
@@ -72,9 +71,22 @@ class Utils
 
     static def String getVarField(Variable variable) {
         if (variable.eContainingFeature === ProductPackage.Literals.BLOCK__CONTEXTVARS) {
-            return (variable.eContainer as Block).contextname ?: variable.name
+            return (variable.eContainer as Block).contextname ?: "___CONTEXT___"
         }
         return variable.name
+    }
+
+    static def boolean isSuppressed(Binding binding) {
+        // If all fields are suppressed, the binding is suppressed
+        val typeDecl = binding.name.type.type
+        if (typeDecl instanceof RecordTypeDecl) {
+            if (typeDecl.fields.forall[suppressed]) {
+                return true
+            }
+        }
+        val varField = binding.varField
+        val step = binding.getContainerOfType(AbstractStep)
+        return step?.suppress !== null && step.suppress.vars.exists[variable.varField == varField]
     }
 
     static def List<Binding> getContextData(AbstractStep step) {
@@ -93,23 +105,6 @@ class Utils
         return step.input.filter[sutvars.contains(name.name)].toList
     }
 
-
-    @Deprecated
-    static def getChainedStepRefs(ExecutableStep step) {
-        return step.stepRef.filter[refStep instanceof ChainedStep]
-    }
-
-    static def Set<String> getSuppressedVarFields(AbstractStep step) {
-        return switch (it: step.suppress) {
-            case null: Collections.emptySet
-            case varFields.isEmpty: (step.input + step.output).map[varField].toSet
-            default: varFields.map[serialize[ expr |
-                if (expr instanceof ExpressionVariable) {
-                    return expr.variable.varField
-                }
-            ]].toSet
-        }
-    }
 
     dispatch static def String printField(ExpressionRecordAccess exp) {
         return exp.record.printField + '.' + exp.field.name

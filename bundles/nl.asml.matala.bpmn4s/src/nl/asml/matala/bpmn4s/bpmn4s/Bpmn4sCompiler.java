@@ -617,14 +617,6 @@ public class Bpmn4sCompiler{
 							}
 							if (e.isSuppressed()) {
 								task += " suppress";
-							} else {
-								Set<String> suppressedFields = collectSuppressedFields(
-										model.getElementById(e.getTar()).getDataType(),
-										sanitize(compile(e.getTar())) + '.',
-										new HashSet<String>());
-								if (!suppressedFields.isEmpty()) {
-									task += suppressedFields.stream().collect(Collectors.joining(", "," suppress(", ")"));
-								}
 							}
 							task += "\n";
 							if (e.isPersistent()) {
@@ -640,12 +632,9 @@ public class Bpmn4sCompiler{
 							if (e.getRefUpdate() != null && e.getRefUpdate() != "") {
 								task += DATA_EXPR_HLPR.processRefUpdate(e.getRefUpdate(), replaceMap);
 							}
-							Set<String> suppressedFields = collectSuppressedFields(
-									model.getElementById(cId).getContextDataType(),
-									postCtxName + '.',
-									new HashSet<String>());
-							if (!suppressedFields.isEmpty()) {
-								task += suppressedFields.stream().collect(Collectors.joining(", "," suppress(", ")"));
+							if (compCtxName == null) {
+								// The default context should always be suppressed
+								task += " suppress";
 							}
 							task += "\n";
 							String updates = "";
@@ -672,20 +661,6 @@ public class Bpmn4sCompiler{
 		desc.addAll(getFlowActions(cId));
 		
 		return "desc \"" + compile(cId) + "_Model\"\n\n" + String.join("\n", desc);
-	}
-
-	private Set<String> collectSuppressedFields(String dataTypeName, String prefix, Set<String> fields) {
-		Bpmn4sDataType dataType = model.dataSchema.get(dataTypeName);
-		if (dataType instanceof RecordType recType) {
-			for(RecordField field : recType.fields) {
-				if (field.isSuppressed()) {
-					fields.add(prefix + field.getName());
-				} else {
-					collectSuppressedFields(field.getType(), prefix + field.getName() + '.', fields);
-				}
-			}
-		}
-		return fields;
 	}
 
 	/**

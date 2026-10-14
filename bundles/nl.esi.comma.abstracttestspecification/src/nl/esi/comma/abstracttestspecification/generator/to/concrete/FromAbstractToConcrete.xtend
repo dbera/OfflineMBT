@@ -126,8 +126,8 @@ class FromAbstractToConcrete extends AbstractGenerator {
     // Generate Types File for Concrete TSpec
     def private generateTypesFile(AbstractTestDefinition atd, Iterable<String> typesImports) {
         val sysStepTypes = atd.steps.filter(ExecutableStep).reject[stepType.isNullOrEmpty].groupBy[stepType]
-        val sysStepTypeInputs = sysStepTypes.mapValues[it.flatMap[input].map['''«name.type.typeName» «varField»''']]
-        val sysStepTypeOutputs = sysStepTypes.mapValues[it.flatMap[output].map['''«name.type.typeName» «varField»''']]
+        val sysStepTypeInputs = sysStepTypes.mapValues[flatMap[input].reject[suppressed].map['''«name.type.typeName» «varField»''']]
+        val sysStepTypeOutputs = sysStepTypes.mapValues[flatMap[output].reject[suppressed].map['''«name.type.typeName» «varField»''']]
 
         return '''
             «FOR ti : typesImports»

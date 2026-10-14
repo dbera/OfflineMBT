@@ -14,7 +14,6 @@ package nl.esi.comma.abstracttestspecification.generator.to.concrete
 
 import java.util.List
 import java.util.Map
-import java.util.Set
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.Binding
 import nl.esi.comma.assertthat.assertThat.JsonValue
@@ -28,7 +27,7 @@ import nl.esi.xtext.types.types.TypeReference
 import nl.esi.xtext.types.types.VectorTypeConstructor
 
 import static extension nl.esi.comma.abstracttestspecification.generator.utils.Utils.*
-import static extension org.eclipse.lsat.common.xtend.Queries.*
+import static extension nl.esi.comma.assertthat.utilities.AssertThatUtilities.isSuppressed
 import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
 
 class ConcreteExpressionHandler {
@@ -36,18 +35,17 @@ class ConcreteExpressionHandler {
         val Map<String, List<String>> mapLHStoRHS = newTreeMap(String.CASE_INSENSITIVE_ORDER)
 
         val inputVarPrefix = step.inputVar + '.'
-        val suppressedVarFields = step.stepRef.map[refStep].union(step).flatMap[suppressedVarFields].map[inputVarPrefix + it].toSet
-        for (binding : bindings.reject[suppressedVarFields.contains(inputVarPrefix + varField)]) {
-            mapLHStoRHS.putVariables(inputVarPrefix + binding.varField, binding.name.type, binding.jsonvals, suppressedVarFields)
+        for (binding : bindings.reject[suppressed]) {
+            mapLHStoRHS.putVariables(inputVarPrefix + binding.varField, binding.name.type, binding.jsonvals)
         }
 
         return mapLHStoRHS
     }
 
-    private static def void putVariables(Map<String, List<String>> mapLHStoRHS, String name, Type type, JsonValue value, Set<String> suppressedVarFields) {
+    private static def void putVariables(Map<String, List<String>> mapLHStoRHS, String name, Type type, JsonValue value) {
         if (type instanceof TypeReference && type.type instanceof RecordTypeDecl) {
-            for (field : (type.type as RecordTypeDecl).fields.filter[f|value.hasMemberValue(f.name)].reject[suppressedVarFields.contains(name + '.' + it.name)]) {
-                mapLHStoRHS.putVariables(name + '.' + field.name, field.type, value.getMemberValue(field.name), suppressedVarFields)
+            for (field : (type.type as RecordTypeDecl).fields.reject[suppressed].filter[f|value.hasMemberValue(f.name)]) {
+                mapLHStoRHS.putVariables(name + '.' + field.name, field.type, value.getMemberValue(field.name))
             }
         } else {
             mapLHStoRHS.computeIfAbsent(name)[newArrayList] += type.createValue(value)

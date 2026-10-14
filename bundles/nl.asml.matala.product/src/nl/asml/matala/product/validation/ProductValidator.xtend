@@ -53,6 +53,7 @@ import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
 import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
 import static extension org.eclipse.lsat.common.xtend.Queries.*
 import static extension org.eclipse.xtext.EcoreUtil2.*
+import static extension nl.esi.comma.assertthat.utilities.AssertThatUtilities.isSuppressed
 
 /**
  * This class contains custom validation rules. 
@@ -416,22 +417,21 @@ class ProductValidator extends AbstractProductValidator {
         }
 
         // Check LHS variables
-        val suppressedVariables = suppress.varFields.filter(ExpressionVariable).map[variable].toSet
+        val suppressedVariables = suppress.vars.map[variable].toSet
         assignments.filter[suppressedVariables.contains(assignment)].forEach[
             error('''Suppressed field cannot be assigned in reference update''', it,
                 ActionsPackage.Literals.RECORD_FIELD_ASSIGNMENT_ACTION__FIELD_ACCESS)
         ]
 
         // Check LHS record fields
-        val suppressedFields  = suppress.varFields.filter(ExpressionRecordAccess).map[field].toSet
-        assignments.filter[fields.exists[suppressedFields.contains(it)]].forEach[
+        assignments.filter[fields.exists[suppressed]].forEach[
             error('''Suppressed field cannot be assigned in reference update''', it,
                 ActionsPackage.Literals.RECORD_FIELD_ASSIGNMENT_ACTION__FIELD_ACCESS)
         ]
 
         // Check RHS record fields
         val rhsFields = dataReferences.eAllContents.filter(Field).toList
-        for (suppressedField : rhsFields.filter[suppressedFields.contains(recordField)]) {
+        for (suppressedField : rhsFields.filter[recordField.suppressed]) {
             error('''Suppressed field cannot be assigned in reference update''', suppressedField,
                 ExpressionPackage.Literals.FIELD__RECORD_FIELD)
         }

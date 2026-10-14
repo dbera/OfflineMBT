@@ -115,11 +115,7 @@ VarRef:
 ;
 
 Suppress: {Suppress}
-    'suppress' ('(' varFields+=SuppressVarFieldExp (',' varFields+=SuppressVarFieldExp)* ')')?
-;
-
-SuppressVarFieldExp returns expr::Expression:
-    ExpressionVariable | FieldAccessExp
+    'suppress' ('(' vars+=ExpressionVariable (',' vars+=ExpressionVariable)* ')')?
 ;
 
 DataConstraints: {DataConstraints}

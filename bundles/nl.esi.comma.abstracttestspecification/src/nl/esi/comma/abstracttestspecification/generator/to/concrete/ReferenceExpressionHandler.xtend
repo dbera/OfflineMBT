@@ -56,10 +56,9 @@ class ReferenceExpressionHandler {
         }
 
         for (rstep : estep.stepRef.map[refStep].filter(RunStep)) {
-            val suppressedOutputs = rstep.suppressedVarFields.map['''«rstep.outputVar».«it»'''].toSet
-            for (output : rstep.output.reject[suppressedOutputs.contains('''«rstep.outputVar».«varField»''')]) {
-                evaluateReferenceConstrains(estep.inputVar + '.' + output.name.name,
-                        rstep.outputVar + '.' + output.name.name, output.name.type, suppressedOutputs, mapLHStoRHS
+            for (output : rstep.output.reject[suppressed]) {
+                evaluateReferenceConstrains(estep.inputVar + '.' + output.varField,
+                        rstep.outputVar + '.' + output.varField, output.name.type, mapLHStoRHS
                 )
             }
         }
@@ -123,10 +122,10 @@ class ReferenceExpressionHandler {
         }
     }
 
-    private static def void evaluateReferenceConstrains(String inputName, String outputName, Type type, Set<String> suppressedOutput, Map<String, List<String>> mapLHStoRHS) {
+    private static def void evaluateReferenceConstrains(String inputName, String outputName, Type type, Map<String, List<String>> mapLHStoRHS) {
         if (type instanceof TypeReference && type.type instanceof RecordTypeDecl) {
-            for (field : (type.type as RecordTypeDecl).fields.reject[kind == RecordFieldKind.CONCRETE].reject[suppressedOutput.contains(outputName + '.' + it.name)]) {
-                evaluateReferenceConstrains(inputName + '.' + field.name, outputName + '.' + field.name, field.type, suppressedOutput, mapLHStoRHS)
+            for (field : (type.type as RecordTypeDecl).fields.reject[suppressed].reject[kind == RecordFieldKind.CONCRETE]) {
+                evaluateReferenceConstrains(inputName + '.' + field.name, outputName + '.' + field.name, field.type, mapLHStoRHS)
             }
         } else {
             mapLHStoRHS.computeIfAbsent(inputName)[newArrayList] += outputName

@@ -31,7 +31,7 @@ import java.util.ArrayList
 
 class MergeConcreteDataAssigments {
     def static void transform(Resource resource) {
-        resource.contents.filter(TSMain).map[model].filter(TestDefinition).forEach[transform]
+        resource.contents.filter(TSMain).map[model].forEach[transform]
     }
 
     def static void transform(TestDefinition ctd) {

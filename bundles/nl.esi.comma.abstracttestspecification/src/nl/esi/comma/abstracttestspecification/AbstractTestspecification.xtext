@@ -71,8 +71,9 @@ ComposeStep:
     'compose-step-name' ':' name = ID
     ('action-case' ':' caseRef = [prod::Update|QualifiedName] ) ?
     stepRef += StepReference*
-    'input-binding' ':' input += Binding+
-    'output-data' ':' output += Binding+ (suppress=Suppress)? // do not generate these in concrete TSpec
+    'input-data' ':' input += Binding+
+    'output-data' ':' output += Binding+
+    (suppress=Suppress)? // do not generate these in concrete TSpec
     refs += ConstraintStep*
     ('sut-var' ':' '{' varID += [expr::Variable|QualifiedName]+ '}')?
 ;
@@ -82,8 +83,9 @@ RunStep:
     ('step-type' ':' stepType = STRING)?
     ('action-case' ':' caseRef = [prod::Update|QualifiedName] ) ?
     stepRef += StepReference*
-    'input-binding' ':' input += Binding+
-    'output-data' ':' output += Binding+ (suppress=Suppress)? // do not generate these in concrete TSpec
+    'input-data' ':' input += Binding+
+    'output-data' ':' output += Binding+
+    (suppress=Suppress)? // do not generate these in concrete TSpec
     ('sut-var' ':' '{' varID += [expr::Variable|QualifiedName]+ '}')?
 ;
 
@@ -92,8 +94,9 @@ AssertionStep:
     ('assert-type' ':' stepType = STRING)?
     ('action-case' ':' caseRef = [prod::Update|QualifiedName] ) ?
     stepRef += StepReference*
-    'input-binding' ':' input += Binding+
-    'output-data' ':' output += Binding+ (suppress=Suppress)? // do not generate these in concrete TSpec
+    'input-data' ':' input += Binding+
+    'output-data' ':' output += Binding+
+    (suppress=Suppress)? // do not generate these in concrete TSpec
     refs += ConstraintStep*
     asserts += AssertStep+
     ('sut-var' ':' '{' varID += [expr::Variable|QualifiedName]+ '}')?
@@ -108,11 +111,7 @@ Binding:
 ;
 
 Suppress: {Suppress}
-    'suppress' ('(' varFields+=SuppressVarFieldExp (',' varFields+=SuppressVarFieldExp)* ')')?
-;
-
-SuppressVarFieldExp returns expr::Expression:
-    ExpressionVariable | FieldAccessExp
+    'suppress' ('(' vars+=ExpressionVariable (',' vars+=ExpressionVariable)* ')')?
 ;
 
 // Json Grammar
