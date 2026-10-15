@@ -35,7 +35,6 @@ Event_0ww9k8j : {
 job_a_input : {
     "job_id": 0
 }
-suppress(Event_0ww9k8j)
 
 run-step-name: Issue299C2RunJobA_RunA_default_0 step-type: "JobA"
 action-case: issue299.Issue299C2RunJobA.RunA.default
@@ -51,7 +50,6 @@ Event_0t40etv : {
 job_a_report : {
     "job_id": 0
 }
-suppress(Event_0t40etv)
 
 compose-step-name: Issue299C3ComposeJobB_JobBintake_default_0
 action-case: issue299.Issue299C3ComposeJobB.JobBintake.default
@@ -137,7 +135,6 @@ temp_job_b_input : {
 job_a_report : {
     "job_id": 0
 }
-suppress(job_a_report)
 data-references: temp_job_b_input
 issue299.Issue299C3ComposeJobB.AddjobAreport.default.x0
 issue299.Issue299C3ComposeJobB.AddjobAreport.default.x1
@@ -207,7 +204,6 @@ Event_18fn07m : {
 job_b_report : {
     "job_id": 0
 }
-suppress(Event_18fn07m)
 
 compose-step-name: Issue299C2ComposeJobA_ComposeA_default_1
 action-case: issue299.Issue299C2ComposeJobA.ComposeA.default
@@ -222,7 +218,6 @@ Event_0ww9k8j : {
 job_a_input : {
     "job_id": 1
 }
-suppress(Event_0ww9k8j)
 
 run-step-name: Issue299C2RunJobA_RunA_default_1 step-type: "JobA"
 action-case: issue299.Issue299C2RunJobA.RunA.default
@@ -238,7 +233,6 @@ Event_0t40etv : {
 job_a_report : {
     "job_id": 1
 }
-suppress(Event_0t40etv)
 
 compose-step-name: Issue299C3ComposeJobB_JobBintake_default_1
 action-case: issue299.Issue299C3ComposeJobB.JobBintake.default
@@ -324,7 +318,6 @@ temp_job_b_input : {
 job_a_report : {
     "job_id": 0
 }
-suppress(job_a_report)
 data-references: temp_job_b_input
 issue299.Issue299C3ComposeJobB.AddjobAreport.default.x0
 issue299.Issue299C3ComposeJobB.AddjobAreport.default.x1
@@ -381,7 +374,6 @@ temp_job_b_input : {
 job_a_report : {
     "job_id": 1
 }
-suppress(job_a_report)
 data-references: temp_job_b_input
 issue299.Issue299C3ComposeJobB.AddjobAreport.default.x0
 issue299.Issue299C3ComposeJobB.AddjobAreport.default.x1
@@ -451,7 +443,6 @@ Event_18fn07m : {
 job_b_report : {
     "job_id": 1
 }
-suppress(Event_18fn07m)
 
 compose-step-name: Issue299C2ComposeJobA_ComposeA_default_2
 action-case: issue299.Issue299C2ComposeJobA.ComposeA.default
@@ -466,7 +457,6 @@ Event_0ww9k8j : {
 job_a_input : {
     "job_id": 2
 }
-suppress(Event_0ww9k8j)
 
 run-step-name: Issue299C2RunJobA_RunA_default_2 step-type: "JobA"
 action-case: issue299.Issue299C2RunJobA.RunA.default
@@ -482,7 +472,6 @@ Event_0t40etv : {
 job_a_report : {
     "job_id": 2
 }
-suppress(Event_0t40etv)
 
 compose-step-name: Issue299C3ComposeJobB_JobBintake_default_2
 action-case: issue299.Issue299C3ComposeJobB.JobBintake.default
@@ -568,7 +557,6 @@ temp_job_b_input : {
 job_a_report : {
     "job_id": 0
 }
-suppress(job_a_report)
 data-references: temp_job_b_input
 issue299.Issue299C3ComposeJobB.AddjobAreport.default.x0
 issue299.Issue299C3ComposeJobB.AddjobAreport.default.x1
@@ -625,7 +613,6 @@ temp_job_b_input : {
 job_a_report : {
     "job_id": 1
 }
-suppress(job_a_report)
 data-references: temp_job_b_input
 issue299.Issue299C3ComposeJobB.AddjobAreport.default.x0
 issue299.Issue299C3ComposeJobB.AddjobAreport.default.x1
@@ -682,7 +669,6 @@ temp_job_b_input : {
 job_a_report : {
     "job_id": 2
 }
-suppress(job_a_report)
 data-references: temp_job_b_input
 issue299.Issue299C3ComposeJobB.AddjobAreport.default.x0
 issue299.Issue299C3ComposeJobB.AddjobAreport.default.x1
@@ -752,7 +738,6 @@ Event_18fn07m : {
 job_b_report : {
     "job_id": 2
 }
-suppress(Event_18fn07m)
 
 generate-file "./dataset/"
 

@@ -351,10 +351,9 @@ public class CamundaParser {
 	}
 
 	private static void addBpmnExtension(DataAssociation da, Binding bind) {
-		ConcreteExpressionHandler ceh = new ConcreteExpressionHandler();
 		TypeDecl b_type = bind.getName().getType().getType();
 		JsonValue b_val = bind.getJsonvals();
-		String b_str = ceh.createTypeDeclValue(b_type, b_val);
+		String b_str = ConcreteExpressionHandler.createTypeDeclValue(b_type, b_val);
 		da.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_UPDATE, b_str);
 	}
 

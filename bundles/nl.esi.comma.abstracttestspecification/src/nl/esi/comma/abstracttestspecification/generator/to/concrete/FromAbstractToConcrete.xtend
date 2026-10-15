@@ -12,270 +12,153 @@
  */
 package nl.esi.comma.abstracttestspecification.generator.to.concrete
 
-import java.util.HashSet
+import java.util.List
+import java.util.Map
+import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractTestDefinition
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AssertionStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.Binding
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.ExecutableStep
-import nl.esi.comma.abstracttestspecification.abstractTestspecification.RunStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.TSMain
 import nl.esi.comma.assertthat.assertThat.DataAssertionItem
 import nl.esi.xtext.expressions.expression.ExpressionVariable
-import nl.esi.xtext.expressions.services.ExpressionGrammarAccess
 import org.eclipse.emf.common.util.URI
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
 
+import static extension nl.esi.comma.abstracttestspecification.generator.to.concrete.ConcreteExpressionHandler.*
+import static extension nl.esi.comma.abstracttestspecification.generator.to.concrete.ReferenceExpressionHandler.*
 import static extension nl.esi.comma.abstracttestspecification.generator.utils.Utils.*
-import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
 import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
+import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
 
 class FromAbstractToConcrete extends AbstractGenerator {
-    
+
     override doGenerate(Resource res, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
-        val atd = res.contents.filter(TSMain).map[model].filter(AbstractTestDefinition).head
+        val atd = res.contents.filter(TSMain).map[model].head
         if (atd === null) {
             throw new Exception('No abstract tspec found in resource: ' + res.URI)
         }
 
-        val typesImportURIs = getTypesImports(res)
-        for (sys : atd.systems) {
-            val typesFile = '''types/«sys».types'''
-            val typesURI = fsa.getURI(typesFile)
-            val typesImports = typesImportURIs.map[resolve(res.URI).deresolve(typesURI).toString].toSet
-            fsa.generateFile(typesFile, atd.generateTypesFile(sys, typesImports))
-            fsa.generateFile('''parameters/«sys».params''', atd.generateParamsFile(sys))
-        }
-        val conTspecFileName = res.URI.lastSegment.replaceAll('\\.atspec$','.tspec')
-        fsa.generateFile(conTspecFileName, atd.generateConcreteTest())
- 
+        val baseName = res.URI.trimFileExtension.lastSegment
+        val typesFile = baseName + '.types'
+        val typesImports = getTypesImports(res).map[resolve(res.URI).deresolve(fsa.getURI(typesFile)).toString].toSet
+        fsa.generateFile(typesFile, atd.generateTypesFile(typesImports))
+        fsa.generateFile(baseName + '.tspec', atd.generateConcreteTest(typesFile))
     }
 
-    def private generateConcreteTest(AbstractTestDefinition atd) {
-        val executableSteps = atd.testSeq.flatMap[step].filter(ExecutableStep).toList
-        val sutexpr = extractSUTVarExpressions(atd)
+    def private generateConcreteTest(AbstractTestDefinition atd, String typesFile) '''
+        import "«typesFile»"
+        
+        test-sequence from_abstract_to_concrete {
+            test_single_sequence
+        }
+        
+        step-sequence test_single_sequence {
+        «FOR step : atd.steps.filter(ExecutableStep) SEPARATOR '\n'»
+            «printStep(step)»
+        «ENDFOR»
+        }
+        
+        generate-file "«atd.filePath»"
+    '''
+
+    private def printStep(ExecutableStep step) {
+        val type = step instanceof AssertionStep ? 'assertion' : 'step'
+
+        val contextAssignments = step.collectConcreteDataAssignments(step.contextData)
+        val sutAssignments = step.collectConcreteDataAssignments(step.SUTData)
+
+        // Get assignments for concrete data input
+        val inputAssignments = step.collectConcreteDataAssignments(step.inputData)
+        // Add assignments for reference data input
+        inputAssignments.mergeAll(step.collectReferenceDataAssignments)
 
         return '''
-            «FOR sys : atd.systems»
-                import "parameters/«sys».params"
-            «ENDFOR»
-            
-            Test-Purpose    "The purpose of this test is..."
-            Background      "The background of this test is..."
-            
-            test-sequence from_abstract_to_concrete {
-                test_single_sequence
-            }
-            
-            step-sequence test_single_sequence {
-            «FOR step : executableSteps»
-                
-                «printStep(step)»
-            «ENDFOR»
-            }
-            
-            generate-file "«atd.filePath»"
-            
-            «IF !executableSteps.isEmpty»
-            step-parameters
-            «FOR step : executableSteps»
-                «step.stepType.get(0)» step_«step.name»
-            «ENDFOR»
-            «ENDIF»
-            
-            «IF !sutexpr.empty»
-                sut-param-init 
-                «FOR lhs: sutexpr.keySet»
-                    «FOR rhs: sutexpr.get(lhs)»
-                        «lhs» := «rhs»
+            «type»-id    step_«step.name»
+            «type»-type  «step.stepType»
+            «IF step instanceof AssertionStep»
+                assertion-items {
+                    «FOR ce : step.asserts.flatMap[ce]»
+                        assertions «ce.name» {
+                            «FOR dai: ce.constr»
+                                «step.printDai(dai)»
+                            «ENDFOR»
+                        }
                     «ENDFOR»
-                «ENDFOR»
+                }
             «ENDIF»
+            «contextAssignments.printAssignments(type + '-context')»
+            «inputAssignments.printAssignments(type + '-input')»
+            «sutAssignments.printAssignments(type + '-sut')»
         '''
     }
-    
-    def printStep(ExecutableStep step) {
-        return switch (step) {
-        	RunStep: printStep(step as RunStep)
-        	AssertionStep: printStep(step as AssertionStep)
-            default: throw new UnsupportedOperationException("Unsupported ExecutableStep sub-type")
-        }
+
+    def private String printDai(AssertionStep step, DataAssertionItem item) {
+        return item.serialize[ obj |
+            if (obj instanceof ExpressionVariable) {
+                val vname = obj.variable.name
+                return '''«step.inputVar».«vname»'''
+            }
+        ].stripIndent().trim()
     }
-    def printStep(RunStep step) '''
-        step-id    step_«step.name»
-        step-type  «step.stepType.get(0)»
-        step-input «step.system»Input
-        «IF !_printOutputs_(step).toString.nullOrEmpty»
-            ref-to-step-output
-                «_printOutputs_(step)»
+
+    def private printAssignments(Map<String, List<String>> assignments, String type) '''
+        «IF !assignments.isEmpty»
+            «type»
+                «FOR entry : assignments.entrySet»
+                    «FOR rhs : entry.value»
+                        «entry.key» := «rhs»
+                    «ENDFOR»
+                «ENDFOR»
         «ENDIF»
     '''
 
-    def printStep(AssertionStep step) '''
-        assertion-id    step_«step.name»
-        assertion-type  «step.stepType.get(0)»
-        assertion-input «step.system»Input
-        «IF !step.asserts.nullOrEmpty»
-        «_printAssertions(step)»
-        «ENDIF»
-        «IF !_printOutputs_(step).toString.nullOrEmpty»
-            ref-to-step-output
-                «_printOutputs_(step)»
-        «ENDIF»
-    '''
-    
-    def _printAssertions(AssertionStep step) '''
-    assertion-items {
-    «FOR ce : step.asserts.flatMap[ce]»
-        assertions «ce.name» { 
-            «FOR dai: ce.constr»
-                «printDai(dai, step)»
-            «ENDFOR»
-         }
-    «ENDFOR»
-    }
-    '''
-
-    def printDai(DataAssertionItem item, AssertionStep step) {
-        return item.serializeXtext[
-            val gaExpression = semanticElement.getService(ExpressionGrammarAccess)
-            if (gaExpression === null) {
-                return null
-            }
-            var abs_assert = step
-            var cexpr_handler = new ConcreteExpressionHandler()
-            if (grammarElement == gaExpression.expressionLevel9Access.expressionVariableParserRuleCall_7) {
-                val exprVar = semanticElement as ExpressionVariable
-                return cexpr_handler.prepareAssertionStepExpressions(abs_assert, exprVar)
-            }
+    def void mergeAll(Map<String, List<String>> source, Map<String, List<String>> addition) {
+        addition.forEach[k, v |
+            source.merge(k, v) [ v1, v2 |
+                v1 += v2
+                return v1
+            ]
         ]
     }
 
-    def private _printOutputs_(RunStep rstep) {
-        // Get text for concrete data expressions
-        var conDataExpr = (new ConcreteExpressionHandler()).prepareStepInputExpressions(rstep, rstep.composeStepRefs)
-        // Append text for reference data expressions
-        val refDataExpr = (new ReferenceExpressionHandler()).resolveStepReferenceExpressions(rstep)
-
-        return '''
-            «conDataExpr»
-            «FOR entry : refDataExpr.entrySet»
-                «FOR v : entry.value»
-                    «entry.key» := «v»
-                «ENDFOR»
-            «ENDFOR»
-        '''
-    }
-
-    def private _printOutputs_(AssertionStep astep) {
-        // At most one (TODO validate this)
-        // Observation: when multiple steps have indistinguishable outputs, 
-        // multiple consumes from is possible. TODO Warn user.   
-        val runStepRefs = astep.runStepRefs
-        // Get text for concrete data expressions
-        var conDataExpr = (new ConcreteExpressionHandler()).prepareStepInputExpressions(astep, runStepRefs)
-
-        return '''
-            «conDataExpr»
-        '''
-    }
-
     // Generate Types File for Concrete TSpec
-    def generateTypesFile(AbstractTestDefinition atd, String system, Iterable<String> typesImports) {
-        var type = ''
-        val ios = newLinkedHashMap
-        for (rstep : atd.getRunSteps(system)) {
-            if (!rstep.stepType.isEmpty) {
-                type = rstep.stepType.last
-            }
-            rstep.input.forEach[i|ios.putIfAbsent(i.name, i)]
-            rstep.output.forEach[o|ios.putIfAbsent(o.name, o)]
-            for (cstep : rstep.composeStepRefs.map[refStep]) {
-                cstep.input.forEach[i|ios.putIfAbsent(i.name, i)]
-                cstep.output.forEach[o|ios.putIfAbsent(o.name, o)]
-            }
-        }
-        for (astep : atd.getAssertionSteps(system)) {
-            if (!astep.stepType.isEmpty) {
-                type = astep.stepType.last
-            }
-            astep.input.forEach[i|ios.putIfAbsent(i.name, i)]
-            astep.output.forEach[o|ios.putIfAbsent(o.name, o)]
-            for (cstep : astep.runStepRefs.map[refStep]) {
-                cstep.input.forEach[i|ios.putIfAbsent(i.name, i)]
-                cstep.output.forEach[o|ios.putIfAbsent(o.name, o)]
-            }
-        }
-        return printTypes(ios.values, type, typesImports)
-    }
+    def private generateTypesFile(AbstractTestDefinition atd, Iterable<String> typesImports) {
+        val sysStepTypes = atd.steps.filter(ExecutableStep).reject[stepType.isNullOrEmpty].groupBy[stepType]
+        val sysStepTypeInputs = sysStepTypes.mapValues[flatMap[allInput].reject[suppressed].map['''«name.type.typeName» «varField»''']]
+        val sysStepTypeOutputs = sysStepTypes.mapValues[flatMap[output].reject[suppressed].map['''«name.type.typeName» «varField»''']]
 
-    // Print types for each step
-    def private printTypes(Iterable<Binding> ios, String type, Iterable<String> typesImports) '''
-        «FOR ti : typesImports»
-            import "«ti»"
-        «ENDFOR»
-        
-        record «type» {
-            «type»Input input
-            «type»Output output
-        }
-        
-        record «type»Input {
-            «FOR i : ios» 
-                «i.name.type.type.name» «i.name.name»
+        return '''
+            «FOR ti : typesImports»
+                import "«ti»"
             «ENDFOR»
-        }
-        
-        record «type»Output {
-            «FOR o : ios» 
-                «o.name.type.type.name» «o.name.name»
+
+            «FOR stepType : sysStepTypes.keySet SEPARATOR '\n'»
+                record «stepType» {
+                    «IF !sysStepTypeInputs.get(stepType).nullOrEmpty»«stepType»Input input«ENDIF»
+                    «IF !sysStepTypeOutputs.get(stepType).nullOrEmpty»«stepType»Output output«ENDIF»
+                }
+
+                «IF !sysStepTypeInputs.get(stepType).nullOrEmpty»
+                    record «stepType»Input {
+                        «sysStepTypeInputs.get(stepType).toSet.join('\n')»
+                    }
+                «ENDIF»
+
+                «IF !sysStepTypeOutputs.get(stepType).nullOrEmpty»
+                    record «stepType»Output {
+                        «sysStepTypeOutputs.get(stepType).toSet.join('\n')»
+                    }
+                «ENDIF»
             «ENDFOR»
-        }
-    '''
-
-    // Generate Parameters File for Concrete TSpec
-    def private generateParamsFile(AbstractTestDefinition atd, String system) {
-        var paramTxt = ''
-        val processedTypes = new HashSet<String>()
-        for (step : atd.getExecutableSteps(system)) {
-            for (type : step.stepType.filter[processedTypes.add(it)]) {
-                paramTxt += printParams(atd, step, type)
-            }
-        }
-        return paramTxt
+        '''
     }
 
-    def private printParams(AbstractTestDefinition atd, ExecutableStep step, String type) '''
-        import "../types/«step.system».types"
-        
-        data-instances
-        «type»Input «step.system»Input
-        «type»Output «step.system»Output
-        
-        data-implementation
-        // Empty
-        
-        path-prefix "«atd.filePath»"
-        var-ref «step.system»Input -> file-name "«step.system»Input.json"
-        var-ref «step.system»Output -> file-name "«step.system»Output.json"
-    '''
-    
-    def private getSystems(AbstractTestDefinition atd) {
-        return atd.steps.filter(ExecutableStep).map[system].toSet
-    }
-
-    def private getRunSteps(AbstractTestDefinition atd, String sys) {
-        return atd.steps.filter(RunStep).filter[system == sys]
-    }
-
-    def private getAssertionSteps(AbstractTestDefinition atd, String sys) {
-        return atd.steps.filter(AssertionStep).filter[system == sys]
-    }
-
-    def private getExecutableSteps(AbstractTestDefinition atd, String sys) {
-        return atd.steps.filter(ExecutableStep).filter[system == sys]
+    def private Iterable<Binding> getAllInput(AbstractStep step) {
+        return step.contextData + step.inputData + step.SUTData
     }
 
     def private Iterable<URI> getTypesImports(Resource res) {

@@ -14,6 +14,8 @@ specification issue249
         ProdReport	report
         ProdCons1	message
         ProdCtx	configuration
+    
+        context prodCtx
         ProdCtx	Gateway_1ww9hic
         ProdCtx	Gateway_1ywuak3
         ProdCtx	Event_1p0urs4
@@ -45,7 +47,7 @@ specification issue249
         element-label	"Compose"
         case			default step-type "null" action-type COMPOSE
         with-inputs		Flow_168eaxr
-        produces-outputs	Event_0m7n0r6 suppress(Event_0m7n0r6.id, Event_0m7n0r6.loop)
+        produces-outputs	Event_0m7n0r6
         updates:
             Event_0m7n0r6 := Flow_168eaxr
         produces-outputs	part1 symbolic-link suppress(part1.id)
@@ -69,7 +71,7 @@ specification issue249
         case			default
         with-inputs		Gateway_1ww9hic
         with-guard		Gateway_1ww9hic.loop
-        produces-outputs	Gateway_1ywuak3 suppress(Gateway_1ywuak3.loop, Gateway_1ywuak3.id)
+        produces-outputs	Gateway_1ywuak3
         updates:
             Gateway_1ywuak3 := Gateway_1ww9hic
             Gateway_1ywuak3.loop := false
@@ -79,7 +81,7 @@ specification issue249
         case			default step-type "ProducerRunType" action-type RUN
         with-inputs		Gateway_1ww9hic, message, configuration, sutConf
         with-guard		not Gateway_1ww9hic.loop and configuration.id == message.id
-        produces-outputs	Flow_168eaxr suppress(Flow_168eaxr.id, Flow_168eaxr.loop)
+        produces-outputs	Flow_168eaxr
         updates:
             Flow_168eaxr := Gateway_1ww9hic
         
@@ -87,7 +89,7 @@ specification issue249
         element-label	"Start"
         case			default
         with-inputs		Event_1p0urs4
-        produces-outputs	Gateway_1ywuak3 suppress(Gateway_1ywuak3.loop, Gateway_1ywuak3.id)
+        produces-outputs	Gateway_1ywuak3
         updates:
             Gateway_1ywuak3 := Event_1p0urs4
         
@@ -95,7 +97,7 @@ specification issue249
         element-label	"Compose Local"
         case			default step-type "null" action-type COMPOSE
         with-inputs		Gateway_1ywuak3
-        produces-outputs	Gateway_1ww9hic suppress(Gateway_1ww9hic.id, Gateway_1ww9hic.loop)
+        produces-outputs	Gateway_1ww9hic
         updates:
             Gateway_1ww9hic := Gateway_1ywuak3
         produces-outputs	message symbolic-link suppress(message.id)
@@ -116,7 +118,9 @@ specification issue249
         
         // outputs
     
-        local
+        // local
+    
+        context
         UNIT	Event_0fmv4m5
     
         // init
@@ -129,7 +133,7 @@ specification issue249
         case			default step-type "ConsumerRunType" action-type RUN
         with-inputs		part1, part2
         with-guard		part1.id == part2.id
-        produces-outputs	Event_0fmv4m5 suppress
+        produces-outputs	Event_0fmv4m5
     
         element-labels ["ContextIssue", "Consumer"]
     }

@@ -15,6 +15,8 @@ specification printer
     
         local
         PrintRequest	request
+    
+        context
         UNIT	Event_0mxx05p
         UNIT	Event_0jcg6zx
         UNIT	Flow_1u2qmtt
@@ -64,12 +66,12 @@ specification printer
         produces-outputs	printResult
         updates:
             printResult := Result { verdict = Outcome::OK }
-        produces-outputs	printReport symbolic-link suppress(printReport.id)
+        produces-outputs	printReport symbolic-link
         updates:
             printReport := Report {
              id = request.id
             }
-        produces-outputs	variants symbolic-link
+        produces-outputs	variants
         updates:
             variants := variants
         
@@ -106,7 +108,7 @@ specification printer
         produces-outputs	printResult
         updates:
             printResult := Result { verdict = Outcome::OK }
-        produces-outputs	variants symbolic-link
+        produces-outputs	variants
         updates:
             variants := variants
     
@@ -123,6 +125,8 @@ specification printer
     
         local
         AssertionsHistory	history
+    
+        context
         UNIT	Event_1bxlea2
     
         init
@@ -147,7 +151,7 @@ specification printer
             history := AssertionsHistory {
               inspectionReports = add(history.inspectionReports, inspectionReport.id)
             }
-        produces-outputs	inspectionReport symbolic-link suppress(inspectionReport.id)
+        produces-outputs	inspectionReport
         updates:
             inspectionReport := inspectionReport
     
@@ -167,6 +171,8 @@ specification printer
     
         local
         MeasureRequest	measureRequest
+    
+        context
         UNIT	Flow_07l0yyj
     
         // init
@@ -178,7 +184,7 @@ specification printer
         element-label	"Run Visual inspection"
         case			default step-type "ExecuteInspection" action-type RUN
         with-inputs		Flow_07l0yyj, measureRequest
-        produces-outputs	inspectionReport symbolic-link suppress(inspectionReport.id)
+        produces-outputs	inspectionReport symbolic-link
         updates:
             inspectionReport := Report {
              id = measureRequest.id
@@ -196,10 +202,10 @@ specification printer
         produces-outputs	measureRequest
         references {
             reportLinking: measureRequest.printJobReport := printReport
-        } symbolic-link suppress(measureRequest.printJobReport.id)
+        } symbolic-link
         updates:
             measureRequest := inspectionJob
-        produces-outputs	printReport symbolic-link suppress
+        produces-outputs	printReport
         updates:
             printReport := printReport
     
@@ -219,6 +225,8 @@ specification printer
     
         local
         OptimizeRequest	optimizeJob
+    
+        context
         UNIT	Event_1oozdnw
         UNIT	Flow_0y8u5pd
     
@@ -236,7 +244,7 @@ specification printer
         produces-outputs	optimizeJob symbolic-link
         updates:
             optimizeJob := optJob
-        produces-outputs	inspectionReport symbolic-link suppress
+        produces-outputs	inspectionReport
         updates:
             inspectionReport := inspectionReport
         
@@ -270,7 +278,9 @@ specification printer
         MeasureRequest	inspectionJob
         OptimizeRequest	optJob
     
-        local
+        // local
+    
+        context ctx
         FactoryCtx	Gateway_0p2uo9v
         FactoryCtx	Gateway_1wpvmtk
         FactoryCtx	Flow_16s4ey1
@@ -419,7 +429,7 @@ specification printer
         produces-outputs	Flow_1dt29vl
         updates:
             Flow_1dt29vl := Flow_1y4bjf4
-        produces-outputs	inspectionJob suppress(inspectionJob.printJobReport.id)
+        produces-outputs	inspectionJob
         updates:
             inspectionJob := MeasureRequest {
              id = Flow_1y4bjf4.id

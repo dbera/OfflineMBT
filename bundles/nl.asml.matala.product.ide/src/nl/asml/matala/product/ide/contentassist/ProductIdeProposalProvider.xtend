@@ -16,9 +16,8 @@
 package nl.asml.matala.product.ide.contentassist
 
 import com.google.inject.Inject
-import java.util.Collections
 import nl.asml.matala.product.product.DataReferences
-import nl.asml.matala.product.product.UpdateOutVar
+import nl.esi.comma.assertthat.assertThat.DataAssertions
 import nl.esi.xtext.actions.services.ActionsGrammarAccess
 import nl.esi.xtext.expressions.expression.TypeAnnotation
 import nl.esi.xtext.expressions.services.ExpressionGrammarAccess
@@ -30,7 +29,7 @@ import org.eclipse.xtext.CrossReference
 import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.ide.editor.contentassist.ContentAssistContext
 
-import static extension nl.esi.xtext.actions.utilities.ActionsUtilities.*
+import static extension nl.esi.comma.assertthat.utilities.AssertThatUtilities.isSuppressed
 
 /**
  * See https://www.eclipse.org/Xtext/documentation/310_eclipse_support.html#content-assist
@@ -49,8 +48,8 @@ class ProductIdeProposalProvider extends AbstractProductIdeProposalProvider {
             case expressionGrammarAccess.expressionLevel8Access.fieldRecordFieldCrossReference_1_0_2_0,
             case actionsGrammarAccess.fieldAccessExpAccess.fieldRecordFieldCrossReference_1_2_0: [
                 val field = EObjectOrProxy as RecordField
-                return context.isReferenceUpdate
-                    ? !context.suppressedFields.contains(field)
+                return context.isReferenceUpdate || context.isAssertion
+                    ? !field.isSuppressed
                     : field.kind != RecordFieldKind.SYMBOLIC
             ]
             default: super.getCrossrefFilter(reference, context)
@@ -67,8 +66,7 @@ class ProductIdeProposalProvider extends AbstractProductIdeProposalProvider {
 
     protected def (RecordField)=>boolean createRecordFieldFilter(ContentAssistContext context) {
         if (context.isReferenceUpdate) {
-            val suppressedFields = context.suppressedFields
-            return [field|!suppressedFields.contains(field)]
+            return [field|!field.suppressed]
         }
         return [field|!RecordFieldKind.SYMBOLIC.equals(field.kind)]
     }
@@ -77,9 +75,7 @@ class ProductIdeProposalProvider extends AbstractProductIdeProposalProvider {
         return EcoreUtil2.getContainerOfType(context.currentModel, DataReferences) !== null
     }
 
-    protected def getSuppressedFields(ContentAssistContext context) {
-        val suppressedVarFields = EcoreUtil2.getContainerOfType(context.currentModel, UpdateOutVar)?.suppress?.
-            varFields ?: Collections.emptyList
-        return suppressedVarFields.map[field].filterNull.toSet
+    protected def boolean isAssertion(ContentAssistContext context) {
+        return EcoreUtil2.getContainerOfType(context.currentModel, DataAssertions) !== null
     }
 }

@@ -13,7 +13,9 @@ specification imaging
         AcqReq	AcquisitionReq
         EquipmentStatus	EqStatus
     
-        local
+        // local
+    
+        context
         UNIT	Gateway_102q82v
         UNIT	Flow_0kkvgdv
         UNIT	Flow_1kpcqqf
@@ -53,7 +55,7 @@ specification imaging
              cmd_type = ImagingRequest.cmd_type,
              id = ImagingRequest.id
             }
-        produces-outputs	EqStatus symbolic-link suppress
+        produces-outputs	EqStatus
         updates:
             EqStatus := EqStatus
         
@@ -100,7 +102,9 @@ specification imaging
         outputs
         PumpResp	PumpUpdate
     
-        local
+        // local
+    
+        context pump_ctx
         CTX	Gateway_0td58pc
         CTX	Flow_0x0gs9b
         CTX	Flow_104f6k4
@@ -161,7 +165,9 @@ specification imaging
         outputs
         ImgReq	ImagingRequest
     
-        local
+        // local
+    
+        context img_ctx
         CTX	Gateway_0i3nw09
         CTX	Gateway_0gu94f4
         CTX	Gateway_0kvhy0o
@@ -301,7 +307,9 @@ specification imaging
         PumpReq	PumpRequest
         EquipmentStatus	EqStatus
     
-        local
+        // local
+    
+        context p_ctx
         CTX	Gateway_1i0qy9g
         CTX	Gateway_1j81da5
         CTX	Flow_1wguswc
@@ -328,7 +336,7 @@ specification imaging
              cmd_type = VacuumEnum::ON,
              id = VacuumRequest.id
             }
-        produces-outputs	EqStatus symbolic-link suppress
+        produces-outputs	EqStatus
         updates:
             EqStatus := EqStatus
         
@@ -370,7 +378,7 @@ specification imaging
              cmd_type = VacuumEnum::OFF,
              id = VacuumRequest.id
             }
-        produces-outputs	EqStatus symbolic-link suppress
+        produces-outputs	EqStatus
         updates:
             EqStatus := EqStatus
         
@@ -402,7 +410,9 @@ specification imaging
         outputs
         TempReq	TempRequest
     
-        local
+        // local
+    
+        context temp_ctx
         CTX	Gateway_1sv33t8
         CTX	Gateway_12yhscn
         CTX	Event_1r2zvr6
@@ -493,7 +503,9 @@ specification imaging
         outputs
         VacReq	VacuumRequest
     
-        local
+        // local
+    
+        context vac_ctx
         CTX	Gateway_0mqr7c2
         CTX	Gateway_07w0e8f
         CTX	Flow_1phqrfh
@@ -566,7 +578,9 @@ specification imaging
         AcqResp	AcqUpdate
         AcqData	ImageData
     
-        local
+        // local
+    
+        context acq_ctx
         CTX	Gateway_0h81kts
         CTX	Flow_084nmm6
         CTX	Flow_1rusz82
@@ -658,6 +672,8 @@ specification imaging
     
         local
         ImgReq	LastAcqReq
+    
+        context
         UNIT	Gateway_16m9e4j
         UNIT	Gateway_0qg69ul
         UNIT	Flow_0678bm1
@@ -750,7 +766,7 @@ specification imaging
         produces-outputs	LastAcqReq symbolic-link
         updates:
             LastAcqReq:=ImagingRequest
-        produces-outputs	EqStatus symbolic-link suppress
+        produces-outputs	EqStatus
         updates:
             EqStatus := EqStatus
         
@@ -790,6 +806,8 @@ specification imaging
     
         local
         TempReq	TempCMD
+    
+        context
         UNIT	Gateway_1qk9wqe
         UNIT	Event_13ys7sy
     
@@ -807,7 +825,7 @@ specification imaging
         produces-outputs	TempCMD symbolic-link
         updates:
             TempCMD := TempRequest
-        produces-outputs	EqStatus symbolic-link suppress
+        produces-outputs	EqStatus
         updates:
             EqStatus := EqStatus
         

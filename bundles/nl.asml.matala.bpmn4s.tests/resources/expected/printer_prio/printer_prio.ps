@@ -13,6 +13,8 @@ specification printer_prio
     
         local
         PrintRequest	request
+    
+        context
         UNIT	Event_0mxx05p
         UNIT	Event_0jcg6zx
         UNIT	Flow_1u2qmtt
@@ -96,6 +98,8 @@ specification printer_prio
     
         local
         AssertionsHistory	history
+    
+        context
         UNIT	Event_1bxlea2
     
         init
@@ -120,7 +124,7 @@ specification printer_prio
             history := AssertionsHistory {
               inspectionReports = add(history.inspectionReports, inspectionReport.id)
             }
-        produces-outputs	inspectionReport symbolic-link
+        produces-outputs	inspectionReport
         updates:
             inspectionReport := inspectionReport
     
@@ -140,6 +144,8 @@ specification printer_prio
     
         local
         MeasureRequest	measureRequest
+    
+        context
         UNIT	Flow_07l0yyj
     
         // init
@@ -172,7 +178,7 @@ specification printer_prio
         } symbolic-link
         updates:
             measureRequest := inspectionJob
-        produces-outputs	printReport symbolic-link suppress
+        produces-outputs	printReport
         updates:
             printReport := printReport
     
@@ -192,6 +198,8 @@ specification printer_prio
     
         local
         OptimizeRequest	optimizeJob
+    
+        context
         UNIT	Event_1oozdnw
         UNIT	Flow_0y8u5pd
     
@@ -209,7 +217,7 @@ specification printer_prio
         produces-outputs	optimizeJob symbolic-link
         updates:
             optimizeJob := optJob
-        produces-outputs	inspectionReport symbolic-link suppress
+        produces-outputs	inspectionReport
         updates:
             inspectionReport := inspectionReport
         
@@ -243,7 +251,9 @@ specification printer_prio
         MeasureRequest	inspectionJob
         OptimizeRequest	optJob
     
-        local
+        // local
+    
+        context ctx
         FactoryCtx	Gateway_0p2uo9v
         FactoryCtx	Gateway_1wpvmtk
         FactoryCtx	Flow_16s4ey1
