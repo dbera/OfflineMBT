@@ -24,6 +24,7 @@ class ServerApiTest {
 
    @Test
 	def void doNothing() {
+	    // For future use
 	}
 }
 

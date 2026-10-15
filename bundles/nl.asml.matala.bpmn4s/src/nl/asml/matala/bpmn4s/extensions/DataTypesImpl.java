@@ -27,6 +27,7 @@ import org.camunda.bpm.model.xml.type.child.ChildElement;
 public class DataTypesImpl extends ExtensionElementsImpl implements DataTypes {
 
 
+    @TODO: remove with issue #439
 	private static ChildElement<DataType> datatype;
 	private static ChildElement<Raw> rawType;
 
