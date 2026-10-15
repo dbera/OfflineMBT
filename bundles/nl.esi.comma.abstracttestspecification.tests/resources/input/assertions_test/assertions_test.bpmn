@@ -509,50 +509,9 @@
       <bpmn2:startEvent bpmn4s:ctxInit="ctx := TestContext {&#10; id = &quot;Test 8&quot;,&#10; hidden = 8&#10;}" id="Event_08zpj4q">
         <bpmn2:outgoing>Flow_1hebemq</bpmn2:outgoing>
       </bpmn2:startEvent>
-      <bpmn2:task bpmn4s:guard="true" id="Activity_1wy8c59" name="Run 8:1">
-        <bpmn2:incoming>Flow_1hebemq</bpmn2:incoming>
-        <bpmn2:outgoing>Flow_03lr78p</bpmn2:outgoing>
-        <bpmn2:dataOutputAssociation bpmn4s:update="report_8_1 := Report { id = 8 }" id="DataOutputAssociation_1dbt90v">
-          <bpmn2:targetRef>DataStoreReference_0c2gexl</bpmn2:targetRef>
-        </bpmn2:dataOutputAssociation>
-      </bpmn2:task>
       <bpmn2:sequenceFlow id="Flow_1hebemq" sourceRef="Event_08zpj4q" targetRef="Activity_1wy8c59"/>
-      <bpmn2:task id="Activity_0cafocx" name="Assert 8:2">
-        <bpmn2:incoming>Flow_03lr78p</bpmn2:incoming>
-        <bpmn2:outgoing>Flow_1qde61m</bpmn2:outgoing>
-        <bpmn2:property id="Property_012g3kf" name="__targetRef_placeholder"/>
-        <bpmn2:dataInputAssociation bpmn4s:persistentRead="true" id="DataInputAssociation_0vkhemw">
-          <bpmn2:sourceRef>DataStoreReference_0c2gexl</bpmn2:sourceRef>
-          <bpmn2:targetRef>Property_012g3kf</bpmn2:targetRef>
-        </bpmn2:dataInputAssociation>
-      </bpmn2:task>
       <bpmn2:sequenceFlow id="Flow_03lr78p" sourceRef="Activity_1wy8c59" targetRef="Activity_0cafocx"/>
-      <bpmn2:task id="Activity_0vwsujg" name="Run 8:3">
-        <bpmn2:incoming>Flow_1qde61m</bpmn2:incoming>
-        <bpmn2:outgoing>Flow_0gq62tt</bpmn2:outgoing>
-        <bpmn2:property id="Property_1loq622" name="__targetRef_placeholder"/>
-        <bpmn2:dataInputAssociation bpmn4s:persistentRead="true" id="DataInputAssociation_0i8887q">
-          <bpmn2:sourceRef>DataStoreReference_0c2gexl</bpmn2:sourceRef>
-          <bpmn2:targetRef>Property_1loq622</bpmn2:targetRef>
-        </bpmn2:dataInputAssociation>
-        <bpmn2:dataOutputAssociation bpmn4s:update="report_8_3 := Report { id = 8 }" id="DataOutputAssociation_0ahe0z7">
-          <bpmn2:targetRef>DataStoreReference_1ii7f0j</bpmn2:targetRef>
-        </bpmn2:dataOutputAssociation>
-      </bpmn2:task>
       <bpmn2:sequenceFlow id="Flow_1qde61m" sourceRef="Activity_0cafocx" targetRef="Activity_0vwsujg"/>
-      <bpmn2:task id="Activity_0js8zvw" name="Assert 8:4">
-        <bpmn2:incoming>Flow_0gq62tt</bpmn2:incoming>
-        <bpmn2:outgoing>Flow_022nv9v</bpmn2:outgoing>
-        <bpmn2:property id="Property_192f9hr" name="__targetRef_placeholder"/>
-        <bpmn2:dataInputAssociation id="DataInputAssociation_0ebacm1">
-          <bpmn2:sourceRef>DataStoreReference_0c2gexl</bpmn2:sourceRef>
-          <bpmn2:targetRef>Property_192f9hr</bpmn2:targetRef>
-        </bpmn2:dataInputAssociation>
-        <bpmn2:dataInputAssociation id="DataInputAssociation_01k5d9b">
-          <bpmn2:sourceRef>DataStoreReference_1ii7f0j</bpmn2:sourceRef>
-          <bpmn2:targetRef>Property_192f9hr</bpmn2:targetRef>
-        </bpmn2:dataInputAssociation>
-      </bpmn2:task>
       <bpmn2:sequenceFlow id="Flow_0gq62tt" sourceRef="Activity_0vwsujg" targetRef="Activity_0js8zvw"/>
       <bpmn2:endEvent id="Event_16siryv">
         <bpmn2:incoming>Flow_022nv9v</bpmn2:incoming>
@@ -560,6 +519,47 @@
       <bpmn2:sequenceFlow id="Flow_022nv9v" sourceRef="Activity_0js8zvw" targetRef="Event_16siryv"/>
       <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_15gnioa" id="DataStoreReference_0c2gexl" name="report_8_1"/>
       <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_15gnioa" id="DataStoreReference_1ii7f0j" name="report_8_3"/>
+      <bpmn2:task bpmn4s:guard="true" bpmn4s:stepType="Step_8_1" bpmn4s:subType="RunTask" id="Activity_1wy8c59" name="Run 8:1">
+        <bpmn2:incoming>Flow_1hebemq</bpmn2:incoming>
+        <bpmn2:outgoing>Flow_03lr78p</bpmn2:outgoing>
+        <bpmn2:dataOutputAssociation bpmn4s:update="report_8_1 := Report { id = 8 }" id="DataOutputAssociation_1dbt90v">
+          <bpmn2:targetRef>DataStoreReference_0c2gexl</bpmn2:targetRef>
+        </bpmn2:dataOutputAssociation>
+      </bpmn2:task>
+      <bpmn2:task bpmn4s:assertions="result: assert-that (report_8_1.result) {&#10;  equal-to &quot;Test 8&quot;&#10;}" bpmn4s:stepType="Assert_8_2" bpmn4s:subType="AssertTask" id="Activity_0cafocx" name="Assert 8:2">
+        <bpmn2:incoming>Flow_03lr78p</bpmn2:incoming>
+        <bpmn2:outgoing>Flow_1qde61m</bpmn2:outgoing>
+        <bpmn2:property id="Property_04ju3gg" name="__targetRef_placeholder"/>
+        <bpmn2:dataInputAssociation bpmn4s:persistentRead="true" id="DataInputAssociation_0vkhemw">
+          <bpmn2:sourceRef>DataStoreReference_0c2gexl</bpmn2:sourceRef>
+          <bpmn2:targetRef>Property_04ju3gg</bpmn2:targetRef>
+        </bpmn2:dataInputAssociation>
+      </bpmn2:task>
+      <bpmn2:task bpmn4s:stepType="Run_8_3" bpmn4s:subType="RunTask" id="Activity_0vwsujg" name="Run 8:3">
+        <bpmn2:incoming>Flow_1qde61m</bpmn2:incoming>
+        <bpmn2:outgoing>Flow_0gq62tt</bpmn2:outgoing>
+        <bpmn2:property id="Property_029h13g" name="__targetRef_placeholder"/>
+        <bpmn2:dataInputAssociation bpmn4s:persistentRead="true" id="DataInputAssociation_0i8887q">
+          <bpmn2:sourceRef>DataStoreReference_0c2gexl</bpmn2:sourceRef>
+          <bpmn2:targetRef>Property_029h13g</bpmn2:targetRef>
+        </bpmn2:dataInputAssociation>
+        <bpmn2:dataOutputAssociation bpmn4s:update="report_8_3 := Report { id = 8 }" id="DataOutputAssociation_0ahe0z7">
+          <bpmn2:targetRef>DataStoreReference_1ii7f0j</bpmn2:targetRef>
+        </bpmn2:dataOutputAssociation>
+      </bpmn2:task>
+      <bpmn2:task bpmn4s:assertions="result: assert-that (report_8_1.result) {&#10;  equal-to report_8_3.result&#10;}" bpmn4s:stepType="Assert_8_4" bpmn4s:subType="AssertTask" id="Activity_0js8zvw" name="Assert 8:4">
+        <bpmn2:incoming>Flow_0gq62tt</bpmn2:incoming>
+        <bpmn2:outgoing>Flow_022nv9v</bpmn2:outgoing>
+        <bpmn2:property id="Property_1j30wkf" name="__targetRef_placeholder"/>
+        <bpmn2:dataInputAssociation id="DataInputAssociation_0ebacm1">
+          <bpmn2:sourceRef>DataStoreReference_0c2gexl</bpmn2:sourceRef>
+          <bpmn2:targetRef>Property_1j30wkf</bpmn2:targetRef>
+        </bpmn2:dataInputAssociation>
+        <bpmn2:dataInputAssociation id="DataInputAssociation_01k5d9b">
+          <bpmn2:sourceRef>DataStoreReference_1ii7f0j</bpmn2:sourceRef>
+          <bpmn2:targetRef>Property_1j30wkf</bpmn2:targetRef>
+        </bpmn2:dataInputAssociation>
+      </bpmn2:task>
     </bpmn2:subProcess>
     <bpmn2:textAnnotation id="TextAnnotation_1i1q37n">
       <bpmn2:text>Legacy: Run and Assert in own component</bpmn2:text>
@@ -1572,21 +1572,17 @@
   </bpmndi:BPMNDiagram>
   <bpmndi:BPMNDiagram id="BPMNDiagram_006suv2">
     <bpmndi:BPMNPlane bpmnElement="Activity_1creept" id="BPMNPlane_18odkz4">
-      <bpmndi:BPMNShape bpmnElement="Activity_0cafocx" id="Activity_0cafocx_di">
-        <dc:Bounds height="80" width="100" x="440" y="180"/>
-        <bpmndi:BPMNLabel/>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape bpmnElement="Activity_0js8zvw" id="Activity_0js8zvw_di">
-        <dc:Bounds height="80" width="100" x="760" y="180"/>
-        <bpmndi:BPMNLabel/>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape bpmnElement="Activity_0vwsujg" id="Activity_0vwsujg_di">
+      <bpmndi:BPMNShape bpmnElement="Activity_0vwsujg" id="Activity_0666pop_di">
         <dc:Bounds height="80" width="100" x="600" y="180"/>
-        <bpmndi:BPMNLabel/>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape bpmnElement="Activity_1wy8c59" id="Activity_1wy8c59_di">
+      <bpmndi:BPMNShape bpmnElement="Activity_0js8zvw" id="Activity_09v72qr_di">
+        <dc:Bounds height="80" width="100" x="760" y="180"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="Activity_0cafocx" id="Activity_0gl9rjv_di">
+        <dc:Bounds height="80" width="100" x="440" y="180"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="Activity_1wy8c59" id="Activity_14sjv0f_di">
         <dc:Bounds height="80" width="100" x="280" y="180"/>
-        <bpmndi:BPMNLabel/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape bpmnElement="DataStoreReference_0c2gexl" id="DataStoreReference_0c2gexl_di">
         <dc:Bounds height="50" width="50" x="465" y="305"/>
