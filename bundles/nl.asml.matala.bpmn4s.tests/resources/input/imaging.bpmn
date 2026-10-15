@@ -2,88 +2,108 @@
   <bpmn2:process id="Process_1" isExecutable="false" name="SupervisonModel">
     <bpmn2:extensionElements>
       <bpmn4s:dataTypes>
-        <bpmn4s:dataType id="DataType_03e4bga" name="ImgReq" type="Record">
-          <bpmn4s:field name="cmd_type" typeRef="DataType_2gr8cfb"/>
-          <bpmn4s:field name="id" typeRef="Int"/>
-          <bpmn4s:field name="image_quality" typeRef="DataType_2ont50o"/>
-        </bpmn4s:dataType>
-        <bpmn4s:dataType id="DataType_03tvv85" name="PumpResp" type="Record">
-          <bpmn4s:field name="result" typeRef="DataType_0akcq5t"/>
-        </bpmn4s:dataType>
-        <bpmn4s:dataType id="DataType_08u2g5m" name="Status" type="Enumeration">
-          <bpmn4s:literal name="ON"/>
-          <bpmn4s:literal name="OFF"/>
-          <bpmn4s:literal name="PREPARING"/>
-          <bpmn4s:literal name="UNPREPARING"/>
-        </bpmn4s:dataType>
-        <bpmn4s:dataType id="DataType_0akcq5t" name="ResponseEnum" type="Enumeration">
-          <bpmn4s:literal name="OK"/>
-          <bpmn4s:literal name="NOK"/>
-        </bpmn4s:dataType>
-        <bpmn4s:dataType id="DataType_0dv6oip" name="ImgResp" type="Record">
-          <bpmn4s:field name="result" typeRef="DataType_0akcq5t"/>
-        </bpmn4s:dataType>
-        <bpmn4s:dataType id="DataType_0neascg" name="AcqResp" type="Record">
-          <bpmn4s:field name="result" typeRef="DataType_0akcq5t"/>
-          <bpmn4s:field name="id" typeRef="Int"/>
-        </bpmn4s:dataType>
-        <bpmn4s:dataType id="DataType_0to2oel" name="AcqData" type="Record">
-          <bpmn4s:field name="id" typeRef="Int"/>
-          <bpmn4s:field kind="Symbolic" name="contrast" typeRef="Float"/>
-          <bpmn4s:field kind="Symbolic" name="resolution" typeRef="Float"/>
-          <bpmn4s:field kind="Symbolic" name="signal_to_noise_ratio" typeRef="Float"/>
-        </bpmn4s:dataType>
-        <bpmn4s:dataType id="DataType_1a82rqc" name="CTX" type="Context">
-          <bpmn4s:field name="id" typeRef="Int"/>
-        </bpmn4s:dataType>
-        <bpmn4s:dataType id="DataType_1d7usl4" name="PumpReq" type="Record">
-          <bpmn4s:field name="cmd_type" typeRef="DataType_2ussh1b"/>
-          <bpmn4s:field name="id" typeRef="Int"/>
-        </bpmn4s:dataType>
-        <bpmn4s:dataType id="DataType_1e80l56" name="EquipmentStatus" type="Record">
-          <bpmn4s:field name="temp_status" typeRef="DataType_08u2g5m"/>
-          <bpmn4s:field name="pump_status" typeRef="DataType_08u2g5m"/>
-          <bpmn4s:field name="acq_status" typeRef="DataType_08u2g5m"/>
-        </bpmn4s:dataType>
-        <bpmn4s:dataType id="DataType_1q6ie9d" name="TempReq" type="Record">
-          <bpmn4s:field name="cmd_type" typeRef="DataType_2jfnsgf"/>
-          <bpmn4s:field name="id" typeRef="Int"/>
-        </bpmn4s:dataType>
-        <bpmn4s:dataType id="DataType_1rng04e" name="TempResp" type="Record">
-          <bpmn4s:field name="result" typeRef="DataType_0akcq5t"/>
-          <bpmn4s:field kind="Symbolic" name="temp_val" typeRef="Int"/>
-          <bpmn4s:field name="reqid" typeRef="Int"/>
-        </bpmn4s:dataType>
-        <bpmn4s:dataType id="DataType_2gr8cfb" name="ImageEnum" type="Enumeration">
-          <bpmn4s:literal name="PREPARE"/>
-          <bpmn4s:literal name="START"/>
-          <bpmn4s:literal name="STOP"/>
-          <bpmn4s:literal name="UNPREPARE"/>
-        </bpmn4s:dataType>
-        <bpmn4s:dataType id="DataType_2jfnsgf" name="TempEnum" type="Enumeration">
-          <bpmn4s:literal name="SET"/>
-          <bpmn4s:literal name="RESET"/>
-        </bpmn4s:dataType>
-        <bpmn4s:dataType id="DataType_2ont50o" name="ImageQuality" type="Enumeration">
-          <bpmn4s:literal name="HIGH"/>
-          <bpmn4s:literal name="LOW"/>
-          <bpmn4s:literal name="NA"/>
-        </bpmn4s:dataType>
-        <bpmn4s:dataType id="DataType_2ussh1b" name="VacuumEnum" type="Enumeration">
-          <bpmn4s:literal name="ON"/>
-          <bpmn4s:literal name="OFF"/>
-        </bpmn4s:dataType>
-        <bpmn4s:dataType id="DataType_35ibonp" name="VacResp" type="Record">
-          <bpmn4s:field name="result" typeRef="DataType_0akcq5t"/>
-        </bpmn4s:dataType>
-        <bpmn4s:dataType id="DataType_390sq5d" name="VacReq" type="Record">
-          <bpmn4s:field name="cmd_type" typeRef="DataType_2ussh1b"/>
-          <bpmn4s:field name="id" typeRef="Int"/>
-        </bpmn4s:dataType>
-        <bpmn4s:dataType id="DataType_3svoua9" name="AcqReq" type="Record">
-          <bpmn4s:field name="cmd_type" typeRef="DataType_2gr8cfb"/>
-          <bpmn4s:field name="id" typeRef="Int"/>
-        </bpmn4s:dataType>
+        <bpmn4s:raw>record ImgReq {
+  ImageEnum cmd_type
+  int id
+  ImageQuality image_quality
+}
+
+record PumpResp {
+  ResponseEnum result
+}
+
+enum Status {
+  ON
+  OFF
+  PREPARING
+  UNPREPARING
+}
+
+enum ResponseEnum {
+  OK
+  NOK
+}
+
+record ImgResp {
+  ResponseEnum result
+}
+
+record AcqResp {
+  ResponseEnum result
+  int id
+}
+
+record AcqData {
+  int id
+  @symbolic real contrast
+  @symbolic real resolution
+  @symbolic real signal_to_noise_ratio
+}
+
+@context
+record CTX {
+  int id
+}
+
+record PumpReq {
+  VacuumEnum cmd_type
+  int id
+}
+
+record EquipmentStatus {
+  Status temp_status
+  Status pump_status
+  Status acq_status
+}
+
+record TempReq {
+  TempEnum cmd_type
+  int id
+}
+
+record TempResp {
+  ResponseEnum result
+  @symbolic int temp_val
+  int reqid
+}
+
+enum ImageEnum {
+  PREPARE
+  START
+  STOP
+  UNPREPARE
+}
+
+enum TempEnum {
+  SET
+  RESET
+}
+
+enum ImageQuality {
+  HIGH
+  LOW
+  NA
+}
+
+enum VacuumEnum {
+  ON
+  OFF
+}
+
+record VacResp {
+  ResponseEnum result
+}
+
+record VacReq {
+  VacuumEnum cmd_type
+  int id
+}
+
+record AcqReq {
+  ImageEnum cmd_type
+  int id
+}</bpmn4s:raw>
+      
       </bpmn4s:dataTypes>
     </bpmn2:extensionElements>
     <bpmn2:subProcess bpmn4s:subType="Component" id="Activity_0a9xp08" name="Supervision">
@@ -137,27 +157,27 @@
       <bpmn2:dataOutputAssociation id="DataOutputAssociation_00gx5ib">
         <bpmn2:targetRef>DataStoreReference_03catyu</bpmn2:targetRef>
       </bpmn2:dataOutputAssociation>
-      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_390sq5d" bpmn4s:linkedDataReferences="DataObjectReference_0llbj7z" bpmn4s:originDataReference="DataObjectReference_0e11adh" bpmn4s:subType="Queue" dataObjectRef="DataObject_1g5k3js" id="DataObjectReference_1pat8j0" name="VacuumRequest"/>
+      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="VacReq" bpmn4s:linkedDataReferences="DataObjectReference_0llbj7z" bpmn4s:originDataReference="DataObjectReference_0e11adh" bpmn4s:subType="Queue" dataObjectRef="DataObject_1g5k3js" id="DataObjectReference_1pat8j0" name="VacuumRequest"/>
       <bpmn2:dataObject id="DataObject_1g5k3js"/>
-      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_1q6ie9d" bpmn4s:linkedDataReferences="DataObjectReference_1v7adty" bpmn4s:originDataReference="DataObjectReference_1omgdas" bpmn4s:subType="Queue" dataObjectRef="DataObject_0ljeu6r" id="DataObjectReference_1b5pbp2" name="TempRequest"/>
+      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="TempReq" bpmn4s:linkedDataReferences="DataObjectReference_1v7adty" bpmn4s:originDataReference="DataObjectReference_1omgdas" bpmn4s:subType="Queue" dataObjectRef="DataObject_0ljeu6r" id="DataObjectReference_1b5pbp2" name="TempRequest"/>
       <bpmn2:dataObject id="DataObject_0ljeu6r"/>
-      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_35ibonp" bpmn4s:linkedDataReferences="DataObjectReference_1ux0m60" bpmn4s:originDataReference="DataObjectReference_0d208n8" bpmn4s:subType="Queue" dataObjectRef="DataObject_1f7lmhn" id="DataObjectReference_00ki1n6" name="VacuumUpdate"/>
+      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="VacResp" bpmn4s:linkedDataReferences="DataObjectReference_1ux0m60" bpmn4s:originDataReference="DataObjectReference_0d208n8" bpmn4s:subType="Queue" dataObjectRef="DataObject_1f7lmhn" id="DataObjectReference_00ki1n6" name="VacuumUpdate"/>
       <bpmn2:dataObject id="DataObject_1f7lmhn"/>
-      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_1rng04e" bpmn4s:linkedDataReferences="DataObjectReference_09pzvzn" bpmn4s:originDataReference="DataObjectReference_1w3nbz0" bpmn4s:subType="Queue" dataObjectRef="DataObject_00eedq7" id="DataObjectReference_0s7t238" name="TempUpdate"/>
+      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="TempResp" bpmn4s:linkedDataReferences="DataObjectReference_09pzvzn" bpmn4s:originDataReference="DataObjectReference_1w3nbz0" bpmn4s:subType="Queue" dataObjectRef="DataObject_00eedq7" id="DataObjectReference_0s7t238" name="TempUpdate"/>
       <bpmn2:dataObject id="DataObject_00eedq7"/>
-      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_03e4bga" bpmn4s:linkedDataReferences="DataObjectReference_0jl3lso DataObjectReference_1o09346" bpmn4s:originDataReference="DataObjectReference_078wjy5" bpmn4s:subType="Queue" dataObjectRef="DataObject_0dhaemq" id="DataObjectReference_1l31b8f" name="ImagingRequest"/>
+      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="ImgReq" bpmn4s:linkedDataReferences="DataObjectReference_0jl3lso DataObjectReference_1o09346" bpmn4s:originDataReference="DataObjectReference_078wjy5" bpmn4s:subType="Queue" dataObjectRef="DataObject_0dhaemq" id="DataObjectReference_1l31b8f" name="ImagingRequest"/>
       <bpmn2:dataObject id="DataObject_0dhaemq"/>
-      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_0dv6oip" bpmn4s:linkedDataReferences="DataObjectReference_02xlor4 DataObjectReference_0kn1j4k" bpmn4s:originDataReference="DataObjectReference_0h1oq61" bpmn4s:subType="Queue" dataObjectRef="DataObject_0yyrevs" id="DataObjectReference_0x8mewy" name="ImagingUpdate"/>
+      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="ImgResp" bpmn4s:linkedDataReferences="DataObjectReference_02xlor4 DataObjectReference_0kn1j4k" bpmn4s:originDataReference="DataObjectReference_0h1oq61" bpmn4s:subType="Queue" dataObjectRef="DataObject_0yyrevs" id="DataObjectReference_0x8mewy" name="ImagingUpdate"/>
       <bpmn2:dataObject id="DataObject_0yyrevs"/>
-      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_1d7usl4" bpmn4s:linkedDataReferences="DataObjectReference_0wfm697" bpmn4s:originDataReference="DataObjectReference_1ucc8f4" bpmn4s:subType="Queue" dataObjectRef="DataObject_1u3gf8w" id="DataObjectReference_044lwas" name="PumpRequest"/>
+      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="PumpReq" bpmn4s:linkedDataReferences="DataObjectReference_0wfm697" bpmn4s:originDataReference="DataObjectReference_1ucc8f4" bpmn4s:subType="Queue" dataObjectRef="DataObject_1u3gf8w" id="DataObjectReference_044lwas" name="PumpRequest"/>
       <bpmn2:dataObject id="DataObject_1u3gf8w"/>
-      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_03tvv85" bpmn4s:linkedDataReferences="DataObjectReference_0d8tee0" bpmn4s:originDataReference="DataObjectReference_1tl4lp5" bpmn4s:subType="Queue" dataObjectRef="DataObject_170lmpb" id="DataObjectReference_1ydun0z" name="PumpUpdate"/>
+      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="PumpResp" bpmn4s:linkedDataReferences="DataObjectReference_0d8tee0" bpmn4s:originDataReference="DataObjectReference_1tl4lp5" bpmn4s:subType="Queue" dataObjectRef="DataObject_170lmpb" id="DataObjectReference_1ydun0z" name="PumpUpdate"/>
       <bpmn2:dataObject id="DataObject_170lmpb"/>
-      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_3svoua9" bpmn4s:linkedDataReferences="DataObjectReference_05qebpz DataObjectReference_1ouww3a" bpmn4s:originDataReference="DataObjectReference_1o9wr0h" bpmn4s:subType="Queue" dataObjectRef="DataObject_0n7fi2n" id="DataObjectReference_1kdsz9c" name="AcquisitionReq"/>
+      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="AcqReq" bpmn4s:linkedDataReferences="DataObjectReference_05qebpz DataObjectReference_1ouww3a" bpmn4s:originDataReference="DataObjectReference_1o9wr0h" bpmn4s:subType="Queue" dataObjectRef="DataObject_0n7fi2n" id="DataObjectReference_1kdsz9c" name="AcquisitionReq"/>
       <bpmn2:dataObject id="DataObject_0n7fi2n"/>
-      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_0neascg" bpmn4s:linkedDataReferences="DataObjectReference_0qr9qow DataObjectReference_12guzx5" bpmn4s:originDataReference="DataObjectReference_1you6s5" bpmn4s:subType="Queue" dataObjectRef="DataObject_0w6d68k" id="DataObjectReference_0kc60jm" name="AcqUpdate"/>
+      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="AcqResp" bpmn4s:linkedDataReferences="DataObjectReference_0qr9qow DataObjectReference_12guzx5" bpmn4s:originDataReference="DataObjectReference_1you6s5" bpmn4s:subType="Queue" dataObjectRef="DataObject_0w6d68k" id="DataObjectReference_0kc60jm" name="AcqUpdate"/>
       <bpmn2:dataObject id="DataObject_0w6d68k"/>
-      <bpmn2:subProcess bpmn4s:ctxName="p_ctx" bpmn4s:ctxTypeRef="DataType_1a82rqc" bpmn4s:subType="Component" id="Activity_1tj18th" name="Pressure Handler">
+      <bpmn2:subProcess bpmn4s:ctxName="p_ctx" bpmn4s:ctxTypeRef="CTX" bpmn4s:subType="Component" id="Activity_1tj18th" name="Pressure Handler">
         <bpmn2:property id="Property_14qdnx7" name="__targetRef_placeholder"/>
         <bpmn2:dataInputAssociation id="DataInputAssociation_0whla0i">
           <bpmn2:sourceRef>DataObjectReference_1pat8j0</bpmn2:sourceRef>
@@ -180,13 +200,13 @@
         <bpmn2:dataOutputAssociation id="DataOutputAssociation_03fpn1t">
           <bpmn2:targetRef>DataStoreReference_1apocqs</bpmn2:targetRef>
         </bpmn2:dataOutputAssociation>
-        <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_390sq5d" bpmn4s:originDataReference="DataObjectReference_1pat8j0" bpmn4s:subType="Queue" dataObjectRef="DataObject_1yluq5a" id="DataObjectReference_0llbj7z" name="VacuumRequest"/>
+        <bpmn2:dataObjectReference bpmn4s:dataTypeRef="VacReq" bpmn4s:originDataReference="DataObjectReference_1pat8j0" bpmn4s:subType="Queue" dataObjectRef="DataObject_1yluq5a" id="DataObjectReference_0llbj7z" name="VacuumRequest"/>
         <bpmn2:dataObject id="DataObject_1yluq5a"/>
-        <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_1d7usl4" bpmn4s:originDataReference="DataObjectReference_044lwas" bpmn4s:subType="Queue" dataObjectRef="DataObject_1fwkmo2" id="DataObjectReference_0wfm697" name="PumpRequest"/>
+        <bpmn2:dataObjectReference bpmn4s:dataTypeRef="PumpReq" bpmn4s:originDataReference="DataObjectReference_044lwas" bpmn4s:subType="Queue" dataObjectRef="DataObject_1fwkmo2" id="DataObjectReference_0wfm697" name="PumpRequest"/>
         <bpmn2:dataObject id="DataObject_1fwkmo2"/>
-        <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_03tvv85" bpmn4s:originDataReference="DataObjectReference_1ydun0z" bpmn4s:subType="Queue" dataObjectRef="DataObject_0rz9sa0" id="DataObjectReference_0d8tee0" name="PumpUpdate"/>
+        <bpmn2:dataObjectReference bpmn4s:dataTypeRef="PumpResp" bpmn4s:originDataReference="DataObjectReference_1ydun0z" bpmn4s:subType="Queue" dataObjectRef="DataObject_0rz9sa0" id="DataObjectReference_0d8tee0" name="PumpUpdate"/>
         <bpmn2:dataObject id="DataObject_0rz9sa0"/>
-        <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_35ibonp" bpmn4s:originDataReference="DataObjectReference_00ki1n6" bpmn4s:subType="Queue" dataObjectRef="DataObject_0jmovjq" id="DataObjectReference_1ux0m60" name="VacuumUpdate"/>
+        <bpmn2:dataObjectReference bpmn4s:dataTypeRef="VacResp" bpmn4s:originDataReference="DataObjectReference_00ki1n6" bpmn4s:subType="Queue" dataObjectRef="DataObject_0jmovjq" id="DataObjectReference_1ux0m60" name="VacuumUpdate"/>
         <bpmn2:dataObject id="DataObject_0jmovjq"/>
         <bpmn2:task id="Activity_1ndweag" name="Wait for Pump Stated">
           <bpmn2:incoming>Flow_0balrow</bpmn2:incoming>
@@ -287,7 +307,7 @@
             <bpmn2:targetRef>DataObjectReference_0wfm697</bpmn2:targetRef>
           </bpmn2:dataOutputAssociation>
         </bpmn2:task>
-        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_1e80l56" bpmn4s:originDataReference="DataStoreReference_1apocqs" id="DataStoreReference_0zs1ahu" name="EqStatus"/>
+        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="EquipmentStatus" bpmn4s:originDataReference="DataStoreReference_1apocqs" id="DataStoreReference_0zs1ahu" name="EqStatus"/>
       </bpmn2:subProcess>
       <bpmn2:subProcess bpmn4s:subType="Component" id="Activity_007hmru" name="Imaging">
         <bpmn2:property id="Property_1f98ijw" name="__targetRef_placeholder"/>
@@ -316,13 +336,13 @@
         <bpmn2:dataOutputAssociation id="DataOutputAssociation_0aolsjp">
           <bpmn2:targetRef>DataStoreReference_1apocqs</bpmn2:targetRef>
         </bpmn2:dataOutputAssociation>
-        <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_03e4bga" bpmn4s:originDataReference="DataObjectReference_1l31b8f" bpmn4s:subType="Queue" dataObjectRef="DataObject_1dw1sm2" id="DataObjectReference_0jl3lso" name="ImagingRequest"/>
+        <bpmn2:dataObjectReference bpmn4s:dataTypeRef="ImgReq" bpmn4s:originDataReference="DataObjectReference_1l31b8f" bpmn4s:subType="Queue" dataObjectRef="DataObject_1dw1sm2" id="DataObjectReference_0jl3lso" name="ImagingRequest"/>
         <bpmn2:dataObject id="DataObject_1dw1sm2"/>
-        <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_0dv6oip" bpmn4s:originDataReference="DataObjectReference_0x8mewy" bpmn4s:subType="Queue" dataObjectRef="DataObject_1kob798" id="DataObjectReference_02xlor4" name="ImagingUpdate"/>
+        <bpmn2:dataObjectReference bpmn4s:dataTypeRef="ImgResp" bpmn4s:originDataReference="DataObjectReference_0x8mewy" bpmn4s:subType="Queue" dataObjectRef="DataObject_1kob798" id="DataObjectReference_02xlor4" name="ImagingUpdate"/>
         <bpmn2:dataObject id="DataObject_1kob798"/>
-        <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_3svoua9" bpmn4s:originDataReference="DataObjectReference_1kdsz9c" bpmn4s:subType="Queue" dataObjectRef="DataObject_123c3jj" id="DataObjectReference_05qebpz" name="AcquisitionReq"/>
+        <bpmn2:dataObjectReference bpmn4s:dataTypeRef="AcqReq" bpmn4s:originDataReference="DataObjectReference_1kdsz9c" bpmn4s:subType="Queue" dataObjectRef="DataObject_123c3jj" id="DataObjectReference_05qebpz" name="AcquisitionReq"/>
         <bpmn2:dataObject id="DataObject_123c3jj"/>
-        <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_0neascg" bpmn4s:originDataReference="DataObjectReference_0kc60jm" bpmn4s:subType="Queue" dataObjectRef="DataObject_02vcfp7" id="DataObjectReference_0qr9qow" name="AcqUpdate"/>
+        <bpmn2:dataObjectReference bpmn4s:dataTypeRef="AcqResp" bpmn4s:originDataReference="DataObjectReference_0kc60jm" bpmn4s:subType="Queue" dataObjectRef="DataObject_02vcfp7" id="DataObjectReference_0qr9qow" name="AcqUpdate"/>
         <bpmn2:dataObject id="DataObject_02vcfp7"/>
         <bpmn2:endEvent id="Event_14v2yup">
           <bpmn2:incoming>Flow_0artsx3</bpmn2:incoming>
@@ -363,7 +383,7 @@
             <bpmn2:targetRef>DataStoreReference_0m980jw</bpmn2:targetRef>
           </bpmn2:dataOutputAssociation>
         </bpmn2:task>
-        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_1e80l56" bpmn4s:originDataReference="DataStoreReference_1apocqs" id="DataStoreReference_15xe2ow" name="EqStatus"/>
+        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="EquipmentStatus" bpmn4s:originDataReference="DataStoreReference_1apocqs" id="DataStoreReference_15xe2ow" name="EqStatus"/>
         <bpmn2:sequenceFlow id="Flow_0678bm1" sourceRef="Activity_182dqml" targetRef="Activity_1jl3u6z"/>
         <bpmn2:task bpmn4s:guard="AcqUpdate.result == ResponseEnum::OK" id="Activity_1bch8n0" name="Wait for Start Acquisition">
           <bpmn2:incoming>Flow_1bajtwc</bpmn2:incoming>
@@ -406,7 +426,7 @@
           </bpmn2:dataOutputAssociation>
         </bpmn2:task>
         <bpmn2:sequenceFlow id="Flow_1ikuivc" sourceRef="Activity_0yyni5d" targetRef="Gateway_19ctodi"/>
-        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_0to2oel" bpmn4s:originDataReference="DataStoreReference_084iied" id="DataStoreReference_04btkou" name="ImageData"/>
+        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="AcqData" bpmn4s:originDataReference="DataStoreReference_084iied" id="DataStoreReference_04btkou" name="ImageData"/>
         <bpmn2:task bpmn4s:assertions="IQ1 : assert-that (ImageData.contrast) {&#10;close-to 0.5&#10;}&#10;IQ2 : assert-that (ImageData.resolution) {&#10;close-to 512&#10;}&#10;IQ3 : assert-that (ImageData.signal_to_noise_ratio) {&#10;close-to 0.55&#10;}" bpmn4s:guard="LastAcqReq.image_quality == ImageQuality::LOW" bpmn4s:stepType="CheckAcquisitionResult" bpmn4s:subType="AssertTask" id="Activity_0yyni5d" name="Check Low Res Image Quality">
           <bpmn2:incoming>Flow_02vz4u8</bpmn2:incoming>
           <bpmn2:outgoing>Flow_1ikuivc</bpmn2:outgoing>
@@ -440,7 +460,7 @@
             <bpmn2:targetRef>Property_0loa549</bpmn2:targetRef>
           </bpmn2:dataInputAssociation>
         </bpmn2:task>
-        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_03e4bga" id="DataStoreReference_0m980jw" name="LastAcqReq"/>
+        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="ImgReq" id="DataStoreReference_0m980jw" name="LastAcqReq"/>
         <bpmn2:exclusiveGateway id="Gateway_19ctodi">
           <bpmn2:incoming>Flow_1ikuivc</bpmn2:incoming>
           <bpmn2:incoming>Flow_148bob5</bpmn2:incoming>
@@ -468,9 +488,9 @@
         <bpmn2:dataOutputAssociation id="DataOutputAssociation_0324r9v">
           <bpmn2:targetRef>DataStoreReference_1apocqs</bpmn2:targetRef>
         </bpmn2:dataOutputAssociation>
-        <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_1q6ie9d" bpmn4s:originDataReference="DataObjectReference_1b5pbp2" bpmn4s:subType="Queue" dataObjectRef="DataObject_0joaz0v" id="DataObjectReference_1v7adty" name="TempRequest"/>
+        <bpmn2:dataObjectReference bpmn4s:dataTypeRef="TempReq" bpmn4s:originDataReference="DataObjectReference_1b5pbp2" bpmn4s:subType="Queue" dataObjectRef="DataObject_0joaz0v" id="DataObjectReference_1v7adty" name="TempRequest"/>
         <bpmn2:dataObject id="DataObject_0joaz0v"/>
-        <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_1rng04e" bpmn4s:originDataReference="DataObjectReference_0s7t238" bpmn4s:subType="Queue" dataObjectRef="DataObject_0objtlr" id="DataObjectReference_09pzvzn" name="TempUpdate"/>
+        <bpmn2:dataObjectReference bpmn4s:dataTypeRef="TempResp" bpmn4s:originDataReference="DataObjectReference_0s7t238" bpmn4s:subType="Queue" dataObjectRef="DataObject_0objtlr" id="DataObjectReference_09pzvzn" name="TempUpdate"/>
         <bpmn2:dataObject id="DataObject_0objtlr"/>
         <bpmn2:task bpmn4s:guard="TempRequest.cmd_type == TempEnum::SET" bpmn4s:subType="ComposeTask" id="Activity_1dssxzh" name="Create Set Temp Message">
           <bpmn2:outgoing>Flow_1bfnc5s</bpmn2:outgoing>
@@ -509,7 +529,7 @@
         <bpmn2:endEvent id="Event_13ys7sy">
           <bpmn2:incoming>Flow_0kz9q0c</bpmn2:incoming>
         </bpmn2:endEvent>
-        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_1q6ie9d" id="DataStoreReference_02ehyd2" name="TempCMD"/>
+        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="TempReq" id="DataStoreReference_02ehyd2" name="TempCMD"/>
         <bpmn2:exclusiveGateway id="Gateway_1qk9wqe">
           <bpmn2:incoming>Flow_1bfnc5s</bpmn2:incoming>
           <bpmn2:incoming>Flow_0uneexi</bpmn2:incoming>
@@ -533,8 +553,8 @@
           </bpmn2:dataOutputAssociation>
         </bpmn2:task>
         <bpmn2:sequenceFlow id="Flow_0kz9q0c" sourceRef="Activity_11xknzj" targetRef="Event_13ys7sy"/>
-        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_1rng04e" bpmn4s:originDataReference="DataStoreReference_122arnu" id="DataStoreReference_05ptwf2" name="temp_achieved"/>
-        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_1e80l56" bpmn4s:originDataReference="DataStoreReference_1apocqs" id="DataStoreReference_18il57g" name="EqStatus"/>
+        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="TempResp" bpmn4s:originDataReference="DataStoreReference_122arnu" id="DataStoreReference_05ptwf2" name="temp_achieved"/>
+        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="EquipmentStatus" bpmn4s:originDataReference="DataStoreReference_1apocqs" id="DataStoreReference_18il57g" name="EqStatus"/>
       </bpmn2:subProcess>
       <bpmn2:subProcess bpmn4s:subType="Component" id="Activity_1k37xje" name="Image Preparation">
         <bpmn2:property id="Property_05ef9d0" name="__targetRef_placeholder"/>
@@ -559,13 +579,13 @@
         <bpmn2:dataOutputAssociation id="DataOutputAssociation_0apc47g">
           <bpmn2:targetRef>DataStoreReference_1apocqs</bpmn2:targetRef>
         </bpmn2:dataOutputAssociation>
-        <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_03e4bga" bpmn4s:originDataReference="DataObjectReference_1l31b8f" bpmn4s:subType="Queue" dataObjectRef="DataObject_0gwjs8k" id="DataObjectReference_1o09346" name="ImagingRequest"/>
+        <bpmn2:dataObjectReference bpmn4s:dataTypeRef="ImgReq" bpmn4s:originDataReference="DataObjectReference_1l31b8f" bpmn4s:subType="Queue" dataObjectRef="DataObject_0gwjs8k" id="DataObjectReference_1o09346" name="ImagingRequest"/>
         <bpmn2:dataObject id="DataObject_0gwjs8k"/>
-        <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_0dv6oip" bpmn4s:originDataReference="DataObjectReference_0x8mewy" bpmn4s:subType="Queue" dataObjectRef="DataObject_03zrkd9" id="DataObjectReference_0kn1j4k" name="ImagingUpdate"/>
+        <bpmn2:dataObjectReference bpmn4s:dataTypeRef="ImgResp" bpmn4s:originDataReference="DataObjectReference_0x8mewy" bpmn4s:subType="Queue" dataObjectRef="DataObject_03zrkd9" id="DataObjectReference_0kn1j4k" name="ImagingUpdate"/>
         <bpmn2:dataObject id="DataObject_03zrkd9"/>
-        <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_3svoua9" bpmn4s:originDataReference="DataObjectReference_1kdsz9c" bpmn4s:subType="Queue" dataObjectRef="DataObject_1srfxfc" id="DataObjectReference_1ouww3a" name="AcquisitionReq"/>
+        <bpmn2:dataObjectReference bpmn4s:dataTypeRef="AcqReq" bpmn4s:originDataReference="DataObjectReference_1kdsz9c" bpmn4s:subType="Queue" dataObjectRef="DataObject_1srfxfc" id="DataObjectReference_1ouww3a" name="AcquisitionReq"/>
         <bpmn2:dataObject id="DataObject_1srfxfc"/>
-        <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_0neascg" bpmn4s:originDataReference="DataObjectReference_0kc60jm" bpmn4s:subType="Queue" dataObjectRef="DataObject_0ld0cu0" id="DataObjectReference_12guzx5" name="AcqUpdate"/>
+        <bpmn2:dataObjectReference bpmn4s:dataTypeRef="AcqResp" bpmn4s:originDataReference="DataObjectReference_0kc60jm" bpmn4s:subType="Queue" dataObjectRef="DataObject_0ld0cu0" id="DataObjectReference_12guzx5" name="AcqUpdate"/>
         <bpmn2:dataObject id="DataObject_0ld0cu0"/>
         <bpmn2:task id="Activity_1y1advl" name="Wait for prepare">
           <bpmn2:incoming>Flow_0kkvgdv</bpmn2:incoming>
@@ -644,33 +664,33 @@
             <bpmn2:targetRef>DataObjectReference_1ouww3a</bpmn2:targetRef>
           </bpmn2:dataOutputAssociation>
         </bpmn2:task>
-        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_1e80l56" bpmn4s:originDataReference="DataStoreReference_1apocqs" id="DataStoreReference_07xb407" name="EqStatus"/>
+        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="EquipmentStatus" bpmn4s:originDataReference="DataStoreReference_1apocqs" id="DataStoreReference_07xb407" name="EqStatus"/>
       </bpmn2:subProcess>
-      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_1rng04e" bpmn4s:linkedDataReferences="DataStoreReference_05ptwf2" bpmn4s:originDataReference="DataStoreReference_0ra38yk" id="DataStoreReference_122arnu" name="temp_achieved"/>
-      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_1e80l56" bpmn4s:linkedDataReferences="DataStoreReference_18il57g DataStoreReference_0zs1ahu DataStoreReference_15xe2ow DataStoreReference_07xb407" bpmn4s:originDataReference="DataStoreReference_03catyu" id="DataStoreReference_1apocqs" name="EqStatus"/>
-      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_0to2oel" bpmn4s:linkedDataReferences="DataStoreReference_04btkou" bpmn4s:originDataReference="DataStoreReference_186pwqm" id="DataStoreReference_084iied" name="ImageData"/>
+      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="TempResp" bpmn4s:linkedDataReferences="DataStoreReference_05ptwf2" bpmn4s:originDataReference="DataStoreReference_0ra38yk" id="DataStoreReference_122arnu" name="temp_achieved"/>
+      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="EquipmentStatus" bpmn4s:linkedDataReferences="DataStoreReference_18il57g DataStoreReference_0zs1ahu DataStoreReference_15xe2ow DataStoreReference_07xb407" bpmn4s:originDataReference="DataStoreReference_03catyu" id="DataStoreReference_1apocqs" name="EqStatus"/>
+      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="AcqData" bpmn4s:linkedDataReferences="DataStoreReference_04btkou" bpmn4s:originDataReference="DataStoreReference_186pwqm" id="DataStoreReference_084iied" name="ImageData"/>
     </bpmn2:subProcess>
-    <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_390sq5d" bpmn4s:linkedDataReferences="DataObjectReference_1pat8j0 DataObjectReference_00wtw1h" bpmn4s:subType="Queue" dataObjectRef="DataObject_01ueixc" id="DataObjectReference_0e11adh" name="VacuumRequest"/>
+    <bpmn2:dataObjectReference bpmn4s:dataTypeRef="VacReq" bpmn4s:linkedDataReferences="DataObjectReference_1pat8j0 DataObjectReference_00wtw1h" bpmn4s:subType="Queue" dataObjectRef="DataObject_01ueixc" id="DataObjectReference_0e11adh" name="VacuumRequest"/>
     <bpmn2:dataObject id="DataObject_01ueixc"/>
-    <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_1q6ie9d" bpmn4s:linkedDataReferences="DataObjectReference_1b5pbp2 DataObjectReference_0wqmwzl" bpmn4s:subType="Queue" dataObjectRef="DataObject_06nqqlr" id="DataObjectReference_1omgdas" name="TempRequest"/>
+    <bpmn2:dataObjectReference bpmn4s:dataTypeRef="TempReq" bpmn4s:linkedDataReferences="DataObjectReference_1b5pbp2 DataObjectReference_0wqmwzl" bpmn4s:subType="Queue" dataObjectRef="DataObject_06nqqlr" id="DataObjectReference_1omgdas" name="TempRequest"/>
     <bpmn2:dataObject id="DataObject_06nqqlr"/>
-    <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_35ibonp" bpmn4s:linkedDataReferences="DataObjectReference_00ki1n6 DataObjectReference_0lkm98u" bpmn4s:subType="Queue" dataObjectRef="DataObject_019w5qo" id="DataObjectReference_0d208n8" name="VacuumUpdate"/>
+    <bpmn2:dataObjectReference bpmn4s:dataTypeRef="VacResp" bpmn4s:linkedDataReferences="DataObjectReference_00ki1n6 DataObjectReference_0lkm98u" bpmn4s:subType="Queue" dataObjectRef="DataObject_019w5qo" id="DataObjectReference_0d208n8" name="VacuumUpdate"/>
     <bpmn2:dataObject id="DataObject_019w5qo"/>
-    <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_1rng04e" bpmn4s:linkedDataReferences="DataObjectReference_0s7t238 DataObjectReference_1un7pwk" bpmn4s:subType="Queue" dataObjectRef="DataObject_1ykuvk9" id="DataObjectReference_1w3nbz0" name="TempUpdate"/>
+    <bpmn2:dataObjectReference bpmn4s:dataTypeRef="TempResp" bpmn4s:linkedDataReferences="DataObjectReference_0s7t238 DataObjectReference_1un7pwk" bpmn4s:subType="Queue" dataObjectRef="DataObject_1ykuvk9" id="DataObjectReference_1w3nbz0" name="TempUpdate"/>
     <bpmn2:dataObject id="DataObject_1ykuvk9"/>
-    <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_03e4bga" bpmn4s:linkedDataReferences="DataObjectReference_1l31b8f DataObjectReference_1p4lyqk" bpmn4s:subType="Queue" dataObjectRef="DataObject_0ncwc0s" id="DataObjectReference_078wjy5" name="ImagingRequest"/>
+    <bpmn2:dataObjectReference bpmn4s:dataTypeRef="ImgReq" bpmn4s:linkedDataReferences="DataObjectReference_1l31b8f DataObjectReference_1p4lyqk" bpmn4s:subType="Queue" dataObjectRef="DataObject_0ncwc0s" id="DataObjectReference_078wjy5" name="ImagingRequest"/>
     <bpmn2:dataObject id="DataObject_0ncwc0s"/>
-    <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_0dv6oip" bpmn4s:linkedDataReferences="DataObjectReference_0x8mewy DataObjectReference_1k6kogv" bpmn4s:subType="Queue" dataObjectRef="DataObject_0qijcom" id="DataObjectReference_0h1oq61" name="ImagingUpdate"/>
+    <bpmn2:dataObjectReference bpmn4s:dataTypeRef="ImgResp" bpmn4s:linkedDataReferences="DataObjectReference_0x8mewy DataObjectReference_1k6kogv" bpmn4s:subType="Queue" dataObjectRef="DataObject_0qijcom" id="DataObjectReference_0h1oq61" name="ImagingUpdate"/>
     <bpmn2:dataObject id="DataObject_0qijcom"/>
-    <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_03tvv85" bpmn4s:linkedDataReferences="DataObjectReference_00w5avs DataObjectReference_1ydun0z" bpmn4s:subType="Queue" dataObjectRef="DataObject_0knq4rc" id="DataObjectReference_1tl4lp5" name="PumpUpdate"/>
+    <bpmn2:dataObjectReference bpmn4s:dataTypeRef="PumpResp" bpmn4s:linkedDataReferences="DataObjectReference_00w5avs DataObjectReference_1ydun0z" bpmn4s:subType="Queue" dataObjectRef="DataObject_0knq4rc" id="DataObjectReference_1tl4lp5" name="PumpUpdate"/>
     <bpmn2:dataObject id="DataObject_0knq4rc"/>
-    <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_1d7usl4" bpmn4s:linkedDataReferences="DataObjectReference_044lwas DataObjectReference_0fmkigy" bpmn4s:subType="Queue" dataObjectRef="DataObject_0padtm6" id="DataObjectReference_1ucc8f4" name="PumpRequest"/>
+    <bpmn2:dataObjectReference bpmn4s:dataTypeRef="PumpReq" bpmn4s:linkedDataReferences="DataObjectReference_044lwas DataObjectReference_0fmkigy" bpmn4s:subType="Queue" dataObjectRef="DataObject_0padtm6" id="DataObjectReference_1ucc8f4" name="PumpRequest"/>
     <bpmn2:dataObject id="DataObject_0padtm6"/>
-    <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_0neascg" bpmn4s:linkedDataReferences="DataObjectReference_0kc60jm DataObjectReference_1r64h05" bpmn4s:subType="Queue" dataObjectRef="DataObject_03mpz11" id="DataObjectReference_1you6s5" name="AcqUpdate"/>
+    <bpmn2:dataObjectReference bpmn4s:dataTypeRef="AcqResp" bpmn4s:linkedDataReferences="DataObjectReference_0kc60jm DataObjectReference_1r64h05" bpmn4s:subType="Queue" dataObjectRef="DataObject_03mpz11" id="DataObjectReference_1you6s5" name="AcqUpdate"/>
     <bpmn2:dataObject id="DataObject_03mpz11"/>
-    <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_3svoua9" bpmn4s:linkedDataReferences="DataObjectReference_1kdsz9c DataObjectReference_1owplqu" bpmn4s:subType="Queue" dataObjectRef="DataObject_1hlhb6k" id="DataObjectReference_1o9wr0h" name="AcquisitionReq"/>
+    <bpmn2:dataObjectReference bpmn4s:dataTypeRef="AcqReq" bpmn4s:linkedDataReferences="DataObjectReference_1kdsz9c DataObjectReference_1owplqu" bpmn4s:subType="Queue" dataObjectRef="DataObject_1hlhb6k" id="DataObjectReference_1o9wr0h" name="AcquisitionReq"/>
     <bpmn2:dataObject id="DataObject_1hlhb6k"/>
-    <bpmn2:subProcess bpmn4s:ctxName="vac_ctx" bpmn4s:ctxTypeRef="DataType_1a82rqc" bpmn4s:subType="Component" id="Activity_0jnpeoc" name="Vacuum Controller">
+    <bpmn2:subProcess bpmn4s:ctxName="vac_ctx" bpmn4s:ctxTypeRef="CTX" bpmn4s:subType="Component" id="Activity_0jnpeoc" name="Vacuum Controller">
       <bpmn2:property id="Property_06rplsd" name="__targetRef_placeholder"/>
       <bpmn2:dataInputAssociation id="DataInputAssociation_0vs39ea">
         <bpmn2:sourceRef>DataObjectReference_0d208n8</bpmn2:sourceRef>
@@ -679,9 +699,9 @@
       <bpmn2:dataOutputAssociation id="DataOutputAssociation_1v4kc3l">
         <bpmn2:targetRef>DataObjectReference_0e11adh</bpmn2:targetRef>
       </bpmn2:dataOutputAssociation>
-      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_35ibonp" bpmn4s:originDataReference="DataObjectReference_0d208n8" bpmn4s:subType="Queue" dataObjectRef="DataObject_1fkp6vj" id="DataObjectReference_0lkm98u" name="VacuumUpdate"/>
+      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="VacResp" bpmn4s:originDataReference="DataObjectReference_0d208n8" bpmn4s:subType="Queue" dataObjectRef="DataObject_1fkp6vj" id="DataObjectReference_0lkm98u" name="VacuumUpdate"/>
       <bpmn2:dataObject id="DataObject_1fkp6vj"/>
-      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_390sq5d" bpmn4s:originDataReference="DataObjectReference_0e11adh" bpmn4s:subType="Queue" dataObjectRef="DataObject_18mf3lb" id="DataObjectReference_00wtw1h" name="VacuumRequest"/>
+      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="VacReq" bpmn4s:originDataReference="DataObjectReference_0e11adh" bpmn4s:subType="Queue" dataObjectRef="DataObject_18mf3lb" id="DataObjectReference_00wtw1h" name="VacuumRequest"/>
       <bpmn2:dataObject id="DataObject_18mf3lb"/>
       <bpmn2:startEvent bpmn4s:ctxInit="vac_ctx := CTX { id = 0 }" id="Event_12xhgab">
         <bpmn2:outgoing>Flow_102e8ef</bpmn2:outgoing>
@@ -745,7 +765,7 @@
       <bpmn2:sequenceFlow id="Flow_1lrjqju" sourceRef="Gateway_07w0e8f" targetRef="Event_1hvh1f5"/>
       <bpmn2:sequenceFlow id="Flow_18c6aq1" sourceRef="Activity_1w84pzr" targetRef="Gateway_07w0e8f"/>
     </bpmn2:subProcess>
-    <bpmn2:subProcess bpmn4s:ctxName="temp_ctx" bpmn4s:ctxTypeRef="DataType_1a82rqc" bpmn4s:subType="Component" id="Activity_00w20io" name="Temperature Controller">
+    <bpmn2:subProcess bpmn4s:ctxName="temp_ctx" bpmn4s:ctxTypeRef="CTX" bpmn4s:subType="Component" id="Activity_00w20io" name="Temperature Controller">
       <bpmn2:property id="Property_1aaq7it" name="__targetRef_placeholder"/>
       <bpmn2:dataInputAssociation id="DataInputAssociation_1vkkfie">
         <bpmn2:sourceRef>DataObjectReference_1w3nbz0</bpmn2:sourceRef>
@@ -758,9 +778,9 @@
       <bpmn2:dataOutputAssociation id="DataOutputAssociation_1e3cw4q">
         <bpmn2:targetRef>DataObjectReference_1omgdas</bpmn2:targetRef>
       </bpmn2:dataOutputAssociation>
-      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_1q6ie9d" bpmn4s:originDataReference="DataObjectReference_1omgdas" bpmn4s:subType="Queue" dataObjectRef="DataObject_1vs3yra" id="DataObjectReference_0wqmwzl" name="TempRequest"/>
+      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="TempReq" bpmn4s:originDataReference="DataObjectReference_1omgdas" bpmn4s:subType="Queue" dataObjectRef="DataObject_1vs3yra" id="DataObjectReference_0wqmwzl" name="TempRequest"/>
       <bpmn2:dataObject id="DataObject_1vs3yra"/>
-      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_1rng04e" bpmn4s:originDataReference="DataObjectReference_1w3nbz0" bpmn4s:subType="Queue" dataObjectRef="DataObject_0gl3xit" id="DataObjectReference_1un7pwk" name="TempUpdate"/>
+      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="TempResp" bpmn4s:originDataReference="DataObjectReference_1w3nbz0" bpmn4s:subType="Queue" dataObjectRef="DataObject_0gl3xit" id="DataObjectReference_1un7pwk" name="TempUpdate"/>
       <bpmn2:dataObject id="DataObject_0gl3xit"/>
       <bpmn2:startEvent bpmn4s:ctxInit="temp_ctx := CTX { id = 0 }" id="Event_1r2zvr6">
         <bpmn2:outgoing>Flow_03h1lqg</bpmn2:outgoing>
@@ -805,7 +825,7 @@
       </bpmn2:task>
       <bpmn2:sequenceFlow id="Flow_0mzlovp" sourceRef="Activity_1ikof99" targetRef="Gateway_1sv33t8"/>
       <bpmn2:sequenceFlow id="Flow_0s0657j" sourceRef="Activity_12k4on6" targetRef="Gateway_12yhscn"/>
-      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_1rng04e" bpmn4s:originDataReference="DataStoreReference_0ra38yk" id="DataStoreReference_1dsezk5" name="temp_achieved"/>
+      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="TempResp" bpmn4s:originDataReference="DataStoreReference_0ra38yk" id="DataStoreReference_1dsezk5" name="temp_achieved"/>
       <bpmn2:sequenceFlow id="Flow_01g3o4k" sourceRef="Activity_1uwhsyg" targetRef="Activity_19jrj3z"/>
       <bpmn2:task bpmn4s:assertions="x: assert-that(temp_achieved.temp_val){equal-to 1}" bpmn4s:stepType="TempCheck" bpmn4s:subType="AssertTask" id="Activity_1uwhsyg" name="CheckTemp">
         <bpmn2:incoming>Flow_0y2hlbd</bpmn2:incoming>
@@ -835,7 +855,7 @@
       <bpmn2:sequenceFlow id="Flow_0k7yt52" sourceRef="Gateway_12yhscn" targetRef="Activity_0ygfw4w"/>
       <bpmn2:sequenceFlow id="Flow_09zh8hh" sourceRef="Activity_0ygfw4w" targetRef="Gateway_1sv33t8"/>
     </bpmn2:subProcess>
-    <bpmn2:subProcess bpmn4s:ctxName="pump_ctx" bpmn4s:ctxTypeRef="DataType_1a82rqc" bpmn4s:subType="Component" id="Activity_0h8exgt" name="Pump Controller">
+    <bpmn2:subProcess bpmn4s:ctxName="pump_ctx" bpmn4s:ctxTypeRef="CTX" bpmn4s:subType="Component" id="Activity_0h8exgt" name="Pump Controller">
       <bpmn2:property id="Property_0qwykpp" name="__targetRef_placeholder"/>
       <bpmn2:dataInputAssociation id="DataInputAssociation_10i0prc">
         <bpmn2:sourceRef>DataObjectReference_1ucc8f4</bpmn2:sourceRef>
@@ -844,9 +864,9 @@
       <bpmn2:dataOutputAssociation id="DataOutputAssociation_0reiyc1">
         <bpmn2:targetRef>DataObjectReference_1tl4lp5</bpmn2:targetRef>
       </bpmn2:dataOutputAssociation>
-      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_1d7usl4" bpmn4s:originDataReference="DataObjectReference_1ucc8f4" bpmn4s:subType="Queue" dataObjectRef="DataObject_0ovzi2n" id="DataObjectReference_0fmkigy" name="PumpRequest"/>
+      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="PumpReq" bpmn4s:originDataReference="DataObjectReference_1ucc8f4" bpmn4s:subType="Queue" dataObjectRef="DataObject_0ovzi2n" id="DataObjectReference_0fmkigy" name="PumpRequest"/>
       <bpmn2:dataObject id="DataObject_0ovzi2n"/>
-      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_03tvv85" bpmn4s:originDataReference="DataObjectReference_1tl4lp5" bpmn4s:subType="Queue" dataObjectRef="DataObject_186gkod" id="DataObjectReference_00w5avs" name="PumpUpdate"/>
+      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="PumpResp" bpmn4s:originDataReference="DataObjectReference_1tl4lp5" bpmn4s:subType="Queue" dataObjectRef="DataObject_186gkod" id="DataObjectReference_00w5avs" name="PumpUpdate"/>
       <bpmn2:dataObject id="DataObject_186gkod"/>
       <bpmn2:task id="Activity_1rdc9j5" name="done">
         <bpmn2:incoming>Flow_0x0gs9b</bpmn2:incoming>
@@ -892,7 +912,7 @@
       </bpmn2:endEvent>
       <bpmn2:sequenceFlow id="Flow_0wdxond" sourceRef="Gateway_0td58pc" targetRef="Event_1gdq56e"/>
     </bpmn2:subProcess>
-    <bpmn2:subProcess bpmn4s:ctxName="acq_ctx" bpmn4s:ctxTypeRef="DataType_1a82rqc" bpmn4s:subType="Component" id="Activity_0gu90d3" name="Acquisition Controller">
+    <bpmn2:subProcess bpmn4s:ctxName="acq_ctx" bpmn4s:ctxTypeRef="CTX" bpmn4s:subType="Component" id="Activity_0gu90d3" name="Acquisition Controller">
       <bpmn2:property id="Property_0g9jqau" name="__targetRef_placeholder"/>
       <bpmn2:dataInputAssociation id="DataInputAssociation_0v3wlx9">
         <bpmn2:sourceRef>DataObjectReference_1o9wr0h</bpmn2:sourceRef>
@@ -904,9 +924,9 @@
       <bpmn2:dataOutputAssociation id="DataOutputAssociation_1io5uyw">
         <bpmn2:targetRef>DataStoreReference_186pwqm</bpmn2:targetRef>
       </bpmn2:dataOutputAssociation>
-      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_3svoua9" bpmn4s:originDataReference="DataObjectReference_1o9wr0h" bpmn4s:subType="Queue" dataObjectRef="DataObject_1rp5g1e" id="DataObjectReference_1owplqu" name="AcquisitionReq"/>
+      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="AcqReq" bpmn4s:originDataReference="DataObjectReference_1o9wr0h" bpmn4s:subType="Queue" dataObjectRef="DataObject_1rp5g1e" id="DataObjectReference_1owplqu" name="AcquisitionReq"/>
       <bpmn2:dataObject id="DataObject_1rp5g1e"/>
-      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_0neascg" bpmn4s:originDataReference="DataObjectReference_1you6s5" bpmn4s:subType="Queue" dataObjectRef="DataObject_1gmhuwv" id="DataObjectReference_1r64h05" name="AcqUpdate"/>
+      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="AcqResp" bpmn4s:originDataReference="DataObjectReference_1you6s5" bpmn4s:subType="Queue" dataObjectRef="DataObject_1gmhuwv" id="DataObjectReference_1r64h05" name="AcqUpdate"/>
       <bpmn2:dataObject id="DataObject_1gmhuwv"/>
       <bpmn2:task id="Activity_0r27y1t" name="Acquisition exec done">
         <bpmn2:incoming>Flow_084nmm6</bpmn2:incoming>
@@ -927,7 +947,7 @@
           <bpmn2:targetRef>Property_0wtvz55</bpmn2:targetRef>
         </bpmn2:dataInputAssociation>
       </bpmn2:task>
-      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_0to2oel" bpmn4s:originDataReference="DataStoreReference_186pwqm" id="DataStoreReference_0ejlnbl" name="ImageData"/>
+      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="AcqData" bpmn4s:originDataReference="DataStoreReference_186pwqm" id="DataStoreReference_0ejlnbl" name="ImageData"/>
       <bpmn2:task id="Activity_1ssvt22" name="Acquisition Started">
         <bpmn2:incoming>Flow_1rusz82</bpmn2:incoming>
         <bpmn2:outgoing>Flow_1og3q0v</bpmn2:outgoing>
@@ -974,7 +994,7 @@
         </bpmn2:dataOutputAssociation>
       </bpmn2:task>
     </bpmn2:subProcess>
-    <bpmn2:subProcess bpmn4s:ctxName="img_ctx" bpmn4s:ctxTypeRef="DataType_1a82rqc" bpmn4s:subType="Component" id="Activity_1toot7j" name="Imaging Controller">
+    <bpmn2:subProcess bpmn4s:ctxName="img_ctx" bpmn4s:ctxTypeRef="CTX" bpmn4s:subType="Component" id="Activity_1toot7j" name="Imaging Controller">
       <bpmn2:property id="Property_03xjl8r" name="__targetRef_placeholder"/>
       <bpmn2:dataInputAssociation id="DataInputAssociation_1v6hlnz">
         <bpmn2:sourceRef>DataObjectReference_0h1oq61</bpmn2:sourceRef>
@@ -983,9 +1003,9 @@
       <bpmn2:dataOutputAssociation id="DataOutputAssociation_1lnkwa3">
         <bpmn2:targetRef>DataObjectReference_078wjy5</bpmn2:targetRef>
       </bpmn2:dataOutputAssociation>
-      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_03e4bga" bpmn4s:originDataReference="DataObjectReference_078wjy5" bpmn4s:subType="Queue" dataObjectRef="DataObject_04v4k9b" id="DataObjectReference_1p4lyqk" name="ImagingRequest"/>
+      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="ImgReq" bpmn4s:originDataReference="DataObjectReference_078wjy5" bpmn4s:subType="Queue" dataObjectRef="DataObject_04v4k9b" id="DataObjectReference_1p4lyqk" name="ImagingRequest"/>
       <bpmn2:dataObject id="DataObject_04v4k9b"/>
-      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_0dv6oip" bpmn4s:originDataReference="DataObjectReference_0h1oq61" bpmn4s:subType="Queue" dataObjectRef="DataObject_1a3ujff" id="DataObjectReference_1k6kogv" name="ImagingUpdate"/>
+      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="ImgResp" bpmn4s:originDataReference="DataObjectReference_0h1oq61" bpmn4s:subType="Queue" dataObjectRef="DataObject_1a3ujff" id="DataObjectReference_1k6kogv" name="ImagingUpdate"/>
       <bpmn2:dataObject id="DataObject_1a3ujff"/>
       <bpmn2:startEvent bpmn4s:ctxInit="img_ctx := CTX { id = 0 }" id="Event_1z0nkqb">
         <bpmn2:outgoing>Flow_0gl6zos</bpmn2:outgoing>
@@ -1124,9 +1144,9 @@
       <bpmn2:sequenceFlow id="Flow_0it3dmz" sourceRef="Gateway_0kvhy0o" targetRef="Activity_007s3e1"/>
       <bpmn2:sequenceFlow id="Flow_08hwivh" sourceRef="Activity_007s3e1" targetRef="Gateway_08l0os0"/>
     </bpmn2:subProcess>
-    <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_1rng04e" bpmn4s:linkedDataReferences="DataStoreReference_122arnu DataStoreReference_1dsezk5" id="DataStoreReference_0ra38yk" name="temp_achieved"/>
-    <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_1e80l56" bpmn4s:init="EqStatus := EquipmentStatus {&#10; temp_status = Status::OFF,&#10; pump_status = Status::OFF,&#10; acq_status = Status::OFF&#10;}" bpmn4s:linkedDataReferences="DataStoreReference_1apocqs" id="DataStoreReference_03catyu" name="EqStatus"/>
-    <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_0to2oel" bpmn4s:linkedDataReferences="DataStoreReference_0ejlnbl DataStoreReference_084iied" id="DataStoreReference_186pwqm" name="ImageData"/>
+    <bpmn2:dataStoreReference bpmn4s:dataTypeRef="TempResp" bpmn4s:linkedDataReferences="DataStoreReference_122arnu DataStoreReference_1dsezk5" id="DataStoreReference_0ra38yk" name="temp_achieved"/>
+    <bpmn2:dataStoreReference bpmn4s:dataTypeRef="EquipmentStatus" bpmn4s:init="EqStatus := EquipmentStatus {&#10; temp_status = Status::OFF,&#10; pump_status = Status::OFF,&#10; acq_status = Status::OFF&#10;}" bpmn4s:linkedDataReferences="DataStoreReference_1apocqs" id="DataStoreReference_03catyu" name="EqStatus"/>
+    <bpmn2:dataStoreReference bpmn4s:dataTypeRef="AcqData" bpmn4s:linkedDataReferences="DataStoreReference_0ejlnbl DataStoreReference_084iied" id="DataStoreReference_186pwqm" name="ImageData"/>
   </bpmn2:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane bpmnElement="Process_1" id="BPMNPlane_1">

@@ -2,41 +2,52 @@ record UNIT {
 	int	unit
 }
 
-record ClientContext {
-    string	client_id
-    Fries	fries
-    bool	premium
-}
-
-record DeliveryServiceContext {
-    FriesDelivery	delivery
-}
-
 record Fries {
-    Size	size
-    Topping[]	style
-}
-
-record FriesDelivery {
-    FriesOrder	clientOrder
-    Receipt	receipt
+  Size size
+  Topping[] style
 }
 
 record FriesOrder {
-    string	client_id
-    Fries	fries
+  string client_id
+  Fries fries
 }
 
 record Receipt {
-    real	amount
+  real amount
 }
 
-enum Size { Small Medium Large Undefined }
+@context
+record ClientContext {
+  string client_id
+  Fries fries
+  bool premium
+}
 
+@context
+record DeliveryServiceContext {
+  FriesDelivery delivery
+}
+
+enum Topping {
+  Ketchup
+  Mayo
+  Onions
+}
+
+record FriesDelivery {
+  FriesOrder clientOrder
+  Receipt receipt
+}
+
+enum Size {
+  Small
+  Medium
+  Large
+  Undefined
+}
+
+@context
 record SnackbarContext {
-    string	employee_id
-    int	orders
+  string employee_id
+  int orders
 }
-
-enum Topping { Ketchup Mayo Onions }
-

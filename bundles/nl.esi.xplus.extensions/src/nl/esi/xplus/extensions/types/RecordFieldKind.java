@@ -15,7 +15,6 @@ package nl.esi.xplus.extensions.types;
 import nl.esi.xtext.types.types.RecordField;
 import static nl.esi.xtext.common.lang.utilities.AnnotationUtil.hasAnnotation;
 
-@SuppressWarnings("all")
 public enum RecordFieldKind {
 	CONCRETE,
 
