@@ -89,20 +89,20 @@ class Utils
         return step?.suppress !== null && step.suppress.vars.exists[variable.varField == varField]
     }
 
-    static def List<Binding> getContextData(AbstractStep step) {
+    static def Iterable<Binding> getContextData(AbstractStep step) {
         // Try exclusion: all bindings except input and sut?
         val nonContext = step.varID.map[name].toSet
         nonContext += step.stepRef.flatMap[refData].map[name]
-        return step.input.reject[nonContext.contains(name.name)].toList
+        return step.input.reject[nonContext.contains(name.name)]
     }
 
-    static def List<Binding> getInputData(AbstractStep step) {
-        return step.stepRef.flatMap[ref | ref.refStep.output.filter[ref.refData.contains(name)]].toList
+    static def Iterable<Binding> getInputData(AbstractStep step) {
+        return step.stepRef.flatMap[ref | ref.refStep.output.filter[ref.refData.contains(name)]]
     }
 
-    static def List<Binding> getSUTData(AbstractStep step) {
+    static def Iterable<Binding> getSUTData(AbstractStep step) {
         val sutvars = step.varID.map[name].toSet
-        return step.input.filter[sutvars.contains(name.name)].toList
+        return step.input.filter[sutvars.contains(name.name)]
     }
 
 

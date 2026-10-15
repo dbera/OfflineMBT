@@ -159,7 +159,7 @@ class TestSCN:
                             txt += v + " "
                         # txt += elm.var_ref
                         txt += " }\n"
-                txt += "input-binding:\n"
+                txt += "input-data:\n"
                 txt += self.printData(idata)
                 isSutVarPresent = False
                 for k, v in idata.items():

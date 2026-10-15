@@ -14,8 +14,10 @@ package nl.esi.comma.abstracttestspecification.generator.to.concrete
 
 import java.util.List
 import java.util.Map
+import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractTestDefinition
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AssertionStep
+import nl.esi.comma.abstracttestspecification.abstractTestspecification.Binding
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.ExecutableStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.TSMain
 import nl.esi.comma.assertthat.assertThat.DataAssertionItem
@@ -126,7 +128,7 @@ class FromAbstractToConcrete extends AbstractGenerator {
     // Generate Types File for Concrete TSpec
     def private generateTypesFile(AbstractTestDefinition atd, Iterable<String> typesImports) {
         val sysStepTypes = atd.steps.filter(ExecutableStep).reject[stepType.isNullOrEmpty].groupBy[stepType]
-        val sysStepTypeInputs = sysStepTypes.mapValues[flatMap[input].reject[suppressed].map['''«name.type.typeName» «varField»''']]
+        val sysStepTypeInputs = sysStepTypes.mapValues[flatMap[allInput].reject[suppressed].map['''«name.type.typeName» «varField»''']]
         val sysStepTypeOutputs = sysStepTypes.mapValues[flatMap[output].reject[suppressed].map['''«name.type.typeName» «varField»''']]
 
         return '''
@@ -153,6 +155,10 @@ class FromAbstractToConcrete extends AbstractGenerator {
                 «ENDIF»
             «ENDFOR»
         '''
+    }
+
+    def private Iterable<Binding> getAllInput(AbstractStep step) {
+        return step.contextData + step.inputData + step.SUTData
     }
 
     def private Iterable<URI> getTypesImports(Resource res) {

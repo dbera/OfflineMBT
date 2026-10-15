@@ -60,13 +60,13 @@ specification printer
         with-guard		(request.resolution == PrintResolution::HIGH and variants.version == "TX500")
         or
         (request.resolution != PrintResolution::HIGH and variants.version != "TX500")
-        produces-outputs	Event_0jcg6zx
+        produces-outputs	Event_0jcg6zx suppress
         updates:
             Event_0jcg6zx := Flow_1u2qmtt
         produces-outputs	printResult
         updates:
             printResult := Result { verdict = Outcome::OK }
-        produces-outputs	printReport symbolic-link suppress(printReport.id)
+        produces-outputs	printReport symbolic-link
         updates:
             printReport := Report {
              id = request.id
@@ -80,7 +80,7 @@ specification printer
         case			default step-type "null" action-type COMPOSE
         with-inputs		printJob, corrections
         with-guard		corrections.id == printJob.id and printJob.opType == OperationType::PRINT
-        produces-outputs	Flow_1u2qmtt
+        produces-outputs	Flow_1u2qmtt suppress
         produces-outputs	request symbolic-link
         updates:
             request := printJob
@@ -90,7 +90,7 @@ specification printer
         case			default step-type "null" action-type COMPOSE
         with-inputs		printJob
         with-guard		printJob.opType == OperationType::PREP
-        produces-outputs	Flow_0iaelzn
+        produces-outputs	Flow_0iaelzn suppress
         produces-outputs	request symbolic-link
         updates:
             request := printJob
@@ -102,7 +102,7 @@ specification printer
         with-guard		(request.resolution == PrintResolution::HIGH and variants.version == "TX500")
         or
         (request.resolution != PrintResolution::HIGH and variants.version != "TX500")
-        produces-outputs	Event_0mxx05p
+        produces-outputs	Event_0mxx05p suppress
         updates:
             Event_0mxx05p := Flow_0iaelzn
         produces-outputs	printResult
@@ -145,13 +145,13 @@ specification printer
               equal-to 9.0 within-margin relative (1.0)
             }
         }
-        produces-outputs	Event_1bxlea2
+        produces-outputs	Event_1bxlea2 suppress
         produces-outputs	history symbolic-link
         updates:
             history := AssertionsHistory {
               inspectionReports = add(history.inspectionReports, inspectionReport.id)
             }
-        produces-outputs	inspectionReport suppress(inspectionReport.id)
+        produces-outputs	inspectionReport
         updates:
             inspectionReport := inspectionReport
     
@@ -184,7 +184,7 @@ specification printer
         element-label	"Run Visual inspection"
         case			default step-type "ExecuteInspection" action-type RUN
         with-inputs		Flow_07l0yyj, measureRequest
-        produces-outputs	inspectionReport symbolic-link suppress(inspectionReport.id)
+        produces-outputs	inspectionReport symbolic-link
         updates:
             inspectionReport := Report {
              id = measureRequest.id
@@ -198,14 +198,14 @@ specification printer
         case			default step-type "null" action-type COMPOSE
         with-inputs		inspectionJob, printReport
         with-guard		printReport.id == inspectionJob.id
-        produces-outputs	Flow_07l0yyj
+        produces-outputs	Flow_07l0yyj suppress
         produces-outputs	measureRequest
         references {
             reportLinking: measureRequest.printJobReport := printReport
-        } symbolic-link suppress(measureRequest.printJobReport.id)
+        } symbolic-link
         updates:
             measureRequest := inspectionJob
-        produces-outputs	printReport suppress(printReport.id)
+        produces-outputs	printReport
         updates:
             printReport := printReport
     
@@ -240,11 +240,11 @@ specification printer
         case			default step-type "null" action-type COMPOSE
         with-inputs		optJob, inspectionReport
         with-guard		inspectionReport.id == optJob.id
-        produces-outputs	Flow_0y8u5pd
+        produces-outputs	Flow_0y8u5pd suppress
         produces-outputs	optimizeJob symbolic-link
         updates:
             optimizeJob := optJob
-        produces-outputs	inspectionReport suppress(inspectionReport.id)
+        produces-outputs	inspectionReport
         updates:
             inspectionReport := inspectionReport
         
@@ -252,7 +252,7 @@ specification printer
         element-label	"Run Optimization Job"
         case			default step-type "ExecuteOptimizer" action-type RUN
         with-inputs		Flow_0y8u5pd, optimizeJob
-        produces-outputs	Event_1oozdnw
+        produces-outputs	Event_1oozdnw suppress
         updates:
             Event_1oozdnw := Flow_0y8u5pd
         produces-outputs	corrections symbolic-link
@@ -429,7 +429,7 @@ specification printer
         produces-outputs	Flow_1dt29vl
         updates:
             Flow_1dt29vl := Flow_1y4bjf4
-        produces-outputs	inspectionJob suppress(inspectionJob.printJobReport.id)
+        produces-outputs	inspectionJob
         updates:
             inspectionJob := MeasureRequest {
              id = Flow_1y4bjf4.id
