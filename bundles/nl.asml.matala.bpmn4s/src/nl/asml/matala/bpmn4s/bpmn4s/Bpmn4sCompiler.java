@@ -47,7 +47,7 @@ import nl.asml.matala.bpmn4s.Logging;
 public class Bpmn4sCompiler{
 	
 	protected final static String UNIT_TYPE = "UNIT";
-	private final String UNIT_INIT = "UNIT { unit = 0 }";
+	private final static String UNIT_INIT = "UNIT { unit = 0 }";
 	
 	private final DataExpressionsHelper DATA_EXPR_HLPR = new DataExpressionsHelper();
 
@@ -812,6 +812,7 @@ public class Bpmn4sCompiler{
 		}
 	}
 	
+    @TODO: remove with issue #439
 	public static String generateTypes(Collection<Bpmn4sDataType> dataTypes ) {
 		String types = new String("");
 		var sorted = IterableExtensions.sortBy(dataTypes,Bpmn4sDataType::getName);
