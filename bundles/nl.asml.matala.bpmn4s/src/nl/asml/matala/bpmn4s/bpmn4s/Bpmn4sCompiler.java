@@ -812,7 +812,7 @@ public class Bpmn4sCompiler{
 		}
 	}
 	
-    @TODO: remove with issue #439
+    //@TODO: remove with issue #439
 	public static String generateTypes(Collection<Bpmn4sDataType> dataTypes ) {
 		String types = new String("");
 		var sorted = IterableExtensions.sortBy(dataTypes,Bpmn4sDataType::getName);
