@@ -46,6 +46,7 @@ import org.eclipse.emf.ecore.util.EcoreUtil
 
 import static extension nl.esi.comma.assertthat.utilities.AssertThatUtilities.isSuppressed
 import static extension org.eclipse.xtext.EcoreUtil2.*
+import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
 
 class Utils 
 {
@@ -80,7 +81,7 @@ class Utils
         // If all fields are suppressed, the binding is suppressed
         val typeDecl = binding.name.type.type
         if (typeDecl instanceof RecordTypeDecl) {
-            if (typeDecl.fields.forall[suppressed]) {
+            if (typeDecl.allFields.forall[suppressed]) {
                 return true
             }
         }

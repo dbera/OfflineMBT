@@ -123,8 +123,10 @@ class ReferenceExpressionHandler {
     }
 
     private static def void evaluateReferenceConstrains(String inputName, String outputName, Type type, Map<String, List<String>> mapLHStoRHS) {
-        if (type instanceof TypeReference && type.type instanceof RecordTypeDecl) {
-            for (field : (type.type as RecordTypeDecl).fields.reject[suppressed].reject[kind == RecordFieldKind.CONCRETE]) {
+        val typeDecl = type.type
+        if (typeDecl instanceof RecordTypeDecl) {
+            // TODO: Should I reject the concrete field here?
+            for (field : typeDecl.allFields.reject[suppressed].reject[kind == RecordFieldKind.CONCRETE]) {
                 evaluateReferenceConstrains(inputName + '.' + field.name, outputName + '.' + field.name, field.type, mapLHStoRHS)
             }
         } else {

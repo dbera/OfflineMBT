@@ -127,7 +127,7 @@ class StandardProjectGenerator extends AbstractGenerator {
                 // Only apply concrete tspec post-processing if resource doesn't contain errors
                 if (conTspecRes.errors.isEmpty) {
                     MergeConcreteDataAssigments.transform(conTspecRes)
-//                    EvaluateDataExpressions.transform(conTspecRes)
+                    EvaluateDataExpressions.transform(conTspecRes)
                     conTspecRes.trySave
                 }
                 // Validate the generated concrete tspec, stop this transformation on error
