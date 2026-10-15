@@ -44,6 +44,7 @@ import static extension org.eclipse.emf.ecore.util.EcoreUtil.*
 import static extension org.eclipse.xtext.EcoreUtil2.*
 
 import static extension org.eclipse.lsat.common.xtend.Queries.*
+import nl.esi.comma.testspecification.generator.utils.EvaluateDataExpressions
 
 /**
  * Generates code from your model files on save.
@@ -126,6 +127,7 @@ class StandardProjectGenerator extends AbstractGenerator {
                 // Only apply concrete tspec post-processing if resource doesn't contain errors
                 if (conTspecRes.errors.isEmpty) {
                     MergeConcreteDataAssigments.transform(conTspecRes)
+//                    EvaluateDataExpressions.transform(conTspecRes)
                     conTspecRes.trySave
                 }
                 // Validate the generated concrete tspec, stop this transformation on error
