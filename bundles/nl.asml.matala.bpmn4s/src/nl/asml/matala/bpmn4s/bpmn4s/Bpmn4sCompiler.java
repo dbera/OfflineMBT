@@ -853,6 +853,8 @@ public class Bpmn4sCompiler{
 		return types;
 	}
 
+
+    //@TODO: remove with issue #439
 	private static String typeToString(Collection<Bpmn4sDataType> dataTypes, String dataTypeName) {
 		Bpmn4sDataType dataType =dataTypes.stream().filter(dt->dt.getName().equals(dataTypeName)).findFirst().orElse(null);
 		String result = "";
