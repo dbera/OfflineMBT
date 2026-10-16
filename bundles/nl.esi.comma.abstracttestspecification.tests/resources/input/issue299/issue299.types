@@ -18,7 +18,7 @@ record InputJobA {
 
 record InputJobB {
     int	job_id
-    mixed KeyValuePair[]	list_of_key_value_pairs
+    @mixed KeyValuePair[]	list_of_key_value_pairs
 }
 
 record JobA {
@@ -33,7 +33,7 @@ record JobB {
 
 record KeyValuePair {
     string	key
-    mixed string	value
+    @mixed string	value
 }
 
 record Parameters {
@@ -43,7 +43,7 @@ record Parameters {
 
 record ReportJobA {
     int	job_id
-    symbolic string	some_value
+    @symbolic  string	some_value
 }
 
 record ReportJobB {

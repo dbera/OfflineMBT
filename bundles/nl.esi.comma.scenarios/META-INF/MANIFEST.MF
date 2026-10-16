@@ -17,7 +17,8 @@ Require-Bundle: nl.esi.xtext.actions;visibility:=reexport,
  org.eclipse.emf.common,
  com.google.gson;bundle-version="2.8.2",
  org.eclipse.core.resources;bundle-version="3.14.0",
- nl.esi.comma.scenarios.dashboard
+ nl.esi.comma.scenarios.dashboard,
+ nl.esi.xplus.extensions
 Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: nl.esi.comma.scenarios,
  nl.esi.comma.scenarios.generator,

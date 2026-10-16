@@ -9,6 +9,7 @@ Bundle-ActivationPolicy: lazy
 Require-Bundle: nl.esi.comma.assertthat;visibility:=reexport,
  nl.asml.matala.product;visibility:=reexport,
  nl.asml.matala.bpmn4s,
+ nl.esi.xplus.extensions,
  org.eclipse.xtext,
  org.camunda.bpm.model.bpmn;bundle-version="7.22.0",
  org.camunda.bpm.model.xml;bundle-version="7.22.0",

@@ -8,6 +8,7 @@ Bundle-SymbolicName: nl.asml.matala.product.ide; singleton:=true
 Bundle-ActivationPolicy: lazy
 Require-Bundle: nl.asml.matala.product;visibility:=reexport,
  nl.esi.comma.assertthat.ide;visibility:=reexport,
+ nl.esi.xplus.extensions,
  org.eclipse.xtext.ide,
  org.eclipse.xtext.xbase.ide,
  org.antlr.runtime;bundle-version="[3.2.0,3.2.1)"
