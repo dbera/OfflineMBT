@@ -14,9 +14,12 @@ package nl.asml.matala.server;
 
 import static nl.esi.xtext.lsp.server.WebSocketServerLauncher.PORT;
 
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Injector;
 
 import nl.asml.matala.server.rest.RestServer;
@@ -39,6 +42,7 @@ public class ServerLauncher extends nl.esi.xtext.lsp.server.ServerLauncher {
 	private static final String LSP_PORT = "--lsp-port";
 	private static final String REPOSITORY_PATH = "--repository-path";
 	private static final String OUTPUT_PATH = "--output-path";
+	private static final String TRACE = "--trace";
 	private static final int DEFAULT_REST_PORT = 9091;
     private static final int DEFAULT_LSP_PORT = 9092;
     private static final String DEFAULT_REPOSITORY_PATH = "models";
@@ -76,8 +80,12 @@ public class ServerLauncher extends nl.esi.xtext.lsp.server.ServerLauncher {
 
         // Start LSP WebSocket server (Java-WebSocket - blocking, Xtext-native)
         int lspPort = getArgValue(args, LSP_PORT, DEFAULT_LSP_PORT);
+        List<String> lspArgs = Lists.newArrayList(WEB_SOCKET, PORT, String.valueOf(lspPort));
+        if (hasArg(args, TRACE)) {
+        	lspArgs.add("-trace");
+        }
         LOG.info("Starting LSP WebSocket server on port {}", lspPort);
-        launcher.launch(new String[] { WEB_SOCKET, PORT, String.valueOf(lspPort) });
+        launcher.launch(lspArgs.toArray(new String[lspArgs.size()]));
     }
 
     private static int getArgValue(String[] args, String flag, int defaultValue) {
@@ -100,5 +108,14 @@ public class ServerLauncher extends nl.esi.xtext.lsp.server.ServerLauncher {
             }
         }
         return defaultValue;
+    }
+
+    private static boolean hasArg(String[] args, String flag) {
+        for (int i = 0; i < args.length; i++) {
+            if (flag.equals(args[i])) {
+                return true;
+            }
+        }
+        return false;
     }
 }
