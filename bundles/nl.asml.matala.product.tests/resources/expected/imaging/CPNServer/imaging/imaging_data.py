@@ -23,60 +23,44 @@ class Data:
     	return json.dumps({"unit":0})
     	
     @staticmethod
-    def get_AcqData():
-    	return json.dumps({"id":0})
-    	
-    @staticmethod
-    def get_AcqReq():
-    	return json.dumps({"cmd_type":"ImageEnum::PREPARE","id":0})
-    	
-    @staticmethod
-    def get_AcqResp():
-    	return json.dumps({"result":"ResponseEnum::OK","id":0})
-    	
-    @staticmethod
-    def get_CTX():
-    	return json.dumps({"id":0})
-    	
-    @staticmethod
-    def get_EquipmentStatus():
-    	return json.dumps({"temp_status":"Status::ON","pump_status":"Status::ON","acq_status":"Status::ON"})
-    	
-    @staticmethod
-    def get_ImageEnum():
-    	return "ImageEnum::PREPARE"
-    	
-    @staticmethod
-    def get_ImageQuality():
-    	return "ImageQuality::HIGH"
-    	
-    @staticmethod
     def get_ImgReq():
     	return json.dumps({"cmd_type":"ImageEnum::PREPARE","id":0,"image_quality":"ImageQuality::HIGH"})
-    	
-    @staticmethod
-    def get_ImgResp():
-    	return json.dumps({"result":"ResponseEnum::OK"})
-    	
-    @staticmethod
-    def get_PumpReq():
-    	return json.dumps({"cmd_type":"VacuumEnum::ON","id":0})
     	
     @staticmethod
     def get_PumpResp():
     	return json.dumps({"result":"ResponseEnum::OK"})
     	
     @staticmethod
-    def get_ResponseEnum():
-    	return "ResponseEnum::OK"
-    	
-    @staticmethod
     def get_Status():
     	return "Status::ON"
     	
     @staticmethod
-    def get_TempEnum():
-    	return "TempEnum::SET"
+    def get_ResponseEnum():
+    	return "ResponseEnum::OK"
+    	
+    @staticmethod
+    def get_ImgResp():
+    	return json.dumps({"result":"ResponseEnum::OK"})
+    	
+    @staticmethod
+    def get_AcqResp():
+    	return json.dumps({"result":"ResponseEnum::OK","id":0})
+    	
+    @staticmethod
+    def get_AcqData():
+    	return json.dumps({"id":0})
+    	
+    @staticmethod
+    def get_CTX():
+    	return json.dumps({"id":0})
+    	
+    @staticmethod
+    def get_PumpReq():
+    	return json.dumps({"cmd_type":"VacuumEnum::ON","id":0})
+    	
+    @staticmethod
+    def get_EquipmentStatus():
+    	return json.dumps({"temp_status":"Status::ON","pump_status":"Status::ON","acq_status":"Status::ON"})
     	
     @staticmethod
     def get_TempReq():
@@ -87,16 +71,32 @@ class Data:
     	return json.dumps({"result":"ResponseEnum::OK","reqid":0})
     	
     @staticmethod
-    def get_VacReq():
-    	return json.dumps({"cmd_type":"VacuumEnum::ON","id":0})
+    def get_ImageEnum():
+    	return "ImageEnum::PREPARE"
+    	
+    @staticmethod
+    def get_TempEnum():
+    	return "TempEnum::SET"
+    	
+    @staticmethod
+    def get_ImageQuality():
+    	return "ImageQuality::HIGH"
+    	
+    @staticmethod
+    def get_VacuumEnum():
+    	return "VacuumEnum::ON"
     	
     @staticmethod
     def get_VacResp():
     	return json.dumps({"result":"ResponseEnum::OK"})
     	
     @staticmethod
-    def get_VacuumEnum():
-    	return "VacuumEnum::ON"
+    def get_VacReq():
+    	return json.dumps({"cmd_type":"VacuumEnum::ON","id":0})
+    	
+    @staticmethod
+    def get_AcqReq():
+    	return json.dumps({"cmd_type":"ImageEnum::PREPARE","id":0})
     	
     @staticmethod
     def execute_SupervisonModelSupervisionImagePreparation_Unprepare_default_AcquisitionReq(ImagingRequest):

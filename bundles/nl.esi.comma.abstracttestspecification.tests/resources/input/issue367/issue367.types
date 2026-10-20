@@ -2,14 +2,13 @@ record UNIT {
 	int	unit
 }
 
-record Input {
-    int	id
-    @mixed string	input1
-}
-
 record Report {
-    int	id
-    @symbolic  string	output1
-    @symbolic  string	output2
+  int id
+  @symbolic string output1
+  @symbolic string output2
 }
 
+record Input {
+  int id
+  @mixed string input1
+}

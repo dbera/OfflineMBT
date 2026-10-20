@@ -63,7 +63,7 @@ Test-Scenario: S1
 
 compose-step-name: SupervisonModelSupervisionTemperatureHandler_CreateSetTempMessage_default_0
 action-case: imaging.SupervisonModelSupervisionTemperatureHandler.CreateSetTempMessage.default
-input-binding:
+input-data:
 TempRequest : {
     "cmd_type": "TempEnum::SET",
     "id": 0
@@ -76,11 +76,12 @@ TempCMD : {
     "cmd_type": "TempEnum::SET",
     "id": 0
 }
+suppress(Gateway_1qk9wqe)
 
 run-step-name: SupervisonModelSupervisionTemperatureHandler_ExecuteSetTemp_default_0 step-type: "SetTemperature"
 action-case: imaging.SupervisonModelSupervisionTemperatureHandler.ExecuteSetTemp.default
 consumes-from-step: SupervisonModelSupervisionTemperatureHandler_CreateSetTempMessage_default_0 { TempCMD  }
-input-binding:
+input-data:
 Gateway_1qk9wqe : {
     "unit": 0
 }
@@ -110,11 +111,12 @@ EqStatus : {
     "pump_status": "Status::OFF",
     "temp_status": "Status::ON"
 }
+suppress(Event_13ys7sy)
 
 compose-step-name: SupervisonModelSupervisionImagePreparation_Prepare_default_0
 action-case: imaging.SupervisonModelSupervisionImagePreparation.Prepare.default
 consumes-from-step: SupervisonModelSupervisionTemperatureHandler_ExecuteSetTemp_default_0 { EqStatus  }
-input-binding:
+input-data:
 ImagingRequest : {
     "cmd_type": "ImageEnum::PREPARE",
     "id": 0,
@@ -138,11 +140,12 @@ EqStatus : {
     "pump_status": "Status::OFF",
     "temp_status": "Status::ON"
 }
+suppress(Flow_0kkvgdv)
 
 assert-step-name: SupervisonModelTemperatureController_CheckTemp_default_0 assert-type: "TempCheck"
 action-case: imaging.SupervisonModelTemperatureController.CheckTemp.default
 consumes-from-step: SupervisonModelSupervisionTemperatureHandler_ExecuteSetTemp_default_0 { temp_achieved  }
-input-binding:
+input-data:
 Gateway_1sv33t8 : {
     "id": 1
 }
@@ -160,7 +163,7 @@ imaging.SupervisonModelTemperatureController.CheckTemp.default.default
 run-step-name: SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_0 step-type: "ExecAcquisitionCommand"
 action-case: imaging.SupervisonModelAcquisitionController.Execacquisitioninitandteardown.default
 consumes-from-step: SupervisonModelSupervisionImagePreparation_Prepare_default_0 { AcquisitionReq  }
-input-binding:
+input-data:
 AcquisitionReq : {
     "cmd_type": "ImageEnum::PREPARE",
     "id": 0
@@ -172,7 +175,7 @@ Flow_084nmm6 : {
 
 compose-step-name: SupervisonModelSupervisionPressureHandler_StartPump_default_0
 action-case: imaging.SupervisonModelSupervisionPressureHandler.StartPump.default
-input-binding:
+input-data:
 Gateway_1j81da5 : {
     "id": 0
 }
@@ -202,7 +205,7 @@ EqStatus : {
 run-step-name: SupervisonModelPumpController_startpump_default_0 step-type: "ExecPumpCommand"
 action-case: imaging.SupervisonModelPumpController.startpump.default
 consumes-from-step: SupervisonModelSupervisionPressureHandler_StartPump_default_0 { PumpRequest  }
-input-binding:
+input-data:
 PumpRequest : {
     "cmd_type": "VacuumEnum::ON",
     "id": 0
@@ -214,7 +217,7 @@ Flow_0x0gs9b : {
 
 compose-step-name: SupervisonModelSupervisionImaging_StartAcquisition_default_0
 action-case: imaging.SupervisonModelSupervisionImaging.StartAcquisition.default
-input-binding:
+input-data:
 ImagingRequest : {
     "cmd_type": "ImageEnum::START",
     "id": 1,
@@ -243,11 +246,12 @@ EqStatus : {
     "pump_status": "Status::ON",
     "temp_status": "Status::ON"
 }
+suppress(Flow_1bajtwc)
 
 run-step-name: SupervisonModelAcquisitionController_StartAcquisition_default_0 step-type: "ExecAcquisitionCommand"
 action-case: imaging.SupervisonModelAcquisitionController.StartAcquisition.default
 consumes-from-step: SupervisonModelSupervisionImaging_StartAcquisition_default_0 { AcquisitionReq  }
-input-binding:
+input-data:
 AcquisitionReq : {
     "cmd_type": "ImageEnum::START",
     "id": 1
@@ -259,7 +263,7 @@ Flow_1rusz82 : {
 
 compose-step-name: SupervisonModelSupervisionImaging_StopAcquisition_default_0
 action-case: imaging.SupervisonModelSupervisionImaging.StopAcquisition.default
-input-binding:
+input-data:
 ImagingRequest : {
     "cmd_type": "ImageEnum::STOP",
     "id": 2,
@@ -273,11 +277,12 @@ AcquisitionReq : {
     "cmd_type": "ImageEnum::STOP",
     "id": 2
 }
+suppress(Flow_0678bm1)
 
 run-step-name: SupervisonModelAcquisitionController_StopAcquisition_default_0 step-type: "ExecAcquisitionCommand"
 action-case: imaging.SupervisonModelAcquisitionController.StopAcquisition.default
 consumes-from-step: SupervisonModelSupervisionImaging_StopAcquisition_default_0 { AcquisitionReq  }
-input-binding:
+input-data:
 AcquisitionReq : {
     "cmd_type": "ImageEnum::STOP",
     "id": 2
@@ -292,7 +297,7 @@ ImageData : {
 
 compose-step-name: SupervisonModelSupervisionImagePreparation_Unprepare_default_0
 action-case: imaging.SupervisonModelSupervisionImagePreparation.Unprepare.default
-input-binding:
+input-data:
 ImagingRequest : {
     "cmd_type": "ImageEnum::UNPREPARE",
     "id": 3,
@@ -306,11 +311,12 @@ AcquisitionReq : {
     "cmd_type": "ImageEnum::UNPREPARE",
     "id": 3
 }
+suppress(Flow_1kpcqqf)
 
 run-step-name: SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_1 step-type: "ExecAcquisitionCommand"
 action-case: imaging.SupervisonModelAcquisitionController.Execacquisitioninitandteardown.default
 consumes-from-step: SupervisonModelSupervisionImagePreparation_Unprepare_default_0 { AcquisitionReq  }
-input-binding:
+input-data:
 AcquisitionReq : {
     "cmd_type": "ImageEnum::UNPREPARE",
     "id": 3
@@ -322,7 +328,7 @@ Flow_084nmm6 : {
 
 compose-step-name: SupervisonModelSupervisionImagePreparation_Prepare_default_1
 action-case: imaging.SupervisonModelSupervisionImagePreparation.Prepare.default
-input-binding:
+input-data:
 ImagingRequest : {
     "cmd_type": "ImageEnum::PREPARE",
     "id": 4,
@@ -346,10 +352,11 @@ EqStatus : {
     "pump_status": "Status::ON",
     "temp_status": "Status::ON"
 }
+suppress(Flow_0kkvgdv)
 
 compose-step-name: SupervisonModelSupervisionPressureHandler_TurnOffPump_default_0
 action-case: imaging.SupervisonModelSupervisionPressureHandler.TurnOffPump.default
-input-binding:
+input-data:
 Flow_1wguswc : {
     "id": 0
 }
@@ -379,7 +386,7 @@ EqStatus : {
 run-step-name: SupervisonModelPumpController_stoppump_default_0 step-type: "ExecPumpCommand"
 action-case: imaging.SupervisonModelPumpController.stoppump.default
 consumes-from-step: SupervisonModelSupervisionPressureHandler_TurnOffPump_default_0 { PumpRequest  }
-input-binding:
+input-data:
 PumpRequest : {
     "cmd_type": "VacuumEnum::OFF",
     "id": 1
@@ -392,7 +399,7 @@ Flow_104f6k4 : {
 run-step-name: SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_2 step-type: "ExecAcquisitionCommand"
 action-case: imaging.SupervisonModelAcquisitionController.Execacquisitioninitandteardown.default
 consumes-from-step: SupervisonModelSupervisionImagePreparation_Prepare_default_1 { AcquisitionReq  }
-input-binding:
+input-data:
 AcquisitionReq : {
     "cmd_type": "ImageEnum::PREPARE",
     "id": 4
@@ -404,7 +411,7 @@ Flow_084nmm6 : {
 
 compose-step-name: SupervisonModelSupervisionPressureHandler_StartPump_default_1
 action-case: imaging.SupervisonModelSupervisionPressureHandler.StartPump.default
-input-binding:
+input-data:
 Gateway_1j81da5 : {
     "id": 0
 }
@@ -434,7 +441,7 @@ EqStatus : {
 run-step-name: SupervisonModelPumpController_startpump_default_1 step-type: "ExecPumpCommand"
 action-case: imaging.SupervisonModelPumpController.startpump.default
 consumes-from-step: SupervisonModelSupervisionPressureHandler_StartPump_default_1 { PumpRequest  }
-input-binding:
+input-data:
 PumpRequest : {
     "cmd_type": "VacuumEnum::ON",
     "id": 2
@@ -448,7 +455,7 @@ assert-step-name: SupervisonModelSupervisionImaging_CheckLowResImageQuality_defa
 action-case: imaging.SupervisonModelSupervisionImaging.CheckLowResImageQuality.default
 consumes-from-step: SupervisonModelSupervisionImaging_StartAcquisition_default_0 { LastAcqReq  }
 consumes-from-step: SupervisonModelAcquisitionController_StopAcquisition_default_0 { ImageData  }
-input-binding:
+input-data:
 Gateway_16m9e4j : {
     "unit": 0
 }
@@ -464,12 +471,13 @@ output-data:
 Gateway_0qg69ul : {
     "unit": 0
 }
+suppress(Gateway_0qg69ul)
 output-assertion: SupervisonModelAcquisitionController_StopAcquisition_default_0
 imaging.SupervisonModelSupervisionImaging.CheckLowResImageQuality.default.default
 
 compose-step-name: SupervisonModelSupervisionImaging_StartAcquisition_default_1
 action-case: imaging.SupervisonModelSupervisionImaging.StartAcquisition.default
-input-binding:
+input-data:
 ImagingRequest : {
     "cmd_type": "ImageEnum::START",
     "id": 5,
@@ -498,11 +506,12 @@ EqStatus : {
     "pump_status": "Status::ON",
     "temp_status": "Status::ON"
 }
+suppress(Flow_1bajtwc)
 
 run-step-name: SupervisonModelAcquisitionController_StartAcquisition_default_1 step-type: "ExecAcquisitionCommand"
 action-case: imaging.SupervisonModelAcquisitionController.StartAcquisition.default
 consumes-from-step: SupervisonModelSupervisionImaging_StartAcquisition_default_1 { AcquisitionReq  }
-input-binding:
+input-data:
 AcquisitionReq : {
     "cmd_type": "ImageEnum::START",
     "id": 5
@@ -514,7 +523,7 @@ Flow_1rusz82 : {
 
 compose-step-name: SupervisonModelSupervisionImaging_StopAcquisition_default_1
 action-case: imaging.SupervisonModelSupervisionImaging.StopAcquisition.default
-input-binding:
+input-data:
 ImagingRequest : {
     "cmd_type": "ImageEnum::STOP",
     "id": 6,
@@ -528,11 +537,12 @@ AcquisitionReq : {
     "cmd_type": "ImageEnum::STOP",
     "id": 6
 }
+suppress(Flow_0678bm1)
 
 run-step-name: SupervisonModelAcquisitionController_StopAcquisition_default_1 step-type: "ExecAcquisitionCommand"
 action-case: imaging.SupervisonModelAcquisitionController.StopAcquisition.default
 consumes-from-step: SupervisonModelSupervisionImaging_StopAcquisition_default_1 { AcquisitionReq  }
-input-binding:
+input-data:
 AcquisitionReq : {
     "cmd_type": "ImageEnum::STOP",
     "id": 6
@@ -547,7 +557,7 @@ ImageData : {
 
 compose-step-name: SupervisonModelSupervisionImagePreparation_Unprepare_default_1
 action-case: imaging.SupervisonModelSupervisionImagePreparation.Unprepare.default
-input-binding:
+input-data:
 ImagingRequest : {
     "cmd_type": "ImageEnum::UNPREPARE",
     "id": 7,
@@ -561,11 +571,12 @@ AcquisitionReq : {
     "cmd_type": "ImageEnum::UNPREPARE",
     "id": 7
 }
+suppress(Flow_1kpcqqf)
 
 run-step-name: SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_3 step-type: "ExecAcquisitionCommand"
 action-case: imaging.SupervisonModelAcquisitionController.Execacquisitioninitandteardown.default
 consumes-from-step: SupervisonModelSupervisionImagePreparation_Unprepare_default_1 { AcquisitionReq  }
-input-binding:
+input-data:
 AcquisitionReq : {
     "cmd_type": "ImageEnum::UNPREPARE",
     "id": 7
@@ -577,7 +588,7 @@ Flow_084nmm6 : {
 
 compose-step-name: SupervisonModelSupervisionImagePreparation_Prepare_default_2
 action-case: imaging.SupervisonModelSupervisionImagePreparation.Prepare.default
-input-binding:
+input-data:
 ImagingRequest : {
     "cmd_type": "ImageEnum::PREPARE",
     "id": 8,
@@ -601,10 +612,11 @@ EqStatus : {
     "pump_status": "Status::ON",
     "temp_status": "Status::ON"
 }
+suppress(Flow_0kkvgdv)
 
 compose-step-name: SupervisonModelSupervisionPressureHandler_TurnOffPump_default_1
 action-case: imaging.SupervisonModelSupervisionPressureHandler.TurnOffPump.default
-input-binding:
+input-data:
 Flow_1wguswc : {
     "id": 0
 }
@@ -634,7 +646,7 @@ EqStatus : {
 run-step-name: SupervisonModelPumpController_stoppump_default_1 step-type: "ExecPumpCommand"
 action-case: imaging.SupervisonModelPumpController.stoppump.default
 consumes-from-step: SupervisonModelSupervisionPressureHandler_TurnOffPump_default_1 { PumpRequest  }
-input-binding:
+input-data:
 PumpRequest : {
     "cmd_type": "VacuumEnum::OFF",
     "id": 3
@@ -647,7 +659,7 @@ Flow_104f6k4 : {
 run-step-name: SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_4 step-type: "ExecAcquisitionCommand"
 action-case: imaging.SupervisonModelAcquisitionController.Execacquisitioninitandteardown.default
 consumes-from-step: SupervisonModelSupervisionImagePreparation_Prepare_default_2 { AcquisitionReq  }
-input-binding:
+input-data:
 AcquisitionReq : {
     "cmd_type": "ImageEnum::PREPARE",
     "id": 8
@@ -659,7 +671,7 @@ Flow_084nmm6 : {
 
 compose-step-name: SupervisonModelSupervisionPressureHandler_StartPump_default_2
 action-case: imaging.SupervisonModelSupervisionPressureHandler.StartPump.default
-input-binding:
+input-data:
 Gateway_1j81da5 : {
     "id": 0
 }
@@ -689,7 +701,7 @@ EqStatus : {
 run-step-name: SupervisonModelPumpController_startpump_default_2 step-type: "ExecPumpCommand"
 action-case: imaging.SupervisonModelPumpController.startpump.default
 consumes-from-step: SupervisonModelSupervisionPressureHandler_StartPump_default_2 { PumpRequest  }
-input-binding:
+input-data:
 PumpRequest : {
     "cmd_type": "VacuumEnum::ON",
     "id": 4
@@ -703,7 +715,7 @@ assert-step-name: SupervisonModelSupervisionImaging_CheckLowResImageQuality_defa
 action-case: imaging.SupervisonModelSupervisionImaging.CheckLowResImageQuality.default
 consumes-from-step: SupervisonModelSupervisionImaging_StartAcquisition_default_1 { LastAcqReq  }
 consumes-from-step: SupervisonModelAcquisitionController_StopAcquisition_default_1 { ImageData  }
-input-binding:
+input-data:
 Gateway_16m9e4j : {
     "unit": 0
 }
@@ -719,12 +731,13 @@ output-data:
 Gateway_0qg69ul : {
     "unit": 0
 }
+suppress(Gateway_0qg69ul)
 output-assertion: SupervisonModelAcquisitionController_StopAcquisition_default_1
 imaging.SupervisonModelSupervisionImaging.CheckLowResImageQuality.default.default
 
 compose-step-name: SupervisonModelSupervisionImaging_StartAcquisition_default_2
 action-case: imaging.SupervisonModelSupervisionImaging.StartAcquisition.default
-input-binding:
+input-data:
 ImagingRequest : {
     "cmd_type": "ImageEnum::START",
     "id": 9,
@@ -753,11 +766,12 @@ EqStatus : {
     "pump_status": "Status::ON",
     "temp_status": "Status::ON"
 }
+suppress(Flow_1bajtwc)
 
 run-step-name: SupervisonModelAcquisitionController_StartAcquisition_default_2 step-type: "ExecAcquisitionCommand"
 action-case: imaging.SupervisonModelAcquisitionController.StartAcquisition.default
 consumes-from-step: SupervisonModelSupervisionImaging_StartAcquisition_default_2 { AcquisitionReq  }
-input-binding:
+input-data:
 AcquisitionReq : {
     "cmd_type": "ImageEnum::START",
     "id": 9
@@ -769,7 +783,7 @@ Flow_1rusz82 : {
 
 compose-step-name: SupervisonModelSupervisionImaging_StopAcquisition_default_2
 action-case: imaging.SupervisonModelSupervisionImaging.StopAcquisition.default
-input-binding:
+input-data:
 ImagingRequest : {
     "cmd_type": "ImageEnum::STOP",
     "id": 10,
@@ -783,11 +797,12 @@ AcquisitionReq : {
     "cmd_type": "ImageEnum::STOP",
     "id": 10
 }
+suppress(Flow_0678bm1)
 
 run-step-name: SupervisonModelAcquisitionController_StopAcquisition_default_2 step-type: "ExecAcquisitionCommand"
 action-case: imaging.SupervisonModelAcquisitionController.StopAcquisition.default
 consumes-from-step: SupervisonModelSupervisionImaging_StopAcquisition_default_2 { AcquisitionReq  }
-input-binding:
+input-data:
 AcquisitionReq : {
     "cmd_type": "ImageEnum::STOP",
     "id": 10
@@ -802,7 +817,7 @@ ImageData : {
 
 compose-step-name: SupervisonModelSupervisionImagePreparation_Unprepare_default_2
 action-case: imaging.SupervisonModelSupervisionImagePreparation.Unprepare.default
-input-binding:
+input-data:
 ImagingRequest : {
     "cmd_type": "ImageEnum::UNPREPARE",
     "id": 11,
@@ -816,11 +831,12 @@ AcquisitionReq : {
     "cmd_type": "ImageEnum::UNPREPARE",
     "id": 11
 }
+suppress(Flow_1kpcqqf)
 
 run-step-name: SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_5 step-type: "ExecAcquisitionCommand"
 action-case: imaging.SupervisonModelAcquisitionController.Execacquisitioninitandteardown.default
 consumes-from-step: SupervisonModelSupervisionImagePreparation_Unprepare_default_2 { AcquisitionReq  }
-input-binding:
+input-data:
 AcquisitionReq : {
     "cmd_type": "ImageEnum::UNPREPARE",
     "id": 11
@@ -832,7 +848,7 @@ Flow_084nmm6 : {
 
 compose-step-name: SupervisonModelSupervisionImagePreparation_Prepare_default_3
 action-case: imaging.SupervisonModelSupervisionImagePreparation.Prepare.default
-input-binding:
+input-data:
 ImagingRequest : {
     "cmd_type": "ImageEnum::PREPARE",
     "id": 12,
@@ -856,10 +872,11 @@ EqStatus : {
     "pump_status": "Status::ON",
     "temp_status": "Status::ON"
 }
+suppress(Flow_0kkvgdv)
 
 compose-step-name: SupervisonModelSupervisionPressureHandler_TurnOffPump_default_2
 action-case: imaging.SupervisonModelSupervisionPressureHandler.TurnOffPump.default
-input-binding:
+input-data:
 Flow_1wguswc : {
     "id": 0
 }
@@ -889,7 +906,7 @@ EqStatus : {
 run-step-name: SupervisonModelPumpController_stoppump_default_2 step-type: "ExecPumpCommand"
 action-case: imaging.SupervisonModelPumpController.stoppump.default
 consumes-from-step: SupervisonModelSupervisionPressureHandler_TurnOffPump_default_2 { PumpRequest  }
-input-binding:
+input-data:
 PumpRequest : {
     "cmd_type": "VacuumEnum::OFF",
     "id": 5
@@ -902,7 +919,7 @@ Flow_104f6k4 : {
 run-step-name: SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_6 step-type: "ExecAcquisitionCommand"
 action-case: imaging.SupervisonModelAcquisitionController.Execacquisitioninitandteardown.default
 consumes-from-step: SupervisonModelSupervisionImagePreparation_Prepare_default_3 { AcquisitionReq  }
-input-binding:
+input-data:
 AcquisitionReq : {
     "cmd_type": "ImageEnum::PREPARE",
     "id": 12
@@ -914,7 +931,7 @@ Flow_084nmm6 : {
 
 compose-step-name: SupervisonModelSupervisionPressureHandler_StartPump_default_3
 action-case: imaging.SupervisonModelSupervisionPressureHandler.StartPump.default
-input-binding:
+input-data:
 Gateway_1j81da5 : {
     "id": 0
 }
@@ -944,7 +961,7 @@ EqStatus : {
 run-step-name: SupervisonModelPumpController_startpump_default_3 step-type: "ExecPumpCommand"
 action-case: imaging.SupervisonModelPumpController.startpump.default
 consumes-from-step: SupervisonModelSupervisionPressureHandler_StartPump_default_3 { PumpRequest  }
-input-binding:
+input-data:
 PumpRequest : {
     "cmd_type": "VacuumEnum::ON",
     "id": 6
@@ -958,7 +975,7 @@ assert-step-name: SupervisonModelSupervisionImaging_CheckLowResImageQuality_defa
 action-case: imaging.SupervisonModelSupervisionImaging.CheckLowResImageQuality.default
 consumes-from-step: SupervisonModelSupervisionImaging_StartAcquisition_default_2 { LastAcqReq  }
 consumes-from-step: SupervisonModelAcquisitionController_StopAcquisition_default_2 { ImageData  }
-input-binding:
+input-data:
 Gateway_16m9e4j : {
     "unit": 0
 }
@@ -974,12 +991,13 @@ output-data:
 Gateway_0qg69ul : {
     "unit": 0
 }
+suppress(Gateway_0qg69ul)
 output-assertion: SupervisonModelAcquisitionController_StopAcquisition_default_2
 imaging.SupervisonModelSupervisionImaging.CheckLowResImageQuality.default.default
 
 compose-step-name: SupervisonModelSupervisionImaging_StartAcquisition_default_3
 action-case: imaging.SupervisonModelSupervisionImaging.StartAcquisition.default
-input-binding:
+input-data:
 ImagingRequest : {
     "cmd_type": "ImageEnum::START",
     "id": 13,
@@ -1008,11 +1026,12 @@ EqStatus : {
     "pump_status": "Status::ON",
     "temp_status": "Status::ON"
 }
+suppress(Flow_1bajtwc)
 
 run-step-name: SupervisonModelAcquisitionController_StartAcquisition_default_3 step-type: "ExecAcquisitionCommand"
 action-case: imaging.SupervisonModelAcquisitionController.StartAcquisition.default
 consumes-from-step: SupervisonModelSupervisionImaging_StartAcquisition_default_3 { AcquisitionReq  }
-input-binding:
+input-data:
 AcquisitionReq : {
     "cmd_type": "ImageEnum::START",
     "id": 13
@@ -1024,7 +1043,7 @@ Flow_1rusz82 : {
 
 compose-step-name: SupervisonModelSupervisionImaging_StopAcquisition_default_3
 action-case: imaging.SupervisonModelSupervisionImaging.StopAcquisition.default
-input-binding:
+input-data:
 ImagingRequest : {
     "cmd_type": "ImageEnum::STOP",
     "id": 14,
@@ -1038,11 +1057,12 @@ AcquisitionReq : {
     "cmd_type": "ImageEnum::STOP",
     "id": 14
 }
+suppress(Flow_0678bm1)
 
 run-step-name: SupervisonModelAcquisitionController_StopAcquisition_default_3 step-type: "ExecAcquisitionCommand"
 action-case: imaging.SupervisonModelAcquisitionController.StopAcquisition.default
 consumes-from-step: SupervisonModelSupervisionImaging_StopAcquisition_default_3 { AcquisitionReq  }
-input-binding:
+input-data:
 AcquisitionReq : {
     "cmd_type": "ImageEnum::STOP",
     "id": 14
@@ -1057,7 +1077,7 @@ ImageData : {
 
 compose-step-name: SupervisonModelSupervisionImagePreparation_Unprepare_default_3
 action-case: imaging.SupervisonModelSupervisionImagePreparation.Unprepare.default
-input-binding:
+input-data:
 ImagingRequest : {
     "cmd_type": "ImageEnum::UNPREPARE",
     "id": 15,
@@ -1071,11 +1091,12 @@ AcquisitionReq : {
     "cmd_type": "ImageEnum::UNPREPARE",
     "id": 15
 }
+suppress(Flow_1kpcqqf)
 
 run-step-name: SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_7 step-type: "ExecAcquisitionCommand"
 action-case: imaging.SupervisonModelAcquisitionController.Execacquisitioninitandteardown.default
 consumes-from-step: SupervisonModelSupervisionImagePreparation_Unprepare_default_3 { AcquisitionReq  }
-input-binding:
+input-data:
 AcquisitionReq : {
     "cmd_type": "ImageEnum::UNPREPARE",
     "id": 15
@@ -1087,7 +1108,7 @@ Flow_084nmm6 : {
 
 compose-step-name: SupervisonModelSupervisionImagePreparation_Prepare_default_4
 action-case: imaging.SupervisonModelSupervisionImagePreparation.Prepare.default
-input-binding:
+input-data:
 ImagingRequest : {
     "cmd_type": "ImageEnum::PREPARE",
     "id": 16,
@@ -1111,10 +1132,11 @@ EqStatus : {
     "pump_status": "Status::ON",
     "temp_status": "Status::ON"
 }
+suppress(Flow_0kkvgdv)
 
 compose-step-name: SupervisonModelSupervisionPressureHandler_TurnOffPump_default_3
 action-case: imaging.SupervisonModelSupervisionPressureHandler.TurnOffPump.default
-input-binding:
+input-data:
 Flow_1wguswc : {
     "id": 0
 }
@@ -1144,7 +1166,7 @@ EqStatus : {
 run-step-name: SupervisonModelPumpController_stoppump_default_3 step-type: "ExecPumpCommand"
 action-case: imaging.SupervisonModelPumpController.stoppump.default
 consumes-from-step: SupervisonModelSupervisionPressureHandler_TurnOffPump_default_3 { PumpRequest  }
-input-binding:
+input-data:
 PumpRequest : {
     "cmd_type": "VacuumEnum::OFF",
     "id": 7
@@ -1157,7 +1179,7 @@ Flow_104f6k4 : {
 run-step-name: SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_8 step-type: "ExecAcquisitionCommand"
 action-case: imaging.SupervisonModelAcquisitionController.Execacquisitioninitandteardown.default
 consumes-from-step: SupervisonModelSupervisionImagePreparation_Prepare_default_4 { AcquisitionReq  }
-input-binding:
+input-data:
 AcquisitionReq : {
     "cmd_type": "ImageEnum::PREPARE",
     "id": 16
@@ -1169,7 +1191,7 @@ Flow_084nmm6 : {
 
 compose-step-name: SupervisonModelSupervisionPressureHandler_StartPump_default_4
 action-case: imaging.SupervisonModelSupervisionPressureHandler.StartPump.default
-input-binding:
+input-data:
 Gateway_1j81da5 : {
     "id": 0
 }
@@ -1199,7 +1221,7 @@ EqStatus : {
 run-step-name: SupervisonModelPumpController_startpump_default_4 step-type: "ExecPumpCommand"
 action-case: imaging.SupervisonModelPumpController.startpump.default
 consumes-from-step: SupervisonModelSupervisionPressureHandler_StartPump_default_4 { PumpRequest  }
-input-binding:
+input-data:
 PumpRequest : {
     "cmd_type": "VacuumEnum::ON",
     "id": 8
@@ -1213,7 +1235,7 @@ assert-step-name: SupervisonModelSupervisionImaging_CheckLowResImageQuality_defa
 action-case: imaging.SupervisonModelSupervisionImaging.CheckLowResImageQuality.default
 consumes-from-step: SupervisonModelSupervisionImaging_StartAcquisition_default_3 { LastAcqReq  }
 consumes-from-step: SupervisonModelAcquisitionController_StopAcquisition_default_3 { ImageData  }
-input-binding:
+input-data:
 Gateway_16m9e4j : {
     "unit": 0
 }
@@ -1229,12 +1251,13 @@ output-data:
 Gateway_0qg69ul : {
     "unit": 0
 }
+suppress(Gateway_0qg69ul)
 output-assertion: SupervisonModelAcquisitionController_StopAcquisition_default_3
 imaging.SupervisonModelSupervisionImaging.CheckLowResImageQuality.default.default
 
 compose-step-name: SupervisonModelSupervisionImaging_StartAcquisition_default_4
 action-case: imaging.SupervisonModelSupervisionImaging.StartAcquisition.default
-input-binding:
+input-data:
 ImagingRequest : {
     "cmd_type": "ImageEnum::START",
     "id": 17,
@@ -1263,11 +1286,12 @@ EqStatus : {
     "pump_status": "Status::ON",
     "temp_status": "Status::ON"
 }
+suppress(Flow_1bajtwc)
 
 run-step-name: SupervisonModelAcquisitionController_StartAcquisition_default_4 step-type: "ExecAcquisitionCommand"
 action-case: imaging.SupervisonModelAcquisitionController.StartAcquisition.default
 consumes-from-step: SupervisonModelSupervisionImaging_StartAcquisition_default_4 { AcquisitionReq  }
-input-binding:
+input-data:
 AcquisitionReq : {
     "cmd_type": "ImageEnum::START",
     "id": 17
@@ -1279,7 +1303,7 @@ Flow_1rusz82 : {
 
 compose-step-name: SupervisonModelSupervisionImaging_StopAcquisition_default_4
 action-case: imaging.SupervisonModelSupervisionImaging.StopAcquisition.default
-input-binding:
+input-data:
 ImagingRequest : {
     "cmd_type": "ImageEnum::STOP",
     "id": 18,
@@ -1293,11 +1317,12 @@ AcquisitionReq : {
     "cmd_type": "ImageEnum::STOP",
     "id": 18
 }
+suppress(Flow_0678bm1)
 
 run-step-name: SupervisonModelAcquisitionController_StopAcquisition_default_4 step-type: "ExecAcquisitionCommand"
 action-case: imaging.SupervisonModelAcquisitionController.StopAcquisition.default
 consumes-from-step: SupervisonModelSupervisionImaging_StopAcquisition_default_4 { AcquisitionReq  }
-input-binding:
+input-data:
 AcquisitionReq : {
     "cmd_type": "ImageEnum::STOP",
     "id": 18
@@ -1312,7 +1337,7 @@ ImageData : {
 
 compose-step-name: SupervisonModelSupervisionImagePreparation_Unprepare_default_4
 action-case: imaging.SupervisonModelSupervisionImagePreparation.Unprepare.default
-input-binding:
+input-data:
 ImagingRequest : {
     "cmd_type": "ImageEnum::UNPREPARE",
     "id": 19,
@@ -1326,11 +1351,12 @@ AcquisitionReq : {
     "cmd_type": "ImageEnum::UNPREPARE",
     "id": 19
 }
+suppress(Flow_1kpcqqf)
 
 run-step-name: SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_9 step-type: "ExecAcquisitionCommand"
 action-case: imaging.SupervisonModelAcquisitionController.Execacquisitioninitandteardown.default
 consumes-from-step: SupervisonModelSupervisionImagePreparation_Unprepare_default_4 { AcquisitionReq  }
-input-binding:
+input-data:
 AcquisitionReq : {
     "cmd_type": "ImageEnum::UNPREPARE",
     "id": 19
@@ -1342,7 +1368,7 @@ Flow_084nmm6 : {
 
 compose-step-name: SupervisonModelSupervisionImagePreparation_Prepare_default_5
 action-case: imaging.SupervisonModelSupervisionImagePreparation.Prepare.default
-input-binding:
+input-data:
 ImagingRequest : {
     "cmd_type": "ImageEnum::PREPARE",
     "id": 20,
@@ -1366,10 +1392,11 @@ EqStatus : {
     "pump_status": "Status::ON",
     "temp_status": "Status::ON"
 }
+suppress(Flow_0kkvgdv)
 
 compose-step-name: SupervisonModelSupervisionPressureHandler_TurnOffPump_default_4
 action-case: imaging.SupervisonModelSupervisionPressureHandler.TurnOffPump.default
-input-binding:
+input-data:
 Flow_1wguswc : {
     "id": 0
 }
@@ -1399,7 +1426,7 @@ EqStatus : {
 run-step-name: SupervisonModelPumpController_stoppump_default_4 step-type: "ExecPumpCommand"
 action-case: imaging.SupervisonModelPumpController.stoppump.default
 consumes-from-step: SupervisonModelSupervisionPressureHandler_TurnOffPump_default_4 { PumpRequest  }
-input-binding:
+input-data:
 PumpRequest : {
     "cmd_type": "VacuumEnum::OFF",
     "id": 9
@@ -1412,7 +1439,7 @@ Flow_104f6k4 : {
 run-step-name: SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_10 step-type: "ExecAcquisitionCommand"
 action-case: imaging.SupervisonModelAcquisitionController.Execacquisitioninitandteardown.default
 consumes-from-step: SupervisonModelSupervisionImagePreparation_Prepare_default_5 { AcquisitionReq  }
-input-binding:
+input-data:
 AcquisitionReq : {
     "cmd_type": "ImageEnum::PREPARE",
     "id": 20
@@ -1424,7 +1451,7 @@ Flow_084nmm6 : {
 
 compose-step-name: SupervisonModelSupervisionPressureHandler_StartPump_default_5
 action-case: imaging.SupervisonModelSupervisionPressureHandler.StartPump.default
-input-binding:
+input-data:
 Gateway_1j81da5 : {
     "id": 0
 }
@@ -1454,7 +1481,7 @@ EqStatus : {
 run-step-name: SupervisonModelPumpController_startpump_default_5 step-type: "ExecPumpCommand"
 action-case: imaging.SupervisonModelPumpController.startpump.default
 consumes-from-step: SupervisonModelSupervisionPressureHandler_StartPump_default_5 { PumpRequest  }
-input-binding:
+input-data:
 PumpRequest : {
     "cmd_type": "VacuumEnum::ON",
     "id": 10
@@ -1468,7 +1495,7 @@ assert-step-name: SupervisonModelSupervisionImaging_CheckLowResImageQuality_defa
 action-case: imaging.SupervisonModelSupervisionImaging.CheckLowResImageQuality.default
 consumes-from-step: SupervisonModelSupervisionImaging_StartAcquisition_default_4 { LastAcqReq  }
 consumes-from-step: SupervisonModelAcquisitionController_StopAcquisition_default_4 { ImageData  }
-input-binding:
+input-data:
 Gateway_16m9e4j : {
     "unit": 0
 }
@@ -1484,12 +1511,13 @@ output-data:
 Gateway_0qg69ul : {
     "unit": 0
 }
+suppress(Gateway_0qg69ul)
 output-assertion: SupervisonModelAcquisitionController_StopAcquisition_default_4
 imaging.SupervisonModelSupervisionImaging.CheckLowResImageQuality.default.default
 
 compose-step-name: SupervisonModelSupervisionImaging_StartAcquisition_default_5
 action-case: imaging.SupervisonModelSupervisionImaging.StartAcquisition.default
-input-binding:
+input-data:
 ImagingRequest : {
     "cmd_type": "ImageEnum::START",
     "id": 21,
@@ -1518,11 +1546,12 @@ EqStatus : {
     "pump_status": "Status::ON",
     "temp_status": "Status::ON"
 }
+suppress(Flow_1bajtwc)
 
 run-step-name: SupervisonModelAcquisitionController_StartAcquisition_default_5 step-type: "ExecAcquisitionCommand"
 action-case: imaging.SupervisonModelAcquisitionController.StartAcquisition.default
 consumes-from-step: SupervisonModelSupervisionImaging_StartAcquisition_default_5 { AcquisitionReq  }
-input-binding:
+input-data:
 AcquisitionReq : {
     "cmd_type": "ImageEnum::START",
     "id": 21
@@ -1534,7 +1563,7 @@ Flow_1rusz82 : {
 
 compose-step-name: SupervisonModelSupervisionImaging_StopAcquisition_default_5
 action-case: imaging.SupervisonModelSupervisionImaging.StopAcquisition.default
-input-binding:
+input-data:
 ImagingRequest : {
     "cmd_type": "ImageEnum::STOP",
     "id": 22,
@@ -1548,11 +1577,12 @@ AcquisitionReq : {
     "cmd_type": "ImageEnum::STOP",
     "id": 22
 }
+suppress(Flow_0678bm1)
 
 run-step-name: SupervisonModelAcquisitionController_StopAcquisition_default_5 step-type: "ExecAcquisitionCommand"
 action-case: imaging.SupervisonModelAcquisitionController.StopAcquisition.default
 consumes-from-step: SupervisonModelSupervisionImaging_StopAcquisition_default_5 { AcquisitionReq  }
-input-binding:
+input-data:
 AcquisitionReq : {
     "cmd_type": "ImageEnum::STOP",
     "id": 22
@@ -1567,7 +1597,7 @@ ImageData : {
 
 compose-step-name: SupervisonModelSupervisionImagePreparation_Unprepare_default_5
 action-case: imaging.SupervisonModelSupervisionImagePreparation.Unprepare.default
-input-binding:
+input-data:
 ImagingRequest : {
     "cmd_type": "ImageEnum::UNPREPARE",
     "id": 23,
@@ -1581,11 +1611,12 @@ AcquisitionReq : {
     "cmd_type": "ImageEnum::UNPREPARE",
     "id": 23
 }
+suppress(Flow_1kpcqqf)
 
 run-step-name: SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_11 step-type: "ExecAcquisitionCommand"
 action-case: imaging.SupervisonModelAcquisitionController.Execacquisitioninitandteardown.default
 consumes-from-step: SupervisonModelSupervisionImagePreparation_Unprepare_default_5 { AcquisitionReq  }
-input-binding:
+input-data:
 AcquisitionReq : {
     "cmd_type": "ImageEnum::UNPREPARE",
     "id": 23
@@ -1597,7 +1628,7 @@ Flow_084nmm6 : {
 
 compose-step-name: SupervisonModelSupervisionImagePreparation_Prepare_default_6
 action-case: imaging.SupervisonModelSupervisionImagePreparation.Prepare.default
-input-binding:
+input-data:
 ImagingRequest : {
     "cmd_type": "ImageEnum::PREPARE",
     "id": 24,
@@ -1621,10 +1652,11 @@ EqStatus : {
     "pump_status": "Status::ON",
     "temp_status": "Status::ON"
 }
+suppress(Flow_0kkvgdv)
 
 compose-step-name: SupervisonModelSupervisionPressureHandler_TurnOffPump_default_5
 action-case: imaging.SupervisonModelSupervisionPressureHandler.TurnOffPump.default
-input-binding:
+input-data:
 Flow_1wguswc : {
     "id": 0
 }
@@ -1654,7 +1686,7 @@ EqStatus : {
 run-step-name: SupervisonModelPumpController_stoppump_default_5 step-type: "ExecPumpCommand"
 action-case: imaging.SupervisonModelPumpController.stoppump.default
 consumes-from-step: SupervisonModelSupervisionPressureHandler_TurnOffPump_default_5 { PumpRequest  }
-input-binding:
+input-data:
 PumpRequest : {
     "cmd_type": "VacuumEnum::OFF",
     "id": 11
@@ -1667,7 +1699,7 @@ Flow_104f6k4 : {
 run-step-name: SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_12 step-type: "ExecAcquisitionCommand"
 action-case: imaging.SupervisonModelAcquisitionController.Execacquisitioninitandteardown.default
 consumes-from-step: SupervisonModelSupervisionImagePreparation_Prepare_default_6 { AcquisitionReq  }
-input-binding:
+input-data:
 AcquisitionReq : {
     "cmd_type": "ImageEnum::PREPARE",
     "id": 24
@@ -1679,7 +1711,7 @@ Flow_084nmm6 : {
 
 compose-step-name: SupervisonModelSupervisionPressureHandler_StartPump_default_6
 action-case: imaging.SupervisonModelSupervisionPressureHandler.StartPump.default
-input-binding:
+input-data:
 Gateway_1j81da5 : {
     "id": 0
 }
@@ -1709,7 +1741,7 @@ EqStatus : {
 run-step-name: SupervisonModelPumpController_startpump_default_6 step-type: "ExecPumpCommand"
 action-case: imaging.SupervisonModelPumpController.startpump.default
 consumes-from-step: SupervisonModelSupervisionPressureHandler_StartPump_default_6 { PumpRequest  }
-input-binding:
+input-data:
 PumpRequest : {
     "cmd_type": "VacuumEnum::ON",
     "id": 12
@@ -1723,7 +1755,7 @@ assert-step-name: SupervisonModelSupervisionImaging_CheckLowResImageQuality_defa
 action-case: imaging.SupervisonModelSupervisionImaging.CheckLowResImageQuality.default
 consumes-from-step: SupervisonModelSupervisionImaging_StartAcquisition_default_5 { LastAcqReq  }
 consumes-from-step: SupervisonModelAcquisitionController_StopAcquisition_default_5 { ImageData  }
-input-binding:
+input-data:
 Gateway_16m9e4j : {
     "unit": 0
 }
@@ -1739,12 +1771,13 @@ output-data:
 Gateway_0qg69ul : {
     "unit": 0
 }
+suppress(Gateway_0qg69ul)
 output-assertion: SupervisonModelAcquisitionController_StopAcquisition_default_5
 imaging.SupervisonModelSupervisionImaging.CheckLowResImageQuality.default.default
 
 compose-step-name: SupervisonModelSupervisionImaging_StartAcquisition_default_6
 action-case: imaging.SupervisonModelSupervisionImaging.StartAcquisition.default
-input-binding:
+input-data:
 ImagingRequest : {
     "cmd_type": "ImageEnum::START",
     "id": 25,
@@ -1773,11 +1806,12 @@ EqStatus : {
     "pump_status": "Status::ON",
     "temp_status": "Status::ON"
 }
+suppress(Flow_1bajtwc)
 
 run-step-name: SupervisonModelAcquisitionController_StartAcquisition_default_6 step-type: "ExecAcquisitionCommand"
 action-case: imaging.SupervisonModelAcquisitionController.StartAcquisition.default
 consumes-from-step: SupervisonModelSupervisionImaging_StartAcquisition_default_6 { AcquisitionReq  }
-input-binding:
+input-data:
 AcquisitionReq : {
     "cmd_type": "ImageEnum::START",
     "id": 25
@@ -1789,7 +1823,7 @@ Flow_1rusz82 : {
 
 compose-step-name: SupervisonModelSupervisionImaging_StopAcquisition_default_6
 action-case: imaging.SupervisonModelSupervisionImaging.StopAcquisition.default
-input-binding:
+input-data:
 ImagingRequest : {
     "cmd_type": "ImageEnum::STOP",
     "id": 26,
@@ -1803,11 +1837,12 @@ AcquisitionReq : {
     "cmd_type": "ImageEnum::STOP",
     "id": 26
 }
+suppress(Flow_0678bm1)
 
 run-step-name: SupervisonModelAcquisitionController_StopAcquisition_default_6 step-type: "ExecAcquisitionCommand"
 action-case: imaging.SupervisonModelAcquisitionController.StopAcquisition.default
 consumes-from-step: SupervisonModelSupervisionImaging_StopAcquisition_default_6 { AcquisitionReq  }
-input-binding:
+input-data:
 AcquisitionReq : {
     "cmd_type": "ImageEnum::STOP",
     "id": 26
@@ -1822,7 +1857,7 @@ ImageData : {
 
 compose-step-name: SupervisonModelSupervisionImagePreparation_Unprepare_default_6
 action-case: imaging.SupervisonModelSupervisionImagePreparation.Unprepare.default
-input-binding:
+input-data:
 ImagingRequest : {
     "cmd_type": "ImageEnum::UNPREPARE",
     "id": 27,
@@ -1836,11 +1871,12 @@ AcquisitionReq : {
     "cmd_type": "ImageEnum::UNPREPARE",
     "id": 27
 }
+suppress(Flow_1kpcqqf)
 
 run-step-name: SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_13 step-type: "ExecAcquisitionCommand"
 action-case: imaging.SupervisonModelAcquisitionController.Execacquisitioninitandteardown.default
 consumes-from-step: SupervisonModelSupervisionImagePreparation_Unprepare_default_6 { AcquisitionReq  }
-input-binding:
+input-data:
 AcquisitionReq : {
     "cmd_type": "ImageEnum::UNPREPARE",
     "id": 27
@@ -1852,7 +1888,7 @@ Flow_084nmm6 : {
 
 compose-step-name: SupervisonModelSupervisionImagePreparation_Prepare_default_7
 action-case: imaging.SupervisonModelSupervisionImagePreparation.Prepare.default
-input-binding:
+input-data:
 ImagingRequest : {
     "cmd_type": "ImageEnum::PREPARE",
     "id": 28,
@@ -1876,10 +1912,11 @@ EqStatus : {
     "pump_status": "Status::ON",
     "temp_status": "Status::ON"
 }
+suppress(Flow_0kkvgdv)
 
 compose-step-name: SupervisonModelSupervisionPressureHandler_TurnOffPump_default_6
 action-case: imaging.SupervisonModelSupervisionPressureHandler.TurnOffPump.default
-input-binding:
+input-data:
 Flow_1wguswc : {
     "id": 0
 }
@@ -1909,7 +1946,7 @@ EqStatus : {
 run-step-name: SupervisonModelPumpController_stoppump_default_6 step-type: "ExecPumpCommand"
 action-case: imaging.SupervisonModelPumpController.stoppump.default
 consumes-from-step: SupervisonModelSupervisionPressureHandler_TurnOffPump_default_6 { PumpRequest  }
-input-binding:
+input-data:
 PumpRequest : {
     "cmd_type": "VacuumEnum::OFF",
     "id": 13
@@ -1922,7 +1959,7 @@ Flow_104f6k4 : {
 run-step-name: SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_14 step-type: "ExecAcquisitionCommand"
 action-case: imaging.SupervisonModelAcquisitionController.Execacquisitioninitandteardown.default
 consumes-from-step: SupervisonModelSupervisionImagePreparation_Prepare_default_7 { AcquisitionReq  }
-input-binding:
+input-data:
 AcquisitionReq : {
     "cmd_type": "ImageEnum::PREPARE",
     "id": 28
@@ -1934,7 +1971,7 @@ Flow_084nmm6 : {
 
 compose-step-name: SupervisonModelSupervisionPressureHandler_StartPump_default_7
 action-case: imaging.SupervisonModelSupervisionPressureHandler.StartPump.default
-input-binding:
+input-data:
 Gateway_1j81da5 : {
     "id": 0
 }
@@ -1964,7 +2001,7 @@ EqStatus : {
 run-step-name: SupervisonModelPumpController_startpump_default_7 step-type: "ExecPumpCommand"
 action-case: imaging.SupervisonModelPumpController.startpump.default
 consumes-from-step: SupervisonModelSupervisionPressureHandler_StartPump_default_7 { PumpRequest  }
-input-binding:
+input-data:
 PumpRequest : {
     "cmd_type": "VacuumEnum::ON",
     "id": 14
@@ -1978,7 +2015,7 @@ assert-step-name: SupervisonModelSupervisionImaging_CheckLowResImageQuality_defa
 action-case: imaging.SupervisonModelSupervisionImaging.CheckLowResImageQuality.default
 consumes-from-step: SupervisonModelSupervisionImaging_StartAcquisition_default_6 { LastAcqReq  }
 consumes-from-step: SupervisonModelAcquisitionController_StopAcquisition_default_6 { ImageData  }
-input-binding:
+input-data:
 Gateway_16m9e4j : {
     "unit": 0
 }
@@ -1994,12 +2031,13 @@ output-data:
 Gateway_0qg69ul : {
     "unit": 0
 }
+suppress(Gateway_0qg69ul)
 output-assertion: SupervisonModelAcquisitionController_StopAcquisition_default_6
 imaging.SupervisonModelSupervisionImaging.CheckLowResImageQuality.default.default
 
 compose-step-name: SupervisonModelSupervisionImaging_StartAcquisition_default_7
 action-case: imaging.SupervisonModelSupervisionImaging.StartAcquisition.default
-input-binding:
+input-data:
 ImagingRequest : {
     "cmd_type": "ImageEnum::START",
     "id": 29,
@@ -2028,6 +2066,7 @@ EqStatus : {
     "pump_status": "Status::ON",
     "temp_status": "Status::ON"
 }
+suppress(Flow_1bajtwc)
 
 generate-file "./dataset/"
 

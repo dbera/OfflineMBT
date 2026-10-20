@@ -2,8 +2,8 @@ record UNIT {
 	int	unit
 }
 
+@context
 record TheType {
-    int	id
-    int	counter
+  int id
+  int counter
 }
-

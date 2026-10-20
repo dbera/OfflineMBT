@@ -2,35 +2,41 @@
   <bpmn2:process id="BPMN4S_root" isExecutable="false" name="AssertionsTest">
     <bpmn2:extensionElements>
       <bpmn4s:dataTypes>
-        <bpmn4s:dataType id="DataType_06sdd5o" name="SymbolicParams" type="Record">
-          <bpmn4s:field name="id" typeRef="Int"/>
-          <bpmn4s:field kind="Symbolic" name="param" suppressUpdate="false" typeRef="String"/>
-        </bpmn4s:dataType>
-        <bpmn4s:dataType id="DataType_0791dbl" name="History" type="Record">
-          <bpmn4s:field name="ids" suppressUpdate="false" typeRef="DataType_38oggtn"/>
-        </bpmn4s:dataType>
-        <bpmn4s:dataType id="DataType_07f4b2c" name="TestContext" type="Context">
-          <bpmn4s:field name="id" suppressUpdate="false" typeRef="String"/>
-          <bpmn4s:field name="hidden" suppressUpdate="true" typeRef="Int"/>
-        </bpmn4s:dataType>
-        <bpmn4s:dataType id="DataType_15gnioa" name="Report" type="Record">
-          <bpmn4s:field name="id" suppressUpdate="false" typeRef="Int"/>
-          <bpmn4s:field kind="Symbolic" name="result" suppressUpdate="false" typeRef="String"/>
-        </bpmn4s:dataType>
-        <bpmn4s:dataType id="DataType_2gshgc1" name="Variant" type="Record">
-          <bpmn4s:field name="id" suppressUpdate="true" typeRef="Int"/>
-          <bpmn4s:field name="param" typeRef="String"/>
-        </bpmn4s:dataType>
-        <bpmn4s:dataType id="DataType_38n3lc9" name="ConcreteParams" type="Record">
-          <bpmn4s:field name="id" typeRef="Int"/>
-          <bpmn4s:field name="param" typeRef="String"/>
-        </bpmn4s:dataType>
-        <bpmn4s:dataType id="DataType_38oggtn" name="StringList" type="List" valueTypeRef="String"/>
+        <bpmn4s:raw>record SymbolicParams {
+  int id
+  @symbolic string param
+}
+
+record History {
+  string[] ids
+}
+
+@context
+record TestContext {
+  string id
+  @suppress int hidden
+}
+
+record Report {
+  int id
+  @symbolic string result
+}
+
+record Variant {
+  @suppress int id
+  string param
+}
+
+record ConcreteParams {
+  int id
+  string param
+}</bpmn4s:raw>
+      
       </bpmn4s:dataTypes>
     </bpmn2:extensionElements>
     <bpmn2:subProcess bpmn4s:priority="1" bpmn4s:subType="Component" id="Activity_1m8dq6c" name="Test 1">
-      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_15gnioa" bpmn4s:linkedDataReferences="DataStoreReference_0s5z9wk DataStoreReference_1k1758d" id="DataStoreReference_1t5fpct" name="report_1_1_2"/>
-      <bpmn2:subProcess bpmn4s:ctxName="ctx" bpmn4s:ctxTypeRef="DataType_07f4b2c" bpmn4s:subType="Component" id="Activity_09gaajr" name="Run 1">
+      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="Report" bpmn4s:linkedDataReferences="DataStoreReference_0s5z9wk DataStoreReference_1k1758d" id="DataStoreReference_1t5fpct" name="report_1_1_2"/>
+      <bpmn2:subProcess bpmn4s:ctxName="ctx" bpmn4s:ctxTypeRef="TestContext" bpmn4s:subType="Component" id="Activity_09gaajr" name="Run 1">
         <bpmn2:dataOutputAssociation id="DataOutputAssociation_0bhms9e">
           <bpmn2:targetRef>DataStoreReference_1t5fpct</bpmn2:targetRef>
         </bpmn2:dataOutputAssociation>
@@ -55,8 +61,8 @@
             <bpmn2:targetRef>DataStoreReference_0s5z9wk</bpmn2:targetRef>
           </bpmn2:dataOutputAssociation>
         </bpmn2:task>
-        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_38n3lc9" id="DataStoreReference_0jdahzt" name="params_1_1_2"/>
-        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_15gnioa" bpmn4s:originDataReference="DataStoreReference_1t5fpct" id="DataStoreReference_0s5z9wk" name="report_1_1_2"/>
+        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="ConcreteParams" id="DataStoreReference_0jdahzt" name="params_1_1_2"/>
+        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="Report" bpmn4s:originDataReference="DataStoreReference_1t5fpct" id="DataStoreReference_0s5z9wk" name="report_1_1_2"/>
         <bpmn2:task bpmn4s:guard="true" bpmn4s:subType="ComposeTask" id="Activity_1g9cqfi" name="Compose 1:1:1">
           <bpmn2:incoming>Flow_1sm8rur</bpmn2:incoming>
           <bpmn2:outgoing>Flow_0nosmsl</bpmn2:outgoing>
@@ -71,7 +77,7 @@
           <bpmn2:sourceRef>DataStoreReference_1t5fpct</bpmn2:sourceRef>
           <bpmn2:targetRef>Property_1eu9vei</bpmn2:targetRef>
         </bpmn2:dataInputAssociation>
-        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_15gnioa" bpmn4s:originDataReference="DataStoreReference_1t5fpct" id="DataStoreReference_1k1758d" name="report_1_1_2"/>
+        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="Report" bpmn4s:originDataReference="DataStoreReference_1t5fpct" id="DataStoreReference_1k1758d" name="report_1_1_2"/>
         <bpmn2:endEvent id="Event_0kl62m8">
           <bpmn2:incoming>Flow_1wbsuze</bpmn2:incoming>
         </bpmn2:endEvent>
@@ -87,11 +93,11 @@
       </bpmn2:subProcess>
     </bpmn2:subProcess>
     <bpmn2:subProcess bpmn4s:priority="2" bpmn4s:subType="Component" id="Activity_0uh7i0w" name="Test 2">
-      <bpmn2:subProcess bpmn4s:ctxName="ctx" bpmn4s:ctxTypeRef="DataType_07f4b2c" bpmn4s:subType="Component" id="Activity_1mwk66g" name="Run 1">
+      <bpmn2:subProcess bpmn4s:ctxName="ctx" bpmn4s:ctxTypeRef="TestContext" bpmn4s:subType="Component" id="Activity_1mwk66g" name="Run 1">
         <bpmn2:dataOutputAssociation id="DataOutputAssociation_1yh8r7s">
           <bpmn2:targetRef>DataStoreReference_1xnyiju</bpmn2:targetRef>
         </bpmn2:dataOutputAssociation>
-        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_15gnioa" bpmn4s:originDataReference="DataStoreReference_1xnyiju" id="DataStoreReference_1ueloas" name="report_2_1_2"/>
+        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="Report" bpmn4s:originDataReference="DataStoreReference_1xnyiju" id="DataStoreReference_1ueloas" name="report_2_1_2"/>
         <bpmn2:startEvent bpmn4s:ctxInit="ctx := TestContext {&#10; id = &quot;Test 2&quot;,&#10; hidden = 0&#10;}" id="Event_0a8ipfe">
           <bpmn2:outgoing>Flow_1ss6s14</bpmn2:outgoing>
         </bpmn2:startEvent>
@@ -120,7 +126,7 @@
             <bpmn2:targetRef>DataStoreReference_1ueloas</bpmn2:targetRef>
           </bpmn2:dataOutputAssociation>
         </bpmn2:task>
-        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_38n3lc9" id="DataStoreReference_1wdxppn" name="params_2_1_2"/>
+        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="ConcreteParams" id="DataStoreReference_1wdxppn" name="params_2_1_2"/>
       </bpmn2:subProcess>
       <bpmn2:subProcess bpmn4s:subType="Component" id="Activity_0tb2hde" name="Compose And Assert 2">
         <bpmn2:property id="Property_0rzqzvc" name="__targetRef_placeholder"/>
@@ -131,8 +137,8 @@
         <bpmn2:dataOutputAssociation id="DataOutputAssociation_0veckrq">
           <bpmn2:targetRef>DataStoreReference_0b9xpn2</bpmn2:targetRef>
         </bpmn2:dataOutputAssociation>
-        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_15gnioa" bpmn4s:originDataReference="DataStoreReference_1xnyiju" id="DataStoreReference_1fty2u6" name="report_2_1_2"/>
-        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_06sdd5o" bpmn4s:originDataReference="DataStoreReference_0b9xpn2" id="DataStoreReference_0arbaj6" name="params_2_3_1"/>
+        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="Report" bpmn4s:originDataReference="DataStoreReference_1xnyiju" id="DataStoreReference_1fty2u6" name="report_2_1_2"/>
+        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="SymbolicParams" bpmn4s:originDataReference="DataStoreReference_0b9xpn2" id="DataStoreReference_0arbaj6" name="params_2_3_1"/>
         <bpmn2:sequenceFlow id="Flow_04tox9b" sourceRef="Activity_1pb7ojf" targetRef="Activity_18ii33z"/>
         <bpmn2:task bpmn4s:subType="ComposeTask" id="Activity_1pb7ojf" name="Compose 2:2:1">
           <bpmn2:outgoing>Flow_04tox9b</bpmn2:outgoing>
@@ -157,7 +163,7 @@
             <bpmn2:targetRef>DataStoreReference_0arbaj6</bpmn2:targetRef>
           </bpmn2:dataOutputAssociation>
         </bpmn2:task>
-        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_06sdd5o" id="DataStoreReference_0fk277a" name="params_2_2_2"/>
+        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="SymbolicParams" id="DataStoreReference_0fk277a" name="params_2_2_2"/>
         <bpmn2:endEvent id="Event_1dlbjjh">
           <bpmn2:incoming>Flow_0y2cpao</bpmn2:incoming>
         </bpmn2:endEvent>
@@ -169,7 +175,7 @@
           <bpmn2:sourceRef>DataStoreReference_0b9xpn2</bpmn2:sourceRef>
           <bpmn2:targetRef>Property_1jd4wec</bpmn2:targetRef>
         </bpmn2:dataInputAssociation>
-        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_06sdd5o" bpmn4s:originDataReference="DataStoreReference_0b9xpn2" id="DataStoreReference_0h7gwf4" name="params_2_3_1"/>
+        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="SymbolicParams" bpmn4s:originDataReference="DataStoreReference_0b9xpn2" id="DataStoreReference_0h7gwf4" name="params_2_3_1"/>
         <bpmn2:task bpmn4s:stepType="Run_2_3_1" bpmn4s:subType="RunTask" id="Activity_194v8s7" name="Run 2:3:1">
           <bpmn2:outgoing>Flow_05rnu35</bpmn2:outgoing>
           <bpmn2:property id="Property_0sn1ivi" name="__targetRef_placeholder"/>
@@ -183,11 +189,11 @@
         </bpmn2:endEvent>
         <bpmn2:sequenceFlow id="Flow_05rnu35" sourceRef="Activity_194v8s7" targetRef="Event_07uzt4k"/>
       </bpmn2:subProcess>
-      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_15gnioa" bpmn4s:linkedDataReferences="DataStoreReference_1ueloas DataStoreReference_1fty2u6" id="DataStoreReference_1xnyiju" name="report_2_1_2"/>
-      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_06sdd5o" bpmn4s:linkedDataReferences="DataStoreReference_0arbaj6 DataStoreReference_0h7gwf4" id="DataStoreReference_0b9xpn2" name="params_2_3_1"/>
+      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="Report" bpmn4s:linkedDataReferences="DataStoreReference_1ueloas DataStoreReference_1fty2u6" id="DataStoreReference_1xnyiju" name="report_2_1_2"/>
+      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="SymbolicParams" bpmn4s:linkedDataReferences="DataStoreReference_0arbaj6 DataStoreReference_0h7gwf4" id="DataStoreReference_0b9xpn2" name="params_2_3_1"/>
     </bpmn2:subProcess>
     <bpmn2:subProcess bpmn4s:priority="3" bpmn4s:subType="Component" id="Activity_1dywnow" name="Test 3">
-      <bpmn2:subProcess bpmn4s:ctxName="ctx" bpmn4s:ctxTypeRef="DataType_07f4b2c" bpmn4s:subType="Component" id="Activity_0nnhpus" name="Run 1">
+      <bpmn2:subProcess bpmn4s:ctxName="ctx" bpmn4s:ctxTypeRef="TestContext" bpmn4s:subType="Component" id="Activity_0nnhpus" name="Run 1">
         <bpmn2:dataOutputAssociation id="DataOutputAssociation_17yfqux">
           <bpmn2:targetRef>DataStoreReference_1avr4jj</bpmn2:targetRef>
         </bpmn2:dataOutputAssociation>
@@ -232,13 +238,13 @@
             <bpmn2:targetRef>DataStoreReference_0yf5r3o</bpmn2:targetRef>
           </bpmn2:dataOutputAssociation>
         </bpmn2:task>
-        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_38n3lc9" id="DataStoreReference_13wv95n" name="params_3_1_2a"/>
-        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_38n3lc9" id="DataStoreReference_0yf5r3o" name="params_3_1_2b"/>
-        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_15gnioa" bpmn4s:originDataReference="DataStoreReference_1avr4jj" id="DataStoreReference_1shmv44" name="report_3_1_2a"/>
-        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_15gnioa" bpmn4s:originDataReference="DataStoreReference_0s4e4in" id="DataStoreReference_0eqej21" name="report_3_1_2b"/>
+        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="ConcreteParams" id="DataStoreReference_13wv95n" name="params_3_1_2a"/>
+        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="ConcreteParams" id="DataStoreReference_0yf5r3o" name="params_3_1_2b"/>
+        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="Report" bpmn4s:originDataReference="DataStoreReference_1avr4jj" id="DataStoreReference_1shmv44" name="report_3_1_2a"/>
+        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="Report" bpmn4s:originDataReference="DataStoreReference_0s4e4in" id="DataStoreReference_0eqej21" name="report_3_1_2b"/>
       </bpmn2:subProcess>
-      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_15gnioa" bpmn4s:linkedDataReferences="DataStoreReference_1shmv44 DataStoreReference_0c1pssz" id="DataStoreReference_1avr4jj" name="report_3_1_2a"/>
-      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_15gnioa" bpmn4s:linkedDataReferences="DataStoreReference_0eqej21 DataStoreReference_1aoo3us" id="DataStoreReference_0s4e4in" name="report_3_1_2b"/>
+      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="Report" bpmn4s:linkedDataReferences="DataStoreReference_1shmv44 DataStoreReference_0c1pssz" id="DataStoreReference_1avr4jj" name="report_3_1_2a"/>
+      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="Report" bpmn4s:linkedDataReferences="DataStoreReference_0eqej21 DataStoreReference_1aoo3us" id="DataStoreReference_0s4e4in" name="report_3_1_2b"/>
       <bpmn2:subProcess bpmn4s:subType="Component" id="Activity_1f7xv4x" name="Assert 2">
         <bpmn2:property id="Property_0xpoyh2" name="__targetRef_placeholder"/>
         <bpmn2:dataInputAssociation id="DataInputAssociation_00x3vs5">
@@ -249,8 +255,8 @@
           <bpmn2:sourceRef>DataStoreReference_0s4e4in</bpmn2:sourceRef>
           <bpmn2:targetRef>Property_0xpoyh2</bpmn2:targetRef>
         </bpmn2:dataInputAssociation>
-        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_15gnioa" bpmn4s:originDataReference="DataStoreReference_1avr4jj" id="DataStoreReference_0c1pssz" name="report_3_1_2a"/>
-        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_15gnioa" bpmn4s:originDataReference="DataStoreReference_0s4e4in" id="DataStoreReference_1aoo3us" name="report_3_1_2b"/>
+        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="Report" bpmn4s:originDataReference="DataStoreReference_1avr4jj" id="DataStoreReference_0c1pssz" name="report_3_1_2a"/>
+        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="Report" bpmn4s:originDataReference="DataStoreReference_0s4e4in" id="DataStoreReference_1aoo3us" name="report_3_1_2b"/>
         <bpmn2:endEvent id="Event_0zgsfij">
           <bpmn2:incoming>Flow_0aydbe1</bpmn2:incoming>
         </bpmn2:endEvent>
@@ -269,7 +275,7 @@
         </bpmn2:task>
       </bpmn2:subProcess>
     </bpmn2:subProcess>
-    <bpmn2:subProcess bpmn4s:ctxName="ctx" bpmn4s:ctxTypeRef="DataType_07f4b2c" bpmn4s:priority="4" bpmn4s:subType="Component" id="Activity_12npz9u" name="Test 4">
+    <bpmn2:subProcess bpmn4s:ctxName="ctx" bpmn4s:ctxTypeRef="TestContext" bpmn4s:priority="4" bpmn4s:subType="Component" id="Activity_12npz9u" name="Test 4">
       <bpmn2:startEvent bpmn4s:ctxInit="ctx := TestContext {&#10; id = &quot;Test 4&quot;,&#10; hidden = 0&#10;}" id="Event_0f3gr38">
         <bpmn2:outgoing>Flow_05z9qk9</bpmn2:outgoing>
       </bpmn2:startEvent>
@@ -325,16 +331,16 @@
           <bpmn2:targetRef>Property_0yhjhxq</bpmn2:targetRef>
         </bpmn2:dataInputAssociation>
       </bpmn2:task>
-      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_38n3lc9" id="DataStoreReference_0slgisn" name="params_4_3"/>
-      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_38n3lc9" id="DataStoreReference_0my6jls" name="params_4_4"/>
-      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_15gnioa" id="DataStoreReference_1sfc3f0" name="report_4_3"/>
+      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="ConcreteParams" id="DataStoreReference_0slgisn" name="params_4_3"/>
+      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="ConcreteParams" id="DataStoreReference_0my6jls" name="params_4_4"/>
+      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="Report" id="DataStoreReference_1sfc3f0" name="report_4_3"/>
     </bpmn2:subProcess>
     <bpmn2:subProcess bpmn4s:priority="5" bpmn4s:subType="Component" id="Activity_0kfztka" name="Test 5">
-      <bpmn2:subProcess bpmn4s:ctxName="ctx" bpmn4s:ctxTypeRef="DataType_07f4b2c" bpmn4s:subType="Component" id="Activity_0j3g78s" name="Run 1">
+      <bpmn2:subProcess bpmn4s:ctxName="ctx" bpmn4s:ctxTypeRef="TestContext" bpmn4s:subType="Component" id="Activity_0j3g78s" name="Run 1">
         <bpmn2:dataOutputAssociation id="DataOutputAssociation_1i60ras">
           <bpmn2:targetRef>DataStoreReference_00e8a25</bpmn2:targetRef>
         </bpmn2:dataOutputAssociation>
-        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_15gnioa" bpmn4s:originDataReference="DataStoreReference_00e8a25" id="DataStoreReference_1qgxjyw" name="report_5_1_2"/>
+        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="Report" bpmn4s:originDataReference="DataStoreReference_00e8a25" id="DataStoreReference_1qgxjyw" name="report_5_1_2"/>
         <bpmn2:startEvent bpmn4s:ctxInit="ctx := TestContext {&#10; id = &quot;Test 5&quot;,&#10; hidden = 0&#10;}" id="Event_16rld86">
           <bpmn2:outgoing>Flow_04li0wb</bpmn2:outgoing>
         </bpmn2:startEvent>
@@ -363,7 +369,7 @@
             <bpmn2:targetRef>DataStoreReference_1qgxjyw</bpmn2:targetRef>
           </bpmn2:dataOutputAssociation>
         </bpmn2:task>
-        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_38n3lc9" id="DataStoreReference_0gixk96" name="params_5_1_2"/>
+        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="ConcreteParams" id="DataStoreReference_0gixk96" name="params_5_1_2"/>
       </bpmn2:subProcess>
       <bpmn2:subProcess bpmn4s:subType="Component" id="Activity_0es7gt5" name="Run 2">
         <bpmn2:property id="Property_0j6btly" name="__targetRef_placeholder"/>
@@ -371,7 +377,7 @@
           <bpmn2:sourceRef>DataStoreReference_00e8a25</bpmn2:sourceRef>
           <bpmn2:targetRef>Property_0j6btly</bpmn2:targetRef>
         </bpmn2:dataInputAssociation>
-        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_15gnioa" bpmn4s:originDataReference="DataStoreReference_00e8a25" id="DataStoreReference_0jchczj" name="report_5_1_2"/>
+        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="Report" bpmn4s:originDataReference="DataStoreReference_00e8a25" id="DataStoreReference_0jchczj" name="report_5_1_2"/>
         <bpmn2:endEvent id="Event_0p6hosm">
           <bpmn2:incoming>Flow_1xcmgh7</bpmn2:incoming>
         </bpmn2:endEvent>
@@ -385,14 +391,14 @@
           </bpmn2:dataInputAssociation>
         </bpmn2:task>
       </bpmn2:subProcess>
-      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_15gnioa" bpmn4s:linkedDataReferences="DataStoreReference_1qgxjyw DataStoreReference_0jchczj" id="DataStoreReference_00e8a25" name="report_5_1_2"/>
+      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="Report" bpmn4s:linkedDataReferences="DataStoreReference_1qgxjyw DataStoreReference_0jchczj" id="DataStoreReference_00e8a25" name="report_5_1_2"/>
     </bpmn2:subProcess>
     <bpmn2:subProcess bpmn4s:priority="6" bpmn4s:subType="Component" id="Activity_16k1np3" name="Test 6">
-      <bpmn2:subProcess bpmn4s:ctxName="ctx" bpmn4s:ctxTypeRef="DataType_07f4b2c" bpmn4s:subType="Component" id="Activity_018x6tb" name="Compose 1">
+      <bpmn2:subProcess bpmn4s:ctxName="ctx" bpmn4s:ctxTypeRef="TestContext" bpmn4s:subType="Component" id="Activity_018x6tb" name="Compose 1">
         <bpmn2:dataOutputAssociation id="DataOutputAssociation_03axnhh">
           <bpmn2:targetRef>DataStoreReference_0506r1u</bpmn2:targetRef>
         </bpmn2:dataOutputAssociation>
-        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_38n3lc9" bpmn4s:originDataReference="DataStoreReference_0506r1u" id="DataStoreReference_0ajyalm" name="params_6_3_1"/>
+        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="ConcreteParams" bpmn4s:originDataReference="DataStoreReference_0506r1u" id="DataStoreReference_0ajyalm" name="params_6_3_1"/>
         <bpmn2:startEvent bpmn4s:ctxInit="ctx := TestContext {&#10; id = &quot;Test 6a&quot;,&#10; hidden = 0&#10;}&#10;ctx := TestContext {&#10; id = &quot;Test 6b&quot;,&#10; hidden = 1&#10;}" id="Event_0hbwt0f">
           <bpmn2:outgoing>Flow_0xdqp17</bpmn2:outgoing>
         </bpmn2:startEvent>
@@ -415,7 +421,7 @@
           <bpmn2:sourceRef>DataStoreReference_0506r1u</bpmn2:sourceRef>
           <bpmn2:targetRef>Property_106frhi</bpmn2:targetRef>
         </bpmn2:dataInputAssociation>
-        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_38n3lc9" bpmn4s:originDataReference="DataStoreReference_0506r1u" id="DataStoreReference_1gdfwmh" name="params_6_3_1"/>
+        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="ConcreteParams" bpmn4s:originDataReference="DataStoreReference_0506r1u" id="DataStoreReference_1gdfwmh" name="params_6_3_1"/>
         <bpmn2:endEvent id="Event_12gigiu">
           <bpmn2:incoming>Flow_04ztu5q</bpmn2:incoming>
         </bpmn2:endEvent>
@@ -429,19 +435,19 @@
           </bpmn2:dataInputAssociation>
         </bpmn2:task>
       </bpmn2:subProcess>
-      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_38n3lc9" bpmn4s:linkedDataReferences="DataStoreReference_0ajyalm DataStoreReference_1gdfwmh DataStoreReference_0uzcvm9" id="DataStoreReference_0506r1u" name="params_6_3_1"/>
+      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="ConcreteParams" bpmn4s:linkedDataReferences="DataStoreReference_0ajyalm DataStoreReference_1gdfwmh DataStoreReference_0uzcvm9" id="DataStoreReference_0506r1u" name="params_6_3_1"/>
       <bpmn2:subProcess bpmn4s:priority="100" bpmn4s:subType="Component" id="Activity_005zhpm" name="Assert 2">
         <bpmn2:property id="Property_1juu78y" name="__targetRef_placeholder"/>
         <bpmn2:dataInputAssociation bpmn4s:persistentRead="true" id="DataInputAssociation_07go3l9">
           <bpmn2:sourceRef>DataStoreReference_0506r1u</bpmn2:sourceRef>
           <bpmn2:targetRef>Property_1juu78y</bpmn2:targetRef>
         </bpmn2:dataInputAssociation>
-        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_38n3lc9" bpmn4s:originDataReference="DataStoreReference_0506r1u" id="DataStoreReference_0uzcvm9" name="params_6_3_1"/>
+        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="ConcreteParams" bpmn4s:originDataReference="DataStoreReference_0506r1u" id="DataStoreReference_0uzcvm9" name="params_6_3_1"/>
         <bpmn2:endEvent id="Event_1mb8mjz">
           <bpmn2:incoming>Flow_1xmm19u</bpmn2:incoming>
         </bpmn2:endEvent>
         <bpmn2:sequenceFlow id="Flow_1xmm19u" sourceRef="Activity_18piikt" targetRef="Event_1mb8mjz"/>
-        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_0791dbl" bpmn4s:init="history := History { ids = &lt;string[]&gt;[] }" id="DataStoreReference_0c9ef2d" name="history"/>
+        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="History" bpmn4s:init="history := History { ids = &lt;string[]&gt;[] }" id="DataStoreReference_0c9ef2d" name="history"/>
         <bpmn2:task bpmn4s:assertions="id: assert-that(params_6_3_1.id) {&#10;  equal-to 6&#10;}" bpmn4s:guard="not contains(history.ids, params_6_3_1.param)" bpmn4s:stepType="Assert_6_2_1" bpmn4s:subType="AssertTask" id="Activity_18piikt" name="Assert 6:2:1">
           <bpmn2:outgoing>Flow_1xmm19u</bpmn2:outgoing>
           <bpmn2:property id="Property_092hbdz" name="__targetRef_placeholder"/>
@@ -460,7 +466,7 @@
       </bpmn2:subProcess>
     </bpmn2:subProcess>
     <bpmn2:subProcess bpmn4s:priority="7" bpmn4s:subType="Component" id="Activity_02gqkqw" name="Test 7">
-      <bpmn2:subProcess bpmn4s:ctxName="ctx" bpmn4s:ctxTypeRef="DataType_07f4b2c" bpmn4s:subType="Component" id="Activity_0f6cj5j" name="Run 1">
+      <bpmn2:subProcess bpmn4s:ctxName="ctx" bpmn4s:ctxTypeRef="TestContext" bpmn4s:subType="Component" id="Activity_0f6cj5j" name="Run 1">
         <bpmn2:property id="Property_0xtfofq" name="__targetRef_placeholder"/>
         <bpmn2:dataInputAssociation bpmn4s:persistentRead="true" id="DataInputAssociation_1vkbsgg">
           <bpmn2:sourceRef>DataStoreReference_1vemqoz</bpmn2:sourceRef>
@@ -499,13 +505,13 @@
             <bpmn2:targetRef>Property_0ptf9yr</bpmn2:targetRef>
           </bpmn2:dataInputAssociation>
         </bpmn2:task>
-        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_2gshgc1" bpmn4s:originDataReference="DataStoreReference_1vemqoz" bpmn4s:sutConfigurations="true" id="DataStoreReference_0zg7kki" name="variants"/>
-        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_38n3lc9" id="DataStoreReference_0o0vtgd" name="params_7_2"/>
-        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_38n3lc9" bpmn4s:init="extContext := ConcreteParams {&#10; id = 100,&#10; param = &quot;Extra Context&quot;&#10;}" id="DataStoreReference_0z83mxp" name="extContext"/>
+        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="Variant" bpmn4s:originDataReference="DataStoreReference_1vemqoz" bpmn4s:sutConfigurations="true" id="DataStoreReference_0zg7kki" name="variants"/>
+        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="ConcreteParams" id="DataStoreReference_0o0vtgd" name="params_7_2"/>
+        <bpmn2:dataStoreReference bpmn4s:dataTypeRef="ConcreteParams" bpmn4s:init="extContext := ConcreteParams {&#10; id = 100,&#10; param = &quot;Extra Context&quot;&#10;}" id="DataStoreReference_0z83mxp" name="extContext"/>
       </bpmn2:subProcess>
-      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_2gshgc1" bpmn4s:init="variants := Variant {&#10; id = 7,&#10; param = &quot;SUT_7&quot;&#10;}&#10;variants := Variant {&#10; id = 8,&#10; param = &quot;SUT_8&quot;&#10;}" bpmn4s:linkedDataReferences="DataStoreReference_0zg7kki" bpmn4s:sutConfigurations="true" id="DataStoreReference_1vemqoz" name="variants"/>
+      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="Variant" bpmn4s:init="variants := Variant {&#10; id = 7,&#10; param = &quot;SUT_7&quot;&#10;}&#10;variants := Variant {&#10; id = 8,&#10; param = &quot;SUT_8&quot;&#10;}" bpmn4s:linkedDataReferences="DataStoreReference_0zg7kki" bpmn4s:sutConfigurations="true" id="DataStoreReference_1vemqoz" name="variants"/>
     </bpmn2:subProcess>
-    <bpmn2:subProcess bpmn4s:ctxName="ctx" bpmn4s:ctxTypeRef="DataType_07f4b2c" bpmn4s:priority="8" bpmn4s:subType="Component" id="Activity_1creept" name="Test 8">
+    <bpmn2:subProcess bpmn4s:ctxName="ctx" bpmn4s:ctxTypeRef="TestContext" bpmn4s:priority="8" bpmn4s:subType="Component" id="Activity_1creept" name="Test 8">
       <bpmn2:startEvent bpmn4s:ctxInit="ctx := TestContext {&#10; id = &quot;Test 8&quot;,&#10; hidden = 8&#10;}" id="Event_08zpj4q">
         <bpmn2:outgoing>Flow_1hebemq</bpmn2:outgoing>
       </bpmn2:startEvent>
@@ -517,8 +523,8 @@
         <bpmn2:incoming>Flow_022nv9v</bpmn2:incoming>
       </bpmn2:endEvent>
       <bpmn2:sequenceFlow id="Flow_022nv9v" sourceRef="Activity_0js8zvw" targetRef="Event_16siryv"/>
-      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_15gnioa" id="DataStoreReference_0c2gexl" name="report_8_1"/>
-      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_15gnioa" id="DataStoreReference_1ii7f0j" name="report_8_3"/>
+      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="Report" id="DataStoreReference_0c2gexl" name="report_8_1"/>
+      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="Report" id="DataStoreReference_1ii7f0j" name="report_8_3"/>
       <bpmn2:task bpmn4s:guard="true" bpmn4s:stepType="Step_8_1" bpmn4s:subType="RunTask" id="Activity_1wy8c59" name="Run 8:1">
         <bpmn2:incoming>Flow_1hebemq</bpmn2:incoming>
         <bpmn2:outgoing>Flow_03lr78p</bpmn2:outgoing>

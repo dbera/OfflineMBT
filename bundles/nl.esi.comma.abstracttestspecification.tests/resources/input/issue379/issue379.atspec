@@ -11,7 +11,7 @@ Test-Scenario: S1
 
 compose-step-name: Root_Compose_default_0
 action-case: issue379.Root.Compose.default
-input-binding:
+input-data:
 Event_0wdp3sm : {
     "id": 0,
     "nested": {
@@ -37,7 +37,6 @@ data : {
         "symbol": "My Concrete Symbol"
     }
 }
-suppress(data.nested.id)
 data-references: data
 issue379.Root.Compose.default.r1
 issue379.Root.Compose.default.r2
@@ -47,7 +46,7 @@ issue379.Root.Compose.default.r4
 run-step-name: Root_Run_default_0 step-type: "RUN"
 action-case: issue379.Root.Run.default
 consumes-from-step: Root_Compose_default_0 { data  }
-input-binding:
+input-data:
 Flow_056jr2e : {
     "id": 0,
     "nested": {

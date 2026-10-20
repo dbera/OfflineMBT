@@ -1,0 +1,60 @@
+import "../../input/printer/printer.types"
+
+record ExecutePrinter {
+    ExecutePrinterInput input
+    ExecutePrinterOutput output
+}
+
+record ExecutePrinterInput {
+    PrintRequest request
+    PrinterVariants variants
+}
+
+record ExecutePrinterOutput {
+    Result printResult
+    Report printReport
+    PrinterVariants variants
+}
+
+record ExecuteInspection {
+    ExecuteInspectionInput input
+    ExecuteInspectionOutput output
+}
+
+record ExecuteInspectionInput {
+    MeasureRequest measureRequest
+}
+
+record ExecuteInspectionOutput {
+    Report inspectionReport
+    Result inspectionResult
+}
+
+record Assertions {
+    AssertionsInput input
+    AssertionsOutput output
+}
+
+record AssertionsInput {
+    AssertionsHistory history
+    Report inspectionReport
+}
+
+record AssertionsOutput {
+    AssertionsHistory history
+    Report inspectionReport
+}
+
+record ExecuteOptimizer {
+    ExecuteOptimizerInput input
+    ExecuteOptimizerOutput output
+}
+
+record ExecuteOptimizerInput {
+    OptimizeRequest optimizeJob
+}
+
+record ExecuteOptimizerOutput {
+    CorrectionsReport corrections
+    Result optResult
+}

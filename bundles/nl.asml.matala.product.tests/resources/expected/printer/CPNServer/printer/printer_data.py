@@ -23,16 +23,40 @@ class Data:
     	return json.dumps({"unit":0})
     	
     @staticmethod
+    def get_OptimizeRequest():
+    	return json.dumps({"id":0})
+    	
+    @staticmethod
+    def get_OperationType():
+    	return "OperationType::PREP"
+    	
+    @staticmethod
+    def get_PrintResolution():
+    	return "PrintResolution::LOW"
+    	
+    @staticmethod
     def get_AssertionsHistory():
     	return json.dumps({"inspectionReports":[]})
+    	
+    @staticmethod
+    def get_MeasureRequest():
+    	return json.dumps({"id":0,"printJobReport":{"id":0}})
+    	
+    @staticmethod
+    def get_CorrectionItem():
+    	return json.dumps({"data":""})
+    	
+    @staticmethod
+    def get_Result():
+    	return json.dumps({"verdict":"Outcome::OK"})
     	
     @staticmethod
     def get_ColorType():
     	return "ColorType::MONOCHROME"
     	
     @staticmethod
-    def get_CorrectionItem():
-    	return json.dumps({"data":""})
+    def get_PrinterVariants():
+    	return json.dumps({"version":"","release":""})
     	
     @staticmethod
     def get_CorrectionsReport():
@@ -43,40 +67,16 @@ class Data:
     	return json.dumps({"id":0,"resolution":"PrintResolution::LOW","scale":0.0,"color":"ColorType::MONOCHROME"})
     	
     @staticmethod
-    def get_MeasureRequest():
-    	return json.dumps({"id":0,"printJobReport":{"id":0}})
-    	
-    @staticmethod
-    def get_OperationType():
-    	return "OperationType::PREP"
-    	
-    @staticmethod
-    def get_OptimizeRequest():
-    	return json.dumps({"id":0})
-    	
-    @staticmethod
     def get_Outcome():
     	return "Outcome::OK"
-    	
-    @staticmethod
-    def get_PrintRequest():
-    	return json.dumps({"id":0,"resolution":"PrintResolution::LOW","scale":0.0,"color":"ColorType::MONOCHROME","opType":"OperationType::PREP"})
-    	
-    @staticmethod
-    def get_PrintResolution():
-    	return "PrintResolution::LOW"
-    	
-    @staticmethod
-    def get_PrinterVariants():
-    	return json.dumps({"version":"","release":""})
     	
     @staticmethod
     def get_Report():
     	return json.dumps({"id":0})
     	
     @staticmethod
-    def get_Result():
-    	return json.dumps({"verdict":"Outcome::OK"})
+    def get_PrintRequest():
+    	return json.dumps({"id":0,"resolution":"PrintResolution::LOW","scale":0.0,"color":"ColorType::MONOCHROME","opType":"OperationType::PREP"})
     	
     @staticmethod
     def execute_PrintFactoryA3DPrinter_RunPrintJob_default_Event_0jcg6zx(request,Flow_1u2qmtt,variants):

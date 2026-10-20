@@ -1,0 +1,15 @@
+import "../../input/issue367/issue367.types"
+
+record Dummy {
+    DummyInput input
+    DummyOutput output
+}
+
+record DummyInput {
+    Input d1
+    Input d4
+}
+
+record DummyOutput {
+    Report d2
+}

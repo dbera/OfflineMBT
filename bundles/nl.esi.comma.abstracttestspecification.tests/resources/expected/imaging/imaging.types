@@ -1,0 +1,68 @@
+import "../../input/imaging/imaging.types"
+
+record SetTemperature {
+    SetTemperatureInput input
+    SetTemperatureOutput output
+}
+
+record SetTemperatureInput {
+    EquipmentStatus EqStatus
+    TempReq TempCMD
+}
+
+record SetTemperatureOutput {
+    TempResp TempUpdate
+    TempResp temp_achieved
+    EquipmentStatus EqStatus
+}
+
+record TempCheck {
+    TempCheckInput input
+    TempCheckOutput output
+}
+
+record TempCheckInput {
+    CTX temp_ctx
+    TempResp temp_achieved
+}
+
+record TempCheckOutput {
+    CTX temp_ctx
+}
+
+record ExecAcquisitionCommand {
+    ExecAcquisitionCommandInput input
+    ExecAcquisitionCommandOutput output
+}
+
+record ExecAcquisitionCommandInput {
+    AcqReq AcquisitionReq
+}
+
+record ExecAcquisitionCommandOutput {
+    CTX acq_ctx
+    AcqData ImageData
+}
+
+record ExecPumpCommand {
+    ExecPumpCommandInput input
+    ExecPumpCommandOutput output
+}
+
+record ExecPumpCommandInput {
+    PumpReq PumpRequest
+}
+
+record ExecPumpCommandOutput {
+    CTX pump_ctx
+}
+
+record CheckAcquisitionResult {
+    CheckAcquisitionResultInput input
+}
+
+record CheckAcquisitionResultInput {
+    ImgReq LastAcqReq
+    AcqData ImageData
+}
+
