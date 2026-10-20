@@ -48,6 +48,9 @@ class EvaluateDataExpressions {
         // Prepare evaluation context
         val stepInput = step.stepVar.type.typeObject.createDefaultValue
         for (action : step.context + step.input + step.sut) {
+            if (action.assignment !== step.stepVar) {
+                throw new IllegalStateException("Expected record-field assignment to step variable")
+            }
             val field = stepInput.resolveField(action.fields)
             field.exp = action.exp.copy
         }
@@ -73,7 +76,7 @@ class EvaluateDataExpressions {
 
     private static def Field resolveField(Expression expression, Iterable<RecordField> fields) {
         if (expression instanceof ExpressionRecord) {
-            val field = expression.fields.findFirst[recordField == fields.head]
+            val field = expression.fields.findFirst[recordField === fields.head]
             if (field !== null && !fields.tail.isEmpty) {
                 return field.exp.resolveField(fields.tail)
             }
