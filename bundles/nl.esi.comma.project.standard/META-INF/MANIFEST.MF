@@ -30,7 +30,8 @@ Require-Bundle: nl.esi.xtext.common.lang;visibility:=reexport,
  nl.esi.comma.testspecification,
  nl.esi.comma.automata,
  nl.esi.comma.constraints,
- nl.esi.comma.scenarios
+ nl.esi.comma.scenarios,
+ com.google.gson
 Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: nl.esi.comma.project.standard,
  nl.esi.comma.project.standard.formatting2,

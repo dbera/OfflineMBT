@@ -15,11 +15,13 @@
  */
 package nl.asml.matala.product
 
+import nl.esi.xtext.common.lang.conversion.BaseValueConverterService
 import nl.esi.xtext.expressions.conversion.ExpressionConvertersProvider
 import nl.esi.xtext.expressions.conversion.IExpressionConvertersProvider
 import nl.esi.xtext.expressions.functions.ExpressionFunctionLibrariesProvider
 import nl.esi.xtext.expressions.functions.IExpressionFunctionLibrariesProvider
 import nl.esi.xtext.expressions.scoping.ExpressionsImportUriGlobalScopeProvider
+import org.eclipse.xtext.conversion.IValueConverterService
 
 /**
  * Use this class to register components to be used at runtime / without the Equinox extension registry.
@@ -27,6 +29,10 @@ import nl.esi.xtext.expressions.scoping.ExpressionsImportUriGlobalScopeProvider
 class ProductRuntimeModule extends AbstractProductRuntimeModule {
     override bindIGlobalScopeProvider() {
         return ExpressionsImportUriGlobalScopeProvider
+    }
+
+    override Class<? extends IValueConverterService> bindIValueConverterService() {
+        return BaseValueConverterService
     }
 
     def Class<? extends IExpressionFunctionLibrariesProvider> bindIExpressionFunctionLibrariesProvider() {

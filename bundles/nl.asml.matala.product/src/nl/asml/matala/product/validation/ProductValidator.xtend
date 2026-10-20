@@ -16,6 +16,7 @@
 package nl.asml.matala.product.validation
 
 import com.google.common.collect.Iterators
+import java.util.Collections
 import java.util.HashSet
 import java.util.List
 import java.util.Map
@@ -29,6 +30,7 @@ import nl.asml.matala.product.product.Specification
 import nl.asml.matala.product.product.Update
 import nl.asml.matala.product.product.UpdateOutVar
 import nl.asml.matala.product.product.VarRef
+import nl.esi.xplus.extensions.types.RecordFieldKind
 import nl.esi.xtext.actions.actions.ActionsPackage
 import nl.esi.xtext.actions.actions.AssignmentAction
 import nl.esi.xtext.actions.actions.ForAction
@@ -43,11 +45,12 @@ import nl.esi.xtext.expressions.expression.ExpressionVariable
 import nl.esi.xtext.expressions.expression.Field
 import nl.esi.xtext.expressions.expression.Variable
 import nl.esi.xtext.types.types.RecordField
-import nl.esi.xtext.types.types.RecordFieldKind
 import nl.esi.xtext.types.types.RecordTypeDecl
+import nl.esi.xtext.types.types.TypesPackage
 import org.eclipse.emf.ecore.EObject
 import org.eclipse.xtext.validation.Check
 
+import static extension nl.esi.xplus.extensions.types.TypesExtensionUtil.*
 import static extension nl.esi.xtext.actions.utilities.ActionsUtilities.*
 import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
 import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
@@ -397,7 +400,7 @@ class ProductValidator extends AbstractProductValidator {
             }
         ]
 
-        // Variables that are supressed cannot be assigned in reference updates
+        // Variables that are suppressed cannot be assigned in reference updates
         val suppress = dataReferences.getContainerOfType(UpdateOutVar)?.suppress
         if (suppress === null) {
             return
@@ -515,6 +518,44 @@ class ProductValidator extends AbstractProductValidator {
                 }
             }
         }
+    }
+
+    @Check
+    def checkRecordFieldAnnotations(RecordField field) {
+        val symbolic = field.annotations.findFirst[name == 'symbolic']
+        val mixed = field.annotations.findFirst[name == 'mixed']
+        val suppress = field.annotations.findFirst[name == 'suppress']
+
+        if (symbolic !== null && mixed !== null) {
+            warning('''Symbolic annotation has no effect for record field '«field.FQN»' as mixed has precedence''',
+                symbolic, null)
+        }
+        if ((symbolic !== null || mixed !== null) && suppress !== null) {
+            error('''«(mixed ?: symbolic).name.toFirstUpper» record field '«field.FQN»' cannot be supressed''',
+                suppress, null)
+        }
+    }
+
+    @Check
+    def checkRecordAnnotations(RecordTypeDecl typeDecl) {
+        if (!typeDecl.isContext) {
+            return
+        }
+        typeDecl.fields.forEach[field, index |
+            if (field.kind !== RecordFieldKind.CONCRETE) {
+                error('''Context type «typeDecl.name» can only contain concrete fields''',
+                    TypesPackage.Literals.RECORD_TYPE_DECL__FIELDS, index)
+            }
+            if (Collections.singleton(field).closure[subFields].exists[kind !== RecordFieldKind.CONCRETE]) {
+                error('''All nested fields of context field '«field.FQN»' should be concrete''',
+                    TypesPackage.Literals.RECORD_TYPE_DECL__FIELDS, index)
+            }
+        ]
+    }
+
+    def private static List<RecordField> getSubFields(RecordField field) {
+        val typeDecl = field.type.type
+        return typeDecl instanceof RecordTypeDecl ? typeDecl.fields : Collections.emptyList
     }
 
 /* STRANGE BUG: Output Vars are Empty. Appears in Input Vars. 
