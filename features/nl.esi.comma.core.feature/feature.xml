@@ -187,4 +187,8 @@ the Department of Electrical Engineering of Eindhoven University of Technology.
          id="nl.esi.comma.causalgraph.ide"
          version="0.0.0"/>
 
+   <plugin
+         id="nl.esi.xplus.extensions"
+         version="0.0.0"/>
+
 </feature>

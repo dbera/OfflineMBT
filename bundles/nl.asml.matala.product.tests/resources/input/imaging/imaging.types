@@ -4,9 +4,9 @@ record UNIT {
 
 record AcqData {
     int	id
-    symbolic real	contrast
-    symbolic real	resolution
-    symbolic real	signal_to_noise_ratio
+    @symbolic  real	contrast
+    @symbolic  real	resolution
+    @symbolic  real	signal_to_noise_ratio
 }
 
 record AcqReq {
@@ -65,7 +65,7 @@ record TempReq {
 
 record TempResp {
     ResponseEnum	result
-    symbolic int	temp_val
+    @symbolic  int	temp_val
     int	reqid
 }
 

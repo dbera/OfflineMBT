@@ -220,6 +220,7 @@
                             <exclude>*:${project.artifactId}-nl.esi.comma.systemconfig-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.testspecification-*</exclude>
                             <exclude>*:${project.artifactId}-nl.esi.comma.testspecification.ide-*</exclude>
+                            <exclude>*:${project.artifactId}-nl.esi.xplus.extensions-*</exclude>
                             <exclude>*:${project.artifactId}-org.aopalliance-*</exclude>
                             <exclude>*:${project.artifactId}-org.apache.aries.spifly.dynamic.bundle-*</exclude>
                             <exclude>*:${project.artifactId}-org.eclipse.lsp4j-*</exclude>
