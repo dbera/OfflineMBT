@@ -20,21 +20,17 @@ import nl.esi.comma.abstracttestspecification.abstractTestspecification.ChainedS
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.ExecutableStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.RunStep
 import nl.esi.xplus.extensions.types.RecordFieldKind
-import nl.esi.xtext.actions.actions.ActionList
-import nl.esi.xtext.actions.actions.ForAction
-import nl.esi.xtext.actions.actions.IfAction
 import nl.esi.xtext.actions.actions.RecordFieldAssignmentAction
 import nl.esi.xtext.common.lang.utilities.EcoreUtil3
 import nl.esi.xtext.expressions.evaluation.ExpressionEvaluator
 import nl.esi.xtext.expressions.expression.ExpressionVariable
 import nl.esi.xtext.types.types.RecordTypeDecl
 import nl.esi.xtext.types.types.Type
-import nl.esi.xtext.types.types.TypeReference
 
 import static extension nl.esi.comma.abstracttestspecification.generator.utils.Utils.*
 import static extension nl.esi.comma.assertthat.utilities.AssertThatUtilities.*
+import static extension nl.esi.xplus.extensions.types.TypesExtensionUtil.*
 import static extension nl.esi.xplus.extensions.types.TypesExtensionUtil.getKind
-import static extension nl.esi.xtext.actions.utilities.ActionsUtilities.*
 import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
 import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
 import static extension org.eclipse.emf.ecore.util.EcoreUtil.*

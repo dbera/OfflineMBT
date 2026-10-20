@@ -26,7 +26,7 @@ import nl.esi.xtext.types.types.TypeDecl
 import nl.esi.xtext.types.types.VectorTypeConstructor
 
 import static extension nl.esi.comma.abstracttestspecification.generator.utils.Utils.*
-import static extension nl.esi.comma.assertthat.utilities.AssertThatUtilities.isSuppressed
+import static extension nl.esi.xplus.extensions.types.TypesExtensionUtil.*
 import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
 
 class ConcreteExpressionHandler {

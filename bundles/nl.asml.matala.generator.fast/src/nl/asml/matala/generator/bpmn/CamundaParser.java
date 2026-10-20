@@ -68,7 +68,6 @@ import nl.esi.comma.abstracttestspecification.abstractTestspecification.ComposeS
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.RunStep;
 import nl.esi.comma.abstracttestspecification.generator.to.concrete.ConcreteExpressionHandler;
 import nl.esi.comma.assertthat.assertThat.JsonValue;
-import nl.esi.xtext.expressions.expression.ExpressionVariable;
 import nl.esi.xtext.types.types.TypeDecl;
 
 public class CamundaParser {
@@ -134,8 +133,7 @@ public class CamundaParser {
 				});
 
 				// Get suppressed
-				final Set<String> suppressed = (step.getSuppress() != null) ? step.getSuppress().getVarFields().stream()
-						.filter(exp -> exp instanceof ExpressionVariable).map(exp -> (ExpressionVariable) exp)
+				final Set<String> suppressed = (step.getSuppress() != null) ? step.getSuppress().getVars().stream()
 						.map(vr -> vr.getVariable().getName()).collect(Collectors.toSet()) : Collections.emptySet();
 
 				// Remove suppressed ones

@@ -38,12 +38,6 @@ class AssertThatUtilities {
         // Private constructor for utilities
     }
 
-    @Deprecated
-    static def boolean isSuppressed(RecordField recordField) {
-        // TODO: Look at annotation after rebase of main branch
-        return false
-    }
-
     static def Expression toExpression(JsonValue json, TypeObject typeObject, IEvaluationContext context) {
         return toExpression(json, typeObject, context)[true]
     }

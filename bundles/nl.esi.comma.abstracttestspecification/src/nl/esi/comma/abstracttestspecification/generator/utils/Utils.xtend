@@ -44,9 +44,9 @@ import nl.esi.xtext.types.types.TypesFactory
 import nl.esi.xtext.types.types.VectorTypeConstructor
 import org.eclipse.emf.ecore.util.EcoreUtil
 
-import static extension nl.esi.comma.assertthat.utilities.AssertThatUtilities.isSuppressed
-import static extension org.eclipse.xtext.EcoreUtil2.*
+import static extension nl.esi.xplus.extensions.types.TypesExtensionUtil.*
 import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
+import static extension org.eclipse.xtext.EcoreUtil2.*
 
 class Utils 
 {

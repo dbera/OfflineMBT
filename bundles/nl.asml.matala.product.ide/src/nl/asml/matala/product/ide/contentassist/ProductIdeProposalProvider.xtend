@@ -29,8 +29,7 @@ import org.eclipse.xtext.CrossReference
 import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.ide.editor.contentassist.ContentAssistContext
 
-import static extension nl.esi.comma.assertthat.utilities.AssertThatUtilities.isSuppressed
-import static extension nl.esi.xplus.extensions.types.TypesExtensionUtil.getKind
+import static extension nl.esi.xplus.extensions.types.TypesExtensionUtil.*
 
 /**
  * See https://www.eclipse.org/Xtext/documentation/310_eclipse_support.html#content-assist

@@ -56,7 +56,6 @@ import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
 import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
 import static extension org.eclipse.lsat.common.xtend.Queries.*
 import static extension org.eclipse.xtext.EcoreUtil2.*
-import static extension nl.esi.comma.assertthat.utilities.AssertThatUtilities.isSuppressed
 
 /**
  * This class contains custom validation rules. 
