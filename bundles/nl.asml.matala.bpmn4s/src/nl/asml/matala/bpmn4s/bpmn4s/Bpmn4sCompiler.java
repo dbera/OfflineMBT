@@ -647,10 +647,6 @@ public class Bpmn4sCompiler{
 							if (e.getRefUpdate() != null && e.getRefUpdate() != "") {
 								task += DATA_EXPR_HLPR.processRefUpdate(e.getRefUpdate(), replaceMap);
 							}
-							if (compCtxName == null) {
-								// The default context should always be suppressed
-								task += " suppress";
-							}
 							task += "\n";
 							String updates = "";
 							if (preCtxName != null) {

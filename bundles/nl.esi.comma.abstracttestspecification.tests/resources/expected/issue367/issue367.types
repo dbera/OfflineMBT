@@ -6,6 +6,7 @@ record Dummy {
 }
 
 record DummyInput {
+    UNIT ___CONTEXT___
     Input d1
     Input d4
 }

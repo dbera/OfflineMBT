@@ -109,7 +109,6 @@ output-data:
 Event_0fmv4m5 : {
     "unit": 0
 }
-suppress(Event_0fmv4m5)
 
 generate-file "./dataset/"
 

@@ -235,7 +235,7 @@ params_6_3_1 : {
     "id": 6,
     "param": "Test 6a"
 }
-suppress(Event_1mb8mjz, history)
+suppress(history)
 output-assertion: AssertionsTestTest6Compose1_Compose611_default_0
 assertions_test.AssertionsTestTest6Assert2.Assert621.default.default
 
@@ -284,7 +284,7 @@ params_6_3_1 : {
     "id": 6,
     "param": "Test 6b"
 }
-suppress(Event_1mb8mjz, history)
+suppress(history)
 output-assertion: AssertionsTestTest6Compose1_Compose611_default_1
 assertions_test.AssertionsTestTest6Assert2.Assert621.default.default
 
@@ -300,7 +300,6 @@ output-data:
 Event_12gigiu : {
     "unit": 0
 }
-suppress(Event_12gigiu)
 
 run-step-name: AssertionsTestTest6Run3_Run631_default_1 step-type: "Run_6_3_1"
 action-case: assertions_test.AssertionsTestTest6Run3.Run631.default
@@ -314,7 +313,6 @@ output-data:
 Event_12gigiu : {
     "unit": 0
 }
-suppress(Event_12gigiu)
 
 compose-step-name: AssertionsTestTest5Run1_Compose511_default_0
 action-case: assertions_test.AssertionsTestTest5Run1.Compose511.default
@@ -365,7 +363,6 @@ output-data:
 Event_0p6hosm : {
     "unit": 0
 }
-suppress(Event_0p6hosm)
 
 compose-step-name: AssertionsTestTest4_Compose41_default_0
 action-case: assertions_test.AssertionsTestTest4.Compose41.default
@@ -521,7 +518,6 @@ output-data:
 Event_0zgsfij : {
     "unit": 0
 }
-suppress(Event_0zgsfij)
 output-assertion: AssertionsTestTest3Run1_Run312_default_0
 assertions_test.AssertionsTestTest3Assert2.Assert321.default.default
 
@@ -577,7 +573,6 @@ Flow_04tox9b : {
 params_2_2_2 : {
     "id": 2
 }
-suppress(Flow_04tox9b)
 data-references: params_2_2_2
 assertions_test.AssertionsTestTest2ComposeAndAssert2.Compose221.default.result
 
@@ -598,7 +593,6 @@ Event_1dlbjjh : {
 params_2_3_1 : {
     "id": 2
 }
-suppress(Event_1dlbjjh)
 data-references: params_2_3_1
 assertions_test.AssertionsTestTest2ComposeAndAssert2.Assert222.default.result
 output-assertion: AssertionsTestTest2ComposeAndAssert2_Compose221_default_0
@@ -615,7 +609,6 @@ output-data:
 Event_07uzt4k : {
     "unit": 0
 }
-suppress(Event_07uzt4k)
 
 compose-step-name: AssertionsTestTest1Run1_Compose111_default_0
 action-case: assertions_test.AssertionsTestTest1Run1.Compose111.default
@@ -666,7 +659,6 @@ output-data:
 Event_0kl62m8 : {
     "unit": 0
 }
-suppress(Event_0kl62m8)
 output-assertion: AssertionsTestTest1Run1_Run112_default_0
 assertions_test.AssertionsTestTest1Assert2.Assert121.default.default
 

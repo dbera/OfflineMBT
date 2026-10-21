@@ -6,6 +6,7 @@ record SetTemperature {
 }
 
 record SetTemperatureInput {
+    UNIT ___CONTEXT___
     EquipmentStatus EqStatus
     TempReq TempCMD
 }
@@ -18,7 +19,6 @@ record SetTemperatureOutput {
 
 record TempCheck {
     TempCheckInput input
-    TempCheckOutput output
 }
 
 record TempCheckInput {
@@ -26,9 +26,6 @@ record TempCheckInput {
     TempResp temp_achieved
 }
 
-record TempCheckOutput {
-    CTX temp_ctx
-}
 
 record ExecAcquisitionCommand {
     ExecAcquisitionCommandInput input
@@ -40,28 +37,24 @@ record ExecAcquisitionCommandInput {
 }
 
 record ExecAcquisitionCommandOutput {
-    CTX acq_ctx
     AcqData ImageData
 }
 
 record ExecPumpCommand {
     ExecPumpCommandInput input
-    ExecPumpCommandOutput output
 }
 
 record ExecPumpCommandInput {
     PumpReq PumpRequest
 }
 
-record ExecPumpCommandOutput {
-    CTX pump_ctx
-}
 
 record CheckAcquisitionResult {
     CheckAcquisitionResultInput input
 }
 
 record CheckAcquisitionResultInput {
+    UNIT ___CONTEXT___
     ImgReq LastAcqReq
     AcqData ImageData
 }

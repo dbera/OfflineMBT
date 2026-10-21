@@ -2,7 +2,6 @@ import "../../input/issue249/issue249.types"
 
 record ProducerRunType {
     ProducerRunTypeInput input
-    ProducerRunTypeOutput output
 }
 
 record ProducerRunTypeInput {
@@ -12,9 +11,6 @@ record ProducerRunTypeInput {
     ProdCtx sutConf
 }
 
-record ProducerRunTypeOutput {
-    ProdCtx prodCtx
-}
 
 record ConsumerRunType {
     ConsumerRunTypeInput input

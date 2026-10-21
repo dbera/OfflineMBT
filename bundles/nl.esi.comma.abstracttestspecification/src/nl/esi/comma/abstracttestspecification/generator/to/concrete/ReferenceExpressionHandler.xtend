@@ -26,6 +26,7 @@ import nl.esi.xtext.expressions.evaluation.ExpressionEvaluator
 import nl.esi.xtext.expressions.expression.ExpressionVariable
 import nl.esi.xtext.types.types.RecordTypeDecl
 import nl.esi.xtext.types.types.Type
+import nl.esi.xtext.types.types.TypeReference
 
 import static extension nl.esi.comma.abstracttestspecification.generator.utils.Utils.*
 import static extension nl.esi.comma.assertthat.utilities.AssertThatUtilities.*
@@ -124,10 +125,9 @@ class ReferenceExpressionHandler {
     }
 
     private static def void evaluateReferenceConstrains(String inputName, String outputName, Type type, Map<String, List<String>> mapLHStoRHS) {
-        val typeDecl = type.type
-        if (typeDecl instanceof RecordTypeDecl) {
+        if (type instanceof TypeReference && type.type instanceof RecordTypeDecl) {
             // TODO: Should I reject the concrete field here?
-            for (field : typeDecl.allFields.reject[suppressed].reject[kind == RecordFieldKind.CONCRETE]) {
+            for (field : (type.type as RecordTypeDecl).allFields.reject[suppressed].reject[kind == RecordFieldKind.CONCRETE]) {
                 evaluateReferenceConstrains(inputName + '.' + field.name, outputName + '.' + field.name, field.type, mapLHStoRHS)
             }
         } else {

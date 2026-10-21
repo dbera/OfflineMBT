@@ -23,15 +23,17 @@ import nl.esi.xtext.types.types.RecordTypeDecl
 import nl.esi.xtext.types.types.SimpleTypeDecl
 import nl.esi.xtext.types.types.Type
 import nl.esi.xtext.types.types.TypeDecl
+import nl.esi.xtext.types.types.TypeReference
 import nl.esi.xtext.types.types.VectorTypeConstructor
 
 import static extension nl.esi.comma.abstracttestspecification.generator.utils.Utils.*
 import static extension nl.esi.xplus.extensions.types.TypesExtensionUtil.*
 import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
+import java.util.Comparator
 
 class ConcreteExpressionHandler {
     static def Map<String, List<String>>  collectConcreteDataAssignments(AbstractStep step, Iterable<Binding> bindings) {
-        val Map<String, List<String>> mapLHStoRHS = newTreeMap(String.CASE_INSENSITIVE_ORDER)
+        val Map<String, List<String>> mapLHStoRHS = newTreeMap(Comparator.naturalOrder)
 
         val inputVarPrefix = step.inputVar + '.'
         for (binding : bindings.reject[suppressed]) {
@@ -42,9 +44,8 @@ class ConcreteExpressionHandler {
     }
 
     private static def void putVariables(Map<String, List<String>> mapLHStoRHS, String name, Type type, JsonValue value) {
-        val typeDecl = type.type
-        if (typeDecl  instanceof RecordTypeDecl) {
-            for (field : typeDecl.allFields.reject[suppressed].filter[f|value.hasMemberValue(f.name)]) {
+        if (type instanceof TypeReference && type.type instanceof RecordTypeDecl) {
+            for (field : (type.type as RecordTypeDecl).allFields.reject[suppressed].filter[f|value.hasMemberValue(f.name)]) {
                 mapLHStoRHS.putVariables(name + '.' + field.name, field.type, value.getMemberValue(field.name))
             }
         } else {

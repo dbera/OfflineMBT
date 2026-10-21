@@ -6,6 +6,7 @@ record ExecutePrinter {
 }
 
 record ExecutePrinterInput {
+    UNIT ___CONTEXT___
     PrintRequest request
     PrinterVariants variants
 }
@@ -13,7 +14,6 @@ record ExecutePrinterInput {
 record ExecutePrinterOutput {
     Result printResult
     Report printReport
-    PrinterVariants variants
 }
 
 record ExecuteInspection {
@@ -22,6 +22,7 @@ record ExecuteInspection {
 }
 
 record ExecuteInspectionInput {
+    UNIT ___CONTEXT___
     MeasureRequest measureRequest
 }
 
@@ -51,6 +52,7 @@ record ExecuteOptimizer {
 }
 
 record ExecuteOptimizerInput {
+    UNIT ___CONTEXT___
     OptimizeRequest optimizeJob
 }
 

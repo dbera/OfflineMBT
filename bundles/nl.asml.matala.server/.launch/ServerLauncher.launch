@@ -17,6 +17,6 @@
     <booleanAttribute key="org.eclipse.jdt.launching.ATTR_USE_CLASSPATH_ONLY_JAR" value="false"/>
     <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="nl.esi.comma.project.standard.cli.Main"/>
     <stringAttribute key="org.eclipse.jdt.launching.MODULE_NAME" value="nl.esi.comma.project.standard.cli"/>
-    <stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="--rest-server --trace"/>
+    <stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="--rest-server --repository-path ${git_dir}/../nl.asml.matala.bpmn4s.tests/resources/input --trace"/>
     <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="nl.esi.comma.project.standard.cli"/>
 </launchConfiguration>

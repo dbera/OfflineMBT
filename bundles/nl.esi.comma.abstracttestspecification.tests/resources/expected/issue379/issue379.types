@@ -2,7 +2,6 @@ import "../../input/issue379/issue379.types"
 
 record RUN {
     RUNInput input
-    RUNOutput output
 }
 
 record RUNInput {
@@ -10,6 +9,3 @@ record RUNInput {
     Data data
 }
 
-record RUNOutput {
-    Context ctx
-}

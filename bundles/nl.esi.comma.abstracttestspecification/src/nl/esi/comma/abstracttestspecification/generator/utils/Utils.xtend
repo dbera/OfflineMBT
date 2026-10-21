@@ -47,6 +47,7 @@ import org.eclipse.emf.ecore.util.EcoreUtil
 import static extension nl.esi.xplus.extensions.types.TypesExtensionUtil.*
 import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
 import static extension org.eclipse.xtext.EcoreUtil2.*
+import nl.esi.xtext.types.types.TypeReference
 
 class Utils 
 {
@@ -71,17 +72,21 @@ class Utils
     }
 
     static def String getVarField(Variable variable) {
-        if (variable.eContainingFeature === ProductPackage.Literals.BLOCK__CONTEXTVARS) {
-            return (variable.eContainer as Block).contextname ?: "___CONTEXT___"
+        if (variable.isContext) {
+            return variable.getContainerOfType(Block).contextname ?: "___CONTEXT___"
         }
         return variable.name
     }
 
+    static def boolean isContext(Variable variable) {
+        return variable.eContainingFeature === ProductPackage.Literals.BLOCK__CONTEXTVARS
+    }
+
     static def boolean isSuppressed(Binding binding) {
         // If all fields are suppressed, the binding is suppressed
-        val typeDecl = binding.name.type.type
-        if (typeDecl instanceof RecordTypeDecl) {
-            if (typeDecl.allFields.forall[suppressed]) {
+        val type = binding.name.type
+        if (type instanceof TypeReference && type.type instanceof RecordTypeDecl) {
+            if ((type.type as RecordTypeDecl).allFields.forall[suppressed]) {
                 return true
             }
         }

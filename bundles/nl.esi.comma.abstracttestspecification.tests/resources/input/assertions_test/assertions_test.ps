@@ -30,7 +30,7 @@ specification assertions_test
               match-regex "\\w+"
             }
         }
-        produces-outputs	Event_0kl62m8 suppress
+        produces-outputs	Event_0kl62m8
     
         element-labels ["AssertionsTest", "Test 1", "Assert 2"]
     }
@@ -56,7 +56,7 @@ specification assertions_test
         element-label	"Run 2:3:1"
         case			default priority 100 step-type "Run_2_3_1" action-type RUN
         with-inputs		params_2_3_1
-        produces-outputs	Event_07uzt4k suppress
+        produces-outputs	Event_07uzt4k
     
         element-labels ["AssertionsTest", "Test 2", "Run 3"]
     }
@@ -295,7 +295,7 @@ specification assertions_test
               equal-to 6
             }
         }
-        produces-outputs	Event_1mb8mjz suppress
+        produces-outputs	Event_1mb8mjz
         produces-outputs	history symbolic-link suppress
         updates:
             history := History { 
@@ -329,7 +329,7 @@ specification assertions_test
         element-label	"Run 6:3:1"
         case			default priority 6 step-type "Run_6_3_1" action-type RUN
         with-inputs		params_6_3_1
-        produces-outputs	Event_12gigiu suppress
+        produces-outputs	Event_12gigiu
     
         element-labels ["AssertionsTest", "Test 6", "Run 3"]
     }
@@ -559,7 +559,7 @@ specification assertions_test
         element-label	"Compose 2:2:1"
         case			default priority 2 step-type "null" action-type COMPOSE
         with-inputs		report_2_1_2
-        produces-outputs	Flow_04tox9b suppress
+        produces-outputs	Flow_04tox9b
         produces-outputs	params_2_2_2
         references {
             result: params_2_2_2.param := report_2_1_2.result
@@ -576,7 +576,7 @@ specification assertions_test
               equal-to params_2_2_2.param
             }
         }
-        produces-outputs	Event_1dlbjjh suppress
+        produces-outputs	Event_1dlbjjh
         updates:
             Event_1dlbjjh := Flow_04tox9b
         produces-outputs	params_2_3_1
@@ -725,7 +725,7 @@ specification assertions_test
               equal-to report_3_1_2b.result
             }
         }
-        produces-outputs	Event_0zgsfij suppress
+        produces-outputs	Event_0zgsfij
     
         element-labels ["AssertionsTest", "Test 3", "Assert 2"]
     }
@@ -751,7 +751,7 @@ specification assertions_test
         element-label	"Run 5:2:1"
         case			default priority 5 step-type "Run_5_2_1" action-type RUN
         with-inputs		report_5_1_2
-        produces-outputs	Event_0p6hosm suppress
+        produces-outputs	Event_0p6hosm
     
         element-labels ["AssertionsTest", "Test 5", "Run 2"]
     }

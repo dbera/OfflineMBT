@@ -14,6 +14,12 @@ step-id    step_Issue299C3RunJobB_RunB_default_0
 step-type  BJob
 step-input
     step_Issue299C3RunJobB_RunB_default_0.input.job_b_input.job_id := 0
+    step_Issue299C3RunJobB_RunB_default_0.input.job_b_input.list_of_key_value_pairs := <KeyValuePair[]>[
+        KeyValuePair {
+            key = "concrete",
+            value = "concreteValue"
+        }
+    ]
     step_Issue299C3RunJobB_RunB_default_0.input.job_b_input.list_of_key_value_pairs := <KeyValuePair[]>[]
     step_Issue299C3RunJobB_RunB_default_0.input.job_b_input.list_of_key_value_pairs := <KeyValuePair[]>[KeyValuePair{key="index__0__",value=step_Issue299C2RunJobA_RunA_default_0.output.job_a_report.some_value}]
 
@@ -26,6 +32,12 @@ step-id    step_Issue299C3RunJobB_RunB_default_1
 step-type  BJob
 step-input
     step_Issue299C3RunJobB_RunB_default_1.input.job_b_input.job_id := 1
+    step_Issue299C3RunJobB_RunB_default_1.input.job_b_input.list_of_key_value_pairs := <KeyValuePair[]>[
+        KeyValuePair {
+            key = "concrete",
+            value = "concreteValue"
+        }
+    ]
     step_Issue299C3RunJobB_RunB_default_1.input.job_b_input.list_of_key_value_pairs := <KeyValuePair[]>[]
     step_Issue299C3RunJobB_RunB_default_1.input.job_b_input.list_of_key_value_pairs := <KeyValuePair[]>[KeyValuePair{key="index__0__",value=step_Issue299C2RunJobA_RunA_default_0.output.job_a_report.some_value}]
     step_Issue299C3RunJobB_RunB_default_1.input.job_b_input.list_of_key_value_pairs := <KeyValuePair[]>[KeyValuePair{key="index__1__",value=step_Issue299C2RunJobA_RunA_default_1.output.job_a_report.some_value}]
@@ -39,6 +51,12 @@ step-id    step_Issue299C3RunJobB_RunB_default_2
 step-type  BJob
 step-input
     step_Issue299C3RunJobB_RunB_default_2.input.job_b_input.job_id := 2
+    step_Issue299C3RunJobB_RunB_default_2.input.job_b_input.list_of_key_value_pairs := <KeyValuePair[]>[
+        KeyValuePair {
+            key = "concrete",
+            value = "concreteValue"
+        }
+    ]
     step_Issue299C3RunJobB_RunB_default_2.input.job_b_input.list_of_key_value_pairs := <KeyValuePair[]>[]
     step_Issue299C3RunJobB_RunB_default_2.input.job_b_input.list_of_key_value_pairs := <KeyValuePair[]>[KeyValuePair{key="index__0__",value=step_Issue299C2RunJobA_RunA_default_0.output.job_a_report.some_value}]
     step_Issue299C3RunJobB_RunB_default_2.input.job_b_input.list_of_key_value_pairs := <KeyValuePair[]>[KeyValuePair{key="index__1__",value=step_Issue299C2RunJobA_RunA_default_1.output.job_a_report.some_value}]

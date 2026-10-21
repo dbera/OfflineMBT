@@ -29,7 +29,6 @@ d1 : {
     "id": 0,
     "input1": "ONE"
 }
-suppress(Flow_01xqgnw)
 
 run-step-name: Root_T2_default_0 step-type: "Dummy"
 action-case: issue367.Root.T2.default
@@ -49,7 +48,6 @@ Flow_12ridhf : {
 d2 : {
     "id": 0
 }
-suppress(Flow_12ridhf)
 
 compose-step-name: Root_T3_default_0
 action-case: issue367.Root.T3.default
@@ -68,7 +66,6 @@ Flow_1u9fpei : {
 d3 : {
     "id": 0
 }
-suppress(Flow_1u9fpei)
 data-references: d3
 issue367.Root.T3.default.x
 issue367.Root.T3.default.y
@@ -90,7 +87,6 @@ Flow_1jw2qfx : {
 d4 : {
     "id": 0
 }
-suppress(Flow_1jw2qfx)
 data-references: d4
 issue367.Root.T4.default.z
 
@@ -108,7 +104,6 @@ output-data:
 Event_07r9aer : {
     "unit": 0
 }
-suppress(Event_07r9aer)
 
 generate-file "./dataset/"
 

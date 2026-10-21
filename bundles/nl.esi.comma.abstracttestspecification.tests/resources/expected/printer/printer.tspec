@@ -7,6 +7,8 @@ test-sequence from_abstract_to_concrete {
 step-sequence test_single_sequence {
 step-id    step_PrintFactoryA3DPrinter_RunPrintJob_default_0
 step-type  ExecutePrinter
+step-context
+    step_PrintFactoryA3DPrinter_RunPrintJob_default_0.input.___CONTEXT___.unit := 0
 step-input
     step_PrintFactoryA3DPrinter_RunPrintJob_default_0.input.request.color := ColorType::MONOCHROME
     step_PrintFactoryA3DPrinter_RunPrintJob_default_0.input.request.id := 1
@@ -19,6 +21,8 @@ step-sut
 
 step-id    step_PrintFactoryA3DPrinter_RunPrepareJob_default_0
 step-type  ExecutePrinter
+step-context
+    step_PrintFactoryA3DPrinter_RunPrepareJob_default_0.input.___CONTEXT___.unit := 0
 step-input
     step_PrintFactoryA3DPrinter_RunPrepareJob_default_0.input.request.color := ColorType::MONOCHROME
     step_PrintFactoryA3DPrinter_RunPrepareJob_default_0.input.request.id := 1
@@ -31,6 +35,8 @@ step-sut
 
 step-id    step_PrintFactoryInspection_RunVisualinspection_default_0
 step-type  ExecuteInspection
+step-context
+    step_PrintFactoryInspection_RunVisualinspection_default_0.input.___CONTEXT___.unit := 0
 step-input
     step_PrintFactoryInspection_RunVisualinspection_default_0.input.measureRequest.id := 1
     step_PrintFactoryInspection_RunVisualinspection_default_0.input.measureRequest.printJobReport := step_PrintFactoryA3DPrinter_RunPrintJob_default_0.output.printReport
@@ -53,11 +59,15 @@ assertion-input
 
 step-id    step_PrintFactoryOptimization_RunOptimizationJob_default_0
 step-type  ExecuteOptimizer
+step-context
+    step_PrintFactoryOptimization_RunOptimizationJob_default_0.input.___CONTEXT___.unit := 0
 step-input
     step_PrintFactoryOptimization_RunOptimizationJob_default_0.input.optimizeJob.id := 1
 
 step-id    step_PrintFactoryA3DPrinter_RunPrintJob_default_1
 step-type  ExecutePrinter
+step-context
+    step_PrintFactoryA3DPrinter_RunPrintJob_default_1.input.___CONTEXT___.unit := 0
 step-input
     step_PrintFactoryA3DPrinter_RunPrintJob_default_1.input.request.color := ColorType::COLOR
     step_PrintFactoryA3DPrinter_RunPrintJob_default_1.input.request.id := 2
@@ -70,6 +80,8 @@ step-sut
 
 step-id    step_PrintFactoryA3DPrinter_RunPrepareJob_default_1
 step-type  ExecutePrinter
+step-context
+    step_PrintFactoryA3DPrinter_RunPrepareJob_default_1.input.___CONTEXT___.unit := 0
 step-input
     step_PrintFactoryA3DPrinter_RunPrepareJob_default_1.input.request.color := ColorType::COLOR
     step_PrintFactoryA3DPrinter_RunPrepareJob_default_1.input.request.id := 2
@@ -82,6 +94,8 @@ step-sut
 
 step-id    step_PrintFactoryInspection_RunVisualinspection_default_1
 step-type  ExecuteInspection
+step-context
+    step_PrintFactoryInspection_RunVisualinspection_default_1.input.___CONTEXT___.unit := 0
 step-input
     step_PrintFactoryInspection_RunVisualinspection_default_1.input.measureRequest.id := 2
     step_PrintFactoryInspection_RunVisualinspection_default_1.input.measureRequest.printJobReport := step_PrintFactoryA3DPrinter_RunPrintJob_default_1.output.printReport
@@ -104,11 +118,15 @@ assertion-input
 
 step-id    step_PrintFactoryOptimization_RunOptimizationJob_default_1
 step-type  ExecuteOptimizer
+step-context
+    step_PrintFactoryOptimization_RunOptimizationJob_default_1.input.___CONTEXT___.unit := 0
 step-input
     step_PrintFactoryOptimization_RunOptimizationJob_default_1.input.optimizeJob.id := 2
 
 step-id    step_PrintFactoryA3DPrinter_RunPrintJob_default_2
 step-type  ExecutePrinter
+step-context
+    step_PrintFactoryA3DPrinter_RunPrintJob_default_2.input.___CONTEXT___.unit := 0
 step-input
     step_PrintFactoryA3DPrinter_RunPrintJob_default_2.input.request.color := ColorType::COLOR
     step_PrintFactoryA3DPrinter_RunPrintJob_default_2.input.request.id := 3
@@ -121,6 +139,8 @@ step-sut
 
 step-id    step_PrintFactoryA3DPrinter_RunPrepareJob_default_2
 step-type  ExecutePrinter
+step-context
+    step_PrintFactoryA3DPrinter_RunPrepareJob_default_2.input.___CONTEXT___.unit := 0
 step-input
     step_PrintFactoryA3DPrinter_RunPrepareJob_default_2.input.request.color := ColorType::COLOR
     step_PrintFactoryA3DPrinter_RunPrepareJob_default_2.input.request.id := 3
@@ -133,6 +153,8 @@ step-sut
 
 step-id    step_PrintFactoryInspection_RunVisualinspection_default_2
 step-type  ExecuteInspection
+step-context
+    step_PrintFactoryInspection_RunVisualinspection_default_2.input.___CONTEXT___.unit := 0
 step-input
     step_PrintFactoryInspection_RunVisualinspection_default_2.input.measureRequest.id := 3
     step_PrintFactoryInspection_RunVisualinspection_default_2.input.measureRequest.printJobReport := step_PrintFactoryA3DPrinter_RunPrintJob_default_2.output.printReport
@@ -155,6 +177,8 @@ assertion-input
 
 step-id    step_PrintFactoryOptimization_RunOptimizationJob_default_2
 step-type  ExecuteOptimizer
+step-context
+    step_PrintFactoryOptimization_RunOptimizationJob_default_2.input.___CONTEXT___.unit := 0
 step-input
     step_PrintFactoryOptimization_RunOptimizationJob_default_2.input.optimizeJob.id := 3
 }

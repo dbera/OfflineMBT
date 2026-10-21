@@ -77,7 +77,7 @@ class MergeConcreteDataAssigments {
             return left
         }
         if (unfLeft == unfRight) {
-            return left
+            return right
         }
         throw new RuntimeException('Cannot merge')
     }

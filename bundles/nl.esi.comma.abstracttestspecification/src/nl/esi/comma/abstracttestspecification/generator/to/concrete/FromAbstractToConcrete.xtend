@@ -129,7 +129,7 @@ class FromAbstractToConcrete extends AbstractGenerator {
     def private generateTypesFile(AbstractTestDefinition atd, Iterable<String> typesImports) {
         val sysStepTypes = atd.steps.filter(ExecutableStep).reject[stepType.isNullOrEmpty].groupBy[stepType]
         val sysStepTypeInputs = sysStepTypes.mapValues[flatMap[allInput].reject[suppressed].map['''«name.type.typeName» «varField»''']]
-        val sysStepTypeOutputs = sysStepTypes.mapValues[flatMap[output].reject[suppressed].map['''«name.type.typeName» «varField»''']]
+        val sysStepTypeOutputs = sysStepTypes.mapValues[flatMap[allOutput].reject[suppressed].map['''«name.type.typeName» «varField»''']]
 
         return '''
             «FOR ti : typesImports»
@@ -159,6 +159,11 @@ class FromAbstractToConcrete extends AbstractGenerator {
 
     def private Iterable<Binding> getAllInput(AbstractStep step) {
         return step.contextData + step.inputData + step.SUTData
+    }
+
+    def private Iterable<Binding> getAllOutput(AbstractStep step) {
+        val sutvars = step.varID.map[name].toSet
+        return step.output.reject[name.isContext].reject[sutvars.contains(name.name)]
     }
 
     def private Iterable<URI> getTypesImports(Resource res) {

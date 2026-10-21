@@ -35,7 +35,7 @@ specification imaging
         case			default step-type "null" action-type COMPOSE
         with-inputs		ImagingRequest
         with-guard		ImagingRequest.cmd_type == ImageEnum::UNPREPARE
-        produces-outputs	Flow_1kpcqqf suppress
+        produces-outputs	Flow_1kpcqqf
         produces-outputs	AcquisitionReq symbolic-link
         updates:
             AcquisitionReq := AcqReq {
@@ -48,7 +48,7 @@ specification imaging
         case			default step-type "null" action-type COMPOSE
         with-inputs		ImagingRequest, EqStatus
         with-guard		ImagingRequest.cmd_type == ImageEnum::PREPARE AND EqStatus.temp_status == Status::ON
-        produces-outputs	Flow_0kkvgdv suppress
+        produces-outputs	Flow_0kkvgdv
         produces-outputs	AcquisitionReq symbolic-link
         updates:
             AcquisitionReq := AcqReq {
@@ -63,7 +63,7 @@ specification imaging
         element-label	"Wait for prepare"
         case			default
         with-inputs		Flow_0kkvgdv, AcqUpdate, EqStatus
-        produces-outputs	Gateway_102q82v suppress
+        produces-outputs	Gateway_102q82v
         updates:
             Gateway_102q82v := Flow_0kkvgdv
         produces-outputs	ImagingUpdate
@@ -79,7 +79,7 @@ specification imaging
         element-label	"Wait for Unprepare"
         case			default
         with-inputs		Flow_1kpcqqf, AcqUpdate, EqStatus
-        produces-outputs	Gateway_102q82v suppress
+        produces-outputs	Gateway_102q82v
         updates:
             Gateway_102q82v := Flow_1kpcqqf
         produces-outputs	ImagingUpdate
@@ -689,7 +689,7 @@ specification imaging
         case			default
         with-inputs		Flow_0678bm1, AcqUpdate, EqStatus
         with-guard		AcqUpdate.result == ResponseEnum::OK
-        produces-outputs	Gateway_16m9e4j suppress
+        produces-outputs	Gateway_16m9e4j
         updates:
             Gateway_16m9e4j := Flow_0678bm1
         produces-outputs	ImagingUpdate
@@ -717,7 +717,7 @@ specification imaging
             close-to 0.55
             }
         }
-        produces-outputs	Gateway_0qg69ul suppress
+        produces-outputs	Gateway_0qg69ul
         updates:
             Gateway_0qg69ul := Gateway_16m9e4j
         
@@ -726,7 +726,7 @@ specification imaging
         case			default
         with-inputs		Flow_1bajtwc, AcqUpdate, EqStatus
         with-guard		AcqUpdate.result == ResponseEnum::OK
-        produces-outputs	Gateway_0qg69ul suppress
+        produces-outputs	Gateway_0qg69ul
         updates:
             Gateway_0qg69ul := Flow_1bajtwc
         produces-outputs	ImagingUpdate
@@ -743,7 +743,7 @@ specification imaging
         case			default step-type "null" action-type COMPOSE
         with-inputs		ImagingRequest
         with-guard		ImagingRequest.cmd_type==ImageEnum::STOP
-        produces-outputs	Flow_0678bm1 suppress
+        produces-outputs	Flow_0678bm1
         produces-outputs	AcquisitionReq symbolic-link
         updates:
             AcquisitionReq := AcqReq {
@@ -756,7 +756,7 @@ specification imaging
         case			default step-type "null" action-type COMPOSE
         with-inputs		ImagingRequest, EqStatus
         with-guard		ImagingRequest.cmd_type == ImageEnum::START AND EqStatus.temp_status == Status::ON AND EqStatus.pump_status == Status::ON
-        produces-outputs	Flow_1bajtwc suppress
+        produces-outputs	Flow_1bajtwc
         produces-outputs	AcquisitionReq symbolic-link
         updates:
             AcquisitionReq := AcqReq {
@@ -786,7 +786,7 @@ specification imaging
             close-to 0.95
             }
         }
-        produces-outputs	Gateway_0qg69ul suppress
+        produces-outputs	Gateway_0qg69ul
         updates:
             Gateway_0qg69ul := Gateway_16m9e4j
     
@@ -821,7 +821,7 @@ specification imaging
         case			default step-type "null" action-type COMPOSE
         with-inputs		TempRequest, EqStatus
         with-guard		TempRequest.cmd_type == TempEnum::RESET AND EqStatus.acq_status == Status::UNPREPARING
-        produces-outputs	Gateway_1qk9wqe suppress
+        produces-outputs	Gateway_1qk9wqe
         produces-outputs	TempCMD symbolic-link
         updates:
             TempCMD := TempRequest
@@ -833,7 +833,7 @@ specification imaging
         element-label	"Execute Set Temp"
         case			default step-type "SetTemperature" action-type RUN
         with-inputs		Gateway_1qk9wqe, TempCMD, EqStatus
-        produces-outputs	Event_13ys7sy suppress
+        produces-outputs	Event_13ys7sy
         updates:
             Event_13ys7sy := Gateway_1qk9wqe
         produces-outputs	TempUpdate
@@ -856,7 +856,7 @@ specification imaging
         case			default step-type "null" action-type COMPOSE
         with-inputs		TempRequest
         with-guard		TempRequest.cmd_type == TempEnum::SET
-        produces-outputs	Gateway_1qk9wqe suppress
+        produces-outputs	Gateway_1qk9wqe
         produces-outputs	TempCMD symbolic-link
         updates:
             TempCMD := TempRequest
