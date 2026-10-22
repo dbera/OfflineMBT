@@ -18,8 +18,8 @@ import "http://www.esi.nl/xtext/expressions/Expression" as expr
 
 DataAssertions: {DataAssertions}
     'assertions' name = ID '{'
-        constr += DataAssertionItem+
-     '}'
+        constr += DataAssertionItem*
+    '}'
 ;
 
 DataAssertionItem:

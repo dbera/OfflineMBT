@@ -1,82 +1,106 @@
+@context
 record UNIT {
-	int	unit
+	@suppress int	unit
 }
-
-record AcqData {
-    int	id
-    @symbolic  real	contrast
-    @symbolic  real	resolution
-    @symbolic  real	signal_to_noise_ratio
-}
-
-record AcqReq {
-    ImageEnum	cmd_type
-    int	id
-}
-
-record AcqResp {
-    ResponseEnum	result
-    int	id
-}
-
-record CTX {
-    int	id
-}
-
-record EquipmentStatus {
-    Status	temp_status
-    Status	pump_status
-    Status	acq_status
-}
-
-enum ImageEnum { PREPARE START STOP UNPREPARE }
-
-enum ImageQuality { HIGH LOW NA }
 
 record ImgReq {
-    ImageEnum	cmd_type
-    int	id
-    ImageQuality	image_quality
-}
-
-record ImgResp {
-    ResponseEnum	result
-}
-
-record PumpReq {
-    VacuumEnum	cmd_type
-    int	id
+  ImageEnum cmd_type
+  int id
+  ImageQuality image_quality
 }
 
 record PumpResp {
-    ResponseEnum	result
+  ResponseEnum result
 }
 
-enum ResponseEnum { OK NOK }
+enum Status {
+  ON
+  OFF
+  PREPARING
+  UNPREPARING
+}
 
-enum Status { ON OFF PREPARING UNPREPARING }
+enum ResponseEnum {
+  OK
+  NOK
+}
 
-enum TempEnum { SET RESET }
+record ImgResp {
+  ResponseEnum result
+}
+
+record AcqResp {
+  ResponseEnum result
+  int id
+}
+
+record AcqData {
+  int id
+  @symbolic real contrast
+  @symbolic real resolution
+  @symbolic real signal_to_noise_ratio
+}
+
+@context
+record CTX {
+  int id
+}
+
+record PumpReq {
+  VacuumEnum cmd_type
+  int id
+}
+
+record EquipmentStatus {
+  Status temp_status
+  Status pump_status
+  Status acq_status
+}
 
 record TempReq {
-    TempEnum	cmd_type
-    int	id
+  TempEnum cmd_type
+  int id
 }
 
 record TempResp {
-    ResponseEnum	result
-    @symbolic  int	temp_val
-    int	reqid
+  ResponseEnum result
+  @symbolic int temp_val
+  int reqid
 }
 
-record VacReq {
-    VacuumEnum	cmd_type
-    int	id
+enum ImageEnum {
+  PREPARE
+  START
+  STOP
+  UNPREPARE
+}
+
+enum TempEnum {
+  SET
+  RESET
+}
+
+enum ImageQuality {
+  HIGH
+  LOW
+  NA
+}
+
+enum VacuumEnum {
+  ON
+  OFF
 }
 
 record VacResp {
-    ResponseEnum	result
+  ResponseEnum result
 }
 
-enum VacuumEnum { ON OFF }
+record VacReq {
+  VacuumEnum cmd_type
+  int id
+}
 
+record AcqReq {
+  ImageEnum cmd_type
+  int id
+}

@@ -1,30 +1,24 @@
-import "parameters/Root.params"
-
-Test-Purpose    "The purpose of this test is..."
-Background      "The background of this test is..."
+import "issue379.types"
 
 test-sequence from_abstract_to_concrete {
     test_single_sequence
 }
 
 step-sequence test_single_sequence {
-
 step-id    step_Root_Run_default_0
 step-type  RUN
-step-input RootInput
-ref-to-step-output
-    RootInput.data.id := 0
-    RootInput.data.nested.mix := "My Concrete Value"
-    RootInput.data.nested.symbol := "My Concrete Symbol"
-    RootInput.data.id := 1
-    RootInput.data.nested.mix := "My R2 Value"
-    RootInput.data.nested.symbol := "My R2 Symbol"
-    RootInput.data.nested.symbol := "My R3 Symbol"
-    RootInput.data.nested.symbol := "My R4 Symbol"
+step-context
+    step_Root_Run_default_0.input.ctx.id := 0
+    step_Root_Run_default_0.input.ctx.nested.mix := "My Init Value"
+    step_Root_Run_default_0.input.ctx.nested.symbol := "My Init Symbol"
+step-input
+    step_Root_Run_default_0.input.data.id := 0
+    step_Root_Run_default_0.input.data.id := 1
+    step_Root_Run_default_0.input.data.nested.mix := "My Concrete Value"
+    step_Root_Run_default_0.input.data.nested.symbol := "My Concrete Symbol"
+    step_Root_Run_default_0.input.data.nested.symbol := "My R3 Symbol"
+    step_Root_Run_default_0.input.data.nested.symbol := "My R4 Symbol"
+    step_Root_Run_default_0.input.data.nested := Nested{mix="My R2 Value",symbol="My R2 Symbol"}
 }
 
 generate-file "./dataset/"
-
-step-parameters
-RUN step_Root_Run_default_0
-

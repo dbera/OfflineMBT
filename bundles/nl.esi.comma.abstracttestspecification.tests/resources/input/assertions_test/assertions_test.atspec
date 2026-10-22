@@ -1,0 +1,666 @@
+import "assertions_test.ps"
+
+using assertions_test.AssertionsTestTest1Assert2.report_1_1_2
+using assertions_test.AssertionsTestTest1Assert2.Event_0kl62m8
+using assertions_test.AssertionsTestTest2Run3.params_2_3_1
+using assertions_test.AssertionsTestTest2Run3.Event_07uzt4k
+using assertions_test.AssertionsTestTest7Run1.variants
+using assertions_test.AssertionsTestTest7Run1.extContext
+using assertions_test.AssertionsTestTest7Run1.params_7_2
+using assertions_test.AssertionsTestTest7Run1.Event_0yxeb2y
+using assertions_test.AssertionsTestTest7Run1.Event_1y5r7sr
+using assertions_test.AssertionsTestTest7Run1.Flow_1kfq18j
+using assertions_test.AssertionsTestTest4.params_4_4
+using assertions_test.AssertionsTestTest4.params_4_3
+using assertions_test.AssertionsTestTest4.report_4_3
+using assertions_test.AssertionsTestTest4.Event_0f3gr38
+using assertions_test.AssertionsTestTest4.Event_0utv02f
+using assertions_test.AssertionsTestTest4.Flow_191w3xb
+using assertions_test.AssertionsTestTest4.Flow_03p9ysp
+using assertions_test.AssertionsTestTest4.Flow_1j45oji
+using assertions_test.AssertionsTestTest6Compose1.params_6_3_1
+using assertions_test.AssertionsTestTest6Compose1.Event_0hbwt0f
+using assertions_test.AssertionsTestTest6Compose1.Event_0fxo6k0
+using assertions_test.AssertionsTestTest6Assert2.history
+using assertions_test.AssertionsTestTest6Assert2.Event_1mb8mjz
+using assertions_test.AssertionsTestTest6Run3.Event_12gigiu
+using assertions_test.AssertionsTestTest8.report_8_1
+using assertions_test.AssertionsTestTest8.report_8_3
+using assertions_test.AssertionsTestTest8.Event_08zpj4q
+using assertions_test.AssertionsTestTest8.Event_16siryv
+using assertions_test.AssertionsTestTest8.Flow_03lr78p
+using assertions_test.AssertionsTestTest8.Flow_1qde61m
+using assertions_test.AssertionsTestTest8.Flow_0gq62tt
+using assertions_test.AssertionsTestTest1Run1.params_1_1_2
+using assertions_test.AssertionsTestTest1Run1.Event_0c9egwi
+using assertions_test.AssertionsTestTest1Run1.Event_1n6gfem
+using assertions_test.AssertionsTestTest1Run1.Flow_0nosmsl
+using assertions_test.AssertionsTestTest3Run1.report_3_1_2b
+using assertions_test.AssertionsTestTest3Run1.report_3_1_2a
+using assertions_test.AssertionsTestTest3Run1.params_3_1_2b
+using assertions_test.AssertionsTestTest3Run1.params_3_1_2a
+using assertions_test.AssertionsTestTest3Run1.Event_12g0zs1
+using assertions_test.AssertionsTestTest3Run1.Event_0b15ps9
+using assertions_test.AssertionsTestTest3Run1.Flow_12ficnm
+using assertions_test.AssertionsTestTest2ComposeAndAssert2.report_2_1_2
+using assertions_test.AssertionsTestTest2ComposeAndAssert2.params_2_2_2
+using assertions_test.AssertionsTestTest2ComposeAndAssert2.Event_1dlbjjh
+using assertions_test.AssertionsTestTest2ComposeAndAssert2.Flow_04tox9b
+using assertions_test.AssertionsTestTest5Run1.report_5_1_2
+using assertions_test.AssertionsTestTest5Run1.params_5_1_2
+using assertions_test.AssertionsTestTest5Run1.Event_16rld86
+using assertions_test.AssertionsTestTest5Run1.Event_1cztdmu
+using assertions_test.AssertionsTestTest5Run1.Flow_0f2471h
+using assertions_test.AssertionsTestTest2Run1.params_2_1_2
+using assertions_test.AssertionsTestTest2Run1.Event_0a8ipfe
+using assertions_test.AssertionsTestTest2Run1.Event_00f1jj9
+using assertions_test.AssertionsTestTest2Run1.Flow_1qkoyuz
+using assertions_test.AssertionsTestTest3Assert2.Event_0zgsfij
+using assertions_test.AssertionsTestTest5Run2.Event_0p6hosm
+
+abstract-test-definition
+
+Test-Scenario: S1
+
+run-step-name: AssertionsTestTest8_Run81_default_0 step-type: "Step_8_1"
+action-case: assertions_test.AssertionsTestTest8.Run81.default
+input-data:
+Event_08zpj4q : {
+    "hidden": 8,
+    "id": "Test 8"
+}
+output-data:
+Flow_03lr78p : {
+    "hidden": 8,
+    "id": "Test 8"
+}
+report_8_1 : {
+    "id": 8
+}
+
+assert-step-name: AssertionsTestTest8_Assert82_default_0 assert-type: "Assert_8_2"
+action-case: assertions_test.AssertionsTestTest8.Assert82.default
+consumes-from-step: AssertionsTestTest8_Run81_default_0 { report_8_1  }
+input-data:
+Flow_03lr78p : {
+    "hidden": 8,
+    "id": "Test 8"
+}
+report_8_1 : {
+    "id": 8
+}
+output-data:
+Flow_1qde61m : {
+    "hidden": 8,
+    "id": "Test 8"
+}
+report_8_1 : {
+    "id": 8
+}
+output-assertion: AssertionsTestTest8_Run81_default_0
+assertions_test.AssertionsTestTest8.Assert82.default.default
+
+run-step-name: AssertionsTestTest8_Run83_default_0 step-type: "Run_8_3"
+action-case: assertions_test.AssertionsTestTest8.Run83.default
+consumes-from-step: AssertionsTestTest8_Run81_default_0 { report_8_1  }
+input-data:
+Flow_1qde61m : {
+    "hidden": 8,
+    "id": "Test 8"
+}
+report_8_1 : {
+    "id": 8
+}
+output-data:
+Flow_0gq62tt : {
+    "hidden": 8,
+    "id": "Test 8"
+}
+report_8_3 : {
+    "id": 8
+}
+report_8_1 : {
+    "id": 8
+}
+
+assert-step-name: AssertionsTestTest8_Assert84_default_0 assert-type: "Assert_8_4"
+action-case: assertions_test.AssertionsTestTest8.Assert84.default
+consumes-from-step: AssertionsTestTest8_Run81_default_0 { report_8_1  }
+consumes-from-step: AssertionsTestTest8_Run83_default_0 { report_8_3  }
+input-data:
+Flow_0gq62tt : {
+    "hidden": 8,
+    "id": "Test 8"
+}
+report_8_1 : {
+    "id": 8
+}
+report_8_3 : {
+    "id": 8
+}
+output-data:
+Event_16siryv : {
+    "hidden": 8,
+    "id": "Test 8"
+}
+output-assertion: AssertionsTestTest8_Run83_default_0
+assertions_test.AssertionsTestTest8.Assert84.default.default
+
+compose-step-name: AssertionsTestTest7Run1_Compose71_default_0
+action-case: assertions_test.AssertionsTestTest7Run1.Compose71.default
+input-data:
+Event_0yxeb2y : {
+    "hidden": 0,
+    "id": "7"
+}
+output-data:
+Flow_1kfq18j : {
+    "hidden": 0,
+    "id": "7"
+}
+params_7_2 : {
+    "id": 7,
+    "param": "7_2"
+}
+
+run-step-name: AssertionsTestTest7Run1_Run72_default_0 step-type: "Run_7_2"
+action-case: assertions_test.AssertionsTestTest7Run1.Run72.default
+consumes-from-step: AssertionsTestTest7Run1_Compose71_default_0 { params_7_2  }
+input-data:
+Flow_1kfq18j : {
+    "hidden": 0,
+    "id": "7"
+}
+variants : {
+    "id": 7,
+    "param": "SUT_7"
+}
+params_7_2 : {
+    "id": 7,
+    "param": "7_2"
+}
+extContext : {
+    "id": 100,
+    "param": "Extra Context"
+}
+output-data:
+Event_1y5r7sr : {
+    "hidden": 0,
+    "id": "7"
+}
+variants : {
+    "id": 7,
+    "param": "SUT_7"
+}
+sut-var: { variants  }
+
+compose-step-name: AssertionsTestTest6Compose1_Compose611_default_0
+action-case: assertions_test.AssertionsTestTest6Compose1.Compose611.default
+input-data:
+Event_0hbwt0f : {
+    "hidden": 0,
+    "id": "Test 6a"
+}
+output-data:
+Event_0fxo6k0 : {
+    "hidden": 0,
+    "id": "Test 6a"
+}
+params_6_3_1 : {
+    "id": 6,
+    "param": "Test 6a"
+}
+
+assert-step-name: AssertionsTestTest6Assert2_Assert621_default_0 assert-type: "Assert_6_2_1"
+action-case: assertions_test.AssertionsTestTest6Assert2.Assert621.default
+consumes-from-step: AssertionsTestTest6Compose1_Compose611_default_0 { params_6_3_1  }
+input-data:
+params_6_3_1 : {
+    "id": 6,
+    "param": "Test 6a"
+}
+history : {
+    "ids": []
+}
+output-data:
+Event_1mb8mjz : {
+    "unit": 0
+}
+history : {
+    "ids": [
+        "Test 6a"
+    ]
+}
+params_6_3_1 : {
+    "id": 6,
+    "param": "Test 6a"
+}
+suppress(history)
+output-assertion: AssertionsTestTest6Compose1_Compose611_default_0
+assertions_test.AssertionsTestTest6Assert2.Assert621.default.default
+
+compose-step-name: AssertionsTestTest6Compose1_Compose611_default_1
+action-case: assertions_test.AssertionsTestTest6Compose1.Compose611.default
+input-data:
+Event_0hbwt0f : {
+    "hidden": 1,
+    "id": "Test 6b"
+}
+output-data:
+Event_0fxo6k0 : {
+    "hidden": 1,
+    "id": "Test 6b"
+}
+params_6_3_1 : {
+    "id": 6,
+    "param": "Test 6b"
+}
+
+assert-step-name: AssertionsTestTest6Assert2_Assert621_default_1 assert-type: "Assert_6_2_1"
+action-case: assertions_test.AssertionsTestTest6Assert2.Assert621.default
+consumes-from-step: AssertionsTestTest6Assert2_Assert621_default_0 { history  }
+consumes-from-step: AssertionsTestTest6Compose1_Compose611_default_1 { params_6_3_1  }
+input-data:
+params_6_3_1 : {
+    "id": 6,
+    "param": "Test 6b"
+}
+history : {
+    "ids": [
+        "Test 6a"
+    ]
+}
+output-data:
+Event_1mb8mjz : {
+    "unit": 0
+}
+history : {
+    "ids": [
+        "Test 6a",
+        "Test 6b"
+    ]
+}
+params_6_3_1 : {
+    "id": 6,
+    "param": "Test 6b"
+}
+suppress(history)
+output-assertion: AssertionsTestTest6Compose1_Compose611_default_1
+assertions_test.AssertionsTestTest6Assert2.Assert621.default.default
+
+run-step-name: AssertionsTestTest6Run3_Run631_default_0 step-type: "Run_6_3_1"
+action-case: assertions_test.AssertionsTestTest6Run3.Run631.default
+consumes-from-step: AssertionsTestTest6Compose1_Compose611_default_0 { params_6_3_1  }
+input-data:
+params_6_3_1 : {
+    "id": 6,
+    "param": "Test 6a"
+}
+output-data:
+Event_12gigiu : {
+    "unit": 0
+}
+
+run-step-name: AssertionsTestTest6Run3_Run631_default_1 step-type: "Run_6_3_1"
+action-case: assertions_test.AssertionsTestTest6Run3.Run631.default
+consumes-from-step: AssertionsTestTest6Compose1_Compose611_default_1 { params_6_3_1  }
+input-data:
+params_6_3_1 : {
+    "id": 6,
+    "param": "Test 6b"
+}
+output-data:
+Event_12gigiu : {
+    "unit": 0
+}
+
+compose-step-name: AssertionsTestTest5Run1_Compose511_default_0
+action-case: assertions_test.AssertionsTestTest5Run1.Compose511.default
+input-data:
+Event_16rld86 : {
+    "hidden": 0,
+    "id": "Test 5"
+}
+output-data:
+Flow_0f2471h : {
+    "hidden": 0,
+    "id": "Test 5"
+}
+params_5_1_2 : {
+    "id": 5,
+    "param": "5_1_2"
+}
+
+run-step-name: AssertionsTestTest5Run1_Run512_default_0 step-type: "Run_5_1_2"
+action-case: assertions_test.AssertionsTestTest5Run1.Run512.default
+consumes-from-step: AssertionsTestTest5Run1_Compose511_default_0 { params_5_1_2  }
+input-data:
+Flow_0f2471h : {
+    "hidden": 0,
+    "id": "Test 5"
+}
+params_5_1_2 : {
+    "id": 5,
+    "param": "5_1_2"
+}
+output-data:
+Event_1cztdmu : {
+    "hidden": 0,
+    "id": "Test 5"
+}
+report_5_1_2 : {
+    "id": 5
+}
+
+run-step-name: AssertionsTestTest5Run2_Run521_default_0 step-type: "Run_5_2_1"
+action-case: assertions_test.AssertionsTestTest5Run2.Run521.default
+consumes-from-step: AssertionsTestTest5Run1_Run512_default_0 { report_5_1_2  }
+input-data:
+report_5_1_2 : {
+    "id": 5
+}
+output-data:
+Event_0p6hosm : {
+    "unit": 0
+}
+
+compose-step-name: AssertionsTestTest4_Compose41_default_0
+action-case: assertions_test.AssertionsTestTest4.Compose41.default
+input-data:
+Event_0f3gr38 : {
+    "hidden": 0,
+    "id": "Test 4"
+}
+output-data:
+Flow_191w3xb : {
+    "hidden": 0,
+    "id": "Test 4"
+}
+params_4_3 : {
+    "id": 4,
+    "param": "4_3"
+}
+params_4_4 : {
+    "id": 4,
+    "param": "4_4"
+}
+suppress(params_4_4)
+
+assert-step-name: AssertionsTestTest4_Assert42_default_0 assert-type: "Assert_4_2"
+action-case: assertions_test.AssertionsTestTest4.Assert42.default
+consumes-from-step: AssertionsTestTest4_Compose41_default_0 { params_4_3  }
+input-data:
+Flow_191w3xb : {
+    "hidden": 0,
+    "id": "Test 4"
+}
+params_4_3 : {
+    "id": 4,
+    "param": "4_3"
+}
+output-data:
+Flow_03p9ysp : {
+    "hidden": 0,
+    "id": "Test 4"
+}
+params_4_3 : {
+    "id": 4,
+    "param": "4_3"
+}
+output-assertion: AssertionsTestTest4_Compose41_default_0
+assertions_test.AssertionsTestTest4.Assert42.default.default
+
+run-step-name: AssertionsTestTest4_Run43_default_0 step-type: "Run_4_3"
+action-case: assertions_test.AssertionsTestTest4.Run43.default
+consumes-from-step: AssertionsTestTest4_Compose41_default_0 { params_4_3  }
+input-data:
+Flow_03p9ysp : {
+    "hidden": 0,
+    "id": "Test 4"
+}
+params_4_3 : {
+    "id": 4,
+    "param": "4_3"
+}
+output-data:
+Flow_1j45oji : {
+    "hidden": 0,
+    "id": "Test 4"
+}
+report_4_3 : {
+    "id": 4
+}
+
+assert-step-name: AssertionsTestTest4_Assert44_default_0 assert-type: "Assert_4_4"
+action-case: assertions_test.AssertionsTestTest4.Assert44.default
+consumes-from-step: AssertionsTestTest4_Compose41_default_0 { params_4_4  }
+consumes-from-step: AssertionsTestTest4_Run43_default_0 { report_4_3  }
+input-data:
+Flow_1j45oji : {
+    "hidden": 0,
+    "id": "Test 4"
+}
+params_4_4 : {
+    "id": 4,
+    "param": "4_4"
+}
+report_4_3 : {
+    "id": 4
+}
+output-data:
+Event_0utv02f : {
+    "hidden": 0,
+    "id": "Test 4"
+}
+output-assertion: AssertionsTestTest4_Run43_default_0
+assertions_test.AssertionsTestTest4.Assert44.default.default
+
+compose-step-name: AssertionsTestTest3Run1_Compose311_default_0
+action-case: assertions_test.AssertionsTestTest3Run1.Compose311.default
+input-data:
+Event_12g0zs1 : {
+    "hidden": 0,
+    "id": "Test 3"
+}
+output-data:
+Flow_12ficnm : {
+    "hidden": 0,
+    "id": "Test 3"
+}
+params_3_1_2a : {
+    "id": 0,
+    "param": "3_1_2a"
+}
+params_3_1_2b : {
+    "id": 0,
+    "param": "3_1_2b"
+}
+
+run-step-name: AssertionsTestTest3Run1_Run312_default_0 step-type: "Run_3_1_2"
+action-case: assertions_test.AssertionsTestTest3Run1.Run312.default
+consumes-from-step: AssertionsTestTest3Run1_Compose311_default_0 { params_3_1_2a params_3_1_2b  }
+input-data:
+Flow_12ficnm : {
+    "hidden": 0,
+    "id": "Test 3"
+}
+params_3_1_2a : {
+    "id": 0,
+    "param": "3_1_2a"
+}
+params_3_1_2b : {
+    "id": 0,
+    "param": "3_1_2b"
+}
+output-data:
+Event_0b15ps9 : {
+    "hidden": 0,
+    "id": "Test 3"
+}
+report_3_1_2a : {
+    "id": 0
+}
+report_3_1_2b : {
+    "id": 0
+}
+
+assert-step-name: AssertionsTestTest3Assert2_Assert321_default_0 assert-type: "Assert_3_2_1"
+action-case: assertions_test.AssertionsTestTest3Assert2.Assert321.default
+consumes-from-step: AssertionsTestTest3Run1_Run312_default_0 { report_3_1_2a report_3_1_2b  }
+input-data:
+report_3_1_2a : {
+    "id": 0
+}
+report_3_1_2b : {
+    "id": 0
+}
+output-data:
+Event_0zgsfij : {
+    "unit": 0
+}
+output-assertion: AssertionsTestTest3Run1_Run312_default_0
+assertions_test.AssertionsTestTest3Assert2.Assert321.default.default
+
+compose-step-name: AssertionsTestTest2Run1_Compose211_default_0
+action-case: assertions_test.AssertionsTestTest2Run1.Compose211.default
+input-data:
+Event_0a8ipfe : {
+    "hidden": 0,
+    "id": "Test 2"
+}
+output-data:
+Flow_1qkoyuz : {
+    "hidden": 0,
+    "id": "Test 2"
+}
+params_2_1_2 : {
+    "id": 2,
+    "param": "2_1_2"
+}
+
+run-step-name: AssertionsTestTest2Run1_Run212_default_0 step-type: "Run_2_1_2"
+action-case: assertions_test.AssertionsTestTest2Run1.Run212.default
+consumes-from-step: AssertionsTestTest2Run1_Compose211_default_0 { params_2_1_2  }
+input-data:
+Flow_1qkoyuz : {
+    "hidden": 0,
+    "id": "Test 2"
+}
+params_2_1_2 : {
+    "id": 2,
+    "param": "2_1_2"
+}
+output-data:
+Event_00f1jj9 : {
+    "hidden": 0,
+    "id": "Test 2"
+}
+report_2_1_2 : {
+    "id": 2
+}
+
+compose-step-name: AssertionsTestTest2ComposeAndAssert2_Compose221_default_0
+action-case: assertions_test.AssertionsTestTest2ComposeAndAssert2.Compose221.default
+consumes-from-step: AssertionsTestTest2Run1_Run212_default_0 { report_2_1_2  }
+input-data:
+report_2_1_2 : {
+    "id": 2
+}
+output-data:
+Flow_04tox9b : {
+    "unit": 0
+}
+params_2_2_2 : {
+    "id": 2
+}
+data-references: params_2_2_2
+assertions_test.AssertionsTestTest2ComposeAndAssert2.Compose221.default.result
+
+assert-step-name: AssertionsTestTest2ComposeAndAssert2_Assert222_default_0 assert-type: "Assert_2_2_2"
+action-case: assertions_test.AssertionsTestTest2ComposeAndAssert2.Assert222.default
+consumes-from-step: AssertionsTestTest2ComposeAndAssert2_Compose221_default_0 { params_2_2_2  }
+input-data:
+Flow_04tox9b : {
+    "unit": 0
+}
+params_2_2_2 : {
+    "id": 2
+}
+output-data:
+Event_1dlbjjh : {
+    "unit": 0
+}
+params_2_3_1 : {
+    "id": 2
+}
+data-references: params_2_3_1
+assertions_test.AssertionsTestTest2ComposeAndAssert2.Assert222.default.result
+output-assertion: AssertionsTestTest2ComposeAndAssert2_Compose221_default_0
+assertions_test.AssertionsTestTest2ComposeAndAssert2.Assert222.default.default
+
+run-step-name: AssertionsTestTest2Run3_Run231_default_0 step-type: "Run_2_3_1"
+action-case: assertions_test.AssertionsTestTest2Run3.Run231.default
+consumes-from-step: AssertionsTestTest2ComposeAndAssert2_Assert222_default_0 { params_2_3_1  }
+input-data:
+params_2_3_1 : {
+    "id": 2
+}
+output-data:
+Event_07uzt4k : {
+    "unit": 0
+}
+
+compose-step-name: AssertionsTestTest1Run1_Compose111_default_0
+action-case: assertions_test.AssertionsTestTest1Run1.Compose111.default
+input-data:
+Event_0c9egwi : {
+    "hidden": 0,
+    "id": "Test 1"
+}
+output-data:
+Flow_0nosmsl : {
+    "hidden": 0,
+    "id": "Test 1"
+}
+params_1_1_2 : {
+    "id": 1,
+    "param": "Test 1"
+}
+
+run-step-name: AssertionsTestTest1Run1_Run112_default_0 step-type: "Run_1_1_2"
+action-case: assertions_test.AssertionsTestTest1Run1.Run112.default
+consumes-from-step: AssertionsTestTest1Run1_Compose111_default_0 { params_1_1_2  }
+input-data:
+Flow_0nosmsl : {
+    "hidden": 0,
+    "id": "Test 1"
+}
+params_1_1_2 : {
+    "id": 1,
+    "param": "Test 1"
+}
+output-data:
+Event_1n6gfem : {
+    "hidden": 0,
+    "id": "Test 1"
+}
+report_1_1_2 : {
+    "id": 1
+}
+
+assert-step-name: AssertionsTestTest1Assert2_Assert121_default_0 assert-type: "Assert_1_2_1"
+action-case: assertions_test.AssertionsTestTest1Assert2.Assert121.default
+consumes-from-step: AssertionsTestTest1Run1_Run112_default_0 { report_1_1_2  }
+input-data:
+report_1_1_2 : {
+    "id": 1
+}
+output-data:
+Event_0kl62m8 : {
+    "unit": 0
+}
+output-assertion: AssertionsTestTest1Run1_Run112_default_0
+assertions_test.AssertionsTestTest1Assert2.Assert121.default.default
+
+generate-file "./dataset/"
+

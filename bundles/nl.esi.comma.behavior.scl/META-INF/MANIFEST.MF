@@ -29,5 +29,6 @@ Export-Package: nl.esi.comma.behavior.scl,
  nl.esi.comma.behavior.scl.parser.antlr.internal,
  nl.esi.comma.behavior.scl.scl.impl,
  nl.esi.comma.behavior.scl.scl,
- nl.esi.comma.behavior.scl.scl.util
+ nl.esi.comma.behavior.scl.scl.util,
+ nl.esi.comma.behavior.scl.formatting2
 Import-Package: org.apache.log4j

@@ -12,6 +12,8 @@ specification issue367
         Input	d4
         Report	d2
         Report	d3
+    
+        context
         UNIT	Event_052akh2
         UNIT	Event_07r9aer
         UNIT	Flow_01xqgnw
@@ -29,7 +31,7 @@ specification issue367
         element-label	"T1"
         case			default step-type "Dummy" action-type COMPOSE
         with-inputs		Event_052akh2
-        produces-outputs	Flow_01xqgnw suppress
+        produces-outputs	Flow_01xqgnw
         updates:
             Flow_01xqgnw := Event_052akh2
         produces-outputs	d1 symbolic-link
@@ -43,7 +45,7 @@ specification issue367
         element-label	"T5"
         case			default step-type "Dummy" action-type RUN
         with-inputs		Flow_1jw2qfx, d4
-        produces-outputs	Event_07r9aer suppress
+        produces-outputs	Event_07r9aer
         updates:
             Event_07r9aer := Flow_1jw2qfx
         
@@ -51,7 +53,7 @@ specification issue367
         element-label	"T4"
         case			default step-type "Dummy" action-type COMPOSE
         with-inputs		Flow_1u9fpei, d3
-        produces-outputs	Flow_1jw2qfx suppress
+        produces-outputs	Flow_1jw2qfx
         updates:
             Flow_1jw2qfx := Flow_1u9fpei
         produces-outputs	d4
@@ -65,7 +67,7 @@ specification issue367
         element-label	"T2"
         case			default step-type "Dummy" action-type RUN
         with-inputs		Flow_01xqgnw, d1
-        produces-outputs	Flow_12ridhf suppress
+        produces-outputs	Flow_12ridhf
         updates:
             Flow_12ridhf := Flow_01xqgnw
         produces-outputs	d2 symbolic-link
@@ -76,7 +78,7 @@ specification issue367
         element-label	"T3"
         case			default step-type "Dummy" action-type COMPOSE
         with-inputs		Flow_12ridhf, d2
-        produces-outputs	Flow_1u9fpei suppress
+        produces-outputs	Flow_1u9fpei
         updates:
             Flow_1u9fpei := Flow_12ridhf
         produces-outputs	d3

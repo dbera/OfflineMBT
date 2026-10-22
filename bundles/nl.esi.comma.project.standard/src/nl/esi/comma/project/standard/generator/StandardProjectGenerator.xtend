@@ -27,6 +27,8 @@ import nl.esi.comma.project.standard.standardProject.OfflineGenerationTarget
 import nl.esi.comma.project.standard.standardProject.Project
 import nl.esi.comma.project.standard.standardProject.TargetConfig
 import nl.esi.comma.testspecification.generator.utils.MergeConcreteDataAssigments
+import nl.esi.comma.testspecification.testspecification.AssertionStep
+import nl.esi.comma.testspecification.testspecification.TSMain
 import nl.esi.xtext.common.lang.reporting.IStatusReporting
 import nl.esi.xtext.common.lang.reporting.StatusReportHelper
 import nl.esi.xtext.common.lang.utilities.EcoreUtil3
@@ -38,12 +40,12 @@ import org.eclipse.xtext.generator.IGeneratorContext
 
 import static nl.esi.comma.project.standard.generator.^extension.IStandardProjectGeneratorExtension.*
 
+import static extension nl.esi.comma.testspecification.generator.utils.Utils.*
 import static extension nl.esi.xtext.common.lang.generator.FileSystemAccessUtil.*
 import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
 import static extension org.eclipse.emf.ecore.util.EcoreUtil.*
-import static extension org.eclipse.xtext.EcoreUtil2.*
-
 import static extension org.eclipse.lsat.common.xtend.Queries.*
+import static extension org.eclipse.xtext.EcoreUtil2.*
 
 /**
  * Generates code from your model files on save.
@@ -117,7 +119,7 @@ class StandardProjectGenerator extends AbstractGenerator {
             // Validate the generated abstract tspec, stop this transformation on error
             if (absTspecRes.validate) {
                 // Generate concrete tspec
-                val conTspecFsa = fsa.createFolderAccess(FOLDER_CONCRETE_TSPEC + '/' + tspecName)
+                val conTspecFsa = fsa.createFolderAccess(FOLDER_CONCRETE_TSPEC)
                 val fromAbstractToConcreteGen = new FromAbstractToConcrete()
                 fromAbstractToConcreteGen.doGenerate(absTspecRes, conTspecFsa, ctx)
 
@@ -126,6 +128,10 @@ class StandardProjectGenerator extends AbstractGenerator {
                 // Only apply concrete tspec post-processing if resource doesn't contain errors
                 if (conTspecRes.errors.isEmpty) {
                     MergeConcreteDataAssigments.transform(conTspecRes)
+                    // Do we always want to evaluate these expressions or do we just want to provide the utility
+                    // such that test-implementation specific transformations can easily use this?
+                    conTspecRes.contents.filter(TSMain).flatMap[model.stepSeq]
+                        .flatMap[step].filter(AssertionStep).forEach[evaluateAssertions]
                     conTspecRes.trySave
                 }
                 // Validate the generated concrete tspec, stop this transformation on error

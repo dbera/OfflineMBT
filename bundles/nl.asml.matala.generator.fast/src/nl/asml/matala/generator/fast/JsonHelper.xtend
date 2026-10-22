@@ -98,7 +98,7 @@ class JsonHelper {
                         default: throw new RuntimeException("Not supported")
                     }
                 }
-                default: throw new RuntimeException("Not supported")
+                default: throw new RuntimeException("Not supported: " + expr?.eClass?.name)
             }
         }
         if (elem instanceof JsonArray)  return jsonElement(elem as JsonArray)

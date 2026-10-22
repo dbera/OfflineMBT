@@ -2,23 +2,23 @@ record UNIT {
 	int	unit
 }
 
-record ProdCons1 {
-    string	part1
-    int	id
-}
-
-record ProdCons2 {
-    string	part2
-    int	id
-}
-
+@context
 record ProdCtx {
-    string	prod_field
-    int	id
-    bool	loop
+  string prod_field
+  @suppress int id
+  @suppress bool loop
+}
+
+record ProdCons1 {
+  string part1
+  @suppress int id
 }
 
 record ProdReport {
-    int	id
+  int id
 }
 
+record ProdCons2 {
+  string part2
+  @suppress int id
+}

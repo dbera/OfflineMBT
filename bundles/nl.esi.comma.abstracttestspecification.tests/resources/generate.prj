@@ -12,6 +12,12 @@
  */
 Project bpmn4s2pspec {
 	Generate Tests {
+		assertions_test {
+			bpmn-file "input/assertions_test/assertions_test.bpmn"
+			prefix-tests "assertions_test_"
+		}
+	}
+	Generate Tests {
 		imaging {
 			product-file "input/imaging/imaging.ps"
 			prefix-tests "imaging_"

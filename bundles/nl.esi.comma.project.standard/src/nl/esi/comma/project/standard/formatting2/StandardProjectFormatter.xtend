@@ -15,12 +15,13 @@
  */
 package nl.esi.comma.project.standard.formatting2
 
-import com.google.inject.Inject
-import nl.esi.comma.project.standard.services.StandardProjectGrammarAccess
+import nl.esi.xtext.common.lang.base.ModelContainer
 import nl.esi.xtext.types.formatting2.TypesFormatter
+import org.eclipse.xtext.formatting2.IFormattableDocument
 
 class StandardProjectFormatter extends TypesFormatter {
-	
-	@Inject extension StandardProjectGrammarAccess
-	
+    // !!! REMOVING THIS METHOD WILL CAUSE FORMATTING NOT TO WORK !!!
+    override dispatch void format(ModelContainer modelContainer, IFormattableDocument document) {
+        modelContainer.formatContents(document)
+    }
 }

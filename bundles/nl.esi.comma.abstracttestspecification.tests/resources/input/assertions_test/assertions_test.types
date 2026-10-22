@@ -1,0 +1,33 @@
+record UNIT {
+	int	unit
+}
+
+record SymbolicParams {
+  int id
+  @symbolic string param
+}
+
+record History {
+  string[] ids
+}
+
+@context
+record TestContext {
+  string id
+  @suppress int hidden
+}
+
+record Report {
+  int id
+  @symbolic string result
+}
+
+record Variant {
+  @suppress int id
+  string param
+}
+
+record ConcreteParams {
+  int id
+  string param
+}

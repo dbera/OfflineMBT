@@ -1,0 +1,763 @@
+import "assertions_test.types"
+specification assertions_test
+{
+    system AssertionsTestTest1Assert2
+    {
+        inputs
+        Report	report_1_1_2
+        
+        // outputs
+    
+        // local
+    
+        context
+        UNIT	Event_0kl62m8
+    
+        // init
+    
+    
+        desc "AssertionsTestTest 1Assert 2_Model"
+        
+        action			Assert121
+        element-label	"Assert 1:2:1"
+        case			default priority 100 step-type "Assert_1_2_1" action-type ASSERT
+        with-inputs		report_1_1_2
+        assertions default {
+            report_id: assert-that (report_1_1_2.id) {
+              equal-to 1
+            }
+            report_result: assert-that (report_1_1_2.result) {
+              match-regex "\\w+"
+            }
+        }
+        produces-outputs	Event_0kl62m8
+    
+        element-labels ["AssertionsTest", "Test 1", "Assert 2"]
+    }
+    
+    system AssertionsTestTest2Run3
+    {
+        inputs
+        SymbolicParams	params_2_3_1
+        
+        // outputs
+    
+        // local
+    
+        context
+        UNIT	Event_07uzt4k
+    
+        // init
+    
+    
+        desc "AssertionsTestTest 2Run 3_Model"
+        
+        action			Run231
+        element-label	"Run 2:3:1"
+        case			default priority 100 step-type "Run_2_3_1" action-type RUN
+        with-inputs		params_2_3_1
+        produces-outputs	Event_07uzt4k
+    
+        element-labels ["AssertionsTest", "Test 2", "Run 3"]
+    }
+    
+    system AssertionsTestTest7Run1
+    {
+        inputs
+        Variant	variants
+        
+        outputs
+        Variant	variants
+    
+        local
+        ConcreteParams	extContext
+        ConcreteParams	params_7_2
+    
+        context ctx
+        TestContext	Event_0yxeb2y
+        TestContext	Event_1y5r7sr
+        TestContext	Flow_1kfq18j
+    
+        init
+        Event_0yxeb2y := TestContext {
+         id = "7",
+         hidden = 0
+        }
+        extContext := ConcreteParams {
+         id = 100,
+         param = "Extra Context"
+        }
+        variants := Variant {
+         id = 7,
+         param = "SUT_7"
+        }
+        variants := Variant {
+         id = 8,
+         param = "SUT_8"
+        }
+    
+        suts variants
+    
+        desc "AssertionsTestTest 7Run 1_Model"
+        
+        action			Compose71
+        element-label	"Compose 7:1"
+        case			default priority 7 step-type "null" action-type COMPOSE
+        with-inputs		Event_0yxeb2y
+        with-guard		true
+        produces-outputs	Flow_1kfq18j
+        updates:
+            Flow_1kfq18j := Event_0yxeb2y
+        produces-outputs	params_7_2 symbolic-link
+        updates:
+            params_7_2 := ConcreteParams {
+             id = 7,
+             param = "7_2"
+            }
+        
+        action			Run72
+        element-label	"Run 7:2"
+        case			default priority 7 step-type "Run_7_2" action-type RUN
+        with-inputs		Flow_1kfq18j, variants, params_7_2, extContext
+        with-guard		toString(variants.id) == Flow_1kfq18j.id
+        produces-outputs	Event_1y5r7sr
+        updates:
+            Event_1y5r7sr := Flow_1kfq18j
+        produces-outputs	variants
+        updates:
+            variants := variants
+    
+        element-labels ["AssertionsTest", "Test 7", "Run 1"]
+    }
+    
+    system AssertionsTestTest4
+    {
+        // inputs
+        
+        // outputs
+    
+        local
+        ConcreteParams	params_4_4
+        ConcreteParams	params_4_3
+        Report	report_4_3
+    
+        context ctx
+        TestContext	Event_0f3gr38
+        TestContext	Event_0utv02f
+        TestContext	Flow_191w3xb
+        TestContext	Flow_03p9ysp
+        TestContext	Flow_1j45oji
+    
+        init
+        Event_0f3gr38 := TestContext {
+         id = "Test 4",
+         hidden = 0
+        }
+    
+    
+        desc "AssertionsTestTest 4_Model"
+        
+        action			Assert42
+        element-label	"Assert 4:2"
+        case			default priority 4 step-type "Assert_4_2" action-type ASSERT
+        with-inputs		Flow_191w3xb, params_4_3
+        assertions default {
+            report_id: assert-that (params_4_3.id) {
+              equal-to 4
+            }
+        }
+        produces-outputs	Flow_03p9ysp
+        updates:
+            Flow_03p9ysp := Flow_191w3xb
+        produces-outputs	params_4_3
+        updates:
+            params_4_3 := params_4_3
+        
+        action			Run43
+        element-label	"Run 4:3"
+        case			default priority 4 step-type "Run_4_3" action-type RUN
+        with-inputs		Flow_03p9ysp, params_4_3
+        produces-outputs	Flow_1j45oji
+        updates:
+            Flow_1j45oji := Flow_03p9ysp
+        produces-outputs	report_4_3 symbolic-link
+        updates:
+            report_4_3 := Report { id = params_4_3.id }
+        
+        action			Compose41
+        element-label	"Compose 4:1"
+        case			default priority 4 step-type "null" action-type COMPOSE
+        with-inputs		Event_0f3gr38
+        with-guard		true
+        produces-outputs	Flow_191w3xb
+        updates:
+            Flow_191w3xb := Event_0f3gr38
+        produces-outputs	params_4_3 symbolic-link
+        updates:
+            params_4_3 := ConcreteParams {
+             id = 4,
+             param = "4_3"
+            }
+        produces-outputs	params_4_4 symbolic-link suppress
+        updates:
+            params_4_4 := ConcreteParams {
+             id = 4,
+             param = "4_4"
+            }
+        
+        action			Assert44
+        element-label	"Assert 4:4"
+        case			default priority 4 step-type "Assert_4_4" action-type ASSERT
+        with-inputs		Flow_1j45oji, params_4_4, report_4_3
+        assertions default {
+            report_result: assert-that (report_4_3.result) {
+              match-regex "\\w+"
+            }
+        }
+        produces-outputs	Event_0utv02f
+        updates:
+            Event_0utv02f := Flow_1j45oji
+    
+        element-labels ["AssertionsTest", "Test 4"]
+    }
+    
+    system AssertionsTestTest6Compose1
+    {
+        // inputs
+        
+        outputs
+        ConcreteParams	params_6_3_1
+    
+        // local
+    
+        context ctx
+        TestContext	Event_0hbwt0f
+        TestContext	Event_0fxo6k0
+    
+        init
+        Event_0hbwt0f := TestContext {
+         id = "Test 6a",
+         hidden = 0
+        }
+        Event_0hbwt0f := TestContext {
+         id = "Test 6b",
+         hidden = 1
+        }
+    
+    
+        desc "AssertionsTestTest 6Compose 1_Model"
+        
+        action			Compose611
+        element-label	"Compose 6:1:1"
+        case			default priority 6 step-type "null" action-type COMPOSE
+        with-inputs		Event_0hbwt0f
+        with-guard		true
+        produces-outputs	Event_0fxo6k0
+        updates:
+            Event_0fxo6k0 := Event_0hbwt0f
+        produces-outputs	params_6_3_1 symbolic-link
+        updates:
+            params_6_3_1 := ConcreteParams {
+             id = 6,
+             param = Event_0hbwt0f.id
+            }
+    
+        element-labels ["AssertionsTest", "Test 6", "Compose 1"]
+    }
+    
+    system AssertionsTestTest6Assert2
+    {
+        inputs
+        ConcreteParams	params_6_3_1
+        
+        outputs
+        ConcreteParams	params_6_3_1
+    
+        local
+        History	history
+    
+        context
+        UNIT	Event_1mb8mjz
+    
+        init
+        history := History { ids = <string[]>[] }
+    
+    
+        desc "AssertionsTestTest 6Assert 2_Model"
+        
+        action			Assert621
+        element-label	"Assert 6:2:1"
+        case			default priority 100 step-type "Assert_6_2_1" action-type ASSERT
+        with-inputs		params_6_3_1, history
+        with-guard		not contains(history.ids, params_6_3_1.param)
+        assertions default {
+            id: assert-that(params_6_3_1.id) {
+              equal-to 6
+            }
+        }
+        produces-outputs	Event_1mb8mjz
+        produces-outputs	history symbolic-link suppress
+        updates:
+            history := History { 
+              ids = add(history.ids, params_6_3_1.param)
+            }
+        produces-outputs	params_6_3_1
+        updates:
+            params_6_3_1 := params_6_3_1
+    
+        element-labels ["AssertionsTest", "Test 6", "Assert 2"]
+    }
+    
+    system AssertionsTestTest6Run3
+    {
+        inputs
+        ConcreteParams	params_6_3_1
+        
+        // outputs
+    
+        // local
+    
+        context
+        UNIT	Event_12gigiu
+    
+        // init
+    
+    
+        desc "AssertionsTestTest 6Run 3_Model"
+        
+        action			Run631
+        element-label	"Run 6:3:1"
+        case			default priority 6 step-type "Run_6_3_1" action-type RUN
+        with-inputs		params_6_3_1
+        produces-outputs	Event_12gigiu
+    
+        element-labels ["AssertionsTest", "Test 6", "Run 3"]
+    }
+    
+    system AssertionsTestTest8
+    {
+        // inputs
+        
+        // outputs
+    
+        local
+        Report	report_8_1
+        Report	report_8_3
+    
+        context ctx
+        TestContext	Event_08zpj4q
+        TestContext	Event_16siryv
+        TestContext	Flow_03lr78p
+        TestContext	Flow_1qde61m
+        TestContext	Flow_0gq62tt
+    
+        init
+        Event_08zpj4q := TestContext {
+         id = "Test 8",
+         hidden = 8
+        }
+    
+    
+        desc "AssertionsTestTest 8_Model"
+        
+        action			Assert84
+        element-label	"Assert 8:4"
+        case			default priority 8 step-type "Assert_8_4" action-type ASSERT
+        with-inputs		Flow_0gq62tt, report_8_1, report_8_3
+        assertions default {
+            result: assert-that (report_8_1.result) {
+              equal-to report_8_3.result
+            }
+        }
+        produces-outputs	Event_16siryv
+        updates:
+            Event_16siryv := Flow_0gq62tt
+        
+        action			Run81
+        element-label	"Run 8:1"
+        case			default priority 8 step-type "Step_8_1" action-type RUN
+        with-inputs		Event_08zpj4q
+        with-guard		true
+        produces-outputs	Flow_03lr78p
+        updates:
+            Flow_03lr78p := Event_08zpj4q
+        produces-outputs	report_8_1 symbolic-link
+        updates:
+            report_8_1 := Report { id = 8 }
+        
+        action			Run83
+        element-label	"Run 8:3"
+        case			default priority 8 step-type "Run_8_3" action-type RUN
+        with-inputs		Flow_1qde61m, report_8_1
+        produces-outputs	Flow_0gq62tt
+        updates:
+            Flow_0gq62tt := Flow_1qde61m
+        produces-outputs	report_8_3 symbolic-link
+        updates:
+            report_8_3 := Report { id = 8 }
+        produces-outputs	report_8_1
+        updates:
+            report_8_1 := report_8_1
+        
+        action			Assert82
+        element-label	"Assert 8:2"
+        case			default priority 8 step-type "Assert_8_2" action-type ASSERT
+        with-inputs		Flow_03lr78p, report_8_1
+        assertions default {
+            result: assert-that (report_8_1.result) {
+              equal-to "Test 8"
+            }
+        }
+        produces-outputs	Flow_1qde61m
+        updates:
+            Flow_1qde61m := Flow_03lr78p
+        produces-outputs	report_8_1
+        updates:
+            report_8_1 := report_8_1
+    
+        element-labels ["AssertionsTest", "Test 8"]
+    }
+    
+    system AssertionsTestTest1Run1
+    {
+        // inputs
+        
+        outputs
+        Report	report_1_1_2
+    
+        local
+        ConcreteParams	params_1_1_2
+    
+        context ctx
+        TestContext	Event_0c9egwi
+        TestContext	Event_1n6gfem
+        TestContext	Flow_0nosmsl
+    
+        init
+        Event_0c9egwi := TestContext {
+         id = "Test 1",
+         hidden = 0
+        }
+    
+    
+        desc "AssertionsTestTest 1Run 1_Model"
+        
+        action			Run112
+        element-label	"Run 1:1:2"
+        case			default priority 1 step-type "Run_1_1_2" action-type RUN
+        with-inputs		Flow_0nosmsl, params_1_1_2
+        produces-outputs	Event_1n6gfem
+        updates:
+            Event_1n6gfem := Flow_0nosmsl
+        produces-outputs	report_1_1_2 symbolic-link
+        updates:
+            report_1_1_2 := Report { id = params_1_1_2.id }
+        
+        action			Compose111
+        element-label	"Compose 1:1:1"
+        case			default priority 1 step-type "null" action-type COMPOSE
+        with-inputs		Event_0c9egwi
+        with-guard		true
+        produces-outputs	Flow_0nosmsl
+        updates:
+            Flow_0nosmsl := Event_0c9egwi
+        produces-outputs	params_1_1_2 symbolic-link
+        updates:
+            params_1_1_2 := ConcreteParams {
+             id = 1,
+             param = Event_0c9egwi.id
+            }
+    
+        element-labels ["AssertionsTest", "Test 1", "Run 1"]
+    }
+    
+    system AssertionsTestTest3Run1
+    {
+        // inputs
+        
+        outputs
+        Report	report_3_1_2b
+        Report	report_3_1_2a
+    
+        local
+        ConcreteParams	params_3_1_2b
+        ConcreteParams	params_3_1_2a
+    
+        context ctx
+        TestContext	Event_12g0zs1
+        TestContext	Event_0b15ps9
+        TestContext	Flow_12ficnm
+    
+        init
+        Event_12g0zs1 := TestContext {
+         id = "Test 3",
+         hidden = 0
+        }
+    
+    
+        desc "AssertionsTestTest 3Run 1_Model"
+        
+        action			Compose311
+        element-label	"Compose 3:1:1"
+        case			default priority 3 step-type "null" action-type COMPOSE
+        with-inputs		Event_12g0zs1
+        with-guard		true
+        produces-outputs	Flow_12ficnm
+        updates:
+            Flow_12ficnm := Event_12g0zs1
+        produces-outputs	params_3_1_2a symbolic-link
+        updates:
+            params_3_1_2a := ConcreteParams {
+             id = 0,
+             param = "3_1_2a"
+            }
+        produces-outputs	params_3_1_2b symbolic-link
+        updates:
+            params_3_1_2b := ConcreteParams {
+             id = 0,
+             param = "3_1_2b"
+            }
+        
+        action			Run312
+        element-label	"Run 3:1:2"
+        case			default priority 3 step-type "Run_3_1_2" action-type RUN
+        with-inputs		Flow_12ficnm, params_3_1_2a, params_3_1_2b
+        produces-outputs	Event_0b15ps9
+        updates:
+            Event_0b15ps9 := Flow_12ficnm
+        produces-outputs	report_3_1_2a symbolic-link
+        updates:
+            report_3_1_2a := Report { id = params_3_1_2a.id }
+        produces-outputs	report_3_1_2b symbolic-link
+        updates:
+            report_3_1_2b := Report { id = params_3_1_2b.id }
+    
+        element-labels ["AssertionsTest", "Test 3", "Run 1"]
+    }
+    
+    system AssertionsTestTest2ComposeAndAssert2
+    {
+        inputs
+        Report	report_2_1_2
+        
+        outputs
+        SymbolicParams	params_2_3_1
+    
+        local
+        SymbolicParams	params_2_2_2
+    
+        context
+        UNIT	Event_1dlbjjh
+        UNIT	Flow_04tox9b
+    
+        // init
+    
+    
+        desc "AssertionsTestTest 2Compose And Assert 2_Model"
+        
+        action			Compose221
+        element-label	"Compose 2:2:1"
+        case			default priority 2 step-type "null" action-type COMPOSE
+        with-inputs		report_2_1_2
+        produces-outputs	Flow_04tox9b
+        produces-outputs	params_2_2_2
+        references {
+            result: params_2_2_2.param := report_2_1_2.result
+        } symbolic-link
+        updates:
+            params_2_2_2 := SymbolicParams { id = report_2_1_2.id }
+        
+        action			Assert222
+        element-label	"Assert 2:2:2"
+        case			default priority 2 step-type "Assert_2_2_2" action-type ASSERT
+        with-inputs		Flow_04tox9b, params_2_2_2
+        assertions default {
+            result: assert-that (params_2_2_2.param) {
+              equal-to params_2_2_2.param
+            }
+        }
+        produces-outputs	Event_1dlbjjh
+        updates:
+            Event_1dlbjjh := Flow_04tox9b
+        produces-outputs	params_2_3_1
+        references {
+            result: params_2_3_1.param := params_2_2_2.param
+        } symbolic-link
+        updates:
+            params_2_3_1 := SymbolicParams { id = params_2_2_2.id }
+    
+        element-labels ["AssertionsTest", "Test 2", "Compose And Assert 2"]
+    }
+    
+    system AssertionsTestTest5Run1
+    {
+        // inputs
+        
+        outputs
+        Report	report_5_1_2
+    
+        local
+        ConcreteParams	params_5_1_2
+    
+        context ctx
+        TestContext	Event_16rld86
+        TestContext	Event_1cztdmu
+        TestContext	Flow_0f2471h
+    
+        init
+        Event_16rld86 := TestContext {
+         id = "Test 5",
+         hidden = 0
+        }
+    
+    
+        desc "AssertionsTestTest 5Run 1_Model"
+        
+        action			Run512
+        element-label	"Run 5:1:2"
+        case			default priority 5 step-type "Run_5_1_2" action-type RUN
+        with-inputs		Flow_0f2471h, params_5_1_2
+        produces-outputs	Event_1cztdmu
+        updates:
+            Event_1cztdmu := Flow_0f2471h
+        produces-outputs	report_5_1_2 symbolic-link
+        updates:
+            report_5_1_2 := Report { id = params_5_1_2.id }
+        
+        action			Compose511
+        element-label	"Compose 5:1:1"
+        case			default priority 5 step-type "null" action-type COMPOSE
+        with-inputs		Event_16rld86
+        with-guard		true
+        produces-outputs	Flow_0f2471h
+        updates:
+            Flow_0f2471h := Event_16rld86
+        produces-outputs	params_5_1_2 symbolic-link
+        updates:
+            params_5_1_2 := ConcreteParams {
+             id = 5,
+             param = "5_1_2"
+            }
+    
+        element-labels ["AssertionsTest", "Test 5", "Run 1"]
+    }
+    
+    system AssertionsTestTest2Run1
+    {
+        // inputs
+        
+        outputs
+        Report	report_2_1_2
+    
+        local
+        ConcreteParams	params_2_1_2
+    
+        context ctx
+        TestContext	Event_0a8ipfe
+        TestContext	Event_00f1jj9
+        TestContext	Flow_1qkoyuz
+    
+        init
+        Event_0a8ipfe := TestContext {
+         id = "Test 2",
+         hidden = 0
+        }
+    
+    
+        desc "AssertionsTestTest 2Run 1_Model"
+        
+        action			Compose211
+        element-label	"Compose 2:1:1"
+        case			default priority 2 step-type "null" action-type COMPOSE
+        with-inputs		Event_0a8ipfe
+        with-guard		true
+        produces-outputs	Flow_1qkoyuz
+        updates:
+            Flow_1qkoyuz := Event_0a8ipfe
+        produces-outputs	params_2_1_2 symbolic-link
+        updates:
+            params_2_1_2 := ConcreteParams {
+             id = 2,
+             param = "2_1_2"
+            }
+        
+        action			Run212
+        element-label	"Run 2:1:2"
+        case			default priority 2 step-type "Run_2_1_2" action-type RUN
+        with-inputs		Flow_1qkoyuz, params_2_1_2
+        produces-outputs	Event_00f1jj9
+        updates:
+            Event_00f1jj9 := Flow_1qkoyuz
+        produces-outputs	report_2_1_2 symbolic-link
+        updates:
+            report_2_1_2 := Report { id = params_2_1_2.id }
+    
+        element-labels ["AssertionsTest", "Test 2", "Run 1"]
+    }
+    
+    system AssertionsTestTest3Assert2
+    {
+        inputs
+        Report	report_3_1_2b
+        Report	report_3_1_2a
+        
+        // outputs
+    
+        // local
+    
+        context
+        UNIT	Event_0zgsfij
+    
+        // init
+    
+    
+        desc "AssertionsTestTest 3Assert 2_Model"
+        
+        action			Assert321
+        element-label	"Assert 3:2:1"
+        case			default priority 3 step-type "Assert_3_2_1" action-type ASSERT
+        with-inputs		report_3_1_2a, report_3_1_2b
+        assertions default {
+            report_id: assert-that (report_3_1_2a.id) {
+              equal-to report_3_1_2b.id
+            }
+            report_result: assert-that (report_3_1_2a.result) {
+              equal-to report_3_1_2b.result
+            }
+        }
+        produces-outputs	Event_0zgsfij
+    
+        element-labels ["AssertionsTest", "Test 3", "Assert 2"]
+    }
+    
+    system AssertionsTestTest5Run2
+    {
+        inputs
+        Report	report_5_1_2
+        
+        // outputs
+    
+        // local
+    
+        context
+        UNIT	Event_0p6hosm
+    
+        // init
+    
+    
+        desc "AssertionsTestTest 5Run 2_Model"
+        
+        action			Run521
+        element-label	"Run 5:2:1"
+        case			default priority 5 step-type "Run_5_2_1" action-type RUN
+        with-inputs		report_5_1_2
+        produces-outputs	Event_0p6hosm
+    
+        element-labels ["AssertionsTest", "Test 5", "Run 2"]
+    }
+    
+	SUT-blocks AssertionsTestTest3Run1 AssertionsTestTest5Run2 AssertionsTestTest2Run3 AssertionsTestTest5Run1 AssertionsTestTest6Run3 AssertionsTestTest1Run1 AssertionsTestTest8 AssertionsTestTest4 AssertionsTestTest7Run1 AssertionsTestTest2Run1
+	depth-limits 300
+	state-limits 1000
+	num-tests 1
+}

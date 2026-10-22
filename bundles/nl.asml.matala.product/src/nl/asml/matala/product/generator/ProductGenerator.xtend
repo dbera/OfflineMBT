@@ -85,7 +85,8 @@ class ProductGenerator extends AbstractGenerator {
 			// populate var and its type decl in map
 			for(invar : block.invars) var_decl_map.put(block.name + "_" + invar.name, invar.type.type.name)
 			for(ovar : block.outvars) var_decl_map.put(block.name + "_" + ovar.name, ovar.type.type.name)
-			for(lvar : block.localvars) var_decl_map.put(block.name + "_" + lvar.name, lvar.type.type.name)
+            for(lvar : block.localvars) var_decl_map.put(block.name + "_" + lvar.name, lvar.type.type.name)
+            for(cvar : block.contextvars) var_decl_map.put(block.name + "_" + cvar.name, cvar.type.type.name)
 			// Added DB 15.04.2025. To handle SUT Variables List
             for(sutvar : block.sutvars) {
                 sutTransitionMap.put(sutvar.name, newLinkedHashSet)
@@ -165,10 +166,10 @@ class ProductGenerator extends AbstractGenerator {
 								}
 								if(ovar.suppress !== null) {
 								    val suppressedVars = mapOfSuppressTransitionVars.computeIfAbsent(transitionName)[newLinkedHashSet]
-								    if (ovar.suppress.varFields.isEmpty) {
+								    if (ovar.suppress.vars.isEmpty) {
                                         suppressedVars += ovar.fnOut.map[ref.name]
 								    } else {
-								        suppressedVars += ovar.suppress.varFields.map[serialize]
+								        suppressedVars += ovar.suppress.vars.map[variable.name]
 								    }
 								}
 							}
@@ -218,6 +219,11 @@ class ProductGenerator extends AbstractGenerator {
 			pnet.internal_places.add(new Place(block.name, localvar.name, PType.LOCAL, localvar.type.type))
 			// TODO add as class members in python class of this block
 		}
+		/* 06.10.26 */
+        for(contextvar : block.contextvars) {
+            pnet.places.add(new Place(block.name, contextvar.name, PType.LOCAL, contextvar.type.type))
+            pnet.internal_places.add(new Place(block.name, contextvar.name, PType.LOCAL, contextvar.type.type))
+        }
 		
 		//val (String) => String func = [s|block.name+"_"+s]
 		val (String) => String func = [s|s]
