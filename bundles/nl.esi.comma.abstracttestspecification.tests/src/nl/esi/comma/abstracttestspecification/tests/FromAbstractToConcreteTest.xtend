@@ -53,6 +53,11 @@ class FromAbstractToConcreteTest {
     }
 
     @Test
+    def void testAssertionsTest() {
+        testGenerator('assertions_test');
+    }
+
+    @Test
     def void testIssue249() {
         testGenerator('issue249');
     }

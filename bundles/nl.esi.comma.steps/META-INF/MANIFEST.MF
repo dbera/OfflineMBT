@@ -28,5 +28,6 @@ Export-Package: nl.esi.comma.steps.step,
  nl.esi.comma.steps.serializer,
  nl.esi.comma.steps.parser.antlr,
  nl.esi.comma.steps.services,
- nl.esi.comma.steps.parser.antlr.internal
+ nl.esi.comma.steps.parser.antlr.internal,
+ nl.esi.comma.steps.formatting2
 Import-Package: org.apache.log4j

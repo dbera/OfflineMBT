@@ -14,11 +14,11 @@ step-context
 step-input
     step_Root_Run_default_0.input.data.id := 0
     step_Root_Run_default_0.input.data.id := 1
-    step_Root_Run_default_0.input.data.nested := Nested{mix="My R2 Value",symbol="My R2 Symbol"}
     step_Root_Run_default_0.input.data.nested.mix := "My Concrete Value"
     step_Root_Run_default_0.input.data.nested.symbol := "My Concrete Symbol"
     step_Root_Run_default_0.input.data.nested.symbol := "My R3 Symbol"
     step_Root_Run_default_0.input.data.nested.symbol := "My R4 Symbol"
+    step_Root_Run_default_0.input.data.nested := Nested{mix="My R2 Value",symbol="My R2 Symbol"}
 }
 
 generate-file "./dataset/"

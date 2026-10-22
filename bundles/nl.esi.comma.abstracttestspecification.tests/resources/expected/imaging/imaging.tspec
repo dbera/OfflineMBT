@@ -8,10 +8,9 @@ step-sequence test_single_sequence {
 step-id    step_SupervisonModelSupervisionTemperatureHandler_ExecuteSetTemp_default_0
 step-type  SetTemperature
 step-context
-    step_SupervisonModelSupervisionTemperatureHandler_ExecuteSetTemp_default_0.input.EqStatus.acq_status := Status::OFF
-    step_SupervisonModelSupervisionTemperatureHandler_ExecuteSetTemp_default_0.input.EqStatus.pump_status := Status::OFF
     step_SupervisonModelSupervisionTemperatureHandler_ExecuteSetTemp_default_0.input.EqStatus.temp_status := Status::OFF
-    step_SupervisonModelSupervisionTemperatureHandler_ExecuteSetTemp_default_0.input.___CONTEXT___.unit := 0
+    step_SupervisonModelSupervisionTemperatureHandler_ExecuteSetTemp_default_0.input.EqStatus.pump_status := Status::OFF
+    step_SupervisonModelSupervisionTemperatureHandler_ExecuteSetTemp_default_0.input.EqStatus.acq_status := Status::OFF
 step-input
     step_SupervisonModelSupervisionTemperatureHandler_ExecuteSetTemp_default_0.input.TempCMD.cmd_type := TempEnum::SET
     step_SupervisonModelSupervisionTemperatureHandler_ExecuteSetTemp_default_0.input.TempCMD.id := 0
@@ -26,9 +25,8 @@ assertion-items {
 assertion-context
     step_SupervisonModelTemperatureController_CheckTemp_default_0.input.temp_ctx.id := 1
 assertion-input
-    step_SupervisonModelTemperatureController_CheckTemp_default_0.input.TempUpdate.temp_val := step_SupervisonModelSupervisionTemperatureHandler_ExecuteSetTemp_default_0.output.TempUpdate.temp_val
-    step_SupervisonModelTemperatureController_CheckTemp_default_0.input.temp_achieved.reqid := 0
     step_SupervisonModelTemperatureController_CheckTemp_default_0.input.temp_achieved.result := ResponseEnum::OK
+    step_SupervisonModelTemperatureController_CheckTemp_default_0.input.temp_achieved.reqid := 0
     step_SupervisonModelTemperatureController_CheckTemp_default_0.input.temp_achieved.temp_val := step_SupervisonModelSupervisionTemperatureHandler_ExecuteSetTemp_default_0.output.temp_achieved.temp_val
 
 step-id    step_SupervisonModelAcquisitionController_Execacquisitioninitandteardown_default_0
@@ -94,16 +92,14 @@ assertion-items {
         }
     }
 }
-assertion-context
-    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_0.input.___CONTEXT___.unit := 0
 assertion-input
-    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_0.input.ImageData.contrast := step_SupervisonModelAcquisitionController_StopAcquisition_default_0.output.ImageData.contrast
-    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_0.input.ImageData.id := 2
-    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_0.input.ImageData.resolution := step_SupervisonModelAcquisitionController_StopAcquisition_default_0.output.ImageData.resolution
-    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_0.input.ImageData.signal_to_noise_ratio := step_SupervisonModelAcquisitionController_StopAcquisition_default_0.output.ImageData.signal_to_noise_ratio
     step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_0.input.LastAcqReq.cmd_type := ImageEnum::START
     step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_0.input.LastAcqReq.id := 1
     step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_0.input.LastAcqReq.image_quality := ImageQuality::LOW
+    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_0.input.ImageData.id := 2
+    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_0.input.ImageData.contrast := step_SupervisonModelAcquisitionController_StopAcquisition_default_0.output.ImageData.contrast
+    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_0.input.ImageData.resolution := step_SupervisonModelAcquisitionController_StopAcquisition_default_0.output.ImageData.resolution
+    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_0.input.ImageData.signal_to_noise_ratio := step_SupervisonModelAcquisitionController_StopAcquisition_default_0.output.ImageData.signal_to_noise_ratio
 
 step-id    step_SupervisonModelAcquisitionController_StartAcquisition_default_1
 step-type  ExecAcquisitionCommand
@@ -156,16 +152,14 @@ assertion-items {
         }
     }
 }
-assertion-context
-    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_1.input.___CONTEXT___.unit := 0
 assertion-input
-    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_1.input.ImageData.contrast := step_SupervisonModelAcquisitionController_StopAcquisition_default_1.output.ImageData.contrast
-    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_1.input.ImageData.id := 6
-    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_1.input.ImageData.resolution := step_SupervisonModelAcquisitionController_StopAcquisition_default_1.output.ImageData.resolution
-    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_1.input.ImageData.signal_to_noise_ratio := step_SupervisonModelAcquisitionController_StopAcquisition_default_1.output.ImageData.signal_to_noise_ratio
     step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_1.input.LastAcqReq.cmd_type := ImageEnum::START
     step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_1.input.LastAcqReq.id := 5
     step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_1.input.LastAcqReq.image_quality := ImageQuality::LOW
+    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_1.input.ImageData.id := 6
+    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_1.input.ImageData.contrast := step_SupervisonModelAcquisitionController_StopAcquisition_default_1.output.ImageData.contrast
+    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_1.input.ImageData.resolution := step_SupervisonModelAcquisitionController_StopAcquisition_default_1.output.ImageData.resolution
+    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_1.input.ImageData.signal_to_noise_ratio := step_SupervisonModelAcquisitionController_StopAcquisition_default_1.output.ImageData.signal_to_noise_ratio
 
 step-id    step_SupervisonModelAcquisitionController_StartAcquisition_default_2
 step-type  ExecAcquisitionCommand
@@ -218,16 +212,14 @@ assertion-items {
         }
     }
 }
-assertion-context
-    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_2.input.___CONTEXT___.unit := 0
 assertion-input
-    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_2.input.ImageData.contrast := step_SupervisonModelAcquisitionController_StopAcquisition_default_2.output.ImageData.contrast
-    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_2.input.ImageData.id := 10
-    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_2.input.ImageData.resolution := step_SupervisonModelAcquisitionController_StopAcquisition_default_2.output.ImageData.resolution
-    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_2.input.ImageData.signal_to_noise_ratio := step_SupervisonModelAcquisitionController_StopAcquisition_default_2.output.ImageData.signal_to_noise_ratio
     step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_2.input.LastAcqReq.cmd_type := ImageEnum::START
     step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_2.input.LastAcqReq.id := 9
     step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_2.input.LastAcqReq.image_quality := ImageQuality::LOW
+    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_2.input.ImageData.id := 10
+    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_2.input.ImageData.contrast := step_SupervisonModelAcquisitionController_StopAcquisition_default_2.output.ImageData.contrast
+    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_2.input.ImageData.resolution := step_SupervisonModelAcquisitionController_StopAcquisition_default_2.output.ImageData.resolution
+    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_2.input.ImageData.signal_to_noise_ratio := step_SupervisonModelAcquisitionController_StopAcquisition_default_2.output.ImageData.signal_to_noise_ratio
 
 step-id    step_SupervisonModelAcquisitionController_StartAcquisition_default_3
 step-type  ExecAcquisitionCommand
@@ -280,16 +272,14 @@ assertion-items {
         }
     }
 }
-assertion-context
-    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_3.input.___CONTEXT___.unit := 0
 assertion-input
-    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_3.input.ImageData.contrast := step_SupervisonModelAcquisitionController_StopAcquisition_default_3.output.ImageData.contrast
-    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_3.input.ImageData.id := 14
-    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_3.input.ImageData.resolution := step_SupervisonModelAcquisitionController_StopAcquisition_default_3.output.ImageData.resolution
-    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_3.input.ImageData.signal_to_noise_ratio := step_SupervisonModelAcquisitionController_StopAcquisition_default_3.output.ImageData.signal_to_noise_ratio
     step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_3.input.LastAcqReq.cmd_type := ImageEnum::START
     step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_3.input.LastAcqReq.id := 13
     step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_3.input.LastAcqReq.image_quality := ImageQuality::LOW
+    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_3.input.ImageData.id := 14
+    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_3.input.ImageData.contrast := step_SupervisonModelAcquisitionController_StopAcquisition_default_3.output.ImageData.contrast
+    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_3.input.ImageData.resolution := step_SupervisonModelAcquisitionController_StopAcquisition_default_3.output.ImageData.resolution
+    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_3.input.ImageData.signal_to_noise_ratio := step_SupervisonModelAcquisitionController_StopAcquisition_default_3.output.ImageData.signal_to_noise_ratio
 
 step-id    step_SupervisonModelAcquisitionController_StartAcquisition_default_4
 step-type  ExecAcquisitionCommand
@@ -342,16 +332,14 @@ assertion-items {
         }
     }
 }
-assertion-context
-    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_4.input.___CONTEXT___.unit := 0
 assertion-input
-    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_4.input.ImageData.contrast := step_SupervisonModelAcquisitionController_StopAcquisition_default_4.output.ImageData.contrast
-    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_4.input.ImageData.id := 18
-    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_4.input.ImageData.resolution := step_SupervisonModelAcquisitionController_StopAcquisition_default_4.output.ImageData.resolution
-    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_4.input.ImageData.signal_to_noise_ratio := step_SupervisonModelAcquisitionController_StopAcquisition_default_4.output.ImageData.signal_to_noise_ratio
     step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_4.input.LastAcqReq.cmd_type := ImageEnum::START
     step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_4.input.LastAcqReq.id := 17
     step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_4.input.LastAcqReq.image_quality := ImageQuality::LOW
+    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_4.input.ImageData.id := 18
+    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_4.input.ImageData.contrast := step_SupervisonModelAcquisitionController_StopAcquisition_default_4.output.ImageData.contrast
+    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_4.input.ImageData.resolution := step_SupervisonModelAcquisitionController_StopAcquisition_default_4.output.ImageData.resolution
+    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_4.input.ImageData.signal_to_noise_ratio := step_SupervisonModelAcquisitionController_StopAcquisition_default_4.output.ImageData.signal_to_noise_ratio
 
 step-id    step_SupervisonModelAcquisitionController_StartAcquisition_default_5
 step-type  ExecAcquisitionCommand
@@ -404,16 +392,14 @@ assertion-items {
         }
     }
 }
-assertion-context
-    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_5.input.___CONTEXT___.unit := 0
 assertion-input
-    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_5.input.ImageData.contrast := step_SupervisonModelAcquisitionController_StopAcquisition_default_5.output.ImageData.contrast
-    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_5.input.ImageData.id := 22
-    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_5.input.ImageData.resolution := step_SupervisonModelAcquisitionController_StopAcquisition_default_5.output.ImageData.resolution
-    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_5.input.ImageData.signal_to_noise_ratio := step_SupervisonModelAcquisitionController_StopAcquisition_default_5.output.ImageData.signal_to_noise_ratio
     step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_5.input.LastAcqReq.cmd_type := ImageEnum::START
     step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_5.input.LastAcqReq.id := 21
     step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_5.input.LastAcqReq.image_quality := ImageQuality::LOW
+    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_5.input.ImageData.id := 22
+    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_5.input.ImageData.contrast := step_SupervisonModelAcquisitionController_StopAcquisition_default_5.output.ImageData.contrast
+    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_5.input.ImageData.resolution := step_SupervisonModelAcquisitionController_StopAcquisition_default_5.output.ImageData.resolution
+    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_5.input.ImageData.signal_to_noise_ratio := step_SupervisonModelAcquisitionController_StopAcquisition_default_5.output.ImageData.signal_to_noise_ratio
 
 step-id    step_SupervisonModelAcquisitionController_StartAcquisition_default_6
 step-type  ExecAcquisitionCommand
@@ -466,16 +452,14 @@ assertion-items {
         }
     }
 }
-assertion-context
-    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_6.input.___CONTEXT___.unit := 0
 assertion-input
-    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_6.input.ImageData.contrast := step_SupervisonModelAcquisitionController_StopAcquisition_default_6.output.ImageData.contrast
-    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_6.input.ImageData.id := 26
-    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_6.input.ImageData.resolution := step_SupervisonModelAcquisitionController_StopAcquisition_default_6.output.ImageData.resolution
-    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_6.input.ImageData.signal_to_noise_ratio := step_SupervisonModelAcquisitionController_StopAcquisition_default_6.output.ImageData.signal_to_noise_ratio
     step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_6.input.LastAcqReq.cmd_type := ImageEnum::START
     step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_6.input.LastAcqReq.id := 25
     step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_6.input.LastAcqReq.image_quality := ImageQuality::LOW
+    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_6.input.ImageData.id := 26
+    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_6.input.ImageData.contrast := step_SupervisonModelAcquisitionController_StopAcquisition_default_6.output.ImageData.contrast
+    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_6.input.ImageData.resolution := step_SupervisonModelAcquisitionController_StopAcquisition_default_6.output.ImageData.resolution
+    step_SupervisonModelSupervisionImaging_CheckLowResImageQuality_default_6.input.ImageData.signal_to_noise_ratio := step_SupervisonModelAcquisitionController_StopAcquisition_default_6.output.ImageData.signal_to_noise_ratio
 }
 
 generate-file "./dataset/"

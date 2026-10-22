@@ -136,7 +136,7 @@ class ExpressionsParser {
             default: null
         }
         if (fieldType instanceof SimpleTypeDecl) {
-            var isBasedOnString = fieldType.base?.name?.equals('string')
+            var isBasedOnString = 'string'.equals(fieldType.base?.name)
             if (isBasedOnString) {
                 var baseName = fieldType.name
                 return switch baseName {

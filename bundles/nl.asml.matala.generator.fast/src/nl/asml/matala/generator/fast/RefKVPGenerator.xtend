@@ -109,7 +109,7 @@ class RefKVPGenerator {
         return txt
     }
 
-    def String getScriptParamType(ScriptParameterNamedPositional param) {
+    private def String getScriptParamType(ScriptParameterNamedPositional param) {
         if(param instanceof ScriptParameterNameOnly) return "NAME_ONLY"
         if (param instanceof ScriptParameterNamedArg) {
             var type = param.file ? "FILE" : "VALUE"
@@ -124,7 +124,7 @@ class RefKVPGenerator {
         throw new RuntimeException("Not supported")
     }
 
-    def String getScriptParamName(ScriptParameterNamed param) {
+    private def String getScriptParamName(ScriptParameterNamed param) {
         switch (param) {
             ScriptParameterNameOnly: return param.label
             ScriptParameterNamedArg: return param.label
@@ -132,7 +132,7 @@ class RefKVPGenerator {
         throw new RuntimeException("Not supported")
     }
 
-    def Expression getScriptParamExpression(ScriptParameterWithValue param) {
+    private def Expression getScriptParamExpression(ScriptParameterWithValue param) {
         switch (param) {
             ScriptParameterNamedArg: return param.^val
             ScriptParameterPositionalFile: return param.^val
@@ -141,7 +141,7 @@ class RefKVPGenerator {
         throw new RuntimeException("Not supported")
     }
 
-    def String expression(AssertThatBlock asrt, AssertionStep step) {
+    private def String expression(AssertThatBlock asrt, AssertionStep step) {
         var expr = asrt.output
         var prefix_list = getExpressionPrefix(expr, step)
         prefix_list = expression(expr, prefix_list)
@@ -150,7 +150,7 @@ class RefKVPGenerator {
         return String.format('"%s"', prefix)
     }
 
-    def String expression(ScriptParameterWithValue param, AssertionStep step) {
+    private def String expression(ScriptParameterWithValue param, AssertionStep step) {
         var expr = getScriptParamExpression(param)
         var prefix_list = getExpressionPrefix(expr, step)
         prefix_list = expression(expr, prefix_list)
@@ -159,7 +159,7 @@ class RefKVPGenerator {
         return String.format('"%s"', prefix)
     }
 
-    def List<String> getExpressionPrefix(Expression expr, AssertionStep step) {
+    private def List<String> getExpressionPrefix(Expression expr, AssertionStep step) {
         var List<String> fields = new ArrayList
         switch (expr) {
             ExpressionBracket: fields.addAll(getExpressionPrefix(expr.sub, step))
@@ -171,7 +171,7 @@ class RefKVPGenerator {
         return fields
     }
 
-    def List<String> getExpressionPrefix(ExpressionVariable expr, AssertionStep step) {
+    private def List<String> getExpressionPrefix(ExpressionVariable expr, AssertionStep step) {
         var List<String> fields = new ArrayList
         var vari = expr.variable.eContainer
         if (vari instanceof GenericScriptBlock) {
@@ -182,19 +182,19 @@ class RefKVPGenerator {
         return fields
     }
 
-    def String getScriptId(GenericScriptBlock block, AssertionStep assertStep) {
+    private def String getScriptId(GenericScriptBlock block, AssertionStep assertStep) {
         return getDatacheckId(block.name, assertStep)
     }
 
-    def String getScriptId(AssertThatBlock block, AssertionStep assertStep) {
+    private def String getScriptId(AssertThatBlock block, AssertionStep assertStep) {
         return getDatacheckId(block.name, assertStep)
     }
 
-    def getDatacheckId(String label, AssertionStep assertStep) {
+    private def getDatacheckId(String label, AssertionStep assertStep) {
         return assertStep.stepVar.name
     }
 
-    def List<String> expression(Expression expr, List<String> prefix) {
+    private def List<String> expression(Expression expr, List<String> prefix) {
         switch (expr) {
             ExpressionBracket:
                 expression(expr.sub, prefix)
@@ -211,11 +211,7 @@ class RefKVPGenerator {
         return prefix
     }
 
-    def String expression(Expression expr) {
-        return expression(expr, '')
-    }
-
-    def String expression(Expression expr, String prefix) {
+    private def String expression(Expression expr, String prefix) {
         switch (expr) {
             ExpressionBracket: return expression(expr.sub, prefix)
             // referencing variable value
@@ -232,7 +228,7 @@ class RefKVPGenerator {
         throw new RuntimeException("Not supported")
     }
 
-    def Boolean isScriptParamTypeNonConstant(Expression param) {
+    private def Boolean isScriptParamTypeNonConstant(Expression param) {
         switch (param) {
             ExpressionVariable: return true
             ExpressionRecordAccess: return true
@@ -246,7 +242,7 @@ class RefKVPGenerator {
      * Parses input parameters of an assertion type into string format. 
      * @param assertion Assertion of type value, xpaths or xmlfile
      */
-    def String extractAssertionParams(AssertValidation params, AssertionStep step) {
+    private def String extractAssertionParams(AssertValidation params, AssertionStep step) {
         switch (params) {
             AssertThatValue: return extractAssertionParams(params.comparisonType)
             AssertThatXPaths: return extractAssertionParams(params)
@@ -259,7 +255,7 @@ class RefKVPGenerator {
      * Parses input parameters of parameters for an assertion comparing output against a single reference value. 
      * @param assertion Assertion parameters of type equality, closeness, regex-matching, size-of
      */
-    def String extractAssertionParams(ComparisonsForSingleReference compType) {
+    private def String extractAssertionParams(ComparisonsForSingleReference compType) {
         switch (compType) {
             AssertThatValueEq: return extractAssertionParams(compType)
             AssertThatValueClose: return extractAssertionParams(compType)
@@ -273,7 +269,7 @@ class RefKVPGenerator {
      * Parses input parameters of parameters for an assertion comparing output against a multi-reference value. 
      * @param assertion Assertion parameters of type identical (as equality), similarity (as closeness)
      */
-    def String extractAssertionParams(ComparisonsForMultiReference compType) {
+    private def String extractAssertionParams(ComparisonsForMultiReference compType) {
         if(compType instanceof AssertThatValueIdentical) return ""
         if (compType instanceof AssertThatValueSimilar) {
             if(compType.margin === null) return "" else return extractAssertionParams(compType.margin)
@@ -281,7 +277,7 @@ class RefKVPGenerator {
         throw new RuntimeException("Not supported")
     }
 
-    def String extractAssertionParams(AssertThatValueEq value) {
+    private def String extractAssertionParams(AssertThatValueEq value) {
         return '''
             "reference":«JsonHelper.jsonElement(value.reference)»«IF value.margin instanceof MargingItem»,
                 «extractAssertionParams(value.margin)»
@@ -290,7 +286,7 @@ class RefKVPGenerator {
         '''
     }
 
-    def String extractAssertionParams(AssertThatValueClose value) {
+    private def String extractAssertionParams(AssertThatValueClose value) {
         return '''
             "reference":«JsonHelper.jsonElement(value.reference)»«IF value.margin instanceof MargingItem»,
                 «extractAssertionParams(value.margin)»
@@ -298,27 +294,27 @@ class RefKVPGenerator {
         '''
     }
 
-    def String extractAssertionParams(AssertThatValueMatch value) {
+    private def String extractAssertionParams(AssertThatValueMatch value) {
         return '''
             "reference":«JsonHelper.jsonElement(value.reference)»,
             "regex":True
         '''
     }
 
-    def String extractAssertionParams(AssertThatValueSize value) {
+    private def String extractAssertionParams(AssertThatValueSize value) {
         return '''
             "reference":«value.reference»,
             "size_compare":True
         '''
     }
 
-    def String extractAssertionParams(MargingItem marginitem) {
+    private def String extractAssertionParams(MargingItem marginitem) {
         return '''
             "margin":«IF marginitem.type.equals(MARGIN_TYPE.NONE)»None«ELSEIF marginitem.type.equals(MARGIN_TYPE.ABSOLUTE)»{"type":"Absolute", "value":«marginitem.marginVal»}«ELSEIF marginitem.type.equals(MARGIN_TYPE.RELATIVE)»{"type":"Relative", "value":«marginitem.marginVal»}«ENDIF»
         '''
     }
 
-    def String extractAssertionParams(AssertThatXPaths paths) {
+    private def String extractAssertionParams(AssertThatXPaths paths) {
         return '''
             "xpaths":[
                     «FOR anAssert : paths.assertRef SEPARATOR ","»
@@ -335,7 +331,7 @@ class RefKVPGenerator {
         '''
     }
 
-    def String extractAssertionParams(AssertThatXMLFile xmlfile, AssertionStep step) {
+    private def String extractAssertionParams(AssertThatXMLFile xmlfile, AssertionStep step) {
         var expr = xmlfile.reference
         var prefix_list = getExpressionPrefix(expr, step)
         var prefix = prefix_list.stream().map(s|String.format("['%s']", s)).collect(Collectors.joining());
@@ -356,7 +352,7 @@ class RefKVPGenerator {
         '''
     }
 
-    def getAssertionType(AssertValidation asrt) {
+    private def getAssertionType(AssertValidation asrt) {
         switch (asrt) {
             AssertThatValue: return "Value" // assertion of type Value
             AssertThatXPaths: return "XPaths" // assertion of type XPaths

@@ -6,7 +6,6 @@ record SetTemperature {
 }
 
 record SetTemperatureInput {
-    UNIT ___CONTEXT___
     EquipmentStatus EqStatus
     TempReq TempCMD
 }
@@ -54,7 +53,6 @@ record CheckAcquisitionResult {
 }
 
 record CheckAcquisitionResultInput {
-    UNIT ___CONTEXT___
     ImgReq LastAcqReq
     AcqData ImageData
 }

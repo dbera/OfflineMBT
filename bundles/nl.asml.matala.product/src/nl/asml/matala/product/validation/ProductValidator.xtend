@@ -130,8 +130,13 @@ class ProductValidator extends AbstractProductValidator {
     def checkLocalDuplication(Block block) {
         val existingLocalvars = block.localvars.groupBy[name]
         existingLocalvars.values.filter[size > 1].flatten.forEach [ localvar |
-            error("Duplicate variable name in local variables: " + localvar.name,
+            error("Duplicate variable: " + localvar.name,
                 ProductPackage.Literals.BLOCK__LOCALVARS, block.localvars.indexOf(localvar))
+        ]
+        val blockIO = (block.invars + block.outvars + block.contextvars).map[name].toSet
+        block.localvars.filter[blockIO.contains(name)].forEach[ localvar |
+            error("Duplicate variable: " + localvar.name,
+                ProductPackage.Literals.BLOCK__LOCALVARS, block.contextvars.indexOf(localvar))
         ]
     }
 
@@ -142,9 +147,18 @@ class ProductValidator extends AbstractProductValidator {
     def checkContextDuplication(Block block) {
         val existingContextvars = block.contextvars.groupBy[name]
         existingContextvars.values.filter[size > 1].flatten.forEach [ contextvar |
-            error("Duplicate variable name in context variables: " + contextvar.name,
+            error("Duplicate variable: " + contextvar.name,
                 ProductPackage.Literals.BLOCK__CONTEXTVARS, block.contextvars.indexOf(contextvar))
         ]
+        val blockvars = (block.invars + block.outvars + block.localvars).map[name].toSet
+        block.contextvars.filter[blockvars.contains(name)].forEach[ contextvar |
+            error("Duplicate variable: " + contextvar.name,
+                ProductPackage.Literals.BLOCK__CONTEXTVARS, block.contextvars.indexOf(contextvar))
+        ]
+        if (blockvars.contains(block.contextname)) {
+            error("Context name is already defined as variable: " + block.contextname,
+                ProductPackage.Literals.BLOCK__CONTEXTNAME)
+        }
     }
 
      /**

@@ -29,11 +29,10 @@ import nl.esi.xtext.types.types.VectorTypeConstructor
 import static extension nl.esi.comma.abstracttestspecification.generator.utils.Utils.*
 import static extension nl.esi.xplus.extensions.types.TypesExtensionUtil.*
 import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
-import java.util.Comparator
 
 class ConcreteExpressionHandler {
     static def Map<String, List<String>>  collectConcreteDataAssignments(AbstractStep step, Iterable<Binding> bindings) {
-        val Map<String, List<String>> mapLHStoRHS = newTreeMap(Comparator.naturalOrder)
+        val Map<String, List<String>> mapLHStoRHS = newLinkedHashMap
 
         val inputVarPrefix = step.inputVar + '.'
         for (binding : bindings.reject[suppressed]) {
@@ -51,6 +50,18 @@ class ConcreteExpressionHandler {
         } else {
             mapLHStoRHS.computeIfAbsent(name)[newArrayList] += type.createValue(value)
         }
+    }
+
+    static def Map<String, List<String>>  collectSUTDataAssignments(AbstractStep step, Iterable<Binding> bindings) {
+        val Map<String, List<String>> mapLHStoRHS = newLinkedHashMap
+
+        val inputVarPrefix = step.inputVar + '.'
+        for (binding : bindings.reject[suppressed]) {
+            mapLHStoRHS.computeIfAbsent(inputVarPrefix + binding.varField)[newArrayList] +=
+                binding.name.type.createValue(binding.jsonvals)
+        }
+
+        return mapLHStoRHS
     }
 
     private static def String createValue(Type type, JsonValue value) {
@@ -90,7 +101,7 @@ class ConcreteExpressionHandler {
             }
             RecordTypeDecl: '''
                 «type.name» {
-                    «FOR field : type.fields.filter[f|value.hasMemberValue(f.name)] SEPARATOR ','»
+                    «FOR field : type.fields.reject[suppressed].filter[f|value.hasMemberValue(f.name)] SEPARATOR ','»
                         «field.name» = «field.type.createValue(value.getMemberValue(field.name))»
                     «ENDFOR»
                 }

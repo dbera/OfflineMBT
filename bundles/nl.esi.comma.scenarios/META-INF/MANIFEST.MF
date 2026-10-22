@@ -34,6 +34,7 @@ Export-Package: nl.esi.comma.scenarios,
  nl.esi.comma.scenarios.scoping,
  nl.esi.comma.scenarios.serializer,
  nl.esi.comma.scenarios.services,
- nl.esi.comma.scenarios.validation
+ nl.esi.comma.scenarios.validation,
+ nl.esi.comma.scenarios.formatting2
 Import-Package: org.apache.log4j
 Automatic-Module-Name: nl.esi.comma.scenarios

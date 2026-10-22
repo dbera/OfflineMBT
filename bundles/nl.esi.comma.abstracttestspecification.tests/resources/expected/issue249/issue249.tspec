@@ -8,12 +8,14 @@ step-sequence test_single_sequence {
 step-id    step_ContextIssueProducer_RunLocal_default_0
 step-type  ProducerRunType
 step-context
-    step_ContextIssueProducer_RunLocal_default_0.input.configuration.prod_field := " Conf"
     step_ContextIssueProducer_RunLocal_default_0.input.prodCtx.prod_field := "Hello Consumer!"
+    step_ContextIssueProducer_RunLocal_default_0.input.configuration.prod_field := " Conf"
 step-input
     step_ContextIssueProducer_RunLocal_default_0.input.message.part1 := "Hello Message!"
 step-sut
-    step_ContextIssueProducer_RunLocal_default_0.input.sutConf.prod_field := "sut"
+    step_ContextIssueProducer_RunLocal_default_0.input.sutConf := ProdCtx {
+        prod_field = "sut"
+    }
 
 step-id    step_ContextIssueConsumer_ConsumerRun_default_0
 step-type  ConsumerRunType

@@ -28,5 +28,6 @@ Export-Package: nl.esi.comma.testspecification,
  nl.esi.comma.testspecification.testspecification,
  nl.esi.comma.testspecification.testspecification.impl,
  nl.esi.comma.testspecification.testspecification.util,
- nl.esi.comma.testspecification.validation
+ nl.esi.comma.testspecification.validation,
+ nl.esi.comma.testspecification.formatting2
 Import-Package: org.apache.log4j

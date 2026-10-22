@@ -97,7 +97,7 @@ public class Bpmn4sCompiler{
 		
 		ps.append(generatePspec());
 		// UNIT_TYPE is the type for undefined contexts.
-		var unit =  String.format("record %s {\n\tint\tunit\n}\n\n", UNIT_TYPE);
+		var unit =  String.format("@context\nrecord %s {\n\t@suppress int\tunit\n}\n\n", UNIT_TYPE);
 		types.append(unit);
 		types.append(model.rawTypes);
 	}

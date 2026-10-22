@@ -48,6 +48,7 @@ import static extension nl.esi.xplus.extensions.types.TypesExtensionUtil.*
 import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
 import static extension org.eclipse.xtext.EcoreUtil2.*
 import nl.esi.xtext.types.types.TypeReference
+import nl.esi.comma.abstracttestspecification.abstractTestspecification.StepReference
 
 class Utils 
 {
@@ -95,6 +96,10 @@ class Utils
         return step?.suppress !== null && step.suppress.vars.exists[variable.varField == varField]
     }
 
+    static def Iterable<Binding> getOutput(StepReference stepRef) {
+        return stepRef.refStep.output.filter[stepRef.refData.contains(name)]
+    }
+
     static def Iterable<Binding> getContextData(AbstractStep step) {
         // Try exclusion: all bindings except input and sut?
         val nonContext = step.varID.map[name].toSet
@@ -103,7 +108,7 @@ class Utils
     }
 
     static def Iterable<Binding> getInputData(AbstractStep step) {
-        return step.stepRef.flatMap[ref | ref.refStep.output.filter[ref.refData.contains(name)]]
+        return step.stepRef.flatMap[output]
     }
 
     static def Iterable<Binding> getSUTData(AbstractStep step) {

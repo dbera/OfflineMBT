@@ -40,7 +40,7 @@ import static extension org.eclipse.lsat.common.xtend.Queries.*
 class ReferenceExpressionHandler {
     static def Map<String, List<String>> collectReferenceDataAssignments(ExecutableStep estep) {
         debug(" [INFO] Resolving references for Executable Step: " + estep.name)
-        val Map<String, List<String>> mapLHStoRHS = newTreeMap(String.CASE_INSENSITIVE_ORDER)
+        val Map<String, List<String>> mapLHStoRHS = newLinkedHashMap
         val Set<String> nestedFieldPrefixes = newHashSet
 
         for (cstep : estep.referencedChainedSteps) {
@@ -57,10 +57,13 @@ class ReferenceExpressionHandler {
             }
         }
 
-        for (rstep : estep.stepRef.map[refStep].filter(RunStep)) {
-            for (output : rstep.output.reject[suppressed]) {
-                evaluateReferenceConstrains(estep.inputVar + '.' + output.varField,
-                        rstep.outputVar + '.' + output.varField, output.name.type, mapLHStoRHS
+        for (stepRef : estep.stepRef.filter[refStep instanceof RunStep]) {
+            for (output : stepRef.output.reject[suppressed]) {
+                evaluateReferenceConstrains(
+                    estep.inputVar + '.' + output.varField,
+                    stepRef.refStep.outputVar + '.' + output.varField,
+                    output.name.type,
+                    mapLHStoRHS
                 )
             }
         }
@@ -94,9 +97,7 @@ class ReferenceExpressionHandler {
         // Iterate all record field assignments of all constraints
         for (action : cstep.refs.flatMap[ce].flatMap[act.actions].filter(RecordFieldAssignmentAction)) {
             // Run block input data structure = Concrete TSpec step input data structure
-            // TODO: Actions formatter doesn't seem to be applied resulting in unwanted spaces.
-            //       Using a simple replace for now
-            val field = fieldPrefix + EcoreUtil3.serialize(action.fieldAccess, true).replace(" ", "")
+            val field = fieldPrefix + EcoreUtil3.serialize(action.fieldAccess, true)
 
             // action.exp is a reference to the original pspec, hence we should not update that expression!
             // However, serialization requires the expression to be contained by an XtextResource

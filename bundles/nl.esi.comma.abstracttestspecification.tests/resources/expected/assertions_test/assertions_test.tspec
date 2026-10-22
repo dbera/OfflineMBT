@@ -1,0 +1,239 @@
+import "assertions_test.types"
+
+test-sequence from_abstract_to_concrete {
+    test_single_sequence
+}
+
+step-sequence test_single_sequence {
+step-id    step_AssertionsTestTest8_Run81_default_0
+step-type  Step_8_1
+step-context
+    step_AssertionsTestTest8_Run81_default_0.input.ctx.id := "Test 8"
+
+assertion-id    step_AssertionsTestTest8_Assert82_default_0
+assertion-type  Assert_8_2
+assertion-items {
+    assertions default {
+        result: assert-that (step_AssertionsTestTest8_Assert82_default_0.input.report_8_1.result) {
+          equal-to "Test 8"
+        }
+    }
+}
+assertion-context
+    step_AssertionsTestTest8_Assert82_default_0.input.ctx.id := "Test 8"
+assertion-input
+    step_AssertionsTestTest8_Assert82_default_0.input.report_8_1.id := 8
+    step_AssertionsTestTest8_Assert82_default_0.input.report_8_1.result := step_AssertionsTestTest8_Run81_default_0.output.report_8_1.result
+
+step-id    step_AssertionsTestTest8_Run83_default_0
+step-type  Run_8_3
+step-context
+    step_AssertionsTestTest8_Run83_default_0.input.ctx.id := "Test 8"
+step-input
+    step_AssertionsTestTest8_Run83_default_0.input.report_8_1.id := 8
+    step_AssertionsTestTest8_Run83_default_0.input.report_8_1.result := step_AssertionsTestTest8_Run81_default_0.output.report_8_1.result
+
+assertion-id    step_AssertionsTestTest8_Assert84_default_0
+assertion-type  Assert_8_4
+assertion-items {
+    assertions default {
+        result: assert-that (step_AssertionsTestTest8_Assert84_default_0.input.report_8_1.result) {
+          equal-to step_AssertionsTestTest8_Assert84_default_0.input.report_8_3.result
+        }
+    }
+}
+assertion-context
+    step_AssertionsTestTest8_Assert84_default_0.input.ctx.id := "Test 8"
+assertion-input
+    step_AssertionsTestTest8_Assert84_default_0.input.report_8_1.id := 8
+    step_AssertionsTestTest8_Assert84_default_0.input.report_8_3.id := 8
+    step_AssertionsTestTest8_Assert84_default_0.input.report_8_1.result := step_AssertionsTestTest8_Run81_default_0.output.report_8_1.result
+    step_AssertionsTestTest8_Assert84_default_0.input.report_8_3.result := step_AssertionsTestTest8_Run83_default_0.output.report_8_3.result
+
+step-id    step_AssertionsTestTest7Run1_Run72_default_0
+step-type  Run_7_2
+step-context
+    step_AssertionsTestTest7Run1_Run72_default_0.input.ctx.id := "7"
+    step_AssertionsTestTest7Run1_Run72_default_0.input.extContext.id := 100
+    step_AssertionsTestTest7Run1_Run72_default_0.input.extContext.param := "Extra Context"
+step-input
+    step_AssertionsTestTest7Run1_Run72_default_0.input.params_7_2.id := 7
+    step_AssertionsTestTest7Run1_Run72_default_0.input.params_7_2.param := "7_2"
+step-sut
+    step_AssertionsTestTest7Run1_Run72_default_0.input.variants := Variant {
+        param = "SUT_7"
+    }
+
+assertion-id    step_AssertionsTestTest6Assert2_Assert621_default_0
+assertion-type  Assert_6_2_1
+assertion-items {
+    assertions default {
+        id: assert-that(step_AssertionsTestTest6Assert2_Assert621_default_0.input.params_6_3_1.id) {
+          equal-to 6
+        }
+    }
+}
+assertion-input
+    step_AssertionsTestTest6Assert2_Assert621_default_0.input.params_6_3_1.id := 6
+    step_AssertionsTestTest6Assert2_Assert621_default_0.input.params_6_3_1.param := "Test 6a"
+
+assertion-id    step_AssertionsTestTest6Assert2_Assert621_default_1
+assertion-type  Assert_6_2_1
+assertion-items {
+    assertions default {
+        id: assert-that(step_AssertionsTestTest6Assert2_Assert621_default_1.input.params_6_3_1.id) {
+          equal-to 6
+        }
+    }
+}
+assertion-input
+    step_AssertionsTestTest6Assert2_Assert621_default_1.input.params_6_3_1.id := 6
+    step_AssertionsTestTest6Assert2_Assert621_default_1.input.params_6_3_1.param := "Test 6b"
+
+step-id    step_AssertionsTestTest6Run3_Run631_default_0
+step-type  Run_6_3_1
+step-input
+    step_AssertionsTestTest6Run3_Run631_default_0.input.params_6_3_1.id := 6
+    step_AssertionsTestTest6Run3_Run631_default_0.input.params_6_3_1.param := "Test 6a"
+
+step-id    step_AssertionsTestTest6Run3_Run631_default_1
+step-type  Run_6_3_1
+step-input
+    step_AssertionsTestTest6Run3_Run631_default_1.input.params_6_3_1.id := 6
+    step_AssertionsTestTest6Run3_Run631_default_1.input.params_6_3_1.param := "Test 6b"
+
+step-id    step_AssertionsTestTest5Run1_Run512_default_0
+step-type  Run_5_1_2
+step-context
+    step_AssertionsTestTest5Run1_Run512_default_0.input.ctx.id := "Test 5"
+step-input
+    step_AssertionsTestTest5Run1_Run512_default_0.input.params_5_1_2.id := 5
+    step_AssertionsTestTest5Run1_Run512_default_0.input.params_5_1_2.param := "5_1_2"
+
+step-id    step_AssertionsTestTest5Run2_Run521_default_0
+step-type  Run_5_2_1
+step-input
+    step_AssertionsTestTest5Run2_Run521_default_0.input.report_5_1_2.id := 5
+    step_AssertionsTestTest5Run2_Run521_default_0.input.report_5_1_2.result := step_AssertionsTestTest5Run1_Run512_default_0.output.report_5_1_2.result
+
+assertion-id    step_AssertionsTestTest4_Assert42_default_0
+assertion-type  Assert_4_2
+assertion-items {
+    assertions default {
+        report_id: assert-that (step_AssertionsTestTest4_Assert42_default_0.input.params_4_3.id) {
+          equal-to 4
+        }
+    }
+}
+assertion-context
+    step_AssertionsTestTest4_Assert42_default_0.input.ctx.id := "Test 4"
+assertion-input
+    step_AssertionsTestTest4_Assert42_default_0.input.params_4_3.id := 4
+    step_AssertionsTestTest4_Assert42_default_0.input.params_4_3.param := "4_3"
+
+step-id    step_AssertionsTestTest4_Run43_default_0
+step-type  Run_4_3
+step-context
+    step_AssertionsTestTest4_Run43_default_0.input.ctx.id := "Test 4"
+step-input
+    step_AssertionsTestTest4_Run43_default_0.input.params_4_3.id := 4
+    step_AssertionsTestTest4_Run43_default_0.input.params_4_3.param := "4_3"
+
+assertion-id    step_AssertionsTestTest4_Assert44_default_0
+assertion-type  Assert_4_4
+assertion-items {
+    assertions default {
+        report_result: assert-that (step_AssertionsTestTest4_Assert44_default_0.input.report_4_3.result) {
+          match-regex "\\w+"
+        }
+    }
+}
+assertion-context
+    step_AssertionsTestTest4_Assert44_default_0.input.ctx.id := "Test 4"
+assertion-input
+    step_AssertionsTestTest4_Assert44_default_0.input.report_4_3.id := 4
+    step_AssertionsTestTest4_Assert44_default_0.input.report_4_3.result := step_AssertionsTestTest4_Run43_default_0.output.report_4_3.result
+
+step-id    step_AssertionsTestTest3Run1_Run312_default_0
+step-type  Run_3_1_2
+step-context
+    step_AssertionsTestTest3Run1_Run312_default_0.input.ctx.id := "Test 3"
+step-input
+    step_AssertionsTestTest3Run1_Run312_default_0.input.params_3_1_2a.id := 0
+    step_AssertionsTestTest3Run1_Run312_default_0.input.params_3_1_2a.param := "3_1_2a"
+    step_AssertionsTestTest3Run1_Run312_default_0.input.params_3_1_2b.id := 0
+    step_AssertionsTestTest3Run1_Run312_default_0.input.params_3_1_2b.param := "3_1_2b"
+
+assertion-id    step_AssertionsTestTest3Assert2_Assert321_default_0
+assertion-type  Assert_3_2_1
+assertion-items {
+    assertions default {
+        report_id: assert-that (step_AssertionsTestTest3Assert2_Assert321_default_0.input.report_3_1_2a.id) {
+          equal-to step_AssertionsTestTest3Assert2_Assert321_default_0.input.report_3_1_2b.id
+        }
+        report_result: assert-that (step_AssertionsTestTest3Assert2_Assert321_default_0.input.report_3_1_2a.result) {
+          equal-to step_AssertionsTestTest3Assert2_Assert321_default_0.input.report_3_1_2b.result
+        }
+    }
+}
+assertion-input
+    step_AssertionsTestTest3Assert2_Assert321_default_0.input.report_3_1_2a.id := 0
+    step_AssertionsTestTest3Assert2_Assert321_default_0.input.report_3_1_2b.id := 0
+    step_AssertionsTestTest3Assert2_Assert321_default_0.input.report_3_1_2a.result := step_AssertionsTestTest3Run1_Run312_default_0.output.report_3_1_2a.result
+    step_AssertionsTestTest3Assert2_Assert321_default_0.input.report_3_1_2b.result := step_AssertionsTestTest3Run1_Run312_default_0.output.report_3_1_2b.result
+
+step-id    step_AssertionsTestTest2Run1_Run212_default_0
+step-type  Run_2_1_2
+step-context
+    step_AssertionsTestTest2Run1_Run212_default_0.input.ctx.id := "Test 2"
+step-input
+    step_AssertionsTestTest2Run1_Run212_default_0.input.params_2_1_2.id := 2
+    step_AssertionsTestTest2Run1_Run212_default_0.input.params_2_1_2.param := "2_1_2"
+
+assertion-id    step_AssertionsTestTest2ComposeAndAssert2_Assert222_default_0
+assertion-type  Assert_2_2_2
+assertion-items {
+    assertions default {
+        result: assert-that (step_AssertionsTestTest2ComposeAndAssert2_Assert222_default_0.input.params_2_2_2.param) {
+          equal-to step_AssertionsTestTest2ComposeAndAssert2_Assert222_default_0.input.params_2_2_2.param
+        }
+    }
+}
+assertion-context
+    step_AssertionsTestTest2ComposeAndAssert2_Assert222_default_0.input.___CONTEXT___.unit := 0
+assertion-input
+    step_AssertionsTestTest2ComposeAndAssert2_Assert222_default_0.input.params_2_2_2.id := 2
+    step_AssertionsTestTest2ComposeAndAssert2_Assert222_default_0.input.params_2_2_2.param := step_AssertionsTestTest2Run1_Run212_default_0.output.report_2_1_2.result
+
+step-id    step_AssertionsTestTest2Run3_Run231_default_0
+step-type  Run_2_3_1
+step-input
+    step_AssertionsTestTest2Run3_Run231_default_0.input.params_2_3_1.id := 2
+    step_AssertionsTestTest2Run3_Run231_default_0.input.params_2_3_1.param := step_AssertionsTestTest2Run1_Run212_default_0.output.report_2_1_2.result
+
+step-id    step_AssertionsTestTest1Run1_Run112_default_0
+step-type  Run_1_1_2
+step-context
+    step_AssertionsTestTest1Run1_Run112_default_0.input.ctx.id := "Test 1"
+step-input
+    step_AssertionsTestTest1Run1_Run112_default_0.input.params_1_1_2.id := 1
+    step_AssertionsTestTest1Run1_Run112_default_0.input.params_1_1_2.param := "Test 1"
+
+assertion-id    step_AssertionsTestTest1Assert2_Assert121_default_0
+assertion-type  Assert_1_2_1
+assertion-items {
+    assertions default {
+        report_id: assert-that (step_AssertionsTestTest1Assert2_Assert121_default_0.input.report_1_1_2.id) {
+          equal-to 1
+        }
+        report_result: assert-that (step_AssertionsTestTest1Assert2_Assert121_default_0.input.report_1_1_2.result) {
+          match-regex "\\w+"
+        }
+    }
+}
+assertion-input
+    step_AssertionsTestTest1Assert2_Assert121_default_0.input.report_1_1_2.id := 1
+    step_AssertionsTestTest1Assert2_Assert121_default_0.input.report_1_1_2.result := step_AssertionsTestTest1Run1_Run112_default_0.output.report_1_1_2.result
+}
+
+generate-file "./dataset/"

@@ -69,7 +69,7 @@ class FromAbstractToConcrete extends AbstractGenerator {
         val type = step instanceof AssertionStep ? 'assertion' : 'step'
 
         val contextAssignments = step.collectConcreteDataAssignments(step.contextData)
-        val sutAssignments = step.collectConcreteDataAssignments(step.SUTData)
+        val sutAssignments = step.collectSUTDataAssignments(step.SUTData)
 
         // Get assignments for concrete data input
         val inputAssignments = step.collectConcreteDataAssignments(step.inputData)

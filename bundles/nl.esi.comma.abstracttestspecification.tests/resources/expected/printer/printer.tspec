@@ -7,36 +7,34 @@ test-sequence from_abstract_to_concrete {
 step-sequence test_single_sequence {
 step-id    step_PrintFactoryA3DPrinter_RunPrintJob_default_0
 step-type  ExecutePrinter
-step-context
-    step_PrintFactoryA3DPrinter_RunPrintJob_default_0.input.___CONTEXT___.unit := 0
 step-input
-    step_PrintFactoryA3DPrinter_RunPrintJob_default_0.input.request.color := ColorType::MONOCHROME
     step_PrintFactoryA3DPrinter_RunPrintJob_default_0.input.request.id := 1
-    step_PrintFactoryA3DPrinter_RunPrintJob_default_0.input.request.opType := OperationType::PRINT
     step_PrintFactoryA3DPrinter_RunPrintJob_default_0.input.request.resolution := PrintResolution::LOW
     step_PrintFactoryA3DPrinter_RunPrintJob_default_0.input.request.scale := 50.0
+    step_PrintFactoryA3DPrinter_RunPrintJob_default_0.input.request.color := ColorType::MONOCHROME
+    step_PrintFactoryA3DPrinter_RunPrintJob_default_0.input.request.opType := OperationType::PRINT
 step-sut
-    step_PrintFactoryA3DPrinter_RunPrintJob_default_0.input.variants.release := "1.0.0"
-    step_PrintFactoryA3DPrinter_RunPrintJob_default_0.input.variants.version := "PX210"
+    step_PrintFactoryA3DPrinter_RunPrintJob_default_0.input.variants := PrinterVariants {
+        version = "PX210",
+        release = "1.0.0"
+    }
 
 step-id    step_PrintFactoryA3DPrinter_RunPrepareJob_default_0
 step-type  ExecutePrinter
-step-context
-    step_PrintFactoryA3DPrinter_RunPrepareJob_default_0.input.___CONTEXT___.unit := 0
 step-input
-    step_PrintFactoryA3DPrinter_RunPrepareJob_default_0.input.request.color := ColorType::MONOCHROME
     step_PrintFactoryA3DPrinter_RunPrepareJob_default_0.input.request.id := 1
-    step_PrintFactoryA3DPrinter_RunPrepareJob_default_0.input.request.opType := OperationType::PREP
     step_PrintFactoryA3DPrinter_RunPrepareJob_default_0.input.request.resolution := PrintResolution::LOW
     step_PrintFactoryA3DPrinter_RunPrepareJob_default_0.input.request.scale := null
+    step_PrintFactoryA3DPrinter_RunPrepareJob_default_0.input.request.color := ColorType::MONOCHROME
+    step_PrintFactoryA3DPrinter_RunPrepareJob_default_0.input.request.opType := OperationType::PREP
 step-sut
-    step_PrintFactoryA3DPrinter_RunPrepareJob_default_0.input.variants.release := "1.1.0"
-    step_PrintFactoryA3DPrinter_RunPrepareJob_default_0.input.variants.version := "PX210"
+    step_PrintFactoryA3DPrinter_RunPrepareJob_default_0.input.variants := PrinterVariants {
+        version = "PX210",
+        release = "1.1.0"
+    }
 
 step-id    step_PrintFactoryInspection_RunVisualinspection_default_0
 step-type  ExecuteInspection
-step-context
-    step_PrintFactoryInspection_RunVisualinspection_default_0.input.___CONTEXT___.unit := 0
 step-input
     step_PrintFactoryInspection_RunVisualinspection_default_0.input.measureRequest.id := 1
     step_PrintFactoryInspection_RunVisualinspection_default_0.input.measureRequest.printJobReport := step_PrintFactoryA3DPrinter_RunPrintJob_default_0.output.printReport
@@ -54,48 +52,44 @@ assertion-context
     step_PrintFactoryAssertions_AssertVisualInspection_default_0.input.history.inspectionReports := <int[]>[
     ]
 assertion-input
-    step_PrintFactoryAssertions_AssertVisualInspection_default_0.input.inspectionReport.kpi := step_PrintFactoryInspection_RunVisualinspection_default_0.output.inspectionReport.kpi
     step_PrintFactoryAssertions_AssertVisualInspection_default_0.input.inspectionReport.payload := step_PrintFactoryInspection_RunVisualinspection_default_0.output.inspectionReport.payload
+    step_PrintFactoryAssertions_AssertVisualInspection_default_0.input.inspectionReport.kpi := step_PrintFactoryInspection_RunVisualinspection_default_0.output.inspectionReport.kpi
 
 step-id    step_PrintFactoryOptimization_RunOptimizationJob_default_0
 step-type  ExecuteOptimizer
-step-context
-    step_PrintFactoryOptimization_RunOptimizationJob_default_0.input.___CONTEXT___.unit := 0
 step-input
     step_PrintFactoryOptimization_RunOptimizationJob_default_0.input.optimizeJob.id := 1
 
 step-id    step_PrintFactoryA3DPrinter_RunPrintJob_default_1
 step-type  ExecutePrinter
-step-context
-    step_PrintFactoryA3DPrinter_RunPrintJob_default_1.input.___CONTEXT___.unit := 0
 step-input
-    step_PrintFactoryA3DPrinter_RunPrintJob_default_1.input.request.color := ColorType::COLOR
     step_PrintFactoryA3DPrinter_RunPrintJob_default_1.input.request.id := 2
-    step_PrintFactoryA3DPrinter_RunPrintJob_default_1.input.request.opType := OperationType::PRINT
     step_PrintFactoryA3DPrinter_RunPrintJob_default_1.input.request.resolution := PrintResolution::MED
     step_PrintFactoryA3DPrinter_RunPrintJob_default_1.input.request.scale := 75.0
+    step_PrintFactoryA3DPrinter_RunPrintJob_default_1.input.request.color := ColorType::COLOR
+    step_PrintFactoryA3DPrinter_RunPrintJob_default_1.input.request.opType := OperationType::PRINT
 step-sut
-    step_PrintFactoryA3DPrinter_RunPrintJob_default_1.input.variants.release := "1.0.0"
-    step_PrintFactoryA3DPrinter_RunPrintJob_default_1.input.variants.version := "PX210"
+    step_PrintFactoryA3DPrinter_RunPrintJob_default_1.input.variants := PrinterVariants {
+        version = "PX210",
+        release = "1.0.0"
+    }
 
 step-id    step_PrintFactoryA3DPrinter_RunPrepareJob_default_1
 step-type  ExecutePrinter
-step-context
-    step_PrintFactoryA3DPrinter_RunPrepareJob_default_1.input.___CONTEXT___.unit := 0
 step-input
-    step_PrintFactoryA3DPrinter_RunPrepareJob_default_1.input.request.color := ColorType::COLOR
     step_PrintFactoryA3DPrinter_RunPrepareJob_default_1.input.request.id := 2
-    step_PrintFactoryA3DPrinter_RunPrepareJob_default_1.input.request.opType := OperationType::PREP
     step_PrintFactoryA3DPrinter_RunPrepareJob_default_1.input.request.resolution := PrintResolution::MED
     step_PrintFactoryA3DPrinter_RunPrepareJob_default_1.input.request.scale := null
+    step_PrintFactoryA3DPrinter_RunPrepareJob_default_1.input.request.color := ColorType::COLOR
+    step_PrintFactoryA3DPrinter_RunPrepareJob_default_1.input.request.opType := OperationType::PREP
 step-sut
-    step_PrintFactoryA3DPrinter_RunPrepareJob_default_1.input.variants.release := "1.1.0"
-    step_PrintFactoryA3DPrinter_RunPrepareJob_default_1.input.variants.version := "PX210"
+    step_PrintFactoryA3DPrinter_RunPrepareJob_default_1.input.variants := PrinterVariants {
+        version = "PX210",
+        release = "1.1.0"
+    }
 
 step-id    step_PrintFactoryInspection_RunVisualinspection_default_1
 step-type  ExecuteInspection
-step-context
-    step_PrintFactoryInspection_RunVisualinspection_default_1.input.___CONTEXT___.unit := 0
 step-input
     step_PrintFactoryInspection_RunVisualinspection_default_1.input.measureRequest.id := 2
     step_PrintFactoryInspection_RunVisualinspection_default_1.input.measureRequest.printJobReport := step_PrintFactoryA3DPrinter_RunPrintJob_default_1.output.printReport
@@ -113,48 +107,44 @@ assertion-input
     step_PrintFactoryAssertions_AssertVisualInspection_default_1.input.history.inspectionReports := <int[]>[
         1
     ]
-    step_PrintFactoryAssertions_AssertVisualInspection_default_1.input.inspectionReport.kpi := step_PrintFactoryInspection_RunVisualinspection_default_1.output.inspectionReport.kpi
     step_PrintFactoryAssertions_AssertVisualInspection_default_1.input.inspectionReport.payload := step_PrintFactoryInspection_RunVisualinspection_default_1.output.inspectionReport.payload
+    step_PrintFactoryAssertions_AssertVisualInspection_default_1.input.inspectionReport.kpi := step_PrintFactoryInspection_RunVisualinspection_default_1.output.inspectionReport.kpi
 
 step-id    step_PrintFactoryOptimization_RunOptimizationJob_default_1
 step-type  ExecuteOptimizer
-step-context
-    step_PrintFactoryOptimization_RunOptimizationJob_default_1.input.___CONTEXT___.unit := 0
 step-input
     step_PrintFactoryOptimization_RunOptimizationJob_default_1.input.optimizeJob.id := 2
 
 step-id    step_PrintFactoryA3DPrinter_RunPrintJob_default_2
 step-type  ExecutePrinter
-step-context
-    step_PrintFactoryA3DPrinter_RunPrintJob_default_2.input.___CONTEXT___.unit := 0
 step-input
-    step_PrintFactoryA3DPrinter_RunPrintJob_default_2.input.request.color := ColorType::COLOR
     step_PrintFactoryA3DPrinter_RunPrintJob_default_2.input.request.id := 3
-    step_PrintFactoryA3DPrinter_RunPrintJob_default_2.input.request.opType := OperationType::PRINT
     step_PrintFactoryA3DPrinter_RunPrintJob_default_2.input.request.resolution := PrintResolution::HIGH
     step_PrintFactoryA3DPrinter_RunPrintJob_default_2.input.request.scale := 75.0
+    step_PrintFactoryA3DPrinter_RunPrintJob_default_2.input.request.color := ColorType::COLOR
+    step_PrintFactoryA3DPrinter_RunPrintJob_default_2.input.request.opType := OperationType::PRINT
 step-sut
-    step_PrintFactoryA3DPrinter_RunPrintJob_default_2.input.variants.release := "2.1.0"
-    step_PrintFactoryA3DPrinter_RunPrintJob_default_2.input.variants.version := "TX500"
+    step_PrintFactoryA3DPrinter_RunPrintJob_default_2.input.variants := PrinterVariants {
+        version = "TX500",
+        release = "2.1.0"
+    }
 
 step-id    step_PrintFactoryA3DPrinter_RunPrepareJob_default_2
 step-type  ExecutePrinter
-step-context
-    step_PrintFactoryA3DPrinter_RunPrepareJob_default_2.input.___CONTEXT___.unit := 0
 step-input
-    step_PrintFactoryA3DPrinter_RunPrepareJob_default_2.input.request.color := ColorType::COLOR
     step_PrintFactoryA3DPrinter_RunPrepareJob_default_2.input.request.id := 3
-    step_PrintFactoryA3DPrinter_RunPrepareJob_default_2.input.request.opType := OperationType::PREP
     step_PrintFactoryA3DPrinter_RunPrepareJob_default_2.input.request.resolution := PrintResolution::HIGH
     step_PrintFactoryA3DPrinter_RunPrepareJob_default_2.input.request.scale := null
+    step_PrintFactoryA3DPrinter_RunPrepareJob_default_2.input.request.color := ColorType::COLOR
+    step_PrintFactoryA3DPrinter_RunPrepareJob_default_2.input.request.opType := OperationType::PREP
 step-sut
-    step_PrintFactoryA3DPrinter_RunPrepareJob_default_2.input.variants.release := "2.1.0"
-    step_PrintFactoryA3DPrinter_RunPrepareJob_default_2.input.variants.version := "TX500"
+    step_PrintFactoryA3DPrinter_RunPrepareJob_default_2.input.variants := PrinterVariants {
+        version = "TX500",
+        release = "2.1.0"
+    }
 
 step-id    step_PrintFactoryInspection_RunVisualinspection_default_2
 step-type  ExecuteInspection
-step-context
-    step_PrintFactoryInspection_RunVisualinspection_default_2.input.___CONTEXT___.unit := 0
 step-input
     step_PrintFactoryInspection_RunVisualinspection_default_2.input.measureRequest.id := 3
     step_PrintFactoryInspection_RunVisualinspection_default_2.input.measureRequest.printJobReport := step_PrintFactoryA3DPrinter_RunPrintJob_default_2.output.printReport
@@ -172,13 +162,11 @@ assertion-input
     step_PrintFactoryAssertions_AssertVisualInspection_default_2.input.history.inspectionReports := <int[]>[
         1,2
     ]
-    step_PrintFactoryAssertions_AssertVisualInspection_default_2.input.inspectionReport.kpi := step_PrintFactoryInspection_RunVisualinspection_default_2.output.inspectionReport.kpi
     step_PrintFactoryAssertions_AssertVisualInspection_default_2.input.inspectionReport.payload := step_PrintFactoryInspection_RunVisualinspection_default_2.output.inspectionReport.payload
+    step_PrintFactoryAssertions_AssertVisualInspection_default_2.input.inspectionReport.kpi := step_PrintFactoryInspection_RunVisualinspection_default_2.output.inspectionReport.kpi
 
 step-id    step_PrintFactoryOptimization_RunOptimizationJob_default_2
 step-type  ExecuteOptimizer
-step-context
-    step_PrintFactoryOptimization_RunOptimizationJob_default_2.input.___CONTEXT___.unit := 0
 step-input
     step_PrintFactoryOptimization_RunOptimizationJob_default_2.input.optimizeJob.id := 3
 }
