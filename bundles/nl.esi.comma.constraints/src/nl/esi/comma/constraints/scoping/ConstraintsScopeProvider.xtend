@@ -31,6 +31,9 @@ import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.scoping.IScope
 import org.eclipse.xtext.scoping.Scopes
 import nl.esi.comma.constraints.constraints.Act
+import nl.esi.comma.constraints.constraints.ReferenceLink
+import nl.esi.comma.constraints.constraints.Response
+import org.eclipse.emf.ecore.util.EcoreUtil
 
 /**
  * This class contains custom scoping description.
@@ -87,7 +90,12 @@ class ConstraintsScopeProvider extends AbstractConstraintsScopeProvider {
 
     def scope_Variables(EObject context, EReference reference) {
         val refAction = EcoreUtil2.getContainerOfType(context, RefAction)
-
+        val link = EcoreUtil2.getContainerOfType(context, ReferenceLink)
+        if (refAction !== null && link !== null && EcoreUtil.isAncestor(link.source, context)) {
+            // activation is the first action written in a constraint
+            val activation = refAction.eContainer.eContents.filter(RefAction).head
+            return Scopes.scopeFor(activation.action.outputs)
+        }
         val scope = context instanceof ExpressionScopedVariable ? context.scope : ExpressionVariableScope.DERIVED
         var outerScope = IScope.NULLSCOPE
         val variables = newArrayList

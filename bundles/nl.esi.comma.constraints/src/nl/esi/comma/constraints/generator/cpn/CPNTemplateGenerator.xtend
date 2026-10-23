@@ -61,7 +61,7 @@ import nl.esi.comma.testspecification.testspecification.TestDefinition
 import nl.esi.xtext.actions.actions.RecordFieldAssignmentAction
 import nl.esi.xtext.expressions.expression.ExpressionVariable
 import nl.esi.xtext.types.types.TypesModel
-
+import com.google.gson.GsonBuilder
 
 class CPNTemplateGenerator 
 {
@@ -674,6 +674,15 @@ class CPNTemplateGenerator
         val acceptanceJsonFileName = generatedSpecName + ".acceptance.json"
         val acceptancePythonFileName = generatedSpecName + ".acceptance.py"
         
+        val referenceChecks = helpers.getReferenceChecks(currentConstraint, td)
+
+        if (currentConstraint.name == "inspectionConsumesPrintReport") {
+            System.out.println("getReferenceChecks returned for " + currentConstraint.name)
+            System.out.println(
+                referenceChecks
+//                new GsonBuilder().setPrettyPrinting().create().toJson(referenceChecks)
+            )
+        }
         fsa.generateFile(
            constraintFolder + pspecFileName,
             specPrefix + tspecModel + specBody + specPostfix
@@ -689,7 +698,8 @@ class CPNTemplateGenerator
             generateAcceptancePythonClass(
                 generatedSpecName,
                 currentConstraint.name,
-                templateResult.getDiagnostics()
+                templateResult.getDiagnostics(),
+                new GsonBuilder().disableHtmlEscaping().create().toJson(referenceChecks)
             )
         )
 
@@ -704,10 +714,11 @@ class CPNTemplateGenerator
     }
     
 //    Generates a python class with the acceptance logic
-    def String generateAcceptancePythonClass(String generatedSpecName, String constraintName, String diagnostics) {
+    def String generateAcceptancePythonClass(String generatedSpecName, String constraintName, String diagnostics, String referenceChecks) {
         return
         '''
         import json
+        import re
         
         # used in generating diagnostics   
         
@@ -855,7 +866,30 @@ class CPNTemplateGenerator
                         
             return diagnostics
 
-        
+        # every accepted pair: the target step must use the activation step's output
+        def check_references(checks, checked_nodes):
+            diagnostics = []
+            for node in checked_nodes:
+                for token in node.get("marking", {}).get("matchedPairs", []):
+                    metadata = token.get("MetaData", {}) if isinstance(token, dict) else {}
+                    for act_id in metadata.get("activationIds", []):
+                        for tgt_id in metadata.get("targetIds", []):
+                            for check in checks:
+                                expected = check["expected"].replace("{activation}", act_id)
+                                actual = check["values"].get(tgt_id, "")
+                                if re.search(r"(?<!\w)" + re.escape(expected) + r"(?!\w)", actual) is None:
+                                    diagnostics.append({
+                                        "kind": "unsatisfiedReference",
+                                        "nodeId": node["id"],
+                                        "place": "matchedPairs",
+                                        "target": check["target"],
+                                        "expected": expected,
+                                        "actual": actual,
+                                        "activationEvent": {"stepIds": [act_id]},
+                                        "targetEvent": {"stepIds": [tgt_id]},
+                                        "message": tgt_id + " does not use " + expected + " at " + check["target"] + "."
+                                    })
+            return diagnostics
                     
               
         
@@ -868,6 +902,10 @@ class CPNTemplateGenerator
             # pass the diagnostics logic for each template
             def diagnostic_rules(self):
                 return «diagnostics»
+            
+            # pass the reference check rules for each constraint    
+            def reference_checks(self):
+                return «referenceChecks»
         
             # evaluates the acceptance condition on the reachability graph
             def evaluate(self, reachability_graph):
@@ -906,17 +944,18 @@ class CPNTemplateGenerator
                             "nodeId": node.get("id"),
                             "violations": node_violations
                         })
+                reference_diagnostics = check_references(self.reference_checks(), checked_nodes)
         
                 return {
                     "constraint": self.acceptance_cond.get("constraint"),
                     "expectedConstraint": self.constraint_name,
                     "generatedPspec": self.pspec_name,
                     "templateType": self.acceptance_cond.get("templateType"),
-                    "accepted": len(violations) == 0,
+                    "accepted": len(violations) == 0 and len(reference_diagnostics) == 0,
                     "scope": scope,
                     "checkedNodeIds": [node.get("id") for node in checked_nodes],
                     "violations": violations,
-                    "diagnostics": build_diagnostics(self.diagnostic_rules(), checked_nodes, violations)
+                    "diagnostics": build_diagnostics(self.diagnostic_rules(), checked_nodes, violations)+ reference_diagnostics
                 }
         
             def _select_nodes(self, reachability_graph, scope):

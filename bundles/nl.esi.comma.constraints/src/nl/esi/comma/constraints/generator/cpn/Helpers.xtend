@@ -13,20 +13,25 @@
 
 package nl.esi.comma.constraints.generator.cpn
 
-import nl.esi.comma.constraints.generator.cpn.model.RefInfo
-import nl.esi.comma.constraints.constraints.RefAction
+import java.util.List
 import nl.esi.comma.constraints.constraints.Ref
+import nl.esi.comma.constraints.constraints.RefAction
+import nl.esi.comma.constraints.constraints.ReferenceLink
+import nl.esi.comma.constraints.constraints.Template
+import nl.esi.comma.constraints.generator.cpn.model.RefInfo
+import nl.esi.comma.testspecification.testspecification.AssertionStep
+import nl.esi.comma.testspecification.testspecification.RunStep
+import nl.esi.comma.testspecification.testspecification.TestDefinition
+import nl.esi.xtext.actions.actions.AssignmentAction
+import nl.esi.xtext.actions.actions.RecordFieldAssignmentAction
 import nl.esi.xtext.expressions.expression.Expression
 import org.eclipse.emf.common.util.BasicEList
 import org.eclipse.emf.common.util.EList
+import org.eclipse.emf.ecore.EObject
+import org.eclipse.xtext.EcoreUtil2
+import org.eclipse.xtext.nodemodel.util.NodeModelUtils
 import org.eclipse.xtext.resource.XtextResource
 import org.eclipse.xtext.serializer.ISerializer
-import nl.esi.xtext.actions.actions.AssignmentAction
-import nl.esi.comma.testspecification.testspecification.TestDefinition
-import java.util.List
-import nl.esi.comma.testspecification.testspecification.RunStep
-import nl.esi.comma.testspecification.testspecification.AssertionStep
-import org.eclipse.emf.ecore.EObject
 
 class Helpers {
     def getRefName(Ref ref){
@@ -211,5 +216,29 @@ class Helpers {
         .replaceAll("[ \\t]*[\\r\\n]+[ \\t]*", " ")
         .replace("\\", "\\\\")
         .replace("\"", "\\\"")
+    }
+    
+        // one check per consumes link; values are keyed by step id
+    def getReferenceChecks(Template constraint, TestDefinition td) {
+        EcoreUtil2.getAllContentsOfType(constraint, ReferenceLink).map [ link |
+            val target = ReferenceHelper.expression(link.target)
+            #{
+                "target" -> target,
+                "expected" -> ReferenceHelper.expression(link.source, ["{activation}.output"]),
+                "values" -> getAssignedValues(td, target)
+            }
+        ].toList
+    }
+
+    def getAssignedValues(TestDefinition td, String targetPath) {
+        val values = newLinkedHashMap
+        for (step : EcoreUtil2.getAllContentsOfType(td, RunStep)) {
+            for (act : EcoreUtil2.getAllContentsOfType(step, RecordFieldAssignmentAction)) {
+                if (ReferenceHelper.expression(act.fieldAccess) == targetPath) {
+                    values.put(step.inputVar.name, NodeModelUtils.getNode(act.exp).text.replaceAll("\\s+", ""))
+                }
+            }
+        }
+        return values
     }
 }
