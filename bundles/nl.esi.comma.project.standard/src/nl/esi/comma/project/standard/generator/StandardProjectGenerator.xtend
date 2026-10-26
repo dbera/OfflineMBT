@@ -27,8 +27,6 @@ import nl.esi.comma.project.standard.standardProject.OfflineGenerationTarget
 import nl.esi.comma.project.standard.standardProject.Project
 import nl.esi.comma.project.standard.standardProject.TargetConfig
 import nl.esi.comma.testspecification.generator.utils.MergeConcreteDataAssigments
-import nl.esi.comma.testspecification.testspecification.AssertionStep
-import nl.esi.comma.testspecification.testspecification.TSMain
 import nl.esi.xtext.common.lang.reporting.IStatusReporting
 import nl.esi.xtext.common.lang.reporting.StatusReportHelper
 import nl.esi.xtext.common.lang.utilities.EcoreUtil3
@@ -40,7 +38,6 @@ import org.eclipse.xtext.generator.IGeneratorContext
 
 import static nl.esi.comma.project.standard.generator.^extension.IStandardProjectGeneratorExtension.*
 
-import static extension nl.esi.comma.testspecification.generator.utils.Utils.*
 import static extension nl.esi.xtext.common.lang.generator.FileSystemAccessUtil.*
 import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
 import static extension org.eclipse.emf.ecore.util.EcoreUtil.*
@@ -128,10 +125,6 @@ class StandardProjectGenerator extends AbstractGenerator {
                 // Only apply concrete tspec post-processing if resource doesn't contain errors
                 if (conTspecRes.errors.isEmpty) {
                     MergeConcreteDataAssigments.transform(conTspecRes)
-                    // Do we always want to evaluate these expressions or do we just want to provide the utility
-                    // such that test-implementation specific transformations can easily use this?
-                    conTspecRes.contents.filter(TSMain).flatMap[model.stepSeq]
-                        .flatMap[step].filter(AssertionStep).forEach[evaluateAssertions]
                     conTspecRes.trySave
                 }
                 // Validate the generated concrete tspec, stop this transformation on error

@@ -43,6 +43,10 @@ class Utils
         // Empty
     }
 
+    /**
+     * Evaluates the assertions of the <tt>step</tt> such that all expression are rewritten 
+     * in terms of the right-hand-side of the assert inputs.
+     */
     static def void evaluateAssertions(AssertionStep step) {
         // Prepare evaluation context, copy the initializers such that they remain unchanged
         val stepInput = step.stepVar.createValue((step.context + step.input + step.sut).map[copy])
@@ -67,7 +71,8 @@ class Utils
     }
 
     static def Expression createValue(Variable variable, Iterable<RecordFieldAssignmentAction> fieldInitializers) {
-        val variableValue = variable.type.typeObject.createDefaultValue[true]
+        val initRecFields = fieldInitializers.flatMap[fields].toSet
+        val variableValue = variable.type.typeObject.createDefaultValue[initRecFields.contains(it)]
         for (action : fieldInitializers.filter[exp !== null && assignment === variable]) {
             val field = variableValue.resolveField(action.fields)
             if (field !== null) {
