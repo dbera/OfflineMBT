@@ -45,7 +45,6 @@ nl.esi.comma.behavior.scl -[hidden]- nl.esi.comma.scenarios
 artifact nl.esi.xtext.types.Types #white/aqua
 artifact nl.asml.matala.product.Product #white/aqua
 artifact nl.esi.comma.abstracttestspecification.AbstractTestspecification #white/aqua
-artifact nl.esi.comma.inputspecification.InputSpecification #white/aqua
 artifact nl.esi.comma.testspecification.Testspecification #white/aqua
 artifact nl.esi.comma.project.standard.StandardProject #white/aqua
 artifact nl.esi.comma.causalgraph.CausalGraph #white/aquamarine

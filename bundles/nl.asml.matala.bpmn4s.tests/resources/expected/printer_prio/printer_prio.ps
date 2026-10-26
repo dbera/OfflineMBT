@@ -13,6 +13,8 @@ specification printer_prio
     
         local
         PrintRequest	request
+    
+        context
         UNIT	Event_0mxx05p
         UNIT	Event_0jcg6zx
         UNIT	Flow_1u2qmtt
@@ -40,7 +42,7 @@ specification printer_prio
         element-label	"Run Print Job"
         case			default priority 10 step-type "ExecutePrinter" action-type RUN
         with-inputs		Flow_1u2qmtt, request
-        produces-outputs	Event_0jcg6zx suppress
+        produces-outputs	Event_0jcg6zx
         updates:
             Event_0jcg6zx := Flow_1u2qmtt
         produces-outputs	printResult
@@ -57,7 +59,7 @@ specification printer_prio
         case			default priority 10 step-type "null" action-type COMPOSE
         with-inputs		printJob, corrections
         with-guard		corrections.id == printJob.id and printJob.opType == OperationType::PRINT
-        produces-outputs	Flow_1u2qmtt suppress
+        produces-outputs	Flow_1u2qmtt
         produces-outputs	request symbolic-link
         updates:
             request := printJob
@@ -67,7 +69,7 @@ specification printer_prio
         case			default priority 10 step-type "null" action-type COMPOSE
         with-inputs		printJob
         with-guard		printJob.opType == OperationType::PREP
-        produces-outputs	Flow_0iaelzn suppress
+        produces-outputs	Flow_0iaelzn
         produces-outputs	request symbolic-link
         updates:
             request := printJob
@@ -76,7 +78,7 @@ specification printer_prio
         element-label	"Run Prepare Job"
         case			default priority 10 step-type "ExecutePrinter" action-type RUN
         with-inputs		Flow_0iaelzn, request
-        produces-outputs	Event_0mxx05p suppress
+        produces-outputs	Event_0mxx05p
         updates:
             Event_0mxx05p := Flow_0iaelzn
         produces-outputs	printResult
@@ -96,6 +98,8 @@ specification printer_prio
     
         local
         AssertionsHistory	history
+    
+        context
         UNIT	Event_1bxlea2
     
         init
@@ -114,13 +118,13 @@ specification printer_prio
               equal-to 9.0 within-margin relative (1.0)
             }
         }
-        produces-outputs	Event_1bxlea2 suppress
+        produces-outputs	Event_1bxlea2
         produces-outputs	history symbolic-link
         updates:
             history := AssertionsHistory {
               inspectionReports = add(history.inspectionReports, inspectionReport.id)
             }
-        produces-outputs	inspectionReport symbolic-link
+        produces-outputs	inspectionReport
         updates:
             inspectionReport := inspectionReport
     
@@ -140,6 +144,8 @@ specification printer_prio
     
         local
         MeasureRequest	measureRequest
+    
+        context
         UNIT	Flow_07l0yyj
     
         // init
@@ -165,14 +171,14 @@ specification printer_prio
         case			default priority 20 step-type "null" action-type COMPOSE
         with-inputs		inspectionJob, printReport
         with-guard		printReport.id == inspectionJob.id
-        produces-outputs	Flow_07l0yyj suppress
+        produces-outputs	Flow_07l0yyj
         produces-outputs	measureRequest
         references {
             reportLinking: measureRequest.printJobReport := printReport
         } symbolic-link
         updates:
             measureRequest := inspectionJob
-        produces-outputs	printReport symbolic-link suppress
+        produces-outputs	printReport
         updates:
             printReport := printReport
     
@@ -192,6 +198,8 @@ specification printer_prio
     
         local
         OptimizeRequest	optimizeJob
+    
+        context
         UNIT	Event_1oozdnw
         UNIT	Flow_0y8u5pd
     
@@ -205,11 +213,11 @@ specification printer_prio
         case			default priority 30 step-type "null" action-type COMPOSE
         with-inputs		optJob, inspectionReport
         with-guard		inspectionReport.id == optJob.id
-        produces-outputs	Flow_0y8u5pd suppress
+        produces-outputs	Flow_0y8u5pd
         produces-outputs	optimizeJob symbolic-link
         updates:
             optimizeJob := optJob
-        produces-outputs	inspectionReport symbolic-link suppress
+        produces-outputs	inspectionReport
         updates:
             inspectionReport := inspectionReport
         
@@ -217,7 +225,7 @@ specification printer_prio
         element-label	"Run Optimization Job"
         case			default priority 30 step-type "ExecuteOptimizer" action-type RUN
         with-inputs		Flow_0y8u5pd, optimizeJob
-        produces-outputs	Event_1oozdnw suppress
+        produces-outputs	Event_1oozdnw
         updates:
             Event_1oozdnw := Flow_0y8u5pd
         produces-outputs	corrections symbolic-link
@@ -243,7 +251,9 @@ specification printer_prio
         MeasureRequest	inspectionJob
         OptimizeRequest	optJob
     
-        local
+        // local
+    
+        context ctx
         FactoryCtx	Gateway_0p2uo9v
         FactoryCtx	Gateway_1wpvmtk
         FactoryCtx	Flow_16s4ey1

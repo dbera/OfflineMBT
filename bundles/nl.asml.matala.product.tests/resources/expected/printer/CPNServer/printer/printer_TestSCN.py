@@ -159,7 +159,7 @@ class TestSCN:
                             txt += v + " "
                         # txt += elm.var_ref
                         txt += " }\n"
-                txt += "input-binding:\n"
+                txt += "input-data:\n"
                 txt += self.printData(idata)
                 isSutVarPresent = False
                 for k, v in idata.items():
@@ -276,8 +276,6 @@ class Step:
         step_dep = StepDependency()
         isMatched = False
         for ipdata in self.output_data:
-            if ipdata in self.output_suppress:
-                continue
             for opdata in _step.input_data:
                 if self.step_name.rsplit('_', 1)[0] in mapTrAssert:
                     if ipdata == opdata and ipdata in mapTrAssert[self.step_name.rsplit('_', 1)[0]]:

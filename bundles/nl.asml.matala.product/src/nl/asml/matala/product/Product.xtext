@@ -64,7 +64,8 @@ Block:
 			('inputs' invars+=Variable* )? &
 			('outputs' outvars+=Variable* )? &
 			('local' localvars+=Variable* )? &
-            ('suts' sutvars += [expr::Variable|ID] (',' sutvars+=[expr::Variable|ID])*)? &
+            ('context' (contextname=ID)? contextvars+=Variable* )? &
+            ('suts' sutvars+=[expr::Variable|ID] (',' sutvars+=[expr::Variable|ID])*)? &
 			('init' initActions+=AssignmentAction*)? &
 			('desc' type = STRING)?
 		)
@@ -114,11 +115,7 @@ VarRef:
 ;
 
 Suppress: {Suppress}
-    'suppress' ('(' varFields+=SuppressVarFieldExp (',' varFields+=SuppressVarFieldExp)* ')')?
-;
-
-SuppressVarFieldExp returns expr::Expression:
-    ExpressionVariable | FieldAccessExp
+    'suppress' ('(' vars+=ExpressionVariable (',' vars+=ExpressionVariable)* ')')?
 ;
 
 DataConstraints: {DataConstraints}

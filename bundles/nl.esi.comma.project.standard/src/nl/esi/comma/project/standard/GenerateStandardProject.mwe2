@@ -50,6 +50,9 @@ Workflow {
             validator = {
                 generateStub = true
             }
+            formatter = formatting.Formatter2Fragment2 {
+                generateStub = true
+            }
             generator = {
                 generateStub = true
             }

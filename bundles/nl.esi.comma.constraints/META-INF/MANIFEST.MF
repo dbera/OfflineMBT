@@ -36,5 +36,6 @@ Export-Package: nl.esi.comma.constraints,
  nl.esi.comma.constraints.scoping,
  nl.esi.comma.constraints.serializer,
  nl.esi.comma.constraints.services,
- nl.esi.comma.constraints.validation
+ nl.esi.comma.constraints.validation,
+ nl.esi.comma.constraints.formatting2
 Import-Package: org.apache.log4j

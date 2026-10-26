@@ -36,7 +36,7 @@ public class FileServerApiImpl implements FileServerApi {
 
 
     public void init(String rootPath) {
-		this.rootPath = Path.of(rootPath).toAbsolutePath();
+		this.rootPath = Path.of(rootPath).toAbsolutePath().normalize();
 	}
 
     @Override

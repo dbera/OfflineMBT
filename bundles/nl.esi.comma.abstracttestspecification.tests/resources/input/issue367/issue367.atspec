@@ -17,7 +17,7 @@ Test-Scenario: S1
 
 compose-step-name: Root_T1_default_0
 action-case: issue367.Root.T1.default
-input-binding:
+input-data:
 Event_052akh2 : {
     "unit": 0
 }
@@ -29,12 +29,11 @@ d1 : {
     "id": 0,
     "input1": "ONE"
 }
-suppress(Flow_01xqgnw)
 
 run-step-name: Root_T2_default_0 step-type: "Dummy"
 action-case: issue367.Root.T2.default
 consumes-from-step: Root_T1_default_0 { d1  }
-input-binding:
+input-data:
 Flow_01xqgnw : {
     "unit": 0
 }
@@ -49,12 +48,11 @@ Flow_12ridhf : {
 d2 : {
     "id": 0
 }
-suppress(Flow_12ridhf)
 
 compose-step-name: Root_T3_default_0
 action-case: issue367.Root.T3.default
 consumes-from-step: Root_T2_default_0 { d2  }
-input-binding:
+input-data:
 Flow_12ridhf : {
     "unit": 0
 }
@@ -68,7 +66,6 @@ Flow_1u9fpei : {
 d3 : {
     "id": 0
 }
-suppress(Flow_1u9fpei)
 data-references: d3
 issue367.Root.T3.default.x
 issue367.Root.T3.default.y
@@ -76,7 +73,7 @@ issue367.Root.T3.default.y
 compose-step-name: Root_T4_default_0
 action-case: issue367.Root.T4.default
 consumes-from-step: Root_T3_default_0 { d3  }
-input-binding:
+input-data:
 Flow_1u9fpei : {
     "unit": 0
 }
@@ -90,14 +87,13 @@ Flow_1jw2qfx : {
 d4 : {
     "id": 0
 }
-suppress(Flow_1jw2qfx)
 data-references: d4
 issue367.Root.T4.default.z
 
 run-step-name: Root_T5_default_0 step-type: "Dummy"
 action-case: issue367.Root.T5.default
 consumes-from-step: Root_T4_default_0 { d4  }
-input-binding:
+input-data:
 Flow_1jw2qfx : {
     "unit": 0
 }
@@ -108,7 +104,6 @@ output-data:
 Event_07r9aer : {
     "unit": 0
 }
-suppress(Event_07r9aer)
 
 generate-file "./dataset/"
 

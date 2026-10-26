@@ -41,9 +41,8 @@ import static nl.esi.comma.project.standard.generator.^extension.IStandardProjec
 import static extension nl.esi.xtext.common.lang.generator.FileSystemAccessUtil.*
 import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
 import static extension org.eclipse.emf.ecore.util.EcoreUtil.*
-import static extension org.eclipse.xtext.EcoreUtil2.*
-
 import static extension org.eclipse.lsat.common.xtend.Queries.*
+import static extension org.eclipse.xtext.EcoreUtil2.*
 
 /**
  * Generates code from your model files on save.
@@ -117,7 +116,7 @@ class StandardProjectGenerator extends AbstractGenerator {
             // Validate the generated abstract tspec, stop this transformation on error
             if (absTspecRes.validate) {
                 // Generate concrete tspec
-                val conTspecFsa = fsa.createFolderAccess(FOLDER_CONCRETE_TSPEC + '/' + tspecName)
+                val conTspecFsa = fsa.createFolderAccess(FOLDER_CONCRETE_TSPEC)
                 val fromAbstractToConcreteGen = new FromAbstractToConcrete()
                 fromAbstractToConcreteGen.doGenerate(absTspecRes, conTspecFsa, ctx)
 

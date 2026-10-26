@@ -33,5 +33,6 @@ Export-Package: nl.esi.comma.abstracttestspecification,
  nl.esi.comma.abstracttestspecification.scoping,
  nl.esi.comma.abstracttestspecification.serializer,
  nl.esi.comma.abstracttestspecification.services,
- nl.esi.comma.abstracttestspecification.validation
+ nl.esi.comma.abstracttestspecification.validation,
+ nl.esi.comma.abstracttestspecification.formatting2
 Import-Package: org.apache.log4j

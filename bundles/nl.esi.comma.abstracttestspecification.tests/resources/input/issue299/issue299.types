@@ -2,56 +2,57 @@ record UNIT {
 	int	unit
 }
 
+@context
 record ContextComposeJobB {
-    int	iteration_index
-    JobB	job
+  int iteration_index
+  JobB job
 }
 
+@context
 record ContextController {
-    int	job_index
-    Parameters	model_parameters
+  int job_index
+  Parameters model_parameters
 }
 
 record InputJobA {
-    int	job_id
+  int job_id
 }
 
 record InputJobB {
-    int	job_id
-    @mixed KeyValuePair[]	list_of_key_value_pairs
+  int job_id
+  @mixed KeyValuePair[] list_of_key_value_pairs
 }
 
 record JobA {
-    int	job_id
+  int job_id
 }
 
 record JobB {
-    int	job_id
-    string	some_label
-    int	count
+  int job_id
+  string some_label
+  int count
 }
 
 record KeyValuePair {
-    string	key
-    @mixed string	value
+  string key
+  @mixed string value
 }
 
 record Parameters {
-    int	job_count
-    string	job_tag
+  int job_count
+  string job_tag
 }
 
 record ReportJobA {
-    int	job_id
-    @symbolic  string	some_value
+  int job_id
+  @symbolic string some_value
 }
 
 record ReportJobB {
-    int	job_id
+  int job_id
 }
 
 record TempInputJobB {
-    int	iteration_index
-    InputJobB	input
+  int iteration_index
+  InputJobB input
 }
-

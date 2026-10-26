@@ -29,5 +29,6 @@ Export-Package: nl.asml.matala.product,
  nl.asml.matala.product.scoping,
  nl.asml.matala.product.serializer,
  nl.asml.matala.product.services,
- nl.asml.matala.product.validation
+ nl.asml.matala.product.validation,
+ nl.asml.matala.product.formatting2
 Import-Package: org.apache.log4j

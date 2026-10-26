@@ -50,6 +50,9 @@ Workflow {
 				// Generates checks for @Deprecated grammar annotations, an IssueProvider and a corresponding PropertyPage
 				generateDeprecationValidation = true
 			}
+            formatter = formatting.Formatter2Fragment2 {
+                generateStub = true
+            }
 			generator = null
             contentAssist = nl.esi.xplus.xtext.generator.ide.contentassist.IdeContentAssistFragment2 {
                 generateXtendStub = true

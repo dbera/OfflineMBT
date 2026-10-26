@@ -2,7 +2,7 @@ record UNIT {
 	int	unit
 }
 
+@context
 record MyContext {
-    int	myField
+  int myField
 }
-
