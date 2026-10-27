@@ -53,6 +53,9 @@ class SemanticExpressionJsonSerializer {
                 case "ExpressionMap":
                     mapExpression(expression, active)
 
+                case "ExpressionMapRW":
+                    mapAccess(expression, active)
+
                 case "ExpressionMapEntry":
                     mapEntry(expression, active)
 
@@ -317,7 +320,8 @@ class SemanticExpressionJsonSerializer {
 
         val fieldReference = firstObject(
             field,
-            #[
+            #[  
+                "recordField",
                 "field",
                 "feature",
                 "member"
@@ -368,6 +372,32 @@ class SemanticExpressionJsonSerializer {
 
         result
     }
+    
+    private def Map<String, Object> mapAccess(
+        EObject expression,
+        Set<EObject> active
+    ) {
+        val update = firstObject(expression, #["value"])
+        val result = base(
+            if (update === null) "mapAccess" else "mapUpdate",
+            expression
+        )
+    
+        result.put(
+            "map",
+            normalize(firstObject(expression, #["map"]), active)
+        )
+        result.put(
+            "key",
+            normalize(firstObject(expression, #["key"]), active)
+        )
+    
+        if (update !== null) {
+            result.put("value", normalize(update, active))
+        }
+    
+        result
+    }
 
     private def Map<String, Object> mapExpression(
         EObject expression,
@@ -385,6 +415,7 @@ class SemanticExpressionJsonSerializer {
                 firstList(
                     expression,
                     #[
+                        "pairs",
                         "entries",
                         "items",
                         "elements",
@@ -1035,8 +1066,9 @@ class SemanticExpressionJsonSerializer {
                 )
 
             if (
-                feature !== null &&
-                owner.eIsSet(feature)
+                feature !== null 
+//                &&
+//                owner.eIsSet(feature)
             ) {
                 val rawValue =
                     owner.eGet(feature)
