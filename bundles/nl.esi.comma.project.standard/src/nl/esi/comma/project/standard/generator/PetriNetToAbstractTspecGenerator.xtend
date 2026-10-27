@@ -72,7 +72,7 @@ class PetriNetToAbstractTspecGenerator extends AbstractGenerator {
         val errOut = new ByteArrayOutputStream
         process.inputReader.pipeTo(System.out)
         process.errorReader.pipeTo(System.err, new PrintStream(errOut))
-        val report = if (!process.waitFor(10, TimeUnit::MINUTES)) {
+        val report = if (!process.waitFor(20, TimeUnit::MINUTES)) {
             process.destroyForcibly
             val childReports = newArrayList()
             val statusReport = statusReportFile.readReport
