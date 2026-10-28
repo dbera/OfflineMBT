@@ -702,6 +702,7 @@ class SemanticExpressionJsonSerializer {
         val condition = firstObject(
             expression,
             #[
+                "left",
                 "condition",
                 "guard",
                 "if"
@@ -711,6 +712,7 @@ class SemanticExpressionJsonSerializer {
         val thenExpression = firstObject(
             expression,
             #[
+                "middle",
                 "then",
                 "thenExpression",
                 "ifTrue",
@@ -721,6 +723,7 @@ class SemanticExpressionJsonSerializer {
         val elseExpression = firstObject(
             expression,
             #[
+                "right",
                 "else",
                 "elseExpression",
                 "ifFalse",
@@ -1085,20 +1088,54 @@ class SemanticExpressionJsonSerializer {
     private def String operator(
         EObject expression
     ) {
-        val rawValue = attribute(
-            expression,
-            #[
-                "operator",
-                "op"
-            ]
-        )
-
-        if (rawValue === null) {
-            return null
+         val knownOperator = switch expression.eClass.name {
+            case "ExpressionAnd": "and"
+            case "ExpressionOr": "or"
+    
+            case "ExpressionEqual": "=="
+            case "ExpressionNEqual": "!="
+            case "ExpressionGeq": ">="
+            case "ExpressionGreater": ">"
+            case "ExpressionLeq": "<="
+            case "ExpressionLess": "<"
+    
+            case "ExpressionAddition": "+"
+            case "ExpressionSubtraction": "-"
+            case "ExpressionMultiply": "*"
+            case "ExpressionDivision": "/"
+            case "ExpressionMaximum": "max"
+            case "ExpressionMinimum": "min"
+            case "ExpressionModulo": "mod"
+            case "ExpressionPower": "^"
+    
+            case "ExpressionNullCoalescing": "??"
+    
+            case "ExpressionNot": "not"
+            case "ExpressionMinus": "-"
+            case "ExpressionPlus": "+"
+    
+            default: null
         }
+    
+        if (knownOperator !== null) {
+            return knownOperator
+        }
+    
+        val rawValue = attribute(expression, #["operator", "op"])
+        if (rawValue === null) null else rawValue.toString
+    
+//        val rawValue = attribute(
+//            expression,
+//            #[
+//                "operator",
+//                "op"
+//            ]
+//        )
 
-        rawValue.toString
-    }
+//        if (rawValue === null) {
+//            return null
+//            
+            }
 
     private def boolean isBinary(
         EObject expression
