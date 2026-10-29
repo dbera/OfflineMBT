@@ -343,9 +343,11 @@ async def test_generator(
     depthLimit = _args.get('depth-limit',1000)
     stateLimit = _args.get('state-limit',1000)
 
-    fname = bpmn_file.filename
-    filename = fname + utils.gensym(prefix="_",timestamp=True)
-    model_path = os.path.join(TEMP_PATH,f"{filename}.bpmn")
+    filename = bpmn_file.filename
+    uid = utils.gensym(prefix="", timestamp=True)
+    model_dir = os.path.join(TEMP_PATH, uid)
+    os.makedirs(model_dir, exist_ok=True)
+    model_path = os.path.join(model_dir, f"{filename}.bpmn")
 
     contents = await bpmn_file.read()
     with open(model_path, "wb") as f:
@@ -356,11 +358,11 @@ async def test_generator(
     try:
         zip_fname, result = generate_tests(model_path, num_tests=numTests, depth_limit=depthLimit, state_limit=stateLimit)
         zip_dir, zip_path = os.path.split(zip_fname)
-        return FileResponse(os.path.join(zip_dir, zip_path), media_type='application/zip', filename=zip_path)
+        return FileResponse(os.path.join(zip_dir, zip_path), media_type='application/zip', filename=filename+'_'+ uid + ".zip")
     except utils.BPMN4SException as e:
         status_code = 400
         failed = response['response']
-        failed['message'] = f'Error generating test cases from file {fname}'
+        failed['message'] = f'Error generating test cases from file {filename}'
         failed['returncode'] = e.returncode
         failed['stdout'] = e.stdout
         failed['stderr'] = e.stderr
