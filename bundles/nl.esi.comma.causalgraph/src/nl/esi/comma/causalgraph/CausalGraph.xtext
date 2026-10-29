@@ -19,7 +19,7 @@ import "http://www.esi.nl/xtext/common/lang/Base" as base
 import "http://www.esi.nl/xtext/types/Types" as types
 import "http://www.esi.nl/xtext/expressions/Expression" as expr
 
-CausalGraph returns base::ModelContainer: {CausalGraph}
+CausalGraph returns types::TypesModel: {CausalGraph}
     imports += Import*
     requirements += RequirementDecl+
     scenarios += ScenarioDecl+
