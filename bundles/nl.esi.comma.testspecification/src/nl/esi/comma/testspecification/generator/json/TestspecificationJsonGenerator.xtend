@@ -19,6 +19,7 @@ class TestspecificationJsonGenerator {
     }
 
     def void generate(
+        String filePrefix, 
         TestDefinition testDefinition,
         Resource sourceResource,
         IFileSystemAccess2 fsa
@@ -29,7 +30,7 @@ class TestspecificationJsonGenerator {
                 .lastSegment
 
             fsa.generateFile(
-                sourceName + ".json",
+                filePrefix + sourceName + ".json",
                 serializer.serialize(
                     testDefinition,
                     sourceName

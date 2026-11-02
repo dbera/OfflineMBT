@@ -22,7 +22,18 @@ Project returns base::ModelContainer: {Project}
 		(statemachineBlocks += StateMachineGenerationBlock)*
 		(testConformanceBlocks += TestConformanceBlock)*
 		(reachabilityAnalysisBlocks += ReachabilityAnalysisBlock)*
+		(testCaseDiffBlocks += TestCaseDiffBlock)*
 	'}'
+;
+
+
+TestCaseDiffBlock:
+    'Perform-Test-Diff-Analysis' '{'
+        name = ID '{'
+            ('old-test-case-file' oldScenario = STRING)
+            ('new-test-case-file' newScenario = STRING)
+        '}'
+    '}'
 ;
 
 ReachabilityAnalysisBlock:

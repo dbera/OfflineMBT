@@ -74,6 +74,10 @@ class StandardProjectGenerator extends AbstractGenerator {
             for (task : project.reachabilityAnalysisBlocks) {
                 (new ReachabilityAnalysisGenerator(reporting)).doGenerate(task, res.resourceSet, fsa.createFolderAccess(task.name), ctx)
             }
+
+            for (task : project.testCaseDiffBlocks) {
+                (new TestCaseDiffAnalaysis).doGenerate(task, res.resourceSet, fsa.createFolderAccess(task.name), ctx)
+            }
         }
     }
 
