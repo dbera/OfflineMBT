@@ -807,22 +807,23 @@ public class Bpmn4sCompiler{
 	public static String generateTypes(Collection<Bpmn4sDataType> dataTypes ) {
 		String types = new String("");
 		var sorted = IterableExtensions.sortBy(dataTypes,Bpmn4sDataType::getName);
-		var sets = sorted.stream().filter(dt -> dt instanceof SetType).map(Bpmn4sDataType::getName).toList();
 
 		for (var dataType : sorted) {
+			String typeContent = "";
+			
 			if(dataType instanceof RecordType recType) {
-				String type = "record " + recType.getName() + " {\n";
+				var context = recType.isContext() ? "@context\n" : "";
+				String type = context+"record " + recType.getName() + " {\n";
 				String parameters = "";
 				for (RecordField field: recType.fields) {
 					String fieldName = field.getName();
 					String fieldTypeName = typeToString(dataTypes, field.getType());
-					String set = sets.contains(field.getType()) ? "@set ": "";
 					String fieldKind = field.getKind() == RecordFieldKind.Concrete ? "" : "@"+field.getKind().name().toLowerCase() + " ";
 					var suppress = field.isSuppressed() ? 	"@suppress " : "";
-					parameters += suppress + set + fieldKind + fieldTypeName + "\t" + fieldName + "\n";
+					parameters += suppress + fieldKind + fieldTypeName + "\t" + fieldName + "\n";
 				}
 				type += indent(parameters) + "}\n";
-				types += type + "\n";
+				typeContent += type + "\n";
 			} else if(dataType instanceof EnumerationType enumType) {
 				String literals = "";
 				for (Map.Entry<String, String> entry : enumType.literals.entrySet()) {
@@ -832,14 +833,15 @@ public class Bpmn4sCompiler{
 					}
 				}
 				String type = String.format("enum %s {%s }\n", enumType.getName(), literals);
-				types += type + "\n";
+				typeContent += type + "\n";
 			} else if(dataType instanceof BaseType) {
 				String type = String.format("type %s based on %s\n", dataType.getName(), typeToString(dataTypes, dataType.getType()));
-				types += type + "\n";
+				typeContent += type + "\n";
 			} else {
 //				NOTE:  I am not compiling data types that are not records or enumerations.
 //				       Other types are used for fields of records in generateRecordField().
 			}
+			types += typeContent;
 		}
 		return types;
 	}

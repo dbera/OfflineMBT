@@ -94,10 +94,13 @@ class AbstractCPNControl(ABC):
 pn: typing.Dict[str, AbstractCPNControl] = {}
 
 
-def to_valid_variable_name(s):
+def sanitize_variable_name(s):
     # Replace invalid characters with underscores
-    s = re.sub(r'\W|^(?=\d)', '_', s)
-    return s
+    result = re.sub(r'\W|^(?=\d)', '_', s)
+    if result != s:
+        result = re.sub(r'__+', '_', result)
+        result = result.rstrip('_')
+    return result
 
 
 def is_loaded_module(source, package="src-gen.server.CPNServer") -> bool:

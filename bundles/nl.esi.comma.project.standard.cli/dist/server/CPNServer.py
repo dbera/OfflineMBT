@@ -138,7 +138,7 @@ def build_and_load_model(model_path:str):
 
     model_dir, model_name = os.path.split(model_path)
     model_name, model_ext = os.path.splitext(model_name)
-    model_name = utils.to_valid_variable_name(model_name)
+    model_name = utils.sanitize_variable_name(model_name)
     taskname:str = f"server"
     prj_template:str = """Project project {{
     Generate Simulator {{
@@ -178,7 +178,7 @@ def generate_tests( model_path:str, num_tests:int=1, depth_limit:int=500, state_
 
     model_dir, model_name = os.path.split(model_path)
     model_name, model_ext = os.path.splitext(model_name)
-    model_name = utils.to_valid_variable_name(model_name)
+    model_name = utils.sanitize_variable_name(model_name)
     taskname:str = f"testgen"
     prj_template:str = """Project project {{
       Generate Tests {{
@@ -289,11 +289,17 @@ def write_status_report_html(output_dir, report_path):
     except Exception as e:
         logger.warning("Could not write status report HTML") 
 
+def _normalized_upload_basename(upload_filename: str) -> str:
+    """Normalize uploaded names so generated PRJ references match saved BPMN files."""
+    base_name, _ = os.path.splitext(upload_filename)
+    normalized = utils.sanitize_variable_name(base_name)
+    return normalized if normalized else "model"
+
 # The endpoint of our FastAPI app
 @app.post("/BPMNParser")
 async def handle_bpmn(bpmn_file: UploadFile = File(alias="bpmn-file")):
     fname = bpmn_file.filename
-    filename = fname + utils.gensym(prefix="_",timestamp=True)
+    filename = _normalized_upload_basename(fname) + utils.gensym(prefix="_",timestamp=True)
     bpmn_path = os.path.join(TEMP_PATH,f"{filename}.bpmn")
 
     contents = await bpmn_file.read()
@@ -343,9 +349,11 @@ async def test_generator(
     depthLimit = _args.get('depth-limit',1000)
     stateLimit = _args.get('state-limit',1000)
 
-    fname = bpmn_file.filename
-    filename = fname + utils.gensym(prefix="_",timestamp=True)
-    model_path = os.path.join(TEMP_PATH,f"{filename}.bpmn")
+    filename = _normalized_upload_basename(bpmn_file.filename)
+    uid = utils.gensym(prefix="", timestamp=True)
+    model_dir = os.path.join(TEMP_PATH, uid)
+    os.makedirs(model_dir, exist_ok=True)
+    model_path = os.path.join(model_dir, f"{filename}.bpmn")
 
     contents = await bpmn_file.read()
     with open(model_path, "wb") as f:
@@ -356,11 +364,11 @@ async def test_generator(
     try:
         zip_fname, result = generate_tests(model_path, num_tests=numTests, depth_limit=depthLimit, state_limit=stateLimit)
         zip_dir, zip_path = os.path.split(zip_fname)
-        return FileResponse(os.path.join(zip_dir, zip_path), media_type='application/zip', filename=zip_path)
+        return FileResponse(os.path.join(zip_dir, zip_path), media_type='application/zip', filename=filename+'_'+ uid + ".zip")
     except utils.BPMN4SException as e:
         status_code = 400
         failed = response['response']
-        failed['message'] = f'Error generating test cases from file {fname}'
+        failed['message'] = f'Error generating test cases from file {filename}'
         failed['returncode'] = e.returncode
         failed['stdout'] = e.stdout
         failed['stderr'] = e.stderr

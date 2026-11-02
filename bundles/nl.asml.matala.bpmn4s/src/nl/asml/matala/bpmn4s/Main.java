@@ -340,7 +340,7 @@ public class Main {
 	
 	public static RecordType parseRecord(DataType dt) {
 		String name = dt.getName();
-		RecordType rec = new RecordType(name);
+		RecordType rec = new RecordType(name, dt.getAnnotations() instanceof Map map ? map.containsKey("context") : Boolean.FALSE);
 		for(var f: dt.getChildren()) {
 			var fKindMixed = f.getAnnotations() instanceof Map map ? map.containsKey("mixed") : Boolean.FALSE;
 			var fKindSymbolic = f.getAnnotations() instanceof Map map ? map.containsKey("symbolic") : Boolean.FALSE;
@@ -408,7 +408,7 @@ public class Main {
 	
 	public static RecordType oldParseRecord(nl.asml.matala.bpmn4s.extensions.DataType dt, Map<String, nl.asml.matala.bpmn4s.extensions.DataType> idNameMapping) {
 		String name = dt.getName();
-		RecordType rec = new RecordType(name);
+		RecordType rec = new RecordType(name, "context".equalsIgnoreCase(dt.getType()));
 		for(Field f: dt.getChildElementsByType(Field.class)) {
 			String fname = f.getName();
 			// tref is either a string representing a basic type (such as int or string) or
