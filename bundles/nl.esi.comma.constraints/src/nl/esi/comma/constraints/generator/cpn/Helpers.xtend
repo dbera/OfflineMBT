@@ -14,17 +14,25 @@
 package nl.esi.comma.constraints.generator.cpn
 
 import java.util.List
+import java.util.Map
 import nl.esi.comma.constraints.constraints.Ref
 import nl.esi.comma.constraints.constraints.RefAction
 import nl.esi.comma.constraints.constraints.ReferenceLink
 import nl.esi.comma.constraints.constraints.Template
 import nl.esi.comma.constraints.generator.cpn.model.RefInfo
+import nl.esi.comma.testspecification.generator.json.SemanticExpressionJsonSerializer
 import nl.esi.comma.testspecification.testspecification.AssertionStep
 import nl.esi.comma.testspecification.testspecification.RunStep
 import nl.esi.comma.testspecification.testspecification.TestDefinition
 import nl.esi.xtext.actions.actions.AssignmentAction
 import nl.esi.xtext.actions.actions.RecordFieldAssignmentAction
 import nl.esi.xtext.expressions.expression.Expression
+import nl.esi.xtext.expressions.expression.ExpressionBracket
+import nl.esi.xtext.expressions.expression.ExpressionFunctionCall
+import nl.esi.xtext.expressions.expression.ExpressionMapRW
+import nl.esi.xtext.expressions.expression.ExpressionRecordAccess
+import nl.esi.xtext.expressions.expression.ExpressionVariable
+import nl.esi.xtext.expressions.expression.Variable
 import org.eclipse.emf.common.util.BasicEList
 import org.eclipse.emf.common.util.EList
 import org.eclipse.emf.ecore.EObject
@@ -136,7 +144,6 @@ class Helpers {
     }
 
 //  returns combination of "where-concrete" and "where-correlation" guards
-//  TODO{here also if both are not there, "true" should be returned}
     def getRefCombinedWhereClause(Ref ref) {
         if(ref instanceof RefAction) {
             val EList<Expression> temp = new BasicEList<Expression>()
@@ -175,13 +182,6 @@ class Helpers {
         '''
     }
     
-//    TODO{need a helper function to generate correlation clauses for repeated activation}
-//    def getRepeatedActivationGuard(Ref ref, Variable correlationVar) {
-//        if (!(ref instanceof RefAction) || ref.withArgs.isNullOrEmpty)
-//            return "false"
-//
-//         
-//    }
 
     def getConjunction(EList<Expression> eList) {
         return
@@ -217,28 +217,54 @@ class Helpers {
         .replace("\\", "\\\\")
         .replace("\"", "\\\"")
     }
-    
-        // one check per consumes link; values are keyed by step id
+
+     // one check per consumes link; candidate assignments come from the steps whose input the link targets
     def getReferenceChecks(Template constraint, TestDefinition td) {
+        val serializer = new SemanticExpressionJsonSerializer
         EcoreUtil2.getAllContentsOfType(constraint, ReferenceLink).map [ link |
-            val target = ReferenceHelper.expression(link.target)
-            #{
-                "target" -> target,
-                "expected" -> ReferenceHelper.expression(link.source, ["{activation}.output"]),
-                "values" -> getAssignedValues(td, target)
-            }
+            val Map<String, Object> check = newLinkedHashMap
+            check.put("targetText", nodeText(link.target)) //the target's expression text 
+            check.put("sourceText", nodeText(link.source)) //the source's expression text
+            check.put("target", serializer.serialize(link.target)) //serialized target expression using tspec2json serializer
+            check.put("source", serializer.serialize(link.source)) //serialized source expression using tspec2json serializer
+            check.put("assignments",
+                getCandidateAssignments(td, rootVariable(link.target)?.name, serializer)) //concrete runstep's target and value
+            check
         ].toList
     }
 
-    def getAssignedValues(TestDefinition td, String targetPath) {
-        val values = newLinkedHashMap
-        for (step : EcoreUtil2.getAllContentsOfType(td, RunStep)) {
-            for (act : EcoreUtil2.getAllContentsOfType(step, RecordFieldAssignmentAction)) {
-                if (ReferenceHelper.expression(act.fieldAccess) == targetPath) {
-                    values.put(step.inputVar.name, NodeModelUtils.getNode(act.exp).text.replaceAll("\\s+", ""))
-                }
-            }
+    def getCandidateAssignments(TestDefinition td, String inputName, SemanticExpressionJsonSerializer serializer) {
+        val Map<String, Object> result = newLinkedHashMap
+        for (step : EcoreUtil2.getAllContentsOfType(td, RunStep)
+            .filter[stepVar?.name == inputName]) {
+            val assignments = EcoreUtil2
+                .getAllContentsOfType(step, RecordFieldAssignmentAction)
+                .map [ assignment |
+                    val Map<String, Object> entry = newLinkedHashMap
+                    entry.put("target", serializer.serialize(assignment.fieldAccess))
+                    entry.put("value", serializer.serialize(assignment.exp))
+                    entry
+                ].toList
+            result.put(step.inputVar.name, assignments)
         }
-        return values
+        result
+    }
+    // the variable a plain access path starts from, or null
+    def Variable rootVariable(Expression e) {
+        switch e {
+            ExpressionVariable: e.variable
+            ExpressionRecordAccess: rootVariable(e.record)
+            ExpressionMapRW: rootVariable(e.map)
+            ExpressionBracket: rootVariable(e.sub)
+            ExpressionFunctionCall case e.function?.name == "get" && !e.args.empty: rootVariable(e.args.head)
+            default: null
+        }
+    }
+
+    def nodeText(EObject e) {
+        NodeModelUtils.getNode(e).text
+        .replaceAll("(?s)/\\*.*?\\*/", "")
+        .replaceAll("(?m)(^|\\s)//.*$", "$1")
+        .trim.replaceAll("\\s+", " ")
     }
 }

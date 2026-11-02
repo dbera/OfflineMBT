@@ -194,6 +194,29 @@ class ConformanceDashboardRenderer {
                     background: var(--target-bg);
                     border-left: 4px solid var(--target-color);
                 }
+                .trace-step pre .code-line { display: block; min-height: 1em; }
+                .code-line.line-relevant {
+                    background: var(--activation-bg);
+                    box-shadow: inset 3px 0 0 var(--activation-color);
+                }
+                .code-line.line-ref {
+                    background: var(--target-bg);
+                    box-shadow: inset 3px 0 0 var(--target-color);
+                }
+                .code-line.line-condition {
+                    background: #fff6d6;
+                    box-shadow: inset 3px 0 0 #c9a227;
+                }
+                .code-line.line-violation {
+                    background: var(--blocker-bg);
+                    box-shadow: inset 3px 0 0 var(--blocker-color);
+                }
+                .line-note {
+                    margin-left: 12px;
+                    color: var(--blocker-color);
+                    font-weight: 700;
+                    font-family: "Segoe UI", sans-serif;
+                }
                 .trace-step.role-blocker {
                     background: var(--blocker-bg);
                     border-left: 4px solid var(--blocker-color);
@@ -468,6 +491,7 @@ class ConformanceDashboardRenderer {
                 let selectedTraceRoles = new Map();
                 let contexts = [];
                 let contextIndex = -1;
+                let selectedResult = null;
 
                 // TSpec has no JSON structure here; step marker lines delimit each block.
                 function parseTrace(text) {
@@ -693,6 +717,211 @@ class ConformanceDashboardRenderer {
                     return { roles, contexts: orderedContexts };
                 }
 
+                // Drop comments and collapse whitespace in expression text.
+                function cleanExpressionText(text) {
+                    return (text || "")
+                        .replace(/\/\*[\s\S]*?\*\//g, "")
+                        .replace(/(^|\s)\/\/.*$/gm, "$1")
+                        .replace(/\s+/g, " ")
+                        .trim();
+                }
+
+                // Split an access expression into its root variable and dotted field path.
+                function referencePathParts(text) {
+                    const cleaned = cleanExpressionText(text)
+                        .replace(/^(get\(\s*)*((input|output)\s+)?/, "")
+                        .replace(/\s+/g, "");
+                    const match = /^[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*/.exec(cleaned);
+                    if (!match) return null;
+                    const segments = match[0].split(".");
+                    return { root: segments[0], path: segments.slice(1).join(".") };
+                }
+
+                function pathsOverlap(left, right) {
+                    return left === right ||
+                        left.startsWith(right + ".") ||
+                        right.startsWith(left + ".");
+                }
+
+                // Split on commas that are not nested in brackets or quotes.
+                function splitTopLevel(text) {
+                    const parts = [];
+                    let depth = 0;
+                    let quote = "";
+                    let start = 0;
+                    for (let i = 0; i < text.length; i++) {
+                        const character = text[i];
+                        if (quote) {
+                            if (character === "\\") i++;
+                            else if (character === quote) quote = "";
+                        } else if (character === "\"" || character === "'") {
+                            quote = character;
+                        } else if ("([{".includes(character)) {
+                            depth++;
+                        } else if (")]}".includes(character)) {
+                            depth--;
+                        } else if (character === "," && depth === 0) {
+                            parts.push(text.slice(start, i).trim());
+                            start = i + 1;
+                        }
+                    }
+                    parts.push(text.slice(start).trim());
+                    return parts.filter(Boolean);
+                }
+
+                // Reference links come from the constraint's consumes clauses plus reported violations.
+                function selectedReferenceLinks(result) {
+                    const links = [];
+                    const seen = new Set();
+                    function add(targetText, sourceText) {
+                        const target = referencePathParts(targetText);
+                        const key = (targetText || "").replace(/\s+/g, "") + "|" +
+                            (sourceText || "").replace(/\s+/g, "");
+                        if (!target || seen.has(key)) return;
+                        seen.add(key);
+                        links.push({ target, targetText, sourceText });
+                    }
+
+                    const definition = extractConstraintDefinition(
+                        result.constraintName || result.constraint
+                    );
+                    const consumesPattern = /\bconsumes\s*\(/g;
+                    let consumesMatch;
+                    while ((consumesMatch = consumesPattern.exec(definition)) !== null) {
+                        let depth = 0;
+                        let body = "";
+                        for (let i = consumesMatch.index + consumesMatch[0].length - 1;
+                             i < definition.length; i++) {
+                            const character = definition[i];
+                            if (character === "(") {
+                                depth++;
+                                if (depth === 1) continue;
+                            } else if (character === ")") {
+                                depth--;
+                                if (depth === 0) break;
+                            }
+                            body += character;
+                        }
+                        for (const part of splitTopLevel(cleanExpressionText(body))) {
+                            const link = /^(.+?)\s+from\s+(.+)$/.exec(part);
+                            if (link) add(link[1], link[2]);
+                        }
+                    }
+                    for (const diagnostic of result.diagnostics || []) {
+                        if (diagnostic.kind === "unsatisfiedReference") {
+                            add(diagnostic.target, diagnostic.source);
+                        }
+                    }
+                    return links;
+                }
+
+                // Field paths mentioned in the where/with clauses of the event role this step plays.
+                function conditionPathsFor(result, roles, inputName) {
+                    const paths = [];
+                    if (!result || !roles || !inputName) return paths;
+                    const definition = extractConstraintDefinition(
+                        result.constraintName || result.constraint
+                    ).replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|\s)\/\/.*$/gm, "$1");
+                    let role = "";
+                    for (const raw of definition.split(/\r?\n/)) {
+                        const text = raw.trim();
+                        if (/^(if|whenever)\b/.test(text)) role = "activation";
+                        else if (/^then\b/.test(text)) role = "target";
+                        else if (/^with\s+no\b/.test(text)) role = "blocker";
+                        else if (/^must/.test(text)) role = "";
+                        if (!role || !roles.has(role)) continue;
+                        for (const match of text.matchAll(/\b[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)+/g)) {
+                            const parts = referencePathParts(match[0]);
+                            if (parts && parts.root === inputName) paths.push(parts.path);
+                        }
+                    }
+                    return paths;
+                }
+
+                // Build a step body, marking assignments used by the constraint's conditions and reference links.
+                function renderStepBody(step) {
+                    const pre = document.createElement("pre");
+                    const lines = step.content.split("\n");
+                    const result = selectedResult;
+                    const inputName =
+                        (/^\s*step-input\s+(\S+)/m.exec(step.content) || [])[1] || "";
+                    const conditionPaths =
+                        conditionPathsFor(result, selectedTraceRoles.get(step.id), inputName);
+                    const links = result ? selectedReferenceLinks(result) : [];
+                    const violations = (result?.diagnostics || []).filter(diagnostic =>
+                        diagnostic.kind === "unsatisfiedReference" &&
+                        (diagnostic.targetEvent?.stepIds || []).includes(step.id)
+                    );
+                    const activationIds = new Set();
+                    for (const diagnostic of result?.diagnostics || []) {
+                        for (const id of diagnostic.activationEvent?.stepIds || []) {
+                            activationIds.add(id);
+                        }
+                    }
+
+                    const classes = lines.map(() => "");
+                    const violationStarts = new Set();
+                    const startPattern =
+                        /^\s*([A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*)\s*:=/;
+                    const starts = [];
+                    lines.forEach((line, index) => {
+                        const match = startPattern.exec(line);
+                        if (match) starts.push({ index, name: match[1] });
+                    });
+
+                    starts.forEach((start, position) => {
+                        let end = position + 1 < starts.length
+                            ? starts[position + 1].index
+                            : lines.length;
+                        for (let i = start.index + 1; i < end; i++) {
+                            if (lines[i].trim() && !/^\s/.test(lines[i])) {
+                                end = i;
+                                break;
+                            }
+                        }
+                        const statement = referencePathParts(start.name);
+                        if (!statement || (inputName && statement.root !== inputName)) return;
+
+                        const violation = violations.find(diagnostic => {
+                            const target = referencePathParts(diagnostic.target);
+                            return target && pathsOverlap(statement.path, target.path);
+                        });
+                        const relevant = violation || links.some(link =>
+                            (!inputName || link.target.root === inputName) &&
+                            pathsOverlap(statement.path, link.target.path)
+                        );
+                        const condition = conditionPaths.some(path =>
+                            pathsOverlap(statement.path, path)
+                        );
+                        if (!relevant && !condition) return;
+
+                        for (let i = start.index; i < end; i++) {
+                            classes[i] = violation
+                                ? "line-violation"
+                                : relevant ? "line-relevant" : "line-condition";
+                            if (relevant && !violation) {
+                                const reference = /([A-Za-z_]\w*)\.output\b/.exec(lines[i]);
+                                if (reference && activationIds.has(reference[1])) {
+                                    classes[i] = "line-ref";
+                                }
+                            }
+                        }
+                        if (violation) violationStarts.add(start.index);
+                    });
+
+                    let firstViolation = null;
+                    lines.forEach((line, index) => {
+                        const element = document.createElement("span");
+                        element.className = ("code-line " + classes[index]).trim();
+                        element.textContent = line || " ";
+                        if (violationStarts.has(index) && !firstViolation) {
+                            firstViolation = element;
+                        }
+                        pre.append(element);
+                    });
+                    return { pre, firstViolation };
+                }
+
                 function updateContextControls() {
                     const hasTargets = contexts.length > 0;
                     document.querySelector("#previous-context").disabled =
@@ -712,13 +941,14 @@ class ConformanceDashboardRenderer {
                     const focusedContext = contexts[contextIndex];
                     const focusedId = focusedContext?.focusId;
                     let focusedElement = null;
+                    let violationElement = null;
 
                     function ensureStepBody(details, step) {
-                        if (details.dataset.bodyRendered === "true") return;
-                        const content = document.createElement("pre");
-                        content.textContent = step.content;
-                        details.append(content);
+                        if (details.dataset.bodyRendered === "true") return null;
+                        const body = renderStepBody(step);
+                        details.append(body.pre);
                         details.dataset.bodyRendered = "true";
+                        return body;
                     }
 
                     for (const step of trace.steps) {
@@ -756,10 +986,19 @@ class ConformanceDashboardRenderer {
                         details.open = false;
                         traceView.append(details);
 
+                        // Open steps that hold a violation so the offending line is visible.
+                        if (inContext) {
+                            const body = ensureStepBody(details, step);
+                            if (body?.firstViolation) {
+                                details.open = true;
+                                if (!violationElement) violationElement = body.firstViolation;
+                            }
+                        }
+
                         if (focused) focusedElement = details;
                     }
 
-                    focusedElement?.scrollIntoView({ block: "center" });
+                    (violationElement || focusedElement)?.scrollIntoView({ block: "center" });
                 }
 
                 function moveContext(offset) {
@@ -849,6 +1088,23 @@ class ConformanceDashboardRenderer {
                     return parts.join("\n");
                 }
 
+                // Render a serialized reference path as step.output.field["key"][index].
+                function formatReferencePath(path) {
+                    if (!Array.isArray(path) || path.length !== 2) return "";
+                    let text = String(path[0]);
+                    for (const [kind, selection] of path[1] || []) {
+                        if (kind === "field") text += "." + selection;
+                        else if (kind === "key") text += "[" + JSON.stringify(selection) + "]";
+                        else if (kind === "index") text += "[" + selection + "]";
+                    }
+                    return text;
+                }
+
+                function stepTypeFor(stepIds) {
+                    const step = trace.steps.find(item => item.id === (stepIds || [])[0]);
+                    return step ? step.type : "";
+                }
+
                 function appendDiagnosticField(container, label, value) {
                     const field = document.createElement("div");
                     field.className = "diagnostic-field";
@@ -867,6 +1123,7 @@ class ConformanceDashboardRenderer {
 
                 // Build the selected constraint's diagnostic panel from structured verdict fields.
                 function showResult(result) {
+                    selectedResult = result;
                     detail.replaceChildren();
 
                     const title = document.createElement("h2");
@@ -913,7 +1170,8 @@ class ConformanceDashboardRenderer {
                             const roleLabel = document.createElement("span");
                             roleLabel.textContent = label;
                             const eventDisplayName = document.createElement("span");
-                            eventDisplayName.textContent = eventInfo.name || "";
+                            eventDisplayName.textContent =
+                                eventInfo.name || stepTypeFor(eventInfo.stepIds);
                             heading.append(roleLabel, eventDisplayName);
                             eventDetail.append(heading);
 
@@ -949,6 +1207,44 @@ class ConformanceDashboardRenderer {
                             }
                             eventDetail.append(fields);
                             message.append(eventDetail);
+                        }
+
+                        if (diagnostic.kind === "unsatisfiedReference") {
+                            const referenceDetail = document.createElement("span");
+                            referenceDetail.className = "diagnostic-event role-target";
+                            const heading = document.createElement("div");
+                            heading.className = "diagnostic-event-heading";
+                            heading.textContent = "Reference check";
+                            const fields = document.createElement("div");
+                            fields.className = "diagnostic-event-fields";
+                            appendDiagnosticField(
+                                fields,
+                                "Consumed input",
+                                shortenInputTypeNames(cleanExpressionText(diagnostic.target))
+                            );
+                            appendDiagnosticField(
+                                fields,
+                                "Required source",
+                                shortenInputTypeNames(cleanExpressionText(diagnostic.source))
+                            );
+                            const expectedText = formatReferencePath(diagnostic.expected);
+                            if (expectedText) {
+                                appendDiagnosticField(
+                                    fields,
+                                    "Expected reference",
+                                    expectedText
+                                );
+                            }
+                            const actualTexts = (diagnostic.actual || [])
+                                .map(formatReferencePath)
+                                .filter(Boolean);
+                            appendDiagnosticField(
+                                fields,
+                                "Actual references",
+                                actualTexts.length ? actualTexts.join(", ") : "none"
+                            );
+                            referenceDetail.append(heading, fields);
+                            message.append(referenceDetail);
                         }
                         detail.append(message);
                     }
@@ -1064,7 +1360,9 @@ class ConformanceDashboardRenderer {
                             label = "Where concrete";
                         } else if (text.startsWith("where-correlation")) {
                             label = "Where correlation";
-                        } else if (text.startsWith("with ")) {
+                        } else if (text.startsWith("consumes")) {
+                            label = "Consumes";
+                        } else if (text.startsWith("with ") || text.startsWith("with-correlation")) {
                             label = "Correlation binding";
                         } else if (text.startsWith("must")) {
                             label = "Requirement";

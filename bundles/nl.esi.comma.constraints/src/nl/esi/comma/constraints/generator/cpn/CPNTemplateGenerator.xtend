@@ -211,7 +211,6 @@ class CPNTemplateGenerator
                                         «NodeModelUtils.getNode(act).text.replaceAll("(?m)^\\s*$\\R?", "")»
                                     «ENDIF»
                                 «ENDIF»
-«««                                    «NodeModelUtils.getNode(act).text.replaceAll("(?m)^\\s*$\\R?", "")»
                             «ENDFOR»
                         «ENDFOR»
                     «ELSE»
@@ -675,14 +674,26 @@ class CPNTemplateGenerator
         val acceptancePythonFileName = generatedSpecName + ".acceptance.py"
         
         val referenceChecks = helpers.getReferenceChecks(currentConstraint, td)
+        
+        // Serialize the checks, then encode them for embedding in Python source.
+        val referenceChecksJson = new GsonBuilder()
+            .disableHtmlEscaping()
+            .setPrettyPrinting()
+            .create()
+            .toJson(referenceChecks)
+//            
+//            new GsonBuilder().disableHtmlEscaping().create().toJson(referenceChecks)
+//        val referenceChecksBase64 = java.util.Base64.getEncoder().encodeToString(
+//            referenceChecksJson.getBytes(java.nio.charset.StandardCharsets.UTF_8)
+//        )
 
-        if (currentConstraint.name == "inspectionConsumesPrintReport") {
-            System.out.println("getReferenceChecks returned for " + currentConstraint.name)
-            System.out.println(
-                referenceChecks
-//                new GsonBuilder().setPrettyPrinting().create().toJson(referenceChecks)
-            )
-        }
+//        if (currentConstraint.name == "inspectionConsumesPrintReport") {
+//            System.out.println("getReferenceChecks returned for " + currentConstraint.name)
+//            System.out.println(
+//                referenceChecks
+////                new GsonBuilder().setPrettyPrinting().create().toJson(referenceChecks)
+//            )
+//        }
         fsa.generateFile(
            constraintFolder + pspecFileName,
             specPrefix + tspecModel + specBody + specPostfix
@@ -699,7 +710,7 @@ class CPNTemplateGenerator
                 generatedSpecName,
                 currentConstraint.name,
                 templateResult.getDiagnostics(),
-                new GsonBuilder().disableHtmlEscaping().create().toJson(referenceChecks)
+                referenceChecksJson
             )
         )
 
@@ -714,46 +725,38 @@ class CPNTemplateGenerator
     }
     
 //    Generates a python class with the acceptance logic
-    def String generateAcceptancePythonClass(String generatedSpecName, String constraintName, String diagnostics, String referenceChecks) {
+    def String generateAcceptancePythonClass(String generatedSpecName, String constraintName, String diagnostics, String referenceChecksJson  ) {
         return
         '''
         import json
-        import re
+        import base64
         
         # used in generating diagnostics   
-        
         # Token is a dict and this function flattens all its keys and values to strings 
         def format_value(value):
                     if isinstance(value, dict):
                         parts = []
-                
                         for key, nested_value in value.items():
                             parts.append(
                                 str(key) + " = " + format_value(nested_value)
                             )
-                
                         return "{" + ", ".join(parts) + "}"
-                
                     if isinstance(value, list):
                         return "[" + ", ".join(
                             format_value(item) for item in value
                         ) + "]"
-                
                     return str(value)
-                
+
         def format_token(token):
             if isinstance(token, dict):
                 parts = []
-        
                 for key, value in token.items():
                     parts.append(
                         str(key) + " = " + format_value(value)
                     )
-        
                 return ", ".join(parts)
-        
             return str(token)
-            
+
         def violation_exists(node_violations, violation_kind, place):
             for violation in node_violations:
                 if (
@@ -761,38 +764,29 @@ class CPNTemplateGenerator
                     and violation["group"] == [place]
                 ):
                     return True
-        
             return False
 
-        
         # look up, for a given node id, the list of violations recorded for it (or None)
         def find_node_violations(violations, node_id):
             for violation in violations:
                 if violation["nodeId"] == node_id:
                     return violation["violations"]
             return None
-        
-        
+
         def build_diagnostics(rules, checked_nodes, violations):
             diagnostics = []
-        
             for node in checked_nodes:
                 node_violations = find_node_violations(violations, node["id"])
-        
                 if node_violations is None:
                     continue
-        
                 marking = node.get("marking", {})
-        
+
                 for rule in rules:
                     violation_kind = rule.get("violationKind", "emptyPlaces")
                     trigger_place = rule.get("triggerPlace", rule.get("tokenPlace"))
-                    
                     if not violation_exists(node_violations, violation_kind, trigger_place):
                         continue
-                    
                     token_place= rule.get("tokenPlace")
-                    
                     if token_place is None:
                         diagnostic = {
                             "kind": rule["kind"],
@@ -804,10 +798,10 @@ class CPNTemplateGenerator
                         for field_name in ("event", "violationStep"):
                             if field_name in rule:
                                 diagnostic[field_name] = dict(rule[field_name])
-                    
+
                         diagnostics.append(diagnostic)
                         continue
-                                
+
                     for token in marking.get(token_place, []):
                         values = dict(rule)
                         if isinstance(token, dict):
@@ -820,12 +814,10 @@ class CPNTemplateGenerator
                         else:
                             metadata = {}
                             correlation_token = token
-                        
                         values["correlation"] = format_token(correlation_token)
-                        
                         if rule.get("valueKind") == "count":
                             values["actualCount"] = token.get("count", 0)
-                        
+
                         diagnostic = {
                             "kind": rule["kind"],
                             "nodeId": node["id"],
@@ -834,37 +826,192 @@ class CPNTemplateGenerator
                             "metadata": metadata,
                             "message": rule["message"].format(**values)
                         }
-                        
+
                         if rule.get("valueKind") == "count":
                             diagnostic["actualCount"] = values["actualCount"]
                             diagnostic["requirement"] = values["requirement"]
-                        
+
                         for event_name in ("event", "activationEvent", "targetEvent", "blockerEvent"):
                             if event_name in rule:
                                 event = dict(rule[event_name])
                                 metadata_key = event.pop("stepIdsFrom", None)
                                 if metadata_key is not None:
                                     event["stepIds"] = metadata.get(metadata_key, [])
-                                
+
                                 if not rule.get("hasCorrelation", True):
                                     event.pop("correlationBinding", None)
                                     event.pop("whereCorrelation", None)
                                 diagnostic[event_name] = event
-                        
+
                         if "violationStep" in rule:
                             diagnostic["violationStep"] = dict(rule["violationStep"])
-                            
+
                         if (rule.get("valueKind") == "correlation" and rule.get("hasCorrelation", True)):
-                        
                             diagnostic["correlation"] = correlation_token
-                        
+
                         if not rule.get("includeRawToken", True):
                             diagnostic.pop("token", None)
                             diagnostic.pop("metadata", None)
-                        
+
                         diagnostics.append(diagnostic)
-                        
             return diagnostics
+
+        def reference_path(expression):
+            if not isinstance(expression, dict):
+                return None    
+            kind = expression.get("kind")
+            # when kind is just a variable
+            if kind == "variable":
+                name = expression.get("name")
+                if isinstance(name, str) and name:
+                    return (name, ())
+                return None
+            # Decode the receiver, then append the selected record field
+            if kind == "featureAccess":
+                parent = reference_path(expression.get("receiver"))
+                field = expression.get("feature")
+                if parent is not None and isinstance(field, str) and field:
+                    return (parent[0], parent[1] + (("field", field),))
+                return None
+            # Decode the map receiver, then append its literal string key.
+            if kind == "mapAccess":
+                parent = reference_path(expression.get("map"))
+                key = expression.get("key")
+                if (parent is not None and isinstance(key, dict)
+                        and key.get("kind") == "string"
+                        and isinstance(key.get("value"), str)):
+                    return (parent[0], parent[1] + (("key", key["value"]),))
+                return None
+            # Treat get(receiver, index) as an indexed reference selection
+            if kind == "functionCall" and expression.get("function") == "get":
+                arguments = expression.get("arguments")
+                # validation check for a function call (accpets argument and index and accepts only nonnegative literal integers in index)
+                if not isinstance(arguments, list) or len(arguments) != 2:
+                    return None
+                parent = reference_path(arguments[0])
+                index = arguments[1]
+                if (parent is not None and isinstance(index, dict)
+                        and index.get("kind") == "integer"
+                        and type(index.get("value")) is int
+                        and index["value"] >= 0):
+                    return (parent[0], parent[1] + (("index", index["value"]),))
+            return None
+
+        # follows one instruction from reference_path inside a serialized container
+        def select_child(expression, selector):
+            # from the selector pair, take the selector kind and selection, for instance for "kind" map, "selector kind" is key
+            selector_kind, selection = selector
+            kind = expression["kind"]
+            # A list stores its element expressions in "items".
+            if selector_kind == "index" and kind == "list":
+                items = expression["items"]
+                if not 0 <= selection < len(items):
+                    raise ValueError("List index out of range: " + str(selection))
+                return items[selection]
+            # A record stores named field entries, each containing a "value".
+            if selector_kind == "field" and kind == "record":
+                for field in expression["fields"]:
+                    if field["name"] == selection:
+                        return field["value"]
+                raise ValueError("Missing record field: " + selection)
+            # Map keys are expression objects; this version supports string keys.
+            if selector_kind == "key" and kind == "map":
+                for entry in expression["entries"]:
+                    key = entry["key"]
+                    if key["kind"] != "string":
+                        raise ValueError("Only literal string map keys are supported")
+                    if key["value"] == selection:
+                        return entry["value"]
+                raise ValueError("Missing map key: " + selection)
+
+            # No inference of children inside references or incompatible expressions (tspec has more granularity than constraints)
+            raise ValueError(
+                "Cannot apply " + selector_kind + " selection to " + kind
+            )
+
+        # check if a serialized path is contained in another serialized path (parent = A.B and child = A.B.C)
+        def is_prefix(parent, child):
+            if parent is None or child is None or parent[0] != child[0]:
+                return False
+            return child[1][:len(parent[1])] == parent[1]
+
+        # select which assignment expressions to check in the target for constraint's reference checks
+        def select_target_regions(assignments, target):
+            if target is None:
+                raise ValueError("Unsupported constraint target")
+            regions = []
+            for assignment in assignments:
+                assigned = reference_path(assignment["target"])
+                if assigned is None:
+                    raise ValueError("Unsupported assignment target")
+                # if target is broad/abstract check if the assignment contains the target or vice-versa
+                if not (is_prefix(assigned, target)
+                        or is_prefix(target, assigned)):
+                    continue
+                value = assignment["value"]
+                if is_prefix(assigned, target):
+                    remaining = target[1][len(assigned[1]):]
+                    for selector in remaining:
+                        value = select_child(value, selector)
+                regions.append(value)
+            if not regions:
+                raise ValueError("No assignment supplies the selected target")
+            return regions
+
+        def collect_references(expression):
+            path = reference_path(expression)
+            if path is not None:
+                return [path]
+            kind = expression["kind"]
+            # Literal expressions contain no dependencies.
+            if kind in ("string", "integer", "real", "boolean", "enum", "null"):
+                return []
+            # Follow the expression children already present in the serialized tree.
+            if kind == "list":
+                children = expression["items"]
+            elif kind == "record":
+                children = [
+                    field["value"] for field in expression["fields"]
+                ]
+            elif kind == "map":
+                children = [
+                    entry["value"] for entry in expression["entries"]
+                ]
+            elif kind == "unary":
+                children = [expression["operand"]]
+            elif kind == "binary":
+                children = [expression["left"], expression["right"]]
+            else:
+                raise ValueError("Unsupported reference expression: " + kind)
+            # recursively collect references
+            references = []
+            for child in children:
+                references.extend(collect_references(child))
+            return references
+            
+        def compare_reference(check, activation_id, target_id):
+            # decode the constraint's source selection.
+            source = reference_path(check["source"])
+            if source is None:
+                raise ValueError("Unsupported constraint source")
+            # bind the constraint source selection to the matched producer's output and add "output" in the middle
+            expected = (
+                activation_id,
+                (("field", "output"),) + source[1],
+            )
+            # select the requested input region in the matched consumer step.
+            target = reference_path(check["target"])
+            assignments = check["assignments"].get(target_id, [])
+            regions = select_target_regions(assignments, target)
+
+            # collect explicit references only within those selected regions.
+            actual = []
+            for region in regions:
+                actual.extend(collect_references(region))
+
+            # a reference qualifies when it equals (with full granular constraints) or descends from the source (for broader constraint)
+            matched = any(is_prefix(expected, path) for path in actual)
+            return matched, expected, actual
 
         # every accepted pair: the target step must use the activation step's output
         def check_references(checks, checked_nodes):
@@ -875,23 +1022,30 @@ class CPNTemplateGenerator
                     for act_id in metadata.get("activationIds", []):
                         for tgt_id in metadata.get("targetIds", []):
                             for check in checks:
-                                expected = check["expected"].replace("{activation}", act_id)
-                                actual = check["values"].get(tgt_id, "")
-                                if re.search(r"(?<!\w)" + re.escape(expected) + r"(?!\w)", actual) is None:
+                                # compare structured paths for this matched step pair.
+                                expected = None
+                                actual = []
+                                try:
+                                    matched, expected, actual = compare_reference(check, act_id, tgt_id)
+                                    reason = "No reference matches the expected source region"
+                                except ValueError as error:
+                                    # Report invalid selections without stopping evaluation.
+                                    matched = False
+                                    reason = str(error)
+                                if not matched:
                                     diagnostics.append({
                                         "kind": "unsatisfiedReference",
                                         "nodeId": node["id"],
                                         "place": "matchedPairs",
-                                        "target": check["target"],
+                                        "target": check["targetText"],
+                                        "source": check["sourceText"],
                                         "expected": expected,
                                         "actual": actual,
                                         "activationEvent": {"stepIds": [act_id]},
                                         "targetEvent": {"stepIds": [tgt_id]},
-                                        "message": tgt_id + " does not use " + expected + " at " + check["target"] + "."
+                                        "message": tgt_id + ": " + reason
                                     })
             return diagnostics
-                    
-              
         
         class TemplateConformance:
             def __init__(self, acceptance_cond):
@@ -905,8 +1059,8 @@ class CPNTemplateGenerator
             
             # pass the reference check rules for each constraint    
             def reference_checks(self):
-                return «referenceChecks»
-        
+                return json.loads(r"""«referenceChecksJson»""")
+                        
             # evaluates the acceptance condition on the reachability graph
             def evaluate(self, reachability_graph):
                 acceptance = self.acceptance_cond.get("acceptance", {})
@@ -1075,7 +1229,6 @@ class CPNTemplateGenerator
                     for (ref : helpers.getRefsforTemplate(templateType)){
                         if (ref instanceof RefAction) {
                             val info = helpers.getRefInputTypeAndVar(ref)
-                            
                             if (!isRefInfoPresent(labelList, info))
                                 labelList.add(info)
                         }

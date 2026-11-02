@@ -62,6 +62,9 @@ class SemanticExpressionJsonSerializer {
                 case "ExpressionVariable":
                     variable(expression)
 
+                case "ExpressionScopedVariable":  //added to support properties language variables
+                    variable(expression)
+
                 case "ExpressionRecordAccess":
                     featureAccess(expression, active)
 
