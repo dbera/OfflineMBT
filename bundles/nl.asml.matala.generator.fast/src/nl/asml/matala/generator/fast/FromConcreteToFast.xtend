@@ -85,7 +85,7 @@ class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGe
         val ctd = res.contents.filter(TSMain).map[model].filter(TestDefinition).head
 
         // New independent JSON export
-        testSpecificationJsonGenerator.generate(ctd, res, testFsa)
+        testSpecificationJsonGenerator.generate("_", ctd, res, testFsa)
 
         // 1) using the .tspec file
         val modelInst = res.contents.head as TSMain
