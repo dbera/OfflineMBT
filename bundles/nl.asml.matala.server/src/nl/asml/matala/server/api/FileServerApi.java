@@ -23,7 +23,7 @@ import java.util.List;
 public interface FileServerApi {
 	
 	
-	void init(String rootFolder) throws ServerApiException;
+	void init(String rootFolder, List<FileHandler> handlers);
 
     /**
      * List files and folders in a directory, or read a file.
