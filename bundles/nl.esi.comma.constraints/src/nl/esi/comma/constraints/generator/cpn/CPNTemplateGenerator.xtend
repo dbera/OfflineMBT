@@ -13,55 +13,48 @@
  
 package nl.esi.comma.constraints.generator.cpn
 
+import com.google.gson.GsonBuilder
 import java.util.ArrayList
-
 import java.util.HashSet
 import java.util.List
 import java.util.Set
-import org.eclipse.emf.ecore.EObject
-import org.eclipse.emf.ecore.resource.Resource
-import org.eclipse.xtext.generator.IFileSystemAccess2
-import org.eclipse.xtext.nodemodel.util.NodeModelUtils
-import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
-
-import nl.esi.comma.constraints.constraints.Constraints
-import nl.esi.comma.constraints.constraints.Template
-import nl.esi.comma.constraints.constraints.Future
-import nl.esi.comma.constraints.constraints.Past
-import nl.esi.comma.constraints.constraints.RefAction
-
-import nl.esi.comma.constraints.constraints.Response
-import nl.esi.comma.constraints.constraints.ChainResponse
-import nl.esi.comma.constraints.constraints.AlternateResponse
-
-import nl.esi.comma.constraints.constraints.Precedence
-import nl.esi.comma.constraints.constraints.ChainPrecedence
 import nl.esi.comma.constraints.constraints.AlternatePrecedence
-
-import nl.esi.comma.constraints.constraints.Existential
+import nl.esi.comma.constraints.constraints.AlternateResponse
 import nl.esi.comma.constraints.constraints.AtLeast
 import nl.esi.comma.constraints.constraints.AtMost
-import nl.esi.comma.constraints.constraints.Exact
-import nl.esi.comma.constraints.constraints.Init
+import nl.esi.comma.constraints.constraints.ChainPrecedence
+import nl.esi.comma.constraints.constraints.ChainResponse
+import nl.esi.comma.constraints.constraints.Constraints
 import nl.esi.comma.constraints.constraints.End
-
+import nl.esi.comma.constraints.constraints.Exact
+import nl.esi.comma.constraints.constraints.Existential
+import nl.esi.comma.constraints.constraints.Future
+import nl.esi.comma.constraints.constraints.Init
+import nl.esi.comma.constraints.constraints.Past
+import nl.esi.comma.constraints.constraints.Precedence
+import nl.esi.comma.constraints.constraints.RefAction
+import nl.esi.comma.constraints.constraints.Response
+import nl.esi.comma.constraints.constraints.Template
 import nl.esi.comma.constraints.generator.cpn.model.CPNTemplateResult
 import nl.esi.comma.constraints.generator.cpn.model.ConstraintGenerationResult
 import nl.esi.comma.constraints.generator.cpn.model.RefInfo
-
+import nl.esi.comma.constraints.generator.cpn.templates.ExistentialTemplates
 import nl.esi.comma.constraints.generator.cpn.templates.FutureTemplates
 import nl.esi.comma.constraints.generator.cpn.templates.PastTemplates
-import nl.esi.comma.constraints.generator.cpn.templates.ExistentialTemplates
-
+import nl.esi.comma.testspecification.testspecification.AbstractStep
 import nl.esi.comma.testspecification.testspecification.AssertionStep
 import nl.esi.comma.testspecification.testspecification.RunStep
 import nl.esi.comma.testspecification.testspecification.TSMain
 import nl.esi.comma.testspecification.testspecification.TestDefinition
-
-import nl.esi.xtext.actions.actions.RecordFieldAssignmentAction
 import nl.esi.xtext.expressions.expression.ExpressionVariable
 import nl.esi.xtext.types.types.TypesModel
-import com.google.gson.GsonBuilder
+import org.eclipse.emf.ecore.EObject
+import org.eclipse.emf.ecore.resource.Resource
+import org.eclipse.xtext.generator.IFileSystemAccess2
+import org.eclipse.xtext.nodemodel.util.NodeModelUtils
+
+import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
+import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
 
 class CPNTemplateGenerator 
 {
@@ -119,8 +112,8 @@ class CPNTemplateGenerator
             «FOR ss : td.stepSeq»
                 «FOR step : ss.step» 
                     «IF step instanceof RunStep || step instanceof AssertionStep»
-                        action «step.type.name»_«_idx»
-                        element-label "«step.type.name»"
+                        action «step.stepVar.name»_«_idx»
+                        element-label "«step.typeName»"
                         case default
                         with-inputs p«_idx», StepMetaData
                         «IF isStepNamePresent(labelList,step.stepVar.name)»
@@ -128,16 +121,12 @@ class CPNTemplateGenerator
                             updates:
                                 // Constructor
                                 «step.stepVar.name» := «Utils.defaultValue(step.stepVar.type.type, step.stepVar.name)»
-                            «FOR elm : step.refStep»
-                                «FOR act : elm.input.actions»
-                                    «IF act instanceof RecordFieldAssignmentAction»
-                                        «IF act.exp.eAllContents.filter(ExpressionVariable).isEmpty»
-                                            // ReferenceExp. TODO Skip.
-                                            «NodeModelUtils.getNode(act).text.replaceAll("(?m)^\\s*$\\R?", "")»
-                                        «ENDIF»
-                                    «ENDIF»
-«««                                    «NodeModelUtils.getNode(act).text.replaceAll("(?m)^\\s*$\\R?", "")»
-                                «ENDFOR»
+                            «FOR act : step.input»
+                                «IF act.exp.eAllContents.filter(ExpressionVariable).isEmpty»
+                                    // ReferenceExp. TODO Skip.
+                                    «NodeModelUtils.getNode(act).text.replaceAll("(?m)^\\s*$\\R?", "")»
+                                «ENDIF»
+«««                            «NodeModelUtils.getNode(act).text.replaceAll("(?m)^\\s*$\\R?", "")»
                             «ENDFOR»
                         «ELSE»
                             produces-outputs any
@@ -147,7 +136,7 @@ class CPNTemplateGenerator
                             «IF step instanceof RunStep»
                                 StepMetaData := StepMetaData {
                                     steps = <map<string,string>>{
-                                        "stepid" -> "«step.inputVar.name»"
+                                        "stepid" -> "«step.stepVar.name»"
                                     }
                                 }
                             «ELSE»
@@ -194,8 +183,8 @@ class CPNTemplateGenerator
            
             «FOR step : reversedSteps» 
                 «IF step instanceof RunStep || step instanceof AssertionStep»
-                    action «step.type.name»_«_idx»
-                    element-label "«step.type.name»"
+                    action «step.typeName»_«_idx»
+                    element-label "«step.typeName»"
                     case default
                     with-inputs p«_idx», StepMetaData
                     «IF isStepNamePresent(labelList,step.stepVar.name)»
@@ -203,15 +192,11 @@ class CPNTemplateGenerator
                         updates:
                             // Constructor
                             «step.stepVar.name» := «Utils.defaultValue(step.stepVar.type.type, step.stepVar.name)»
-                        «FOR elm : step.refStep»
-                            «FOR act : elm.input.actions»
-                                «IF act instanceof RecordFieldAssignmentAction»
-                                    «IF act.exp.eAllContents.filter(ExpressionVariable).isEmpty»
-                                        // ReferenceExp. TODO Skip.
-                                        «NodeModelUtils.getNode(act).text.replaceAll("(?m)^\\s*$\\R?", "")»
-                                    «ENDIF»
-                                «ENDIF»
-                            «ENDFOR»
+                        «FOR act : step.input»
+                            «IF act.exp.eAllContents.filter(ExpressionVariable).isEmpty»
+                                // ReferenceExp. TODO Skip.
+                                «NodeModelUtils.getNode(act).text.replaceAll("(?m)^\\s*$\\R?", "")»
+                            «ENDIF»
                         «ENDFOR»
                     «ELSE»
                         produces-outputs any
@@ -221,7 +206,7 @@ class CPNTemplateGenerator
                         «IF step instanceof RunStep»
                             StepMetaData := StepMetaData {
                                 steps = <map<string,string>>{
-                                    "stepid" -> "«step.inputVar.name»"
+                                    "stepid" -> "«step.stepVar.name»"
                                 }
                             }
                         «ELSE»
@@ -274,8 +259,8 @@ class CPNTemplateGenerator
             desc "TSpecCPNModel"
     
             «IF boundaryStep !== null»
-                action «boundaryStep.type.name»_0
-                element-label "«boundaryStep.type.name»"
+                action «boundaryStep.typeName»_0
+                element-label "«boundaryStep.typeName»"
                 case default
                 with-inputs p0, StepMetaData
                 
@@ -287,16 +272,12 @@ class CPNTemplateGenerator
                                 boundaryStep.stepVar.type.type,
                                 boundaryStep.stepVar.name
                             )»
-                    «FOR element : boundaryStep.refStep»
-                        «FOR action : element.input.actions»
-                            «IF action instanceof RecordFieldAssignmentAction»
-                                «IF action.exp.eAllContents
-                                    .filter(ExpressionVariable).isEmpty»
-                                    «NodeModelUtils.getNode(action).text
-                                        .replaceAll("(?m)^\\s*$\\R?", "")»
-                                «ENDIF»
-                            «ENDIF»
-                        «ENDFOR»
+                    «FOR action : boundaryStep.input»
+                        «IF action.exp.eAllContents
+                            .filter(ExpressionVariable).isEmpty»
+                            «NodeModelUtils.getNode(action).text
+                                .replaceAll("(?m)^\\s*$\\R?", "")»
+                        «ENDIF»
                     «ENDFOR»
                 «ELSE»
                     produces-outputs any
@@ -306,7 +287,7 @@ class CPNTemplateGenerator
                     «IF boundaryStep instanceof RunStep»
                         StepMetaData := StepMetaData {
                             steps = <map<string,string>>{
-                                "stepid" -> "«boundaryStep.inputVar.name»"
+                                "stepid" -> "«boundaryStep.stepVar.name»"
                             }
                         }
                     «ELSE»
@@ -350,24 +331,20 @@ class CPNTemplateGenerator
                     «FOR ss : td.stepSeq»
                         «FOR step : ss.step»
                             «IF step instanceof RunStep || step instanceof AssertionStep»
-                                action «step.type.name»_«_idx»
-                                element-label "«step.type.name»"
+                                action «step.typeName»_«_idx»
+                                element-label "«step.typeName»"
                                 case default
                                 with-inputs p«_idx»,StepMetaData
                                 «IF isStepNamePresent(labelList,step.stepVar.name)»
                                     produces-outputs «step.stepVar.name»
                                     updates:
                                         «step.stepVar.name» := «Utils.defaultValue(step.stepVar.type.type, step.stepVar.name)»
-                                    «FOR elm : step.refStep»
-                                        «FOR act : elm.input.actions»
-                                            «IF act instanceof RecordFieldAssignmentAction»
-                                                «IF act.exp.eAllContents.filter(ExpressionVariable).isEmpty»
-                                                    // ReferenceExp. TODO Skip.
-                                                    «NodeModelUtils.getNode(act).text.replaceAll("(?m)^\\s*$\\R?", "")»
-                                                «ENDIF»
-                                            «ENDIF»
-        «««                                    «NodeModelUtils.getNode(act).text.replaceAll("(?m)^\\s*$\\R?", "")»
-                                        «ENDFOR»
+                                    «FOR act : step.input»
+                                        «IF act.exp.eAllContents.filter(ExpressionVariable).isEmpty»
+                                            // ReferenceExp. TODO Skip.
+                                            «NodeModelUtils.getNode(act).text.replaceAll("(?m)^\\s*$\\R?", "")»
+                                        «ENDIF»
+«««                                    «NodeModelUtils.getNode(act).text.replaceAll("(?m)^\\s*$\\R?", "")»
                                     «ENDFOR»
                                 «ELSE»
                                     produces-outputs any
@@ -377,13 +354,13 @@ class CPNTemplateGenerator
                                     «IF step instanceof RunStep»
                                         StepMetaData := StepMetaData {
                                             steps = <map<string,string>>{
-                                                "stepid" -> "«step.inputVar.name»"
+                                                "stepid" -> "«step.stepVar.name»"
                                             }
                                         }
                                     «ELSE»
                                         StepMetaData := StepMetaData
                                     «ENDIF»
-                
+
                                 «IF _idx == idx - 1»
                                     produces-outputs endoftrace
                                 «ENDIF»
@@ -1239,5 +1216,9 @@ class CPNTemplateGenerator
         if(!isRefInfoPresent(labelList, anyInfo))
             labelList.add(anyInfo)
         return labelList
+    }
+
+    private def getTypeName(AbstractStep step) {
+        return step.stepVar.type.typeName
     }
 }

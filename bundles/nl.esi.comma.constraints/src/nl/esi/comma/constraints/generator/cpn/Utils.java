@@ -13,10 +13,13 @@
  
 package nl.esi.comma.constraints.generator.cpn;
 
+import java.util.stream.Collectors;
+
+import nl.esi.xplus.extensions.types.RecordFieldKind;
+import nl.esi.xplus.extensions.types.TypesExtensionUtil;
 import nl.esi.xtext.types.types.EnumTypeDecl;
 import nl.esi.xtext.types.types.MapTypeConstructor;
 import nl.esi.xtext.types.types.MapTypeDecl;
-import nl.esi.xtext.types.types.RecordFieldKind;
 import nl.esi.xtext.types.types.RecordTypeDecl;
 import nl.esi.xtext.types.types.SimpleTypeDecl;
 import nl.esi.xtext.types.types.Type;
@@ -24,8 +27,6 @@ import nl.esi.xtext.types.types.TypeDecl;
 import nl.esi.xtext.types.types.VectorTypeConstructor;
 import nl.esi.xtext.types.types.VectorTypeDecl;
 import nl.esi.xtext.types.utilities.TypeUtilities;
-import java.util.stream.Collectors;
-
 
 class Utils {
 	
@@ -59,7 +60,7 @@ class Utils {
 	        return "<" + mapType.getName() + ">{}";
 	    } else if (type instanceof RecordTypeDecl recType) {
 	    	String value = TypeUtilities.getAllFields(recType).stream()
-	                .filter(f -> !RecordFieldKind.SYMBOLIC.equals(f.getKind()))
+	                .filter(f -> !RecordFieldKind.SYMBOLIC.equals(TypesExtensionUtil.getKind(f)))
 	                .map(f -> String.format("%s = %s", f.getName(), defaultValue(f.getType(), f.getName())))
 	                .collect(Collectors.joining(","));
 	            return String.format("%s {%s}", recType.getName(), value);

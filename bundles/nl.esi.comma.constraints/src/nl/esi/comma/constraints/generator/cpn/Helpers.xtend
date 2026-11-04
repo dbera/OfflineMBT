@@ -245,7 +245,7 @@ class Helpers {
                     entry.put("value", serializer.serialize(assignment.exp))
                     entry
                 ].toList
-            result.put(step.inputVar.name, assignments)
+            result.put(step.stepVar.name, assignments)
         }
         result
     }
