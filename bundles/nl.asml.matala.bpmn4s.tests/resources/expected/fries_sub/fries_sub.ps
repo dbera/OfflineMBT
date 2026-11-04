@@ -3,16 +3,15 @@ specification fries_sub
 {
     system Fries
     {
-        inputs
-        Topping	topping
+        // inputs
         
-        outputs
-        Topping	topping
-        Fries	fries
+        // outputs
     
         local
         Fries	fries
         Topping	topping
+    
+        context fries_ctx
         FriesContext	choice
         FriesContext	Gateway_05dn8q0
         FriesContext	start_event

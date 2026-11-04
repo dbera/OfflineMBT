@@ -138,7 +138,7 @@ def build_and_load_model(model_path:str):
 
     model_dir, model_name = os.path.split(model_path)
     model_name, model_ext = os.path.splitext(model_name)
-    model_name = utils.to_valid_variable_name(model_name)
+    model_name = utils.sanitize_variable_name(model_name)
     taskname:str = f"server"
     prj_template:str = """Project project {{
     Generate Simulator {{
@@ -178,7 +178,7 @@ def generate_tests( model_path:str, num_tests:int=1, depth_limit:int=500, state_
 
     model_dir, model_name = os.path.split(model_path)
     model_name, model_ext = os.path.splitext(model_name)
-    model_name = utils.to_valid_variable_name(model_name)
+    model_name = utils.sanitize_variable_name(model_name)
     taskname:str = f"testgen"
     prj_template:str = """Project project {{
       Generate Tests {{
@@ -221,7 +221,8 @@ def generate_tests( model_path:str, num_tests:int=1, depth_limit:int=500, state_
     # store results in the report dir
     utils.store_results(report_path, result, cli_args)
 
-    write_eclipse_project(output_dir, model_name)
+    tmp_dir, uid = os.path.split(model_dir)
+    write_eclipse_project(output_dir, model_name + '_' + uid)
     write_status_report_html(output_dir, report_path)
 
     # store bpmn and prj files in bpmn directory 
@@ -289,11 +290,17 @@ def write_status_report_html(output_dir, report_path):
     except Exception as e:
         logger.warning("Could not write status report HTML") 
 
+def _normalized_upload_basename(upload_filename: str) -> str:
+    """Normalize uploaded names so generated PRJ references match saved BPMN files."""
+    base_name, _ = os.path.splitext(upload_filename)
+    normalized = utils.sanitize_variable_name(base_name)
+    return normalized if normalized else "model"
+
 # The endpoint of our FastAPI app
 @app.post("/BPMNParser")
 async def handle_bpmn(bpmn_file: UploadFile = File(alias="bpmn-file")):
     fname = bpmn_file.filename
-    filename = fname + utils.gensym(prefix="_",timestamp=True)
+    filename = _normalized_upload_basename(fname) + utils.gensym(prefix="_",timestamp=True)
     bpmn_path = os.path.join(TEMP_PATH,f"{filename}.bpmn")
 
     contents = await bpmn_file.read()
@@ -343,9 +350,11 @@ async def test_generator(
     depthLimit = _args.get('depth-limit',1000)
     stateLimit = _args.get('state-limit',1000)
 
-    fname = bpmn_file.filename
-    filename = fname + utils.gensym(prefix="_",timestamp=True)
-    model_path = os.path.join(TEMP_PATH,f"{filename}.bpmn")
+    filename = _normalized_upload_basename(bpmn_file.filename)
+    uid = utils.gensym(prefix="", timestamp=True)
+    model_dir = os.path.join(TEMP_PATH, uid)
+    os.makedirs(model_dir, exist_ok=True)
+    model_path = os.path.join(model_dir, f"{filename}.bpmn")
 
     contents = await bpmn_file.read()
     with open(model_path, "wb") as f:
@@ -356,11 +365,11 @@ async def test_generator(
     try:
         zip_fname, result = generate_tests(model_path, num_tests=numTests, depth_limit=depthLimit, state_limit=stateLimit)
         zip_dir, zip_path = os.path.split(zip_fname)
-        return FileResponse(os.path.join(zip_dir, zip_path), media_type='application/zip', filename=zip_path)
+        return FileResponse(os.path.join(zip_dir, zip_path), media_type='application/zip', filename=filename+'_'+ uid + ".zip")
     except utils.BPMN4SException as e:
         status_code = 400
         failed = response['response']
-        failed['message'] = f'Error generating test cases from file {fname}'
+        failed['message'] = f'Error generating test cases from file {filename}'
         failed['returncode'] = e.returncode
         failed['stdout'] = e.stdout
         failed['stderr'] = e.stderr
@@ -512,7 +521,14 @@ def _rest_url() -> str:
     """Base URL of the Java REST file server."""
     return f"http://127.0.0.1:{REST_PORT}"
 
-async def _proxy_to_rest(method: str, path: Optional[str] = None, body: bytes = None, params: dict = None) -> Response:
+async def _proxy_to_rest(
+    method: str,
+    fragment: str,
+    path: Optional[str] = None,
+    body: bytes = None,
+    params: dict = None,
+    require_path: bool = False,
+) -> Response:
     """
     Generic proxy handler for forwarding requests to Java REST server.
 
@@ -525,18 +541,25 @@ async def _proxy_to_rest(method: str, path: Optional[str] = None, body: bytes = 
     if REST_PORT is None:
         return JSONResponse({"error": "REST file server not available"}, status_code=503)
     
-    if path is None or path == "":
-        if method != "GET":
+    request_params = dict(params or {})
+    if path is not None and "path" not in request_params:
+        request_params["path"] = path
+
+    if require_path and method in {"POST", "PUT"} and ("path" not in request_params or request_params["path"] == ""):
             return JSONResponse({"error": "path parameter is required"}, status_code=400)
     
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
             if method == "GET":
-                resp = await client.get(f"{_rest_url()}/files", params=params or {})
+                resp = await client.get(f"{_rest_url()}/{fragment}", params=request_params)
             elif method == "POST":
-                resp = await client.post(f"{_rest_url()}/files", params={"path": path}, content=body)
+                resp = await client.post(f"{_rest_url()}/{fragment}", params=request_params, content=body)
             elif method == "PUT":
-                resp = await client.put(f"{_rest_url()}/files", params={"path": path}, content=body)
+                resp = await client.put(f"{_rest_url()}/{fragment}", params=request_params, content=body)
+            elif method == "DELETE":
+                resp = await client.delete(f"{_rest_url()}/{fragment}", params=request_params, content=body)
+            elif method == "PATCH":
+                resp = await client.patch(f"{_rest_url()}/{fragment}", params=request_params, content=body)
             else:
                 return JSONResponse({"error": "Unsupported HTTP method"}, status_code=405)
 
@@ -554,30 +577,27 @@ async def _proxy_to_rest(method: str, path: Optional[str] = None, body: bytes = 
         logger.error(f"REST server connection error ({method}): {e}")
         return JSONResponse({"error": "Connection failed to REST server"}, status_code=502)
     except Exception as e:
-        logger.error(f"Unexpected error in {method} /files: {e}")
+        logger.error(f"Unexpected error in {method} /{fragment}: {e}")
         return JSONResponse({"error": "Internal server error"}, status_code=500)
 
-@app.get("/files")
-async def proxy_files_get(path: Optional[str] = None, extension: Optional[str] = None):
-    """Proxy GET /files to Java REST server."""
-    params = {}
-    if path is not None:
-        params["path"] = path
-    if extension is not None:
-        params["extension"] = extension
-    return await _proxy_to_rest("GET", params=params)
-
-@app.post("/files")
-async def proxy_files_post(path: Optional[str] = None, request: Request = None):
-    """Proxy POST /files to Java REST server."""
-    body = await request.body()
-    return await _proxy_to_rest("POST", path=path, body=body)
-
-@app.put("/files")
-async def proxy_files_put(path: Optional[str] = None, request: Request = None):
-    """Proxy PUT /files to Java REST server."""
-    body = await request.body()
-    return await _proxy_to_rest("PUT", path=path, body=body)
+@app.api_route("/files", methods=["GET", "POST", "PUT", "PATCH", "DELETE"])
+@app.api_route("/files/{subpath:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE"])
+@app.api_route("/types", methods=["GET", "POST", "PUT", "PATCH", "DELETE"])
+@app.api_route("/types/{subpath:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE"])
+async def proxy_rest_any(subpath: str = "", request: Request = None):
+    """Proxy any /files* and /types/* request to Java REST server."""
+    method = request.method.upper()
+    params = dict(request.query_params)
+    body = await request.body() if method in {"POST", "PUT", "PATCH", "DELETE"} else None
+    group = "types" if request.url.path.startswith("/types") else "files"
+    fragment = group if subpath == "" else f"{group}/{subpath}"
+    return await _proxy_to_rest(
+        method,
+        fragment=fragment,
+        params=params,
+        body=body,
+        require_path=(subpath == ""),
+    )
 
 # This route handles any web files in the root directory
 @app.get("/{path:path}")
@@ -727,33 +747,35 @@ if __name__ == "__main__":
     logger.info(f"Starting Java server (LSP on port {LSP_PORT}, REST on port {REST_PORT})...")
 
     # Start Java ServerLauncher which runs both LSP and REST servers
-    lsp_command = [
+    java_rest_server_command = [
         JAVA_PATH,
     ]
 
     if args.debug and ensure_port_available(JAVA_DEBUG_PORT_LSP, "the Java LSP debug agent"):
-        lsp_command.append(
+        java_rest_server_command.append(
             f"-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=127.0.0.1:{JAVA_DEBUG_PORT_LSP}"
         )
         logger.info(f"Java debug agent listening on 127.0.0.1:{JAVA_DEBUG_PORT_LSP}")
 
-    lsp_command.extend([
-        "-cp",
+    java_rest_server_command.extend([
+        "-jar",
         BPMN4S_GEN,
-        "nl.asml.matala.server.ServerLauncher",
+        "--rest-server",
         "--lsp-port",
         str(LSP_PORT),
         "--rest-port",
         str(REST_PORT),
         "--repository-path",
         REPOSITORY_PATH_ARG,
+        "--output_path",
+        TEMP_PATH
     ])
 
-    logger.debug(f"LSP command: {' '.join(lsp_command)}")
+    logger.debug(f"LSP command: {' '.join(java_rest_server_command)}")
     logger.debug(f"Using JAVA_PATH: {JAVA_PATH}")
 
     lsp_proc = subprocess.Popen(
-        lsp_command,
+        java_rest_server_command,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,

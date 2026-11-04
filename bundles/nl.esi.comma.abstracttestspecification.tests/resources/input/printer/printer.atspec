@@ -42,7 +42,7 @@ Test-Scenario: S1
 
 compose-step-name: PrintFactoryA3DPrinter_ComposePrintJob_default_0
 action-case: printer.PrintFactoryA3DPrinter.ComposePrintJob.default
-input-binding:
+input-data:
 printJob : {
     "color": "ColorType::MONOCHROME",
     "id": 1,
@@ -82,12 +82,11 @@ request : {
     "resolution": "PrintResolution::LOW",
     "scale": 50.0
 }
-suppress(Flow_1u2qmtt)
 
 run-step-name: PrintFactoryA3DPrinter_RunPrintJob_default_0 step-type: "ExecutePrinter"
 action-case: printer.PrintFactoryA3DPrinter.RunPrintJob.default
 consumes-from-step: PrintFactoryA3DPrinter_ComposePrintJob_default_0 { request  }
-input-binding:
+input-data:
 Flow_1u2qmtt : {
     "unit": 0
 }
@@ -116,12 +115,11 @@ variants : {
     "release": "1.0.0",
     "version": "PX210"
 }
-suppress(Event_0jcg6zx, printReport.id)
 sut-var: { variants  }
 
 compose-step-name: PrintFactoryA3DPrinter_ComposePrepareJob_default_0
 action-case: printer.PrintFactoryA3DPrinter.ComposePrepareJob.default
-input-binding:
+input-data:
 printJob : {
     "color": "ColorType::MONOCHROME",
     "id": 1,
@@ -140,12 +138,11 @@ request : {
     "resolution": "PrintResolution::LOW",
     "scale": null
 }
-suppress(Flow_0iaelzn)
 
 run-step-name: PrintFactoryA3DPrinter_RunPrepareJob_default_0 step-type: "ExecutePrinter"
 action-case: printer.PrintFactoryA3DPrinter.RunPrepareJob.default
 consumes-from-step: PrintFactoryA3DPrinter_ComposePrepareJob_default_0 { request  }
-input-binding:
+input-data:
 Flow_0iaelzn : {
     "unit": 0
 }
@@ -171,13 +168,12 @@ variants : {
     "release": "1.1.0",
     "version": "PX210"
 }
-suppress(Event_0mxx05p)
 sut-var: { variants  }
 
 compose-step-name: PrintFactoryInspection_ComposeVisualInspectionJob_default_0
 action-case: printer.PrintFactoryInspection.ComposeVisualInspectionJob.default
 consumes-from-step: PrintFactoryA3DPrinter_RunPrintJob_default_0 { printReport  }
-input-binding:
+input-data:
 inspectionJob : {
     "id": 1
 }
@@ -194,14 +190,13 @@ measureRequest : {
 printReport : {
     "id": 1
 }
-suppress(Flow_07l0yyj, measureRequest.printJobReport.id, printReport)
 data-references: measureRequest
 printer.PrintFactoryInspection.ComposeVisualInspectionJob.default.reportLinking
 
 run-step-name: PrintFactoryInspection_RunVisualinspection_default_0 step-type: "ExecuteInspection"
 action-case: printer.PrintFactoryInspection.RunVisualinspection.default
 consumes-from-step: PrintFactoryInspection_ComposeVisualInspectionJob_default_0 { measureRequest  }
-input-binding:
+input-data:
 Flow_07l0yyj : {
     "unit": 0
 }
@@ -215,12 +210,11 @@ inspectionReport : {
 inspectionResult : {
     "verdict": "Outcome::OK"
 }
-suppress(inspectionReport.id)
 
 assert-step-name: PrintFactoryAssertions_AssertVisualInspection_default_0 assert-type: "Assertions"
 action-case: printer.PrintFactoryAssertions.AssertVisualInspection.default
 consumes-from-step: PrintFactoryInspection_RunVisualinspection_default_0 { inspectionReport  }
-input-binding:
+input-data:
 inspectionReport : {
     "id": 1
 }
@@ -239,15 +233,13 @@ history : {
 inspectionReport : {
     "id": 1
 }
-suppress(Event_1bxlea2, inspectionReport.id)
 output-assertion: PrintFactoryInspection_RunVisualinspection_default_0
 printer.PrintFactoryAssertions.AssertVisualInspection.default.default
 
 compose-step-name: PrintFactoryOptimization_ComposeOptimizationJob_default_0
 action-case: printer.PrintFactoryOptimization.ComposeOptimizationJob.default
 consumes-from-step: PrintFactoryInspection_RunVisualinspection_default_0 { inspectionReport  }
-consumes-from-step: PrintFactoryAssertions_AssertVisualInspection_default_0 { inspectionReport  }
-input-binding:
+input-data:
 optJob : {
     "id": 1
 }
@@ -264,12 +256,11 @@ optimizeJob : {
 inspectionReport : {
     "id": 1
 }
-suppress(Flow_0y8u5pd, inspectionReport)
 
 run-step-name: PrintFactoryOptimization_RunOptimizationJob_default_0 step-type: "ExecuteOptimizer"
 action-case: printer.PrintFactoryOptimization.RunOptimizationJob.default
 consumes-from-step: PrintFactoryOptimization_ComposeOptimizationJob_default_0 { optimizeJob  }
-input-binding:
+input-data:
 Flow_0y8u5pd : {
     "unit": 0
 }
@@ -286,12 +277,11 @@ corrections : {
 optResult : {
     "verdict": "Outcome::OK"
 }
-suppress(Event_1oozdnw)
 
 compose-step-name: PrintFactoryA3DPrinter_ComposePrintJob_default_1
 action-case: printer.PrintFactoryA3DPrinter.ComposePrintJob.default
 consumes-from-step: PrintFactoryOptimization_RunOptimizationJob_default_0 { corrections  }
-input-binding:
+input-data:
 printJob : {
     "color": "ColorType::COLOR",
     "id": 2,
@@ -313,13 +303,11 @@ request : {
     "resolution": "PrintResolution::MED",
     "scale": 75.0
 }
-suppress(Flow_1u2qmtt)
 
 run-step-name: PrintFactoryA3DPrinter_RunPrintJob_default_1 step-type: "ExecutePrinter"
 action-case: printer.PrintFactoryA3DPrinter.RunPrintJob.default
-consumes-from-step: PrintFactoryA3DPrinter_RunPrintJob_default_0 { variants  }
 consumes-from-step: PrintFactoryA3DPrinter_ComposePrintJob_default_1 { request  }
-input-binding:
+input-data:
 Flow_1u2qmtt : {
     "unit": 0
 }
@@ -348,12 +336,11 @@ variants : {
     "release": "1.0.0",
     "version": "PX210"
 }
-suppress(Event_0jcg6zx, printReport.id)
 sut-var: { variants  }
 
 compose-step-name: PrintFactoryA3DPrinter_ComposePrepareJob_default_1
 action-case: printer.PrintFactoryA3DPrinter.ComposePrepareJob.default
-input-binding:
+input-data:
 printJob : {
     "color": "ColorType::COLOR",
     "id": 2,
@@ -372,13 +359,11 @@ request : {
     "resolution": "PrintResolution::MED",
     "scale": null
 }
-suppress(Flow_0iaelzn)
 
 run-step-name: PrintFactoryA3DPrinter_RunPrepareJob_default_1 step-type: "ExecutePrinter"
 action-case: printer.PrintFactoryA3DPrinter.RunPrepareJob.default
-consumes-from-step: PrintFactoryA3DPrinter_RunPrepareJob_default_0 { variants  }
 consumes-from-step: PrintFactoryA3DPrinter_ComposePrepareJob_default_1 { request  }
-input-binding:
+input-data:
 Flow_0iaelzn : {
     "unit": 0
 }
@@ -404,13 +389,12 @@ variants : {
     "release": "1.1.0",
     "version": "PX210"
 }
-suppress(Event_0mxx05p)
 sut-var: { variants  }
 
 compose-step-name: PrintFactoryInspection_ComposeVisualInspectionJob_default_1
 action-case: printer.PrintFactoryInspection.ComposeVisualInspectionJob.default
 consumes-from-step: PrintFactoryA3DPrinter_RunPrintJob_default_1 { printReport  }
-input-binding:
+input-data:
 inspectionJob : {
     "id": 2
 }
@@ -427,14 +411,13 @@ measureRequest : {
 printReport : {
     "id": 2
 }
-suppress(Flow_07l0yyj, measureRequest.printJobReport.id, printReport)
 data-references: measureRequest
 printer.PrintFactoryInspection.ComposeVisualInspectionJob.default.reportLinking
 
 run-step-name: PrintFactoryInspection_RunVisualinspection_default_1 step-type: "ExecuteInspection"
 action-case: printer.PrintFactoryInspection.RunVisualinspection.default
 consumes-from-step: PrintFactoryInspection_ComposeVisualInspectionJob_default_1 { measureRequest  }
-input-binding:
+input-data:
 Flow_07l0yyj : {
     "unit": 0
 }
@@ -448,13 +431,12 @@ inspectionReport : {
 inspectionResult : {
     "verdict": "Outcome::OK"
 }
-suppress(inspectionReport.id)
 
 assert-step-name: PrintFactoryAssertions_AssertVisualInspection_default_1 assert-type: "Assertions"
 action-case: printer.PrintFactoryAssertions.AssertVisualInspection.default
 consumes-from-step: PrintFactoryAssertions_AssertVisualInspection_default_0 { history  }
 consumes-from-step: PrintFactoryInspection_RunVisualinspection_default_1 { inspectionReport  }
-input-binding:
+input-data:
 inspectionReport : {
     "id": 2
 }
@@ -476,15 +458,13 @@ history : {
 inspectionReport : {
     "id": 2
 }
-suppress(Event_1bxlea2, inspectionReport.id)
 output-assertion: PrintFactoryInspection_RunVisualinspection_default_1
 printer.PrintFactoryAssertions.AssertVisualInspection.default.default
 
 compose-step-name: PrintFactoryOptimization_ComposeOptimizationJob_default_1
 action-case: printer.PrintFactoryOptimization.ComposeOptimizationJob.default
 consumes-from-step: PrintFactoryInspection_RunVisualinspection_default_1 { inspectionReport  }
-consumes-from-step: PrintFactoryAssertions_AssertVisualInspection_default_1 { inspectionReport  }
-input-binding:
+input-data:
 optJob : {
     "id": 2
 }
@@ -501,12 +481,11 @@ optimizeJob : {
 inspectionReport : {
     "id": 2
 }
-suppress(Flow_0y8u5pd, inspectionReport)
 
 run-step-name: PrintFactoryOptimization_RunOptimizationJob_default_1 step-type: "ExecuteOptimizer"
 action-case: printer.PrintFactoryOptimization.RunOptimizationJob.default
 consumes-from-step: PrintFactoryOptimization_ComposeOptimizationJob_default_1 { optimizeJob  }
-input-binding:
+input-data:
 Flow_0y8u5pd : {
     "unit": 0
 }
@@ -523,12 +502,11 @@ corrections : {
 optResult : {
     "verdict": "Outcome::OK"
 }
-suppress(Event_1oozdnw)
 
 compose-step-name: PrintFactoryA3DPrinter_ComposePrintJob_default_2
 action-case: printer.PrintFactoryA3DPrinter.ComposePrintJob.default
 consumes-from-step: PrintFactoryOptimization_RunOptimizationJob_default_1 { corrections  }
-input-binding:
+input-data:
 printJob : {
     "color": "ColorType::COLOR",
     "id": 3,
@@ -550,12 +528,11 @@ request : {
     "resolution": "PrintResolution::HIGH",
     "scale": 75.0
 }
-suppress(Flow_1u2qmtt)
 
 run-step-name: PrintFactoryA3DPrinter_RunPrintJob_default_2 step-type: "ExecutePrinter"
 action-case: printer.PrintFactoryA3DPrinter.RunPrintJob.default
 consumes-from-step: PrintFactoryA3DPrinter_ComposePrintJob_default_2 { request  }
-input-binding:
+input-data:
 Flow_1u2qmtt : {
     "unit": 0
 }
@@ -584,12 +561,11 @@ variants : {
     "release": "2.1.0",
     "version": "TX500"
 }
-suppress(Event_0jcg6zx, printReport.id)
 sut-var: { variants  }
 
 compose-step-name: PrintFactoryA3DPrinter_ComposePrepareJob_default_2
 action-case: printer.PrintFactoryA3DPrinter.ComposePrepareJob.default
-input-binding:
+input-data:
 printJob : {
     "color": "ColorType::COLOR",
     "id": 3,
@@ -608,13 +584,11 @@ request : {
     "resolution": "PrintResolution::HIGH",
     "scale": null
 }
-suppress(Flow_0iaelzn)
 
 run-step-name: PrintFactoryA3DPrinter_RunPrepareJob_default_2 step-type: "ExecutePrinter"
 action-case: printer.PrintFactoryA3DPrinter.RunPrepareJob.default
-consumes-from-step: PrintFactoryA3DPrinter_RunPrintJob_default_2 { variants  }
 consumes-from-step: PrintFactoryA3DPrinter_ComposePrepareJob_default_2 { request  }
-input-binding:
+input-data:
 Flow_0iaelzn : {
     "unit": 0
 }
@@ -640,13 +614,12 @@ variants : {
     "release": "2.1.0",
     "version": "TX500"
 }
-suppress(Event_0mxx05p)
 sut-var: { variants  }
 
 compose-step-name: PrintFactoryInspection_ComposeVisualInspectionJob_default_2
 action-case: printer.PrintFactoryInspection.ComposeVisualInspectionJob.default
 consumes-from-step: PrintFactoryA3DPrinter_RunPrintJob_default_2 { printReport  }
-input-binding:
+input-data:
 inspectionJob : {
     "id": 3
 }
@@ -663,14 +636,13 @@ measureRequest : {
 printReport : {
     "id": 3
 }
-suppress(Flow_07l0yyj, measureRequest.printJobReport.id, printReport)
 data-references: measureRequest
 printer.PrintFactoryInspection.ComposeVisualInspectionJob.default.reportLinking
 
 run-step-name: PrintFactoryInspection_RunVisualinspection_default_2 step-type: "ExecuteInspection"
 action-case: printer.PrintFactoryInspection.RunVisualinspection.default
 consumes-from-step: PrintFactoryInspection_ComposeVisualInspectionJob_default_2 { measureRequest  }
-input-binding:
+input-data:
 Flow_07l0yyj : {
     "unit": 0
 }
@@ -684,13 +656,12 @@ inspectionReport : {
 inspectionResult : {
     "verdict": "Outcome::OK"
 }
-suppress(inspectionReport.id)
 
 assert-step-name: PrintFactoryAssertions_AssertVisualInspection_default_2 assert-type: "Assertions"
 action-case: printer.PrintFactoryAssertions.AssertVisualInspection.default
 consumes-from-step: PrintFactoryAssertions_AssertVisualInspection_default_1 { history  }
 consumes-from-step: PrintFactoryInspection_RunVisualinspection_default_2 { inspectionReport  }
-input-binding:
+input-data:
 inspectionReport : {
     "id": 3
 }
@@ -714,15 +685,13 @@ history : {
 inspectionReport : {
     "id": 3
 }
-suppress(Event_1bxlea2, inspectionReport.id)
 output-assertion: PrintFactoryInspection_RunVisualinspection_default_2
 printer.PrintFactoryAssertions.AssertVisualInspection.default.default
 
 compose-step-name: PrintFactoryOptimization_ComposeOptimizationJob_default_2
 action-case: printer.PrintFactoryOptimization.ComposeOptimizationJob.default
 consumes-from-step: PrintFactoryInspection_RunVisualinspection_default_2 { inspectionReport  }
-consumes-from-step: PrintFactoryAssertions_AssertVisualInspection_default_2 { inspectionReport  }
-input-binding:
+input-data:
 optJob : {
     "id": 3
 }
@@ -739,12 +708,11 @@ optimizeJob : {
 inspectionReport : {
     "id": 3
 }
-suppress(Flow_0y8u5pd, inspectionReport)
 
 run-step-name: PrintFactoryOptimization_RunOptimizationJob_default_2 step-type: "ExecuteOptimizer"
 action-case: printer.PrintFactoryOptimization.RunOptimizationJob.default
 consumes-from-step: PrintFactoryOptimization_ComposeOptimizationJob_default_2 { optimizeJob  }
-input-binding:
+input-data:
 Flow_0y8u5pd : {
     "unit": 0
 }
@@ -761,7 +729,6 @@ corrections : {
 optResult : {
     "verdict": "Outcome::OK"
 }
-suppress(Event_1oozdnw)
 
 generate-file "./dataset/"
 

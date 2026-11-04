@@ -73,14 +73,6 @@ the Department of Electrical Engineering of Eindhoven University of Technology.
          version="0.0.0"/>
 
    <plugin
-         id="nl.esi.comma.inputspecification"
-         version="0.0.0"/>
-
-   <plugin
-         id="nl.esi.comma.inputspecification.ide"
-         version="0.0.0"/>
-
-   <plugin
          id="nl.esi.comma.automata"
          version="0.0.0"/>
 
@@ -162,6 +154,10 @@ the Department of Electrical Engineering of Eindhoven University of Technology.
 
    <plugin
          id="nl.esi.comma.causalgraph.ide"
+         version="0.0.0"/>
+
+   <plugin
+         id="nl.esi.xplus.extensions"
          version="0.0.0"/>
 
 </feature>

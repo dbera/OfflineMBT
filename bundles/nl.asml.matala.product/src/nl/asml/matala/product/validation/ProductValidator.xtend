@@ -16,6 +16,7 @@
 package nl.asml.matala.product.validation
 
 import com.google.common.collect.Iterators
+import java.util.Collections
 import java.util.HashSet
 import java.util.List
 import java.util.Map
@@ -29,6 +30,7 @@ import nl.asml.matala.product.product.Specification
 import nl.asml.matala.product.product.Update
 import nl.asml.matala.product.product.UpdateOutVar
 import nl.asml.matala.product.product.VarRef
+import nl.esi.xplus.extensions.types.RecordFieldKind
 import nl.esi.xtext.actions.actions.ActionsPackage
 import nl.esi.xtext.actions.actions.AssignmentAction
 import nl.esi.xtext.actions.actions.ForAction
@@ -43,11 +45,12 @@ import nl.esi.xtext.expressions.expression.ExpressionVariable
 import nl.esi.xtext.expressions.expression.Field
 import nl.esi.xtext.expressions.expression.Variable
 import nl.esi.xtext.types.types.RecordField
-import nl.esi.xtext.types.types.RecordFieldKind
 import nl.esi.xtext.types.types.RecordTypeDecl
+import nl.esi.xtext.types.types.TypesPackage
 import org.eclipse.emf.ecore.EObject
 import org.eclipse.xtext.validation.Check
 
+import static extension nl.esi.xplus.extensions.types.TypesExtensionUtil.*
 import static extension nl.esi.xtext.actions.utilities.ActionsUtilities.*
 import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
 import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
@@ -125,11 +128,37 @@ class ProductValidator extends AbstractProductValidator {
      */
     @Check
     def checkLocalDuplication(Block block) {
-        val existingLocalvars = block.localvars.groupBy[localvars|localvars.name]
-        existingLocalvars.values.filter[size > 1].flatten.forEach [ localvars |
-            error("Duplicate variable name in local variables: " + localvars.name,
-                ProductPackage.Literals.BLOCK__LOCALVARS, block.localvars.indexOf(localvars))
+        val existingLocalvars = block.localvars.groupBy[name]
+        existingLocalvars.values.filter[size > 1].flatten.forEach [ localvar |
+            error("Duplicate variable: " + localvar.name,
+                ProductPackage.Literals.BLOCK__LOCALVARS, block.localvars.indexOf(localvar))
         ]
+        val blockIO = (block.invars + block.outvars + block.contextvars).map[name].toSet
+        block.localvars.filter[blockIO.contains(name)].forEach[ localvar |
+            error("Duplicate variable: " + localvar.name,
+                ProductPackage.Literals.BLOCK__LOCALVARS, block.contextvars.indexOf(localvar))
+        ]
+    }
+
+    /**
+     * Check the duplication of variables in Context
+     */
+    @Check
+    def checkContextDuplication(Block block) {
+        val existingContextvars = block.contextvars.groupBy[name]
+        existingContextvars.values.filter[size > 1].flatten.forEach [ contextvar |
+            error("Duplicate variable: " + contextvar.name,
+                ProductPackage.Literals.BLOCK__CONTEXTVARS, block.contextvars.indexOf(contextvar))
+        ]
+        val blockvars = (block.invars + block.outvars + block.localvars).map[name].toSet
+        block.contextvars.filter[blockvars.contains(name)].forEach[ contextvar |
+            error("Duplicate variable: " + contextvar.name,
+                ProductPackage.Literals.BLOCK__CONTEXTVARS, block.contextvars.indexOf(contextvar))
+        ]
+        if (blockvars.contains(block.contextname)) {
+            error("Context name is already defined as variable: " + block.contextname,
+                ProductPackage.Literals.BLOCK__CONTEXTNAME)
+        }
     }
 
      /**
@@ -137,7 +166,7 @@ class ProductValidator extends AbstractProductValidator {
      */
     @Check
     def checkBlockVariables(Block block) {
-        for (blockVar : block.invars.union(block.outvars).union(block.localvars)) {
+        for (blockVar : block.invars.union(block.outvars).union(block.localvars).union(block.contextvars)) {
             if (!blockVar.type.isRecordType) {
                 error("Only record types are allowed for block variables", blockVar,
                     ExpressionPackage.Literals.VARIABLE__TYPE)
@@ -241,29 +270,7 @@ class ProductValidator extends AbstractProductValidator {
     }
 
     /**
-     * A system block may have many RUN steps but they all must be of the same step-type
-     */
-     @Check
-    def checkMultiRunSteps(Block block) {
-        val runUpdates = block.functions.flatMap[updates].filter[actionType == ActionType::RUN]
-
-        val groupedByStepType = runUpdates.groupBy[stepType]
-
-        if (groupedByStepType.keySet.size > 1) {
-            val mostCommon = groupedByStepType.entrySet.maxBy[value.size].key
-            runUpdates.filter[stepType != mostCommon].forEach [ update |
-                error(
-                    "All step-types must be the same for action-type RUN (expected: " + mostCommon + ")",
-                    update,
-                    ProductPackage.Literals.UPDATE__STEP_TYPE
-                )
-            ]
-        }
-
-    }
- 
-    /**
-     * Run step must always have step type.
+     * Run or assert step must always have step type.
      */
     @Check
     def checkRunStep(Update update) {
@@ -397,29 +404,28 @@ class ProductValidator extends AbstractProductValidator {
             }
         ]
 
-        // Variables that are supressed cannot be assigned in reference updates
+        // Variables that are suppressed cannot be assigned in reference updates
         val suppress = dataReferences.getContainerOfType(UpdateOutVar)?.suppress
         if (suppress === null) {
             return
         }
 
         // Check LHS variables
-        val suppressedVariables = suppress.varFields.filter(ExpressionVariable).map[variable].toSet
+        val suppressedVariables = suppress.vars.map[variable].toSet
         assignments.filter[suppressedVariables.contains(assignment)].forEach[
             error('''Suppressed field cannot be assigned in reference update''', it,
                 ActionsPackage.Literals.RECORD_FIELD_ASSIGNMENT_ACTION__FIELD_ACCESS)
         ]
 
         // Check LHS record fields
-        val suppressedFields  = suppress.varFields.filter(ExpressionRecordAccess).map[field].toSet
-        assignments.filter[fields.exists[suppressedFields.contains(it)]].forEach[
+        assignments.filter[fields.exists[suppressed]].forEach[
             error('''Suppressed field cannot be assigned in reference update''', it,
                 ActionsPackage.Literals.RECORD_FIELD_ASSIGNMENT_ACTION__FIELD_ACCESS)
         ]
 
         // Check RHS record fields
         val rhsFields = dataReferences.eAllContents.filter(Field).toList
-        for (suppressedField : rhsFields.filter[suppressedFields.contains(recordField)]) {
+        for (suppressedField : rhsFields.filter[recordField.suppressed]) {
             error('''Suppressed field cannot be assigned in reference update''', suppressedField,
                 ExpressionPackage.Literals.FIELD__RECORD_FIELD)
         }
@@ -515,6 +521,44 @@ class ProductValidator extends AbstractProductValidator {
                 }
             }
         }
+    }
+
+    @Check
+    def checkRecordFieldAnnotations(RecordField field) {
+        val symbolic = field.annotations.findFirst[name == 'symbolic']
+        val mixed = field.annotations.findFirst[name == 'mixed']
+        val suppress = field.annotations.findFirst[name == 'suppress']
+
+        if (symbolic !== null && mixed !== null) {
+            warning('''Symbolic annotation has no effect for record field '«field.FQN»' as mixed has precedence''',
+                symbolic, null)
+        }
+        if ((symbolic !== null || mixed !== null) && suppress !== null) {
+            error('''«(mixed ?: symbolic).name.toFirstUpper» record field '«field.FQN»' cannot be supressed''',
+                suppress, null)
+        }
+    }
+
+    @Check
+    def checkRecordAnnotations(RecordTypeDecl typeDecl) {
+        if (!typeDecl.isContext) {
+            return
+        }
+        typeDecl.fields.forEach[field, index |
+            if (field.kind !== RecordFieldKind.CONCRETE) {
+                error('''Context type «typeDecl.name» can only contain concrete fields''',
+                    TypesPackage.Literals.RECORD_TYPE_DECL__FIELDS, index)
+            }
+            if (Collections.singleton(field).closure[subFields].exists[kind !== RecordFieldKind.CONCRETE]) {
+                error('''All nested fields of context field '«field.FQN»' should be concrete''',
+                    TypesPackage.Literals.RECORD_TYPE_DECL__FIELDS, index)
+            }
+        ]
+    }
+
+    def private static List<RecordField> getSubFields(RecordField field) {
+        val typeDecl = field.type.type
+        return typeDecl instanceof RecordTypeDecl ? typeDecl.fields : Collections.emptyList
     }
 
 /* STRANGE BUG: Output Vars are Empty. Appears in Input Vars. 

@@ -1,0 +1,235 @@
+import "../../input/assertions_test/assertions_test.types"
+
+record Step_8_1 {
+    Step_8_1Input input
+    Step_8_1Output output
+}
+
+record Step_8_1Input {
+    TestContext ctx
+}
+
+record Step_8_1Output {
+    Report report_8_1
+}
+
+record Assert_8_2 {
+    Assert_8_2Input input
+    Assert_8_2Output output
+}
+
+record Assert_8_2Input {
+    TestContext ctx
+    Report report_8_1
+}
+
+record Assert_8_2Output {
+    Report report_8_1
+}
+
+record Run_8_3 {
+    Run_8_3Input input
+    Run_8_3Output output
+}
+
+record Run_8_3Input {
+    TestContext ctx
+    Report report_8_1
+}
+
+record Run_8_3Output {
+    Report report_8_3
+    Report report_8_1
+}
+
+record Assert_8_4 {
+    Assert_8_4Input input
+}
+
+record Assert_8_4Input {
+    TestContext ctx
+    Report report_8_1
+    Report report_8_3
+}
+
+
+record Run_7_2 {
+    Run_7_2Input input
+}
+
+record Run_7_2Input {
+    TestContext ctx
+    ConcreteParams extContext
+    ConcreteParams params_7_2
+    Variant variants
+}
+
+
+record Assert_6_2_1 {
+    Assert_6_2_1Input input
+    Assert_6_2_1Output output
+}
+
+record Assert_6_2_1Input {
+    ConcreteParams params_6_3_1
+}
+
+record Assert_6_2_1Output {
+    ConcreteParams params_6_3_1
+}
+
+record Run_6_3_1 {
+    Run_6_3_1Input input
+}
+
+record Run_6_3_1Input {
+    ConcreteParams params_6_3_1
+}
+
+
+record Run_5_1_2 {
+    Run_5_1_2Input input
+    Run_5_1_2Output output
+}
+
+record Run_5_1_2Input {
+    TestContext ctx
+    ConcreteParams params_5_1_2
+}
+
+record Run_5_1_2Output {
+    Report report_5_1_2
+}
+
+record Run_5_2_1 {
+    Run_5_2_1Input input
+}
+
+record Run_5_2_1Input {
+    Report report_5_1_2
+}
+
+
+record Assert_4_2 {
+    Assert_4_2Input input
+    Assert_4_2Output output
+}
+
+record Assert_4_2Input {
+    TestContext ctx
+    ConcreteParams params_4_3
+}
+
+record Assert_4_2Output {
+    ConcreteParams params_4_3
+}
+
+record Run_4_3 {
+    Run_4_3Input input
+    Run_4_3Output output
+}
+
+record Run_4_3Input {
+    TestContext ctx
+    ConcreteParams params_4_3
+}
+
+record Run_4_3Output {
+    Report report_4_3
+}
+
+record Assert_4_4 {
+    Assert_4_4Input input
+}
+
+record Assert_4_4Input {
+    TestContext ctx
+    Report report_4_3
+}
+
+
+record Run_3_1_2 {
+    Run_3_1_2Input input
+    Run_3_1_2Output output
+}
+
+record Run_3_1_2Input {
+    TestContext ctx
+    ConcreteParams params_3_1_2a
+    ConcreteParams params_3_1_2b
+}
+
+record Run_3_1_2Output {
+    Report report_3_1_2a
+    Report report_3_1_2b
+}
+
+record Assert_3_2_1 {
+    Assert_3_2_1Input input
+}
+
+record Assert_3_2_1Input {
+    Report report_3_1_2a
+    Report report_3_1_2b
+}
+
+
+record Run_2_1_2 {
+    Run_2_1_2Input input
+    Run_2_1_2Output output
+}
+
+record Run_2_1_2Input {
+    TestContext ctx
+    ConcreteParams params_2_1_2
+}
+
+record Run_2_1_2Output {
+    Report report_2_1_2
+}
+
+record Assert_2_2_2 {
+    Assert_2_2_2Input input
+    Assert_2_2_2Output output
+}
+
+record Assert_2_2_2Input {
+    UNIT ___CONTEXT___
+    SymbolicParams params_2_2_2
+}
+
+record Assert_2_2_2Output {
+    SymbolicParams params_2_3_1
+}
+
+record Run_2_3_1 {
+    Run_2_3_1Input input
+}
+
+record Run_2_3_1Input {
+    SymbolicParams params_2_3_1
+}
+
+
+record Run_1_1_2 {
+    Run_1_1_2Input input
+    Run_1_1_2Output output
+}
+
+record Run_1_1_2Input {
+    TestContext ctx
+    ConcreteParams params_1_1_2
+}
+
+record Run_1_1_2Output {
+    Report report_1_1_2
+}
+
+record Assert_1_2_1 {
+    Assert_1_2_1Input input
+}
+
+record Assert_1_2_1Input {
+    Report report_1_1_2
+}
+

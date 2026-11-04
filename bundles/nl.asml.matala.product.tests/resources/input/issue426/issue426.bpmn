@@ -1,11 +1,13 @@
 <bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:bpmn4s="http://bpmn4s" id="sample-diagram" targetNamespace="http://bpmn.io/schema/bpmn" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd">
-  <bpmn2:process bpmn4s:ctxName="ctx" bpmn4s:ctxTypeRef="DataType_0d4mvpm" id="BPMN4S_root" isExecutable="false" name="Issue426">
+  <bpmn2:process bpmn4s:ctxName="ctx" bpmn4s:ctxTypeRef="TheType" id="BPMN4S_root" isExecutable="false" name="Issue426">
     <bpmn2:extensionElements>
       <bpmn4s:dataTypes>
-        <bpmn4s:dataType id="DataType_0d4mvpm" name="TheType" type="Context">
-          <bpmn4s:field name="id" typeRef="Int"/>
-          <bpmn4s:field name="counter" typeRef="Int"/>
-        </bpmn4s:dataType>
+        <bpmn4s:raw>@context
+record TheType {
+  int id
+  int counter
+}</bpmn4s:raw>
+      
       </bpmn4s:dataTypes>
     </bpmn2:extensionElements>
     <bpmn2:startEvent bpmn4s:ctxInit="ctx := TheType {&#10; id = 1,&#10; counter = 0&#10;}" id="Event_01uaof6">
@@ -38,7 +40,7 @@
         <bpmn2:targetRef>DataStoreReference_1eevurg</bpmn2:targetRef>
       </bpmn2:dataOutputAssociation>
     </bpmn2:task>
-    <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_0d4mvpm" id="DataStoreReference_1eevurg" name="params"/>
+    <bpmn2:dataStoreReference bpmn4s:dataTypeRef="TheType" id="DataStoreReference_1eevurg" name="params"/>
     <bpmn2:task bpmn4s:ctxUpdate="for int idx in range(5, 10) do&#10;  ctx.counter := ctx.counter + idx&#10;end-for" id="Activity_0zy51nw" name="B">
       <bpmn2:incoming>Flow_1ew3pv8</bpmn2:incoming>
       <bpmn2:outgoing>Flow_109yqzk</bpmn2:outgoing>

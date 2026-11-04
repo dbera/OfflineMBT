@@ -1,0 +1,23 @@
+import "../../input/issue249/issue249.types"
+
+record ProducerRunType {
+    ProducerRunTypeInput input
+}
+
+record ProducerRunTypeInput {
+    ProdCtx prodCtx
+    ProdCtx configuration
+    ProdCons1 message
+    ProdCtx sutConf
+}
+
+
+record ConsumerRunType {
+    ConsumerRunTypeInput input
+}
+
+record ConsumerRunTypeInput {
+    ProdCons1 part1
+    ProdCons2 part2
+}
+

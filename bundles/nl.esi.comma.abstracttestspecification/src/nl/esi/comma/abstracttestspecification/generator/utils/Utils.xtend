@@ -13,29 +13,19 @@
 
 package nl.esi.comma.abstracttestspecification.generator.utils
 
-import java.util.ArrayList
 import java.util.Collections
 import java.util.List
-import java.util.TreeSet
-import java.util.stream.Collectors
-
+import nl.asml.matala.product.product.Block
+import nl.asml.matala.product.product.ProductPackage
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractTestDefinition
-import nl.esi.comma.abstracttestspecification.abstractTestspecification.AssertionStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.Binding
-import nl.esi.comma.abstracttestspecification.abstractTestspecification.ComposeStep
-import nl.esi.comma.abstracttestspecification.abstractTestspecification.ExecutableStep
-import nl.esi.comma.abstracttestspecification.abstractTestspecification.RunStep
-import nl.esi.comma.abstracttestspecification.generator.to.concrete.BindingComparator
-
 import nl.esi.comma.assertthat.assertThat.AssertThatFactory
 import nl.esi.comma.assertthat.assertThat.JsonArray
-import nl.esi.comma.assertthat.assertThat.JsonCollection
 import nl.esi.comma.assertthat.assertThat.JsonExpression
 import nl.esi.comma.assertthat.assertThat.JsonMember
 import nl.esi.comma.assertthat.assertThat.JsonObject
 import nl.esi.comma.assertthat.assertThat.JsonValue
-
 import nl.esi.xtext.expressions.expression.Expression
 import nl.esi.xtext.expressions.expression.ExpressionConstantBool
 import nl.esi.xtext.expressions.expression.ExpressionConstantInt
@@ -43,26 +33,21 @@ import nl.esi.xtext.expressions.expression.ExpressionConstantReal
 import nl.esi.xtext.expressions.expression.ExpressionConstantString
 import nl.esi.xtext.expressions.expression.ExpressionFactory
 import nl.esi.xtext.expressions.expression.ExpressionMinus
+import nl.esi.xtext.expressions.expression.ExpressionNullLiteral
 import nl.esi.xtext.expressions.expression.ExpressionPlus
 import nl.esi.xtext.expressions.expression.ExpressionRecordAccess
 import nl.esi.xtext.expressions.expression.ExpressionVariable
 import nl.esi.xtext.expressions.expression.Variable
-
-import nl.esi.xtext.types.types.MapTypeConstructor
+import nl.esi.xtext.types.types.RecordTypeDecl
 import nl.esi.xtext.types.types.Type
-import nl.esi.xtext.types.types.TypeReference
 import nl.esi.xtext.types.types.TypesFactory
 import nl.esi.xtext.types.types.VectorTypeConstructor
-
-import org.eclipse.emf.common.util.EList
 import org.eclipse.emf.ecore.util.EcoreUtil
 
-import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.serialize
-import nl.esi.xtext.expressions.expression.ExpressionNullLiteral
-import nl.esi.comma.abstracttestspecification.generator.to.concrete.ConcreteExpressionHandler
-import java.util.LinkedHashMap
-import java.util.Map
-import java.util.Set
+import static extension nl.esi.xplus.extensions.types.TypesExtensionUtil.*
+import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
+import static extension org.eclipse.xtext.EcoreUtil2.*
+import nl.esi.xtext.types.types.TypeReference
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.StepReference
 
 class Utils 
@@ -75,42 +60,62 @@ class Utils
         return atd.testSeq.flatMap[step]
     }
 
-    static def getSystem(RunStep step) {
-        return step.name.split('_').get(0)
-    }
-    static def getSystem(AssertionStep step) {
-        return step.name.split('_').get(0)
-    }
-    static def getSystem(ExecutableStep step) {
+    static def getSystem(AbstractStep step) {
         return step.name.split('_').get(0)
     }
 
-    static def getInputVar(ExecutableStep rstep) '''«rstep.system»Input'''
+    static def String getInputVar(AbstractStep step) '''step_«step.name».input'''
 
-    static def getComposeStepRefs(RunStep step) {
-        return step.stepRef.filter[refStep instanceof ComposeStep]
+    static def String getOutputVar(AbstractStep step) '''step_«step.name».output'''
+
+    static def String getVarField(Binding binding) {
+        return binding.name.varField
     }
 
-    static def getRunStepRefs(AssertionStep step) {
-        return step.stepRef.filter[refStep instanceof RunStep]
-    }
-
-    static def List<String> getSuppressedVarFields(StepReference stepRef) {
-        val fields = newArrayList
-        val suppress = stepRef.refStep.suppress
-        if (suppress !== null) {
-            if (suppress.varFields.isEmpty) {
-                // All outputs need to be suppressed
-                return stepRef.refStep.output.map[it.name.name]
-            }
-            // Suppress the marked variable(-fields)
-            fields += stepRef.refStep.suppress.varFields.map[it.serialize]
+    static def String getVarField(Variable variable) {
+        if (variable.isContext) {
+            return variable.getContainerOfType(Block).contextname ?: "___CONTEXT___"
         }
-        // Also suppress all unreferenced output variables
-        val unreferencedOutputs = stepRef.refStep.output.reject[stepRef.refData.contains(name)]
-        fields += unreferencedOutputs.map[it.name.name]
-        return fields
+        return variable.name
     }
+
+    static def boolean isContext(Variable variable) {
+        return variable.eContainingFeature === ProductPackage.Literals.BLOCK__CONTEXTVARS
+    }
+
+    static def boolean isSuppressed(Binding binding) {
+        // If all fields are suppressed, the binding is suppressed
+        val type = binding.name.type
+        if (type instanceof TypeReference && type.type instanceof RecordTypeDecl) {
+            if ((type.type as RecordTypeDecl).allFields.forall[suppressed]) {
+                return true
+            }
+        }
+        val varField = binding.varField
+        val step = binding.getContainerOfType(AbstractStep)
+        return step?.suppress !== null && step.suppress.vars.exists[variable.varField == varField]
+    }
+
+    static def Iterable<Binding> getOutput(StepReference stepRef) {
+        return stepRef.refStep.output.filter[stepRef.refData.contains(name)]
+    }
+
+    static def Iterable<Binding> getContextData(AbstractStep step) {
+        // Try exclusion: all bindings except input and sut?
+        val nonContext = step.varID.map[name].toSet
+        nonContext += step.stepRef.flatMap[refData].map[name]
+        return step.input.reject[nonContext.contains(name.name)]
+    }
+
+    static def Iterable<Binding> getInputData(AbstractStep step) {
+        return step.stepRef.flatMap[output]
+    }
+
+    static def Iterable<Binding> getSUTData(AbstractStep step) {
+        val sutvars = step.varID.map[name].toSet
+        return step.input.filter[sutvars.contains(name.name)]
+    }
+
 
     dispatch static def String printField(ExpressionRecordAccess exp) {
         return exp.record.printField + '.' + exp.field.name
@@ -133,15 +138,6 @@ class Utils
             ]
         }
     }
-
-    dispatch static def String getTypeName(TypeReference type) '''
-        «type.type.name»'''
-
-    dispatch static def String getTypeName(VectorTypeConstructor type) '''
-        «type.type.name»«FOR dimension : type.dimensions»[]«ENDFOR»'''
-
-    dispatch static def String getTypeName(MapTypeConstructor type) '''
-        map<«type.type.name», «type.valueType.typeName»>'''
 
     // JSON utilities
 
@@ -212,54 +208,4 @@ class Utils
             expr = ExpressionFactory.eINSTANCE.createExpressionConstantString => [ value = text ]
         ]
     }
-    
-    static def List<JsonCollection> extractSUTVars(AbstractTestDefinition atd){
-        var stepSutDataIn = new ArrayList<Binding>()
-        var stepSutDataOut = new ArrayList<Binding>()
-        for (testseq : atd.testSeq) {
-            for (step : testseq.step) {
-                stepSutDataIn.addAll(getSUTData(step))
-                stepSutDataOut.addAll(getSUTData(step, false))
-            }
-        }
-        val stepSutData = removeDuplicates(stepSutDataIn,stepSutDataOut)
-        var jsonValsList = stepSutData.map(obj | obj.jsonvals as JsonCollection).toList
-        return jsonValsList
-    }
-
-    static def Map<String,Set<String>> extractSUTVarExpressions(AbstractTestDefinition atd){
-        var ceh = new ConcreteExpressionHandler
-        var Map<String,Set<String>> sutexpr = new LinkedHashMap
-
-        for (testseq : atd.testSeq) {
-            for (step : testseq.step) {
-                ceh.prepareSutVariableExpressions(step, sutexpr, true)
-                ceh.prepareSutVariableExpressions(step, sutexpr, false)
-            }
-        }
-        return sutexpr
-    }
-
-    static def List<Binding> getSUTData(AbstractStep astep) { getSUTData(astep, true) }
-    static def List<Binding> getSUTData(AbstractStep astep, boolean fromInput) {
-        var EList<Binding> bindings = fromInput? astep.input : astep.output
-        var EList<Variable> sutvars = astep.varID
-
-        val sutvars_names = sutvars.map[s|s.name]
-        return bindings .stream
-                        .filter(p | sutvars_names.contains(p.name.name))
-                        .collect(Collectors.toList())
-    }
-    
-    static def List<Binding> removeDuplicates(List<Binding> inData, List<Binding> outData) {
-        var join = new TreeSet<Binding>(new BindingComparator())
-        for (element : inData) {
-            join.add(element)
-        }
-        for (element : outData) {
-            join.add(element)
-        }
-        return join.toList
-    }
-    
 }

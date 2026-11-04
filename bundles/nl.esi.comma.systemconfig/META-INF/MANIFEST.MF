@@ -27,5 +27,6 @@ Export-Package: nl.esi.comma.systemconfig.serializer,
  nl.esi.comma.systemconfig.configuration,
  nl.esi.comma.systemconfig.configuration.util,
  nl.esi.comma.systemconfig.generator,
- nl.esi.comma.systemconfig.services
+ nl.esi.comma.systemconfig.services,
+ nl.esi.comma.systemconfig.formatting2
 Import-Package: org.apache.log4j

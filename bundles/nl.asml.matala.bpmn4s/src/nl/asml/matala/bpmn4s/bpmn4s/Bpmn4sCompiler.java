@@ -21,6 +21,7 @@ import java.util.AbstractMap;
 import java.util.AbstractSet;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -45,8 +46,8 @@ import nl.asml.matala.bpmn4s.Logging;
  */
 public class Bpmn4sCompiler{
 	
-	protected final String UNIT_TYPE = "UNIT";
-	private final String UNIT_INIT = "UNIT { unit = 0 }";
+	protected final static String UNIT_TYPE = "UNIT";
+	private final static String UNIT_INIT = "UNIT { unit = 0 }";
 	
 	private final DataExpressionsHelper DATA_EXPR_HLPR = new DataExpressionsHelper();
 
@@ -95,7 +96,10 @@ public class Bpmn4sCompiler{
 		flattenActivities();
 		
 		ps.append(generatePspec());
-		types.append(generateTypes());
+		// UNIT_TYPE is the type for undefined contexts.
+		var unit =  String.format("@context\nrecord %s {\n\t@suppress int\tunit\n}\n\n", UNIT_TYPE);
+		types.append(unit);
+		types.append(model.rawTypes);
 	}
 
 	/**
@@ -218,6 +222,7 @@ public class Bpmn4sCompiler{
 				component += "system " + sanitize(cname) + "\r\n{\r\n";
 				String inOut = fabSpecInputOutput(c);
 				String local = fabSpecLocal(c);
+				String context = fabSpecContext(c);
 				String init = fabSpecInit(c.getId());
 				List<String> sutConfVars = fabSpecSutConfs(c.getId());
 				String sutConfs = sutConfVars.isEmpty() ? "" : "suts " + String.join(", ", sutConfVars) + "\n";
@@ -225,6 +230,8 @@ public class Bpmn4sCompiler{
 				component += indent(inOut);
 				component += "\n";
 				component += indent(local);
+				component += "\n";
+				component += indent(context);
 				component += "\n";
 				component += indent(init);
 				component += "\n";
@@ -269,7 +276,7 @@ public class Bpmn4sCompiler{
 		LinkedHashSet<String> outputs = new LinkedHashSet<String>();
 		
 		for (Element data: model.elements.values()) {
-			if (isParentComponent(c, data) && model.isData(data.getId()) && data.isReferenceData()) {
+			if (data.isData() && isReferenceDataIn(data, c)) {
 				if (!data.getDataOutputs().isEmpty()) {
 					inputs.add(tabulate(mapType(data.getDataType()), compile(data.getId())));
 				}
@@ -282,6 +289,17 @@ public class Bpmn4sCompiler{
 		String inStr = inputs.isEmpty() ? "// inputs\n" : "inputs\n" + String.join("\n", inputs) + "\n";
 		String outStr = outputs.isEmpty() ? "// outputs\n" : "outputs\n" + String.join("\n", outputs) + "\n";
 		return inStr + "\n" + outStr;
+	}
+	
+	private Boolean isReferenceDataIn(Element data, Element parent) {
+		Element origin = data;
+		while (origin.isReferenceData()) {
+			if (parent.getId().equals(origin.getParent())) {
+				return true;
+			}
+			origin = model.getElementById(origin.getOriginDataNodeId());
+		}
+		return false;
 	}
 	
 	/**
@@ -308,22 +326,34 @@ public class Bpmn4sCompiler{
 				locals.add(tabulate(mapType(data.getDataType()), repr(data)));
 			}
 		}
+		return locals.isEmpty() ? "// local\n" : "local\n" + String.join("\n", locals) + "\n";
+	}
+	
+	/**
+	 * Build the context declaration section for a pspec system. FIXME!
+	 * @param c is the component that corresponds one to one with a pspec system.
+	 * @return the context section for the system corresponding to c.
+	 */
+	private String fabSpecContext(Element c) {
+		String contextName = c.context.name;
+		String contextType = mapType(c.context.dataType != "" ? c.context.dataType : UNIT_TYPE);
+
+		LinkedHashSet<String> contextVars = new LinkedHashSet<String>();
 		// XOR gates introduce a place (Maximal Connected Components of XOR gates for optimization)
 		AbstractSet<String> visited = new HashSet<String>();
 		for (Element xor: model.elements.values()) {
 			if (model.isXor(xor.getId()) && isParentComponent( c, xor)) {
 				String cGateName = getCompiledXorName(xor.getId()); 
-				String datatype = mapType(c.context.dataType != "" ? c.context.dataType : UNIT_TYPE);
 				if (!visited.contains(cGateName)) {
 					visited.add(cGateName);
-					locals.add(tabulate(datatype, sanitize(cGateName)));
+					contextVars.add(tabulate(contextType, sanitize(cGateName)));
 				}
 			}
 		}
 		// Start Events
-		locals.addAll(localsFromStartEvents(c));
+		contextVars.addAll(contextFromStartEvents(c));
 		// End Events
-		locals.addAll(localsFromEndEvents(c));
+		contextVars.addAll(contextFromEndEvents(c));
 		// Edges between transitions (tasks and parallel gates) introduce places. 
 		for (Edge e: model.edges) {
 			String srcId = e.getSrc();
@@ -333,13 +363,26 @@ public class Bpmn4sCompiler{
 			if (isParentComponent( c, src)
 					&& (model.isAnd(srcId) || model.isTask(srcId))
 					&& (model.isAnd(tarId) || model.isTask(tarId))){
-				String datatype = mapType(c.context.dataType != "" ? c.context.dataType : UNIT_TYPE);
-				locals.add(tabulate(datatype, sanitize(namePlaceBetweenTransitions(e.getId(), repr(src), repr(tar)))));
+				contextVars.add(tabulate(contextType, sanitize(namePlaceBetweenTransitions(e.getId(), repr(src), repr(tar)))));
 			}
 		}
-		return locals.isEmpty() ? "// local\n" : "local\n" + String.join("\n", locals) + "\n";
+
+		StringBuilder context = new StringBuilder();
+		if (contextVars.isEmpty()) {
+			context.append("// ");
+		}
+		context.append("context");
+		if (contextName != null && !contextName.isBlank()) {
+			context.append(" ");
+			context.append(contextName);
+		}
+		context.append("\n");
+		for (String contextVar : contextVars) {
+			context.append(contextVar);
+			context.append("\n");
+		}
+		return context.toString();
 	}
-	
 	
 	/**
 	 * START_EVENTs introduce a place if followed by a transition in the target PN. 
@@ -347,7 +390,7 @@ public class Bpmn4sCompiler{
 	 * @param c
 	 * @return
 	 */
-	protected List<String> localsFromStartEvents (Element c) {
+	protected List<String> contextFromStartEvents (Element c) {
 		List<String> result = new ArrayList<String>();
 		for (Element se: model.elements.values()) {
 			if (se.getType().equals(ElementType.START_EVENT) && isParentComponent( c, se)) { 
@@ -369,7 +412,7 @@ public class Bpmn4sCompiler{
 	 * @param c
 	 * @return
 	 */	
-	protected List<String> localsFromEndEvents (Element c) {
+	protected List<String> contextFromEndEvents (Element c) {
 		List<String> result = new ArrayList<String>();
 		for (Element ee: model.elements.values()) {
 			String datatype = mapType(c.context.dataType != "" ? c.context.dataType : UNIT_TYPE);
@@ -581,29 +624,19 @@ public class Bpmn4sCompiler{
 							if (e.getRefUpdate() != null && e.getRefUpdate() != "") {
 								task += DATA_EXPR_HLPR.processRefUpdate(e.getRefUpdate(), replaceMap);
 							}
-							if (model.isExecutionTask(node.getId())) {
-								boolean isSymbolicLink = getAllDataOutputs(e.getTar()).stream().anyMatch(
-										d -> model.isExecutionTask(d.getTar()));
-								if (isSymbolicLink) {
-									task += " symbolic-link";
-								}
+							boolean isSymbolicLink = !e.isPersistent()
+									&& model.isExecutionTask(node.getId())
+									&& getAllDataOutputs(e.getTar()).stream().anyMatch(d -> model.isExecutionTask(d.getTar()));
+							if (isSymbolicLink) {
+								task += " symbolic-link";
 							}
 							if (e.isSuppressed()) {
 								task += " suppress";
-							} else {
-								Set<String> suppressedFields = collectSuppressedFields(
-										model.getElementById(e.getTar()).getDataType(),
-										sanitize(compile(e.getTar())) + '.',
-										new HashSet<String>());
-								if (!suppressedFields.isEmpty()) {
-									task += suppressedFields.stream().collect(Collectors.joining(", "," suppress(", ")"));
-								}
 							}
 							task += "\n";
 							if (e.isPersistent()) {
 								task += "updates:\n" + indent(compile(e.getTar()) + " := " + compile(e.getTar())) + "\n";
-							}
-							if (e.getUpdate() != null && e.getUpdate() != "" ) {
+							} else if (e.getUpdate() != null && e.getUpdate() != "" ) {
 								task += DATA_EXPR_HLPR.processUpdate(e.getUpdate(), replaceMap);
 							}
 						} else { // then its context
@@ -613,19 +646,6 @@ public class Bpmn4sCompiler{
 							}
 							if (e.getRefUpdate() != null && e.getRefUpdate() != "") {
 								task += DATA_EXPR_HLPR.processRefUpdate(e.getRefUpdate(), replaceMap);
-							}
-							if (node.isContextSuppressed() || // Modeler suppresses this context
-								!model.componentDefinesContext(cId) // Auto constructed context is always suppressed
-								) {
-								task += " suppress";
-							} else {
-								Set<String> suppressedFields = collectSuppressedFields(
-										model.getElementById(cId).getContextDataType(),
-										postCtxName + '.',
-										new HashSet<String>());
-								if (!suppressedFields.isEmpty()) {
-									task += suppressedFields.stream().collect(Collectors.joining(", "," suppress(", ")"));
-								}
 							}
 							task += "\n";
 							String updates = "";
@@ -652,20 +672,6 @@ public class Bpmn4sCompiler{
 		desc.addAll(getFlowActions(cId));
 		
 		return "desc \"" + compile(cId) + "_Model\"\n\n" + String.join("\n", desc);
-	}
-
-	private Set<String> collectSuppressedFields(String dataTypeName, String prefix, Set<String> fields) {
-		Bpmn4sDataType dataType = model.dataSchema.get(dataTypeName);
-		if (dataType instanceof RecordType recType) {
-			for(RecordField field : recType.fields) {
-				if (field.isSuppressed()) {
-					fields.add(prefix + field.getName());
-				} else {
-					collectSuppressedFields(field.getType(), prefix + field.getName() + '.', fields);
-				}
-			}
-		}
-		return fields;
 	}
 
 	/**
@@ -796,23 +802,28 @@ public class Bpmn4sCompiler{
 			return compile(tarId);
 		}
 	}
-
-	public String generateTypes() {
+	
+    //@TODO: remove with issue #439
+	public static String generateTypes(Collection<Bpmn4sDataType> dataTypes ) {
 		String types = new String("");
-		// UNIT_TYPE is the type for undefined contexts.
-		types += String.format("record %s {\n\tint\tunit\n}\n\n", UNIT_TYPE);
-		for (Bpmn4sDataType dataType: IterableExtensions.sortBy(model.dataSchema.values(), Bpmn4sDataType::getName)) {
+		var sorted = IterableExtensions.sortBy(dataTypes,Bpmn4sDataType::getName);
+
+		for (var dataType : sorted) {
+			String typeContent = "";
+			
 			if(dataType instanceof RecordType recType) {
-				String type = "record " + recType.getName() + " {\n";
+				var context = recType.isContext() ? "@context\n" : "";
+				String type = context+"record " + recType.getName() + " {\n";
 				String parameters = "";
 				for (RecordField field: recType.fields) {
 					String fieldName = field.getName();
-					String fieldTypeName = typeToString(field.getType());
-					String fieldKind = field.getKind() == RecordFieldKind.Concrete ? "" : field.getKind().name().toLowerCase() + " ";
-					parameters += fieldKind + fieldTypeName + "\t" + fieldName + "\n";
+					String fieldTypeName = typeToString(dataTypes, field.getType());
+					String fieldKind = field.getKind() == RecordFieldKind.Concrete ? "" : "@"+field.getKind().name().toLowerCase() + " ";
+					var suppress = field.isSuppressed() ? 	"@suppress " : "";
+					parameters += suppress + fieldKind + fieldTypeName + "\t" + fieldName + "\n";
 				}
 				type += indent(parameters) + "}\n";
-				types += type + "\n";
+				typeContent += type + "\n";
 			} else if(dataType instanceof EnumerationType enumType) {
 				String literals = "";
 				for (Map.Entry<String, String> entry : enumType.literals.entrySet()) {
@@ -822,33 +833,36 @@ public class Bpmn4sCompiler{
 					}
 				}
 				String type = String.format("enum %s {%s }\n", enumType.getName(), literals);
-				types += type + "\n";
+				typeContent += type + "\n";
 			} else if(dataType instanceof BaseType) {
-				String type = String.format("type %s based on %s\n", dataType.getName(), typeToString(dataType.getType()));
-				types += type + "\n";
+				String type = String.format("type %s based on %s\n", dataType.getName(), typeToString(dataTypes, dataType.getType()));
+				typeContent += type + "\n";
 			} else {
 //				NOTE:  I am not compiling data types that are not records or enumerations.
 //				       Other types are used for fields of records in generateRecordField().
 			}
+			types += typeContent;
 		}
 		return types;
 	}
 
-	private String typeToString(String dataTypeName) {
-		Bpmn4sDataType dataType = model.dataSchema.get(dataTypeName);
+
+    //@TODO: remove with issue #439
+	private static String typeToString(Collection<Bpmn4sDataType> dataTypes, String dataTypeName) {
+		Bpmn4sDataType dataType =dataTypes.stream().filter(dt->dt.getName().equals(dataTypeName)).findFirst().orElse(null);
 		String result = "";
 		if (dataType == null) {
 			return mapType(dataTypeName);
 		} else {
-			if (dataType instanceof ListType) {
+			if (dataType instanceof ListType ) {
 				ListType lst = ListType.class.cast(dataType);
-				result = String.format("%s[]" , typeToString(lst.valueType)); 
+				result = String.format("%s[]" , typeToString(dataTypes, lst.valueType)); 
 			} else if (dataType instanceof MapType) {
 				MapType mp = MapType.class.cast(dataType);
-				result = String.format("map<%s,%s>", typeToString(mp.keyType), typeToString(mp.valueType));
+				result = String.format("map<%s,%s>", typeToString(dataTypes, mp.keyType), typeToString(dataTypes, mp.valueType));
 			} else if (dataType instanceof SetType) {
 				SetType st = SetType.class.cast(dataType);			
-				result = String.format("set<%s>" , typeToString(st.valueType));
+				result = String.format("@set %s[]" , typeToString(dataTypes, st.valueType)); 
 			} else {
 				// record, enumerations and basic types go here
 				result = mapType(dataType.getName()); 
@@ -861,7 +875,7 @@ public class Bpmn4sCompiler{
 	 * Basic types in BPMN4S editor start with upper case, 
 	 * while in pspec they are lower cased.
 	 */
-	protected String mapType(String name) {
+	protected static String mapType(String name) {
 		return switch (name) {
 			case "Int", "String" -> name.toLowerCase();
 			case "Boolean" -> "bool";
@@ -957,11 +971,11 @@ public class Bpmn4sCompiler{
 		return result;
 	}
 
-	private String indent(String str) {
+	private static String indent(String str) {
 		return str.replaceAll("(?m)^", "    ");
 	}
 
-	protected String tabulate (String... strings) {
+	protected static String tabulate (String... strings) {
 		return String.join("\t", strings);
 	}
 

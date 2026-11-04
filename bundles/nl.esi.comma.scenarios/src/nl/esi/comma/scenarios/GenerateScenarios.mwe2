@@ -51,6 +51,9 @@ Workflow {
 			validator = {
 				// composedCheck = "org.eclipse.xtext.validation.NamesAreUniqueValidator"
 			}
+            formatter = formatting.Formatter2Fragment2 {
+                generateStub = true
+            }
             contentAssist = nl.esi.xplus.xtext.generator.ide.contentassist.IdeContentAssistFragment2 {
                 generateXtendStub = true
             }

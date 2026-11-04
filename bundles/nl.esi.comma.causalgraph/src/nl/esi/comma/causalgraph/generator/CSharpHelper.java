@@ -12,11 +12,13 @@
  */
 package nl.esi.comma.causalgraph.generator;
 
+import static nl.esi.xplus.extensions.types.TypesExtensionUtil.getKind;
 import static nl.esi.xtext.common.lang.utilities.EcoreUtil3.serialize;
 
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import nl.esi.xplus.extensions.types.RecordFieldKind;
 import nl.esi.xtext.actions.actions.Action;
 import nl.esi.xtext.actions.actions.AssignmentAction;
 import nl.esi.xtext.actions.actions.ForAction;
@@ -63,7 +65,6 @@ import nl.esi.xtext.expressions.expression.ExpressionVariable;
 import nl.esi.xtext.expressions.expression.ExpressionVector;
 import nl.esi.xtext.types.types.EnumTypeDecl;
 import nl.esi.xtext.types.types.MapTypeDecl;
-import nl.esi.xtext.types.types.RecordFieldKind;
 import nl.esi.xtext.types.types.RecordTypeDecl;
 import nl.esi.xtext.types.types.SimpleTypeDecl;
 import nl.esi.xtext.types.types.TypeDecl;
@@ -88,7 +89,7 @@ class CSharpHelper {
 			return "{}";
 		} else if (type instanceof RecordTypeDecl) {
 			String value = ((RecordTypeDecl) type).getFields().stream()
-				.filter(f -> !RecordFieldKind.SYMBOLIC.equals(f.getKind()))
+				.filter(f -> !RecordFieldKind.SYMBOLIC.equals(getKind(f)))
 				.map(f -> String.format("\"%s\":%s", f.getName(), defaultValue(f.getType().getType())))
 				.collect(Collectors.joining(","));
 			return String.format("{%s}", value);

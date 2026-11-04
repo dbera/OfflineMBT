@@ -1,10 +1,12 @@
 <bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:bpmn4s="http://bpmn4s" id="sample-diagram" targetNamespace="http://bpmn.io/schema/bpmn" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd">
-  <bpmn2:process bpmn4s:ctxName="ctx" bpmn4s:ctxTypeRef="DataType_1cuqdnb" id="BPMN4S_root" isExecutable="false" name="Root">
+  <bpmn2:process bpmn4s:ctxName="ctx" bpmn4s:ctxTypeRef="MyContext" id="BPMN4S_root" isExecutable="false" name="Root">
     <bpmn2:extensionElements>
       <bpmn4s:dataTypes>
-        <bpmn4s:dataType id="DataType_1cuqdnb" name="MyContext" type="Context">
-          <bpmn4s:field name="myField" typeRef="Int"/>
-        </bpmn4s:dataType>
+        <bpmn4s:raw>@context
+record MyContext {
+  int myField
+}</bpmn4s:raw>
+      
       </bpmn4s:dataTypes>
     </bpmn2:extensionElements>
     <bpmn2:startEvent bpmn4s:ctxInit="ctx := MyContext { myField = 0 }" id="Event_0o4qsh5">

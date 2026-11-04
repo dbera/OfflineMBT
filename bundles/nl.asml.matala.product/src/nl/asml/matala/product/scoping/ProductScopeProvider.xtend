@@ -52,11 +52,11 @@ class ProductScopeProvider extends AbstractProductScopeProvider {
             }
             Update case reference == ProductPackage.Literals.VAR_REF__REF: {
                 val block = context.getContainerOfType(Block)
-                return scopeFor(block.localvars + block.invars)
+                return scopeFor(block.contextvars + block.localvars + block.invars)
             }
             UpdateOutVar case reference == ProductPackage.Literals.VAR_REF__REF: {
                 val block = context.getContainerOfType(Block)
-                return scopeFor(block.localvars + block.outvars)
+                return scopeFor(block.contextvars + block.localvars + block.outvars)
             }
             case reference == ProductPackage.Literals.VAR_REF__REF: {
                 return context.eContainer.getScope(reference)
@@ -90,7 +90,7 @@ class ProductScopeProvider extends AbstractProductScopeProvider {
 
         switch (context) {
             Block: {
-                return scopeFor(context.localvars + context.invars)
+                return scopeFor(context.contextvars + context.localvars + context.invars)
             }
             UpdateOutVar: {
                 val update = context.getContainerOfType(Update)

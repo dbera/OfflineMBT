@@ -14,17 +14,22 @@ package nl.esi.comma.scenarios.generator.traces
 
 import java.util.HashMap
 import java.util.List
-import nl.esi.xtext.expressions.expression.Expression
-import nl.esi.xtext.expressions.expression.ExpressionAny
 import nl.esi.comma.scenarios.scenarios.ActionType
 import nl.esi.comma.scenarios.scenarios.Scenario
 import nl.esi.comma.scenarios.scenarios.Scenarios
-import nl.esi.xtext.types.types.Type
+import nl.esi.xplus.extensions.types.RecordFieldKind
 import nl.esi.xtext.common.lang.base.Import
+import nl.esi.xtext.expressions.expression.Expression
+import nl.esi.xtext.expressions.expression.ExpressionAny
+import nl.esi.xtext.types.types.RecordField
+import nl.esi.xtext.types.types.Type
 import org.eclipse.xtext.generator.IFileSystemAccess
 
+import static nl.esi.xplus.extensions.types.TypesExtensionUtil.getKind
 import static nl.esi.xtext.common.lang.utilities.EcoreUtil3.serialize
 import static nl.esi.xtext.expressions.utilities.ExpressionsUtilities.generateDefaultValue
+
+import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
 
 class ScenarioTracesGenerator {
 	final static String DEFAULT_SERVER_IP = "192.68.32.1"
@@ -121,7 +126,10 @@ class ScenarioTracesGenerator {
 	'''
 	def generateParameter(Type t, Expression e)
 	'''
-	Parameter: «serialize(t)» : «IF e instanceof ExpressionAny»«generateDefaultValue(t)»«ELSE»«serialize(e)»«ENDIF»
+	Parameter: «serialize(t)» : «IF e instanceof ExpressionAny»«generateDefaultValue(t.typeObject)[!symbolicField]»«ELSE»«serialize(e)»«ENDIF»
 	'''
 	
+	def isSymbolicField(RecordField a){
+	    getKind(a) === RecordFieldKind.SYMBOLIC
+	}
 }

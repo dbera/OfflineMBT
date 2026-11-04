@@ -15,10 +15,6 @@ package nl.asml.matala.generator.docgen
 import java.util.ArrayList
 import java.util.HashMap
 import java.util.List
-import nl.esi.xtext.actions.actions.AssignmentAction
-import nl.esi.xtext.actions.actions.RecordFieldAssignmentAction
-import nl.esi.comma.inputspecification.inputSpecification.APIDefinition
-import nl.esi.comma.inputspecification.inputSpecification.Main
 import nl.esi.comma.testspecification.generator.utils.JSONData
 import nl.esi.comma.testspecification.generator.utils.KeyValue
 import nl.esi.comma.testspecification.generator.utils.TestSpecificationInstance
@@ -39,21 +35,21 @@ class InputDataInstance
             val inputResource = EcoreUtil2.getResource(resource, imp.importURI)
             var input = inputResource.allContents.head
             var JSONDataFileContents = new ArrayList<JSONData>
-            if (input instanceof Main) {
-                if (input.model instanceof APIDefinition) {
-                    val apiDef = input.model as APIDefinition
-                    var dataInst = new JSONData
-                    for (act : apiDef.initActions) {
-						if(	act instanceof AssignmentAction || 
-							act instanceof RecordFieldAssignmentAction) {
-							var mapLHStoRHS = (new ExpressionHandler).generateInitAssignmentAction(act, tsInst.dataVarToDataInstance, tsInst.stepVarNameToType)
-                            dataInst.getKvList.add(mapLHStoRHS)
-                        }
-                    }
-                    // dataInst.display
-                    JSONDataFileContents.add(dataInst)
-                }
-            }
+//            if (input instanceof Main) {
+//                if (input.model instanceof APIDefinition) {
+//                    val apiDef = input.model as APIDefinition
+//                    var dataInst = new JSONData
+//                    for (act : apiDef.initActions) {
+//						if(	act instanceof AssignmentAction || 
+//							act instanceof RecordFieldAssignmentAction) {
+//							var mapLHStoRHS = (new ExpressionHandler).generateInitAssignmentAction(act, tsInst.dataVarToDataInstance, tsInst.stepVarNameToType)
+//                            dataInst.getKvList.add(mapLHStoRHS)
+//                        }
+//                    }
+//                    // dataInst.display
+//                    JSONDataFileContents.add(dataInst)
+//                }
+//            }
 
             for (dataInst : JSONDataFileContents) {
                 for (mapLHStoRHS : dataInst.kvList) {

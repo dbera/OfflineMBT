@@ -15,14 +15,13 @@
  */
 package nl.esi.comma.project.standard.ui
 
+import nl.esi.comma.project.standard.ui.internal.StandardActivator
 import nl.esi.xtext.common.lang.reporting.IStatusReporting
 import nl.esi.xtext.common.lang.reporting.StatusReportingEclipseRuntime
 import nl.esi.xtext.types.ui.contentassist.XPlusHyperLinkDetector
 import org.eclipse.core.runtime.Platform
-import org.eclipse.jface.text.hyperlink.IHyperlinkDetector
-import com.google.inject.Provides
 import org.eclipse.core.runtime.Plugin
-import nl.esi.comma.project.standard.ui.internal.StandardActivator
+import org.eclipse.jface.text.hyperlink.IHyperlinkDetector
 
 /**
  * Use this class to register components to be used within the Eclipse IDE.
@@ -42,8 +41,7 @@ class StandardProjectUiModule extends AbstractStandardProjectUiModule {
 		 return XPlusHyperLinkDetector
 	}
 	
-	@Provides
-    def Plugin providePlugin() {
+    def Plugin bindPlugin() {
         return this.plugin;
     }
 	

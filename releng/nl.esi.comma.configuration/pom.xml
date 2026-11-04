@@ -309,6 +309,7 @@
                                 <exclude>src-gen/**</exclude>
                                 <exclude>xtend-gen/**</exclude>
                                 <exclude>templates/**</exclude>
+                                <exclude>dist/web/**</exclude>
                                 <!-- Excluding test resources -->
                                 <exclude>resources/input/**</exclude>
                                 <exclude>resources/actual/**</exclude>

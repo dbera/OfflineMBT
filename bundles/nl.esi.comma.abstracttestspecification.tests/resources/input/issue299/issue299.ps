@@ -9,7 +9,9 @@ specification issue299
         outputs
         InputJobA	job_a_input
     
-        local
+        // local
+    
+        context
         UNIT	Event_0ww9k8j
     
         // init
@@ -21,7 +23,7 @@ specification issue299
         element-label	"Compose A"
         case			default step-type "null" action-type COMPOSE
         with-inputs		jobA
-        produces-outputs	Event_0ww9k8j suppress
+        produces-outputs	Event_0ww9k8j
         produces-outputs	job_a_input symbolic-link
         updates:
             job_a_input := InputJobA { job_id = jobA.job_id }
@@ -37,7 +39,9 @@ specification issue299
         outputs
         ReportJobA	job_a_report
     
-        local
+        // local
+    
+        context
         UNIT	Event_0t40etv
     
         // init
@@ -49,7 +53,7 @@ specification issue299
         element-label	"Run A"
         case			default step-type "JobA" action-type RUN
         with-inputs		job_a_input
-        produces-outputs	Event_0t40etv suppress
+        produces-outputs	Event_0t40etv
         produces-outputs	job_a_report symbolic-link
         updates:
             job_a_report := ReportJobA { job_id = job_a_input.job_id }
@@ -69,6 +73,8 @@ specification issue299
     
         local
         TempInputJobB	temp_job_b_input
+    
+        context context_compose_job_b
         ContextComposeJobB	Gateway_0uysc4w
         ContextComposeJobB	Event_1880doa
     
@@ -120,7 +126,7 @@ specification issue299
         updates:
             temp_job_b_input := temp_job_b_input
             temp_job_b_input.iteration_index := Gateway_0uysc4w.iteration_index + 1
-        produces-outputs	job_a_report symbolic-link suppress
+        produces-outputs	job_a_report
         updates:
             job_a_report := job_a_report
         
@@ -161,7 +167,9 @@ specification issue299
         outputs
         ReportJobB	job_b_report
     
-        local
+        // local
+    
+        context
         UNIT	Event_18fn07m
     
         // init
@@ -173,7 +181,7 @@ specification issue299
         element-label	"Run B"
         case			default step-type "BJob" action-type RUN
         with-inputs		job_b_input
-        produces-outputs	Event_18fn07m suppress
+        produces-outputs	Event_18fn07m
         produces-outputs	job_b_report
         updates:
             job_b_report := ReportJobB { job_id = job_b_input.job_id }
@@ -190,7 +198,9 @@ specification issue299
         JobB	jobB
         JobA	jobA
     
-        local
+        // local
+    
+        context controller_context
         ContextController	Gateway_0r5pxtv
         ContextController	Gateway_1habvb7
         ContextController	Event_0rch5hf

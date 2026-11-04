@@ -24,17 +24,17 @@
     <booleanAttribute key="org.eclipse.debug.core.launchGroup.3.adoptIfRunning" value="false"/>
     <booleanAttribute key="org.eclipse.debug.core.launchGroup.3.enabled" value="true"/>
     <stringAttribute key="org.eclipse.debug.core.launchGroup.3.mode" value="inherit"/>
-    <stringAttribute key="org.eclipse.debug.core.launchGroup.3.name" value="Generate InputSpecification (params) Language Infrastructure"/>
+    <stringAttribute key="org.eclipse.debug.core.launchGroup.3.name" value="Generate Testspecification (tspec) Language Infrastructure"/>
     <stringAttribute key="org.eclipse.debug.core.launchGroup.4.action" value="WAIT_FOR_TERMINATION"/>
     <booleanAttribute key="org.eclipse.debug.core.launchGroup.4.adoptIfRunning" value="false"/>
     <booleanAttribute key="org.eclipse.debug.core.launchGroup.4.enabled" value="true"/>
     <stringAttribute key="org.eclipse.debug.core.launchGroup.4.mode" value="inherit"/>
-    <stringAttribute key="org.eclipse.debug.core.launchGroup.4.name" value="Generate Testspecification (tspec) Language Infrastructure"/>
+    <stringAttribute key="org.eclipse.debug.core.launchGroup.4.name" value="Generate CausalGraph (cg) Language Infrastructure"/>
     <stringAttribute key="org.eclipse.debug.core.launchGroup.5.action" value="WAIT_FOR_TERMINATION"/>
     <booleanAttribute key="org.eclipse.debug.core.launchGroup.5.adoptIfRunning" value="false"/>
     <booleanAttribute key="org.eclipse.debug.core.launchGroup.5.enabled" value="true"/>
     <stringAttribute key="org.eclipse.debug.core.launchGroup.5.mode" value="inherit"/>
-    <stringAttribute key="org.eclipse.debug.core.launchGroup.5.name" value="Generate CausalGraph (cg) Language Infrastructure"/>
+    <stringAttribute key="org.eclipse.debug.core.launchGroup.5.name" value="Generate Scl (scl) Language Infrastructure"/>
     <stringAttribute key="org.eclipse.debug.core.launchGroup.6.action" value="WAIT_FOR_TERMINATION"/>
     <booleanAttribute key="org.eclipse.debug.core.launchGroup.6.adoptIfRunning" value="false"/>
     <booleanAttribute key="org.eclipse.debug.core.launchGroup.6.enabled" value="true"/>

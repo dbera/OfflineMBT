@@ -50,17 +50,6 @@ public class Element {
 		return context_update;
 	}
 
-	// Tasks may suppress context
-	boolean context_suppressed = false;
-	
-	public void setContextSuppressed(boolean suppressed) {
-		context_suppressed = suppressed;
-	}
-	
-	public boolean isContextSuppressed() {
-		return context_suppressed;
-	}
-
 	// For ASSERT tasks:
 	String assertions = null;
 	
@@ -255,6 +244,10 @@ public class Element {
 	
 	// For data nodes
 	
+	public boolean isData() {
+		return type == ElementType.DATASTORE || type == ElementType.MSGQUEUE;
+	}
+
 	public void setDataType(String dt) {
 		this.dataType = dt;
 	}

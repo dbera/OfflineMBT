@@ -13,6 +13,36 @@
         }
         ,
         {
+            "name": "CPNServer BPMN4STests",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "server/CPNServer.py",
+            "console": "integratedTerminal",
+            "args": ["--web-path", "/bpmn4s-editor/bpmn4s-editor/public", "--server-path", "${workspaceFolder}/../target/dist/server", "--repository-path", "${workspaceFolder}/../../../bundles/nl.asml.matala.bpmn4s.tests/resources/input", "--debug"],
+            "cwd": "${workspaceFolder}"
+        }
+        ,
+        {
+            "name": "CPNServer no web",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "server/CPNServer.py",
+            "console": "integratedTerminal",
+            "args": ["--web-path", "/unknown", "--server-path", "${workspaceFolder}/../target/dist/server", "--repository-path", "${workspaceFolder}/../target/dist/models", "--debug"],
+            "cwd": "${workspaceFolder}"
+        }
+        ,
+        {
+            "name": "CPNServer web",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "server/CPNServer.py",
+            "console": "integratedTerminal",
+            "args": ["--web-path", "/web", "--server-path", "${workspaceFolder}/../target/dist/server", "--repository-path", "${workspaceFolder}/../target/dist/models", "--debug"],
+            "cwd": "${workspaceFolder}"
+        }
+        ,
+        {
             "name": "CPNServer_cov",
             "type": "debugpy",
             "request": "launch",

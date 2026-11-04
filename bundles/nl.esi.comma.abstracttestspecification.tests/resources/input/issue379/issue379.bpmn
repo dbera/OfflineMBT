@@ -1,20 +1,24 @@
 <bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:bpmn4s="http://bpmn4s" id="sample-diagram" targetNamespace="http://bpmn.io/schema/bpmn" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd">
-  <bpmn2:process bpmn4s:ctxName="ctx" bpmn4s:ctxTypeRef="DataType_3bnb10s" id="BPMN4S_root" isExecutable="false" name="Root">
+  <bpmn2:process bpmn4s:ctxName="ctx" bpmn4s:ctxTypeRef="Context" id="BPMN4S_root" isExecutable="false" name="Root">
     <bpmn2:extensionElements>
       <bpmn4s:dataTypes>
-        <bpmn4s:dataType id="DataType_0bpid5h" name="Data" type="Record">
-          <bpmn4s:field name="id" typeRef="Int"/>
-          <bpmn4s:field kind="Mixed" name="nested" typeRef="DataType_0v8lk4m"/>
-        </bpmn4s:dataType>
-        <bpmn4s:dataType id="DataType_0v8lk4m" name="Nested" type="Record">
-          <bpmn4s:field name="id" suppressUpdate="true" typeRef="Int"/>
-          <bpmn4s:field kind="Mixed" name="mix" typeRef="String"/>
-          <bpmn4s:field kind="Symbolic" name="symbol" typeRef="String"/>
-        </bpmn4s:dataType>
-        <bpmn4s:dataType id="DataType_3bnb10s" name="Context" type="Context">
-          <bpmn4s:field name="id" typeRef="Int"/>
-          <bpmn4s:field name="nested" typeRef="DataType_0v8lk4m"/>
-        </bpmn4s:dataType>
+        <bpmn4s:raw>record Data {
+  int id
+  @mixed Nested nested
+}
+
+record Nested {
+  @suppress int id
+  @mixed string mix
+  @symbolic string symbol
+}
+
+@context
+record Context {
+  int id
+  Nested nested
+}</bpmn4s:raw>
+      
       </bpmn4s:dataTypes>
     </bpmn2:extensionElements>
     <bpmn2:startEvent bpmn4s:ctxInit="ctx := Context {&#10;  id = 0,&#10;  nested = Nested {&#10;    id = 0,&#10;    mix = &quot;My Init Value&quot;,&#10;    symbol = &quot;My Init Symbol&quot;&#10;  }&#10;}" id="Event_0wdp3sm">
@@ -26,7 +30,7 @@
       <bpmn2:incoming>Flow_1vxz3c1</bpmn2:incoming>
     </bpmn2:endEvent>
     <bpmn2:sequenceFlow id="Flow_1vxz3c1" sourceRef="Activity_0619je4" targetRef="Event_16rbmqm"/>
-    <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_0bpid5h" id="DataStoreReference_19g3nxb" name="data"/>
+    <bpmn2:dataStoreReference bpmn4s:dataTypeRef="Data" id="DataStoreReference_19g3nxb" name="data"/>
     <bpmn2:task bpmn4s:subType="ComposeTask" id="Activity_0t0grto" name="Compose">
       <bpmn2:incoming>Flow_0qbyl67</bpmn2:incoming>
       <bpmn2:outgoing>Flow_056jr2e</bpmn2:outgoing>

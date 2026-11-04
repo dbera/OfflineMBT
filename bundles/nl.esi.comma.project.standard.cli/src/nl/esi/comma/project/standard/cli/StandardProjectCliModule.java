@@ -17,7 +17,13 @@ import org.eclipse.xtext.resource.ResourceServiceProviderServiceLoader;
 
 import com.google.inject.Provider;
 
+import nl.asml.matala.server.api.FileServerApi;
+import nl.asml.matala.server.api.GeneratorApi;
+import nl.asml.matala.server.api.TypesApi;
+import nl.asml.matala.server.impl.FileServerApiImpl;
+import nl.asml.matala.server.impl.TypesApiImpl;
 import nl.esi.comma.project.standard.StandardProjectRuntimeModule;
+import nl.esi.comma.project.standard.cli.server.GeneratorApiImpl;
 import nl.esi.comma.project.standard.generator.extension.IStandardProjectGeneratorExtension;
 import nl.esi.comma.project.standard.generator.extension.StandardProjectGeneratorExtensionServiceLoader;
 
@@ -31,4 +37,17 @@ class StandardProjectCliModule extends StandardProjectRuntimeModule {
 	public Class<? extends Provider<? extends IStandardProjectGeneratorExtension.Registry>> provideIStandardProjectGeneratorExtension$Registry() {
 		return StandardProjectGeneratorExtensionServiceLoader.class;
 	}
+	
+	public Class<? extends GeneratorApi> bindGeneratorApi() {
+		return GeneratorApiImpl.class;
+	}
+	
+	public Class<? extends FileServerApi> bindFileServerApi() {
+		return FileServerApiImpl.class;
+	}
+
+	public Class<? extends TypesApi> bindTypesApi() {
+		return TypesApiImpl.class;
+	}
+
 }

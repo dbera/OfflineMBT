@@ -18,9 +18,15 @@ import java.util.List;
 public class RecordType extends Bpmn4sDataType {
 
 	public List<RecordField> fields = new ArrayList<RecordField>();
+	private final boolean isContext;
 
-	public RecordType(String _name) {
+	public RecordType(String _name, boolean _isContext) {
 		super(_name, RECORD_TYPE);
+		this.isContext = _isContext;
+	}
+	
+	boolean isContext() {
+		return isContext;
 	}
 
 	public void addField(String _key, String _type, RecordFieldKind _kind, boolean _suppress) {

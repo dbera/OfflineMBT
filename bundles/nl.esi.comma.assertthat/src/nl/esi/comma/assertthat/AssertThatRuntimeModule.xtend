@@ -15,11 +15,13 @@
  */
 package nl.esi.comma.assertthat
 
+import nl.esi.xtext.common.lang.conversion.BaseValueConverterService
 import nl.esi.xtext.expressions.conversion.ExpressionConvertersProvider
 import nl.esi.xtext.expressions.conversion.IExpressionConvertersProvider
 import nl.esi.xtext.expressions.functions.ExpressionFunctionLibrariesProvider
 import nl.esi.xtext.expressions.functions.IExpressionFunctionLibrariesProvider
 import nl.esi.xtext.expressions.scoping.ExpressionsImportUriGlobalScopeProvider
+import org.eclipse.xtext.conversion.IValueConverterService
 import org.eclipse.xtext.scoping.IGlobalScopeProvider
 
 /**
@@ -28,6 +30,10 @@ import org.eclipse.xtext.scoping.IGlobalScopeProvider
 class AssertThatRuntimeModule extends AbstractAssertThatRuntimeModule {
     override Class<? extends IGlobalScopeProvider> bindIGlobalScopeProvider() {
         return ExpressionsImportUriGlobalScopeProvider
+    }
+
+    override Class<? extends IValueConverterService> bindIValueConverterService() {
+        return BaseValueConverterService
     }
 
     def Class<? extends IExpressionFunctionLibrariesProvider> bindIExpressionFunctionLibrariesProvider() {

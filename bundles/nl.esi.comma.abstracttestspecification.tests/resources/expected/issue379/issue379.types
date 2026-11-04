@@ -1,0 +1,11 @@
+import "../../input/issue379/issue379.types"
+
+record RUN {
+    RUNInput input
+}
+
+record RUNInput {
+    Context ctx
+    Data data
+}
+

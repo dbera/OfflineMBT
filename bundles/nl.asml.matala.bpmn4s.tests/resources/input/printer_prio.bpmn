@@ -2,64 +2,75 @@
   <bpmn2:process id="Process_1" isExecutable="false" name="PrintFactory">
     <bpmn2:extensionElements>
       <bpmn4s:dataTypes>
-        <bpmn4s:dataType id="DataType_0bajq85" name="OptimizeRequest" type="Record">
-          <bpmn4s:field name="id" typeRef="Int"/>
-        </bpmn4s:dataType>
-        <bpmn4s:dataType id="DataType_0hvka0d" name="OperationType" type="Enumeration">
-          <bpmn4s:literal name="PREP"/>
-          <bpmn4s:literal name="PRINT"/>
-        </bpmn4s:dataType>
-        <bpmn4s:dataType id="DataType_0ubij56" name="IDs" type="List" valueTypeRef="Int"/>
-        <bpmn4s:dataType id="DataType_10oh63l" name="CorrectionsList" type="List" valueTypeRef="DataType_1ki6a6v"/>
-        <bpmn4s:dataType id="DataType_1a9pflp" name="PrintResolution" type="Enumeration">
-          <bpmn4s:literal name="LOW"/>
-          <bpmn4s:literal name="MED"/>
-          <bpmn4s:literal name="HIGH"/>
-        </bpmn4s:dataType>
-        <bpmn4s:dataType id="DataType_1ag1efq" name="AssertionsHistory" type="Record">
-          <bpmn4s:field name="inspectionReports" typeRef="DataType_0ubij56"/>
-        </bpmn4s:dataType>
-        <bpmn4s:dataType id="DataType_1eduiqa" keyTypeRef="Int" name="CorrectionsMap" type="Map" valueTypeRef="DataType_10oh63l"/>
-        <bpmn4s:dataType id="DataType_1hqgl3e" name="MeasureRequest" type="Record">
-          <bpmn4s:field name="id" typeRef="Int"/>
-          <bpmn4s:field kind="Mixed" name="printJobReport" typeRef="DataType_37032q4"/>
-        </bpmn4s:dataType>
-        <bpmn4s:dataType id="DataType_1ki6a6v" name="CorrectionItem" type="Record">
-          <bpmn4s:field name="data" typeRef="String"/>
-        </bpmn4s:dataType>
-        <bpmn4s:dataType id="DataType_1udeikv" name="Result" type="Record">
-          <bpmn4s:field name="verdict" typeRef="DataType_3659oc9"/>
-        </bpmn4s:dataType>
-        <bpmn4s:dataType id="DataType_233p98f" name="ColorType" type="Enumeration">
-          <bpmn4s:literal name="MONOCHROME"/>
-          <bpmn4s:literal name="COLOR"/>
-        </bpmn4s:dataType>
-        <bpmn4s:dataType id="DataType_2qhm379" name="CorrectionsReport" type="Record">
-          <bpmn4s:field kind="Mixed" name="correctionsMap" typeRef="DataType_1eduiqa"/>
-          <bpmn4s:field name="id" typeRef="Int"/>
-        </bpmn4s:dataType>
-        <bpmn4s:dataType id="DataType_354ns33" name="FactoryCtx" type="Context">
-          <bpmn4s:field name="id" typeRef="Int"/>
-          <bpmn4s:field name="resolution" typeRef="DataType_1a9pflp"/>
-          <bpmn4s:field name="scale" typeRef="Float"/>
-          <bpmn4s:field name="color" typeRef="DataType_233p98f"/>
-        </bpmn4s:dataType>
-        <bpmn4s:dataType id="DataType_3659oc9" name="Outcome" type="Enumeration">
-          <bpmn4s:literal name="OK"/>
-          <bpmn4s:literal name="NOK"/>
-        </bpmn4s:dataType>
-        <bpmn4s:dataType id="DataType_37032q4" name="Report" type="Record">
-          <bpmn4s:field name="id" typeRef="Int"/>
-          <bpmn4s:field kind="Symbolic" name="payload" typeRef="String"/>
-          <bpmn4s:field kind="Symbolic" name="kpi" typeRef="Float"/>
-        </bpmn4s:dataType>
-        <bpmn4s:dataType id="DataType_3mm73l2" name="PrintRequest" type="Record">
-          <bpmn4s:field name="id" typeRef="Int"/>
-          <bpmn4s:field name="resolution" typeRef="DataType_1a9pflp"/>
-          <bpmn4s:field name="scale" typeRef="Float"/>
-          <bpmn4s:field name="color" typeRef="DataType_233p98f"/>
-          <bpmn4s:field name="opType" typeRef="DataType_0hvka0d"/>
-        </bpmn4s:dataType>
+        <bpmn4s:raw>record OptimizeRequest {
+  int id
+}
+
+enum OperationType {
+  PREP
+  PRINT
+}
+
+enum PrintResolution {
+  LOW
+  MED
+  HIGH
+}
+
+record AssertionsHistory {
+  int[] inspectionReports
+}
+
+record MeasureRequest {
+  int id
+  @mixed Report printJobReport
+}
+
+record CorrectionItem {
+  string data
+}
+
+record Result {
+  Outcome verdict
+}
+
+enum ColorType {
+  MONOCHROME
+  COLOR
+}
+
+record CorrectionsReport {
+  @mixed map&lt;int, CorrectionItem[]&gt; correctionsMap
+  int id
+}
+
+@context
+record FactoryCtx {
+  int id
+  PrintResolution resolution
+  real scale
+  ColorType color
+}
+
+enum Outcome {
+  OK
+  NOK
+}
+
+record Report {
+  int id
+  @symbolic string payload
+  @symbolic real kpi
+}
+
+record PrintRequest {
+  int id
+  PrintResolution resolution
+  real scale
+  ColorType color
+  OperationType opType
+}</bpmn4s:raw>
+      
       </bpmn4s:dataTypes>
     </bpmn2:extensionElements>
     <bpmn2:subProcess bpmn4s:priority="10" bpmn4s:subType="Component" id="Activity_1lazkw7" name="A 3D Printer">
@@ -133,13 +144,13 @@
           <bpmn2:targetRef>DataObjectReference_03glkhd</bpmn2:targetRef>
         </bpmn2:dataOutputAssociation>
       </bpmn2:task>
-      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_3mm73l2" id="DataStoreReference_1221tl9" name="request"/>
-      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_3mm73l2" bpmn4s:originDataReference="DataObjectReference_0dobbvk" bpmn4s:subType="Queue" dataObjectRef="DataObject_0bnrt4p" id="DataObjectReference_04dnox5" name="printJob"/>
+      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="PrintRequest" id="DataStoreReference_1221tl9" name="request"/>
+      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="PrintRequest" bpmn4s:originDataReference="DataObjectReference_0dobbvk" bpmn4s:subType="Queue" dataObjectRef="DataObject_0bnrt4p" id="DataObjectReference_04dnox5" name="printJob"/>
       <bpmn2:dataObject id="DataObject_0bnrt4p"/>
-      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_1udeikv" bpmn4s:originDataReference="DataObjectReference_15zyq6c" bpmn4s:subType="Queue" dataObjectRef="DataObject_1brc6l4" id="DataObjectReference_03glkhd" name="printResult"/>
+      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="Result" bpmn4s:originDataReference="DataObjectReference_15zyq6c" bpmn4s:subType="Queue" dataObjectRef="DataObject_1brc6l4" id="DataObjectReference_03glkhd" name="printResult"/>
       <bpmn2:dataObject id="DataObject_1brc6l4"/>
-      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_2qhm379" bpmn4s:originDataReference="DataStoreReference_18mx7a8" id="DataStoreReference_1iu4tht" name="corrections"/>
-      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_37032q4" bpmn4s:originDataReference="DataStoreReference_0zb46u3" id="DataStoreReference_1ei8xuv" name="printReport"/>
+      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="CorrectionsReport" bpmn4s:originDataReference="DataStoreReference_18mx7a8" id="DataStoreReference_1iu4tht" name="corrections"/>
+      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="Report" bpmn4s:originDataReference="DataStoreReference_0zb46u3" id="DataStoreReference_1ei8xuv" name="printReport"/>
       <bpmn2:endEvent id="Event_0jcg6zx">
         <bpmn2:incoming>Flow_14743j7</bpmn2:incoming>
       </bpmn2:endEvent>
@@ -161,7 +172,7 @@
       </bpmn2:textAnnotation>
       <bpmn2:association associationDirection="None" id="Association_10xclnq" sourceRef="Activity_0kyb9u9" targetRef="TextAnnotation_1ojazud"/>
     </bpmn2:subProcess>
-    <bpmn2:subProcess bpmn4s:ctxName="ctx" bpmn4s:ctxTypeRef="DataType_354ns33" bpmn4s:subType="Component" id="Activity_1v3jwys" name="Factory Automation">
+    <bpmn2:subProcess bpmn4s:ctxName="ctx" bpmn4s:ctxTypeRef="FactoryCtx" bpmn4s:subType="Component" id="Activity_1v3jwys" name="Factory Automation">
       <bpmn2:property id="Property_0jxdfuu" name="__targetRef_placeholder"/>
       <bpmn2:dataInputAssociation id="DataInputAssociation_0469nkz">
         <bpmn2:sourceRef>DataObjectReference_15zyq6c</bpmn2:sourceRef>
@@ -302,19 +313,19 @@
       </bpmn2:parallelGateway>
       <bpmn2:sequenceFlow id="Flow_09b0flo" sourceRef="Activity_0ad3chm" targetRef="Gateway_1f8wap6"/>
       <bpmn2:sequenceFlow id="Flow_1r6dupi" sourceRef="Gateway_1f8wap6" targetRef="Gateway_0p2uo9v"/>
-      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_3mm73l2" bpmn4s:originDataReference="DataObjectReference_0dobbvk" bpmn4s:subType="Queue" dataObjectRef="DataObject_0fghjsu" id="DataObjectReference_021icu4" name="printJob"/>
+      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="PrintRequest" bpmn4s:originDataReference="DataObjectReference_0dobbvk" bpmn4s:subType="Queue" dataObjectRef="DataObject_0fghjsu" id="DataObjectReference_021icu4" name="printJob"/>
       <bpmn2:dataObject id="DataObject_0fghjsu"/>
-      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_1udeikv" bpmn4s:originDataReference="DataObjectReference_15zyq6c" bpmn4s:subType="Queue" dataObjectRef="DataObject_108329a" id="DataObjectReference_0yc0ez2" name="printResult"/>
+      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="Result" bpmn4s:originDataReference="DataObjectReference_15zyq6c" bpmn4s:subType="Queue" dataObjectRef="DataObject_108329a" id="DataObjectReference_0yc0ez2" name="printResult"/>
       <bpmn2:dataObject id="DataObject_108329a"/>
-      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_1hqgl3e" bpmn4s:originDataReference="DataObjectReference_0hvxqpd" bpmn4s:subType="Queue" dataObjectRef="DataObject_1jzkbxq" id="DataObjectReference_1v0ryrd" name="inspectionJob"/>
+      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="MeasureRequest" bpmn4s:originDataReference="DataObjectReference_0hvxqpd" bpmn4s:subType="Queue" dataObjectRef="DataObject_1jzkbxq" id="DataObjectReference_1v0ryrd" name="inspectionJob"/>
       <bpmn2:dataObject id="DataObject_1jzkbxq"/>
-      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_1udeikv" bpmn4s:originDataReference="DataObjectReference_01m0czw" bpmn4s:subType="Queue" dataObjectRef="DataObject_0s4x1b0" id="DataObjectReference_08w3juj" name="inspectionResult"/>
+      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="Result" bpmn4s:originDataReference="DataObjectReference_01m0czw" bpmn4s:subType="Queue" dataObjectRef="DataObject_0s4x1b0" id="DataObjectReference_08w3juj" name="inspectionResult"/>
       <bpmn2:dataObject id="DataObject_0s4x1b0"/>
-      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_0bajq85" bpmn4s:originDataReference="DataObjectReference_0gm0nb7" bpmn4s:subType="Queue" dataObjectRef="DataObject_08j70bg" id="DataObjectReference_1va221g" name="optJob"/>
+      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="OptimizeRequest" bpmn4s:originDataReference="DataObjectReference_0gm0nb7" bpmn4s:subType="Queue" dataObjectRef="DataObject_08j70bg" id="DataObjectReference_1va221g" name="optJob"/>
       <bpmn2:dataObject id="DataObject_08j70bg"/>
-      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_1udeikv" bpmn4s:originDataReference="DataObjectReference_0c253d3" bpmn4s:subType="Queue" dataObjectRef="DataObject_13efxh3" id="DataObjectReference_0rr88o3" name="optResult"/>
+      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="Result" bpmn4s:originDataReference="DataObjectReference_0c253d3" bpmn4s:subType="Queue" dataObjectRef="DataObject_13efxh3" id="DataObjectReference_0rr88o3" name="optResult"/>
       <bpmn2:dataObject id="DataObject_13efxh3"/>
-      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_3mm73l2" bpmn4s:originDataReference="DataStoreReference_0wnjztj" id="DataStoreReference_0auqxs9" name="printRequests"/>
+      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="PrintRequest" bpmn4s:originDataReference="DataStoreReference_0wnjztj" id="DataStoreReference_0auqxs9" name="printRequests"/>
       <bpmn2:sequenceFlow id="Flow_1dcdx0e" sourceRef="Activity_1fczbkv" targetRef="Gateway_1j3rupx"/>
     </bpmn2:subProcess>
     <bpmn2:subProcess bpmn4s:priority="20" bpmn4s:subType="Component" id="Activity_14x2mh4" name="Inspection">
@@ -363,13 +374,13 @@
           <bpmn2:targetRef>DataObjectReference_1pd43qu</bpmn2:targetRef>
         </bpmn2:dataOutputAssociation>
       </bpmn2:task>
-      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_37032q4" bpmn4s:originDataReference="DataStoreReference_0zb46u3" id="DataStoreReference_0l7z85p" name="printReport"/>
-      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_37032q4" bpmn4s:originDataReference="DataStoreReference_1r5xmmd" id="DataStoreReference_10kmv51" name="inspectionReport"/>
-      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_1hqgl3e" bpmn4s:originDataReference="DataObjectReference_0hvxqpd" bpmn4s:subType="Queue" dataObjectRef="DataObject_04qwqag" id="DataObjectReference_0r16hay" name="inspectionJob"/>
+      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="Report" bpmn4s:originDataReference="DataStoreReference_0zb46u3" id="DataStoreReference_0l7z85p" name="printReport"/>
+      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="Report" bpmn4s:originDataReference="DataStoreReference_1r5xmmd" id="DataStoreReference_10kmv51" name="inspectionReport"/>
+      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="MeasureRequest" bpmn4s:originDataReference="DataObjectReference_0hvxqpd" bpmn4s:subType="Queue" dataObjectRef="DataObject_04qwqag" id="DataObjectReference_0r16hay" name="inspectionJob"/>
       <bpmn2:dataObject id="DataObject_04qwqag"/>
-      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_1udeikv" bpmn4s:originDataReference="DataObjectReference_01m0czw" bpmn4s:subType="Queue" dataObjectRef="DataObject_1yo6fiu" id="DataObjectReference_1pd43qu" name="inspectionResult"/>
+      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="Result" bpmn4s:originDataReference="DataObjectReference_01m0czw" bpmn4s:subType="Queue" dataObjectRef="DataObject_1yo6fiu" id="DataObjectReference_1pd43qu" name="inspectionResult"/>
       <bpmn2:dataObject id="DataObject_1yo6fiu"/>
-      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_1hqgl3e" id="DataStoreReference_17wghfz" name="measureRequest"/>
+      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="MeasureRequest" id="DataStoreReference_17wghfz" name="measureRequest"/>
       <bpmn2:textAnnotation id="TextAnnotation_012b9ie">
         <bpmn2:text>See how reports are selected based on context</bpmn2:text>
       </bpmn2:textAnnotation>
@@ -434,13 +445,13 @@
           <bpmn2:targetRef>DataStoreReference_1h7cfk3</bpmn2:targetRef>
         </bpmn2:dataOutputAssociation>
       </bpmn2:task>
-      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_0bajq85" bpmn4s:originDataReference="DataObjectReference_0gm0nb7" bpmn4s:subType="Queue" dataObjectRef="DataObject_1iiv26d" id="DataObjectReference_0l1df1h" name="optJob"/>
+      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="OptimizeRequest" bpmn4s:originDataReference="DataObjectReference_0gm0nb7" bpmn4s:subType="Queue" dataObjectRef="DataObject_1iiv26d" id="DataObjectReference_0l1df1h" name="optJob"/>
       <bpmn2:dataObject id="DataObject_1iiv26d"/>
-      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_1udeikv" bpmn4s:originDataReference="DataObjectReference_0c253d3" bpmn4s:subType="Queue" dataObjectRef="DataObject_0n8z55h" id="DataObjectReference_17tiux3" name="optResult"/>
+      <bpmn2:dataObjectReference bpmn4s:dataTypeRef="Result" bpmn4s:originDataReference="DataObjectReference_0c253d3" bpmn4s:subType="Queue" dataObjectRef="DataObject_0n8z55h" id="DataObjectReference_17tiux3" name="optResult"/>
       <bpmn2:dataObject id="DataObject_0n8z55h"/>
-      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_37032q4" bpmn4s:originDataReference="DataStoreReference_1r5xmmd" id="DataStoreReference_1p9xemy" name="inspectionReport"/>
-      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_2qhm379" bpmn4s:originDataReference="DataStoreReference_18mx7a8" id="DataStoreReference_0zn554c" name="corrections"/>
-      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_0bajq85" id="DataStoreReference_1h7cfk3" name="optimizeJob"/>
+      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="Report" bpmn4s:originDataReference="DataStoreReference_1r5xmmd" id="DataStoreReference_1p9xemy" name="inspectionReport"/>
+      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="CorrectionsReport" bpmn4s:originDataReference="DataStoreReference_18mx7a8" id="DataStoreReference_0zn554c" name="corrections"/>
+      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="OptimizeRequest" id="DataStoreReference_1h7cfk3" name="optimizeJob"/>
       <bpmn2:textAnnotation id="TextAnnotation_0e62zvn">
         <bpmn2:text>See how the corrections are calculated for the next print job: id + 1</bpmn2:text>
       </bpmn2:textAnnotation>
@@ -454,29 +465,29 @@
       </bpmn2:textAnnotation>
       <bpmn2:association associationDirection="None" id="Association_0iu5yuv" sourceRef="Activity_1opg0oh" targetRef="TextAnnotation_0h04i1f"/>
     </bpmn2:subProcess>
-    <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_3mm73l2" bpmn4s:linkedDataReferences="DataObjectReference_04dnox5 DataObjectReference_021icu4" bpmn4s:subType="Queue" dataObjectRef="DataObject_1ae7m1o" id="DataObjectReference_0dobbvk" name="printJob"/>
+    <bpmn2:dataObjectReference bpmn4s:dataTypeRef="PrintRequest" bpmn4s:linkedDataReferences="DataObjectReference_04dnox5 DataObjectReference_021icu4" bpmn4s:subType="Queue" dataObjectRef="DataObject_1ae7m1o" id="DataObjectReference_0dobbvk" name="printJob"/>
     <bpmn2:dataObject id="DataObject_1ae7m1o"/>
-    <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_1udeikv" bpmn4s:linkedDataReferences="DataObjectReference_03glkhd DataObjectReference_0yc0ez2" bpmn4s:subType="Queue" dataObjectRef="DataObject_0j4zpsb" id="DataObjectReference_15zyq6c" name="printResult"/>
+    <bpmn2:dataObjectReference bpmn4s:dataTypeRef="Result" bpmn4s:linkedDataReferences="DataObjectReference_03glkhd DataObjectReference_0yc0ez2" bpmn4s:subType="Queue" dataObjectRef="DataObject_0j4zpsb" id="DataObjectReference_15zyq6c" name="printResult"/>
     <bpmn2:dataObject id="DataObject_0j4zpsb"/>
-    <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_1hqgl3e" bpmn4s:linkedDataReferences="DataObjectReference_0r16hay DataObjectReference_1v0ryrd" bpmn4s:subType="Queue" dataObjectRef="DataObject_128j3q3" id="DataObjectReference_0hvxqpd" name="inspectionJob"/>
+    <bpmn2:dataObjectReference bpmn4s:dataTypeRef="MeasureRequest" bpmn4s:linkedDataReferences="DataObjectReference_0r16hay DataObjectReference_1v0ryrd" bpmn4s:subType="Queue" dataObjectRef="DataObject_128j3q3" id="DataObjectReference_0hvxqpd" name="inspectionJob"/>
     <bpmn2:dataObject id="DataObject_128j3q3"/>
-    <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_1udeikv" bpmn4s:linkedDataReferences="DataObjectReference_1pd43qu DataObjectReference_08w3juj" bpmn4s:subType="Queue" dataObjectRef="DataObject_0dqimky" id="DataObjectReference_01m0czw" name="inspectionResult"/>
+    <bpmn2:dataObjectReference bpmn4s:dataTypeRef="Result" bpmn4s:linkedDataReferences="DataObjectReference_1pd43qu DataObjectReference_08w3juj" bpmn4s:subType="Queue" dataObjectRef="DataObject_0dqimky" id="DataObjectReference_01m0czw" name="inspectionResult"/>
     <bpmn2:dataObject id="DataObject_0dqimky"/>
-    <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_0bajq85" bpmn4s:linkedDataReferences="DataObjectReference_0l1df1h DataObjectReference_1va221g" bpmn4s:subType="Queue" dataObjectRef="DataObject_1cjdawu" id="DataObjectReference_0gm0nb7" name="optJob"/>
+    <bpmn2:dataObjectReference bpmn4s:dataTypeRef="OptimizeRequest" bpmn4s:linkedDataReferences="DataObjectReference_0l1df1h DataObjectReference_1va221g" bpmn4s:subType="Queue" dataObjectRef="DataObject_1cjdawu" id="DataObjectReference_0gm0nb7" name="optJob"/>
     <bpmn2:dataObject id="DataObject_1cjdawu"/>
-    <bpmn2:dataObjectReference bpmn4s:dataTypeRef="DataType_1udeikv" bpmn4s:linkedDataReferences="DataObjectReference_17tiux3 DataObjectReference_0rr88o3" bpmn4s:subType="Queue" dataObjectRef="DataObject_0m5ztb0" id="DataObjectReference_0c253d3" name="optResult"/>
+    <bpmn2:dataObjectReference bpmn4s:dataTypeRef="Result" bpmn4s:linkedDataReferences="DataObjectReference_17tiux3 DataObjectReference_0rr88o3" bpmn4s:subType="Queue" dataObjectRef="DataObject_0m5ztb0" id="DataObjectReference_0c253d3" name="optResult"/>
     <bpmn2:dataObject id="DataObject_0m5ztb0"/>
-    <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_37032q4" bpmn4s:linkedDataReferences="DataStoreReference_0l7z85p DataStoreReference_1ei8xuv" id="DataStoreReference_0zb46u3" name="printReport"/>
-    <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_37032q4" bpmn4s:linkedDataReferences="DataStoreReference_1p9xemy DataStoreReference_10kmv51 DataStoreReference_16tennj" id="DataStoreReference_1r5xmmd" name="inspectionReport"/>
-    <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_2qhm379" bpmn4s:init="corrections := CorrectionsReport { &#10;                   id = 1,&#10;                   correctionsMap = &lt;map&lt;int,CorrectionItem[]&gt;&gt; { &#10;                            0 -&gt; &lt;CorrectionItem[]&gt; [ &#10;                                      CorrectionItem { data = &quot;X&quot; },&#10;                                      CorrectionItem { data = &quot;Y&quot; } &#10;                                 ],&#10;                            1 -&gt; &lt;CorrectionItem[]&gt; [ &#10;                                      CorrectionItem { data = &quot;A&quot; },&#10;                                      CorrectionItem { data = &quot;B&quot; } &#10;                                 ] &#10;                   } &#10;               }" bpmn4s:linkedDataReferences="DataStoreReference_0zn554c DataStoreReference_1iu4tht" id="DataStoreReference_18mx7a8" name="corrections"/>
-    <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_3mm73l2" bpmn4s:init="printRequests := PrintRequest {&#10; id = 1,&#10; resolution = PrintResolution::LOW,&#10; scale = 50.0,&#10; color = ColorType::MONOCHROME,&#10;    opType = OperationType::PRINT&#10;}&#10;&#10;printRequests := PrintRequest {&#10; id = 2,&#10; resolution = PrintResolution::MED,&#10; scale = 75.0,&#10; color = ColorType::COLOR,&#10;    opType = OperationType::PRINT&#10;}&#10;&#10;printRequests := PrintRequest {&#10; id = 3,&#10; resolution = PrintResolution::HIGH,&#10; scale = 75.0,&#10; color = ColorType::COLOR,&#10;    opType = OperationType::PRINT&#10;}" bpmn4s:linkedDataReferences="DataStoreReference_0auqxs9" id="DataStoreReference_0wnjztj" name="printRequests"/>
+    <bpmn2:dataStoreReference bpmn4s:dataTypeRef="Report" bpmn4s:linkedDataReferences="DataStoreReference_0l7z85p DataStoreReference_1ei8xuv" id="DataStoreReference_0zb46u3" name="printReport"/>
+    <bpmn2:dataStoreReference bpmn4s:dataTypeRef="Report" bpmn4s:linkedDataReferences="DataStoreReference_1p9xemy DataStoreReference_10kmv51 DataStoreReference_16tennj" id="DataStoreReference_1r5xmmd" name="inspectionReport"/>
+    <bpmn2:dataStoreReference bpmn4s:dataTypeRef="CorrectionsReport" bpmn4s:init="corrections := CorrectionsReport { &#10;                   id = 1,&#10;                   correctionsMap = &lt;map&lt;int,CorrectionItem[]&gt;&gt; { &#10;                            0 -&gt; &lt;CorrectionItem[]&gt; [ &#10;                                      CorrectionItem { data = &quot;X&quot; },&#10;                                      CorrectionItem { data = &quot;Y&quot; } &#10;                                 ],&#10;                            1 -&gt; &lt;CorrectionItem[]&gt; [ &#10;                                      CorrectionItem { data = &quot;A&quot; },&#10;                                      CorrectionItem { data = &quot;B&quot; } &#10;                                 ] &#10;                   } &#10;               }" bpmn4s:linkedDataReferences="DataStoreReference_0zn554c DataStoreReference_1iu4tht" id="DataStoreReference_18mx7a8" name="corrections"/>
+    <bpmn2:dataStoreReference bpmn4s:dataTypeRef="PrintRequest" bpmn4s:init="printRequests := PrintRequest {&#10; id = 1,&#10; resolution = PrintResolution::LOW,&#10; scale = 50.0,&#10; color = ColorType::MONOCHROME,&#10;    opType = OperationType::PRINT&#10;}&#10;&#10;printRequests := PrintRequest {&#10; id = 2,&#10; resolution = PrintResolution::MED,&#10; scale = 75.0,&#10; color = ColorType::COLOR,&#10;    opType = OperationType::PRINT&#10;}&#10;&#10;printRequests := PrintRequest {&#10; id = 3,&#10; resolution = PrintResolution::HIGH,&#10; scale = 75.0,&#10; color = ColorType::COLOR,&#10;    opType = OperationType::PRINT&#10;}" bpmn4s:linkedDataReferences="DataStoreReference_0auqxs9" id="DataStoreReference_0wnjztj" name="printRequests"/>
     <bpmn2:subProcess bpmn4s:priority="100" bpmn4s:subType="Component" id="Activity_1v8oyy2" name="Assertions">
       <bpmn2:property id="Property_1gm30em" name="__targetRef_placeholder"/>
       <bpmn2:dataInputAssociation bpmn4s:persistentRead="true" id="DataInputAssociation_0z61xa6">
         <bpmn2:sourceRef>DataStoreReference_1r5xmmd</bpmn2:sourceRef>
         <bpmn2:targetRef>Property_1gm30em</bpmn2:targetRef>
       </bpmn2:dataInputAssociation>
-      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_37032q4" bpmn4s:originDataReference="DataStoreReference_1r5xmmd" id="DataStoreReference_16tennj" name="inspectionReport"/>
+      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="Report" bpmn4s:originDataReference="DataStoreReference_1r5xmmd" id="DataStoreReference_16tennj" name="inspectionReport"/>
       <bpmn2:task bpmn4s:assertions="assert_kpi: assert-that (inspectionReport.kpi) {&#10;  equal-to 9.0 within-margin relative (1.0)&#10;}" bpmn4s:guard="not contains(history.inspectionReports, inspectionReport.id)" bpmn4s:stepType="Assertions" bpmn4s:subType="AssertTask" id="Activity_022s6i4" name="Assert Visual Inspection">
         <bpmn2:outgoing>Flow_15gqvjr</bpmn2:outgoing>
         <bpmn2:property id="Property_0fplz1m" name="__targetRef_placeholder"/>
@@ -496,7 +507,7 @@
         <bpmn2:incoming>Flow_15gqvjr</bpmn2:incoming>
       </bpmn2:endEvent>
       <bpmn2:sequenceFlow id="Flow_15gqvjr" sourceRef="Activity_022s6i4" targetRef="Event_1bxlea2"/>
-      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_1ag1efq" bpmn4s:init="history := AssertionsHistory { inspectionReports = &lt;int[]&gt;[] }" id="DataStoreReference_1ee2f4c" name="history"/>
+      <bpmn2:dataStoreReference bpmn4s:dataTypeRef="AssertionsHistory" bpmn4s:init="history := AssertionsHistory { inspectionReports = &lt;int[]&gt;[] }" id="DataStoreReference_1ee2f4c" name="history"/>
     </bpmn2:subProcess>
   </bpmn2:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">

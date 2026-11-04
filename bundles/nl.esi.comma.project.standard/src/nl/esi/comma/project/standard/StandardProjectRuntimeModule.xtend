@@ -15,14 +15,16 @@
  */
 package nl.esi.comma.project.standard
 
+import nl.esi.xtext.common.lang.conversion.BaseValueConverterService
+import nl.esi.xtext.common.lang.reporting.IStatusReporting
+import nl.esi.xtext.common.lang.reporting.StatusReportCollector
 import nl.esi.xtext.expressions.conversion.ExpressionConvertersProvider
 import nl.esi.xtext.expressions.conversion.IExpressionConvertersProvider
 import nl.esi.xtext.expressions.functions.ExpressionFunctionLibrariesProvider
 import nl.esi.xtext.expressions.functions.IExpressionFunctionLibrariesProvider
 import nl.esi.xtext.expressions.scoping.ExpressionsImportUriGlobalScopeProvider
+import org.eclipse.xtext.conversion.IValueConverterService
 import org.eclipse.xtext.scoping.IGlobalScopeProvider
-import nl.esi.xtext.common.lang.reporting.StatusReportCollector
-import nl.esi.xtext.common.lang.reporting.IStatusReporting
 
 /**
  * Use this class to register components to be used at runtime / without the Equinox extension registry.
@@ -31,6 +33,10 @@ class StandardProjectRuntimeModule extends AbstractStandardProjectRuntimeModule 
 
     override Class<? extends IGlobalScopeProvider> bindIGlobalScopeProvider() {
         return ExpressionsImportUriGlobalScopeProvider
+    }
+
+    override Class<? extends IValueConverterService> bindIValueConverterService() {
+        return BaseValueConverterService
     }
 
     def Class<? extends IExpressionFunctionLibrariesProvider> bindIExpressionFunctionLibrariesProvider() {

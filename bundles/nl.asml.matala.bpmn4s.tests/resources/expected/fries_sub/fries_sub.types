@@ -1,20 +1,24 @@
+@context
 record UNIT {
-	int	unit
+	@suppress int	unit
 }
 
 record Fries {
-    Topping	dressing
-    string	client_id
+  Topping dressing
+  string client_id
 }
 
+@context
 record FriesContext {
-    string	client_id
+  string client_id
 }
 
-enum Sauce { Ketchup Mayo }
+enum Sauce {
+  Ketchup
+  Mayo
+}
 
 record Topping {
-    FriesContext	ctx
-    Sauce	sauce
+  FriesContext ctx
+  Sauce sauce
 }
-

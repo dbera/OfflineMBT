@@ -13,82 +13,67 @@
 grammar nl.esi.comma.testspecification.Testspecification with nl.esi.comma.assertthat.AssertThat
 
 generate testspecification "http://www.esi.nl/comma/testspecification/Testspecification"
-
 import "http://www.esi.nl/xtext/common/lang/Base" as base
 import "http://www.esi.nl/xtext/types/Types" as types
 import "http://www.esi.nl/xtext/expressions/Expression" as expr
 
-TSMain returns base::ModelContainer: {TSMain}
-	imports += Import*
-	namespace += NameSpace*
-	model = ModelType
-;
+TSMain returns base::ModelContainer:
+    {TSMain}
+    imports+=Import*
+    namespace+=NameSpace*
+    model=TestDefinition;
 
 @Override
 NamedElement returns base::NamedElement:
-	name=QualifiedName | Variable
-;
-
-ModelType:
-	TestDefinition
-;
+    name=QualifiedName | Variable;
 
 TestDefinition:
-	{TestDefinition}
-	('Test-Purpose' purpose = STRING)?
-	('Background' background = STRING)?
-	('Stakeholders' stakeholder += StakeHolder+)?
-	
-	testSeq += TestSequence* 
-	stepSeq += StepSequence*
-	'generate-file' filePath = STRING
-	('global-parameters' gparams+=Variable+)?
-	('step-parameters' stepparams+=Variable+)?
-	('sut-parameters' sutparams+=Variable+)?
-	('global-param-init' gparamsInitActions+=(AssignmentAction | RecordFieldAssignmentAction)+)?
-	('sut-param-init' sutInitActions+=(AssignmentAction | RecordFieldAssignmentAction)+ )?
-;
+    {TestDefinition}
+    ('Test-Purpose' purpose=STRING)?
+    ('Background' background=STRING)?
+    ('Stakeholders' stakeholder+=StakeHolder+)?
+    testSeq+=TestSequence*
+    stepSeq+=StepSequence*
+    'generate-file' filePath=STRING;
 
 StakeHolder:
-	'stakeholder-name' name = STRING 
-	'function' function = STRING 
-	'comments' comments = STRING
-;
+    'stakeholder-name' name=STRING
+    'function' function=STRING
+    'comments' comments=STRING;
 
 TestSequence:
-	'test-sequence' name = ID '{'
-		stepSeqRef += [StepSequence|ID]+
-	'}'
-;
+    'test-sequence' name=ID '{'
+    stepSeqRef+=[StepSequence|ID]+
+    '}';
 
 StepSequence:
-	'step-sequence' name = ID '{'
-		step += AbstractStep*
-	'}'
-;
+    'step-sequence' name=ID '{'
+    step+=AbstractStep*
+    '}';
 
 AbstractStep:
-    AssertionStep | RunStep
-;
+    AssertionStep | RunStep;
 
 AssertionStep:
-	'assertion-id' inputVar = [expr::Variable|ID]
-	'assertion-type' type = [types::TypeDecl|ID]
-	'assertion-input' stepVar = [expr::Variable|ID]
-	('for-features' featuresForStep += [expr::Variable|ID]+ )?
-    'assertion-items' '{' asserts += DataAssertions+ '}'
-	refStep += RefStep*
+    stepVar=AssertionStepVariable
+    'assertion-items' '{' asserts+=DataAssertions* '}'
+    ('assertion-context' context += RecordFieldAssignmentAction*)?
+    ('assertion-input' input += RecordFieldAssignmentAction*)?
+    ('assertion-sut' sut += RecordFieldAssignmentAction*)?
 ;
+
+AssertionStepVariable returns expr::Variable:
+    'assertion-id' name=ID
+    'assertion-type' type=Type;
 
 RunStep:
-	'step-id' inputVar = [expr::Variable|ID]
-	'step-type' type = [types::TypeDecl|ID]
-	'step-input' stepVar = [expr::Variable|ID]
-	('for-features' featuresForStep += [expr::Variable|ID]+ )?
-	refStep += RefStep*
+    stepVar=RunStepVariable
+    ('step-context' context += RecordFieldAssignmentAction*)?
+    ('step-input' input += RecordFieldAssignmentAction*)?
+    ('step-sut' sut += RecordFieldAssignmentAction*)?
 ;
 
-RefStep:
-	'ref-to-step-output' input = ActionList
-	('for-features' featuresToOutput += [expr::Variable|ID]+ )?
+RunStepVariable returns expr::Variable:
+    'step-id' name=ID
+    'step-type' type=Type
 ;

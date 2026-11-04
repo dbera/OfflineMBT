@@ -1,24 +1,27 @@
 <bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:bpmn4s="http://bpmn4s" id="sample-diagram" targetNamespace="http://bpmn.io/schema/bpmn" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd">
-  <bpmn2:process bpmn4s:ctxName="fries_ctx" bpmn4s:ctxTypeRef="DataType_17t5tar" id="Process_1" isExecutable="false" name="Fries">
+  <bpmn2:process bpmn4s:ctxName="fries_ctx" bpmn4s:ctxTypeRef="FriesContext" id="Process_1" isExecutable="false" name="Fries">
     <bpmn2:extensionElements>
       <bpmn4s:dataTypes>
-        <bpmn4s:dataType id="DataType_02hh0t9" name="Fries" type="Record">
-          <bpmn4s:field name="dressing" typeRef="DataType_2v8mfd7"/>
-          <bpmn4s:field name="client_id" typeRef="String"/>
-        </bpmn4s:dataType>
-        <bpmn4s:dataType id="DataType_17t5tar" name="FriesContext" type="Context">
-          <bpmn4s:field name="client_id" typeRef="String"/>
-        </bpmn4s:dataType>
-        <bpmn4s:dataType id="DataType_1jk4lpg" name="Sauce" type="Enumeration">
-          <bpmn4s:literal name="Ketchup"/>
-          <bpmn4s:literal name="Mayo"/>
-        </bpmn4s:dataType>
-        <bpmn4s:dataType id="DataType_2v8mfd7" name="Topping" type="Record">
-          <bpmn4s:field name="ctx" typeRef="DataType_17t5tar"/>
-          <bpmn4s:field name="sauce" typeRef="DataType_1jk4lpg"/>
-          <bpmn4s:literal name="Ketchup"/>
-          <bpmn4s:literal name="Mayo"/>
-        </bpmn4s:dataType>
+        <bpmn4s:raw>record Fries {
+  Topping dressing
+  string client_id
+}
+
+@context
+record FriesContext {
+  string client_id
+}
+
+enum Sauce {
+  Ketchup
+  Mayo
+}
+
+record Topping {
+  FriesContext ctx
+  Sauce sauce
+}</bpmn4s:raw>
+      
       </bpmn4s:dataTypes>
     </bpmn2:extensionElements>
     <bpmn2:startEvent bpmn4s:ctxInit="fries_ctx := FriesContext { client_id = &quot;Tom&quot; }&#10;fries_ctx := FriesContext { client_id = &quot;Bob&quot; }" id="Event_0a5g9gv" name="start_event">
@@ -53,9 +56,9 @@
       <bpmn2:incoming>Flow_1oh9t4c</bpmn2:incoming>
     </bpmn2:endEvent>
     <bpmn2:sequenceFlow id="Flow_0bwi85w" sourceRef="Gateway_1w5n2dh" targetRef="Activity_0uiz2cy"/>
-    <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_2v8mfd7" id="DataStoreReference_18a07df" name="topping"/>
+    <bpmn2:dataStoreReference bpmn4s:dataTypeRef="Topping" id="DataStoreReference_18a07df" name="topping"/>
     <bpmn2:sequenceFlow id="Flow_1oh9t4c" sourceRef="Activity_0uiz2cy" targetRef="Event_1vt9n85"/>
-    <bpmn2:dataStoreReference bpmn4s:dataTypeRef="DataType_02hh0t9" id="DataStoreReference_03v9xko" name="fries"/>
+    <bpmn2:dataStoreReference bpmn4s:dataTypeRef="Fries" id="DataStoreReference_03v9xko" name="fries"/>
     <bpmn2:parallelGateway id="Gateway_1w5n2dh" name="join">
       <bpmn2:incoming>Flow_003weme</bpmn2:incoming>
       <bpmn2:incoming>Flow_1x3h6dr</bpmn2:incoming>

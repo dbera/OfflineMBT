@@ -23,7 +23,6 @@ public class Bpmn4sModel extends Bpmn {
 	@Override
 	protected void doRegisterTypes(ModelBuilder bpmnModelBuilder) {
 		super.doRegisterTypes(bpmnModelBuilder);
-		DataTypeImpl.registerType(bpmnModelBuilder);
 		DataTypesImpl.registerType(bpmnModelBuilder);
 		FieldImpl.registerType(bpmnModelBuilder);
 		LiteralImpl.registerType(bpmnModelBuilder);

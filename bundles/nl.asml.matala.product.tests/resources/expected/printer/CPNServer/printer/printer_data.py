@@ -23,16 +23,40 @@ class Data:
     	return json.dumps({"unit":0})
     	
     @staticmethod
+    def get_OptimizeRequest():
+    	return json.dumps({"id":0})
+    	
+    @staticmethod
+    def get_OperationType():
+    	return "OperationType::PREP"
+    	
+    @staticmethod
+    def get_PrintResolution():
+    	return "PrintResolution::LOW"
+    	
+    @staticmethod
     def get_AssertionsHistory():
     	return json.dumps({"inspectionReports":[]})
+    	
+    @staticmethod
+    def get_MeasureRequest():
+    	return json.dumps({"id":0,"printJobReport":{"id":0}})
+    	
+    @staticmethod
+    def get_CorrectionItem():
+    	return json.dumps({"data":""})
+    	
+    @staticmethod
+    def get_Result():
+    	return json.dumps({"verdict":"Outcome::OK"})
     	
     @staticmethod
     def get_ColorType():
     	return "ColorType::MONOCHROME"
     	
     @staticmethod
-    def get_CorrectionItem():
-    	return json.dumps({"data":""})
+    def get_PrinterVariants():
+    	return json.dumps({"version":"","release":""})
     	
     @staticmethod
     def get_CorrectionsReport():
@@ -43,47 +67,23 @@ class Data:
     	return json.dumps({"id":0,"resolution":"PrintResolution::LOW","scale":0.0,"color":"ColorType::MONOCHROME"})
     	
     @staticmethod
-    def get_MeasureRequest():
-    	return json.dumps({"id":0,"printJobReport":{"id":0}})
-    	
-    @staticmethod
-    def get_OperationType():
-    	return "OperationType::PREP"
-    	
-    @staticmethod
-    def get_OptimizeRequest():
-    	return json.dumps({"id":0})
-    	
-    @staticmethod
     def get_Outcome():
     	return "Outcome::OK"
-    	
-    @staticmethod
-    def get_PrintRequest():
-    	return json.dumps({"id":0,"resolution":"PrintResolution::LOW","scale":0.0,"color":"ColorType::MONOCHROME","opType":"OperationType::PREP"})
-    	
-    @staticmethod
-    def get_PrintResolution():
-    	return "PrintResolution::LOW"
-    	
-    @staticmethod
-    def get_PrinterVariants():
-    	return json.dumps({"version":"","release":""})
     	
     @staticmethod
     def get_Report():
     	return json.dumps({"id":0})
     	
     @staticmethod
-    def get_Result():
-    	return json.dumps({"verdict":"Outcome::OK"})
+    def get_PrintRequest():
+    	return json.dumps({"id":0,"resolution":"PrintResolution::LOW","scale":0.0,"color":"ColorType::MONOCHROME","opType":"OperationType::PREP"})
     	
     @staticmethod
     def execute_PrintFactoryA3DPrinter_RunPrintJob_default_Event_0jcg6zx(request,Flow_1u2qmtt,variants):
     	try:
     	    Event_0jcg6zx = Flow_1u2qmtt
     	except Exception as e:
-    	    __location = Location(63,63,2082,29,"Event_0jcg6zx := Flow_1u2qmtt")
+    	    __location = Location(65,65,2094,29,"Event_0jcg6zx := Flow_1u2qmtt")
     	    __source_file = "printer.ps"
     	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(Event_0jcg6zx)
@@ -93,7 +93,7 @@ class Data:
     	try:
     	    printResult = {"verdict": "Outcome::OK"}
     	except Exception as e:
-    	    __location = Location(66,66,2178,47,"printResult := Result { verdict = Outcome::OK }")
+    	    __location = Location(68,68,2190,47,"printResult := Result { verdict = Outcome::OK }")
     	    __source_file = "printer.ps"
     	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(printResult)
@@ -103,7 +103,7 @@ class Data:
     	try:
     	    printReport = {"id": request["id"]}
     	except Exception as e:
-    	    __location = Location(69,71,2331,66,"printReport := Report { id = request.id }")
+    	    __location = Location(71,73,2318,66,"printReport := Report { id = request.id }")
     	    __source_file = "printer.ps"
     	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(printReport)
@@ -113,7 +113,7 @@ class Data:
     	try:
     	    variants = variants
     	except Exception as e:
-    	    __location = Location(74,74,2475,20,"variants := variants")
+    	    __location = Location(76,76,2448,20,"variants := variants")
     	    __source_file = "printer.ps"
     	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(variants)
@@ -123,7 +123,7 @@ class Data:
     	try:
     	    request = printJob
     	except Exception as e:
-    	    __location = Location(84,84,2900,19,"request := printJob")
+    	    __location = Location(86,86,2864,19,"request := printJob")
     	    __source_file = "printer.ps"
     	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(request)
@@ -133,7 +133,7 @@ class Data:
     	try:
     	    request = printJob
     	except Exception as e:
-    	    __location = Location(94,94,3280,19,"request := printJob")
+    	    __location = Location(96,96,3235,19,"request := printJob")
     	    __source_file = "printer.ps"
     	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(request)
@@ -143,7 +143,7 @@ class Data:
     	try:
     	    Event_0mxx05p = Flow_0iaelzn
     	except Exception as e:
-    	    __location = Location(105,105,3771,29,"Event_0mxx05p := Flow_0iaelzn")
+    	    __location = Location(107,107,3717,29,"Event_0mxx05p := Flow_0iaelzn")
     	    __source_file = "printer.ps"
     	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(Event_0mxx05p)
@@ -153,7 +153,7 @@ class Data:
     	try:
     	    printResult = {"verdict": "Outcome::OK"}
     	except Exception as e:
-    	    __location = Location(108,108,3867,47,"printResult := Result { verdict = Outcome::OK }")
+    	    __location = Location(110,110,3813,47,"printResult := Result { verdict = Outcome::OK }")
     	    __source_file = "printer.ps"
     	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(printResult)
@@ -163,7 +163,7 @@ class Data:
     	try:
     	    variants = variants
     	except Exception as e:
-    	    __location = Location(111,111,3992,20,"variants := variants")
+    	    __location = Location(113,113,3924,20,"variants := variants")
     	    __source_file = "printer.ps"
     	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(variants)
@@ -173,7 +173,7 @@ class Data:
     	try:
     	    history = {"inspectionReports": history["inspectionReports"] + [inspectionReport["id"]]}
     	except Exception as e:
-    	    __location = Location(147,149,5050,130,"history := AssertionsHistory { inspectionReports = add(history.inspectionReports, inspectionReport.id) }")
+    	    __location = Location(151,153,4994,130,"history := AssertionsHistory { inspectionReports = add(history.inspectionReports, inspectionReport.id) }")
     	    __source_file = "printer.ps"
     	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(history)
@@ -183,7 +183,7 @@ class Data:
     	try:
     	    inspectionReport = inspectionReport
     	except Exception as e:
-    	    __location = Location(152,152,5296,36,"inspectionReport := inspectionReport")
+    	    __location = Location(156,156,5196,36,"inspectionReport := inspectionReport")
     	    __source_file = "printer.ps"
     	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(inspectionReport)
@@ -193,7 +193,7 @@ class Data:
     	try:
     	    inspectionReport = {"id": measureRequest["id"]}
     	except Exception as e:
-    	    __location = Location(183,185,6122,78,"inspectionReport := Report { id = measureRequest.id }")
+    	    __location = Location(189,191,6013,78,"inspectionReport := Report { id = measureRequest.id }")
     	    __source_file = "printer.ps"
     	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(inspectionReport)
@@ -203,7 +203,7 @@ class Data:
     	try:
     	    inspectionResult = {"verdict": "Outcome::OK"}
     	except Exception as e:
-    	    __location = Location(188,188,6272,52,"inspectionResult := Result { verdict = Outcome::OK }")
+    	    __location = Location(194,194,6163,52,"inspectionResult := Result { verdict = Outcome::OK }")
     	    __source_file = "printer.ps"
     	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(inspectionResult)
@@ -213,7 +213,7 @@ class Data:
     	try:
     	    measureRequest = inspectionJob
     	except Exception as e:
-    	    __location = Location(201,201,6871,31,"measureRequest := inspectionJob")
+    	    __location = Location(207,207,6710,31,"measureRequest := inspectionJob")
     	    __source_file = "printer.ps"
     	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(measureRequest)
@@ -223,7 +223,7 @@ class Data:
     	try:
     	    printReport = printReport
     	except Exception as e:
-    	    __location = Location(204,204,6992,26,"printReport := printReport")
+    	    __location = Location(210,210,6808,26,"printReport := printReport")
     	    __source_file = "printer.ps"
     	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(printReport)
@@ -233,7 +233,7 @@ class Data:
     	try:
     	    optimizeJob = optJob
     	except Exception as e:
-    	    __location = Location(238,238,7898,21,"optimizeJob := optJob")
+    	    __location = Location(246,246,7726,21,"optimizeJob := optJob")
     	    __source_file = "printer.ps"
     	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(optimizeJob)
@@ -243,7 +243,7 @@ class Data:
     	try:
     	    inspectionReport = inspectionReport
     	except Exception as e:
-    	    __location = Location(241,241,8014,36,"inspectionReport := inspectionReport")
+    	    __location = Location(249,249,7819,36,"inspectionReport := inspectionReport")
     	    __source_file = "printer.ps"
     	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(inspectionReport)
@@ -253,7 +253,7 @@ class Data:
     	try:
     	    Event_1oozdnw = Flow_0y8u5pd
     	except Exception as e:
-    	    __location = Location(249,249,8333,29,"Event_1oozdnw := Flow_0y8u5pd")
+    	    __location = Location(257,257,8129,29,"Event_1oozdnw := Flow_0y8u5pd")
     	    __source_file = "printer.ps"
     	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(Event_1oozdnw)
@@ -263,7 +263,7 @@ class Data:
     	try:
     	    corrections = {"id": optimizeJob["id"] + 1}
     	except Exception as e:
-    	    __location = Location(252,254,8443,85,"corrections := CorrectionsReport { id = optimizeJob.id + 1 }")
+    	    __location = Location(260,262,8239,85,"corrections := CorrectionsReport { id = optimizeJob.id + 1 }")
     	    __source_file = "printer.ps"
     	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(corrections)
@@ -273,25 +273,25 @@ class Data:
     	try:
     	    Flow_16s4ey1 = Gateway_1wpvmtk
     	except Exception as e:
-    	    __location = Location(328,328,10537,31,"Flow_16s4ey1 := Gateway_1wpvmtk")
+    	    __location = Location(338,338,10361,31,"Flow_16s4ey1 := Gateway_1wpvmtk")
     	    __source_file = "printer.ps"
     	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	try:
     	    Flow_16s4ey1["color"] = printRequests["color"]
     	except Exception as e:
-    	    __location = Location(329,329,10581,41,"Flow_16s4ey1.color := printRequests.color")
+    	    __location = Location(339,339,10405,41,"Flow_16s4ey1.color := printRequests.color")
     	    __source_file = "printer.ps"
     	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	try:
     	    Flow_16s4ey1["resolution"] = printRequests["resolution"]
     	except Exception as e:
-    	    __location = Location(330,330,10635,51,"Flow_16s4ey1.resolution := printRequests.resolution")
+    	    __location = Location(340,340,10459,51,"Flow_16s4ey1.resolution := printRequests.resolution")
     	    __source_file = "printer.ps"
     	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	try:
     	    Flow_16s4ey1["scale"] = printRequests["scale"]
     	except Exception as e:
-    	    __location = Location(331,331,10699,41,"Flow_16s4ey1.scale := printRequests.scale")
+    	    __location = Location(341,341,10523,41,"Flow_16s4ey1.scale := printRequests.scale")
     	    __source_file = "printer.ps"
     	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(Flow_16s4ey1)
@@ -301,7 +301,7 @@ class Data:
     	try:
     	    printJob = {"id": printRequests["id"], "resolution": printRequests["resolution"], "scale": printRequests["scale"], "color": printRequests["color"], "opType": printRequests["opType"]}
     	except Exception as e:
-    	    __location = Location(334,340,10804,255,"printJob := PrintRequest { id = printRequests.id, resolution = printRequests.resolution, scale = printRequests.scale, color = printRequests.color, opType = printRequests.opType }")
+    	    __location = Location(344,350,10628,255,"printJob := PrintRequest { id = printRequests.id, resolution = printRequests.resolution, scale = printRequests.scale, color = printRequests.color, opType = printRequests.opType }")
     	    __source_file = "printer.ps"
     	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(printJob)
@@ -311,13 +311,13 @@ class Data:
     	try:
     	    Gateway_1wpvmtk = Gateway_0p2uo9v
     	except Exception as e:
-    	    __location = Location(348,348,11257,34,"Gateway_1wpvmtk := Gateway_0p2uo9v")
+    	    __location = Location(358,358,11081,34,"Gateway_1wpvmtk := Gateway_0p2uo9v")
     	    __source_file = "printer.ps"
     	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	try:
     	    Gateway_1wpvmtk["id"] = Gateway_1wpvmtk["id"] + 1
     	except Exception as e:
-    	    __location = Location(349,349,11304,44,"Gateway_1wpvmtk.id := Gateway_1wpvmtk.id + 1")
+    	    __location = Location(359,359,11128,44,"Gateway_1wpvmtk.id := Gateway_1wpvmtk.id + 1")
     	    __source_file = "printer.ps"
     	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(Gateway_1wpvmtk)
@@ -327,7 +327,7 @@ class Data:
     	try:
     	    Flow_09b0flo = Flow_01m2s0h
     	except Exception as e:
-    	    __location = Location(357,357,11583,28,"Flow_09b0flo := Flow_01m2s0h")
+    	    __location = Location(367,367,11407,28,"Flow_09b0flo := Flow_01m2s0h")
     	    __source_file = "printer.ps"
     	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(Flow_09b0flo)
@@ -337,7 +337,7 @@ class Data:
     	try:
     	    Gateway_0p2uo9v = Flow_09b0flo
     	except Exception as e:
-    	    __location = Location(366,366,11884,31,"Gateway_0p2uo9v := Flow_09b0flo")
+    	    __location = Location(376,376,11708,31,"Gateway_0p2uo9v := Flow_09b0flo")
     	    __source_file = "printer.ps"
     	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(Gateway_0p2uo9v)
@@ -347,7 +347,7 @@ class Data:
     	try:
     	    Flow_1y4bjf4 = Flow_1dcdx0e
     	except Exception as e:
-    	    __location = Location(374,374,12122,28,"Flow_1y4bjf4 := Flow_1dcdx0e")
+    	    __location = Location(384,384,11946,28,"Flow_1y4bjf4 := Flow_1dcdx0e")
     	    __source_file = "printer.ps"
     	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(Flow_1y4bjf4)
@@ -357,7 +357,7 @@ class Data:
     	try:
     	    Flow_1f74bn4 = Flow_1dcdx0e
     	except Exception as e:
-    	    __location = Location(377,377,12218,28,"Flow_1f74bn4 := Flow_1dcdx0e")
+    	    __location = Location(387,387,12042,28,"Flow_1f74bn4 := Flow_1dcdx0e")
     	    __source_file = "printer.ps"
     	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(Flow_1f74bn4)
@@ -367,7 +367,7 @@ class Data:
     	try:
     	    Flow_0kbycuh = Flow_1dt29vl
     	except Exception as e:
-    	    __location = Location(385,385,12490,28,"Flow_0kbycuh := Flow_1dt29vl")
+    	    __location = Location(395,395,12314,28,"Flow_0kbycuh := Flow_1dt29vl")
     	    __source_file = "printer.ps"
     	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(Flow_0kbycuh)
@@ -377,7 +377,7 @@ class Data:
     	try:
     	    Flow_01m2s0h = Flow_0kbycuh
     	except Exception as e:
-    	    __location = Location(393,393,12735,28,"Flow_01m2s0h := Flow_0kbycuh")
+    	    __location = Location(403,403,12559,28,"Flow_01m2s0h := Flow_0kbycuh")
     	    __source_file = "printer.ps"
     	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(Flow_01m2s0h)
@@ -387,7 +387,7 @@ class Data:
     	try:
     	    optJob = {"id": Flow_0kbycuh["id"]}
     	except Exception as e:
-    	    __location = Location(396,396,12825,50,"optJob := OptimizeRequest { id = Flow_0kbycuh.id }")
+    	    __location = Location(406,406,12649,50,"optJob := OptimizeRequest { id = Flow_0kbycuh.id }")
     	    __source_file = "printer.ps"
     	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(optJob)
@@ -397,7 +397,7 @@ class Data:
     	try:
     	    Flow_1rkhqnd = Flow_1f74bn4
     	except Exception as e:
-    	    __location = Location(404,404,13077,28,"Flow_1rkhqnd := Flow_1f74bn4")
+    	    __location = Location(414,414,12901,28,"Flow_1rkhqnd := Flow_1f74bn4")
     	    __source_file = "printer.ps"
     	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(Flow_1rkhqnd)
@@ -407,7 +407,7 @@ class Data:
     	try:
     	    printJob = {"id": Flow_1f74bn4["id"], "resolution": Flow_1f74bn4["resolution"], "scale": None, "color": Flow_1f74bn4["color"], "opType": "OperationType::PREP"}
     	except Exception as e:
-    	    __location = Location(407,413,13169,236,"printJob := PrintRequest { id = Flow_1f74bn4.id, resolution = Flow_1f74bn4.resolution, scale = null, color = Flow_1f74bn4.color, opType = OperationType::PREP }")
+    	    __location = Location(417,423,12993,236,"printJob := PrintRequest { id = Flow_1f74bn4.id, resolution = Flow_1f74bn4.resolution, scale = null, color = Flow_1f74bn4.color, opType = OperationType::PREP }")
     	    __source_file = "printer.ps"
     	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(printJob)
@@ -417,7 +417,7 @@ class Data:
     	try:
     	    Flow_1dt29vl = Flow_1y4bjf4
     	except Exception as e:
-    	    __location = Location(421,421,13631,28,"Flow_1dt29vl := Flow_1y4bjf4")
+    	    __location = Location(431,431,13455,28,"Flow_1dt29vl := Flow_1y4bjf4")
     	    __source_file = "printer.ps"
     	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(Flow_1dt29vl)
@@ -427,7 +427,7 @@ class Data:
     	try:
     	    inspectionJob = {"id": Flow_1y4bjf4["id"]}
     	except Exception as e:
-    	    __location = Location(424,426,13770,81,"inspectionJob := MeasureRequest { id = Flow_1y4bjf4.id }")
+    	    __location = Location(434,436,13552,81,"inspectionJob := MeasureRequest { id = Flow_1y4bjf4.id }")
     	    __source_file = "printer.ps"
     	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(inspectionJob)
@@ -437,7 +437,7 @@ class Data:
     	try:
     	    Flow_1vq9t2p = Flow_1rkhqnd
     	except Exception as e:
-    	    __location = Location(434,434,14067,28,"Flow_1vq9t2p := Flow_1rkhqnd")
+    	    __location = Location(444,444,13849,28,"Flow_1vq9t2p := Flow_1rkhqnd")
     	    __source_file = "printer.ps"
     	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(Flow_1vq9t2p)
@@ -447,7 +447,7 @@ class Data:
     	try:
     	    Flow_1dcdx0e = Flow_16s4ey1
     	except Exception as e:
-    	    __location = Location(442,442,14318,28,"Flow_1dcdx0e := Flow_16s4ey1")
+    	    __location = Location(452,452,14100,28,"Flow_1dcdx0e := Flow_16s4ey1")
     	    __source_file = "printer.ps"
     	    get_reporting().exception(str(e), e, details=__location.text, source=__source_file, location=__location)
     	return json.dumps(Flow_1dcdx0e)

@@ -1,0 +1,27 @@
+import "../../input/issue299/issue299.types"
+
+record JobA {
+    JobAInput input
+    JobAOutput output
+}
+
+record JobAInput {
+    InputJobA job_a_input
+}
+
+record JobAOutput {
+    ReportJobA job_a_report
+}
+
+record BJob {
+    BJobInput input
+    BJobOutput output
+}
+
+record BJobInput {
+    InputJobB job_b_input
+}
+
+record BJobOutput {
+    ReportJobB job_b_report
+}

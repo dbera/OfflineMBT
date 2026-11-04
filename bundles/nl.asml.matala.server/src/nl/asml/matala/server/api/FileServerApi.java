@@ -21,6 +21,9 @@ import java.util.List;
  * This interface is JSON-free; serialization is handled by the REST layer.
  */
 public interface FileServerApi {
+	
+	
+	void init(String rootFolder) throws ServerApiException;
 
     /**
      * List files and folders in a directory, or read a file.
@@ -59,26 +62,4 @@ public interface FileServerApi {
 
     /** Directory listing with folders and files relative to the listed path. */
     record DirectoryListing(String path, List<String> folders, List<String> files) implements FileResult {}
-
-    /** File content with MIME type. */
-    record FileContent(String path, byte[] content, String mimeType) implements FileResult {}
-
-    /** Result of a file write operation. */
-    record FileWriteResult(String path, String message, boolean success) {}
-
-    /** Exception carrying an HTTP status code. */
-    class ServerApiException extends Exception {
-        private static final long serialVersionUID = 1L;
-        public final int statusCode;
-
-        public ServerApiException(int statusCode, String message) {
-            super(message);
-            this.statusCode = statusCode;
-        }
-
-        public ServerApiException(int statusCode, String message, Throwable cause) {
-            super(message, cause);
-            this.statusCode = statusCode;
-        }
-    }
 }

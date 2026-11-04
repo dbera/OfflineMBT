@@ -13,7 +13,9 @@ specification imaging
         AcqReq	AcquisitionReq
         EquipmentStatus	EqStatus
     
-        local
+        // local
+    
+        context
         UNIT	Gateway_102q82v
         UNIT	Flow_0kkvgdv
         UNIT	Flow_1kpcqqf
@@ -33,7 +35,7 @@ specification imaging
         case			default step-type "null" action-type COMPOSE
         with-inputs		ImagingRequest
         with-guard		ImagingRequest.cmd_type == ImageEnum::UNPREPARE
-        produces-outputs	Flow_1kpcqqf suppress
+        produces-outputs	Flow_1kpcqqf
         produces-outputs	AcquisitionReq symbolic-link
         updates:
             AcquisitionReq := AcqReq {
@@ -46,14 +48,14 @@ specification imaging
         case			default step-type "null" action-type COMPOSE
         with-inputs		ImagingRequest, EqStatus
         with-guard		ImagingRequest.cmd_type == ImageEnum::PREPARE AND EqStatus.temp_status == Status::ON
-        produces-outputs	Flow_0kkvgdv suppress
+        produces-outputs	Flow_0kkvgdv
         produces-outputs	AcquisitionReq symbolic-link
         updates:
             AcquisitionReq := AcqReq {
              cmd_type = ImagingRequest.cmd_type,
              id = ImagingRequest.id
             }
-        produces-outputs	EqStatus symbolic-link suppress
+        produces-outputs	EqStatus
         updates:
             EqStatus := EqStatus
         
@@ -61,7 +63,7 @@ specification imaging
         element-label	"Wait for prepare"
         case			default
         with-inputs		Flow_0kkvgdv, AcqUpdate, EqStatus
-        produces-outputs	Gateway_102q82v suppress
+        produces-outputs	Gateway_102q82v
         updates:
             Gateway_102q82v := Flow_0kkvgdv
         produces-outputs	ImagingUpdate
@@ -77,7 +79,7 @@ specification imaging
         element-label	"Wait for Unprepare"
         case			default
         with-inputs		Flow_1kpcqqf, AcqUpdate, EqStatus
-        produces-outputs	Gateway_102q82v suppress
+        produces-outputs	Gateway_102q82v
         updates:
             Gateway_102q82v := Flow_1kpcqqf
         produces-outputs	ImagingUpdate
@@ -100,7 +102,9 @@ specification imaging
         outputs
         PumpResp	PumpUpdate
     
-        local
+        // local
+    
+        context pump_ctx
         CTX	Gateway_0td58pc
         CTX	Flow_0x0gs9b
         CTX	Flow_104f6k4
@@ -161,7 +165,9 @@ specification imaging
         outputs
         ImgReq	ImagingRequest
     
-        local
+        // local
+    
+        context img_ctx
         CTX	Gateway_0i3nw09
         CTX	Gateway_0gu94f4
         CTX	Gateway_0kvhy0o
@@ -301,7 +307,9 @@ specification imaging
         PumpReq	PumpRequest
         EquipmentStatus	EqStatus
     
-        local
+        // local
+    
+        context p_ctx
         CTX	Gateway_1i0qy9g
         CTX	Gateway_1j81da5
         CTX	Flow_1wguswc
@@ -328,7 +336,7 @@ specification imaging
              cmd_type = VacuumEnum::ON,
              id = VacuumRequest.id
             }
-        produces-outputs	EqStatus symbolic-link suppress
+        produces-outputs	EqStatus
         updates:
             EqStatus := EqStatus
         
@@ -370,7 +378,7 @@ specification imaging
              cmd_type = VacuumEnum::OFF,
              id = VacuumRequest.id
             }
-        produces-outputs	EqStatus symbolic-link suppress
+        produces-outputs	EqStatus
         updates:
             EqStatus := EqStatus
         
@@ -402,7 +410,9 @@ specification imaging
         outputs
         TempReq	TempRequest
     
-        local
+        // local
+    
+        context temp_ctx
         CTX	Gateway_1sv33t8
         CTX	Gateway_12yhscn
         CTX	Event_1r2zvr6
@@ -493,7 +503,9 @@ specification imaging
         outputs
         VacReq	VacuumRequest
     
-        local
+        // local
+    
+        context vac_ctx
         CTX	Gateway_0mqr7c2
         CTX	Gateway_07w0e8f
         CTX	Flow_1phqrfh
@@ -566,7 +578,9 @@ specification imaging
         AcqResp	AcqUpdate
         AcqData	ImageData
     
-        local
+        // local
+    
+        context acq_ctx
         CTX	Gateway_0h81kts
         CTX	Flow_084nmm6
         CTX	Flow_1rusz82
@@ -658,6 +672,8 @@ specification imaging
     
         local
         ImgReq	LastAcqReq
+    
+        context
         UNIT	Gateway_16m9e4j
         UNIT	Gateway_0qg69ul
         UNIT	Flow_0678bm1
@@ -673,7 +689,7 @@ specification imaging
         case			default
         with-inputs		Flow_0678bm1, AcqUpdate, EqStatus
         with-guard		AcqUpdate.result == ResponseEnum::OK
-        produces-outputs	Gateway_16m9e4j suppress
+        produces-outputs	Gateway_16m9e4j
         updates:
             Gateway_16m9e4j := Flow_0678bm1
         produces-outputs	ImagingUpdate
@@ -701,7 +717,7 @@ specification imaging
             close-to 0.55
             }
         }
-        produces-outputs	Gateway_0qg69ul suppress
+        produces-outputs	Gateway_0qg69ul
         updates:
             Gateway_0qg69ul := Gateway_16m9e4j
         
@@ -710,7 +726,7 @@ specification imaging
         case			default
         with-inputs		Flow_1bajtwc, AcqUpdate, EqStatus
         with-guard		AcqUpdate.result == ResponseEnum::OK
-        produces-outputs	Gateway_0qg69ul suppress
+        produces-outputs	Gateway_0qg69ul
         updates:
             Gateway_0qg69ul := Flow_1bajtwc
         produces-outputs	ImagingUpdate
@@ -727,7 +743,7 @@ specification imaging
         case			default step-type "null" action-type COMPOSE
         with-inputs		ImagingRequest
         with-guard		ImagingRequest.cmd_type==ImageEnum::STOP
-        produces-outputs	Flow_0678bm1 suppress
+        produces-outputs	Flow_0678bm1
         produces-outputs	AcquisitionReq symbolic-link
         updates:
             AcquisitionReq := AcqReq {
@@ -740,7 +756,7 @@ specification imaging
         case			default step-type "null" action-type COMPOSE
         with-inputs		ImagingRequest, EqStatus
         with-guard		ImagingRequest.cmd_type == ImageEnum::START AND EqStatus.temp_status == Status::ON AND EqStatus.pump_status == Status::ON
-        produces-outputs	Flow_1bajtwc suppress
+        produces-outputs	Flow_1bajtwc
         produces-outputs	AcquisitionReq symbolic-link
         updates:
             AcquisitionReq := AcqReq {
@@ -750,7 +766,7 @@ specification imaging
         produces-outputs	LastAcqReq symbolic-link
         updates:
             LastAcqReq:=ImagingRequest
-        produces-outputs	EqStatus symbolic-link suppress
+        produces-outputs	EqStatus
         updates:
             EqStatus := EqStatus
         
@@ -770,7 +786,7 @@ specification imaging
             close-to 0.95
             }
         }
-        produces-outputs	Gateway_0qg69ul suppress
+        produces-outputs	Gateway_0qg69ul
         updates:
             Gateway_0qg69ul := Gateway_16m9e4j
     
@@ -790,6 +806,8 @@ specification imaging
     
         local
         TempReq	TempCMD
+    
+        context
         UNIT	Gateway_1qk9wqe
         UNIT	Event_13ys7sy
     
@@ -803,11 +821,11 @@ specification imaging
         case			default step-type "null" action-type COMPOSE
         with-inputs		TempRequest, EqStatus
         with-guard		TempRequest.cmd_type == TempEnum::RESET AND EqStatus.acq_status == Status::UNPREPARING
-        produces-outputs	Gateway_1qk9wqe suppress
+        produces-outputs	Gateway_1qk9wqe
         produces-outputs	TempCMD symbolic-link
         updates:
             TempCMD := TempRequest
-        produces-outputs	EqStatus symbolic-link suppress
+        produces-outputs	EqStatus
         updates:
             EqStatus := EqStatus
         
@@ -815,7 +833,7 @@ specification imaging
         element-label	"Execute Set Temp"
         case			default step-type "SetTemperature" action-type RUN
         with-inputs		Gateway_1qk9wqe, TempCMD, EqStatus
-        produces-outputs	Event_13ys7sy suppress
+        produces-outputs	Event_13ys7sy
         updates:
             Event_13ys7sy := Gateway_1qk9wqe
         produces-outputs	TempUpdate
@@ -838,7 +856,7 @@ specification imaging
         case			default step-type "null" action-type COMPOSE
         with-inputs		TempRequest
         with-guard		TempRequest.cmd_type == TempEnum::SET
-        produces-outputs	Gateway_1qk9wqe suppress
+        produces-outputs	Gateway_1qk9wqe
         produces-outputs	TempCMD symbolic-link
         updates:
             TempCMD := TempRequest

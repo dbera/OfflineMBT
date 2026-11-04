@@ -417,14 +417,14 @@ if __name__ == '__main__':
             map_block_uml_txt[t.name.split('_')[0]] = gtxt
             
         for t in pn.n.transition():
-            for inp in pn.n.pre(t.name):
+            for inp in sorted(pn.n.pre(t.name)):
                 txt = map_block_uml_txt.get(t.name.split('_')[0])
                 if 'local' in inp:
                     txt += '%s -[#lightgrey]-> [%s]\n' % (inp, t.name)
                 else:
                     txt += '%s --> [%s]\n' % (inp, t.name)
                 map_block_uml_txt[t.name.split('_')[0]] = txt
-            for out in pn.n.post(t.name):
+            for out in sorted(pn.n.post(t.name)):
                 txt = map_block_uml_txt.get(t.name.split('_')[0])
                 if 'local' in out:
                     txt += '[%s] -[#lightgrey]-> %s\n' % (t.name, out)
