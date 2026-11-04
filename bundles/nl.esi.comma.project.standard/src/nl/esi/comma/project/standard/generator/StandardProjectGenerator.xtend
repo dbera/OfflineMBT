@@ -57,13 +57,26 @@ class StandardProjectGenerator extends AbstractGenerator {
     IStatusReporting reporting;
 
     override doGenerate(Resource res, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
-        for (project : res.contents.filter(Project)) {
+        for (project : res.contents.filter(Project)) 
+        {
             for (task : project.offlineBlocks) {
                 doGenerate(task, res.resourceSet, fsa.createFolderAccess(task.name), ctx)
             }
 
             for (task : project.statemachineBlocks) {
                 (new StateMachineGenerator()).doGenerate(task, fsa.createFolderAccess(task.name), ctx)
+            }
+
+            for (task : project.testConformanceBlocks) {
+                (new TestConformanceNetGenerator(reporting)).doGenerate(task, fsa.createFolderAccess(task.name), ctx)
+            }
+
+            for (task : project.reachabilityAnalysisBlocks) {
+                (new ReachabilityAnalysisGenerator(reporting)).doGenerate(task, res.resourceSet, fsa.createFolderAccess(task.name), ctx)
+            }
+
+            for (task : project.testCaseDiffBlocks) {
+                (new TestCaseDiffAnalaysis).doGenerate(task, res.resourceSet, fsa.createFolderAccess(task.name), ctx)
             }
         }
     }
