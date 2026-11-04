@@ -221,7 +221,8 @@ def generate_tests( model_path:str, num_tests:int=1, depth_limit:int=500, state_
     # store results in the report dir
     utils.store_results(report_path, result, cli_args)
 
-    write_eclipse_project(output_dir, model_name)
+    tmp_dir, uid = os.path.split(model_dir)
+    write_eclipse_project(output_dir, model_name + '_' + uid)
     write_status_report_html(output_dir, report_path)
 
     # store bpmn and prj files in bpmn directory 
