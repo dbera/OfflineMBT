@@ -25,6 +25,8 @@ import org.slf4j.LoggerFactory;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.TypeLiteral;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServer;
@@ -32,6 +34,7 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
 import nl.asml.matala.server.api.FileContent;
+import nl.asml.matala.server.api.FileHandler;
 import nl.asml.matala.server.api.FileServerApi;
 import nl.asml.matala.server.api.FileServerApi.DirectoryListing;
 import nl.asml.matala.server.api.FileServerApi.FileResult;
@@ -40,7 +43,6 @@ import nl.asml.matala.server.api.GeneratorApi;
 import nl.asml.matala.server.api.GeneratorApi.GenerationTarget;
 import nl.asml.matala.server.api.ServerApiException;
 import nl.asml.matala.server.api.TypesApi;
-import nl.asml.matala.server.impl.FileServerApiImpl;
 
 /**
  * Vert.x-based REST Server for file operations.
@@ -74,6 +76,7 @@ public class RestServer {
     private final GeneratorApi generatorApi;
     private final FileServerApi fileServerApi;
 	private final TypesApi typesApi;
+	private final List<FileHandler> fileHandlers;
 
     /**
      * Create a new REST server with a custom repository path.
@@ -84,9 +87,8 @@ public class RestServer {
     public RestServer(int port, String modelPath, String tempPath, Injector injector) {
         this.port = port > 0 ? port : DEFAULT_PORT;
         this.fileServerApi = injector.getInstance(FileServerApi.class);
-        if(this.fileServerApi instanceof FileServerApiImpl fileServerApiImpl) {
-			fileServerApiImpl.init(modelPath);
-		}
+        this.fileHandlers = injector.getInstance(Key.get(new TypeLiteral<List<FileHandler>>() {}));
+	    this.fileServerApi.init(modelPath, fileHandlers);
         this.generatorApi = injector.getInstance(GeneratorApi.class);
         this.typesApi = injector.getInstance(TypesApi.class);
         this.tempPath = Path.of(tempPath);
