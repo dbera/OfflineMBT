@@ -10,11 +10,11 @@ name: Java CI with Maven
 
 on:
   push:
-    branches: [ "main", "develop" ]
+    branches: [ "main" ]
     tags:
       - "v*.*.*"
   pull_request:
-    branches: [ "main", "develop" ]
+    branches: [ "main" ]
 
 jobs:
   build:
@@ -94,7 +94,7 @@ jobs:
 
     # Deploy P2 Repository to GitHub Pages for nightly builds
     - name: Deploy P2 Repository (Nightly)
-      if: github.ref == 'refs/heads/develop' && success()
+      if: github.ref == 'refs/heads/main' && success()
       uses: peaceiris/actions-gh-pages@v4
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
