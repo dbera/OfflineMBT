@@ -689,7 +689,7 @@ public class Bpmn4sCompiler{
 					inputNames.add(sanitize(getPNSourcePlaceName(e)));
 				}
 				// check all inputs equal first input
-				return String.join(" && ",
+				return String.join(" AND ",
 						inputNames.stream().skip(1).map(e -> e + " == " + inputNames.get(0) ).toList());
 			}
 		}
