@@ -25,6 +25,7 @@ public abstract class Bpmn4sDataType {
 	public static final String INT_TYPE = "Int";
 	public static final String BOOLEAN_TYPE = "Boolean";
 	public static final String FLOAT_TYPE = "Float";
+	public static final String PRIMITIVE_BASED_ON = "primitive-based-on";
 	
 	private final String name;
 	private final String type;
