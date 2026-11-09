@@ -1,0 +1,47 @@
+// Only the existing annotation value syntax is used: strings, booleans, numbers.
+// Structured metadata uses JSON strings, decoded at generation time, not at runtime.
+
+@Model
+record Resource {
+    @F(label="Resource ID", required=true)
+    string resource_id
+
+    @F(default="WORKER", label="Resource type")
+    string resource_type
+
+    @FileSelector(file_filter="XML files (*.xml);;All files (*)", required=true)
+    string configuration_file
+}
+
+@Model
+record Task {
+    @F(default="Task1", required=true, pattern="^[A-Za-z][^ ]*$")
+    string task_name
+
+    @Ref(path="/resources", value_field="resource_id", filters_json="{\"resource_type\":\"WORKER\"}", required=true)
+    string assigned_worker
+
+    @RefList(path="/tasks", value_field="task_name", item_label="Task")
+    string[] dependencies
+
+    @Template(generator="task_configuration", predefined_json="[]", file_filter="XML files (*.xml)", advanced=true)
+    string configuration_template
+
+    @L(title="Input files", item_label="File", items_json="{\"kind\":\"file_selector\",\"file_filter\":\"All files (*)\",\"required\":true}")
+    string[] input_files
+
+    @F(default=2, ge=1, le=42, relevant_if_json="{\"./enabled\":true}")
+    int batch_size
+
+    @F(default=true)
+    bool enabled
+}
+
+@Model
+record WorkflowProject {
+    @L(title="Resources", item_label="Resource", presentation="map_detail", order=20, import_export=true)
+    Resource[] resources
+
+    @L(title="Tasks", item_label="Task", reverse_display=true, order=30)
+    Task[] tasks
+}

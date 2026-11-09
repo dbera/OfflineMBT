@@ -5,9 +5,11 @@ Bundle-SymbolicName: nl.asml.matala.generator.fast;singleton:=true
 Bundle-Version: 4.2.0.qualifier
 Export-Package: nl.asml.matala.generator.bpmn,
  nl.asml.matala.generator.docgen,
- nl.asml.matala.generator.fast
+ nl.asml.matala.generator.fast,
+ nl.asml.matala.generator.types
 Bundle-Vendor: ASML
-Automatic-Module-Name: nl.asml.matala.generator.fast
+Automatic-Module-Name: nl.asml.matala.generator.fast,
+ nl.asml.matala.generator.types
 Bundle-RequiredExecutionEnvironment: JavaSE-21
 Require-Bundle: org.eclipse.xtext,
  org.eclipse.xtext.xbase,
@@ -22,4 +24,7 @@ Require-Bundle: org.eclipse.xtext,
  org.camunda.bpm.model.xml;bundle-version="7.22.0",
  nl.asml.matala.bpmn4s,
  nl.asml.matala.product,
- nl.esi.comma.abstracttestspecification
+ nl.esi.comma.abstracttestspecification,
+ nl.esi.xtext.expressions,
+ nl.esi.xtext.types,
+ nl.esi.xtext.common.lang
