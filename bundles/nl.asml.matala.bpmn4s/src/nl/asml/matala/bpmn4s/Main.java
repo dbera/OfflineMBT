@@ -315,6 +315,7 @@ public class Main {
 			     Bpmn4sDataType.INT_TYPE,
 			     Bpmn4sDataType.BOOLEAN_TYPE,
 			     Bpmn4sDataType.FLOAT_TYPE -> parseBase(dt);
+			case Bpmn4sDataType.PRIMITIVE_BASED_ON -> parseBasedOn(dt);
 			default -> null;
 		};
 		if (datatype == null) {
@@ -323,7 +324,11 @@ public class Main {
 			model.dataSchema.put(dt.getId() != null ? dt.getId() : dt.getName(), datatype);
 		}
 	}
-	
+
+	public static BaseType parseBasedOn(DataType dt) {
+		return new BaseType(dt.getName(), dt.getType());
+	}
+
 	public static BaseType parseBase(DataType dt) {
 		return new BaseType(dt.getName(), dt.getNodeType());
 	}
