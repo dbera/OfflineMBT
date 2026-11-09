@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import nl.asml.matala.server.api.FileContent;
+import nl.asml.matala.server.api.FileHandler;
 import nl.asml.matala.server.api.FileServerApi;
 import nl.asml.matala.server.api.FileWriteResult;
 import nl.asml.matala.server.api.ServerApiException;
@@ -34,8 +35,12 @@ public class FileServerApiImpl implements FileServerApi {
     /** Maximum file size to read (100 MB). Prevents DoS attacks via large file requests. */
     private static final long MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 MB
 
+	private final List<FileHandler> handlers = new ArrayList<>();
 
-    public void init(String rootPath) {
+
+    @Override
+    public void init(String rootPath, List<FileHandler> handlers) {
+		this.handlers.addAll(handlers);
 		this.rootPath = Path.of(rootPath).toAbsolutePath().normalize();
 	}
 
@@ -53,7 +58,20 @@ public class FileServerApiImpl implements FileServerApi {
                 if (fileSize > MAX_FILE_SIZE) {
                     throw new ServerApiException(413, "File too large (max " + (MAX_FILE_SIZE / (1024 * 1024)) + " MB)");
                 }
-                byte[] content = Files.readAllBytes(normalizedPath);
+                
+                // Find the first handler that can handle this path
+                byte[] content = null;
+                for (FileHandler handler : handlers) {
+                    if (handler.canHandle(normalizedPath)) {
+                        content = handler.read(normalizedPath);
+                        break;
+                    }
+                }
+                
+                if (content == null) {
+                    throw new ServerApiException(500, "No handler available to read file");
+                }
+                
                 String mimeType = getMimeType(normalizedPath);
                 return new FileContent(path, content, mimeType);
             }
@@ -85,14 +103,21 @@ public class FileServerApiImpl implements FileServerApi {
     public FileWriteResult createFile(String path, byte[] content) throws ServerApiException {
         var normalizedPath = validateAndNormalize(path);
 
-        try {
-            Files.createDirectories(normalizedPath.getParent());
-            Files.write(normalizedPath, content,
-                    StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
-            return new FileWriteResult(path, "File created successfully", true);
-        } catch (IOException e) {
-            throw new ServerApiException(500, "Cannot create or write file", e);
+        // Find the first handler that can handle this path
+        FileHandler handler = null;
+        for (FileHandler h : handlers) {
+            if (h.canHandle(normalizedPath)) {
+                handler = h;
+                break;
+            }
         }
+        
+        if (handler == null) {
+            throw new ServerApiException(500, "No handler available to write file");
+        }
+        
+        handler.write(normalizedPath, content);
+        return new FileWriteResult(path, "File created successfully", true);
     }
 
     @Override
@@ -103,13 +128,21 @@ public class FileServerApiImpl implements FileServerApi {
             throw new ServerApiException(404, "File not found");
         }
 
-        try {
-            Files.write(normalizedPath, content,
-                    StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
-            return new FileWriteResult(path, "File updated successfully", true);
-        } catch (IOException e) {
-            throw new ServerApiException(500, "Cannot update file", e);
+        // Find the first handler that can handle this path
+        FileHandler handler = null;
+        for (FileHandler h : handlers) {
+            if (h.canHandle(normalizedPath)) {
+                handler = h;
+                break;
+            }
         }
+        
+        if (handler == null) {
+            throw new ServerApiException(500, "No handler available to write file");
+        }
+        
+        handler.write(normalizedPath, content);
+        return new FileWriteResult(path, "File updated successfully", true);
     }
 
     // ---- Internal Helpers ----
