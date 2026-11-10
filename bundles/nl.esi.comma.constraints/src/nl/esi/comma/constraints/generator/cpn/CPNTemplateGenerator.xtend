@@ -55,6 +55,9 @@ import org.eclipse.xtext.nodemodel.util.NodeModelUtils
 
 import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
 import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
+import nl.esi.xtext.types.types.RecordTypeDecl
+import nl.esi.xtext.expressions.expression.Expression
+import nl.esi.xtext.expressions.expression.ExpressionRecordAccess
 
 class CPNTemplateGenerator 
 {
@@ -77,10 +80,10 @@ class CPNTemplateGenerator
         return results
     }
     
-    def isStepNamePresent(List<RefInfo> labelList, String name) {
-        for(label : labelList) { if(label.refName.equals(name)) return true }
-        return false
-    }
+//    def isStepNamePresent(List<RefInfo> labelList, String name) {
+//        for(label : labelList) { if(label.refName.equals(name)) return true }
+//        return false
+//    }
 
     def generateTSpecModel(TestDefinition td, List<RefInfo> labelList) 
     {
@@ -116,33 +119,32 @@ class CPNTemplateGenerator
                         element-label "«step.typeName»"
                         case default
                         with-inputs p«_idx», StepMetaData
-                        «IF isStepNamePresent(labelList,step.stepVar.name)»
-                            produces-outputs «step.stepVar.name»
+                        «IF step.inputName(labelList) !== null»
+                            produces-outputs «step.inputName(labelList)»
+«««                        «IF isStepNamePresent(labelList,step.stepVar.name)»                            
+«««                            produces-outputs «step.stepVar.name»
                             updates:
                                 // Constructor
-                                «step.stepVar.name» := «Utils.defaultValue(step.stepVar.type.type, step.stepVar.name)»
-                            «FOR act : step.input»
+                                «step.inputName(labelList)» := «Utils.defaultValue(step.inputType, step.inputName(labelList))»
+«««                                «step.stepVar.name» := «Utils.defaultValue(step.stepVar.type.type, step.stepVar.name)»
+«««                            «FOR act : step.input»
+                            «FOR act : step.context + step.input + step.sut»
                                 «IF act.exp.eAllContents.filter(ExpressionVariable).isEmpty»
                                     // ReferenceExp. TODO Skip.
-                                    «NodeModelUtils.getNode(act).text.replaceAll("(?m)^\\s*$\\R?", "")»
+                                    «step.inputName(labelList)».«act.fieldAccess.fieldPath.tail.join('.')» := «NodeModelUtils.getTokenText(NodeModelUtils.getNode(act.exp))»
+«««                                    «NodeModelUtils.getNode(act).text.replaceAll("(?m)^\\s*$\\R?", "")»
                                 «ENDIF»
-«««                            «NodeModelUtils.getNode(act).text.replaceAll("(?m)^\\s*$\\R?", "")»
                             «ENDFOR»
                         «ELSE»
                             produces-outputs any
                         «ENDIF»
                         produces-outputs StepMetaData
                         updates:
-                            «IF step instanceof RunStep»
-                                StepMetaData := StepMetaData {
-                                    steps = <map<string,string>>{
-                                        "stepid" -> "«step.stepVar.name»"
-                                    }
+                            StepMetaData := StepMetaData {
+                                steps = <map<string,string>>{
+                                    "stepid" -> "«step.stepVar.name»"
                                 }
-                            «ELSE»
-                                StepMetaData := StepMetaData
-                            «ENDIF»
-                             
+                            }
                         produces-outputs p«_idx+1»
                         «{_idx++ ""}»
                     «ENDIF»
@@ -187,15 +189,19 @@ class CPNTemplateGenerator
                     element-label "«step.typeName»"
                     case default
                     with-inputs p«_idx», StepMetaData
-                    «IF isStepNamePresent(labelList,step.stepVar.name)»
-                        produces-outputs «step.stepVar.name»
+                    «IF step.inputName(labelList) !== null»
+                        produces-outputs «step.inputName(labelList)»
+«««                    «IF isStepNamePresent(labelList,step.stepVar.name)»
+«««                        produces-outputs «step.stepVar.name»
                         updates:
                             // Constructor
-                            «step.stepVar.name» := «Utils.defaultValue(step.stepVar.type.type, step.stepVar.name)»
-                        «FOR act : step.input»
+                            «step.inputName(labelList)» := «Utils.defaultValue(step.inputType, step.inputName(labelList))»
+«««                            «step.stepVar.name» := «Utils.defaultValue(step.stepVar.type.type, step.stepVar.name)»
+                        «FOR act : step.context + step.input + step.sut»
                             «IF act.exp.eAllContents.filter(ExpressionVariable).isEmpty»
                                 // ReferenceExp. TODO Skip.
-                                «NodeModelUtils.getNode(act).text.replaceAll("(?m)^\\s*$\\R?", "")»
+                                «step.inputName(labelList)».«act.fieldAccess.fieldPath.tail.join('.')» := «NodeModelUtils.getTokenText(NodeModelUtils.getNode(act.exp))»
+«««                                «NodeModelUtils.getNode(act).text.replaceAll("(?m)^\\s*$\\R?", "")»
                             «ENDIF»
                         «ENDFOR»
                     «ELSE»
@@ -203,15 +209,11 @@ class CPNTemplateGenerator
                     «ENDIF»
                     produces-outputs StepMetaData
                     updates:
-                        «IF step instanceof RunStep»
-                            StepMetaData := StepMetaData {
-                                steps = <map<string,string>>{
-                                    "stepid" -> "«step.stepVar.name»"
-                                }
+                        StepMetaData := StepMetaData {
+                            steps = <map<string,string>>{
+                                "stepid" -> "«step.stepVar.name»"
                             }
-                        «ELSE»
-                            StepMetaData := StepMetaData
-                        «ENDIF»
+                        }
                     produces-outputs p«_idx+1»
                     «{_idx++ ""}»
                 «ENDIF»
@@ -264,19 +266,23 @@ class CPNTemplateGenerator
                 case default
                 with-inputs p0, StepMetaData
                 
-                «IF isStepNamePresent(labelList, boundaryStep.stepVar.name)»
-                    produces-outputs «boundaryStep.stepVar.name»
+                «IF boundaryStep.inputName(labelList) !== null»
+                    produces-outputs «boundaryStep.inputName(labelList)»
+«««                «IF isStepNamePresent(labelList, boundaryStep.stepVar.name)»
+«««                    produces-outputs «boundaryStep.stepVar.name»
                     updates:
-                        «boundaryStep.stepVar.name» :=
-                            «Utils.defaultValue(
-                                boundaryStep.stepVar.type.type,
-                                boundaryStep.stepVar.name
-                            )»
-                    «FOR action : boundaryStep.input»
+                        «boundaryStep.inputName(labelList)» := «Utils.defaultValue(boundaryStep.inputType, boundaryStep.inputName(labelList))»
+«««                        «boundaryStep.stepVar.name» :=
+«««                            «Utils.defaultValue(
+«««                                boundaryStep.stepVar.type.type,
+«««                                boundaryStep.stepVar.name
+«««                            )»
+                    «FOR action : boundaryStep.context + boundaryStep.input + boundaryStep.sut»
                         «IF action.exp.eAllContents
                             .filter(ExpressionVariable).isEmpty»
-                            «NodeModelUtils.getNode(action).text
-                                .replaceAll("(?m)^\\s*$\\R?", "")»
+                            «boundaryStep.inputName(labelList)».«action.fieldAccess.fieldPath.tail.join('.')» := «NodeModelUtils.getTokenText(NodeModelUtils.getNode(action.exp))»
+«««                            «NodeModelUtils.getNode(action).text
+«««                                .replaceAll("(?m)^\\s*$\\R?", "")»
                         «ENDIF»
                     «ENDFOR»
                 «ELSE»
@@ -284,16 +290,11 @@ class CPNTemplateGenerator
                 «ENDIF»
                 produces-outputs StepMetaData
                 updates:
-                    «IF boundaryStep instanceof RunStep»
-                        StepMetaData := StepMetaData {
-                            steps = <map<string,string>>{
-                                "stepid" -> "«boundaryStep.stepVar.name»"
-                            }
+                    StepMetaData := StepMetaData {
+                        steps = <map<string,string>>{
+                            "stepid" -> "«boundaryStep.stepVar.name»"
                         }
-                    «ELSE»
-                        StepMetaData := StepMetaData
-                    «ENDIF»
-
+                    }
                 produces-outputs p1
             «ENDIF»
         }
@@ -335,32 +336,30 @@ class CPNTemplateGenerator
                                 element-label "«step.typeName»"
                                 case default
                                 with-inputs p«_idx»,StepMetaData
-                                «IF isStepNamePresent(labelList,step.stepVar.name)»
-                                    produces-outputs «step.stepVar.name»
+                                «IF step.inputName(labelList) !== null»
+                                    produces-outputs «step.inputName(labelList)»
+«««                                «IF isStepNamePresent(labelList,step.stepVar.name)»
+«««                                    produces-outputs «step.stepVar.name»
                                     updates:
-                                        «step.stepVar.name» := «Utils.defaultValue(step.stepVar.type.type, step.stepVar.name)»
-                                    «FOR act : step.input»
+                                        «step.inputName(labelList)» := «Utils.defaultValue(step.inputType, step.inputName(labelList))»
+«««                                        «step.stepVar.name» := «Utils.defaultValue(step.stepVar.type.type, step.stepVar.name)»
+                                    «FOR act : step.context + step.input + step.sut»
                                         «IF act.exp.eAllContents.filter(ExpressionVariable).isEmpty»
                                             // ReferenceExp. TODO Skip.
-                                            «NodeModelUtils.getNode(act).text.replaceAll("(?m)^\\s*$\\R?", "")»
+                                            «step.inputName(labelList)».«act.fieldAccess.fieldPath.tail.join('.')» := «NodeModelUtils.getTokenText(NodeModelUtils.getNode(act.exp))»
+«««                                            «NodeModelUtils.getNode(act).text.replaceAll("(?m)^\\s*$\\R?", "")»
                                         «ENDIF»
-«««                                    «NodeModelUtils.getNode(act).text.replaceAll("(?m)^\\s*$\\R?", "")»
                                     «ENDFOR»
                                 «ELSE»
                                     produces-outputs any
                                 «ENDIF»
                                 produces-outputs StepMetaData
                                 updates:
-                                    «IF step instanceof RunStep»
-                                        StepMetaData := StepMetaData {
-                                            steps = <map<string,string>>{
-                                                "stepid" -> "«step.stepVar.name»"
-                                            }
+                                    StepMetaData := StepMetaData {
+                                        steps = <map<string,string>>{
+                                            "stepid" -> "«step.stepVar.name»"
                                         }
-                                    «ELSE»
-                                        StepMetaData := StepMetaData
-                                    «ENDIF»
-
+                                    }
                                 «IF _idx == idx - 1»
                                     produces-outputs endoftrace
                                 «ENDIF»
@@ -978,6 +977,8 @@ class CPNTemplateGenerator
             )
             # select the requested input region in the matched consumer step.
             target = reference_path(check["target"])
+            if target is not None:
+                target = (target_id, (("field", "input"),) + target[1])
             assignments = check["assignments"].get(target_id, [])
             regions = select_target_regions(assignments, target)
 
@@ -1220,5 +1221,22 @@ class CPNTemplateGenerator
 
     private def getTypeName(AbstractStep step) {
         return step.stepVar.type.typeName
+    }
+    // type of the step-type record's 'input' field, e.g. ExecutePrinterInput
+    private def inputType(AbstractStep step) {
+        (step.stepVar.type.type as RecordTypeDecl).allFields.findFirst[name == 'input']?.type
+    }
+    
+    // constraint input variable whose type is the step's input type, e.g. PrintFactoryA3DPrinterInput
+    private def inputName(AbstractStep step, List<RefInfo> labelList) {
+        labelList.findFirst[refType == step.inputType?.typeName]?.refName
+    }
+    
+    // field names below the step variable: step_x.input.request.id -> [input, request, id]
+    private def Iterable<String> fieldPath(Expression access) {
+        if (access instanceof ExpressionRecordAccess) {
+            return access.record.fieldPath + #[access.field.name]
+        }
+        return #[]
     }
 }

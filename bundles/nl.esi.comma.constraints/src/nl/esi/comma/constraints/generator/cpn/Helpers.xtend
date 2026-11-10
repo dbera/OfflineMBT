@@ -15,6 +15,7 @@ package nl.esi.comma.constraints.generator.cpn
 
 import java.util.List
 import java.util.Map
+import nl.esi.comma.constraints.constraints.Act
 import nl.esi.comma.constraints.constraints.Ref
 import nl.esi.comma.constraints.constraints.RefAction
 import nl.esi.comma.constraints.constraints.ReferenceLink
@@ -38,8 +39,9 @@ import org.eclipse.emf.common.util.EList
 import org.eclipse.emf.ecore.EObject
 import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.nodemodel.util.NodeModelUtils
-import org.eclipse.xtext.resource.XtextResource
-import org.eclipse.xtext.serializer.ISerializer
+
+import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
+import nl.esi.comma.testspecification.testspecification.AbstractStep
 
 class Helpers {
     def getRefName(Ref ref){
@@ -53,7 +55,7 @@ class Helpers {
         var refInfo = new RefInfo
         if(ref instanceof RefAction) {
             var inputVar = ref.action.inputs.head
-            refInfo = new RefInfo(inputVar.type.type.name,  inputVar.name)
+            refInfo = new RefInfo(inputVar.type.type.name, ref.action.name + "_" + inputVar.name)
         }
         return refInfo
     }
@@ -197,19 +199,39 @@ class Helpers {
     
     def String cleanSerialize(Expression expr) {
         if (expr === null || expr.eResource === null) { return "" }
-        val resource = expr.eResource as XtextResource
-        val serializer = resource.resourceServiceProvider.get(ISerializer)
-        return serializer.serialize(expr).trim
-//        return serialize(expr).trim
+        return expr.serialize[ obj | obj.actionVariableName ].trim
     }
-
+    
     def String cleanSerialize(AssignmentAction expr) {
         if (expr === null || expr.eResource === null) { return "" }
-        val resource = expr.eResource as XtextResource
-        val serializer = resource.resourceServiceProvider.get(ISerializer)
-        return serializer.serialize(expr).trim
-//        return serialize(expr).trim
+        return expr.serialize[ obj | obj.actionVariableName ].trim
     }
+    
+    // a variable declared on an action (Input/Output) becomes <Action>_<variable>; others (e.g. ctx) are untouched
+    private def CharSequence actionVariableName(EObject obj) {
+        if (obj instanceof ExpressionVariable) {
+            val container = obj.variable.eContainer
+            if (container instanceof Act) {
+                return container.name + "_" + obj.variable.name
+            }
+        }
+        return null
+    }
+//    def String cleanSerialize(Expression expr) {
+//        if (expr === null || expr.eResource === null) { return "" }
+//        val resource = expr.eResource as XtextResource
+//        val serializer = resource.resourceServiceProvider.get(ISerializer)
+//        return serializer.serialize(expr).trim
+////        return serialize(expr).trim
+//    }
+//
+//    def String cleanSerialize(AssignmentAction expr) {
+//        if (expr === null || expr.eResource === null) { return "" }
+//        val resource = expr.eResource as XtextResource
+//        val serializer = resource.resourceServiceProvider.get(ISerializer)
+//        return serializer.serialize(expr).trim
+////        return serialize(expr).trim
+//    }
     
     def escapePythonString(String value) {
     value
@@ -228,15 +250,17 @@ class Helpers {
             check.put("target", serializer.serialize(link.target)) //serialized target expression using tspec2json serializer
             check.put("source", serializer.serialize(link.source)) //serialized source expression using tspec2json serializer
             check.put("assignments",
-                getCandidateAssignments(td, rootVariable(link.target)?.name, serializer)) //concrete runstep's target and value
+                getCandidateAssignments(td, (rootVariable(link.target)?.eContainer as Act)?.name, serializer)) //concrete runstep's target and value
+//                getCandidateAssignments(td, rootVariable(link.target)?.name, serializer)) //concrete runstep's target and value
             check
         ].toList
     }
 
-    def getCandidateAssignments(TestDefinition td, String inputName, SemanticExpressionJsonSerializer serializer) {
+    def getCandidateAssignments(TestDefinition td, String actionName, SemanticExpressionJsonSerializer serializer) {
         val Map<String, Object> result = newLinkedHashMap
-        for (step : EcoreUtil2.getAllContentsOfType(td, RunStep)
-            .filter[stepVar?.name == inputName]) {
+        for (step : EcoreUtil2.getAllContentsOfType(td, AbstractStep).filter[stepVar?.type?.type?.name == actionName]) {
+//        for (step : EcoreUtil2.getAllContentsOfType(td, RunStep)
+//            .filter[stepVar?.name == inputName]) {
             val assignments = EcoreUtil2
                 .getAllContentsOfType(step, RecordFieldAssignmentAction)
                 .map [ assignment |

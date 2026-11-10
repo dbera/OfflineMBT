@@ -435,7 +435,10 @@ class ConformanceDashboardRenderer {
         </head>
         <body>
             <header>
-                <h1>Conformance</h1>
+                <div class="page-heading">
+                    <div><p class="eyebrow">CONSTRAINT ANALYSIS</p><h1>Conformance dashboard</h1></div>
+                    <div id="run-overview" aria-label="Run overview"></div>
+                </div>
                 <div class="file-meta">
                     <p><strong>Test case:</strong> <span id="testcase"></span></p>
                     <p><strong>Constraint file:</strong> <span id="constraint-file"></span></p>
@@ -443,6 +446,9 @@ class ConformanceDashboardRenderer {
             </header>
             <main>
                 <aside id="constraints-panel">
+                    <label class="search-label" for="constraint-search">Find a constraint</label>
+                    <input id="constraint-search" type="search" placeholder="Name or template..." autocomplete="off">
+                    <p id="constraint-count" class="muted" aria-live="polite"></p>
                     <nav aria-label="Constraints">
                         <section>
                             <h2>Violated Constraints</h2>
@@ -453,6 +459,7 @@ class ConformanceDashboardRenderer {
                             <div id="accepted"></div>
                         </section>
                     </nav>
+                    <p id="constraint-empty" class="empty-state" hidden>No matching constraints. Clear the search to see all results.</p>
                     <section id="detail" aria-live="polite">
                         <p class="muted">Select a constraint.</p>
                     </section>
@@ -461,6 +468,7 @@ class ConformanceDashboardRenderer {
                 <div id="inspection-divider" class="pane-divider horizontal" role="separator" aria-label="Constraint inspection height" aria-orientation="horizontal" tabindex="0"></div>
                 <section id="inspection-panel" aria-label="Selected constraint">
                     <div class="inspection-toolbar">
+                        <span id="selection-status" class="status-badge">Select a constraint</span>
                         <label><input id="full-constraint" type="checkbox" checked> Full definition</label>
                         <label><input id="all-diagnostics" type="checkbox"> All diagnostics</label>
                         <button id="reset-layout" type="button">Reset layout</button>
@@ -470,26 +478,34 @@ class ConformanceDashboardRenderer {
                     <div id="diagnostics-host"></div>
                 </section>
                 <section id="testcase-panel">
-                    <h2>Concrete Test Case</h2>
-                    <div class="trace-toolbar">
-                        <button id="previous-context" type="button" disabled>
-                            Previous context
-                        </button>
-                        <span id="context-position" class="muted" aria-live="polite"></span>
-                        <button id="next-context" type="button" disabled>
-                            Next context
-                        </button>
+                    <div class="trace-heading">
+                        <h2>Concrete trace <span id="trace-count" class="muted"></span></h2>
+                        <div class="trace-toolbar">
+                            <button id="previous-context" type="button" disabled>
+                                Previous context
+                            </button>
+                            <span id="context-position" class="muted" aria-live="polite"></span>
+                            <button id="next-context" type="button" disabled>
+                                Next context
+                            </button>
+                        </div>
                     </div>
                     <div class="inspection-toolbar">
                         <label><input id="intermediate-steps" type="checkbox"> Intermediate steps</label>
-                        <label><input id="all-steps" type="checkbox" checked> Entire trace</label>
+                        <label><input id="all-steps" type="checkbox"> Entire trace</label>
                         <label><input id="all-lines" type="checkbox"> Unhighlighted lines</label>
-                        <label class="step-split-control">Step split <input id="step-split" type="range" min="25" max="75" value="50" aria-label="Step comparison widths"></label>
+                        <label title="Display only: this is the current step; step[n] is trace step n. Hover over code for the original source."><input id="full-paths" type="checkbox"> Full step IDs in code</label>
+                        <label>View <select id="trace-layout"><option value="stacked">Stacked</option><option value="compare">Compare</option></select></label>
+                        <label class="step-split-control" hidden>Step split <input id="step-split" type="range" min="25" max="75" value="50" aria-label="Step comparison widths"></label>
+                        <button id="collapse-steps" type="button">Collapse steps</button>
                     </div>
-                    <div class="highlight-legend" aria-label="Line highlighting">
-                        <span class="legend-condition">Condition field</span>
-                        <span class="legend-reference">Reference field</span>
-                        <span class="legend-violation">Reference mismatch</span>
+                    <div class="trace-extras">
+                        <div class="highlight-legend" aria-label="Line highlighting">
+                            <span class="legend-condition">Condition field</span>
+                            <span class="legend-reference">Reference field</span>
+                            <span class="legend-violation">Reference mismatch</span>
+                        </div>
+                        <details class="source-block trace-metadata"><summary>Setup &amp; generation settings</summary><pre id="trace-metadata"></pre></details>
                     </div>
                     <pre id="testcase-source" hidden>«safeTestCaseText»</pre>
                     <pre id="constraint-source" hidden>«safeConstraintText»</pre>
@@ -553,7 +569,7 @@ class ConformanceDashboardRenderer {
                 let contextIndex = -1;
                 let selectedResult = null;
 
-                const layoutDefaults = { sidebar: 260, inspection: 38, definition: 50, steps: 50 };
+                const layoutDefaults = { sidebar: 300, inspection: 40, definition: 48, steps: 50 };
                 let layout = { ...layoutDefaults };
                 const layoutKey = "conformance-layout:" + location.pathname;
                 try {
@@ -561,15 +577,18 @@ class ConformanceDashboardRenderer {
                     for (const key of Object.keys(layoutDefaults)) {
                         if (Number.isFinite(saved?.[key])) layout[key] = saved[key];
                     }
-                } catch (error) {}
+                } catch (error) {
+                    console.warn("Could not restore dashboard layout.", error);
+                }
 
                 function applyLayout() {
                     const main = document.querySelector("main");
-                    layout.sidebar = Math.max(180, Math.min(layout.sidebar, Math.max(180, main.clientWidth - 540)));
+                    layout.sidebar = Math.max(220, Math.min(layout.sidebar, 640));
+                    const sidebarWidth = Math.min(layout.sidebar, Math.max(220, main.clientWidth - 600));
                     layout.inspection = Math.max(25, Math.min(65, layout.inspection));
                     layout.definition = Math.max(25, Math.min(75, layout.definition));
                     layout.steps = Math.max(25, Math.min(75, layout.steps));
-                    main.style.setProperty("--sidebar-width", layout.sidebar + "px");
+                    main.style.setProperty("--sidebar-width", sidebarWidth + "px");
                     main.style.setProperty("--inspection-height", layout.inspection + "%");
                     document.querySelector("#inspection-panel").style.setProperty("--definition-width", layout.definition + "fr");
                     document.querySelector("#inspection-panel").style.setProperty("--diagnostics-width", (100 - layout.definition) + "fr");
@@ -577,17 +596,20 @@ class ConformanceDashboardRenderer {
                     traceView.style.setProperty("--step-right-width", (100 - layout.steps) + "%");
                     document.getElementById("step-split").value = layout.steps;
                     for (const [id, key, min, max] of [
-                        ["sidebar-divider", "sidebar", 180, Math.max(180, main.clientWidth - 540)],
+                        ["sidebar-divider", "sidebar", 220, Math.max(220, main.clientWidth - 600)],
                         ["inspection-divider", "inspection", 25, 65],
                         ["definition-divider", "definition", 25, 75]
                     ]) {
                         const divider = document.getElementById(id);
                         divider.setAttribute("aria-valuemin", min);
                         divider.setAttribute("aria-valuemax", max);
-                        divider.setAttribute("aria-valuenow", Math.round(layout[key]));
-                        divider.setAttribute("aria-valuetext", Math.round(layout[key]) + (key === "sidebar" ? " pixels" : " percent"));
+                        const value = key === "sidebar" ? sidebarWidth : layout[key];
+                        divider.setAttribute("aria-valuenow", Math.round(value));
+                        divider.setAttribute("aria-valuetext", Math.round(value) + (key === "sidebar" ? " pixels" : " percent"));
                     }
-                    try { sessionStorage.setItem(layoutKey, JSON.stringify(layout)); } catch (error) {}
+                    try { sessionStorage.setItem(layoutKey, JSON.stringify(layout)); } catch (error) {
+                        console.warn("Could not save dashboard layout.", error);
+                    }
                 }
 
                 for (const [id, key, horizontal] of [
@@ -606,10 +628,10 @@ class ConformanceDashboardRenderer {
                     });
                     divider.addEventListener("pointermove", event => {
                         if (!dragging) return;
-                        const bounds = (key === "definition"
-                            ? document.getElementById("inspection-panel") : document.querySelector("main")).getBoundingClientRect();
+                        const bounds = (key === "sidebar" ? document.querySelector("main")
+                            : document.getElementById("inspection-panel")).getBoundingClientRect();
                         layout[key] = key === "sidebar" ? event.clientX - bounds.left
-                            : horizontal ? 100 * (event.clientY - bounds.top) / bounds.height
+                            : horizontal ? 100 * (event.clientY - document.querySelector("main").getBoundingClientRect().top) / document.querySelector("main").clientHeight
                             : 100 * (event.clientX - bounds.left) / bounds.width;
                         applyLayout();
                     });
@@ -657,7 +679,7 @@ class ConformanceDashboardRenderer {
 
                     function finishCurrentStep() {
                         if (!current) return;
-                        const bodyLines = current.lines.slice(2);
+                        const bodyLines = current.lines;
                         let commonIndent = null;
                         for (const line of bodyLines) {
                             if (!line.trim()) continue;
@@ -682,12 +704,8 @@ class ConformanceDashboardRenderer {
                     }
 
                     for (const line of lines) {
-                        const trimmed = line.trimStart();
-                        const stepPrefix = trimmed.startsWith("step-id ")
-                            ? "step-id "
-                            : trimmed.startsWith("assertion-id ")
-                                ? "assertion-id "
-                                : null;
+                        const trimmed = line.trim();
+                        const marker = /^(step-id|assertion-id)\s+([A-Za-z_]\w*)(?:\s+(?:step-type|assertion-type)\s+(.+))?$/.exec(trimmed);
                         const trailerStart =
                             trimmed.startsWith("generate-file ") ||
                             trimmed.startsWith("step-parameters") ||
@@ -700,29 +718,28 @@ class ConformanceDashboardRenderer {
                             continue;
                         }
 
-                        if (stepPrefix) {
+                        if (marker) {
                             finishCurrentStep();
                             current = {
-                                id: trimmed.slice(stepPrefix.length).trim(),
-                                type: "",
-                                kind: stepPrefix === "assertion-id "
+                                id: marker[2],
+                                type: marker[3] || "",
+                                kind: marker[1] === "assertion-id"
                                     ? "assertion"
                                     : "step",
-                                lines: [line]
+                                lines: []
                             };
                             pastSteps = true;
                             continue;
                         }
 
                         if (current) {
-                            current.lines.push(line);
                             if (trimmed.startsWith("step-type ")) {
                                 current.type =
                                     trimmed.slice("step-type ".length).trim();
                             } else if (trimmed.startsWith("assertion-type ")) {
                                 current.type =
                                     trimmed.slice("assertion-type ".length).trim();
-                            }
+                            } else current.lines.push(line);
                         } else if (pastSteps) {
                             trailer.push(line);
                         } else {
@@ -740,6 +757,24 @@ class ConformanceDashboardRenderer {
                 }
 
                 const trace = parseTrace(traceText);
+                document.getElementById("trace-count").textContent =
+                    trace.steps.length + " steps / " + trace.steps.filter(step => step.kind === "assertion").length + " assertions";
+                document.getElementById("trace-metadata").textContent =
+                    [trace.preamble, trace.trailer].filter(Boolean).join("\n\n") || "No setup or generation settings.";
+
+                function displayType(type) {
+                    return type.replace(/_dot_/g, ".");
+                }
+
+                function displayCode(line, step) {
+                    if (document.getElementById("full-paths").checked) return line;
+                    return line.replace(/"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|\b[A-Za-z_]\w*(?=\.(?:input|output)\b)/g, root => {
+                        if (/^["']/.test(root)) return root;
+                        if (root === step.id) return "this";
+                        const index = trace.steps.findIndex(item => item.id === root);
+                        return index >= 0 ? "step[" + (index + 1) + "]" : root;
+                    });
+                }
 
                 // Shorten generated type qualifiers for display only; keep the source and IDs intact.
                 function shortenInputTypeNames(text) {
@@ -876,21 +911,119 @@ class ConformanceDashboardRenderer {
                         .trim();
                 }
 
-                // Split an access expression into its root variable and dotted field path.
+                // Preserve get/index/key selectors so an exact reference does not highlight a whole list.
                 function referencePathParts(text) {
-                    const cleaned = cleanExpressionText(text)
-                        .replace(/^(get\(\s*)*((input|output)\s+)?/, "")
-                        .replace(/\s+/g, "");
-                    const match = /^[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*/.exec(cleaned);
-                    if (!match) return null;
-                    const segments = match[0].split(".");
-                    return { root: segments[0], path: segments.slice(1).join(".") };
+                    const cleaned = (text || "").trim().replace(/^(input|output)\s+/, "");
+                    let position = 0;
+                    const skip = () => { while (/\s/.test(cleaned[position] || "") && position < cleaned.length) position++; };
+                    function selection() {
+                        skip();
+                        const match = /^(?:-?\d+|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')/.exec(cleaned.slice(position));
+                        if (!match) return null;
+                        position += match[0].length;
+                        const value = match[0];
+                        return /^-?\d+$/.test(value) ? { kind: "index", value: Number(value) }
+                            : { kind: "key", value: value[0] === '"' ? JSON.parse(value) : value.slice(1, -1) };
+                    }
+                    function access() {
+                        skip();
+                        let result;
+                        if (/^get\s*\(/.test(cleaned.slice(position))) {
+                            position += /^get\s*\(/.exec(cleaned.slice(position))[0].length;
+                            result = access();
+                            skip();
+                            if (!result || cleaned[position++] !== ",") return null;
+                            const selected = selection();
+                            skip();
+                            if (!selected || cleaned[position++] !== ")") return null;
+                            result.selectors.push(selected);
+                        } else {
+                            const name = /^[A-Za-z_]\w*/.exec(cleaned.slice(position));
+                            if (!name) return null;
+                            position += name[0].length;
+                            result = { root: name[0], selectors: [] };
+                        }
+                        for (;;) {
+                            skip();
+                            if (cleaned[position] === ".") {
+                                position++;
+                                const field = /^[A-Za-z_]\w*/.exec(cleaned.slice(position));
+                                if (!field) return null;
+                                position += field[0].length;
+                                result.selectors.push({ kind: "field", value: field[0] });
+                            } else if (cleaned[position] === "[") {
+                                position++;
+                                const selected = selection();
+                                skip();
+                                if (!selected || cleaned[position++] !== "]") return null;
+                                result.selectors.push(selected);
+                            } else break;
+                        }
+                        return result;
+                    }
+                    const result = access();
+                    skip();
+                    if (!result || position !== cleaned.length) return null;
+                    result.path = result.selectors.filter(item => item.kind === "field").map(item => item.value).join(".");
+                    return result;
                 }
 
                 function pathsOverlap(left, right) {
-                    return left === right ||
+                    return !left || !right || left === right ||
                         left.startsWith(right + ".") ||
                         right.startsWith(left + ".");
+                }
+
+                // Locate a literal subvalue without evaluating TSPEC expressions.
+                function referenceValueRange(text, assigned, selected) {
+                    if (!selected) return null;
+                    const common = Math.min(assigned.length, selected.length);
+                    for (let i = 0; i < common; i++) {
+                        if (assigned[i].kind !== selected[i].kind || assigned[i].value !== selected[i].value) return null;
+                    }
+                    let start = text.indexOf(":=") + 2;
+                    let end = text.length;
+                    for (const selector of selected.slice(common)) {
+                        const value = text.slice(start, end);
+                        const opening = /^\s*(?:<[^>]+>\s*)?(?:[A-Za-z_]\w*\s*)?([\[{])/.exec(value);
+                        if (!opening) return null;
+                        const innerStart = start + opening[0].length;
+                        const entries = [];
+                        let depth = 0, quote = "", entryStart = innerStart;
+                        for (let i = innerStart; i < end; i++) {
+                            const character = text[i];
+                            if (quote) {
+                                if (character === "\\") i++;
+                                else if (character === quote) quote = "";
+                            } else if (character === '"' || character === "'") quote = character;
+                            else if ("([{".includes(character)) depth++;
+                            else if (")]}".includes(character)) {
+                                if (depth === 0) {
+                                    if (text.slice(entryStart, i).trim()) entries.push({ start: entryStart, end: i });
+                                    break;
+                                }
+                                depth--;
+                            } else if (character === "," && depth === 0) {
+                                entries.push({ start: entryStart, end: i });
+                                entryStart = i + 1;
+                            }
+                        }
+                        let entry;
+                        if (selector.kind === "index" && opening[1] === "[") entry = entries[selector.value];
+                        else if (selector.kind === "field" && opening[1] === "{") {
+                            entry = entries.find(item =>
+                                /^\s*([A-Za-z_]\w*)\s*=/.exec(text.slice(item.start, item.end))?.[1] === selector.value);
+                            if (entry) {
+                                entry = { start: entry.start + text.slice(entry.start, entry.end).indexOf("=") + 1, end: entry.end };
+                            }
+                        }
+                        if (!entry) return null;
+                        start = entry.start;
+                        end = entry.end;
+                    }
+                    while (start < end && /\s/.test(text[start])) start++;
+                    while (end > start && /\s/.test(text[end - 1])) end--;
+                    return { start, end };
                 }
 
                 // Split on commas that are not nested in brackets or quotes.
@@ -966,13 +1099,13 @@ class ConformanceDashboardRenderer {
                 }
 
                 // Field paths mentioned in the where/with clauses of the event role this step plays.
-                function conditionPathsFor(result, roles, inputName) {
+                function conditionPathsFor(result, roles, inputName, step) {
                     const paths = [];
-                    if (!result || !roles || !inputName) return paths;
+                    if (!result || !roles) return paths;
                     const definition = extractConstraintDefinition(
                         result.constraintName || result.constraint
                     ).replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|\s)\/\/.*$/gm, "$1");
-                    let role = "";
+                    let role = "event";
                     for (const raw of definition.split(/\r?\n/)) {
                         const text = raw.trim();
                         if (/^(if|whenever)\b/.test(text)) role = "activation";
@@ -980,9 +1113,24 @@ class ConformanceDashboardRenderer {
                         else if (/^with\s+no\b/.test(text)) role = "blocker";
                         else if (/^must/.test(text)) role = "";
                         if (!role || !roles.has(role)) continue;
-                        for (const match of text.matchAll(/\b[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)+/g)) {
+                        for (const match of text.replace(/"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'/g, '""').matchAll(/\b[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*/g)) {
                             const parts = referencePathParts(match[0]);
-                            if (parts && parts.root === inputName) paths.push(parts.path);
+                            if (parts && (parts.root === "Input" || parts.root === inputName)) paths.push(parts.path);
+                        }
+                        for (const diagnostic of result.diagnostics || []) {
+                            for (const [field, eventRole] of [
+                                ["activationEvent", "activation"], ["targetEvent", "target"],
+                                ["blockerEvent", "blocker"], ["event", "event"]
+                            ]) {
+                                const event = diagnostic[field];
+                                if (!event || !roles.has(eventRole) || (event.name && event.name !== step.type)) continue;
+                                if (event.stepIds?.length && !event.stepIds.includes(step.id)) continue;
+                                const expressions = [event.whereConcrete, event.whereCorrelation, event.correlationBinding].filter(Boolean).join(" ");
+                                for (const match of expressions.replace(/"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'/g, '""').matchAll(/\b[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*/g)) {
+                                    const parts = referencePathParts(match[0]);
+                                    if (parts && [inputName, "Input", step.type + "_Input"].includes(parts.root)) paths.push(parts.path);
+                                }
+                            }
                         }
                     }
                     return paths;
@@ -994,14 +1142,14 @@ class ConformanceDashboardRenderer {
                     const lines = step.content.split("\n");
                     const result = selectedResult;
                     const inputName =
-                        (/^\s*step-input\s+(\S+)/m.exec(step.content) || [])[1] || "";
+                        (/^\s*(?:step|assertion)-input[ \t]+([A-Za-z_]\w*)[ \t]*$/m.exec(step.content) || [])[1] || "";
                     const selectedContext = contexts[contextIndex];
                     const inContext = !selectedContext || selectedContext.stepIds.has(step.id);
                     const stepRoles = new Set(selectedContext?.roles.get(step.id) || selectedTraceRoles.get(step.id) || []);
                     if (stepRoles.has("related")) stepRoles.add("target");
                     const conditionPaths =
-                        inContext ? conditionPathsFor(result, stepRoles, inputName) : [];
-                    const links = result && inContext ? selectedReferenceLinks(result) : [];
+                        inContext ? conditionPathsFor(result, stepRoles, inputName, step) : [];
+                    const links = result && inContext && stepRoles.has("target") ? selectedReferenceLinks(result) : [];
                     const violations = (result?.diagnostics || []).filter(diagnostic =>
                         inContext && (!selectedContext || selectedContext.diagnostics.has(diagnostic)) &&
                         diagnostic.kind === "unsatisfiedReference" &&
@@ -1016,6 +1164,7 @@ class ConformanceDashboardRenderer {
 
                     const classes = lines.map(() => "");
                     const violationStarts = new Set();
+                    const mismatchRanges = new Map();
                     const startPattern =
                         /^\s*([A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*)\s*:=/;
                     const starts = [];
@@ -1035,14 +1184,21 @@ class ConformanceDashboardRenderer {
                             }
                         }
                         const statement = referencePathParts(start.name);
-                        if (!statement || (inputName && statement.root !== inputName)) return;
+                        if (!statement) return;
+                        // Context, input and SUT sections all assign fields below the same step.input root.
+                        if (statement.root === step.id && statement.selectors[0]?.value === "input") {
+                            statement.selectors.shift();
+                            statement.path = statement.selectors.map(item => item.value).join(".");
+                        } else if (!inputName || statement.root !== inputName) return;
 
-                        const violation = violations.find(diagnostic => {
+                        const matchingViolations = violations.filter(diagnostic => {
                             const target = referencePathParts(diagnostic.target);
                             return target && pathsOverlap(statement.path, target.path);
                         });
+                        const violation = matchingViolations.length > 0;
                         const relevant = violation || links.some(link =>
-                            (!inputName || link.target.root === inputName) &&
+                            (link.target.root === "Input" || link.target.root === inputName ||
+                                link.target.root === step.type + "_Input") &&
                             pathsOverlap(statement.path, link.target.path)
                         );
                         const condition = conditionPaths.some(path =>
@@ -1062,17 +1218,61 @@ class ConformanceDashboardRenderer {
                             }
                         }
                         if (violation) violationStarts.add(start.index);
+                        if (violation) {
+                            const text = lines.slice(start.index, end).join("\n");
+                            const ranges = matchingViolations.map(diagnostic => referenceValueRange(text, statement.selectors,
+                                referencePathParts(diagnostic.target)?.selectors));
+                            for (const range of ranges.filter(Boolean)) {
+                                let offset = 0;
+                                for (let i = start.index; i < end; i++) {
+                                    const from = Math.max(0, range.start - offset);
+                                    const to = Math.min(lines[i].length, range.end - offset);
+                                    if (to > from) {
+                                        if (!mismatchRanges.has(i)) mismatchRanges.set(i, []);
+                                        mismatchRanges.get(i).push({ start: from, end: to });
+                                    }
+                                    // Keep the assignment as context; mark only the selected subvalue as the mismatch.
+                                    if (ranges.every(Boolean)) classes[i] = "line-relevant";
+                                    offset += lines[i].length + 1;
+                                }
+                            }
+                        }
                     });
 
                     let firstViolation = null;
                     lines.forEach((line, index) => {
                         const element = document.createElement("span");
                         element.className = ("code-line " + classes[index]).trim();
-                        element.textContent = line || " ";
+                        element.textContent = displayCode(line, step) || " ";
+                        const mismatches = mismatchRanges.get(index);
+                        if (mismatches) {
+                            element.replaceChildren();
+                            const merged = [];
+                            for (const range of mismatches.sort((a, b) => a.start - b.start)) {
+                                const previous = merged[merged.length - 1];
+                                if (previous && range.start <= previous.end) previous.end = Math.max(previous.end, range.end);
+                                else merged.push({ ...range });
+                            }
+                            let offset = 0;
+                            for (const mismatch of merged) {
+                                const mark = document.createElement("mark");
+                                mark.className = "reference-mismatch";
+                                mark.textContent = displayCode(line.slice(mismatch.start, mismatch.end), step);
+                                mark.title = "Reference mismatch: " + line.slice(mismatch.start, mismatch.end);
+                                element.append(document.createTextNode(displayCode(line.slice(offset, mismatch.start), step)), mark);
+                                if (!firstViolation) firstViolation = mark;
+                                offset = mismatch.end;
+                            }
+                            element.append(document.createTextNode(displayCode(line.slice(offset), step)));
+                        }
+                        element.title = line;
+                        if (/^\s*(?:step|assertion)-(?:context|input|sut|items)\b/.test(line)) {
+                            element.classList.add("code-section");
+                        }
                         if (classes[index]) {
-                            element.title = classes[index] === "line-violation" ? "Reference mismatch"
+                            element.title = (classes[index] === "line-violation" ? "Reference mismatch"
                                 : classes[index] === "line-condition" ? "Field used by a constraint condition"
-                                : "Field selected by a reference check";
+                                : "Field selected by a reference check") + "\n" + line;
                         }
                         if (violationStarts.has(index) && !firstViolation) {
                             firstViolation = element;
@@ -1080,6 +1280,12 @@ class ConformanceDashboardRenderer {
                         pre.append(element);
                     });
                     pre.classList.toggle("has-highlights", classes.some(Boolean));
+                    if (classes.some(Boolean)) {
+                        const hint = document.createElement("span");
+                        hint.className = "code-hint";
+                        hint.textContent = "Relevant fields shown. Enable Unhighlighted lines to inspect the complete step.";
+                        pre.prepend(hint);
+                    }
                     return { pre, firstViolation };
                 }
 
@@ -1089,11 +1295,15 @@ class ConformanceDashboardRenderer {
                         !hasTargets || contextIndex <= 0;
                     document.querySelector("#next-context").disabled =
                         !hasTargets || contextIndex >= contexts.length - 1;
+                    document.querySelector("#all-steps").disabled = !hasTargets;
+                    document.querySelector("#all-steps").title = hasTargets
+                        ? "Show every step, not just this diagnostic context"
+                        : "All steps are shown because no diagnostic context is available";
                     document.querySelector("#context-position").textContent =
                         hasTargets
                             ? "Context " + (contextIndex + 1) + " of " + contexts.length +
                                 " / step " + (trace.steps.findIndex(step => step.id === contexts[contextIndex].focusId) + 1)
-                            : "No diagnostic context";
+                            : "No diagnostic context / showing all steps";
                 }
 
                 // Keep large step bodies out of the DOM until the user opens that step.
@@ -1117,6 +1327,7 @@ class ConformanceDashboardRenderer {
                     sequence.setAttribute("aria-label", "Test step sequence");
                     const panels = document.createElement("div");
                     panels.className = "trace-panels";
+                    panels.classList.toggle("compare", document.getElementById("trace-layout").value === "compare");
                     panels.setAttribute("role", "region");
                     panels.setAttribute("aria-label", "Test steps in sequence order");
                     panels.tabIndex = 0;
@@ -1125,6 +1336,7 @@ class ConformanceDashboardRenderer {
                     const focusedContext = contexts[contextIndex];
                     updateInspection();
                     traceView.classList.toggle("relevant-lines", !document.querySelector("#all-lines").checked);
+                    traceView.classList.toggle("full-paths", document.getElementById("full-paths").checked);
                     const entireTrace = document.querySelector("#all-steps").checked || !focusedContext;
                     const intermediate = document.querySelector("#intermediate-steps").checked;
                     document.querySelector("#intermediate-steps").disabled = entireTrace;
@@ -1195,23 +1407,23 @@ class ConformanceDashboardRenderer {
                         const roleLabel = document.createElement("span");
                         roleLabel.className = "step-role";
                         roleLabel.textContent = "#" + (stepIndex + 1) + "  " +
-                            (Array.from(roles).map(role => role === "related" ? "Adjacent step" : role).join(" / ") || "Step");
+                            (Array.from(roles).map(role => role === "related" ? "Adjacent step" : role).join(" / ") ||
+                                (step.kind === "assertion" ? "Assertion" : "Run step"));
                         const stepId = document.createElement("span");
                         stepId.className = "step-id";
-                        stepId.textContent = "step-id " + step.id;
+                        stepId.textContent = step.id;
+                        stepId.title = (step.kind === "assertion" ? "assertion-id " : "step-id ") + step.id;
                         const stepType = document.createElement("span");
                         stepType.className = "step-type";
-                        stepType.textContent =
-                            (step.kind === "assertion"
-                                ? "assertion-type "
-                                : "step-type ") + step.type;
+                        stepType.textContent = displayType(step.type);
+                        stepType.title = step.type;
                         summaryLine.append(roleLabel, stepType, stepId);
                         const stepLink = document.createElement("button");
                         stepLink.type = "button";
                         stepLink.className = "sequence-step";
                         for (const role of roles) stepLink.classList.add("role-" + role);
-                        stepLink.textContent = "#" + (stepIndex + 1) + " " + step.type;
-                        stepLink.title = Array.from(roles).join(" / ") + " " + step.id;
+                        stepLink.textContent = "#" + (stepIndex + 1) + " " + displayType(step.type);
+                        stepLink.title = (Array.from(roles).join(" / ") || step.kind) + "\n" + step.type + "\n" + step.id;
                         stepLink.setAttribute("aria-current", focused ? "step" : "false");
                         if (focused) focusedLink = stepLink;
                         stepLink.addEventListener("click", () => {
@@ -1277,10 +1489,17 @@ class ConformanceDashboardRenderer {
                         }
                     }
 
+                    if (!trace.steps.length) {
+                        const empty = document.createElement("p");
+                        empty.className = "empty-state";
+                        empty.textContent = traceText.trim()
+                            ? "No step-id or assertion-id blocks were found. Check the concrete test case format."
+                            : "No concrete test case source was provided.";
+                        panels.append(empty);
+                    }
                     if (scrollToContext) {
                         if (focusedElement) {
-                            panels.scrollLeft += focusedElement.getBoundingClientRect().left - panels.getBoundingClientRect().left;
-                            panels.scrollTop = 0;
+                            panels.scrollTop += focusedElement.getBoundingClientRect().top - panels.getBoundingClientRect().top;
                         }
                         focusedLink?.scrollIntoView({ block: "nearest", inline: "center" });
                     } else {
@@ -1422,6 +1641,9 @@ class ConformanceDashboardRenderer {
                 // Build the selected constraint's diagnostic panel from structured verdict fields.
                 function showResult(result) {
                     selectedResult = result;
+                    const status = document.getElementById("selection-status");
+                    status.textContent = (result.accepted ? "Accepted" : "Violated") + " / " + (result.templateType || "Constraint");
+                    status.classList.toggle("failed", result.accepted === false);
                     traceView.replaceChildren();
                     expandedSteps.clear();
                     collapsedSteps.clear();
@@ -1476,7 +1698,7 @@ class ConformanceDashboardRenderer {
                             roleLabel.textContent = label;
                             const eventDisplayName = document.createElement("span");
                             eventDisplayName.textContent =
-                                eventInfo.name || stepTypeFor(eventInfo.stepIds);
+                                displayType(eventInfo.name || stepTypeFor(eventInfo.stepIds));
                             heading.append(roleLabel, eventDisplayName);
                             eventDetail.append(heading);
 
@@ -1692,7 +1914,7 @@ class ConformanceDashboardRenderer {
                         lineLabel.textContent = label;
                         line.append(lineLabel);
                         const lineText = document.createElement("span");
-                        lineText.textContent = rawLine.trimEnd();
+                        lineText.textContent = text;
                         line.append(lineText);
                         definition.append(line);
                     }
@@ -1708,17 +1930,39 @@ class ConformanceDashboardRenderer {
 
                 const constraintsPanel = document.querySelector("#constraints-panel");
                 document.querySelector("#diagnostics-host").append(detail);
-                for (const id of ["full-constraint", "all-diagnostics", "intermediate-steps", "all-steps", "all-lines"]) {
+                for (const id of ["full-constraint", "all-diagnostics", "intermediate-steps", "all-steps", "all-lines", "full-paths", "trace-layout"]) {
                     document.getElementById(id).addEventListener("change", () => {
                         if (id === "full-constraint" || id === "all-diagnostics") {
                             updateInspection();
                         } else if (id === "all-lines") {
                             traceView.classList.toggle("relevant-lines", !document.getElementById(id).checked);
                         } else {
+                            if (id === "trace-layout") {
+                                document.querySelector(".step-split-control").hidden =
+                                    document.getElementById(id).value !== "compare";
+                            }
                             renderTrace();
                         }
                     });
                 }
+                document.getElementById("collapse-steps").addEventListener("click", () => {
+                    for (const step of traceView.querySelectorAll(".trace-step")) step.open = false;
+                });
+                function filterConstraints() {
+                    exitFocus();
+                    const query = document.getElementById("constraint-search").value.trim().toLowerCase();
+                    let visible = 0;
+                    for (const entry of document.querySelectorAll(".constraint-entry")) {
+                        entry.hidden = !entry.textContent.toLowerCase().includes(query);
+                        if (!entry.hidden) visible++;
+                    }
+                    document.getElementById("constraint-count").textContent = visible + " of " + results.length + " constraints";
+                    document.getElementById("constraint-empty").hidden = visible !== 0;
+                    document.getElementById("constraint-empty").textContent = results.length
+                        ? "No matching constraints. Clear the search to see all results."
+                        : "No constraint results were reported.";
+                }
+                document.getElementById("constraint-search").addEventListener("input", filterConstraints);
                 let focusedEntry = null;
 
                 // The diagnostics panel is moved under the focused entry and back again on exit.
@@ -1811,6 +2055,19 @@ class ConformanceDashboardRenderer {
                 const accepted = results.filter(item => item.accepted === true);
                 addGroup("#failed", failed, false);
                 addGroup("#accepted", accepted, true);
+                for (const [label, count, className] of [
+                    ["Violated", failed.length, "failed"], ["Accepted", accepted.length, "accepted"],
+                    ["Total", results.length, "total"]
+                ]) {
+                    const badge = document.createElement("span");
+                    badge.className = "overview-stat " + className;
+                    const value = document.createElement("strong");
+                    value.textContent = count;
+                    badge.append(value, document.createTextNode(label));
+                    document.getElementById("run-overview").append(badge);
+                }
+                filterConstraints();
+                updateContextControls();
                 renderTrace();
 
                 if (failed.length) {
@@ -1832,13 +2089,24 @@ class ConformanceDashboardRenderer {
     private def String inspectionStyles() {
         '''
         <style>
-            :root { background: #f4f6f7; font-family: "Segoe UI Variable Text", "Segoe UI", sans-serif; --activation-color: #0072b2; --activation-bg: #edf5fa; --target-color: #475569; --target-bg: #f1f3f5; --blocker-color: #a63603; --blocker-bg: #fceee7; }
+            :root { background: #f4f6fa; color: #233047; font: 14px/1.5 "Segoe UI Variable Text", "Segoe UI", sans-serif; --activation-color: #2764a5; --activation-bg: #edf4fc; --target-color: #237a61; --target-bg: #edf8f2; --blocker-color: #b13645; --blocker-bg: #fff0f1; }
             * { box-sizing: border-box; }
             [hidden] { display: none !important; }
-            header { padding: 12px 20px; background: #253b37; }
-            h1 { font-size: 18px; }
+            header { padding: 16px 24px; background: #17283e; border-bottom: 3px solid #4d9dce; }
+            h1 { font-size: 23px; font-weight: 650; letter-spacing: -.4px; }
+            h2 { font-size: 15px; }
+            .page-heading { display: flex; justify-content: space-between; align-items: center; gap: 20px; }
+            .eyebrow { margin: 0 0 2px; color: #adcae2; font-size: 10px; font-weight: 700; letter-spacing: 1.8px; }
+            #run-overview { display: flex; flex-wrap: wrap; gap: 10px; }
+            .overview-stat { display: flex; align-items: center; gap: 8px; padding: 6px 12px; border: 1px solid #526478; border-radius: 7px; color: #e3ebf5; font-size: 12px; }
+            .overview-stat strong { font-size: 21px; line-height: 1.2; color: #fff; }
+            .overview-stat.failed { border-color: #c37b85; }
+            .overview-stat.failed strong { color: #ffc0c7; }
+            .overview-stat.accepted strong { color: #9de0c2; }
+            .file-meta { margin-top: 10px; }
+            .file-meta p { font-size: 12px; color: #c1d0df; }
             .file-meta p { overflow-wrap: anywhere; min-width: 0; }
-            main { grid-template-columns: var(--sidebar-width, 260px) 8px minmax(0, 1fr); grid-template-rows: minmax(180px, var(--inspection-height, 38%)) 8px minmax(0, 1fr); grid-template-areas: "constraints sidebar inspection" "horizontal horizontal horizontal" "testcase testcase testcase"; gap: 0; padding: 0; }
+            main { grid-template-columns: var(--sidebar-width, 300px) 8px minmax(0, 1fr); grid-template-rows: minmax(160px, var(--inspection-height, 40%)) 8px minmax(0, 1fr); grid-template-areas: "constraints sidebar inspection" "constraints sidebar horizontal" "constraints sidebar testcase"; gap: 0; padding: 0; }
             .pane-divider { background: #e6ece9; cursor: col-resize; touch-action: none; position: relative; z-index: 3; }
             .pane-divider::after { content: ""; position: absolute; width: 2px; height: 28px; left: calc(50% - 1px); top: calc(50% - 14px); background: #9caca5; border-radius: 2px; }
             .pane-divider:hover, .pane-divider:focus-visible { background: #b7d4ca; }
@@ -1848,26 +2116,33 @@ class ConformanceDashboardRenderer {
             #inspection-divider { grid-area: horizontal; }
             #definition-divider { grid-column: 2; grid-row: 2; }
             body.resizing { user-select: none; }
-            #constraints-panel { grid-area: constraints; padding: 14px 12px; border-right: 1px solid #d5ddda; }
-            #constraints-panel nav h2 { background: #f4f6f7; font-size: 12px; padding: 10px 0; }
-            .constraint-select { min-width: 0; padding: 10px 8px; border-radius: 4px; }
-            .constraint-select strong { font-size: 12px; font-weight: 600; overflow-wrap: anywhere; }
-            .constraint-select span { margin-top: 4px; font-size: 11px; }
-            .constraint-select { border-left-color: #64748b; }
-            .constraint-select.failed { border-left: 4px double #a63603; }
-            button[aria-current="true"] { outline: 2px solid #253342; }
-            .constraint-entry { margin: 0 0 8px; }
-            .constraint-entry-header > .focus-toggle { padding: 0 6px; font-size: 11px; }
+            #constraints-panel { grid-area: constraints; padding: 18px 14px; background: #f8fafc; border-right: 1px solid #d8e1eb; }
+            #constraints-panel nav h2 { background: #f8fafc; font-size: 11px; text-transform: uppercase; letter-spacing: .8px; padding: 12px 0 8px; color: #52647a; }
+            .search-label { font-size: 13px; font-weight: 650; margin-bottom: 7px; }
+            input[type="search"], select { min-width: 0; border: 1px solid #bac8d7; border-radius: 6px; padding: 8px 10px; background: #fff; color: #233047; font: inherit; }
+            #constraint-search { width: 100%; }
+            #constraint-count { margin: 8px 0 0; font-size: 12px; }
+            .constraint-select { min-width: 0; padding: 12px 10px; border-radius: 6px 0 0 6px; border-left: 3px solid #237a61; transition: background .12s; }
+            .constraint-select strong { font-size: 13px; line-height: 1.45; font-weight: 600; overflow-wrap: anywhere; }
+            .constraint-select span { margin-top: 6px; font-size: 11px; color: #627186; }
+            .constraint-select.failed { border-left: 3px solid #b13645; }
+            button:hover:not(:disabled) { background: #edf3fa; }
+            button[aria-current="true"] { outline: none; background: #e8f0fb; box-shadow: inset 0 0 0 1px #6084b3; }
+            .constraint-entry { margin: 0 2px 9px; }
+            .constraint-entry-header > .focus-toggle { padding: 0 8px; font-size: 11px; color: #425f86; border-radius: 0 6px 6px 0; }
             .constraint-source { border: 0; background: transparent; }
             .constraint-source summary { font-size: 11px; padding: 6px 4px; }
-            #inspection-panel { grid-area: inspection; display: grid; grid-template-columns: minmax(0, var(--definition-width, 50fr)) 8px minmax(0, var(--diagnostics-width, 50fr)); grid-template-rows: auto minmax(0, 1fr); gap: 0 12px; min-width: 0; min-height: 0; overflow: hidden; padding: 12px 20px; background: #fff; border-bottom: 1px solid #d5ddda; }
-            #inspection-panel > .inspection-toolbar { grid-column: 1 / -1; padding-bottom: 10px; }
+            #inspection-panel { grid-area: inspection; display: grid; grid-template-columns: minmax(0, var(--definition-width, 48fr)) 8px minmax(0, var(--diagnostics-width, 52fr)); grid-template-rows: auto minmax(0, 1fr); gap: 0 14px; min-width: 0; min-height: 0; overflow: hidden; padding: 12px 20px 16px; background: #fff; border-bottom: 1px solid #d8e1eb; }
+            #inspection-panel > .inspection-toolbar { grid-column: 1 / -1; padding-bottom: 12px; margin-bottom: 10px; border-bottom: 1px solid #e6ecf3; }
             #selected-definition, #diagnostics-host { min-width: 0; min-height: 0; overflow: auto; padding-right: 8px; }
-            #detail, #constraints-panel:not(.focus-mode) #detail { display: block; min-height: 0; max-height: none; margin: 12px 0 0; padding: 0; border: 0; overflow: visible; }
+            #detail, #constraints-panel:not(.focus-mode) #detail { display: block; min-height: 0; max-height: none; margin: 0; padding: 0; border: 0; overflow: visible; }
             #detail h2 { overflow-wrap: anywhere; font-size: 14px; }
             .inspection-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding: 8px 0 12px; }
-            .inspection-toolbar label { display: inline-flex; gap: 6px; align-items: center; font-size: 12px; color: #435357; cursor: pointer; }
-            .inspection-toolbar button { width: auto; margin: 0 0 0 auto; padding: 5px 8px; border: 1px solid #c9d4d0; border-radius: 4px; font-size: 11px; }
+            .inspection-toolbar label { display: inline-flex; gap: 6px; align-items: center; font-size: 12px; color: #52647a; cursor: pointer; }
+            .inspection-toolbar button { width: auto; margin: 0 0 0 auto; padding: 6px 10px; border: 1px solid #c2cfdd; border-radius: 5px; font-size: 12px; }
+            .inspection-toolbar select { padding: 3px 6px; font-size: 12px; }
+            .status-badge { padding: 4px 8px; border-radius: 5px; background: #edf8f2; color: #1d644f; font-size: 12px; font-weight: 650; }
+            .status-badge.failed { background: #fff0f1; color: #a62e3c; }
             .inspection-toolbar input[type="range"] { width: 90px; accent-color: #24766b; }
             input[type="checkbox"] { accent-color: #24766b; margin: 0; flex-shrink: 0; }
             :focus-visible { outline: 2px solid #24766b; outline-offset: 3px; }
@@ -1875,51 +2150,66 @@ class ConformanceDashboardRenderer {
             #selected-definition > h2 { margin: 0 0 12px; font-size: 14px; }
             .constraint-declaration { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.6; margin-bottom: 12px; }
             .constraint-indicator { display: block; width: max-content; }
-            .constraint-line { grid-template-columns: 90px minmax(0, 1fr); font-size: 12px; padding: 2px 0; }
-            .constraint-line-label { font-size: 10px; }
+            .constraint-line { grid-template-columns: 95px minmax(0, 1fr); font-size: 13px; padding: 3px 0; }
+            .constraint-line > :last-child { white-space: pre-wrap; overflow-wrap: anywhere; min-width: 0; }
+            .constraint-line-label { font-size: 11px; }
             .compact-definition .constraint-declaration, .compact-definition .constraint-punctuation { display: none; }
-            .message { margin: 12px 0; padding: 10px 8px; background: #f7f9fa; font-size: 12px; overflow-wrap: anywhere; }
+            .message { margin: 12px 0; padding: 12px; background: #f5f7fb; border-radius: 0 6px 6px 0; font-size: 13px; overflow-wrap: anywhere; }
             .diagnostic-message { display: block; }
             .diagnostic-message .role-activation, .diagnostic-message .role-target, .diagnostic-message .role-blocker { color: #253342; }
             .message.role-event, .diagnostic-event.role-event { color: #253342; background: #f1f3f5; border-color: #64748b; }
             .diagnostic-field, .diagnostic-event-heading { grid-template-columns: 1fr; gap: 2px; }
-            .diagnostic-event { padding: 6px; font-size: 11px; }
-            #detail:not(.expanded-diagnostics) .diagnostic-event.role-activation .diagnostic-event-fields,
-            #detail:not(.expanded-diagnostics) .diagnostic-event.role-blocker .diagnostic-event-fields { display: none; }
-            #testcase-panel { grid-area: testcase; border: 0; background: #f4f6f7; padding: 12px 20px; }
-            #testcase-panel > h2 { margin: 0 0 10px; font-size: 14px; }
+            .diagnostic-event { padding: 10px; font-size: 12px; border-radius: 0 5px 5px 0; }
+            #testcase-panel { grid-area: testcase; border: 0; background: #f4f6fa; padding: 14px 20px; }
+            .trace-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 16px; }
+            .trace-heading h2 { margin: 0; font-size: 15px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 12px; }
             .trace-toolbar { flex-wrap: wrap; gap: 8px; margin: 0; }
             .trace-toolbar button { border: 1px solid #c9d4d0; border-radius: 4px; padding: 7px 10px; font-size: 12px; }
-            .highlight-legend { display: flex; flex-wrap: wrap; gap: 8px 20px; padding: 0 0 8px; color: #253342; font-size: 11px; }
+            .highlight-legend { display: flex; flex-wrap: wrap; gap: 8px 20px; padding: 0 0 6px; color: #52647a; font-size: 11px; }
             .highlight-legend span { padding-left: 8px; }
             .legend-condition { border-left: 4px dotted #64748b; }
             .legend-reference { border-left: 4px solid #0072b2; }
-            .legend-violation { border-left: 4px double #a63603; }
+            .legend-violation { border-left: 4px double #b13645; }
             #trace-view { display: flex; flex-direction: column; gap: 8px; overflow: hidden; padding: 4px; }
-            .trace-panels { display: flex; flex: 1; min-height: 0; gap: 12px; align-items: flex-start; overflow: auto; padding: 4px 2px 12px; }
-            .trace-panels > * { flex: 0 0 calc(var(--step-left-width, 50%) - 6px); }
-            .trace-panels > :nth-child(even) { flex-basis: calc(var(--step-right-width, 50%) - 6px); }
-            .trace-step { min-width: 0; margin: 0; padding: 0; border-radius: 4px; background: #fff; }
-            .trace-panels > .trace-step:not([open]) { flex-basis: 190px; }
-            .trace-step.highlighted, .trace-step.role-activation, .trace-step.role-target, .trace-step.role-event, .trace-step.role-blocker { background: #fff; border-color: #8c9ca5; }
+            .trace-panels { display: grid; grid-template-columns: minmax(0, 1fr); flex: 1; min-height: 0; gap: 12px; align-items: start; align-content: start; overflow: auto; padding: 4px 4px 14px; scrollbar-gutter: stable; }
+            .trace-panels.compare { grid-template-columns: minmax(0, var(--step-left-width, 50%)) minmax(0, var(--step-right-width, 50%)); column-gap: 0; }
+            .trace-panels.compare > :nth-child(odd) { margin-right: 6px; }
+            .trace-panels.compare > :nth-child(even) { margin-left: 6px; }
+            .trace-step { min-width: 0; margin: 0; padding: 0; border: 1px solid #ced9e5; border-radius: 7px; background: #fff; box-shadow: 0 1px 3px #17283e08; }
+            .trace-step.highlighted { background: #fff; }
+            .trace-step.role-activation { border-left: 4px solid var(--activation-color); }
+            .trace-step.role-target { border-left: 4px solid var(--target-color); }
+            .trace-step.role-blocker { border-left: 4px solid var(--blocker-color); }
+            .trace-step.role-event { border-left: 4px solid #98721c; }
             .trace-step.role-related { border-left: 4px dashed #64748b; }
-            .trace-step.context-focus { outline: 2px solid #253342; }
-            .trace-step summary { padding: 10px; font: 12px/1.5 "Segoe UI", sans-serif; }
-            .trace-step[open] summary { font: 12px/1.5 "Segoe UI", sans-serif; border-bottom: 1px solid #d5ddda; }
-            .step-role { display: block; font-size: 11px; text-transform: uppercase; font-weight: 600; }
-            .trace-step .step-type, .trace-step[open] .step-type { font-size: 12px; font-weight: 600; color: #202a31; margin: 4px 0; }
-            .trace-step .step-id, .trace-step[open] .step-id { font-size: 10px; font-weight: 400; color: #526166; }
-            .trace-step pre { margin: 0; padding: 8px 0; max-height: 38vh; font-size: 12px; line-height: 1.65; background: #fff; }
+            .trace-step.context-focus { outline: 2px solid #6084b3; outline-offset: 0; }
+            .trace-step summary, .trace-step[open] summary { padding: 12px 14px; font: 13px/1.5 "Segoe UI", sans-serif; }
+            .trace-step[open] summary { border-bottom: 1px solid #e2e8f0; }
+            .step-role { display: inline; font-size: 11px; text-transform: uppercase; font-weight: 650; letter-spacing: .5px; color: #52647a; }
+            .trace-step .step-type, .trace-step[open] .step-type { display: inline; font-size: 15px; font-weight: 650; color: #233047; margin-left: 12px; }
+            .trace-step .step-id, .trace-step[open] .step-id { font-size: 11px; font-weight: 400; color: #627186; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+            .full-paths .trace-step .step-id { white-space: normal; }
+            .trace-step pre { margin: 0; padding: 10px 0; max-height: 48vh; font-size: 13px; line-height: 1.65; background: #fff; border-radius: 0 0 7px 7px; tab-size: 4; }
             .trace-step pre .code-line { padding: 1px 10px; }
             .trace-step pre .line-condition { color: #253342; background: #f1f3f5; border-left: 4px dotted #64748b; box-shadow: none; }
             .trace-step pre .line-relevant, .trace-step pre .line-ref { color: #253342; background: #edf5fa; border-left: 4px solid #0072b2; box-shadow: none; }
-            .trace-step pre .line-violation { color: #572000; background: #fceee7; border-left: 4px double #a63603; box-shadow: none; }
+            .trace-step pre .line-violation { color: #862735; background: #fff0f1; border-left: 4px double #b13645; box-shadow: none; }
+            .reference-mismatch { color: #862735; background: #ffd5dc; outline: 1px solid #b13645; border-radius: 2px; font-weight: 700; padding: 1px 2px; }
+            .code-hint { display: none; padding: 4px 10px 8px; color: #627186; font: 11px/1.5 "Segoe UI", sans-serif; }
+            .relevant-lines .code-hint { display: block; }
+            .trace-step pre .code-section { display: block !important; color: #52647a; background: #f4f7fb; padding: 5px 10px; margin: 6px 0; font: 600 11px/1.6 "Segoe UI", sans-serif; letter-spacing: .4px; text-transform: uppercase; }
+            .trace-extras { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; }
+            .trace-metadata { margin: 0 4px 5px auto; min-width: 0; border-radius: 5px; }
+            .trace-metadata[open] { flex: 1 0 100%; margin-left: 0; }
+            .trace-metadata summary { padding: 4px 8px; font-size: 11px; color: #52647a; }
+            .trace-metadata pre { max-height: 120px; }
+            .empty-state { padding: 18px; border: 1px dashed #b6c5d6; border-radius: 6px; color: #52647a; background: #fff; }
             .missing-target { min-width: 0; padding: 16px; background: #fff; border: 1px dashed #9ba9a4; border-radius: 4px; color: #526166; overflow-wrap: anywhere; }
             .missing-target h2 { margin: 0 0 6px; font-size: 13px; }
             .missing-target p { margin: 0; font-size: 12px; }
             .relevant-lines .has-highlights .code-line:not(.line-relevant):not(.line-ref):not(.line-condition):not(.line-violation) { display: none; }
-            .trace-sequence { display: flex; flex-shrink: 0; gap: 8px; align-items: center; overflow-x: auto; padding: 4px 2px 10px; }
-            .sequence-step { flex: 0 0 150px; width: 150px; height: 48px; margin: 0; padding: 6px 8px; border: 1px solid #c9d4d0; border-radius: 4px; font-size: 11px; overflow: hidden; overflow-wrap: anywhere; }
+            .trace-sequence { display: flex; flex-shrink: 0; gap: 6px; align-items: center; overflow-x: auto; padding: 4px 2px 8px; }
+            .sequence-step { flex: 0 0 auto; width: auto; max-width: 190px; height: 34px; margin: 0; padding: 5px 9px; border: 1px solid #c2cfdd; border-radius: 5px; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
             .sequence-step.role-activation { border-top: 3px solid var(--activation-color); }
             .sequence-step.role-target { border-top: 3px solid var(--target-color); }
             .sequence-step.role-blocker { border-top: 3px solid var(--blocker-color); }
@@ -1931,15 +2221,35 @@ class ConformanceDashboardRenderer {
                 main { grid-template-columns: 1fr; grid-template-rows: auto auto auto; grid-template-areas: "constraints" "inspection" "testcase"; }
                 .pane-divider { display: none; }
                 .inspection-toolbar .step-split-control { display: none; }
-                #constraints-panel { max-height: 240px; overflow: auto; }
-                #constraints-panel nav { overflow: visible; flex: none; }
+                .page-heading { align-items: flex-start; flex-direction: column; gap: 10px; }
+                header { padding: 14px 16px; }
+                #constraints-panel { max-height: 300px; overflow: hidden; }
+                #constraints-panel nav { overflow: auto; flex: 1; }
                 #inspection-panel, #testcase-panel { overflow: visible; }
                 #inspection-panel { display: block; }
                 #selected-definition, #diagnostics-host { max-height: 50vh; overflow: auto; }
                 #trace-view { max-height: none; overflow: visible; grid-template-columns: 1fr; }
-                .trace-panels { flex-direction: column; flex: none; overflow: visible; }
-                .trace-panels > *, .trace-panels > :nth-child(even), .trace-panels > .trace-step:not([open]) { flex: none; width: 100%; }
+                .trace-panels, .trace-panels.compare { grid-template-columns: minmax(0, 1fr); flex: none; overflow: visible; }
+                .trace-panels.compare > :nth-child(n) { margin: 0; }
                 .trace-step pre { max-height: 55vh; }
+            }
+            @media (max-height: 760px) and (min-width: 851px) {
+                header { padding: 10px 20px; }
+                h1 { font-size: 20px; }
+                .eyebrow { display: none; }
+                .file-meta { margin-top: 4px; }
+                #testcase-panel { padding-top: 8px; }
+                .inspection-toolbar { gap: 7px 12px; padding: 5px 0 8px; }
+            }
+            @media print {
+                body { display: block; height: auto; overflow: visible; }
+                main { display: block; }
+                header { color: #233047; background: white; }
+                header h1, .file-meta strong, .file-meta p, .overview-stat strong { color: #233047; }
+                #constraints-panel, .pane-divider, .inspection-toolbar, .trace-toolbar, .trace-sequence { display: none; }
+                #inspection-panel, #trace-view, .trace-panels { display: block; overflow: visible; }
+                #selected-definition, #diagnostics-host, .trace-step pre { max-height: none; overflow: visible; }
+                .trace-step { margin: 12px 0; break-inside: avoid; }
             }
         </style>
         '''
