@@ -67,7 +67,7 @@ jobs:
       uses: actions/upload-artifact@v7
       with:
         name: bpmn4s-p2-site
-        path: releng/nl.esi.comma.standard.site/target/*.zip
+        path: releng/nl.esi.comma.standard.site/target/repository
         retention-days: 10
     - name: Release
       uses: softprops/action-gh-release@v3
