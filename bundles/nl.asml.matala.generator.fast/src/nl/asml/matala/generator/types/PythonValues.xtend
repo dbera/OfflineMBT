@@ -43,8 +43,8 @@ final class PythonValues {
                     throw new IllegalArgumentException("Non-finite number")
                 value.toString()
             }
-            List<?>: '''[«FOR item : value SEPARATOR ', '»«literal(item)»«ENDFOR»]'''.toString
-            Map<?, ?>: '''{«FOR key : value.keySet() SEPARATOR ', '»«literal(key)»: «literal(value.get(key))»«ENDFOR»}'''.toString
+            List<?>: '''[ «FOR item : value SEPARATOR ', '» «literal(item)» «ENDFOR» ]'''.toString
+            Map<?, ?>: '''{ «FOR key : value.keySet() SEPARATOR ', '» «literal(key)»: «literal(value.get(key))» «ENDFOR» }'''.toString
             default: throw new IllegalArgumentException("Unsupported metadata value: " + value.class.name)
         }
     }

@@ -5,6 +5,8 @@ package nl.asml.matala.generator.types
 
 import java.util.ArrayList
 import java.util.LinkedHashMap
+import java.util.LinkedHashSet
+import java.util.Set
 import java.util.List
 import java.util.Map
 
@@ -17,9 +19,6 @@ import org.eclipse.xtext.nodemodel.util.NodeModelUtils
 
 import nl.esi.comma.project.standard.generator.^extension.IStandardProjectGeneratorExtension
 import nl.esi.xtext.common.lang.base.Annotatable
-import nl.esi.xtext.common.lang.base.AnnotationValue
-import nl.esi.xtext.common.lang.base.NamedElement
-import nl.esi.xtext.common.lang.utilities.AnnotationUtil
 import nl.esi.xtext.expressions.expression.ExpressionModel
 import nl.esi.xtext.types.types.EnumTypeDecl
 import nl.esi.xtext.types.types.RecordTypeDecl
@@ -28,8 +27,8 @@ import nl.esi.xtext.types.types.TypeDecl
 
 /**
  * Explicit generator entry point. Traverses the generated language interfaces,
- * with annotation values obtained exclusively through the existing
- * AnnotationUtil. The intermediate Schema remains a renderer boundary, not a
+ * with annotation values decoded through the existing AnnotationUtil,
+ * independently for each annotation occurrence. The intermediate Schema remains a renderer boundary, not a
  * second parser.
  */
 class TypesToPythonGenerator extends AbstractGenerator implements IStandardProjectGeneratorExtension {
@@ -70,25 +69,29 @@ class TypesToPythonGenerator extends AbstractGenerator implements IStandardProje
             if (declaration instanceof RecordTypeDecl) {
                 val record = declaration
                 val List<Schema.Field> fields = new ArrayList<Schema.Field>()
+                val summaryEntries = new ArrayList<ModelSummaryBuilder.Entry>()
 
                 for (field : record.fields) {
+                    val Set<String> names = new LinkedHashSet<String>(PythonRenderer.HELPERS)
+                    names.addAll(ModelSummaryBuilder.NAMES)
+                    val occurrences = AnnotationOccurrences.read(field as Annotatable, names)
                     var String helper = null
                     val Map<String, Object> metadata = new LinkedHashMap<String, Object>()
 
-                    for (String candidate : PythonRenderer.HELPERS) {
-                        val Map<String, Object> values = annotation(field, candidate)
-
-                        // The demonstrated AnnotationUtil API exposes values, not
-                        // presence of an annotation with zero arguments. Such a
-                        // marker is therefore equivalent to an unannotated field.
-                        if (!values.empty) {
+                    for (occurrence : occurrences) {
+                        if (ModelSummaryBuilder.NAMES.contains(occurrence.name)) {
+                            summaryEntries.add(new ModelSummaryBuilder.Entry(
+                                field.name, occurrence.name, occurrence.values
+                            ))
+                        } else {
+                            // Presence, not a non-empty argument map, selects a helper.
+                            // Thus bare @F/@L/@FileSelector/etc. are recognized too.
                             if (helper !== null)
                                 throw new IllegalArgumentException(
                                     "Multiple UI helpers on " + record.name + "." + field.name
                                 )
-
-                            helper = candidate
-                            metadata.putAll(values)
+                            helper = occurrence.name
+                            metadata.putAll(uiValues(occurrence.name, occurrence.values))
                         }
                     }
 
@@ -102,13 +105,16 @@ class TypesToPythonGenerator extends AbstractGenerator implements IStandardProje
                     )
                 }
 
+                val Map<String, Object> recordMetadata = new LinkedHashMap<String, Object>()
+                val summary = ModelSummaryBuilder.build(summaryEntries)
+                if (!summary.empty) recordMetadata.put("summary", summary)
                 declarations.add(
                     new Schema.Declaration(
                         record.name,
                         null,
                         List.of(),
                         fields,
-                        Map.of()
+                        recordMetadata
                     )
                 )
             } else if (declaration instanceof EnumTypeDecl) {
@@ -118,7 +124,11 @@ class TypesToPythonGenerator extends AbstractGenerator implements IStandardProje
 
                 for (literal : enumeration.literals) {
                     literals.add(literal.name)
-                    val Map<String, Object> values = annotation(literal, "F")
+                    val annotations = AnnotationOccurrences.read(literal as Annotatable, Set.of("F"))
+                    if (annotations.size() > 1)
+                        throw new IllegalArgumentException("Multiple @F annotations on enum literal " + literal.name)
+                    val Map<String, Object> values = new LinkedHashMap<String, Object>()
+                    if (!annotations.empty) values.putAll(uiValues("F", annotations.head.values))
 
                     if (values.containsKey("default"))
                         metadata.put("value_" + literal.name, values.get("default"))
@@ -184,31 +194,14 @@ class TypesToPythonGenerator extends AbstractGenerator implements IStandardProje
         return NodeModelUtils.getTokenText(node)
     }
 
-    /** Annotation access mirrors ExpressionAnnotationsTest: map + first value. */
-    def private Map<String, Object> annotation(NamedElement owner, String name) {
-        val Map<String, Object> values = AnnotationUtil.getAnnotationValues(owner as Annotatable, name)
-        val AnnotationValue first = AnnotationUtil.getAnnotationValue(owner as Annotatable, name)
+    /** Normalize decoded UI values without passing raw AnnotationValue AST nodes. */
+    def private Map<String, Object> uiValues(String helper, Map<String, Object> values) {
         val Map<String, Object> result = new LinkedHashMap<String, Object>()
-
         for (entry : values.entrySet()) {
-            var String key = entry.key
-
-            if (key === null || key.empty) {
-                key = positionalKey(name)
-
-                if (first !== null) {
-                    put(result, key, first)
-                }
-            } else {
-                put(result, key, entry.value)
-            }
+            val key = if (entry.key === null || entry.key.empty) positionalKey(helper) else entry.key
+            put(result, key, entry.value)
         }
-
-        if (result.empty && first !== null) {
-            put(result, positionalKey(name), first)
-        }
-
-        return result
+        result
     }
 
     def private String positionalKey(String helper) {

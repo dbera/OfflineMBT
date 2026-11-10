@@ -31,7 +31,7 @@ class Task(Model):
     assigned_worker: str = Ref(
         "/resources",
         value_field="resource_id",
-        filters={"resource_type": "WORKER"},
+        filters={  "resource_type": "WORKER"  },
         required=True,
         default=...,
     )
@@ -42,20 +42,20 @@ class Task(Model):
     )
     configuration_template: str = Template(
         generator="task_configuration",
-        predefined=[],
+        predefined=[  ],
         file_filter="XML files (*.xml)",
         advanced=True,
     )
     input_files: list[str] = L(
         title="Input files",
         item_label="File",
-        items={"kind": "file_selector", "file_filter": "All files (*)", "required": True},
+        items={  "kind": "file_selector",   "file_filter": "All files (*)",   "required": True  },
     )
     batch_size: int = F(
         default=2,
         ge=1,
         le=42,
-        relevant_if={"./enabled": True},
+        relevant_if={  "./enabled": True  },
     )
     enabled: bool = F(
         default=True,
@@ -76,3 +76,46 @@ class WorkflowProject(Model):
         reverse_display=True,
         order=30,
     )
+
+
+class Item(Model):
+    name: str = F(
+        default="",
+    )
+    description: str = F(
+        default="",
+    )
+    enabled: bool = F(
+        default=False,
+    )
+    attachments: list[str] = L(
+    )
+
+
+class Group(Model):
+    label: str = F(
+        default="",
+    )
+    item: Item = F(
+        default_factory=lambda: Item(),
+    )
+
+
+MODEL_SUMMARIES = {
+    Item: {
+        "title": "name",
+        "lines": [
+            {  "label": "description",   "fields": [  "description"  ]  },
+            {  "label": "enabled",   "flags": [  {  "path": "enabled",   "text": "enabled"  }  ]  },
+            {  "label": "attachments",   "count": "attachments"  },
+        ],
+    }
+    ,
+    Group: {
+        "title": "label",
+        "lines": [
+            {  "label": "Attachments",   "count": "item.attachments"  },
+        ],
+    }
+    ,
+}

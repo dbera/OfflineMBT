@@ -45,3 +45,24 @@ record WorkflowProject {
     @L(title="Tasks", item_label="Task", reverse_display=true, order=30)
     Task[] tasks
 }
+
+// All four summary annotations accept zero arguments.
+@Model
+record Item {
+    @SchemaTitle
+    string name
+    @SchemaField
+    string description
+    @SchemaFlag
+    bool enabled
+    @SchemaCount
+    string[] attachments
+}
+// A nested count uses exactly the same subfield convention as fields and flags.
+@Model
+record Group {
+    @SchemaTitle
+    string label
+    @SchemaCount(label="Attachments", subfield="attachments")
+    Item item
+}
