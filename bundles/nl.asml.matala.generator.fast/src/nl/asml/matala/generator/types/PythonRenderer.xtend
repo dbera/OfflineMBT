@@ -65,7 +65,8 @@ final class PythonRenderer {
         "int",
         "float",
         "bool",
-        "MODEL_SUMMARIES"
+        "MODEL_SUMMARIES", "Identifier", "Annotated", "Field", "AfterValidator", "Path",
+        "validate_identifier", "list_templates"
     )
 
     def static String identifier(String name) {
@@ -82,6 +83,7 @@ final class PythonRenderer {
                 throw new IllegalArgumentException("Duplicate/reserved type: " + d.name())
         }
         val sections = new ArrayList<String>()
+        sections.add(PythonSupport.render())
         val emitted = new HashSet<String>()
         for (d : types.values()) {
             if (!d.literals().empty) {
@@ -93,9 +95,12 @@ final class PythonRenderer {
             if (d.base() !== null)
                 alias(d, types, emitted, new HashSet<String>(), sections)
         }
+        val orderedRecords = new ArrayList<Schema.Declaration>()
+        val ordered = new HashSet<String>()
         for (d : types.values()) {
-            if(record(d)) sections.add(renderRecord(d, types))
+            if (record(d)) orderRecord(d, types, ordered, new HashSet<String>(), orderedRecords)
         }
+        for (d : orderedRecords) sections.add(renderRecord(d, types))
         sections.add(renderSummaries(types))
         // Keep the supplied renderer's API and output behavior; no model_rebuild is added.
         '''
@@ -103,7 +108,10 @@ final class PythonRenderer {
             from __future__ import annotations
             
             from enum import StrEnum
+            from typing import Annotated
+            from pydantic import Field, AfterValidator
             from .ui_api import F, L, FileSelector, Model, Ref, RefList, Template
+            from .model_utils import list_templates
             
             
             «sections.join("\n\n")»
@@ -187,126 +195,33 @@ final class PythonRenderer {
         '''.toString
     }
 
-    def private String renderField(Schema.Field f, Map<String, Schema.Declaration> types) {
-        var String pythonType = type(f.type(), types)
-        val meta = new LinkedHashMap<String, Object>(f.metadata())
-        val helper = if (f.helper() === null) {
-                if(pythonType.startsWith("list[")) "L" else "F"
-            } else f.helper()
-        if (!HELPERS.contains(helper)) {
-            throw new IllegalArgumentException("Unsupported helper: " + helper)
-        }
-        if (Set.of("L", "RefList").contains(helper) && !pythonType.startsWith("list[")) {
-            throw new IllegalArgumentException(helper + " requires a list: " + f.name())
-        }
-        if (Set.of("Ref", "FileSelector", "Template").contains(helper) && pythonType != "str") {
-            throw new IllegalArgumentException(helper + " requires string: " + f.name())
-        }
-        if (meta.containsKey("default") && meta.containsKey("default_factory")) {
-            throw new IllegalArgumentException("Conflicting defaults: " + f.name())
-        }
-        for (key : meta.keySet())
-            identifier(key)
-        if (meta.containsKey("required") && !(meta.get("required") instanceof Boolean)) {
-            throw new IllegalArgumentException("required must be boolean")
-        }
-        for (key : List.of("filters", "items", "relevant_if", "required_if")) {
-            if (meta.containsKey(key) && !(meta.get(key) instanceof Map<?, ?>)) {
-                throw new IllegalArgumentException(key + " must be an object")
+    /** Direct factory symbols must be declared before their owning classes. */
+    def private void orderRecord(Schema.Declaration declaration, Map<String, Schema.Declaration> types,
+        Set<String> emitted, Set<String> visiting, List<Schema.Declaration> output) {
+        if (!emitted.contains(declaration.name())) {
+            if (!visiting.add(declaration.name()))
+                throw new IllegalArgumentException("Cyclic record default factories: " + declaration.name())
+            for (field : declaration.fields()) {
+                val meta = field.metadata()
+                val dependency = if (meta.containsKey("default_factory")) String.valueOf(meta.get("default_factory"))
+                else if (!meta.containsKey("default") && !meta.containsKey("default_enum") &&
+                    !Boolean.TRUE.equals(meta.get("required"))) field.type()
+                else ""
+                val target = types.get(dependency)
+                if (target !== null && record(target)) orderRecord(target, types, emitted, visiting, output)
             }
-        }
-        if (meta.containsKey("predefined") && !(meta.get("predefined") instanceof List<?>)) {
-            throw new IllegalArgumentException("predefined must be a list")
-        }
-        val low = meta.get("ge")
-        val high = meta.get("le")
-        if (low instanceof Number) {
-            if (high instanceof Number) {
-                if (low.doubleValue() > high.doubleValue()) {
-                    throw new IllegalArgumentException("ge must not exceed le")
-                }
-            }
-        }
-        if (helper == "RefList" && pythonType != "list[str]") {
-            throw new IllegalArgumentException("RefList requires string items")
-        }
-        if (meta.containsKey("default") && meta.get("default") === null) {
-            pythonType = pythonType + " | None"
-        }
-
-        val arguments = new ArrayList<String>()
-        if (helper == "Ref" || helper == "RefList") {
-            val path = meta.remove("path")
-            if (!(path instanceof String)) {
-                throw new IllegalArgumentException("Reference path required: " + f.name())
-            }
-            if ((path as String).isBlank()) {
-                throw new IllegalArgumentException("Reference path required: " + f.name())
-            }
-            arguments.add(PythonValues.literal(path))
-        }
-        if (!meta.containsKey("default") && !meta.containsKey("default_factory")) {
-            if (Boolean.TRUE.equals(meta.get("required"))) {
-                meta.put("default", Required.VALUE)
-            } else if (types.containsKey(f.type()) && record(types.get(f.type()))) {
-                cycle(f.type(), types, new HashSet<String>())
-                meta.put("default_factory", f.type())
-            } else if (helper == "F") {
-                meta.put("default", scalarDefault(pythonType))
-            }
-        }
-        for (entry : meta.entrySet()) {
-            val value = argumentValue(entry.key, entry.value, types)
-            arguments.add('''«entry.key»=«value»'''.toString)
-        }
-        '''
-            «f.name()»: «pythonType» = «helper»(
-                «FOR argument : arguments»
-                    «argument»,
-                «ENDFOR»
-            )
-        '''.toString
-    }
-
-    def private Object scalarDefault(String pythonType) {
-        switch pythonType {
-            case "str": ""
-            case "int": 0
-            case "float": 0.0
-            case "bool": false
-            default: Required.VALUE
+            visiting.remove(declaration.name())
+            emitted.add(declaration.name())
+            output.add(declaration)
         }
     }
 
-    def private String argumentValue(String key, Object value, Map<String, Schema.Declaration> types) {
-        if (key == "default_factory") {
-            val factory = String.valueOf(value)
-            if (!Set.of("list", "dict").contains(factory) && !types.containsKey(factory)) {
-                throw new IllegalArgumentException("Unknown factory: " + factory)
-            }
-            return '''lambda: «identifier(factory)»()'''.toString
-        }
-        if(value === Required.VALUE) "..." else PythonValues.literal(value)
+    def private String renderField(Schema.Field field, Map<String, Schema.Declaration> types) {
+        new PythonFieldRenderer().render(field, types)
     }
 
-    private enum Required {
-        VALUE
-    }
-
-    def private static boolean record(Schema.Declaration d) {
-        d.base() === null && d.literals().empty
-    }
-
-    def private void cycle(String name, Map<String, Schema.Declaration> types, Set<String> visiting) {
-        if (!visiting.add(name)) {
-            throw new IllegalArgumentException("Recursive default factories: " + name + "; use default_json=\"null\"")
-        }
-        for (f : types.get(name).fields()) {
-            if (types.containsKey(f.type()) && record(types.get(f.type())) && !f.metadata().containsKey("default") &&
-                !Boolean.TRUE.equals(f.metadata().get("required")))
-                cycle(f.type(), types, visiting)
-        }
-        visiting.remove(name)
+    def private static boolean record(Schema.Declaration declaration) {
+        declaration.base() === null && declaration.literals().empty
     }
 
     def private void alias(Schema.Declaration d, Map<String, Schema.Declaration> types, Set<String> emitted,

@@ -70,19 +70,52 @@ class TypesToPythonGenerator extends AbstractGenerator implements IStandardProje
                 val record = declaration
                 val List<Schema.Field> fields = new ArrayList<Schema.Field>()
                 val summaryEntries = new ArrayList<ModelSummaryBuilder.Entry>()
+                // Record-level summaries use subfield as an absolute model-relative path.
+                // This also preserves display-only paths absent from the active model.
+                for (occurrence : AnnotationOccurrences.read(record as Annotatable, ModelSummaryBuilder.NAMES)) {
+                    val values = new LinkedHashMap<String, Object>(occurrence.values)
+                    val path = values.remove("subfield")
+                    if (!(path instanceof String))
+                        throw new IllegalArgumentException("Record-level summary requires subfield")
+                    val text = path as String
+                    if (!text.matches("[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z_][A-Za-z0-9_]*)*"))
+                        throw new IllegalArgumentException("Invalid record summary subfield: " + text)
+                    val dot = text.indexOf('.')
+                    val root = if (dot < 0) text else text.substring(0, dot)
+                    if (dot >= 0) values.put("subfield", text.substring(dot + 1))
+                    summaryEntries.add(new ModelSummaryBuilder.Entry(root, occurrence.name, values))
+                }
 
                 for (field : record.fields) {
                     val Set<String> names = new LinkedHashSet<String>(PythonRenderer.HELPERS)
                     names.addAll(ModelSummaryBuilder.NAMES)
+                    names.addAll(Set.of("Identifier", "Python", "FileSelectorList"))
                     val occurrences = AnnotationOccurrences.read(field as Annotatable, names)
                     var String helper = null
                     val Map<String, Object> metadata = new LinkedHashMap<String, Object>()
+                    val Map<String, Object> python = new LinkedHashMap<String, Object>()
 
                     for (occurrence : occurrences) {
                         if (ModelSummaryBuilder.NAMES.contains(occurrence.name)) {
                             summaryEntries.add(new ModelSummaryBuilder.Entry(
                                 field.name, occurrence.name, occurrence.values
                             ))
+                        } else if (occurrence.name == "FileSelectorList") {
+                            throw new IllegalArgumentException(
+                                "@" + occurrence.name + " is no longer supported; use @Ref with filters_json or @L with items_json"
+                            )
+                        } else if (occurrence.name == "Identifier") {
+                            if (!occurrence.values.empty)
+                                throw new IllegalArgumentException("@Identifier is a marker")
+                            if (python.containsKey("identifier"))
+                                throw new IllegalArgumentException("Duplicate Identifier/Python identifier setting")
+                            python.put("identifier", true)
+                        } else if (occurrence.name == "Python") {
+                            for (key : occurrence.values.keySet()) {
+                                if (python.containsKey(key))
+                                    throw new IllegalArgumentException("Duplicate Python option: " + key)
+                                python.put(key, occurrence.values.get(key))
+                            }
                         } else {
                             // Presence, not a non-empty argument map, selects a helper.
                             // Thus bare @F/@L/@FileSelector/etc. are recognized too.
@@ -95,6 +128,7 @@ class TypesToPythonGenerator extends AbstractGenerator implements IStandardProje
                         }
                     }
 
+                    if (!python.empty) metadata.put("_python", python)
                     fields.add(
                         new Schema.Field(
                             field.name,
@@ -124,11 +158,18 @@ class TypesToPythonGenerator extends AbstractGenerator implements IStandardProje
 
                 for (literal : enumeration.literals) {
                     literals.add(literal.name)
-                    val annotations = AnnotationOccurrences.read(literal as Annotatable, Set.of("F"))
+                    val annotations = AnnotationOccurrences.read(literal as Annotatable, Set.of("F", "EnumValue"))
                     if (annotations.size() > 1)
-                        throw new IllegalArgumentException("Multiple @F annotations on enum literal " + literal.name)
+                        throw new IllegalArgumentException("Multiple enum-value annotations on literal " + literal.name)
                     val Map<String, Object> values = new LinkedHashMap<String, Object>()
-                    if (!annotations.empty) values.putAll(uiValues("F", annotations.head.values))
+                    if (!annotations.empty) {
+                        val occurrence = annotations.head
+                        if (occurrence.name == "EnumValue") {
+                            if (occurrence.values.size() != 1 || !occurrence.values.containsKey("value"))
+                                throw new IllegalArgumentException("EnumValue requires only value=...")
+                            values.put("default", occurrence.values.get("value"))
+                        } else values.putAll(uiValues("F", occurrence.values))
+                    }
 
                     if (values.containsKey("default"))
                         metadata.put("value_" + literal.name, values.get("default"))
@@ -205,7 +246,8 @@ class TypesToPythonGenerator extends AbstractGenerator implements IStandardProje
     }
 
     def private String positionalKey(String helper) {
-        return helper.equals("Ref") || helper.equals("RefList") ? "path" : "default"
+        return if (helper == "Ref" || helper == "RefList") "path"
+        else "default"
     }
 
     /** Decode structured metadata only AFTER AnnotationUtil has read its value. */

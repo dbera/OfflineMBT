@@ -2,7 +2,24 @@
 from __future__ import annotations
 
 from enum import StrEnum
+from typing import Annotated
+from pydantic import Field, AfterValidator
 from .ui_api import F, L, FileSelector, Model, Ref, RefList, Template
+from .model_utils import list_templates
+
+
+def validate_identifier(value: str) -> str:
+    if not value:
+        return value
+    if not value[0].isalpha():
+        raise ValueError("Identifier must start with a letter.")
+    if any(char.isspace() for char in value):
+        raise ValueError("Identifier cannot contain spaces.")
+    return value
+
+
+Identifier = Annotated[str, AfterValidator(validate_identifier)]
+
 
 
 class Resource(Model):
@@ -31,7 +48,7 @@ class Task(Model):
     assigned_worker: str = Ref(
         "/resources",
         value_field="resource_id",
-        filters={  "resource_type": "WORKER"  },
+        filters={"resource_type": "WORKER"},
         required=True,
         default=...,
     )
@@ -42,20 +59,20 @@ class Task(Model):
     )
     configuration_template: str = Template(
         generator="task_configuration",
-        predefined=[  ],
+        predefined=[],
         file_filter="XML files (*.xml)",
         advanced=True,
     )
     input_files: list[str] = L(
         title="Input files",
         item_label="File",
-        items={  "kind": "file_selector",   "file_filter": "All files (*)",   "required": True  },
+        items={"kind": "file_selector", "file_filter": "All files (*)", "required": True},
     )
     batch_size: int = F(
         default=2,
         ge=1,
         le=42,
-        relevant_if={  "./enabled": True  },
+        relevant_if={"./enabled": True},
     )
     enabled: bool = F(
         default=True,
@@ -97,7 +114,7 @@ class Group(Model):
         default="",
     )
     item: Item = F(
-        default_factory=lambda: Item(),
+        default_factory=Item,
     )
 
 
