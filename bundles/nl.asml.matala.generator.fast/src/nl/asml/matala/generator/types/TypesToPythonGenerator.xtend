@@ -186,10 +186,8 @@ class TypesToPythonGenerator extends AbstractGenerator implements IStandardProje
 
     /** Annotation access mirrors ExpressionAnnotationsTest: map + first value. */
     def private Map<String, Object> annotation(NamedElement owner, String name) {
-        val Map<String, Object> values =
-            AnnotationUtil.getAnnotationValues(owner as Annotatable, name)
-        val AnnotationValue first =
-            AnnotationUtil.getAnnotationValue(owner as Annotatable, name)
+        val Map<String, Object> values = AnnotationUtil.getAnnotationValues(owner as Annotatable, name)
+        val AnnotationValue first = AnnotationUtil.getAnnotationValue(owner as Annotatable, name)
         val Map<String, Object> result = new LinkedHashMap<String, Object>()
 
         for (entry : values.entrySet()) {
