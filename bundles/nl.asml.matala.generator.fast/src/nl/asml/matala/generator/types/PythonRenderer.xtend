@@ -59,6 +59,7 @@ final class PythonRenderer {
             from enum import StrEnum
             from .ui_api import F, L, FileSelector, Model, Ref, RefList, Template
 
+
             «sections.join("\n\n")»
         '''.toString
     }
