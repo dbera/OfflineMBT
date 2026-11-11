@@ -194,7 +194,6 @@ record Assert_2_2_2 {
 }
 
 record Assert_2_2_2Input {
-    UNIT ___CONTEXT___
     SymbolicParams params_2_2_2
 }
 
