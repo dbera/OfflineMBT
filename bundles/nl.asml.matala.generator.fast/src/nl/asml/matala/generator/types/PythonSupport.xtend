@@ -9,7 +9,7 @@ final class PythonSupport {
 
     def static String render() {
         '''
-            def validate_identifier(value: str) -> str:
+            def _validate_identifier(value: _types_builtins.str) -> _types_builtins.str:
                 if not value:
                     return value
                 if not value[0].isalpha():
@@ -19,7 +19,7 @@ final class PythonSupport {
                 return value
 
 
-            Identifier = Annotated[str, AfterValidator(validate_identifier)]
+            _TypesIdentifier = _types_typing.Annotated[_types_builtins.str, _types_pydantic.AfterValidator(_validate_identifier)]
 
         '''.toString
     }

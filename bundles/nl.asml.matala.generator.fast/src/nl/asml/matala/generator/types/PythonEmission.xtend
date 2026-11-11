@@ -56,13 +56,13 @@ final class PythonEmission {
         PythonRenderer.identifier(name)
         if (name != "list" && name != "dict" && !types.containsKey(name))
             throw new IllegalArgumentException("Unknown factory: " + name)
-        new Expression(name)
+        new Expression(if (types.containsKey(name)) name else "_types_builtins." + name)
     }
 
     def static Object predefined(Object value) {
         if (value != "list_templates")
             throw new IllegalArgumentException("Only predefined_from=\"list_templates\" is supported")
-        new Expression("list_templates()")
+        new Expression("_types_model_utils.list_templates()")
     }
 
     def static String literal(Object value) {

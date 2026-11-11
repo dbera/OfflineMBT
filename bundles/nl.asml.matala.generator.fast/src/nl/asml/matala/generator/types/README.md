@@ -52,11 +52,20 @@ You can use one UI annotation and multiple summary annotations on the same field
 |         | `@SchemaFlag`  | Field           | Flag path and display text                                |
 |         | `@SchemaCount` | Field           | Collection path to count                                  |
 
-The generated Python uses these UI API names:
+The generated Python imports runtime modules rather than copying their public names into the generated module:
 
 ```python
-from .ui_api import F, L, FileSelector, Model, Ref, RefList, Template
+import builtins as _types_builtins
+import enum as _types_enum
+import typing as _types_typing
+import pydantic as _types_pydantic
+from . import ui_api as _types_ui_api
+from . import model_utils as _types_model_utils
 ```
+
+Generated references are package-qualified, for example `_types_ui_api.F(...)`, `_types_ui_api.Model`, `_types_enum.StrEnum`, `_types_typing.Annotated`, `_types_pydantic.Field(...)`, and `_types_model_utils.list_templates()`. This lets declarations use names such as `F`, `Model`, `StrEnum`, `Field`, `Annotated`, `list`, or `dict` without colliding with imported names.
+
+Python language keywords are still invalid declaration, field, and enum-member names. For example, `class`, `from`, and `lambda` cannot be made legal by qualification: `class class(...)` is invalid Python, and Python also rejects keyword attribute syntax such as `value.class`. The source grammar may impose additional reserved words before generation.
 
 Summary annotations do not introduce another Python helper or import. They produce data in `MODEL_SUMMARIES`.
 
@@ -126,7 +135,7 @@ Put the needed UI arguments on the chosen helper instead.
 
 ## UI annotations
 
-UI argument maps are forwarded to the selected `.ui_api` helper after normalization. 
+UI argument maps are forwarded to the selected package-qualified `_types_ui_api` helper after normalization. 
 The examples below show the conventions used by this project, **not a guarantee that every argument is implemented by every version of your UI runtime**.
 
 ### `@Model`: mark a record
@@ -552,7 +561,7 @@ Run `TypesToPythonCli` using your existing Eclipse launch configuration or a cla
 
 Absolute paths avoid confusion about the Java application's working directory.
 
-Put the generated module in a Python package beside the actual `ui_api.py` and an `__init__.py`. Import it as a package module because `.ui_api` is a relative import. The generated module imports `StrEnum`, so use Python 3.11 or later.
+Put the generated module in a Python package beside the actual `ui_api.py` and an `__init__.py`. Import it as a package module because `.ui_api` is a relative import. The generated module uses `_types_enum.StrEnum`, so use Python 3.11 or later.
 
 The CLI does not supply the UI runtime, register template generators, or build an application around the models. Those remain part of the host project.
 

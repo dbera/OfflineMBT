@@ -18,20 +18,20 @@ final class PythonFieldRenderer {
         var String pythonType = new PythonRenderer().type(field.type(), types)
         val storageType = pythonType
         if (flag(options, "identifier")) {
-            if (pythonType == "str") pythonType = "Identifier"
-            else if (pythonType == "list[str]") pythonType = "list[Identifier]"
+            if (pythonType == "_types_builtins.str") pythonType = "_TypesIdentifier"
+            else if (pythonType == "_types_builtins.list[_types_builtins.str]") pythonType = "_types_builtins.list[_TypesIdentifier]"
             else throw new IllegalArgumentException("@Identifier requires string or string[]: " + field.name())
         }
         var String helper = if (field.helper() === null) {
-            if (storageType.startsWith("list[")) "L" else "F"
+            if (storageType.startsWith("_types_builtins.list[")) "L" else "F"
         } else field.helper()
         if (!PythonRenderer.HELPERS.contains(helper))
             throw new IllegalArgumentException("Unsupported helper: " + helper)
-        if (Set.of("L", "RefList").contains(helper) && !storageType.startsWith("list["))
+        if (Set.of("L", "RefList").contains(helper) && !storageType.startsWith("_types_builtins.list["))
             throw new IllegalArgumentException(helper + " requires a list: " + field.name())
-        if (Set.of("Ref", "FileSelector", "Template").contains(helper) && storageType != "str")
+        if (Set.of("Ref", "FileSelector", "Template").contains(helper) && storageType != "_types_builtins.str")
             throw new IllegalArgumentException(helper + " requires a string: " + field.name())
-        if (helper == "RefList" && storageType != "list[str]")
+        if (helper == "RefList" && storageType != "_types_builtins.list[_types_builtins.str]")
             throw new IllegalArgumentException("RefList requires string[]")
         for (key : meta.keySet()) PythonRenderer.identifier(key)
         if (meta.containsKey("default") && meta.containsKey("default_enum"))
@@ -87,7 +87,7 @@ final class PythonFieldRenderer {
         if (flag(options, "constraints")) {
             if (flag(options, "identifier"))
                 throw new IllegalArgumentException("Use Identifier or Annotated constraints, not both")
-            if (!Set.of("int", "float", "str").contains(storageType))
+            if (!Set.of("_types_builtins.int", "_types_builtins.float", "_types_builtins.str").contains(storageType))
                 throw new IllegalArgumentException("Annotated constraints require a primitive scalar")
             val constraints = new ArrayList<String>()
             for (key : List.of("ge", "le", "gt", "lt", "min_length", "max_length", "pattern")) {
@@ -95,7 +95,7 @@ final class PythonFieldRenderer {
                     constraints.add('''«key»=«PythonEmission.literal(meta.remove(key))»'''.toString)
             }
             if (constraints.empty) throw new IllegalArgumentException("constraints=true needs a constraint")
-            pythonType = '''Annotated[«pythonType», Field(«constraints.join(", ")») ]'''.toString
+            pythonType = '''_types_typing.Annotated[«pythonType», _types_pydantic.Field(«constraints.join(", ")») ]'''.toString
         }
         val args = new ArrayList<String>()
         if (helper == "Ref" || helper == "RefList") {
@@ -127,7 +127,7 @@ final class PythonFieldRenderer {
             args.add('''«entry.key»=«value»'''.toString)
         }
         '''
-            «field.name()»: «pythonType» = «helper»(
+            «field.name()»: «pythonType» = _types_ui_api.«helper»(
                 «FOR argument : args»
                 «argument»,
                 «ENDFOR»
@@ -157,10 +157,10 @@ final class PythonFieldRenderer {
 
     def private Object scalarDefault(String type) {
         switch type {
-            case "str": ""
-            case "int": 0
-            case "float": 0.0
-            case "bool": false
+            case "_types_builtins.str": ""
+            case "_types_builtins.int": 0
+            case "_types_builtins.float": 0.0
+            case "_types_builtins.bool": false
             default: PythonEmission.required()
         }
     }
