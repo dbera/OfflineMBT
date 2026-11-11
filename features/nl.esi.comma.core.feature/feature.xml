@@ -15,22 +15,21 @@
 -->
 <feature
       id="nl.esi.comma.core.feature"
-      label="ComMA Core DSLs"
+      label="OfflineMBT Core"
       version="4.2.0.qualifier"
-      provider-name="TNO-ESI, Philips">
+      provider-name="TNO-ESI">
 
    <description>
-      This feature provides reusable set of ComMA Core Domain-Specific
-Languages.
+      Contains all OfflineMBT languages and transformations.
    </description>
 
    <copyright>
-      Copyright (c) 2018-2020, Embedded Systems Innovation by TNO. All rights
-reserved.
+      Copyright (c) 2018-2026, TNO-ESI.
+All rights reserved.
    </copyright>
 
    <license url="">
-      Copyright (c) 2018, Embedded Systems Innovation by TNO. All rights reserved.
+      Copyright (c) 2026, TNO-ESI. All rights reserved.
  
 Use of this software in binary form, without modification and without
 redistribution, is permitted provided that the following conditions are met:
@@ -61,10 +60,6 @@ the Department of Electrical Engineering of Eindhoven University of Technology.
 
    <includes
          id="nl.esi.xplus.feature"
-         version="0.0.0"/>
-
-   <includes
-         id="nl.esi.xplus.lsp.feature"
          version="0.0.0"/>
 
    <requires>
@@ -169,14 +164,6 @@ the Department of Electrical Engineering of Eindhoven University of Technology.
 
    <plugin
          id="nl.esi.xplus.extensions"
-         version="0.0.0"/>
-
-   <plugin
-         id="nl.esi.comma.project.standard.cli"
-         version="0.0.0"/>
-
-   <plugin
-         id="nl.asml.matala.server"
          version="0.0.0"/>
 
 </feature>

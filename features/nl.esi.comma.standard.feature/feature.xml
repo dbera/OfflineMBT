@@ -15,21 +15,21 @@
 -->
 <feature
       id="nl.esi.comma.standard.feature"
-      label="ComMA DSLs"
+      label="OfflineMBT Eclipse Feature"
       version="4.2.0.qualifier"
-      provider-name="TNO-ESI, Philips">
+      provider-name="TNO-ESI">
 
    <description>
-      This feature includes ComMA Core languages feature and adds the default ComMA project language and help.
+      Contains Eclipse UI bundles for OfflineMBT
    </description>
 
    <copyright>
-      Copyright (c) 2018-2020, Embedded Systems Innovation by TNO.
+      Copyright (c) 2018-2026, TNO-ESI.
 All rights reserved.
    </copyright>
 
    <license url="">
-      Copyright (c) 2018, Embedded Systems Innovation by TNO. All rights reserved.
+      Copyright (c) 2026, TNO-ESI. All rights reserved.
  
 Use of this software in binary form, without modification and without
 redistribution, is permitted provided that the following conditions are met:
