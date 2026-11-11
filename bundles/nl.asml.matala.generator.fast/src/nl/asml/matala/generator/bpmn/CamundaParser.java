@@ -356,6 +356,16 @@ public class CamundaParser {
 		da.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_UPDATE, b_str);
 	}
 
+	private static void addBpmnExtension(DataAssociation da, DataInstanceDescriptor dsDescriptor) {
+		Binding bind = dsDescriptor.bind_producer;
+		String var_id = normalizeBpmnId(dsDescriptor.id);
+		TypeDecl b_type = bind.getName().getType().getType();
+		JsonValue b_val = bind.getJsonvals();
+		String b_str = ConcreteExpressionHandler.createTypeDeclValue(b_type, b_val);
+		String update_assignment = var_id+" := "+b_str;
+		da.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_UPDATE, update_assignment);
+	}
+
 	private static Definitions createDefinitions(BpmnModelInstance modelInstance) {
 		Definitions definitions = modelInstance.newInstance(Definitions.class);
 		definitions.setTargetNamespace("http://bpmn.io/schema/bpmn");
@@ -446,7 +456,7 @@ public class CamundaParser {
 		for (ElementDescriptor e : elements) {
 			if (!laneMap.containsKey(e.lane)) {
 				Lane lane = modelInstance.newInstance(Lane.class);
-				lane.setId("lane_" + e.lane.replaceAll("\\s+", "_"));
+				lane.setId(normalizeBpmnId("lane_" + e.lane));
 				lane.setName(e.lane);
 				laneSet.addChildElement(lane);
 				laneMap.put(e.lane, lane);
@@ -499,7 +509,23 @@ public class CamundaParser {
 	}
 
 	private static String normalizeTaskId(String td_id) {
-		return td_id.replaceAll("\\s+", "_");
+		return normalizeBpmnId(td_id);
+	}
+
+	/**
+	 * BPMN ids use the XML Schema NCName datatype. Keep the human-readable
+	 * element name unchanged, but replace characters that are illegal in an
+	 * NCName (for example parentheses) in generated ids.
+	 */
+	private static String normalizeBpmnId(String id) {
+		if (id == null || id.isEmpty()) {
+			return "id";
+		}
+		String normalized = id.replaceAll("[^A-Za-z0-9_.-]", "_");
+		if (!normalized.substring(0, 1).matches("[A-Za-z_]")) {
+			normalized = "id_" + normalized;
+		}
+		return normalized;
 	}
 
 	private static StartEvent createStartEvent(BpmnModelInstance modelInstance, Process process, String laneName,
@@ -564,7 +590,7 @@ public class CamundaParser {
 			Process process, BpmnPlane plane, DataInstanceDescriptor dsDescriptor, Map<String, Task> taskMap,
 			Map<BaseElement, Bounds> elemBounds, double x, double y) {
 
-		String dsId = "dataobject_" + dsDescriptor.id.replaceAll("\\s+", "_");
+		String dsId = normalizeBpmnId("dataobject_" + dsDescriptor.id);
 
 		// 1️ Create top-level DataStore in definitions
 		DataObject dataObject = modelInstance.newInstance(DataObject.class);
@@ -598,8 +624,7 @@ public class CamundaParser {
 				doa.setId("doa_" + dsId + "_" + producer.getId());
 				doa.setTarget(dsRef);
 
-				Binding bind = dsDescriptor.bind_producer;
-				addBpmnExtension(doa, bind);
+				addBpmnExtension(doa, dsDescriptor);
 				producer.addChildElement(doa);
 
 				Bounds producerBounds = elemBounds.get(producer);
