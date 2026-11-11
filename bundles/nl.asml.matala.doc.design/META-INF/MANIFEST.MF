@@ -19,8 +19,5 @@ Require-Bundle: com.google.guava,
  nl.esi.comma.causalgraph;resolution:=optional,
  nl.esi.comma.constraints;resolution:=optional,
  nl.esi.comma.project.standard;resolution:=optional,
- nl.esi.comma.scenarios;resolution:=optional,
- nl.esi.comma.steps;resolution:=optional,
- nl.esi.comma.systemconfig;resolution:=optional,
  nl.esi.comma.testspecification;resolution:=optional,
  nl.esi.xtext.lsp.generator;resolution:=optional

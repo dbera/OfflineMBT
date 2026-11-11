@@ -188,9 +188,6 @@
                                 <inputFile>${project.build.directory}/meta-models/nl.esi.comma.causalgraph/model/generated/CausalGraph.ecore</inputFile>
                                 <inputFile>${project.build.directory}/meta-models/nl.esi.comma.constraints/model/generated/Constraints.ecore</inputFile>
                                 <inputFile>${project.build.directory}/meta-models/nl.esi.comma.project.standard/model/generated/StandardProject.ecore</inputFile>
-                                <inputFile>${project.build.directory}/meta-models/nl.esi.comma.scenarios/model/generated/Scenarios.ecore</inputFile>
-                                <inputFile>${project.build.directory}/meta-models/nl.esi.comma.steps/model/generated/Step.ecore</inputFile>
-                                <inputFile>${project.build.directory}/meta-models/nl.esi.comma.systemconfig/model/generated/Configuration.ecore</inputFile>
                                 <inputFile>${project.build.directory}/meta-models/nl.esi.comma.testspecification/model/generated/Testspecification.ecore</inputFile>
                             </inputFiles>
                             <outputFile>${project.build.directory}/adoc-gen/ecore-documentation.adoc</outputFile>

@@ -63,10 +63,6 @@ class StandardProjectGenerator extends AbstractGenerator {
                 doGenerate(task, res.resourceSet, fsa.createFolderAccess(task.name), ctx)
             }
 
-            for (task : project.statemachineBlocks) {
-                (new StateMachineGenerator()).doGenerate(task, fsa.createFolderAccess(task.name), ctx)
-            }
-
             for (task : project.testConformanceBlocks) {
                 (new TestConformanceNetGenerator(reporting)).doGenerate(task, fsa.createFolderAccess(task.name), ctx)
             }
