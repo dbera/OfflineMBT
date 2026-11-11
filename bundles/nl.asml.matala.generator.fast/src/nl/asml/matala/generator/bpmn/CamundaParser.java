@@ -30,8 +30,7 @@ import org.camunda.bpm.model.bpmn.BpmnModelInstance;
 import org.camunda.bpm.model.bpmn.instance.BaseElement;
 import org.camunda.bpm.model.bpmn.instance.DataAssociation;
 import org.camunda.bpm.model.bpmn.instance.DataInputAssociation;
-import org.camunda.bpm.model.bpmn.instance.DataObject;
-import org.camunda.bpm.model.bpmn.instance.DataObjectReference;
+import org.camunda.bpm.model.bpmn.instance.DataStoreReference;
 import org.camunda.bpm.model.bpmn.instance.DataOutputAssociation;
 import org.camunda.bpm.model.bpmn.instance.Definitions;
 import org.camunda.bpm.model.bpmn.instance.EndEvent;
@@ -85,9 +84,10 @@ public class CamundaParser {
 	private static final String BPMN4S_ASSERT_TASK = "AssertTask";
 	private static final String BPMN4S_COMPOSE_TASK = "ComposeTask";
 	private static final String BPMN4S_SUB_TYPE = "subType";
+	private static final String BPMN4S_STEP_TYPE = "stepType";
 	private static final String BPMN4S_DATATYPE_REF = "dataTypeRef";
 	private static final String BPMN4S_UPDATE = "update";
-	private static final String BPMN4S_QUEUE = "Queue";
+	private static final String BPMN4S_PERSISTENT_READ = "persistentRead";
 
 	// BPMN DI layout constants. Keep them together so the generated diagram can
 	// be tuned without changing the semantic model construction.
@@ -360,6 +360,10 @@ public class CamundaParser {
 			task.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_SUB_TYPE, BPMN4S_COMPOSE_TASK);
 		} else if (step instanceof RunStep) {
 			task.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_SUB_TYPE, BPMN4S_RUN_TASK);
+			task.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_STEP_TYPE, 
+					"stepType" // TODO replace once different step types are allowed
+				//	((RunStep)step).getStepType()
+					); 
 		} else if (step instanceof AssertionStep) {
 			task.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_SUB_TYPE, BPMN4S_ASSERT_TASK);
 		} else
@@ -600,29 +604,20 @@ public class CamundaParser {
 		plane.addChildElement(edge);
 	}
 
-	private static DataObject linkDataInstanceToTasks(BpmnModelInstance modelInstance, Definitions definitions,
+	private static DataStoreReference linkDataInstanceToTasks(BpmnModelInstance modelInstance, Definitions definitions,
 			Process process, BpmnPlane plane, DataInstanceDescriptor dsDescriptor, Map<String, Task> taskMap,
 			Map<BaseElement, Bounds> elemBounds, double x, double y) {
 
 		String dsId = normalizeBpmnId("dataobject_" + dsDescriptor.id);
 
-		// 1️ Create top-level DataStore in definitions
-		DataObject dataObject = modelInstance.newInstance(DataObject.class);
-		dataObject.setId(dsId);
-		dataObject.setName(dsDescriptor.id);
-		process.addChildElement(dataObject);
-
-		// 2️ Create DataObjectReference in the process
-		DataObjectReference dsRef = modelInstance.newInstance(DataObjectReference.class);
+		// 1 Create DataStoreReference in the process
+		DataStoreReference dsRef = modelInstance.newInstance(DataStoreReference.class);
 		dsRef.setId(dsId + "_ref");
 		dsRef.setName(normalizeTaskId(dsDescriptor.id));
-		dsRef.setDataObject(dataObject);
-		dsRef.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_SUB_TYPE, BPMN4S_QUEUE);
 		dsRef.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_DATATYPE_REF, "record_id");
-
 		process.addChildElement(dsRef);
 
-		// 3️ Add diagram shape for the DataStoreReference
+		// 2 Add diagram shape for the DataStoreReference.
 		BpmnShape dsShape = modelInstance.newInstance(BpmnShape.class);
 		dsShape.setId("shape_" + dsId);
 		dsShape.setBpmnElement(dsRef);
@@ -630,7 +625,7 @@ public class CamundaParser {
 		dsShape.setBounds(dsBounds);
 		plane.addChildElement(dsShape);
 
-		// 4️ Link producer task to DataStoreReference
+		// 3 Link producer task to DataStoreReference
 		if (dsDescriptor.producer != null) {
 			Task producer = taskMap.get(dsDescriptor.producer);
 			if (producer != null) {
@@ -651,7 +646,7 @@ public class CamundaParser {
 			}
 		}
 
-		// 5️ Link DataObjectReference to each consumer task (input)
+		// 4 Link DataStoreReference to each consumer task (input)
 		for (int consumerIdx = 0; consumerIdx < dsDescriptor.consumers.size(); consumerIdx++) {
 			String consumerId = dsDescriptor.consumers.get(consumerIdx);
 			Task consumer = taskMap.get(consumerId);
@@ -670,6 +665,9 @@ public class CamundaParser {
 				dia.setId("dia_" + dstaskLabel + uid);
 				dia.getSources().add(dsRef);
 				dia.setTarget(inputProp);
+				// Datastore reads are non-consuming: the stored value remains
+				// available to subsequent consumers.
+				dia.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_PERSISTENT_READ, "true");
 
 				Binding bind = dsDescriptor.bind_consumers.getOrDefault(consumer.getName(), null);
 				if (bind != null) {
@@ -690,7 +688,7 @@ public class CamundaParser {
 			}
 		}
 
-		return dataObject;
+		return dsRef;
 	}
 
 	private static void createDataAssociationEdge(BpmnModelInstance modelInstance, BpmnPlane plane,
@@ -734,7 +732,7 @@ public class CamundaParser {
 			}
 			double outputX = sourceBounds.getX() + offsetX;
 
-			// Distribute arrival points on top edge of DataObject
+			// Distribute arrival points on top edge of the data store
 			double targetOffsetX = calculateHorizontalOffset(targetConnectionIndex, totalTargetConnections,
 					targetWidth);
 			double arrivalX = targetBounds.getX() + targetOffsetX;
