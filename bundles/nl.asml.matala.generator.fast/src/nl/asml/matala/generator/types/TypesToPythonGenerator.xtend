@@ -10,6 +10,7 @@ import java.util.Set
 import java.util.List
 import java.util.Map
 
+import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.emf.ecore.util.EcoreUtil
 import org.eclipse.xtext.generator.AbstractGenerator
@@ -18,12 +19,17 @@ import org.eclipse.xtext.generator.IGeneratorContext
 import org.eclipse.xtext.nodemodel.util.NodeModelUtils
 
 import nl.esi.comma.project.standard.generator.^extension.IStandardProjectGeneratorExtension
+import nl.esi.comma.testspecification.testspecification.impl.TSMainImpl
 import nl.esi.xtext.common.lang.base.Annotatable
-import nl.esi.xtext.expressions.expression.ExpressionModel
 import nl.esi.xtext.types.types.EnumTypeDecl
 import nl.esi.xtext.types.types.RecordTypeDecl
 import nl.esi.xtext.types.types.SimpleTypeDecl
 import nl.esi.xtext.types.types.TypeDecl
+import nl.esi.xtext.types.types.TypesModel
+import nl.esi.xtext.types.types.impl.TypesModelImpl
+
+import static extension nl.esi.xtext.common.lang.generator.FileSystemAccessUtil.*
+import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
 
 /**
  * Explicit generator entry point. Traverses the generated language interfaces,
@@ -40,7 +46,35 @@ class TypesToPythonGenerator extends AbstractGenerator implements IStandardProje
     ) {
         // Render completely before writing, so invalid input cannot produce partial
         // output.
-        fsa.generateFile("models.py", generate(resource))
+        EcoreUtil.resolveAll(resource)
+
+        if (!resource.errors.empty)
+            throw new IllegalArgumentException("Invalid types input: " + resource.errors)
+
+        if (resource.contents.empty)
+            throw new IllegalArgumentException("Empty types resource")
+
+        // Get TSpec file (Resource)
+        val tspecRes = resource.contents.get(0)
+        if (!(tspecRes instanceof TSMainImpl))
+            throw new IllegalArgumentException("Expected an TSMainImpl parsed by the TSpec language")
+
+        // Get TSpec specific Types file path, URI, and Resource
+        val typesTspecPath = (tspecRes as TSMainImpl).imports.get(0).importURI
+        val typesTspecURI = tspecRes.eResource.resolveUri(typesTspecPath)
+        val typesTspecRes = resource.resourceSet.getResource(typesTspecURI, true).contents.get(0)
+        if (!(typesTspecRes instanceof TypesModelImpl))
+            throw new IllegalArgumentException("Expected a (TSpec) TypesModelImpl parsed by the Expression language")
+
+        // Get PSpec specific Types file path, URI, and Resource
+        val typesPspecPath = (typesTspecRes as TypesModelImpl).imports.get(0).importURI
+        val typesPspecURI = tspecRes.eResource.resolveUri(typesPspecPath)
+        val typesPspecRes = resource.resourceSet.getResource(typesPspecURI, true).contents.get(0)
+        if (!(typesPspecRes instanceof TypesModelImpl))
+            throw new IllegalArgumentException("Expected a (PSpec) TypesModelImpl parsed by the Expression language")
+
+        val pythonFsa = fsa.createFolderAccess('generated_python/')
+        pythonFsa.generateFile("models.py", generate(typesPspecRes as TypesModel))
     }
 
     def String generate(Resource resource) {
@@ -52,17 +86,16 @@ class TypesToPythonGenerator extends AbstractGenerator implements IStandardProje
         if (resource.contents.empty)
             throw new IllegalArgumentException("Empty types resource")
 
-        val model = resource.contents.get(0)
-        if (!(model instanceof ExpressionModel))
-            throw new IllegalArgumentException(
-                "Expected an ExpressionModel parsed by the Expression language"
-            )
+        // Get TSpec file (Resource)
+        val tspecRes = resource.contents.get(0)
+        if (!(tspecRes instanceof TypesModelImpl))
+            throw new IllegalArgumentException("Expected a TypesModelImpl parsed by the Expression language")
 
-        return generate(model as ExpressionModel)
+        return generate(tspecRes as TypesModel)
     }
 
     /** Also accepts a model already parsed by ParseHelper<ExpressionModel>. */
-    def String generate(ExpressionModel model) {
+    def String generate(TypesModel model) {
         val List<Schema.Declaration> declarations = new ArrayList<Schema.Declaration>()
 
         for (TypeDecl declaration : model.types) {
@@ -81,8 +114,8 @@ class TypesToPythonGenerator extends AbstractGenerator implements IStandardProje
                     if (!text.matches("[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z_][A-Za-z0-9_]*)*"))
                         throw new IllegalArgumentException("Invalid record summary subfield: " + text)
                     val dot = text.indexOf('.')
-                    val root = if (dot < 0) text else text.substring(0, dot)
-                    if (dot >= 0) values.put("subfield", text.substring(dot + 1))
+                    val root = if(dot < 0) text else text.substring(0, dot)
+                    if(dot >= 0) values.put("subfield", text.substring(dot + 1))
                     summaryEntries.add(new ModelSummaryBuilder.Entry(root, occurrence.name, values))
                 }
 
@@ -128,7 +161,7 @@ class TypesToPythonGenerator extends AbstractGenerator implements IStandardProje
                         }
                     }
 
-                    if (!python.empty) metadata.put("_python", python)
+                    if(!python.empty) metadata.put("_python", python)
                     fields.add(
                         new Schema.Field(
                             field.name,
@@ -141,7 +174,7 @@ class TypesToPythonGenerator extends AbstractGenerator implements IStandardProje
 
                 val Map<String, Object> recordMetadata = new LinkedHashMap<String, Object>()
                 val summary = ModelSummaryBuilder.build(summaryEntries)
-                if (!summary.empty) recordMetadata.put("summary", summary)
+                if(!summary.empty) recordMetadata.put("summary", summary)
                 declarations.add(
                     new Schema.Declaration(
                         record.name,
@@ -224,7 +257,7 @@ class TypesToPythonGenerator extends AbstractGenerator implements IStandardProje
      * inherited Types grammar/metamodel was not supplied, so constructor accessor
      * names must not be invented here.
      */
-    def private String typeSpelling(org.eclipse.emf.ecore.EObject type) {
+    def private String typeSpelling(EObject type) {
         val node = NodeModelUtils.getNode(type)
 
         if (node === null)
@@ -239,7 +272,7 @@ class TypesToPythonGenerator extends AbstractGenerator implements IStandardProje
     def private Map<String, Object> uiValues(String helper, Map<String, Object> values) {
         val Map<String, Object> result = new LinkedHashMap<String, Object>()
         for (entry : values.entrySet()) {
-            val key = if (entry.key === null || entry.key.empty) positionalKey(helper) else entry.key
+            val key = if(entry.key === null || entry.key.empty) positionalKey(helper) else entry.key
             put(result, key, entry.value)
         }
         result
