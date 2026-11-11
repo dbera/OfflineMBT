@@ -89,9 +89,19 @@ public class CamundaParser {
 	private static final String BPMN4S_UPDATE = "update";
 	private static final String BPMN4S_QUEUE = "Queue";
 
-	final static double OFFSET_X = 150.0;
-	final static double OFFSET_Y = 50.0;
-	final static double baseY = 50.0;
+	// BPMN DI layout constants. Keep them together so the generated diagram can
+	// be tuned without changing the semantic model construction.
+	private static final double DIAGRAM_MARGIN_X = 50.0;
+	private static final double DIAGRAM_MARGIN_Y = 40.0;
+	private static final double LANE_HEIGHT = 220.0;
+	private static final double TASK_WIDTH = 100.0;
+	private static final double TASK_HEIGHT = 80.0;
+	private static final double TASK_STEP_X = 210.0;
+	private static final double TASK_TOP_OFFSET = 35.0;
+	private static final double EVENT_SIZE = 36.0;
+	private static final double DATA_SIZE = 50.0;
+	private static final double DATA_TOP_OFFSET = 135.0;
+	private static final double DATA_STEP_X = 66.0;
 
 	public static String generateBPMNModel(AbstractTestDefinition atd) {
 		List<ElementDescriptor> descriptors = createDescriptors(atd);
@@ -239,37 +249,40 @@ public class CamundaParser {
 		LaneSet laneSet = createLaneSet(modelInstance, process);
 		BpmnPlane plane = createDiagram(modelInstance, definitions, process);
 
-		Map<String, Lane> laneMap = new HashMap<>();
-		Map<String, Double> laneYMap = new HashMap<>();
+		Map<String, Lane> laneMap = new LinkedHashMap<>();
+		Map<String, Double> laneYMap = new LinkedHashMap<>();
 		Map<String, Task> taskMap = new HashMap<>();
 		Map<BaseElement, Bounds> elemBounds = new LinkedHashMap<>();
-		double baseY = OFFSET_Y;
-		double offsetX = OFFSET_X;
+		long taskCount = elements.stream().filter(TaskDescriptor.class::isInstance).count();
+		double laneWidth = Math.max(800.0, DIAGRAM_MARGIN_X * 2 + EVENT_SIZE * 2
+				+ TASK_STEP_X * Math.max(1, taskCount));
 
-		createLanes(modelInstance, elements, laneSet, plane, laneMap, laneYMap, baseY);
+		createLanes(modelInstance, elements, laneSet, plane, laneMap, laneYMap,
+				DIAGRAM_MARGIN_Y, laneWidth);
 
 		FlowNode previousNode = null;
 		int nodeIdx = 0;
-		int lastTaskIdx = 0;
 
 		for (ElementDescriptor e : elements) {
 			if (e instanceof TaskDescriptor td) {
 				String taskId = td.id;
-				double x = offsetX + (nodeIdx + 1) * offsetX;
-				double y = laneYMap.get(td.lane) + 20.0;
+				double x = DIAGRAM_MARGIN_X + EVENT_SIZE + 55.0 + nodeIdx * TASK_STEP_X;
+				double y = laneYMap.get(td.lane) + TASK_TOP_OFFSET;
 
 				Task task = createTaskWithIO(modelInstance, process, td);
 				addBpmnExtension(task, td.step);
 				laneMap.get(td.lane).getFlowNodeRefs().add(task);
 				taskMap.put(taskId, task);
 
-				Bounds taskBounds = createBounds(modelInstance, x, y, 100.0, 80.0);
+				Bounds taskBounds = createBounds(modelInstance, x, y, TASK_WIDTH, TASK_HEIGHT);
 				elemBounds.put(task, taskBounds);
 				addShapeToPlane(modelInstance, plane, task, taskBounds);
 
 				if (nodeIdx == 0) {
 					StartEvent startEvent = createStartEvent(modelInstance, process, td.lane, laneMap);
-					Bounds startBounds = createBounds(modelInstance, offsetX, laneYMap.get(td.lane) + 40.0, 36.0, 36.0);
+					Bounds startBounds = createBounds(modelInstance, DIAGRAM_MARGIN_X,
+						laneYMap.get(td.lane) + TASK_TOP_OFFSET + (TASK_HEIGHT - EVENT_SIZE) / 2.0,
+						EVENT_SIZE, EVENT_SIZE);
 					addShapeToPlane(modelInstance, plane, startEvent, startBounds);
 					createSequenceFlowWithEdge(modelInstance, process, plane, startEvent, task, "flow_start",
 							startBounds, taskBounds);
@@ -278,25 +291,26 @@ public class CamundaParser {
 				if (previousNode != null) {
 					Bounds prevBounds = elemBounds.get(previousNode);
 					if (prevBounds == null) {
-						prevBounds = createBounds(modelInstance, offsetX, laneYMap.get(td.lane) + 60, 100.0, 80.0);
+						prevBounds = createBounds(modelInstance, DIAGRAM_MARGIN_X, laneYMap.get(td.lane) + TASK_TOP_OFFSET,
+							TASK_WIDTH, TASK_HEIGHT);
 					}
 					createSequenceFlowWithEdge(modelInstance, process, plane, previousNode, task,
 							"flow_" + (nodeIdx - 1) + "_" + nodeIdx, prevBounds, taskBounds);
 				}
 
-				if (nodeIdx == elements.size() - 1) {
+				if (nodeIdx == taskCount - 1) {
 					EndEvent endEvent = createEndEvent(modelInstance, process, td.lane, laneMap);
-					Bounds endBounds = createBounds(modelInstance, taskBounds.getX() + offsetX,
-							taskBounds.getY() + 20.0, 36.0, 36.0);
+					Bounds endBounds = createBounds(modelInstance, taskBounds.getX() + TASK_WIDTH + 55.0,
+							taskBounds.getY() + (TASK_HEIGHT - EVENT_SIZE) / 2.0,
+							EVENT_SIZE, EVENT_SIZE);
 					addShapeToPlane(modelInstance, plane, endEvent, endBounds);
 					createSequenceFlowWithEdge(modelInstance, process, plane, task, endEvent, "flow_end", taskBounds,
 							endBounds);
 				}
 
 				previousNode = task;
-				lastTaskIdx = nodeIdx;
+				nodeIdx++;
 			}
-			nodeIdx++;
 		}
 		nodeIdx = 0;
 
@@ -313,17 +327,20 @@ public class CamundaParser {
 					Bounds taskBounds = elemBounds.get(producer);
 					int count = producerDataCount.getOrDefault(ds.producer, 0);
 
-					x = taskBounds.getX() + (taskBounds.getWidth() / 2) - 25;
-					y = taskBounds.getY() + taskBounds.getHeight() + 40 + (count * 60.0);
+					// Keep produced data in the producer's lane. Multiple objects fan out
+					// horizontally instead of growing into the lane below.
+					x = taskBounds.getX() + (taskBounds.getWidth() - DATA_SIZE) / 2.0
+							+ count * DATA_STEP_X;
+					y = laneYMap.get(ds.lane) + DATA_TOP_OFFSET;
 
 					producerDataCount.put(ds.producer, count + 1);
 				} else {
-					x = offsetX + nodeIdx * offsetX;
-					y = laneYMap.get(ds.lane) + 36.0;
+					x = DIAGRAM_MARGIN_X + EVENT_SIZE + 55.0 + nodeIdx * DATA_STEP_X;
+					y = laneYMap.get(ds.lane) + DATA_TOP_OFFSET;
 				}
 
 				// Create shape without connection
-				Bounds objBounds = createBounds(modelInstance, x, y, 50.0, 50.0);
+				Bounds objBounds = createBounds(modelInstance, x, y, DATA_SIZE, DATA_SIZE);
 				dataBoundsMap.put(ds, objBounds);
 			}
 			nodeIdx++;
@@ -448,10 +465,7 @@ public class CamundaParser {
 
 	private static void createLanes(BpmnModelInstance modelInstance, List<ElementDescriptor> elements, LaneSet laneSet,
 			BpmnPlane plane, Map<String, Lane> laneMap, Map<String, Double> laneYMap,
-			// double laneHeight, double laneWidth,
-			double baseY) {
-		double laneHeight = OFFSET_Y * elements.stream().map(e -> e.lane).distinct().count();
-		double laneWidth = OFFSET_X * (elements.size() + 2);
+			double baseY, double laneWidth) {
 
 		for (ElementDescriptor e : elements) {
 			if (!laneMap.containsKey(e.lane)) {
@@ -461,10 +475,10 @@ public class CamundaParser {
 				laneSet.addChildElement(lane);
 				laneMap.put(e.lane, lane);
 
-				double y = baseY + laneMap.size() * laneHeight;
+				double y = baseY + (laneMap.size() - 1) * LANE_HEIGHT;
 				laneYMap.put(e.lane, y);
 
-				Bounds bounds = createBounds(modelInstance, 10.0, y, laneWidth, laneHeight);
+				Bounds bounds = createBounds(modelInstance, 10.0, y, laneWidth, LANE_HEIGHT);
 				addShapeToPlane(modelInstance, plane, lane, bounds);
 			}
 		}
@@ -612,7 +626,7 @@ public class CamundaParser {
 		BpmnShape dsShape = modelInstance.newInstance(BpmnShape.class);
 		dsShape.setId("shape_" + dsId);
 		dsShape.setBpmnElement(dsRef);
-		Bounds dsBounds = createBounds(modelInstance, x, y, 50.0, 50.0);
+		Bounds dsBounds = createBounds(modelInstance, x, y, DATA_SIZE, DATA_SIZE);
 		dsShape.setBounds(dsBounds);
 		plane.addChildElement(dsShape);
 
