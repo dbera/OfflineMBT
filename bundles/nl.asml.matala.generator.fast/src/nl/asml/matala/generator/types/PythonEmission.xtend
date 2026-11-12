@@ -16,6 +16,7 @@ import java.util.ArrayList
 import java.util.LinkedHashMap
 import java.util.List
 import java.util.Map
+import nl.asml.matala.generator.types.Schema.Declaration
 
 /** Explicit, validated Python expressions mixed with ordinary literal metadata. */
 final class PythonEmission {
@@ -28,7 +29,7 @@ final class PythonEmission {
 
     def static Object required() { new Expression("...") }
 
-    def static Object enumMember(Object value, Map<String, Schema.Declaration> types) {
+    def static Object enumMember(Object value, Map<String, Declaration> types) {
         if (!(value instanceof String)) throw new IllegalArgumentException("Enum expression must be a string")
         val text = value as String
         if (!text.matches("[A-Za-z][A-Za-z0-9_]*\\.[A-Za-z][A-Za-z0-9_]*"))
@@ -43,7 +44,7 @@ final class PythonEmission {
         new Expression(text)
     }
 
-    def static Object enumTree(Object value, Map<String, Schema.Declaration> types) {
+    def static Object enumTree(Object value, Map<String, Declaration> types) {
         if (value instanceof Map<?, ?>) {
             val Map<Object, Object> result = new LinkedHashMap<Object, Object>()
             for (key : value.keySet()) result.put(key, enumTree(value.get(key), types))
@@ -59,7 +60,7 @@ final class PythonEmission {
         value
     }
 
-    def static Object factory(Object value, Map<String, Schema.Declaration> types) {
+    def static Object factory(Object value, Map<String, Declaration> types) {
         if (!(value instanceof String)) throw new IllegalArgumentException("Factory must be a name")
         val name = value as String
         PythonRenderer.identifier(name)
