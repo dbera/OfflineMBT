@@ -29,6 +29,11 @@
             class="nl.asml.matala.generator.bpmn.FromConcreteToBpmn">
       </generator>
       -->
+      <!-- Disabled outdated
+      <generator
+            class="nl.asml.matala.generator.docgen.FromConcreteToDocumentation">
+      </generator>
+      -->
    </extension>
 
 </plugin>

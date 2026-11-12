@@ -3,3 +3,4 @@ nl.asml.matala.generator.types.TypesToPythonGenerator
 # Disabled until issue 334 is solved,
 # see https://github.com/dbera/OfflineMBT/issues/334
 # nl.asml.matala.generator.bpmn.FromConcreteToBpmn
+# nl.asml.matala.generator.docgen.FromConcreteToDocumentation
