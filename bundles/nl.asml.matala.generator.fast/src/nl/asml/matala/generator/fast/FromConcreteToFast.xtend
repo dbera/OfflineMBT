@@ -49,10 +49,15 @@ import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
 
 import static extension nl.esi.xtext.actions.utilities.ActionsUtilities.*
+import nl.esi.comma.testspecification.generator.json.TestspecificationJsonGenerator
+
 import static extension nl.esi.xtext.common.lang.generator.FileSystemAccessUtil.*
 import static extension org.eclipse.emf.ecore.util.EcoreUtil.*
 
 class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGeneratorExtension {
+    // @Inject TestspecificationJsonGenerator testSpecificationJsonGenerator
+    val TestspecificationJsonGenerator testSpecificationJsonGenerator = new TestspecificationJsonGenerator
+    
     /* TODO this should come from project task? Investigate and Implement it. */
     var List<String> record_def_file_names = List.of("lot_definition", "job_definition")
     var List<String> setup_file_names = List.of("setup_file")
@@ -74,6 +79,11 @@ class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGe
         val testPath = ctx.generatorParams.getOrDefault('prefixPath', './')
         val testFsa = baseFsa.createFolderAccess(testPath)
         val datasetFsa = testFsa.createFolderAccess('dataset/')
+
+        val ctd = res.contents.filter(TSMain).map[model].filter(TestDefinition).head
+
+        // New independent JSON export
+        testSpecificationJsonGenerator.generate("_", ctd, res, testFsa)
 
         // 1) using the .tspec file
         val modelInst = res.contents.head as TSMain

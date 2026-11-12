@@ -40,7 +40,6 @@ Workflow {
             fileExtensions = "constraints"
 
             referencedResource = "platform:/resource/nl.esi.xtext.actions/model/generated/Actions.genmodel"
-            referencedResource = "platform:/resource/nl.esi.comma.steps/model/generated/Step.genmodel"
 
             serializer = {
                 generateStub = false

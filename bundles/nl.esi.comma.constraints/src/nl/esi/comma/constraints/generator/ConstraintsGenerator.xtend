@@ -15,7 +15,6 @@
  */
 package nl.esi.comma.constraints.generator
 
-import nl.esi.comma.steps.step.Steps
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2

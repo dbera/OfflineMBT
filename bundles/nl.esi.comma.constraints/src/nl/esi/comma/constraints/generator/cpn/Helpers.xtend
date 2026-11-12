@@ -1,0 +1,269 @@
+/**
+ * Copyright (c) 2024, 2025 TNO-ESI
+ *
+ * See the NOTICE file(s) distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This program and the accompanying materials are made available
+ * under the terms of the MIT License which is available at
+ * https://opensource.org/licenses/MIT
+ *
+ * SPDX-License-Identifier: MIT
+ */
+
+package nl.esi.comma.constraints.generator.cpn
+
+import java.util.List
+import java.util.Map
+import nl.esi.comma.constraints.constraints.Act
+import nl.esi.comma.constraints.constraints.Ref
+import nl.esi.comma.constraints.constraints.RefAction
+import nl.esi.comma.constraints.constraints.ReferenceLink
+import nl.esi.comma.constraints.constraints.Template
+import nl.esi.comma.constraints.generator.cpn.model.RefInfo
+import nl.esi.comma.testspecification.generator.json.SemanticExpressionJsonSerializer
+import nl.esi.comma.testspecification.testspecification.AssertionStep
+import nl.esi.comma.testspecification.testspecification.RunStep
+import nl.esi.comma.testspecification.testspecification.TestDefinition
+import nl.esi.xtext.actions.actions.AssignmentAction
+import nl.esi.xtext.actions.actions.RecordFieldAssignmentAction
+import nl.esi.xtext.expressions.expression.Expression
+import nl.esi.xtext.expressions.expression.ExpressionBracket
+import nl.esi.xtext.expressions.expression.ExpressionFunctionCall
+import nl.esi.xtext.expressions.expression.ExpressionMapRW
+import nl.esi.xtext.expressions.expression.ExpressionRecordAccess
+import nl.esi.xtext.expressions.expression.ExpressionVariable
+import nl.esi.xtext.expressions.expression.Variable
+import org.eclipse.emf.common.util.BasicEList
+import org.eclipse.emf.common.util.EList
+import org.eclipse.emf.ecore.EObject
+import org.eclipse.xtext.EcoreUtil2
+import org.eclipse.xtext.nodemodel.util.NodeModelUtils
+
+import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
+import nl.esi.comma.testspecification.testspecification.AbstractStep
+
+class Helpers {
+    def getRefName(Ref ref){
+        var refName = new String
+        if(ref instanceof RefAction) { refName = ref.action.name ?: "" }
+        return refName
+    }
+
+    def getRefInputTypeAndVar(Ref ref) 
+    {
+        var refInfo = new RefInfo
+        if(ref instanceof RefAction) {
+            var inputVar = ref.action.inputs.head
+            refInfo = new RefInfo(inputVar.type.type.name, ref.action.name + "_" + inputVar.name)
+        }
+        return refInfo
+    }
+    
+    //Counts the size of a trace here
+    def countTraceSize(TestDefinition td, List<RefInfo> labellist)
+    {
+        var idx = 0
+        
+        for(ss : td.stepSeq) {
+            for(step: ss.step) {
+                if(step instanceof RunStep) {
+                    idx++
+                }
+                else if(step instanceof AssertionStep) {
+                    idx++
+                }
+                else {}
+            }
+        }
+        return idx
+    }
+    def getRefsforTemplate(EObject templatetype){
+        val reflist = newArrayList
+        for (feature : templatetype.eClass.EAllStructuralFeatures) {
+            if (feature.name.startsWith("ref")) {
+                val refs = templatetype.eGet(feature) as List<Ref>
+                
+                if (!refs.empty)
+                    reflist.add(refs.head)
+            }
+        }
+        return reflist
+    }
+    
+    //    as there is no superclass implementation in the grammar}
+    def getTemplateTypes(EObject templateGroup){
+        val feature = templateGroup.eClass.getEStructuralFeature("type")
+        
+        if (feature !== null)
+            return templateGroup.eGet(feature) as List<EObject>
+        else
+            return emptyList
+    }
+    
+//    returns "where-concrete" guard
+    def getRefConcreteWhereClause(Ref ref) {
+        if(ref instanceof RefAction) {
+            if (ref.whereArgs.isNullOrEmpty) 
+                return "true"
+            return getConjunction(ref.whereArgs)
+        }
+        return null
+    }
+    
+//    returns guard for repeated activation tasks
+    def getRefRepeatedActivationWhereClause(Ref ref) {
+    if(ref instanceof RefAction) {
+        val concreteWhere = getRefConcreteWhereClause(ref)
+        val correlationWhere =
+            if (!ref.whereOptArgs.isNullOrEmpty)
+                getConjunction(ref.whereOptArgs)
+            else if (!ref.withArgs.isNullOrEmpty)
+                getWithConjunction(ref.withArgs).replace(":=", "==").trim
+            else
+                "true"
+    
+        if (concreteWhere == "true") return correlationWhere
+        if (correlationWhere == "true") return concreteWhere
+        return '''«concreteWhere» and «correlationWhere»'''
+        }
+        return null
+    }
+
+//    returns "where-correlation" guard
+    def getRefCorrelationWhereClause(Ref ref) {
+        if(ref instanceof RefAction) {
+            if(ref.whereOptArgs !== null)
+                return getConjunction(ref.whereOptArgs)
+        }
+        return null    
+    }
+
+//  returns combination of "where-concrete" and "where-correlation" guards
+    def getRefCombinedWhereClause(Ref ref) {
+        if(ref instanceof RefAction) {
+            val EList<Expression> temp = new BasicEList<Expression>()
+            if (ref.whereArgs !== null) temp.addAll(ref.whereArgs)
+            if (ref.whereOptArgs !== null) temp.addAll(ref.whereOptArgs)
+            if (temp.isNullOrEmpty) 
+                return "true"
+            return getConjunction(temp)
+        }
+        return null
+    }
+
+//  returns "with" bindings
+    def getRefWithClause(Ref ref) {
+        if(ref instanceof RefAction) {
+            if (ref.withArgs !== null) 
+                return getWithConjunction(ref.withArgs)
+        }
+        return null
+    }
+
+//    Overloading the function to handle no correlation    
+    def String getRefWithClause(
+        Ref ref,
+        RefInfo correlationInfo,
+        boolean hasCorrelation
+    ) {
+        if (hasCorrelation) {
+            return getRefWithClause(ref)
+        }
+    
+        return '''
+            «correlationInfo.refName» := «correlationInfo.refType» {
+                MetaData = <map<string,string[]>>{}
+            }
+        '''
+    }
+    
+
+    def getConjunction(EList<Expression> eList) {
+        return
+        '''«FOR e : eList SEPARATOR " and "»«e.cleanSerialize»«ENDFOR»'''
+    }
+
+    def getWithConjunction(EList<AssignmentAction> aList) {
+        return
+        '''
+        «FOR a : aList SEPARATOR " and "»«a.cleanSerialize»«ENDFOR»
+        '''
+    }
+    
+    def String cleanSerialize(Expression expr) {
+        if (expr === null || expr.eResource === null) { return "" }
+        return expr.serialize[ obj | obj.actionVariableName ].trim
+    }
+    
+    def String cleanSerialize(AssignmentAction expr) {
+        if (expr === null || expr.eResource === null) { return "" }
+        return expr.serialize[ obj | obj.actionVariableName ].trim
+    }
+    
+    // a variable declared on an action (Input/Output) becomes <Action>_<variable>; others (e.g. ctx) are untouched
+    private def CharSequence actionVariableName(EObject obj) {
+        if (obj instanceof ExpressionVariable) {
+            val container = obj.variable.eContainer
+            if (container instanceof Act) {
+                return container.name + "_" + obj.variable.name
+            }
+        }
+        return null
+    }
+    def escapePythonString(String value) {
+    value
+        .replaceAll("[ \\t]*[\\r\\n]+[ \\t]*", " ")
+        .replace("\\", "\\\\")
+        .replace("\"", "\\\"")
+    }
+
+     // one check per consumes link; candidate assignments come from the steps whose input the link targets
+    def getReferenceChecks(Template constraint, TestDefinition td) {
+        val serializer = new SemanticExpressionJsonSerializer
+        EcoreUtil2.getAllContentsOfType(constraint, ReferenceLink).map [ link |
+            val Map<String, Object> check = newLinkedHashMap
+            check.put("targetText", nodeText(link.target)) //the target's expression text 
+            check.put("sourceText", nodeText(link.source)) //the source's expression text
+            check.put("target", serializer.serialize(link.target)) //serialized target expression using tspec2json serializer
+            check.put("source", serializer.serialize(link.source)) //serialized source expression using tspec2json serializer
+            check.put("assignments",
+                getCandidateAssignments(td, (rootVariable(link.target)?.eContainer as Act)?.name, serializer)) //concrete runstep's target and value
+            check
+        ].toList
+    }
+
+    def getCandidateAssignments(TestDefinition td, String actionName, SemanticExpressionJsonSerializer serializer) {
+        val Map<String, Object> result = newLinkedHashMap
+        for (step : EcoreUtil2.getAllContentsOfType(td, AbstractStep).filter[stepVar?.type?.type?.name == actionName]) {
+            val assignments = EcoreUtil2
+                .getAllContentsOfType(step, RecordFieldAssignmentAction)
+                .map [ assignment |
+                    val Map<String, Object> entry = newLinkedHashMap
+                    entry.put("target", serializer.serialize(assignment.fieldAccess))
+                    entry.put("value", serializer.serialize(assignment.exp))
+                    entry
+                ].toList
+            result.put(step.stepVar.name, assignments)
+        }
+        result
+    }
+    // the variable a plain access path starts from, or null
+    def Variable rootVariable(Expression e) {
+        switch e {
+            ExpressionVariable: e.variable
+            ExpressionRecordAccess: rootVariable(e.record)
+            ExpressionMapRW: rootVariable(e.map)
+            ExpressionBracket: rootVariable(e.sub)
+            ExpressionFunctionCall case e.function?.name == "get" && !e.args.empty: rootVariable(e.args.head)
+            default: null
+        }
+    }
+
+    def nodeText(EObject e) {
+        NodeModelUtils.getNode(e).text
+        .replaceAll("(?s)/\\*.*?\\*/", "")
+        .replaceAll("(?m)(^|\\s)//.*$", "$1")
+        .trim.replaceAll("\\s+", " ")
+    }
+}
