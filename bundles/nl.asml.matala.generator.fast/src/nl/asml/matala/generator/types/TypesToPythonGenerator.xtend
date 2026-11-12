@@ -1,13 +1,13 @@
 /**
  * Copyright (c) 2024, 2025 TNO-ESI
- *
+ * 
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
- *
+ * 
  * This program and the accompanying materials are made available
  * under the terms of the MIT License which is available at
  * https://opensource.org/licenses/MIT
- *
+ * 
  * SPDX-License-Identifier: MIT
  */
 package nl.asml.matala.generator.types
@@ -15,18 +15,9 @@ package nl.asml.matala.generator.types
 import java.util.ArrayList
 import java.util.LinkedHashMap
 import java.util.LinkedHashSet
-import java.util.Set
 import java.util.List
 import java.util.Map
-
-import org.eclipse.emf.ecore.EObject
-import org.eclipse.emf.ecore.resource.Resource
-import org.eclipse.emf.ecore.util.EcoreUtil
-import org.eclipse.xtext.generator.AbstractGenerator
-import org.eclipse.xtext.generator.IFileSystemAccess2
-import org.eclipse.xtext.generator.IGeneratorContext
-import org.eclipse.xtext.nodemodel.util.NodeModelUtils
-
+import java.util.Set
 import nl.esi.comma.project.standard.generator.^extension.IStandardProjectGeneratorExtension
 import nl.esi.comma.testspecification.testspecification.impl.TSMainImpl
 import nl.esi.xtext.common.lang.base.Annotatable
@@ -36,6 +27,13 @@ import nl.esi.xtext.types.types.SimpleTypeDecl
 import nl.esi.xtext.types.types.TypeDecl
 import nl.esi.xtext.types.types.TypesModel
 import nl.esi.xtext.types.types.impl.TypesModelImpl
+import org.eclipse.emf.ecore.EObject
+import org.eclipse.emf.ecore.resource.Resource
+import org.eclipse.emf.ecore.util.EcoreUtil
+import org.eclipse.xtext.generator.AbstractGenerator
+import org.eclipse.xtext.generator.IFileSystemAccess2
+import org.eclipse.xtext.generator.IGeneratorContext
+import org.eclipse.xtext.nodemodel.util.NodeModelUtils
 
 import static extension nl.esi.xtext.common.lang.generator.FileSystemAccessUtil.*
 import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
@@ -140,11 +138,14 @@ class TypesToPythonGenerator extends AbstractGenerator implements IStandardProje
                     for (occurrence : occurrences) {
                         if (ModelSummaryBuilder.NAMES.contains(occurrence.name)) {
                             summaryEntries.add(new ModelSummaryBuilder.Entry(
-                                field.name, occurrence.name, occurrence.values
+                                field.name,
+                                occurrence.name,
+                                occurrence.values
                             ))
                         } else if (occurrence.name == "FileSelectorList") {
                             throw new IllegalArgumentException(
-                                "@" + occurrence.name + " is no longer supported; use @Ref with filters_json or @L with items_json"
+                                "@" + occurrence.name +
+                                    " is no longer supported; use @Ref with filters_json or @L with items_json"
                             )
                         } else if (occurrence.name == "Identifier") {
                             if (!occurrence.values.empty)
@@ -210,7 +211,8 @@ class TypesToPythonGenerator extends AbstractGenerator implements IStandardProje
                             if (occurrence.values.size() != 1 || !occurrence.values.containsKey("value"))
                                 throw new IllegalArgumentException("EnumValue requires only value=...")
                             values.put("default", occurrence.values.get("value"))
-                        } else values.putAll(uiValues("F", occurrence.values))
+                        } else
+                            values.putAll(uiValues("F", occurrence.values))
                     }
 
                     if (values.containsKey("default"))
@@ -288,8 +290,7 @@ class TypesToPythonGenerator extends AbstractGenerator implements IStandardProje
     }
 
     def private String positionalKey(String helper) {
-        return if (helper == "Ref" || helper == "RefList") "path"
-        else "default"
+        return if(helper == "Ref" || helper == "RefList") "path" else "default"
     }
 
     /** Decode structured metadata only AFTER AnnotationUtil has read its value. */

@@ -8,12 +8,12 @@ Export-Package: nl.asml.matala.generator.bpmn,
  nl.asml.matala.generator.fast,
  nl.asml.matala.generator.types
 Bundle-Vendor: ASML
-Automatic-Module-Name: nl.asml.matala.generator.fast,
- nl.asml.matala.generator.types
+Automatic-Module-Name: nl.asml.matala.generator.fast
 Bundle-RequiredExecutionEnvironment: JavaSE-21
 Require-Bundle: org.eclipse.xtext,
  org.eclipse.xtext.xbase,
  org.eclipse.equinox.common;bundle-version="3.16.0",
+ org.eclipse.equinox.app,
  org.eclipse.emf.ecore,
  org.eclipse.xtext.xbase.lib;bundle-version="2.36.0",
  org.eclipse.emf.common,

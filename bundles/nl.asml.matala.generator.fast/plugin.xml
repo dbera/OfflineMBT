@@ -35,5 +35,16 @@
       </generator>
       -->
    </extension>
-
+   <extension
+         id="typesToPython"
+         point="org.eclipse.core.runtime.applications">
+      <application
+            cardinality="singleton-global"
+            thread="main"
+            visible="true">
+         <run
+               class="nl.asml.matala.generator.types.TypesToPythonCli">
+         </run>
+      </application>
+   </extension>
 </plugin>
