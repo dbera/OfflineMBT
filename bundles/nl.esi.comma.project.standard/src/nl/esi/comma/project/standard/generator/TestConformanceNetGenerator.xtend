@@ -94,10 +94,10 @@ class TestConformanceNetGenerator  extends AbstractGenerator {
                 throw new Exception(task.tspecFile + " Could not be resolved.")
             }
             var tspec = tspecResource.allContents.head
-            if(tspec !== null && tspec instanceof TSMain) {
+            if (tspec !== null && tspec instanceof TSMain) {
                 val generatedConstraints = (new CPNTemplateGenerator).generatePSpec(
-                    resource, fsa, constraints, tspec as TSMain
-                )
+                            resource, fsa, constraints, tspec as TSMain
+                            )
 //          generating the reachability graph from pspec    
             val verdicts = new ArrayList<Pair<String, URI>>
             for (generatedConstraint : generatedConstraints) {

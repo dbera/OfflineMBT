@@ -43,6 +43,12 @@ import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
 import static extension org.eclipse.emf.ecore.util.EcoreUtil.*
 import static extension org.eclipse.lsat.common.xtend.Queries.*
 import static extension org.eclipse.xtext.EcoreUtil2.*
+import nl.esi.comma.testspecification.testspecification.TSMain
+import java.util.LinkedHashSet
+import java.util.LinkedHashMap
+import nl.esi.xtext.types.types.RecordTypeDecl
+import nl.esi.comma.testspecification.testspecification.AssertionStep
+import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
 
 /**
  * Generates code from your model files on save.
@@ -136,6 +142,10 @@ class StandardProjectGenerator extends AbstractGenerator {
                     MergeConcreteDataAssigments.transform(conTspecRes)
                     conTspecRes.trySave
                 }
+                // Validate the generated concrete tspec, and generate the action.constraints file to be used to write properties
+                if (conTspecRes.validate) {
+                    generateActionConstraints(conTspecRes, conTspecFsa, tspecName + '.header.constraints')
+                }
                 // Validate the generated concrete tspec, stop this transformation on error
                 if (conTspecRes.validate) {
                     // TODO fetch these FAST configuration parameters from somewhere else (e.g., .prj task)
@@ -150,7 +160,46 @@ class StandardProjectGenerator extends AbstractGenerator {
             }
         }
     }
+    
+    private def void generateActionConstraints(Resource resource, IFileSystemAccess2 fsa, String fileName) {
+        val root = resource.contents.filter(TSMain).head
+        val imports = new LinkedHashSet<String>()
+        val actions = new LinkedHashMap<String, String>()
+        
+        for (step : root.model.stepSeq.flatMap[step]) {
+            val type = step.stepVar.type.type
+            val record = type as RecordTypeDecl
+            val input = record.allFields.findFirst[name == 'input']
+            val output = record.allFields.findFirst[name == 'output']
+            val kind = if (step instanceof AssertionStep) 'Observable' else 'Trigger'
 
+            val declaration = '''
+                «kind» «record.name»
+                    «IF input !== null»
+                    inputs «input.type.typeName» Input
+                    «ENDIF»
+                    «IF output !== null»
+                    outputs «output.type.typeName» Output
+                    «ENDIF»
+            '''.toString
+            actions.putIfAbsent(record.name, declaration)
+            imports.add(record.eResource.URI.deresolve(fsa.getURI(fileName)).toString)
+        }
+
+        fsa.generateFile(fileName,
+        '''
+        «FOR path : imports»
+        import "«path»"
+        «ENDFOR»
+
+        Actions
+
+        «FOR declaration : actions.values SEPARATOR '\n'»
+        «declaration»
+        «ENDFOR»
+        ''')
+    }
+    
     private def createPropertiesMap(TargetConfig tgtConfig) {
         var props = new HashMap<String, String>()
         for (elem : tgtConfig.item) {
