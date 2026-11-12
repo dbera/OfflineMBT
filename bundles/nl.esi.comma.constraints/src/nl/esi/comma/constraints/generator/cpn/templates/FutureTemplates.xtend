@@ -241,10 +241,7 @@ class FutureTemplates {
         '''
 
         return new CPNTemplateResult (psBody, acceptanceJson, diagnostics)
-		
     }
-    
-    
 
     def generateChainResponseTemplate(
         String templateName, RefInfo correlationInfo, boolean hasCorrelation, boolean negated,
@@ -427,10 +424,9 @@ class FutureTemplates {
                   }
                 }
         '''
-       
+
         val activationLabel = '''(«activationEvent» where «helpers.getRefConcreteWhereClause(activationEventInst)»)'''
         val targetLabel = '''(«targetEvent» where «helpers.getRefConcreteWhereClause(targetEventInst)»)'''
-        
         val diagnostics =
         '''
         [
@@ -485,7 +481,7 @@ class FutureTemplates {
              }
         «ENDIF»
         ]
-        '''       
+        '''
         return new CPNTemplateResult (psBody, acceptanceJson, diagnostics)
     }
 
@@ -676,11 +672,10 @@ class FutureTemplates {
                           }
                         }
         '''
-        
+
         val activationLabel = '''(«activationEvent» where «helpers.getRefConcreteWhereClause(activationEventInst)»)'''
         val targetLabel = '''(«targetEvent» where «helpers.getRefConcreteWhereClause(targetEventInst)»)'''
         val intermediateLabel = '''(«intermediateEvent» where «helpers.getRefConcreteWhereClause(intermediateEventInst)»)'''
-        
         val diagnostics =
         '''
         [
@@ -738,7 +733,6 @@ class FutureTemplates {
         '''
 
         return new CPNTemplateResult (psBody, acceptanceJson, diagnostics)
-        
     }
 
 }

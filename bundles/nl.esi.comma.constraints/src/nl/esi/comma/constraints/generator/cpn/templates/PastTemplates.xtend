@@ -61,7 +61,7 @@ class PastTemplates {
              },
              "message": "Activation was eventually preceded by a forbidden Target «IF hasCorrelation» with matching correlation«ENDIF»."   
             }
-        «ELSE»        
+        «ELSE»
             {
             "kind": "unfulfilledPrecedence",
             "valueKind": "correlation",
@@ -102,10 +102,8 @@ class PastTemplates {
         val result = futuretemplates.generateChainResponseTemplate(templateName, correlationInfo, hasCorrelation, negated,
         activationEventInst, activationEventInfo, activationEvent,
         targetEventInst, targetEvent, targetEventInfo )
-        
         val activationLabel = '''(«activationEvent» where «helpers.getRefConcreteWhereClause(activationEventInst)»)'''
         val targetLabel = '''(«targetEvent» where «helpers.getRefConcreteWhereClause(targetEventInst)»)'''
-        
         val diagnostics =
         '''
         [
@@ -132,7 +130,7 @@ class PastTemplates {
              },
              "message": "Activation was immediately preceded by a forbidden Target «IF hasCorrelation» with matching correlation«ENDIF»."   
             }
-        «ELSE»                
+        «ELSE»
             {
             "kind": "unfulfilledChainPrecedence",
             "valueKind": "correlation",
@@ -161,14 +159,13 @@ class PastTemplates {
         «ENDIF»
         ]
         '''
-        
         return new CPNTemplateResult(
             result.psBody,
             result.acceptanceJson.replace('"templateType": "ChainResponse"', '"templateType": "ChainPrecedence"'),
             diagnostics
         )
     }
-    
+
     def generateAlternatePrecedenceTemplate(
         String templateName, RefInfo correlationInfo, boolean hasCorrelation,
         Ref activationEventInst, RefInfo activationEventInfo, String activationEvent,
@@ -241,7 +238,6 @@ class PastTemplates {
             }
         ]
         '''
-             
         return new CPNTemplateResult(
             result.psBody,
             result.acceptanceJson.replace('"templateType": "AlternateResponse"', '"templateType": "AlternatePrecedence"'),

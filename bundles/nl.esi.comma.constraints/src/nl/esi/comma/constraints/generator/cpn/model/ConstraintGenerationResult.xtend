@@ -46,11 +46,11 @@ class ConstraintGenerationResult {
     def String getAcceptancePythonFileName() {
         acceptancePythonFileName
     }
-    
+
     def String getConstraintFolderName() {
         constraintFolderName
     }
-    
+
     def String getConstraintSourceUri() {
     constraintSourceUri
 }

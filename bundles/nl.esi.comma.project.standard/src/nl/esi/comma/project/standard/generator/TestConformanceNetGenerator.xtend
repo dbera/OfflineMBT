@@ -115,7 +115,6 @@ class TestConformanceNetGenerator  extends AbstractGenerator {
                         + generatedConstraint.getPspecFileName()
                     )
                 }
-            
                 (new ProductGenerator(ProductGenerationMode.CHECK_TEST_CONFORMANCE))
                     .doGenerate(pspecResource, fsa, ctx)
                 val specName = product.specification.name
@@ -130,7 +129,6 @@ class TestConformanceNetGenerator  extends AbstractGenerator {
                         constraintFsa,
                         ctx
                     )
-                 
                 val acceptancePyUri = constraintFsa.getURI(generatedConstraint.getAcceptancePythonFileName())
                 val acceptanceJsonUri = constraintFsa.getURI(generatedConstraint.getAcceptanceJsonFileName())
                 val rgJsonUri = constraintFsa.getURI("plantuml/rg.json")
@@ -175,7 +173,7 @@ class TestConformanceNetGenerator  extends AbstractGenerator {
         if (process.waitFor != 0) {
             throw new RuntimeException('Conformance summary generation failed.')
         }
-    }    
+    }
     // runs the generated acceptance script and writes the verdict
     def private runAcceptanceEvaluation(URI acceptancePyUri, URI acceptanceJsonUri, URI rgJsonUri, URI verdictUri) {
         val pythonExe = task.pythonExe ?: 'python.exe'

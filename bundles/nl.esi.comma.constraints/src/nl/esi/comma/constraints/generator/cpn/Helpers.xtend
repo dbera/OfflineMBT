@@ -60,7 +60,6 @@ class Helpers {
         return refInfo
     }
     
-    //TODO{discuss: made this a counting function in the helper class}
     //Counts the size of a trace here
     def countTraceSize(TestDefinition td, List<RefInfo> labellist)
     {
@@ -79,7 +78,6 @@ class Helpers {
         }
         return idx
     }
-    //TODO{discuss: adding a helper function to get all refs as a list for a template type}
     def getRefsforTemplate(EObject templatetype){
         val reflist = newArrayList
         for (feature : templatetype.eClass.EAllStructuralFeatures) {
@@ -93,7 +91,6 @@ class Helpers {
         return reflist
     }
     
-    //TODO{discuss: adding a helper function to get all templatetypes of a templategroup
     //    as there is no superclass implementation in the grammar}
     def getTemplateTypes(EObject templateGroup){
         val feature = templateGroup.eClass.getEStructuralFeature("type")
@@ -105,19 +102,16 @@ class Helpers {
     }
     
 //    returns "where-concrete" guard
-//    TODO{it should return "true" if there is no clause, check the null function}
     def getRefConcreteWhereClause(Ref ref) {
         if(ref instanceof RefAction) {
             if (ref.whereArgs.isNullOrEmpty) 
                 return "true"
             return getConjunction(ref.whereArgs)
         }
-//        System.out.println("message")
         return null
     }
     
 //    returns guard for repeated activation tasks
-//  TODO[check replacement happens only one time, prevents with list multiple times]
     def getRefRepeatedActivationWhereClause(Ref ref) {
     if(ref instanceof RefAction) {
         val concreteWhere = getRefConcreteWhereClause(ref)
@@ -217,22 +211,6 @@ class Helpers {
         }
         return null
     }
-//    def String cleanSerialize(Expression expr) {
-//        if (expr === null || expr.eResource === null) { return "" }
-//        val resource = expr.eResource as XtextResource
-//        val serializer = resource.resourceServiceProvider.get(ISerializer)
-//        return serializer.serialize(expr).trim
-////        return serialize(expr).trim
-//    }
-//
-//    def String cleanSerialize(AssignmentAction expr) {
-//        if (expr === null || expr.eResource === null) { return "" }
-//        val resource = expr.eResource as XtextResource
-//        val serializer = resource.resourceServiceProvider.get(ISerializer)
-//        return serializer.serialize(expr).trim
-////        return serialize(expr).trim
-//    }
-    
     def escapePythonString(String value) {
     value
         .replaceAll("[ \\t]*[\\r\\n]+[ \\t]*", " ")
@@ -251,7 +229,6 @@ class Helpers {
             check.put("source", serializer.serialize(link.source)) //serialized source expression using tspec2json serializer
             check.put("assignments",
                 getCandidateAssignments(td, (rootVariable(link.target)?.eContainer as Act)?.name, serializer)) //concrete runstep's target and value
-//                getCandidateAssignments(td, rootVariable(link.target)?.name, serializer)) //concrete runstep's target and value
             check
         ].toList
     }
@@ -259,8 +236,6 @@ class Helpers {
     def getCandidateAssignments(TestDefinition td, String actionName, SemanticExpressionJsonSerializer serializer) {
         val Map<String, Object> result = newLinkedHashMap
         for (step : EcoreUtil2.getAllContentsOfType(td, AbstractStep).filter[stepVar?.type?.type?.name == actionName]) {
-//        for (step : EcoreUtil2.getAllContentsOfType(td, RunStep)
-//            .filter[stepVar?.name == inputName]) {
             val assignments = EcoreUtil2
                 .getAllContentsOfType(step, RecordFieldAssignmentAction)
                 .map [ assignment |

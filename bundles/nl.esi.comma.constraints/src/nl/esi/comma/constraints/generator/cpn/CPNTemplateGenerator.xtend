@@ -79,11 +79,6 @@ class CPNTemplateGenerator
         }
         return results
     }
-    
-//    def isStepNamePresent(List<RefInfo> labelList, String name) {
-//        for(label : labelList) { if(label.refName.equals(name)) return true }
-//        return false
-//    }
 
     def generateTSpecModel(TestDefinition td, List<RefInfo> labelList) 
     {
@@ -121,18 +116,13 @@ class CPNTemplateGenerator
                         with-inputs p«_idx», StepMetaData
                         «IF step.inputName(labelList) !== null»
                             produces-outputs «step.inputName(labelList)»
-«««                        «IF isStepNamePresent(labelList,step.stepVar.name)»                            
-«««                            produces-outputs «step.stepVar.name»
                             updates:
                                 // Constructor
                                 «step.inputName(labelList)» := «Utils.defaultValue(step.inputType, step.inputName(labelList))»
-«««                                «step.stepVar.name» := «Utils.defaultValue(step.stepVar.type.type, step.stepVar.name)»
-«««                            «FOR act : step.input»
                             «FOR act : step.context + step.input + step.sut»
                                 «IF act.exp.eAllContents.filter(ExpressionVariable).isEmpty»
-                                    // ReferenceExp. TODO Skip.
+                                    // ReferenceExpressions are skipped.
                                     «step.inputName(labelList)».«act.fieldAccess.fieldPath.tail.join('.')» := «NodeModelUtils.getTokenText(NodeModelUtils.getNode(act.exp))»
-«««                                    «NodeModelUtils.getNode(act).text.replaceAll("(?m)^\\s*$\\R?", "")»
                                 «ENDIF»
                             «ENDFOR»
                         «ELSE»
@@ -191,17 +181,13 @@ class CPNTemplateGenerator
                     with-inputs p«_idx», StepMetaData
                     «IF step.inputName(labelList) !== null»
                         produces-outputs «step.inputName(labelList)»
-«««                    «IF isStepNamePresent(labelList,step.stepVar.name)»
-«««                        produces-outputs «step.stepVar.name»
                         updates:
                             // Constructor
                             «step.inputName(labelList)» := «Utils.defaultValue(step.inputType, step.inputName(labelList))»
-«««                            «step.stepVar.name» := «Utils.defaultValue(step.stepVar.type.type, step.stepVar.name)»
                         «FOR act : step.context + step.input + step.sut»
                             «IF act.exp.eAllContents.filter(ExpressionVariable).isEmpty»
-                                // ReferenceExp. TODO Skip.
+                                // ReferenceExpressions are skipped.
                                 «step.inputName(labelList)».«act.fieldAccess.fieldPath.tail.join('.')» := «NodeModelUtils.getTokenText(NodeModelUtils.getNode(act.exp))»
-«««                                «NodeModelUtils.getNode(act).text.replaceAll("(?m)^\\s*$\\R?", "")»
                             «ENDIF»
                         «ENDFOR»
                     «ELSE»
@@ -268,21 +254,12 @@ class CPNTemplateGenerator
                 
                 «IF boundaryStep.inputName(labelList) !== null»
                     produces-outputs «boundaryStep.inputName(labelList)»
-«««                «IF isStepNamePresent(labelList, boundaryStep.stepVar.name)»
-«««                    produces-outputs «boundaryStep.stepVar.name»
                     updates:
                         «boundaryStep.inputName(labelList)» := «Utils.defaultValue(boundaryStep.inputType, boundaryStep.inputName(labelList))»
-«««                        «boundaryStep.stepVar.name» :=
-«««                            «Utils.defaultValue(
-«««                                boundaryStep.stepVar.type.type,
-«««                                boundaryStep.stepVar.name
-«««                            )»
                     «FOR action : boundaryStep.context + boundaryStep.input + boundaryStep.sut»
                         «IF action.exp.eAllContents
                             .filter(ExpressionVariable).isEmpty»
                             «boundaryStep.inputName(labelList)».«action.fieldAccess.fieldPath.tail.join('.')» := «NodeModelUtils.getTokenText(NodeModelUtils.getNode(action.exp))»
-«««                            «NodeModelUtils.getNode(action).text
-«««                                .replaceAll("(?m)^\\s*$\\R?", "")»
                         «ENDIF»
                     «ENDFOR»
                 «ELSE»
@@ -338,16 +315,12 @@ class CPNTemplateGenerator
                                 with-inputs p«_idx»,StepMetaData
                                 «IF step.inputName(labelList) !== null»
                                     produces-outputs «step.inputName(labelList)»
-«««                                «IF isStepNamePresent(labelList,step.stepVar.name)»
-«««                                    produces-outputs «step.stepVar.name»
                                     updates:
                                         «step.inputName(labelList)» := «Utils.defaultValue(step.inputType, step.inputName(labelList))»
-«««                                        «step.stepVar.name» := «Utils.defaultValue(step.stepVar.type.type, step.stepVar.name)»
                                     «FOR act : step.context + step.input + step.sut»
                                         «IF act.exp.eAllContents.filter(ExpressionVariable).isEmpty»
-                                            // ReferenceExp. TODO Skip.
+                                            // ReferenceExpressions are skipped.
                                             «step.inputName(labelList)».«act.fieldAccess.fieldPath.tail.join('.')» := «NodeModelUtils.getTokenText(NodeModelUtils.getNode(act.exp))»
-«««                                            «NodeModelUtils.getNode(act).text.replaceAll("(?m)^\\s*$\\R?", "")»
                                         «ENDIF»
                                     «ENDFOR»
                                 «ELSE»
@@ -375,11 +348,6 @@ class CPNTemplateGenerator
     def generateConstraintPS(Constraints model, Template currentConstraint, TestDefinition td, IFileSystemAccess2 fsa) 
     {
         var typesText = '''''' 
-//        '''
-//        record UNIT {
-//            int unit
-//        }
-//        '''
         typesText = typesText +
         '''
         record ANY {
@@ -415,9 +383,9 @@ class CPNTemplateGenerator
         var uri = model.eResource.getURI()
         if (uri === null) throw new IllegalArgumentException("Constraint resource has no URI")
         var fileName = uri.trimFileExtension().lastSegment()
-        val generatedSpecName = fileName + "_" + currentConstraint.name 
+        val generatedSpecName = fileName.replace(".", "_") + "_" + currentConstraint.name 
         val constraintFolder = generatedSpecName + "/"
-                
+
 //        Check if correlation variable has been declared by the user or not
 //        Otherwise creates a dummy variable with metadata after checking if this name already exists or not
         val hasCorrelation = !currentConstraint.variables.empty
@@ -476,7 +444,6 @@ class CPNTemplateGenerator
             }else {
                 generateTSpecModel(td, computeLabelSet(currentConstraint))
             }
-//        var tspecModel = generateTSpecModel(td, computeLabelSet(currentConstraint))
         var CPNTemplateResult templateResult= null
 
         // start computing ps system model based on declare constraints
@@ -657,19 +624,6 @@ class CPNTemplateGenerator
             .setPrettyPrinting()
             .create()
             .toJson(referenceChecks)
-//            
-//            new GsonBuilder().disableHtmlEscaping().create().toJson(referenceChecks)
-//        val referenceChecksBase64 = java.util.Base64.getEncoder().encodeToString(
-//            referenceChecksJson.getBytes(java.nio.charset.StandardCharsets.UTF_8)
-//        )
-
-//        if (currentConstraint.name == "inspectionConsumesPrintReport") {
-//            System.out.println("getReferenceChecks returned for " + currentConstraint.name)
-//            System.out.println(
-//                referenceChecks
-////                new GsonBuilder().setPrettyPrinting().create().toJson(referenceChecks)
-//            )
-//        }
         fsa.generateFile(
            constraintFolder + pspecFileName,
             specPrefix + tspecModel + specBody + specPostfix
