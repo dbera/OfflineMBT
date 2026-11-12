@@ -53,8 +53,10 @@ class StandardProjectCliModule extends StandardProjectRuntimeModule {
 		return FileServerApiImpl.class;
 	}
 	
+	// Note: Guice @Provides method; must NOT start with 'provide', 'bind' or 'configure' as Xtext's
+	// MethodBasedModule interprets such methods as Xtext-style bindings.
 	@Provides
-	public List<FileHandler> provideFileHandlers() {
+	public List<FileHandler> fileHandlers() {
 		// Returns list with BPMN types splitter handler
 		// Note: Order matters. The first handler that can handle a file will be used.
 		// StandardFileHandler should be last as it can handle any file.
