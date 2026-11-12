@@ -43,6 +43,7 @@ Export-Package: nl.esi.comma.project.standard,
  nl.esi.comma.project.standard.standardProject,
  nl.esi.comma.project.standard.standardProject.impl,
  nl.esi.comma.project.standard.standardProject.util,
+ nl.esi.comma.project.standard.util,
  nl.esi.comma.project.standard.validation
 Import-Package: org.apache.log4j
 Automatic-Module-Name: nl.esi.comma.project.standard

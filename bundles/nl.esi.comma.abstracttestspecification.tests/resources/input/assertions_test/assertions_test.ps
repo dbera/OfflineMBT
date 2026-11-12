@@ -211,7 +211,7 @@ specification assertions_test
         with-inputs		Flow_1j45oji, params_4_4, report_4_3
         assertions default {
             report_result: assert-that (report_4_3.result) {
-              match-regex "\\w+"
+              match-regex Flow_1j45oji.id
             }
         }
         produces-outputs	Event_0utv02f

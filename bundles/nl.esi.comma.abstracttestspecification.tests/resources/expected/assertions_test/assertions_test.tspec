@@ -144,7 +144,7 @@ assertion-type  Assert_4_4
 assertion-items {
     assertions default {
         report_result: assert-that (step_AssertionsTestTest4_Assert44_default_0.input.report_4_3.result) {
-          match-regex "\\w+"
+          match-regex step_AssertionsTestTest4_Assert44_default_0.input.ctx.id
         }
     }
 }
@@ -199,8 +199,6 @@ assertion-items {
         }
     }
 }
-assertion-context
-    step_AssertionsTestTest2ComposeAndAssert2_Assert222_default_0.input.___CONTEXT___.unit := 0
 assertion-input
     step_AssertionsTestTest2ComposeAndAssert2_Assert222_default_0.input.params_2_2_2.id := 2
     step_AssertionsTestTest2ComposeAndAssert2_Assert222_default_0.input.params_2_2_2.param := step_AssertionsTestTest2Run1_Run212_default_0.output.report_2_1_2.result

@@ -18,21 +18,17 @@
       ComMA DSLs and analysis tools.
    </description>
    <feature id="nl.esi.comma.standard.feature">
-      <category name="ComMA"/>
+      <category name="OfflineMBT"/>
    </feature>
    <feature id="nl.esi.comma.core.feature">
-      <category name="ComMA"/>
+      <category name="OfflineMBT"/>
    </feature>
-   <bundle id="nl.esi.xtext.lsp.server"/>
-   <bundle id="nl.esi.comma.project.standard.cli">
-      <category name="ComMA"/>
-   </bundle>
-   <bundle id="nl.asml.matala.server">
-      <category name="ComMA"/>
-   </bundle>
-   <category-def name="ComMA" label="ComMA">
+   <feature id="nl.esi.comma.server.feature">
+      <category name="OfflineMBT"/>
+   </feature>
+   <category-def name="OfflineMBT" label="OfflineMBT">
       <description>
-         ComMA framework with examples.
+         OfflineMBT framework.
       </description>
    </category-def>
 </site>

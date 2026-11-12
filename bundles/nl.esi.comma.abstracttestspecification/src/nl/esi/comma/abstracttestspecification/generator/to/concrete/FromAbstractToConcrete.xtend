@@ -99,7 +99,7 @@ class FromAbstractToConcrete extends AbstractGenerator {
     def private String printDai(AssertionStep step, DataAssertionItem item) {
         return item.serialize[ obj |
             if (obj instanceof ExpressionVariable) {
-                val vname = obj.variable.name
+                val vname = obj.variable.varField
                 return '''«step.inputVar».«vname»'''
             }
         ].stripIndent().trim()
