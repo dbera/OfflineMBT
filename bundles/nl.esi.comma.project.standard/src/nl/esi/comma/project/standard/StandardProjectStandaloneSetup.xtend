@@ -15,13 +15,21 @@
  */
 package nl.esi.comma.project.standard
 
+import org.eclipse.emf.ecore.resource.Resource
 
 /**
  * Initialization support for running Xtext languages without Equinox extension registry.
  */
 class StandardProjectStandaloneSetup extends StandardProjectStandaloneSetupGenerated {
 
-	def static void doSetup() {
-		new StandardProjectStandaloneSetup().createInjectorAndDoEMFRegistration()
+	/**
+	 * Idempotent: only creates and registers a new injector if the language is not registered yet.
+	 * This prevents multiple injectors (and thus multiple Grammar instances) for the same language
+	 * when this setup is invoked from the setups of inheriting languages.
+	 */
+	def static synchronized void doSetup() {
+		if (!Resource.Factory.Registry.INSTANCE.extensionToFactoryMap.containsKey("prj")) {
+			new StandardProjectStandaloneSetup().createInjectorAndDoEMFRegistration()
+		}
 	}
 }
