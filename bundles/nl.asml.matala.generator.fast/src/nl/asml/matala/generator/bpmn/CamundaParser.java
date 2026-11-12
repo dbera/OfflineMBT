@@ -30,7 +30,8 @@ import org.camunda.bpm.model.bpmn.BpmnModelInstance;
 import org.camunda.bpm.model.bpmn.instance.BaseElement;
 import org.camunda.bpm.model.bpmn.instance.DataAssociation;
 import org.camunda.bpm.model.bpmn.instance.DataInputAssociation;
-import org.camunda.bpm.model.bpmn.instance.DataStoreReference;
+import org.camunda.bpm.model.bpmn.instance.DataObject;
+import org.camunda.bpm.model.bpmn.instance.DataObjectReference;
 import org.camunda.bpm.model.bpmn.instance.DataOutputAssociation;
 import org.camunda.bpm.model.bpmn.instance.Definitions;
 import org.camunda.bpm.model.bpmn.instance.EndEvent;
@@ -84,24 +85,13 @@ public class CamundaParser {
 	private static final String BPMN4S_ASSERT_TASK = "AssertTask";
 	private static final String BPMN4S_COMPOSE_TASK = "ComposeTask";
 	private static final String BPMN4S_SUB_TYPE = "subType";
-	private static final String BPMN4S_STEP_TYPE = "stepType";
 	private static final String BPMN4S_DATATYPE_REF = "dataTypeRef";
 	private static final String BPMN4S_UPDATE = "update";
-	private static final String BPMN4S_PERSISTENT_READ = "persistentRead";
+	private static final String BPMN4S_QUEUE = "Queue";
 
-	// BPMN DI layout constants. Keep them together so the generated diagram can
-	// be tuned without changing the semantic model construction.
-	private static final double DIAGRAM_MARGIN_X = 50.0;
-	private static final double DIAGRAM_MARGIN_Y = 40.0;
-	private static final double LANE_HEIGHT = 220.0;
-	private static final double TASK_WIDTH = 100.0;
-	private static final double TASK_HEIGHT = 80.0;
-	private static final double TASK_STEP_X = 210.0;
-	private static final double TASK_TOP_OFFSET = 35.0;
-	private static final double EVENT_SIZE = 36.0;
-	private static final double DATA_SIZE = 50.0;
-	private static final double DATA_TOP_OFFSET = 135.0;
-	private static final double DATA_STEP_X = 66.0;
+	final static double OFFSET_X = 150.0;
+	final static double OFFSET_Y = 50.0;
+	final static double baseY = 50.0;
 
 	public static String generateBPMNModel(AbstractTestDefinition atd) {
 		List<ElementDescriptor> descriptors = createDescriptors(atd);
@@ -249,40 +239,37 @@ public class CamundaParser {
 		LaneSet laneSet = createLaneSet(modelInstance, process);
 		BpmnPlane plane = createDiagram(modelInstance, definitions, process);
 
-		Map<String, Lane> laneMap = new LinkedHashMap<>();
-		Map<String, Double> laneYMap = new LinkedHashMap<>();
+		Map<String, Lane> laneMap = new HashMap<>();
+		Map<String, Double> laneYMap = new HashMap<>();
 		Map<String, Task> taskMap = new HashMap<>();
 		Map<BaseElement, Bounds> elemBounds = new LinkedHashMap<>();
-		long taskCount = elements.stream().filter(TaskDescriptor.class::isInstance).count();
-		double laneWidth = Math.max(800.0, DIAGRAM_MARGIN_X * 2 + EVENT_SIZE * 2
-				+ TASK_STEP_X * Math.max(1, taskCount));
+		double baseY = OFFSET_Y;
+		double offsetX = OFFSET_X;
 
-		createLanes(modelInstance, elements, laneSet, plane, laneMap, laneYMap,
-				DIAGRAM_MARGIN_Y, laneWidth);
+		createLanes(modelInstance, elements, laneSet, plane, laneMap, laneYMap, baseY);
 
 		FlowNode previousNode = null;
 		int nodeIdx = 0;
+		int lastTaskIdx = 0;
 
 		for (ElementDescriptor e : elements) {
 			if (e instanceof TaskDescriptor td) {
 				String taskId = td.id;
-				double x = DIAGRAM_MARGIN_X + EVENT_SIZE + 55.0 + nodeIdx * TASK_STEP_X;
-				double y = laneYMap.get(td.lane) + TASK_TOP_OFFSET;
+				double x = offsetX + (nodeIdx + 1) * offsetX;
+				double y = laneYMap.get(td.lane) + 20.0;
 
 				Task task = createTaskWithIO(modelInstance, process, td);
 				addBpmnExtension(task, td.step);
 				laneMap.get(td.lane).getFlowNodeRefs().add(task);
 				taskMap.put(taskId, task);
 
-				Bounds taskBounds = createBounds(modelInstance, x, y, TASK_WIDTH, TASK_HEIGHT);
+				Bounds taskBounds = createBounds(modelInstance, x, y, 100.0, 80.0);
 				elemBounds.put(task, taskBounds);
 				addShapeToPlane(modelInstance, plane, task, taskBounds);
 
 				if (nodeIdx == 0) {
 					StartEvent startEvent = createStartEvent(modelInstance, process, td.lane, laneMap);
-					Bounds startBounds = createBounds(modelInstance, DIAGRAM_MARGIN_X,
-						laneYMap.get(td.lane) + TASK_TOP_OFFSET + (TASK_HEIGHT - EVENT_SIZE) / 2.0,
-						EVENT_SIZE, EVENT_SIZE);
+					Bounds startBounds = createBounds(modelInstance, offsetX, laneYMap.get(td.lane) + 40.0, 36.0, 36.0);
 					addShapeToPlane(modelInstance, plane, startEvent, startBounds);
 					createSequenceFlowWithEdge(modelInstance, process, plane, startEvent, task, "flow_start",
 							startBounds, taskBounds);
@@ -291,26 +278,25 @@ public class CamundaParser {
 				if (previousNode != null) {
 					Bounds prevBounds = elemBounds.get(previousNode);
 					if (prevBounds == null) {
-						prevBounds = createBounds(modelInstance, DIAGRAM_MARGIN_X, laneYMap.get(td.lane) + TASK_TOP_OFFSET,
-							TASK_WIDTH, TASK_HEIGHT);
+						prevBounds = createBounds(modelInstance, offsetX, laneYMap.get(td.lane) + 60, 100.0, 80.0);
 					}
 					createSequenceFlowWithEdge(modelInstance, process, plane, previousNode, task,
 							"flow_" + (nodeIdx - 1) + "_" + nodeIdx, prevBounds, taskBounds);
 				}
 
-				if (nodeIdx == taskCount - 1) {
+				if (nodeIdx == elements.size() - 1) {
 					EndEvent endEvent = createEndEvent(modelInstance, process, td.lane, laneMap);
-					Bounds endBounds = createBounds(modelInstance, taskBounds.getX() + TASK_WIDTH + 55.0,
-							taskBounds.getY() + (TASK_HEIGHT - EVENT_SIZE) / 2.0,
-							EVENT_SIZE, EVENT_SIZE);
+					Bounds endBounds = createBounds(modelInstance, taskBounds.getX() + offsetX,
+							taskBounds.getY() + 20.0, 36.0, 36.0);
 					addShapeToPlane(modelInstance, plane, endEvent, endBounds);
 					createSequenceFlowWithEdge(modelInstance, process, plane, task, endEvent, "flow_end", taskBounds,
 							endBounds);
 				}
 
 				previousNode = task;
-				nodeIdx++;
+				lastTaskIdx = nodeIdx;
 			}
+			nodeIdx++;
 		}
 		nodeIdx = 0;
 
@@ -327,20 +313,17 @@ public class CamundaParser {
 					Bounds taskBounds = elemBounds.get(producer);
 					int count = producerDataCount.getOrDefault(ds.producer, 0);
 
-					// Keep produced data in the producer's lane. Multiple objects fan out
-					// horizontally instead of growing into the lane below.
-					x = taskBounds.getX() + (taskBounds.getWidth() - DATA_SIZE) / 2.0
-							+ count * DATA_STEP_X;
-					y = laneYMap.get(ds.lane) + DATA_TOP_OFFSET;
+					x = taskBounds.getX() + (taskBounds.getWidth() / 2) - 25;
+					y = taskBounds.getY() + taskBounds.getHeight() + 40 + (count * 60.0);
 
 					producerDataCount.put(ds.producer, count + 1);
 				} else {
-					x = DIAGRAM_MARGIN_X + EVENT_SIZE + 55.0 + nodeIdx * DATA_STEP_X;
-					y = laneYMap.get(ds.lane) + DATA_TOP_OFFSET;
+					x = offsetX + nodeIdx * offsetX;
+					y = laneYMap.get(ds.lane) + 36.0;
 				}
 
 				// Create shape without connection
-				Bounds objBounds = createBounds(modelInstance, x, y, DATA_SIZE, DATA_SIZE);
+				Bounds objBounds = createBounds(modelInstance, x, y, 50.0, 50.0);
 				dataBoundsMap.put(ds, objBounds);
 			}
 			nodeIdx++;
@@ -360,10 +343,6 @@ public class CamundaParser {
 			task.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_SUB_TYPE, BPMN4S_COMPOSE_TASK);
 		} else if (step instanceof RunStep) {
 			task.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_SUB_TYPE, BPMN4S_RUN_TASK);
-			task.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_STEP_TYPE, 
-					"stepType" // TODO replace once different step types are allowed
-				//	((RunStep)step).getStepType()
-					); 
 		} else if (step instanceof AssertionStep) {
 			task.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_SUB_TYPE, BPMN4S_ASSERT_TASK);
 		} else
@@ -375,16 +354,6 @@ public class CamundaParser {
 		JsonValue b_val = bind.getJsonvals();
 		String b_str = ConcreteExpressionHandler.createTypeDeclValue(b_type, b_val);
 		da.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_UPDATE, b_str);
-	}
-
-	private static void addBpmnExtension(DataAssociation da, DataInstanceDescriptor dsDescriptor) {
-		Binding bind = dsDescriptor.bind_producer;
-		String var_id = normalizeBpmnId(dsDescriptor.id);
-		TypeDecl b_type = bind.getName().getType().getType();
-		JsonValue b_val = bind.getJsonvals();
-		String b_str = ConcreteExpressionHandler.createTypeDeclValue(b_type, b_val);
-		String update_assignment = var_id+" := "+b_str;
-		da.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_UPDATE, update_assignment);
 	}
 
 	private static Definitions createDefinitions(BpmnModelInstance modelInstance) {
@@ -469,20 +438,23 @@ public class CamundaParser {
 
 	private static void createLanes(BpmnModelInstance modelInstance, List<ElementDescriptor> elements, LaneSet laneSet,
 			BpmnPlane plane, Map<String, Lane> laneMap, Map<String, Double> laneYMap,
-			double baseY, double laneWidth) {
+			// double laneHeight, double laneWidth,
+			double baseY) {
+		double laneHeight = OFFSET_Y * elements.stream().map(e -> e.lane).distinct().count();
+		double laneWidth = OFFSET_X * (elements.size() + 2);
 
 		for (ElementDescriptor e : elements) {
 			if (!laneMap.containsKey(e.lane)) {
 				Lane lane = modelInstance.newInstance(Lane.class);
-				lane.setId(normalizeBpmnId("lane_" + e.lane));
+				lane.setId("lane_" + e.lane.replaceAll("\\s+", "_"));
 				lane.setName(e.lane);
 				laneSet.addChildElement(lane);
 				laneMap.put(e.lane, lane);
 
-				double y = baseY + (laneMap.size() - 1) * LANE_HEIGHT;
+				double y = baseY + laneMap.size() * laneHeight;
 				laneYMap.put(e.lane, y);
 
-				Bounds bounds = createBounds(modelInstance, 10.0, y, laneWidth, LANE_HEIGHT);
+				Bounds bounds = createBounds(modelInstance, 10.0, y, laneWidth, laneHeight);
 				addShapeToPlane(modelInstance, plane, lane, bounds);
 			}
 		}
@@ -527,23 +499,7 @@ public class CamundaParser {
 	}
 
 	private static String normalizeTaskId(String td_id) {
-		return normalizeBpmnId(td_id);
-	}
-
-	/**
-	 * BPMN ids use the XML Schema NCName datatype. Keep the human-readable
-	 * element name unchanged, but replace characters that are illegal in an
-	 * NCName (for example parentheses) in generated ids.
-	 */
-	private static String normalizeBpmnId(String id) {
-		if (id == null || id.isEmpty()) {
-			return "id";
-		}
-		String normalized = id.replaceAll("[^A-Za-z0-9_.-]", "_");
-		if (!normalized.substring(0, 1).matches("[A-Za-z_]")) {
-			normalized = "id_" + normalized;
-		}
-		return normalized;
+		return td_id.replaceAll("\\s+", "_");
 	}
 
 	private static StartEvent createStartEvent(BpmnModelInstance modelInstance, Process process, String laneName,
@@ -604,28 +560,37 @@ public class CamundaParser {
 		plane.addChildElement(edge);
 	}
 
-	private static DataStoreReference linkDataInstanceToTasks(BpmnModelInstance modelInstance, Definitions definitions,
+	private static DataObject linkDataInstanceToTasks(BpmnModelInstance modelInstance, Definitions definitions,
 			Process process, BpmnPlane plane, DataInstanceDescriptor dsDescriptor, Map<String, Task> taskMap,
 			Map<BaseElement, Bounds> elemBounds, double x, double y) {
 
-		String dsId = normalizeBpmnId("dataobject_" + dsDescriptor.id);
+		String dsId = "dataobject_" + dsDescriptor.id.replaceAll("\\s+", "_");
 
-		// 1 Create DataStoreReference in the process
-		DataStoreReference dsRef = modelInstance.newInstance(DataStoreReference.class);
+		// 1️ Create top-level DataStore in definitions
+		DataObject dataObject = modelInstance.newInstance(DataObject.class);
+		dataObject.setId(dsId);
+		dataObject.setName(dsDescriptor.id);
+		process.addChildElement(dataObject);
+
+		// 2️ Create DataObjectReference in the process
+		DataObjectReference dsRef = modelInstance.newInstance(DataObjectReference.class);
 		dsRef.setId(dsId + "_ref");
 		dsRef.setName(normalizeTaskId(dsDescriptor.id));
+		dsRef.setDataObject(dataObject);
+		dsRef.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_SUB_TYPE, BPMN4S_QUEUE);
 		dsRef.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_DATATYPE_REF, "record_id");
+
 		process.addChildElement(dsRef);
 
-		// 2 Add diagram shape for the DataStoreReference.
+		// 3️ Add diagram shape for the DataStoreReference
 		BpmnShape dsShape = modelInstance.newInstance(BpmnShape.class);
 		dsShape.setId("shape_" + dsId);
 		dsShape.setBpmnElement(dsRef);
-		Bounds dsBounds = createBounds(modelInstance, x, y, DATA_SIZE, DATA_SIZE);
+		Bounds dsBounds = createBounds(modelInstance, x, y, 50.0, 50.0);
 		dsShape.setBounds(dsBounds);
 		plane.addChildElement(dsShape);
 
-		// 3 Link producer task to DataStoreReference
+		// 4️ Link producer task to DataStoreReference
 		if (dsDescriptor.producer != null) {
 			Task producer = taskMap.get(dsDescriptor.producer);
 			if (producer != null) {
@@ -633,7 +598,8 @@ public class CamundaParser {
 				doa.setId("doa_" + dsId + "_" + producer.getId());
 				doa.setTarget(dsRef);
 
-				addBpmnExtension(doa, dsDescriptor);
+				Binding bind = dsDescriptor.bind_producer;
+				addBpmnExtension(doa, bind);
 				producer.addChildElement(doa);
 
 				Bounds producerBounds = elemBounds.get(producer);
@@ -646,7 +612,7 @@ public class CamundaParser {
 			}
 		}
 
-		// 4 Link DataStoreReference to each consumer task (input)
+		// 5️ Link DataObjectReference to each consumer task (input)
 		for (int consumerIdx = 0; consumerIdx < dsDescriptor.consumers.size(); consumerIdx++) {
 			String consumerId = dsDescriptor.consumers.get(consumerIdx);
 			Task consumer = taskMap.get(consumerId);
@@ -665,9 +631,6 @@ public class CamundaParser {
 				dia.setId("dia_" + dstaskLabel + uid);
 				dia.getSources().add(dsRef);
 				dia.setTarget(inputProp);
-				// Datastore reads are non-consuming: the stored value remains
-				// available to subsequent consumers.
-				dia.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_PERSISTENT_READ, "true");
 
 				Binding bind = dsDescriptor.bind_consumers.getOrDefault(consumer.getName(), null);
 				if (bind != null) {
@@ -688,7 +651,7 @@ public class CamundaParser {
 			}
 		}
 
-		return dsRef;
+		return dataObject;
 	}
 
 	private static void createDataAssociationEdge(BpmnModelInstance modelInstance, BpmnPlane plane,
@@ -732,7 +695,7 @@ public class CamundaParser {
 			}
 			double outputX = sourceBounds.getX() + offsetX;
 
-			// Distribute arrival points on top edge of the data store
+			// Distribute arrival points on top edge of DataObject
 			double targetOffsetX = calculateHorizontalOffset(targetConnectionIndex, totalTargetConnections,
 					targetWidth);
 			double arrivalX = targetBounds.getX() + targetOffsetX;
