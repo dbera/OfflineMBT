@@ -57,6 +57,9 @@ public class Main {
 	 */
 	private static void checkGlobalRegistries(IResourceServiceProvider.Registry registry) {
 		for (String ext : registry.getExtensionToFactoryMap().keySet()) {
+			if (IGNORED_EXTENSIONS.contains(ext)) {
+				continue;
+			}
 			URI uri = URI.createURI("dummy." + ext);
 			IResourceServiceProvider lspProvider = registry.getResourceServiceProvider(uri);
 			IResourceServiceProvider globalProvider = IResourceServiceProvider.Registry.INSTANCE
