@@ -26,31 +26,31 @@ import nl.asml.matala.generator.types.Field
 /** Field rendering extensions; all Python structure is emitted with rich strings. */
 final class PythonFieldRenderer {
     def String render(Field field, Map<String, Declaration> types) {
-        val meta = new LinkedHashMap<String, Object>(field.metadata())
+        val meta = new LinkedHashMap<String, Object>(field.metadata)
         val options = options(meta.remove("_python"))
-        var String pythonType = new PythonRenderer().type(field.type(), types)
+        var String pythonType = new PythonRenderer().type(field.type, types)
         val storageType = pythonType
         if (flag(options, "identifier")) {
             if (pythonType == "_types_builtins.str") pythonType = "_TypesIdentifier"
             else if (pythonType == "_types_builtins.list[_types_builtins.str]") pythonType = "_types_builtins.list[_TypesIdentifier]"
-            else throw new IllegalArgumentException("@Identifier requires string or string[]: " + field.name())
+            else throw new IllegalArgumentException("@Identifier requires string or string[]: " + field.name)
         }
-        var String helper = if (field.helper() === null) {
+        var String helper = if (field.helper === null) {
             if (storageType.startsWith("_types_builtins.list[")) "L" else "F"
-        } else field.helper()
+        } else field.helper
         if (!PythonRenderer.HELPERS.contains(helper))
             throw new IllegalArgumentException("Unsupported helper: " + helper)
         if (Set.of("L", "RefList").contains(helper) && !storageType.startsWith("_types_builtins.list["))
-            throw new IllegalArgumentException(helper + " requires a list: " + field.name())
+            throw new IllegalArgumentException(helper + " requires a list: " + field.name)
         if (Set.of("Ref", "FileSelector", "Template").contains(helper) && storageType != "_types_builtins.str")
-            throw new IllegalArgumentException(helper + " requires a string: " + field.name())
+            throw new IllegalArgumentException(helper + " requires a string: " + field.name)
         if (helper == "RefList" && storageType != "_types_builtins.list[_types_builtins.str]")
             throw new IllegalArgumentException("RefList requires string[]")
         for (key : meta.keySet()) PythonRenderer.identifier(key)
         if (meta.containsKey("default") && meta.containsKey("default_enum"))
             throw new IllegalArgumentException("default and default_enum conflict")
         if ((meta.containsKey("default") || meta.containsKey("default_enum")) && meta.containsKey("default_factory"))
-            throw new IllegalArgumentException("default and default_factory conflict: " + field.name())
+            throw new IllegalArgumentException("default and default_factory conflict: " + field.name)
         if (meta.containsKey("predefined") && meta.containsKey("predefined_from"))
             throw new IllegalArgumentException("predefined and predefined_from conflict")
         if (meta.containsKey("required") && !(meta.get("required") instanceof Boolean))
@@ -81,10 +81,10 @@ final class PythonFieldRenderer {
                     throw new IllegalArgumentException("Unsupported enum metadata: " + key)
                 if (meta.containsKey(target)) throw new IllegalArgumentException("Duplicate enum metadata: " + target)
                 val value = meta.remove(key)
-                if (target == "default" && types.containsKey(field.type()) && !types.get(field.type()).literals().empty) {
+                if (target == "default" && types.containsKey(field.type) && !types.get(field.type).literals.empty) {
                     if (!(value instanceof String)) throw new IllegalArgumentException("default_enum must be a string")
-                    if (!(value as String).startsWith(field.type() + "."))
-                        throw new IllegalArgumentException("default_enum must belong to " + field.type())
+                    if (!(value as String).startsWith(field.type + "."))
+                        throw new IllegalArgumentException("default_enum must belong to " + field.type)
                 }
                 if (target != "default" && !(value instanceof Map<?, ?>))
                     throw new IllegalArgumentException(target + "_enum must be an object")
@@ -119,9 +119,9 @@ final class PythonFieldRenderer {
         }
         if (!meta.containsKey("default") && !meta.containsKey("default_factory")) {
             if (Boolean.TRUE.equals(meta.get("required"))) meta.put("default", PythonEmission.required())
-            else if (types.containsKey(field.type()) && record(types.get(field.type()))) {
-                cycle(field.type(), types, new HashSet<String>())
-                meta.put("default_factory", field.type())
+            else if (types.containsKey(field.type) && record(types.get(field.type))) {
+                cycle(field.type, types, new HashSet<String>())
+                meta.put("default_factory", field.type)
             } else if (helper == "F") {
                 meta.put("default", scalarDefault(storageType))
             }
@@ -131,7 +131,7 @@ final class PythonFieldRenderer {
                 throw new IllegalArgumentException("plain=true cannot discard a UI helper")
             if (meta.size() != 1 || !meta.containsKey("default"))
                 throw new IllegalArgumentException("plain=true requires only a default after extracting constraints")
-            return '''«field.name()»: «pythonType» = «PythonEmission.literal(meta.get("default"))»'''.toString
+            return '''«field.name»: «pythonType» = «PythonEmission.literal(meta.get("default"))»'''.toString
         }
         for (entry : meta.entrySet()) {
             val value = if (entry.key == "default_factory")
@@ -140,7 +140,7 @@ final class PythonFieldRenderer {
             args.add('''«entry.key»=«value»'''.toString)
         }
         '''
-            «field.name()»: «pythonType» = _types_ui_api.«helper»(
+            «field.name»: «pythonType» = _types_ui_api.«helper»(
                 «FOR argument : args»
                 «argument»,
                 «ENDFOR»
@@ -179,15 +179,15 @@ final class PythonFieldRenderer {
     }
 
     def private boolean record(Declaration declaration) {
-        declaration.base() === null && declaration.literals().empty
+        declaration.base === null && declaration.literals.empty
     }
 
     def private void cycle(String name, Map<String, Declaration> types, Set<String> visiting) {
         if (!visiting.add(name)) throw new IllegalArgumentException("Recursive default factories: " + name)
-        for (field : types.get(name).fields()) {
-            if (types.containsKey(field.type()) && record(types.get(field.type())) &&
-                !field.metadata().containsKey("default") && !Boolean.TRUE.equals(field.metadata().get("required")))
-                cycle(field.type(), types, visiting)
+        for (field : types.get(types).fields) {
+            if (types.containsKey(field.type) && record(types.get(field.type)) &&
+                !field.metadata.containsKey("default") && !Boolean.TRUE.equals(field.metadata.get("required")))
+                cycle(field.type, types, visiting)
         }
         visiting.remove(name)
     }

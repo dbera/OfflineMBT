@@ -27,6 +27,8 @@ import org.eclipse.equinox.app.IApplicationContext;
 import org.eclipse.xtext.resource.IResourceServiceProvider;
 import org.eclipse.xtext.resource.XtextResourceSet;
 
+import nl.asml.matala.generator.types.TypesToPythonGenerator;
+
 /**
  * Equinox command-line entry point for the Types-to-Python generator.
  *

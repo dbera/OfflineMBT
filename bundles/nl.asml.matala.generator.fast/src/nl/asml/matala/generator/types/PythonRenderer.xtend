@@ -76,22 +76,22 @@ final class PythonRenderer {
 
     def String render(Schema schema) {
         val Map<String, Declaration> types = new LinkedHashMap<String, Declaration>()
-        for (d : schema.declarations()) {
-            identifier(d.name())
-            if (GLOBALS.contains(d.name()) || types.putIfAbsent(d.name(), d) !== null)
-                throw new IllegalArgumentException("Duplicate/reserved type: " + d.name())
+        for (d : schema.declarations) {
+            identifier(d.name)
+            if (GLOBALS.contains(d.name) || types.putIfAbsent(d.name, d) !== null)
+                throw new IllegalArgumentException("Duplicate/reserved type: " + d.name)
         }
         val sections = new ArrayList<String>()
         sections.add(PythonSupport.render())
         val emitted = new HashSet<String>()
         for (d : types.values()) {
-            if (!d.literals().empty) {
+            if (!d.literals.empty) {
                 sections.add(renderEnum(d))
-                emitted.add(d.name())
+                emitted.add(d.name)
             }
         }
         for (d : types.values()) {
-            if (d.base() !== null)
+            if (d.base !== null)
                 alias(d, types, emitted, new HashSet<String>(), sections)
         }
         val orderedRecords = new ArrayList<Declaration>()
@@ -122,13 +122,13 @@ final class PythonRenderer {
     /** Emit class-object keys after every class has been declared. */
     def private String renderSummaries(Map<String, Declaration> types) {
         val summaries = types.values().filter [
-            record(it) && it.metadata().containsKey("summary")
+            record(it) && it.metadata.containsKey("summary")
         ].toList
         if(summaries.empty) return "MODEL_SUMMARIES = {}"
         '''
             MODEL_SUMMARIES = {
                 «FOR declaration : summaries»
-                    «declaration.name()»: «renderSummary(declaration.metadata().get("summary"))»,
+                    «declaration.name»: «renderSummary(declaration.metadata.get("summary"))»,
                 «ENDFOR»
             }
         '''.toString
@@ -158,17 +158,17 @@ final class PythonRenderer {
     def private String renderEnum(Declaration d) {
         val seen = new HashSet<String>()
         val members = new ArrayList<String>()
-        for (member : d.literals()) {
+        for (member : d.literals) {
             identifier(member)
             if (!seen.add(member))
                 throw new IllegalArgumentException("Duplicate enum member: " + member)
-            val value = d.metadata().getOrDefault("value_" + member, member)
+            val value = d.metadata.getOrDefault("value_" + member, member)
             if (!(value instanceof String))
                 throw new IllegalArgumentException("Enum value must be a string")
             members.add('''«member» = «PythonValues.literal(value)»'''.toString)
         }
         '''
-            class «d.name()»(_types_enum.StrEnum):
+            class «d.name»(_types_enum.StrEnum):
                 «FOR member : members»
                     «member»
                 «ENDFOR»
@@ -178,14 +178,14 @@ final class PythonRenderer {
     def private String renderRecord(Declaration d, Map<String, Declaration> types) {
         val seen = new HashSet<String>()
         val fields = new ArrayList<String>()
-        for (f : d.fields()) {
-            identifier(f.name())
-            if (!seen.add(f.name()))
-                throw new IllegalArgumentException("Duplicate/reserved field: " + f.name())
+        for (f : d.fields) {
+            identifier(f.name)
+            if (!seen.add(f.name))
+                throw new IllegalArgumentException("Duplicate/reserved field: " + f.name)
             fields.add(renderField(f, types))
         }
         '''
-            class «d.name()»(_types_ui_api.Model):
+            class «d.name»(_types_ui_api.Model):
                 «IF fields.empty»
                     pass
                 «ELSE»
@@ -199,20 +199,20 @@ final class PythonRenderer {
     /** Direct factory symbols must be declared before their owning classes. */
     def private void orderRecord(Declaration declaration, Map<String, Declaration> types,
         Set<String> emitted, Set<String> visiting, List<Declaration> output) {
-        if (!emitted.contains(declaration.name())) {
-            if (!visiting.add(declaration.name()))
-                throw new IllegalArgumentException("Cyclic record default factories: " + declaration.name())
-            for (field : declaration.fields()) {
-                val meta = field.metadata()
+        if (!emitted.contains(declaration.name)) {
+            if (!visiting.add(declaration.name))
+                throw new IllegalArgumentException("Cyclic record default factories: " + declaration.name)
+            for (field : declaration.fields) {
+                val meta = field.metadata
                 val dependency = if (meta.containsKey("default_factory"))
                         String.valueOf(meta.get("default_factory"))
                     else if(!meta.containsKey("default") && !meta.containsKey("default_enum") &&
-                        !Boolean.TRUE.equals(meta.get("required"))) field.type() else ""
+                        !Boolean.TRUE.equals(meta.get("required"))) field.type else ""
                 val target = types.get(dependency)
                 if(target !== null && record(target)) orderRecord(target, types, emitted, visiting, output)
             }
-            visiting.remove(declaration.name())
-            emitted.add(declaration.name())
+            visiting.remove(declaration.name)
+            emitted.add(declaration.name)
             output.add(declaration)
         }
     }
@@ -222,24 +222,24 @@ final class PythonRenderer {
     }
 
     def private static boolean record(Declaration declaration) {
-        declaration.base() === null && declaration.literals().empty
+        declaration.base === null && declaration.literals.empty
     }
 
     def private void alias(Declaration d, Map<String, Declaration> types, Set<String> emitted,
         Set<String> visiting, List<String> sections) {
-        if (!emitted.contains(d.name())) {
-            if (!visiting.add(d.name())) {
-                throw new IllegalArgumentException("Cyclic alias: " + d.name())
+        if (!emitted.contains(d.name)) {
+            if (!visiting.add(d.name)) {
+                throw new IllegalArgumentException("Cyclic alias: " + d.name)
             }
-            val target = types.get(d.base())
-            if (target !== null && target.base() !== null)
+            val target = types.get(d.base)
+            if (target !== null && target.base !== null)
                 alias(target, types, emitted, visiting, sections)
             if (target !== null && record(target)) {
-                throw new IllegalArgumentException("Record alias unsupported: " + d.name())
+                throw new IllegalArgumentException("Record alias unsupported: " + d.name)
             }
-            sections.add('''«d.name()» = «type(d.base(), types)»'''.toString)
-            visiting.remove(d.name())
-            emitted.add(d.name())
+            sections.add('''«d.name» = «type(d.base, types)»'''.toString)
+            visiting.remove(d.name)
+            emitted.add(d.name)
         }
     }
 

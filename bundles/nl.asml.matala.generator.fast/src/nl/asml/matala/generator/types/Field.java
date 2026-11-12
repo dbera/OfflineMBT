@@ -14,8 +14,16 @@ package nl.asml.matala.generator.types;
 
 import java.util.Map;
 
-public record Field(String name, String type, String helper, Map<String, Object> metadata) {
-	public Field {
-		metadata = java.util.Collections.unmodifiableMap(new java.util.LinkedHashMap<>(metadata));
+public class Field {
+	public String name;
+	public String type;
+	public String helper;
+	public Map<String, Object> metadata;
+
+	public Field(String name, String type, String helper, Map<String, Object> metadata) {
+		this.name = name;
+		this.type= type;
+		this.helper = helper;
+		this.metadata = java.util.Collections.unmodifiableMap(new java.util.LinkedHashMap<>(metadata));
 	}
 }

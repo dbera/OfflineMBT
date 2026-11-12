@@ -13,12 +13,13 @@
 package nl.asml.matala.generator.types;
 
 import java.util.List;
-import java.util.Map;
 
 /** Small immutable boundary between the Xtext adapter and Python emission. */
-public record Schema(List<Declaration> declarations) {
+public class Schema {
 
-	public Schema {
-		declarations = List.copyOf(declarations);
+	public List<Declaration> declarations;
+
+	public Schema(List<Declaration> declarations) {
+		this.declarations = List.copyOf(declarations);
 	}
 }

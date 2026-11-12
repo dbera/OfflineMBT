@@ -16,11 +16,19 @@ import java.util.List;
 import java.util.Map;
 
 /** Small immutable boundary between the Xtext adapter and Python emission. */
-public record Declaration(String name, String base, List<String> literals, List<Field> fields,
-		Map<String, Object> metadata) {
-	public Declaration {
-		literals = List.copyOf(literals);
-		fields = List.copyOf(fields);
-		metadata = java.util.Collections.unmodifiableMap(new java.util.LinkedHashMap<>(metadata));
+public class Declaration {
+	public String name;
+	public String base;
+	public List<String> literals;
+	public List<Field> fields;
+	public Map<String, Object> metadata;
+
+	public Declaration(String name, String base, List<String> literals, List<Field> fields,
+			Map<String, Object> metadata) {
+		this.name = name;
+		this.base = base;
+		this.literals = List.copyOf(literals);
+		this.fields = List.copyOf(fields);
+		this.metadata = java.util.Collections.unmodifiableMap(new java.util.LinkedHashMap<>(metadata));
 	}
 }
