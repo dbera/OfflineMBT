@@ -16,7 +16,9 @@ import java.util.ArrayList
 import java.util.LinkedHashMap
 import java.util.List
 import java.util.Map
-import nl.asml.matala.generator.types.Schema.Declaration
+import nl.asml.matala.generator.types.Schema
+import nl.asml.matala.generator.types.Declaration
+
 
 /** Explicit, validated Python expressions mixed with ordinary literal metadata. */
 final class PythonEmission {

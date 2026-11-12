@@ -22,6 +22,9 @@ import nl.esi.comma.project.standard.generator.^extension.IStandardProjectGenera
 import nl.esi.comma.testspecification.testspecification.impl.TSMainImpl
 import nl.esi.xtext.common.lang.base.Annotatable
 import nl.esi.xtext.types.types.EnumTypeDecl
+import nl.asml.matala.generator.types.Schema
+import nl.asml.matala.generator.types.Declaration
+import nl.asml.matala.generator.types.Field
 import nl.esi.xtext.types.types.RecordTypeDecl
 import nl.esi.xtext.types.types.SimpleTypeDecl
 import nl.esi.xtext.types.types.TypeDecl
@@ -34,6 +37,10 @@ import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
 import org.eclipse.xtext.nodemodel.util.NodeModelUtils
+
+import nl.asml.matala.generator.types.Schema
+import nl.asml.matala.generator.types.Declaration
+import nl.asml.matala.generator.types.Field
 
 import static extension nl.esi.xtext.common.lang.generator.FileSystemAccessUtil.*
 import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
@@ -103,12 +110,12 @@ class TypesToPythonGenerator extends AbstractGenerator implements IStandardProje
 
     /** Also accepts a model already parsed by ParseHelper<ExpressionModel>. */
     def String generate(TypesModel model) {
-        val List<Schema.Declaration> declarations = new ArrayList<Schema.Declaration>()
+        val List<Declaration> declarations = new ArrayList<Declaration>()
 
         for (TypeDecl declaration : model.types) {
             if (declaration instanceof RecordTypeDecl) {
                 val record = declaration
-                val List<Schema.Field> fields = new ArrayList<Schema.Field>()
+                val List<Field> fields = new ArrayList<Field>()
                 val summaryEntries = new ArrayList<ModelSummaryBuilder.Entry>()
                 // Record-level summaries use subfield as an absolute model-relative path.
                 // This also preserves display-only paths absent from the active model.
@@ -173,7 +180,7 @@ class TypesToPythonGenerator extends AbstractGenerator implements IStandardProje
 
                     if(!python.empty) metadata.put("_python", python)
                     fields.add(
-                        new Schema.Field(
+                        new Field(
                             field.name,
                             typeSpelling(field.type),
                             helper,
@@ -186,7 +193,7 @@ class TypesToPythonGenerator extends AbstractGenerator implements IStandardProje
                 val summary = ModelSummaryBuilder.build(summaryEntries)
                 if(!summary.empty) recordMetadata.put("summary", summary)
                 declarations.add(
-                    new Schema.Declaration(
+                    new Declaration(
                         record.name,
                         null,
                         List.of(),
@@ -223,7 +230,7 @@ class TypesToPythonGenerator extends AbstractGenerator implements IStandardProje
                     throw new IllegalArgumentException("Empty enum: " + enumeration.name)
 
                 declarations.add(
-                    new Schema.Declaration(
+                    new Declaration(
                         enumeration.name,
                         null,
                         literals,
@@ -240,7 +247,7 @@ class TypesToPythonGenerator extends AbstractGenerator implements IStandardProje
                     )
 
                 declarations.add(
-                    new Schema.Declaration(
+                    new Declaration(
                         simple.name,
                         simple.base.name,
                         List.of(),

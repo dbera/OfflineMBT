@@ -19,9 +19,13 @@ import java.util.List
 import java.util.Map
 import java.util.Set
 
+import nl.asml.matala.generator.types.Schema
+import nl.asml.matala.generator.types.Declaration
+import nl.asml.matala.generator.types.Field
+
 /** Field rendering extensions; all Python structure is emitted with rich strings. */
 final class PythonFieldRenderer {
-    def String render(Schema.Field field, Map<String, Schema.Declaration> types) {
+    def String render(Field field, Map<String, Declaration> types) {
         val meta = new LinkedHashMap<String, Object>(field.metadata())
         val options = options(meta.remove("_python"))
         var String pythonType = new PythonRenderer().type(field.type(), types)
@@ -174,11 +178,11 @@ final class PythonFieldRenderer {
         }
     }
 
-    def private boolean record(Schema.Declaration declaration) {
+    def private boolean record(Declaration declaration) {
         declaration.base() === null && declaration.literals().empty
     }
 
-    def private void cycle(String name, Map<String, Schema.Declaration> types, Set<String> visiting) {
+    def private void cycle(String name, Map<String, Declaration> types, Set<String> visiting) {
         if (!visiting.add(name)) throw new IllegalArgumentException("Recursive default factories: " + name)
         for (field : types.get(name).fields()) {
             if (types.containsKey(field.type()) && record(types.get(field.type())) &&

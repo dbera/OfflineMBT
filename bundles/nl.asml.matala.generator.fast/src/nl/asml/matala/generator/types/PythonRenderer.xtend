@@ -20,6 +20,8 @@ import java.util.Map
 import java.util.Set
 
 import nl.asml.matala.generator.types.Schema
+import nl.asml.matala.generator.types.Declaration
+import nl.asml.matala.generator.types.Field
 
 /** Deterministic Python emission using Xtend rich-string templates. */
 final class PythonRenderer {
@@ -73,7 +75,7 @@ final class PythonRenderer {
     }
 
     def String render(Schema schema) {
-        val Map<String, Schema.Declaration> types = new LinkedHashMap<String, Schema.Declaration>()
+        val Map<String, Declaration> types = new LinkedHashMap<String, Declaration>()
         for (d : schema.declarations()) {
             identifier(d.name())
             if (GLOBALS.contains(d.name()) || types.putIfAbsent(d.name(), d) !== null)
@@ -92,7 +94,7 @@ final class PythonRenderer {
             if (d.base() !== null)
                 alias(d, types, emitted, new HashSet<String>(), sections)
         }
-        val orderedRecords = new ArrayList<Schema.Declaration>()
+        val orderedRecords = new ArrayList<Declaration>()
         val ordered = new HashSet<String>()
         for (d : types.values()) {
             if(record(d)) orderRecord(d, types, ordered, new HashSet<String>(), orderedRecords)
@@ -118,7 +120,7 @@ final class PythonRenderer {
     }
 
     /** Emit class-object keys after every class has been declared. */
-    def private String renderSummaries(Map<String, Schema.Declaration> types) {
+    def private String renderSummaries(Map<String, Declaration> types) {
         val summaries = types.values().filter [
             record(it) && it.metadata().containsKey("summary")
         ].toList
@@ -153,7 +155,7 @@ final class PythonRenderer {
         '''.toString
     }
 
-    def private String renderEnum(Schema.Declaration d) {
+    def private String renderEnum(Declaration d) {
         val seen = new HashSet<String>()
         val members = new ArrayList<String>()
         for (member : d.literals()) {
@@ -173,7 +175,7 @@ final class PythonRenderer {
         '''.toString
     }
 
-    def private String renderRecord(Schema.Declaration d, Map<String, Schema.Declaration> types) {
+    def private String renderRecord(Declaration d, Map<String, Declaration> types) {
         val seen = new HashSet<String>()
         val fields = new ArrayList<String>()
         for (f : d.fields()) {
@@ -195,8 +197,8 @@ final class PythonRenderer {
     }
 
     /** Direct factory symbols must be declared before their owning classes. */
-    def private void orderRecord(Schema.Declaration declaration, Map<String, Schema.Declaration> types,
-        Set<String> emitted, Set<String> visiting, List<Schema.Declaration> output) {
+    def private void orderRecord(Declaration declaration, Map<String, Declaration> types,
+        Set<String> emitted, Set<String> visiting, List<Declaration> output) {
         if (!emitted.contains(declaration.name())) {
             if (!visiting.add(declaration.name()))
                 throw new IllegalArgumentException("Cyclic record default factories: " + declaration.name())
@@ -215,15 +217,15 @@ final class PythonRenderer {
         }
     }
 
-    def private String renderField(Schema.Field field, Map<String, Schema.Declaration> types) {
+    def private String renderField(Field field, Map<String, Declaration> types) {
         new PythonFieldRenderer().render(field, types)
     }
 
-    def private static boolean record(Schema.Declaration declaration) {
+    def private static boolean record(Declaration declaration) {
         declaration.base() === null && declaration.literals().empty
     }
 
-    def private void alias(Schema.Declaration d, Map<String, Schema.Declaration> types, Set<String> emitted,
+    def private void alias(Declaration d, Map<String, Declaration> types, Set<String> emitted,
         Set<String> visiting, List<String> sections) {
         if (!emitted.contains(d.name())) {
             if (!visiting.add(d.name())) {
@@ -242,7 +244,7 @@ final class PythonRenderer {
     }
 
     /** Only validated type syntax is emitted; arbitrary source text is never executed. */
-    def String type(String source, Map<String, Schema.Declaration> types) {
+    def String type(String source, Map<String, Declaration> types) {
         val s = source.replaceAll("\\s+", "")
         if (s.endsWith("[]"))
             return '''_types_builtins.list[«type(s.substring(0, s.length() - 2), types)»]'''.toString
