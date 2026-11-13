@@ -158,7 +158,7 @@ class ExpressionsParser {
         if (expr.value.startsWith('dataset:/')) {
             // Filenames and paths within Dataset directory
             var suffix = expr.value.replace("dataset:/", "")
-            return '''global.params[\'testcase_data\'] + '«suffix»' '''
+            return '''global.params['testcase_data'] + '«suffix»' '''
         }
         if (expr.value.contains('''Platform:''') || expr.value.contains('''setup.suts''')) {
             // Platform & SUT setup details
