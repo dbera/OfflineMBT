@@ -118,32 +118,51 @@ class ExpressionsParser {
         return  '''«expr.type.literals.indexOf(expr.literal)»'''
 	}
 
-	// modify string to remove quotes for prefix: "platform:" && "setup.suts" [FAST Specific]
-	def static dispatch CharSequence generateExpression(ExpressionConstantString expr, CharSequence ref)      
-	{
-		var prefix = findStringPrefixBasedOnType(expr)
-		if(prefix instanceof String) return prefix+''''«expr.value»' '''
-		if(expr.value.contains('''Platform:''') || expr.value.contains('''setup.suts''')) return '''«expr.value»'''	
-		else return '''"«expr.value»"'''
-	} 
+    /* 
+     * modify string to:
+     * - remove quotes for prefixes: "platform:" && "setup.suts"              [FAST Specific]
+     * - replace "dataset://" prefix for global.params access & concatenation [FAST Specific]
+     */
+    def static dispatch CharSequence generateExpression(ExpressionConstantString expr, CharSequence ref) {
+        /* Toggled off (keeping for future use)
+        var prefix = findStringPrefixBasedOnType(expr)
+        if(prefix instanceof String) return prefix+''''«expr.value»' '''
+        */
+        var match = doStringReplacementBasedOnCoding(expr)
+        if(match instanceof String) return match else return '''"«expr.value»"'''
+    }
 
-    def static String findStringPrefixBasedOnType(ExpressionConstantString string) {
-        var cont = string.eContainer
-        var TypeDecl fieldType = switch (cont) {
-            Field: cont.recordField.type.type
-            RecordFieldAssignmentAction: (cont.fieldAccess as ExpressionRecordAccess).field.type.type
-            ExpressionVector: cont.typeAnnotation.type.type
-            default: null
+//    def static String findStringPrefixBasedOnType(ExpressionConstantString string) {
+//        var cont = string.eContainer
+//        var TypeDecl fieldType = switch (cont) {
+//            Field: cont.recordField.type.type
+//            RecordFieldAssignmentAction: (cont.fieldAccess as ExpressionRecordAccess).field.type.type
+//            ExpressionVector: cont.typeAnnotation.type.type
+//            default: null
+//        }
+//        if (fieldType instanceof SimpleTypeDecl) {
+//            var isBasedOnString = 'string'.equals(fieldType.base?.name)
+//            if (isBasedOnString) {
+//                var baseName = fieldType.name
+//                return switch baseName {
+//                    case 'Dataset': 'global.params[\'testcase_data\'] + '
+//                    default: null
+//                }
+//            }
+//        }
+//        return null
+//    }
+
+    def static String doStringReplacementBasedOnCoding(ExpressionConstantString expr) {
+
+        if (expr.value.startsWith('dataset:/')) {
+            // Filenames and paths within Dataset directory
+            var suffix = expr.value.replace("dataset:/", "")
+            return '''global.params[\'testcase_data\'] + '«suffix»' '''
         }
-        if (fieldType instanceof SimpleTypeDecl) {
-            var isBasedOnString = 'string'.equals(fieldType.base?.name)
-            if (isBasedOnString) {
-                var baseName = fieldType.name
-                return switch baseName {
-                    case 'Dataset': 'global.params[\'testcase_data\'] + '
-                    default: null
-                }
-            }
+        if (expr.value.contains('''Platform:''') || expr.value.contains('''setup.suts''')) {
+            // Platform & SUT setup details
+            return '''«expr.value»'''
         }
         return null
     }
