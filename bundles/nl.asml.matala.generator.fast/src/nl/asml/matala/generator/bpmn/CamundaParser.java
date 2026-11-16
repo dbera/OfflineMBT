@@ -70,7 +70,11 @@ import nl.esi.comma.abstracttestspecification.abstractTestspecification.ComposeS
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.RunStep;
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.TSMain;
 import nl.esi.comma.abstracttestspecification.generator.to.concrete.ConcreteExpressionHandler;
+import nl.esi.comma.abstracttestspecification.generator.utils.Utils;
+import nl.esi.comma.assertthat.assertThat.DataAssertionItem;
 import nl.esi.comma.assertthat.assertThat.JsonValue;
+import nl.esi.xtext.common.lang.utilities.EcoreUtil3;
+import nl.esi.xtext.expressions.expression.ExpressionVariable;
 import nl.esi.xtext.types.types.TypeDecl;
 import nl.esi.xtext.types.types.TypesModel;
 
@@ -91,6 +95,7 @@ public class CamundaParser {
 	private static final String BPMN4S_STEP_TYPE = "stepType";
 	private static final String BPMN4S_DATATYPE_REF = "dataTypeRef";
 	private static final String BPMN4S_UPDATE = "update";
+	private static final String BPMN4S_ASSERTIONS= "assertions";
 	private static final String BPMN4S_INIT = "init";
 	private static final String BPMN4S_PERSISTENT_READ = "persistentRead";
 
@@ -388,14 +393,37 @@ public class CamundaParser {
 	private static void addBpmnExtension(Task task, AbstractStep step) {
 		if (step instanceof RunStep) {
 			task.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_SUB_TYPE, BPMN4S_RUN_TASK);
-			task.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_STEP_TYPE,
-					"stepType" // TODO replace once different step types are allowed
-			);
+			task.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_STEP_TYPE, ((RunStep) step).getStepType());
 		} else if (step instanceof AssertionStep) {
 			task.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_SUB_TYPE, BPMN4S_ASSERT_TASK);
+			task.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_STEP_TYPE, ((AssertionStep) step).getStepType());
+
+			
+			AssertionStep assertionStep = (AssertionStep) step;
+			String assertions = assertionStep .getAsserts().stream()
+					.flatMap(assertion -> assertion.getCe().stream())
+					.flatMap(constraintExpression -> constraintExpression.getConstr().stream())
+					.map(assertionItem -> printDai(assertionStep, assertionItem))
+					.filter(assertion -> !assertion.isBlank())
+					.collect(Collectors.joining("\n"));
+
+			if (!assertions.isBlank()) {
+				task.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_ASSERTIONS, assertions);
+			}
 		} else {
 			throw new IllegalArgumentException("Unexpected executable step: " + step);
 		}
+	}
+	
+	private static String printDai(AssertionStep step, DataAssertionItem item) {
+		return EcoreUtil3.serialize(item, object -> {
+			if (object instanceof ExpressionVariable) {
+				ExpressionVariable expressionVariable = (ExpressionVariable) object;
+				String variableName = Utils.getVarField(expressionVariable.getVariable());
+				return Utils.getInputVar(step) + "." + variableName;
+			}
+			return null;
+		}).stripIndent().trim();
 	}
 
 	private static void addBpmnExtension(DataAssociation da, Binding bind) {
