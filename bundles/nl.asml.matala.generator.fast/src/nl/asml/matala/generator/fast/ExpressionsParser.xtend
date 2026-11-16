@@ -155,9 +155,9 @@ class ExpressionsParser {
 
     def static String doStringReplacementBasedOnCoding(ExpressionConstantString expr) {
 
-        if (expr.value.startsWith('dataset:/')) {
+        if (expr.value.startsWith('dataset://')) {
             // Filenames and paths within Dataset directory
-            var suffix = expr.value.replace("dataset:/", "")
+            var suffix = expr.value.replace("dataset://", "")
             return '''global.params['testcase_data'] + '«suffix»' '''
         }
         if (expr.value.contains('''Platform:''') || expr.value.contains('''setup.suts''')) {
