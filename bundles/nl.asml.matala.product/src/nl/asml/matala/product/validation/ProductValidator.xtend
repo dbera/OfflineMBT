@@ -356,6 +356,30 @@ class ProductValidator extends AbstractProductValidator {
         ]
     }
 
+
+    @Check
+    def checkSymbolicFieldsAssigned(Update update) {
+        val actionType = update.actionType
+        if(actionType !== ActionType.COMPOSE && ActionType.ASSERT !== actionType){ 
+            return
+        }
+
+        update.fnInp.forEach[inp|
+            val refVariable = inp.ref
+            if (refVariable !== null && !refVariable.eIsProxy) {
+                val assignments = inp.dataReferences.constr.xcollectOne[act].collect[actions].filter(RecordFieldAssignmentAction)
+                val refType = refVariable.type?.typeObject
+                if (refType instanceof RecordTypeDecl) {
+                    val assignedFields = assignments.filter[assignment == refVariable].map[fields.head].filterNull.toSet
+                    refType.allFields.reject[kind != RecordFieldKind::SYMBOLIC].reject[assignedFields.contains(it)].forEach [ field |
+                        error('''Symbolic record field '«refVariable.name».«field.name»' should be assigned in reference update for «actionType.getName()» Task: «update.name»''',
+                            refVariable, ProductPackage.Literals.VAR_REF__REF)
+                    ]
+                }
+            }
+        ]
+    }
+
     @Check
     def checkDataReferences(DataReferences dataReferences) {
         // Validate unique reference names
@@ -403,19 +427,6 @@ class ProductValidator extends AbstractProductValidator {
                 }
             }
         ]
-
-        // All symbolic record fields (that are not suppressed) should be assigned in reference updates
-        val refVariable = dataReferences.getContainerOfType(VarRef)?.ref
-        if (refVariable !== null && !refVariable.eIsProxy) {
-            val refType = refVariable.type?.typeObject
-            if (refType instanceof RecordTypeDecl) {
-                val assignedFields = assignments.filter[assignment == refVariable].map[fields.head].filterNull.toSet
-                refType.allFields.reject[suppressed].filter[kind == RecordFieldKind::SYMBOLIC && !assignedFields.contains(it)].forEach [ field |
-                    error('''Symbolic record field '«refVariable.name».«field.name»' should be assigned in reference update''',
-                        dataReferences, null)
-                ]
-            }
-        }
 
         // Variables that are suppressed cannot be assigned in reference updates
         val suppress = dataReferences.getContainerOfType(UpdateOutVar)?.suppress
