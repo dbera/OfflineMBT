@@ -29,6 +29,7 @@ public class DataInstanceDescriptor extends ElementDescriptor {
 	
 	public Map<String,Binding> bind_consumers = new HashMap<>();
 	public Binding bind_producer;
+	public boolean initializedByCompose;
 	
 
 	public DataInstanceDescriptor(String id,String lane, String producer, List<String> consumers) {
