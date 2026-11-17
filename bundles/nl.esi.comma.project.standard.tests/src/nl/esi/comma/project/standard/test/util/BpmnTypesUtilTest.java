@@ -12,7 +12,11 @@
  */
 package nl.esi.comma.project.standard.test.util;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,6 +31,7 @@ import nl.esi.comma.project.standard.util.BpmnTypesUtil;
 public class BpmnTypesUtilTest {
 
 	private Document simplifiedBpmnDoc;
+	private String simplifiedBpmnXml;
 	private String testTypes;
 
 	@BeforeEach
@@ -35,23 +40,21 @@ public class BpmnTypesUtilTest {
 		testTypes = "enum Size {\n  Small\n  Medium\n  Large\n}\n\nrecord Order {\n  string id\n  Size size\n}";
 
 		// Simplified BPMN document (similar to fries_comp.bpmn structure)
-		String bpmnXml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-			"<bpmn2:definitions xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" \n" +
-			"    xmlns:bpmn2=\"http://www.omg.org/spec/BPMN/20100524/MODEL\" \n" +
-			"    xmlns:bpmn4s=\"http://bpmn4s\" \n" +
-			"    id=\"test-diagram\" \n" +
-			"    targetNamespace=\"http://test.io/schema/bpmn\">\n" +
+		simplifiedBpmnXml = "<bpmn2:definitions" +
+			" xmlns:bpmn2=\"http://www.omg.org/spec/BPMN/20100524/MODEL\"" +
+			" xmlns:bpmn4s=\"http://bpmn4s\"" +
+			" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"" +
+			" id=\"test-diagram\"" +
+			" targetNamespace=\"http://test.io/schema/bpmn\">\n" +
 			"  <bpmn2:process id=\"Process_1\" isExecutable=\"false\" name=\"TestProcess\">\n" +
 			"    <bpmn2:extensionElements>\n" +
-			"      <bpmn4s:dataTypes>\n" +
-			"        <bpmn4s:raw>" + testTypes + "</bpmn4s:raw>\n" +
-			"      </bpmn4s:dataTypes>\n" +
+			"      <bpmn4s:dataTypes><bpmn4s:raw>" + testTypes + "</bpmn4s:raw></bpmn4s:dataTypes>\n" +
 			"    </bpmn2:extensionElements>\n" +
 			"  </bpmn2:process>\n" +
 			"</bpmn2:definitions>";
 
 		// Parse the BPMN XML string
-		simplifiedBpmnDoc = BpmnTypesUtil.parseXml(bpmnXml.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+		simplifiedBpmnDoc = BpmnTypesUtil.parseXml(simplifiedBpmnXml.getBytes(java.nio.charset.StandardCharsets.UTF_8));
 	}
 
 	@Test
@@ -127,6 +130,9 @@ public class BpmnTypesUtilTest {
 
 		// Verify round-trip worked
 		assertEquals(extractedTypes, reinjectedTypes, "Types should be identical after round-trip");
+		
+//		String withTypesAgainXml = new String(BpmnTypesUtil.xmlToBytes(withTypesAgain), StandardCharsets.UTF_8);
+//		assertEquals(simplifiedBpmnXml, withTypesAgainXml, "Xml should be identical after round-trip");
 	}
 
 	@Test

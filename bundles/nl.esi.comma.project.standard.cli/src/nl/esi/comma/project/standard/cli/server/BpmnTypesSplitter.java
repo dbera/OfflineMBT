@@ -56,8 +56,7 @@ public class BpmnTypesSplitter implements FileHandler {
 			}
 
 			// Check if BPMN already contains types (backward compatibility)
-			String existingTypes = BpmnTypesUtil.extractTypesFromBpmn(bpmnDoc);
-			if (existingTypes != null) {
+			if (BpmnTypesUtil.hasTypes(bpmnDoc)) {
 				// Types already exist in BPMN, return as-is
 				return bpmnContent;
 			}
@@ -70,7 +69,6 @@ public class BpmnTypesSplitter implements FileHandler {
 				"   then save the bpmn file.\n" +
 				"*/\n";
 			bpmnDoc = BpmnTypesUtil.injectTypesIntoBpmn(bpmnDoc, typesContent);
-
 			return BpmnTypesUtil.xmlToBytes(bpmnDoc);
 		} catch (ServerApiException e) {
 			throw e;
