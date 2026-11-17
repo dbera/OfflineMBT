@@ -69,10 +69,10 @@ import nl.esi.comma.abstracttestspecification.abstractTestspecification.Binding;
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.ComposeStep;
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.RunStep;
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.TSMain;
-import nl.esi.comma.abstracttestspecification.generator.to.concrete.ConcreteExpressionHandler;
 import nl.esi.comma.abstracttestspecification.generator.utils.Utils;
 import nl.esi.comma.assertthat.assertThat.DataAssertionItem;
 import nl.esi.comma.assertthat.assertThat.JsonValue;
+import nl.esi.comma.testspecification.testspecification.TestDefinition;
 import nl.esi.xtext.common.lang.utilities.EcoreUtil3;
 import nl.esi.xtext.expressions.expression.ExpressionVariable;
 import nl.esi.xtext.types.types.TypeDecl;
@@ -91,11 +91,12 @@ public class CamundaParser {
 
 	private static final String BPMN4S_RUN_TASK = "RunTask";
 	private static final String BPMN4S_ASSERT_TASK = "AssertTask";
+	private static final String BPMN4S_COMPOSE_TASK = "ComposeTask";
 	private static final String BPMN4S_SUB_TYPE = "subType";
 	private static final String BPMN4S_STEP_TYPE = "stepType";
 	private static final String BPMN4S_DATATYPE_REF = "dataTypeRef";
 	private static final String BPMN4S_UPDATE = "update";
-	private static final String BPMN4S_ASSERTIONS= "assertions";
+	private static final String BPMN4S_ASSERTIONS = "assertions";
 	private static final String BPMN4S_INIT = "init";
 	private static final String BPMN4S_PERSISTENT_READ = "persistentRead";
 
@@ -112,7 +113,7 @@ public class CamundaParser {
 
 	// Height allocated to each swimlane. Increasing this adds vertical space
 	// around tasks and datastores and increases the distance between lanes.
-	private static final double LANE_HEIGHT = 400.0;
+	private static final double LANE_HEIGHT = 300.0;
 
 	// Width of each generated task shape. Increasing this makes task labels
 	// easier to read but reduces the free horizontal space between tasks.
@@ -130,7 +131,7 @@ public class CamundaParser {
 
 	// Vertical offset from the top of a swimlane to a task. Deriving the value
 	// from LANE_HEIGHT and TASK_HEIGHT centers each task vertically in its lane.
-	private static final double TASK_TOP_OFFSET = (LANE_HEIGHT - TASK_HEIGHT) / 2.0;
+	private static final double TASK_TOP_OFFSET = (LANE_HEIGHT - TASK_HEIGHT) / 2.0 - 50.0;
 
 	// Width and height of start and end event shapes. Event positions use this
 	// value to align the events vertically with the center of adjacent tasks.
@@ -148,8 +149,9 @@ public class CamundaParser {
 	// Horizontal spacing applied when multiple datastores are placed for the
 	// same producer or when fallback datastore positions are calculated.
 	private static final double DATA_STEP_X = 80.0;
+	private static final CharSequence UNIT_RECORD_TYPE = "@context\nrecord UNIT {\n\t@suppress int\tunit\n}\n\n";
 
-	public static String generateBPMNModel(AbstractTestDefinition atd) {
+	public static String generateBPMNModel(AbstractTestDefinition atd, TestDefinition ctd) {
 		List<ElementDescriptor> descriptors = createDescriptors(atd);
 		BpmnModelInstance modelInstance = generateBPMNModel(atd, descriptors);
 		return Bpmn.convertToString(modelInstance);
@@ -161,26 +163,21 @@ public class CamundaParser {
 		Map<String, List<Map.Entry<String, Binding>>> outputsMap = new LinkedHashMap<>();
 		Map<String, DataInstanceDescriptor> dataInstanceMap = new LinkedHashMap<>();
 
-		// Collect executable tasks and all output bindings. Compose steps are data
-		// initialization and therefore do not become executable BPMN tasks.
+		// Collect executable tasks and all output bindings.
 		for (AbstractTestSequence sequence : atd.getTestSeq()) {
 			for (AbstractStep step : sequence.getStep()) {
 				Set<Binding> outputs = new HashSet<>(step.getOutput());
-				Set<String> suppressed = step.getSuppress() != null
-						? step.getSuppress().getVars().stream()
-								.map(variableReference -> variableReference.getVariable().getName())
-								.collect(Collectors.toSet())
+				Set<String> suppressed = step.getSuppress() != null ? step.getSuppress().getVars().stream()
+						.map(variableReference -> variableReference.getVariable().getName()).collect(Collectors.toSet())
 						: Collections.emptySet();
 				outputs.removeIf(output -> suppressed.contains(output.getName().getName()));
 
 				String stepName = getConsumerName(step);
 				String laneName = getComponentName(step);
 
-				if (!(step instanceof ComposeStep)) {
-					TaskDescriptor task = new TaskDescriptor(stepName, laneName);
-					task.step = step;
-					tasks.add(task);
-				}
+				TaskDescriptor task = new TaskDescriptor(stepName, laneName);
+				task.step = step;
+				tasks.add(task);
 
 				outputs.forEach(output -> {
 					String dataStoreName = output.getName().getName();
@@ -200,13 +197,11 @@ public class CamundaParser {
 				consumingStep.getStepRef().forEach(stepReference -> {
 					AbstractStep producerStep = stepReference.getRefStep();
 					String producerName = getConsumerName(producerStep);
-					boolean initializedByCompose = producerStep instanceof ComposeStep;
 
 					stepReference.getRefData().forEach(referencedData -> {
 						String consumedData = referencedData.getName();
 						outputsMap.getOrDefault(consumedData, Collections.emptyList()).stream()
-								.filter(entry -> entry.getKey().equals(producerName))
-								.findFirst()
+								.filter(entry -> entry.getKey().equals(producerName)).findFirst()
 								.ifPresent(matchedEntry -> {
 									String key = consumedData + "_" + producerName;
 									DataInstanceDescriptor existing = dataInstanceMap.get(key);
@@ -217,22 +212,15 @@ public class CamundaParser {
 										return;
 									}
 
-									String effectiveProducer = initializedByCompose ? null : producerName;
 									DataInstanceDescriptor dataInstance = new DataInstanceDescriptor(key, laneName,
-											effectiveProducer, new ArrayList<>(List.of(consumerName)));
+											producerName, new ArrayList<>(List.of(consumerName)));
 									dataInstance.bind_producer = matchedEntry.getValue();
-									dataInstance.initializedByCompose = initializedByCompose;
 									dataInstanceMap.put(key, dataInstance);
 								});
 					});
 				});
 			}
 		}
-
-		// Compose outputs are initial process data and have no producer task.
-		dataInstanceMap.values().stream()
-				.filter(dataInstance -> dataInstance.initializedByCompose)
-				.forEach(elements::add);
 
 		// Preserve task/output ordering for executable producers.
 		for (TaskDescriptor task : tasks) {
@@ -275,11 +263,10 @@ public class CamundaParser {
 		Map<String, Task> taskMap = new HashMap<>();
 		Map<BaseElement, Bounds> elemBounds = new LinkedHashMap<>();
 		long taskCount = elements.stream().filter(TaskDescriptor.class::isInstance).count();
-		double laneWidth = Math.max(800.0, DIAGRAM_MARGIN_X * 2 + EVENT_SIZE * 2
-				+ TASK_STEP_X * Math.max(1, taskCount));
+		double laneWidth = Math.max(800.0,
+				DIAGRAM_MARGIN_X * 2 + EVENT_SIZE * 2 + TASK_STEP_X * Math.max(1, taskCount));
 
-		createLanes(modelInstance, elements, laneSet, plane, laneMap, laneYMap,
-				DIAGRAM_MARGIN_Y, laneWidth);
+		createLanes(modelInstance, elements, laneSet, plane, laneMap, laneYMap, DIAGRAM_MARGIN_Y, laneWidth);
 
 		FlowNode previousNode = null;
 		int nodeIdx = 0;
@@ -302,8 +289,8 @@ public class CamundaParser {
 				if (nodeIdx == 0) {
 					StartEvent startEvent = createStartEvent(modelInstance, process, td.lane, laneMap);
 					Bounds startBounds = createBounds(modelInstance, DIAGRAM_MARGIN_X,
-						laneYMap.get(td.lane) + TASK_TOP_OFFSET + (TASK_HEIGHT - EVENT_SIZE) / 2.0,
-						EVENT_SIZE, EVENT_SIZE);
+							laneYMap.get(td.lane) + TASK_TOP_OFFSET + (TASK_HEIGHT - EVENT_SIZE) / 2.0, EVENT_SIZE,
+							EVENT_SIZE);
 					addShapeToPlane(modelInstance, plane, startEvent, startBounds);
 					createSequenceFlowWithEdge(modelInstance, process, plane, startEvent, task, "flow_start",
 							startBounds, taskBounds);
@@ -312,8 +299,8 @@ public class CamundaParser {
 				if (previousNode != null) {
 					Bounds prevBounds = elemBounds.get(previousNode);
 					if (prevBounds == null) {
-						prevBounds = createBounds(modelInstance, DIAGRAM_MARGIN_X, laneYMap.get(td.lane) + TASK_TOP_OFFSET,
-							TASK_WIDTH, TASK_HEIGHT);
+						prevBounds = createBounds(modelInstance, DIAGRAM_MARGIN_X,
+								laneYMap.get(td.lane) + TASK_TOP_OFFSET, TASK_WIDTH, TASK_HEIGHT);
 					}
 					createSequenceFlowWithEdge(modelInstance, process, plane, previousNode, task,
 							"flow_" + (nodeIdx - 1) + "_" + nodeIdx, prevBounds, taskBounds);
@@ -322,8 +309,7 @@ public class CamundaParser {
 				if (nodeIdx == taskCount - 1) {
 					EndEvent endEvent = createEndEvent(modelInstance, process, td.lane, laneMap);
 					Bounds endBounds = createBounds(modelInstance, taskBounds.getX() + TASK_WIDTH + 55.0,
-							taskBounds.getY() + (TASK_HEIGHT - EVENT_SIZE) / 2.0,
-							EVENT_SIZE, EVENT_SIZE);
+							taskBounds.getY() + (TASK_HEIGHT - EVENT_SIZE) / 2.0, EVENT_SIZE, EVENT_SIZE);
 					addShapeToPlane(modelInstance, plane, endEvent, endBounds);
 					createSequenceFlowWithEdge(modelInstance, process, plane, task, endEvent, "flow_end", taskBounds,
 							endBounds);
@@ -343,29 +329,14 @@ public class CamundaParser {
 			if (e instanceof DataInstanceDescriptor ds) {
 				double x, y;
 
-				if (ds.initializedByCompose) {
-					Task consumer = ds.consumers.stream()
-							.map(taskMap::get)
-							.filter(java.util.Objects::nonNull)
-							.findFirst()
-							.orElse(null);
-					if (consumer != null) {
-						Bounds consumerBounds = elemBounds.get(consumer);
-						x = consumerBounds.getX() + (consumerBounds.getWidth() - DATA_SIZE) / 2.0;
-						y = consumerBounds.getY() - DATA_SIZE - 50.0;
-					} else {
-						x = DIAGRAM_MARGIN_X + EVENT_SIZE + 55.0 + nodeIdx * DATA_STEP_X;
-						y = laneYMap.get(ds.lane) + DATA_TOP_OFFSET;
-					}
-				} else if (ds.producer != null && taskMap.containsKey(ds.producer)) {
+				if (ds.producer != null && taskMap.containsKey(ds.producer)) {
 					Task producer = taskMap.get(ds.producer);
 					Bounds taskBounds = elemBounds.get(producer);
 					int count = producerDataCount.getOrDefault(ds.producer, 0);
 
 					// Keep produced data in the producer's lane. Multiple objects fan out
 					// horizontally instead of growing into the lane below.
-					x = taskBounds.getX() + (taskBounds.getWidth() - DATA_SIZE) / 2.0
-							+ count * DATA_STEP_X;
+					x = taskBounds.getX() + (taskBounds.getWidth() - DATA_SIZE) / 2.0 + count * DATA_STEP_X;
 					y = laneYMap.get(ds.lane) + DATA_TOP_OFFSET;
 
 					producerDataCount.put(ds.producer, count + 1);
@@ -391,39 +362,40 @@ public class CamundaParser {
 	}
 
 	private static void addBpmnExtension(Task task, AbstractStep step) {
-		if (step instanceof RunStep) {
-			task.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_SUB_TYPE, BPMN4S_RUN_TASK);
-			task.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_STEP_TYPE, ((RunStep) step).getStepType());
-		} else if (step instanceof AssertionStep) {
-			task.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_SUB_TYPE, BPMN4S_ASSERT_TASK);
-			task.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_STEP_TYPE, ((AssertionStep) step).getStepType());
-
-			
-			AssertionStep assertionStep = (AssertionStep) step;
-			String assertions = assertionStep .getAsserts().stream()
-					.flatMap(assertion -> assertion.getCe().stream())
-					.flatMap(constraintExpression -> constraintExpression.getConstr().stream())
-					.map(assertionItem -> printDai(assertionStep, assertionItem))
-					.filter(assertion -> !assertion.isBlank())
-					.collect(Collectors.joining("\n"));
-
-			if (!assertions.isBlank()) {
-				task.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_ASSERTIONS, assertions);
-			}
-		} else {
+		if (step instanceof RunStep)
+			addBpmnExtension(task, (RunStep) step);
+		else if (step instanceof ComposeStep)
+			addBpmnExtension(task, (ComposeStep) step);
+		else if (step instanceof AssertionStep)
+			addBpmnExtension(task, (AssertionStep) step);
+		else
 			throw new IllegalArgumentException("Unexpected executable step: " + step);
-		}
 	}
-	
-	private static String printDai(AssertionStep step, DataAssertionItem item) {
-		return EcoreUtil3.serialize(item, object -> {
-			if (object instanceof ExpressionVariable) {
-				ExpressionVariable expressionVariable = (ExpressionVariable) object;
-				String variableName = Utils.getVarField(expressionVariable.getVariable());
-				return Utils.getInputVar(step) + "." + variableName;
-			}
-			return null;
-		}).stripIndent().trim();
+
+	private static void addBpmnExtension(Task task, ComposeStep step) {
+		task.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_SUB_TYPE, BPMN4S_COMPOSE_TASK);
+	}
+
+	private static void addBpmnExtension(Task task, RunStep step) {
+		task.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_SUB_TYPE, BPMN4S_RUN_TASK);
+		task.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_STEP_TYPE, ((RunStep) step).getStepType());
+	}
+
+	private static void addBpmnExtension(Task task, AssertionStep step) {
+		task.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_SUB_TYPE, BPMN4S_RUN_TASK
+		// BPMN4S_ASSERT_TASK // TODO change it later
+		);
+		task.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_STEP_TYPE, ((AssertionStep) step).getStepType());
+
+		AssertionStep assertionStep = (AssertionStep) step;
+		String assertions = assertionStep.getAsserts().stream().flatMap(assertion -> assertion.getCe().stream())
+				.flatMap(constraintExpression -> constraintExpression.getConstr().stream())
+				.map(assertionItem -> printDai(assertionStep, assertionItem)).filter(assertion -> !assertion.isBlank())
+				.collect(Collectors.joining("\n"));
+
+		if (!assertions.isBlank()) {
+			task.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_ASSERTIONS, assertions);
+		}
 	}
 
 	private static void addBpmnExtension(DataAssociation da, Binding bind) {
@@ -468,6 +440,15 @@ public class CamundaParser {
 		return definitions;
 	}
 
+	private static Process createProcess(BpmnModelInstance modelInstance, Definitions definitions) {
+		Process process = modelInstance.newInstance(Process.class);
+		process.setExecutable(true);
+		process.setId("BPMNProcess_id");
+		process.setName("BPMNProcess");
+		definitions.addChildElement(process);
+		return process;
+	}
+
 	private static void createDataTypes(AbstractTestDefinition atd, BpmnModelInstance modelInstance, Process process) {
 		ExtensionElements extElem = modelInstance.newInstance(ExtensionElements.class);
 		DataTypes dtype_list = modelInstance.newInstance(DataTypes.class);
@@ -479,19 +460,17 @@ public class CamundaParser {
 		process.addChildElement(extElem);
 		extElem.addChildElement(dtype_list);
 	}
-	
-	private static String getBindingType(DataInstanceDescriptor dsDescriptor) {
-		TypeDecl b_type = dsDescriptor.bind_producer.getName().getType().getType();
-		return b_type.getName();
-	}
-	
+
 	/**
 	 * Resolves the product-specific types file imported indirectly by the test
 	 * specification and returns its original UTF-8 source text.
 	 *
-	 * <p>The expected import chain is:</p>
+	 * <p>
+	 * The expected import chain is:
+	 * </p>
 	 * <ol>
-	 * <li>the {@link TSMain} containing {@code atd} imports the TSpec types file;</li>
+	 * <li>the {@link TSMain} containing {@code atd} imports the TSpec types
+	 * file;</li>
 	 * <li>that {@link TypesModel} imports the product-specific types file;</li>
 	 * <li>the product-specific types source is embedded in BPMN4S {@code Raw}.</li>
 	 * </ol>
@@ -534,9 +513,8 @@ public class CamundaParser {
 					"The TSpec types model does not import a product-specific types file: " + tSpecTypesUri);
 		}
 
-		URI productTypesUri = resolveImport(tSpecTypesResource.getURI(),
-				tSpecTypes.getImports().get(0).getImportURI());
-		return readUtf8(tspecResource, productTypesUri);
+		URI productTypesUri = resolveImport(tSpecTypesResource.getURI(), tSpecTypes.getImports().get(0).getImportURI());
+		return readUtf8(tspecResource, productTypesUri).replace(UNIT_RECORD_TYPE, "");
 	}
 
 	private static URI resolveImport(URI baseResourceUri, String importUri) {
@@ -553,15 +531,6 @@ public class CamundaParser {
 		} catch (IOException exception) {
 			throw new IllegalArgumentException("Could not read imported product types file: " + uri, exception);
 		}
-	}
-
-	private static Process createProcess(BpmnModelInstance modelInstance, Definitions definitions) {
-		Process process = modelInstance.newInstance(Process.class);
-		process.setExecutable(true);
-		process.setId("BPMNProcess_id");
-		process.setName("BPMNProcess");
-		definitions.addChildElement(process);
-		return process;
 	}
 
 	private static LaneSet createLaneSet(BpmnModelInstance modelInstance, Process process) {
@@ -585,8 +554,7 @@ public class CamundaParser {
 	}
 
 	private static void createLanes(BpmnModelInstance modelInstance, List<ElementDescriptor> elements, LaneSet laneSet,
-			BpmnPlane plane, Map<String, Lane> laneMap, Map<String, Double> laneYMap,
-			double baseY, double laneWidth) {
+			BpmnPlane plane, Map<String, Lane> laneMap, Map<String, Double> laneYMap, double baseY, double laneWidth) {
 
 		for (ElementDescriptor e : elements) {
 			if (!laneMap.containsKey(e.lane)) {
@@ -603,6 +571,30 @@ public class CamundaParser {
 				addShapeToPlane(modelInstance, plane, lane, bounds);
 			}
 		}
+	}
+
+	/**
+	 * BPMN ids use the XML Schema NCName datatype. Keep the human-readable element
+	 * name unchanged, but replace characters that are illegal in an NCName (for
+	 * example parentheses) in generated ids.
+	 */
+	private static String normalizeBpmnId(String id) {
+		if (id == null || id.isEmpty()) {
+			return "id";
+		}
+		String normalized = id.replaceAll("[^A-Za-z0-9_.]", "_");
+		if (!normalized.substring(0, 1).matches("[A-Za-z_]")) {
+			normalized = "id_" + normalized;
+		}
+		return normalized;
+	}
+
+	private static String normalizeTaskId(String td_id) {
+		return normalizeBpmnId(td_id);
+	}
+
+	private static String normalizeTaskId(TaskDescriptor td) {
+		return normalizeTaskId(td.id);
 	}
 
 	private static Bounds createBounds(BpmnModelInstance modelInstance, double x, double y, double width,
@@ -639,28 +631,15 @@ public class CamundaParser {
 		return task;
 	}
 
-	private static String normalizeTaskId(TaskDescriptor td) {
-		return normalizeTaskId(td.id);
-	}
-
-	private static String normalizeTaskId(String td_id) {
-		return normalizeBpmnId(td_id);
-	}
-
-	/**
-	 * BPMN ids use the XML Schema NCName datatype. Keep the human-readable
-	 * element name unchanged, but replace characters that are illegal in an
-	 * NCName (for example parentheses) in generated ids.
-	 */
-	private static String normalizeBpmnId(String id) {
-		if (id == null || id.isEmpty()) {
-			return "id";
-		}
-		String normalized = id.replaceAll("[^A-Za-z0-9_.]", "_");
-		if (!normalized.substring(0, 1).matches("[A-Za-z_]")) {
-			normalized = "id_" + normalized;
-		}
-		return normalized;
+	private static String printDai(AssertionStep step, DataAssertionItem item) {
+		return EcoreUtil3.serialize(item, object -> {
+			if (object instanceof ExpressionVariable) {
+				ExpressionVariable expressionVariable = (ExpressionVariable) object;
+				String variableName = Utils.getVarField(expressionVariable.getVariable());
+				return Utils.getInputVar(step) + "." + variableName;
+			}
+			return null;
+		}).stripIndent().trim();
 	}
 
 	private static StartEvent createStartEvent(BpmnModelInstance modelInstance, Process process, String laneName,
@@ -681,6 +660,11 @@ public class CamundaParser {
 		process.addChildElement(endEvent);
 		laneMap.get(laneName).getFlowNodeRefs().add(endEvent);
 		return endEvent;
+	}
+
+	private static String getBindingType(DataInstanceDescriptor dsDescriptor) {
+		TypeDecl b_type = dsDescriptor.bind_producer.getName().getType().getType();
+		return b_type.getName();
 	}
 
 	private static void createSequenceFlowWithEdge(BpmnModelInstance modelInstance, Process process, BpmnPlane plane,
@@ -726,8 +710,8 @@ public class CamundaParser {
 			Map<BaseElement, Bounds> elemBounds, double x, double y) {
 		boolean hasProducerTask = dsDescriptor.producer != null && taskMap.containsKey(dsDescriptor.producer);
 		boolean hasConsumerTask = dsDescriptor.consumers.stream().anyMatch(taskMap::containsKey);
-		if (!hasProducerTask && !hasConsumerTask) return null;
-
+		if (!hasProducerTask && !hasConsumerTask)
+			return null;
 
 		String dsId = normalizeBpmnId("dataobject_" + dsDescriptor.id);
 
@@ -736,14 +720,14 @@ public class CamundaParser {
 		dsRef.setId(dsId + "_ref");
 		dsRef.setName(normalizeTaskId(dsDescriptor.id));
 		dsRef.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_DATATYPE_REF, getBindingType(dsDescriptor));
-		// Compose is not represented as a BPMN task. Its update assignment
-		// initializes the persistent data store directly.
-		if (dsDescriptor.initializedByCompose) {
-			String initializationAssignment = createUpdateAssignment(dsDescriptor);
-			if (initializationAssignment != null) {
-				dsRef.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_INIT, initializationAssignment);
-			}
-		}
+//		// Compose is not represented as a BPMN task. Its update assignment
+//		// initializes the persistent data store directly.
+//		if (dsDescriptor.initializedByCompose) {
+//			String initializationAssignment = createUpdateAssignment(dsDescriptor);
+//			if (initializationAssignment != null) {
+//				dsRef.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_INIT, initializationAssignment);
+//			}
+//		}
 		process.addChildElement(dsRef);
 
 		// 2 Add diagram shape for the DataStoreReference.
@@ -752,10 +736,10 @@ public class CamundaParser {
 		dsShape.setBpmnElement(dsRef);
 		Bounds dsBounds = createBounds(modelInstance, x, y, DATA_SIZE, DATA_SIZE);
 		dsShape.setBounds(dsBounds);
-		plane.addChildElement(dsShape);
 
+		plane.addChildElement(dsShape);
 		// 3 Link producer task to DataStoreReference
-		if (!dsDescriptor.initializedByCompose && dsDescriptor.producer != null) {
+		if (dsDescriptor.producer != null) {
 			Task producer = taskMap.get(dsDescriptor.producer);
 			if (producer != null) {
 				DataOutputAssociation doa = modelInstance.newInstance(DataOutputAssociation.class);
@@ -983,18 +967,18 @@ public class CamundaParser {
 
 		return regionOffset + margin + (index * spacing);
 	}
-
-	// Distribute connections evenly along a vertical edge
-	private static double calculateVerticalOffset(int index, int total, double height) {
-		if (total == 1) {
-			return height / 2.0;
-		}
-
-		// Leave 20% margin on top and bottom, distribute in the middle 60%
-		double usableHeight = height * 0.6;
-		double margin = height * 0.2;
-		double spacing = usableHeight / (total - 1);
-
-		return margin + (index * spacing);
-	}
+//
+//	// Distribute connections evenly along a vertical edge
+//	private static double calculateVerticalOffset(int index, int total, double height) {
+//		if (total == 1) {
+//			return height / 2.0;
+//		}
+//
+//		// Leave 20% margin on top and bottom, distribute in the middle 60%
+//		double usableHeight = height * 0.6;
+//		double margin = height * 0.2;
+//		double spacing = usableHeight / (total - 1);
+//
+//		return margin + (index * spacing);
+//	}
 }
