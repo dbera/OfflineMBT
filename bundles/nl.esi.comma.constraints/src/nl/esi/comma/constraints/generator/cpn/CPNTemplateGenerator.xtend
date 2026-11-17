@@ -46,18 +46,20 @@ import nl.esi.comma.testspecification.testspecification.AssertionStep
 import nl.esi.comma.testspecification.testspecification.RunStep
 import nl.esi.comma.testspecification.testspecification.TSMain
 import nl.esi.comma.testspecification.testspecification.TestDefinition
+import nl.esi.xtext.expressions.expression.Expression
+import nl.esi.xtext.expressions.expression.ExpressionRecordAccess
 import nl.esi.xtext.expressions.expression.ExpressionVariable
+import nl.esi.xtext.types.types.RecordTypeDecl
 import nl.esi.xtext.types.types.TypesModel
 import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.nodemodel.util.NodeModelUtils
 
+import static extension nl.esi.xplus.extensions.types.RecordFieldKind.*
 import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
+import static extension nl.esi.xtext.expressions.utilities.ExpressionsUtilities.*
 import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
-import nl.esi.xtext.types.types.RecordTypeDecl
-import nl.esi.xtext.expressions.expression.Expression
-import nl.esi.xtext.expressions.expression.ExpressionRecordAccess
 
 class CPNTemplateGenerator 
 {
@@ -118,7 +120,7 @@ class CPNTemplateGenerator
                             produces-outputs «step.inputName(labelList)»
                             updates:
                                 // Constructor
-                                «step.inputName(labelList)» := «Utils.defaultValue(step.inputType, step.inputName(labelList))»
+                                «step.inputName(labelList)» := «step.generateDefaultInput»
                             «FOR act : step.context + step.input + step.sut»
                                 «IF act.exp.eAllContents.filter(ExpressionVariable).isEmpty»
                                     // ReferenceExpressions are skipped.
@@ -183,7 +185,7 @@ class CPNTemplateGenerator
                         produces-outputs «step.inputName(labelList)»
                         updates:
                             // Constructor
-                            «step.inputName(labelList)» := «Utils.defaultValue(step.inputType, step.inputName(labelList))»
+                            «step.inputName(labelList)» := «step.generateDefaultInput»
                         «FOR act : step.context + step.input + step.sut»
                             «IF act.exp.eAllContents.filter(ExpressionVariable).isEmpty»
                                 // ReferenceExpressions are skipped.
@@ -255,7 +257,7 @@ class CPNTemplateGenerator
                 «IF boundaryStep.inputName(labelList) !== null»
                     produces-outputs «boundaryStep.inputName(labelList)»
                     updates:
-                        «boundaryStep.inputName(labelList)» := «Utils.defaultValue(boundaryStep.inputType, boundaryStep.inputName(labelList))»
+                        «boundaryStep.inputName(labelList)» := «boundaryStep.generateDefaultInput»
                     «FOR action : boundaryStep.context + boundaryStep.input + boundaryStep.sut»
                         «IF action.exp.eAllContents
                             .filter(ExpressionVariable).isEmpty»
@@ -316,7 +318,7 @@ class CPNTemplateGenerator
                                 «IF step.inputName(labelList) !== null»
                                     produces-outputs «step.inputName(labelList)»
                                     updates:
-                                        «step.inputName(labelList)» := «Utils.defaultValue(step.inputType, step.inputName(labelList))»
+                                        «step.inputName(labelList)» := «step.generateDefaultInput»
                                     «FOR act : step.context + step.input + step.sut»
                                         «IF act.exp.eAllContents.filter(ExpressionVariable).isEmpty»
                                             // ReferenceExpressions are skipped.
@@ -1176,6 +1178,7 @@ class CPNTemplateGenerator
     private def getTypeName(AbstractStep step) {
         return step.stepVar.type.typeName
     }
+    
     // type of the step-type record's 'input' field, e.g. ExecutePrinterInput
     private def inputType(AbstractStep step) {
         (step.stepVar.type.type as RecordTypeDecl).allFields.findFirst[name == 'input']?.type
@@ -1192,5 +1195,9 @@ class CPNTemplateGenerator
             return access.record.fieldPath + #[access.field.name]
         }
         return #[]
+    }
+    
+    private def generateDefaultInput(AbstractStep step) {
+        return step.inputType.typeObject.generateDefaultValue[kind != SYMBOLIC]
     }
 }

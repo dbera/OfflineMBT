@@ -49,6 +49,7 @@ import java.util.LinkedHashMap
 import nl.esi.xtext.types.types.RecordTypeDecl
 import nl.esi.comma.testspecification.testspecification.AssertionStep
 import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
+import nl.asml.matala.product.generator.ProductGenerationMode
 
 /**
  * Generates code from your model files on save.
@@ -112,7 +113,8 @@ class StandardProjectGenerator extends AbstractGenerator {
         }
         // PspecToPetriNetGenerator
         // Generate CPNServer (a.k.a. abstract Tspec generator) and Petri-nets
-        (new ProductGenerator(task.prefixTests)).doGenerate(productRes, fsa, ctx)
+        val productGenerator = new ProductGenerator(task.prefixTests, ProductGenerationMode.TEST_GENERATION)
+        productGenerator.doGenerate(productRes, fsa, ctx)
 
         if (task.target == OfflineGenerationTarget.SIMULATOR) {
             return

@@ -35,9 +35,6 @@ import org.eclipse.xtext.xbase.lib.Procedures.Procedure1
  * expression or element. It is not repeated for every nested AST node.
  */
 class TestspecificationJsonSerializer {
-
-    val JsonWriter jsonWriter = new JsonWriter
-    
     val SemanticExpressionJsonSerializer semanticExpressionSerializer = new SemanticExpressionJsonSerializer
 
     val Map<EObject, StepInfo> stepByVariable =
@@ -114,7 +111,7 @@ class TestspecificationJsonSerializer {
             diagnostics
         )
 
-        jsonWriter.write(result)
+        JsonWriter.toJson(result)
     }
 
     private def void indexSteps(EObject definition) {
