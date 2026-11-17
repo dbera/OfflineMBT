@@ -21,7 +21,10 @@ import nl.esi.xtext.expressions.conversion.IExpressionConvertersProvider
 import nl.esi.xtext.expressions.functions.ExpressionFunctionLibrariesProvider
 import nl.esi.xtext.expressions.functions.IExpressionFunctionLibrariesProvider
 import nl.esi.xtext.expressions.scoping.ExpressionsImportUriGlobalScopeProvider
+import nl.asml.matala.product.validation.ProductTypesValidator
 import org.eclipse.xtext.conversion.IValueConverterService
+import org.eclipse.xtext.service.SingletonBinding
+
 
 /**
  * Use this class to register components to be used at runtime / without the Equinox extension registry.
@@ -41,6 +44,15 @@ class ProductRuntimeModule extends AbstractProductRuntimeModule {
 
     def Class<? extends IExpressionConvertersProvider> bindIExpressionConvertersProvider() {
         return ExpressionConvertersProvider
+    }
+
+    /**
+     * Eagerly creates (and thereby registers) the additional types validations that should be active whenever the
+     * product language is active.
+     */
+    @SingletonBinding(eager=true)
+    def Class<? extends ProductTypesValidator> bindProductTypesValidator() {
+        return ProductTypesValidator
     }
 
 }
