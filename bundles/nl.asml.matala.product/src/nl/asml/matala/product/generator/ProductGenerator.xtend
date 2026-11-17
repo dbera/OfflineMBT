@@ -185,7 +185,6 @@ class ProductGenerator extends AbstractGenerator {
 			}
 			
 			fsa.generateFile('CPNServer//' + specName + '//' + specName + '.py', pnet.toSnakes(
-//			    isReachabilityGenerationTask,
 			    generationMode,
 			    specName, specName, listOfEnvBlocks, listOfAssertTransitions,
 			     mapOfTransitionQnames, mapOfSuppressTransitionVars, inout_places, 
