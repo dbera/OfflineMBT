@@ -49,6 +49,7 @@ import nl.esi.comma.testspecification.testspecification.TestDefinition
 import nl.esi.xtext.expressions.expression.Expression
 import nl.esi.xtext.expressions.expression.ExpressionRecordAccess
 import nl.esi.xtext.expressions.expression.ExpressionVariable
+import nl.esi.xtext.expressions.utilities.ProposalHelper
 import nl.esi.xtext.types.types.RecordTypeDecl
 import nl.esi.xtext.types.types.TypesModel
 import org.eclipse.emf.ecore.EObject
@@ -58,7 +59,6 @@ import org.eclipse.xtext.nodemodel.util.NodeModelUtils
 
 import static extension nl.esi.xplus.extensions.types.RecordFieldKind.*
 import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
-import static extension nl.esi.xtext.expressions.utilities.ExpressionsUtilities.*
 import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
 
 class CPNTemplateGenerator 
@@ -1198,6 +1198,6 @@ class CPNTemplateGenerator
     }
     
     private def generateDefaultInput(AbstractStep step) {
-        return step.inputType.typeObject.generateDefaultValue[kind != SYMBOLIC]
+        return ProposalHelper.defaultValue(step.inputType, 'input', [kind != SYMBOLIC])
     }
 }

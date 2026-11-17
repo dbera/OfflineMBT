@@ -45,6 +45,10 @@ class JsonWriter {
         return String.valueOf(value).quoted
     }
 
+    static dispatch def String toJson(Void _void) {
+        return "null"
+    }
+
     private static def String quoted(String in) {
         val out = new StringBuilder('"')
         for (var i = 0; i < in.length; i++) {

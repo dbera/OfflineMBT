@@ -15,6 +15,8 @@ package nl.esi.comma.project.standard.generator
 
 import java.io.File
 import java.io.FilenameFilter
+import java.nio.file.Files
+import java.nio.file.Path
 import java.util.ArrayList
 import java.util.List
 import nl.asml.matala.product.generator.ProductGenerationMode
@@ -22,6 +24,7 @@ import nl.asml.matala.product.generator.ProductGenerator
 import nl.asml.matala.product.product.Product
 import nl.esi.comma.constraints.constraints.Constraints
 import nl.esi.comma.constraints.generator.cpn.CPNTemplateGenerator
+import nl.esi.comma.constraints.generator.cpn.dashboard.ConformanceDashboardRenderer
 import nl.esi.comma.project.standard.standardProject.FilePath
 import nl.esi.comma.project.standard.standardProject.Project
 import nl.esi.comma.project.standard.standardProject.TestConformanceBlock
@@ -41,11 +44,6 @@ import org.eclipse.xtext.nodemodel.util.NodeModelUtils
 
 import static extension nl.esi.xtext.common.lang.generator.FileSystemAccessUtil.*
 import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
-
-//for conformance dashboard
-import java.nio.file.Files
-import java.nio.file.Path
-import nl.esi.comma.constraints.generator.cpn.dashboard.ConformanceDashboardRenderer
 
 @FinalFieldsConstructor
 class TestConformanceNetGenerator  extends AbstractGenerator {
@@ -77,76 +75,77 @@ class TestConformanceNetGenerator  extends AbstractGenerator {
     var Resource resource
      
     var TestConformanceBlock task
-    List<Constraints> constraints
+    var List<Constraints> constraints
+    var IFileSystemAccess2 constraintsFsa
 
     override doGenerate(Resource res, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
-        res.contents.filter(Project).flatMap[testConformanceBlocks].forEach[doGenerate(fsa, ctx)]
+        res.contents.filter(Project).flatMap[testConformanceBlocks].forEach[doGenerate(fsa.createFolderAccess(name), ctx)]
     }
 
     def void doGenerate(TestConformanceBlock task, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
         this.task = task
         this.resource = task.eResource
+        this.constraintsFsa = fsa.createFolderAccess("constraints")
         setConstraints
 
-        if(task.tspecFile !== null) {
+        if (task.tspecFile !== null) {
             var tspecResource = EcoreUtil2.getResource(resource, task.tspecFile)
-            if(tspecResource === null) {
+            if (tspecResource === null) {
                 throw new Exception(task.tspecFile + " Could not be resolved.")
             }
             var tspec = tspecResource.allContents.head
             if (tspec !== null && tspec instanceof TSMain) {
                 val generatedConstraints = (new CPNTemplateGenerator).generatePSpec(
-                            resource, fsa, constraints, tspec as TSMain
-                            )
+                    resource,
+                    constraintsFsa,
+                    constraints,
+                    tspec as TSMain
+                )
 //          generating the reachability graph from pspec    
-            val verdicts = new ArrayList<Pair<String, URI>>
-            for (generatedConstraint : generatedConstraints) {
-                val constraintFsa =  fsa.createFolderAccess(generatedConstraint.getConstraintFolderName())
-                val pspecURI = constraintFsa.getURI(generatedConstraint.getPspecFileName())
-                val pspecResource = resource.resourceSet.getResource(pspecURI,true)
-                
-                val product = pspecResource.contents
-                    .filter(Product)
-                    .findFirst[specification !== null]
-            
-                if (product === null) {
-                    throw new Exception(
-                        "No product found in generated PS resource: "
-                        + generatedConstraint.getPspecFileName()
-                    )
-                }
-                (new ProductGenerator(ProductGenerationMode.CHECK_TEST_CONFORMANCE))
-                    .doGenerate(pspecResource, fsa, ctx)
-                val specName = product.specification.name
+                val verdicts = new ArrayList<Pair<String, URI>>
+                for (generatedConstraint : generatedConstraints) {
+                    val constraintFsa = constraintsFsa.createFolderAccess(generatedConstraint.getConstraintFolderName())
+                    val pspecURI = constraintFsa.getURI(generatedConstraint.getPspecFileName())
+                    val pspecResource = resource.resourceSet.getResource(pspecURI, true)
 
-                val petriNetURI = fsa.getURI('''CPNServer/«specName»/«specName».py''')
+                    val product = pspecResource.contents.filter(Product).findFirst[specification !== null]
 
-                (new PetriNetToAbstractTspecGenerator(task.pythonExe, reporting)) 
-                    .doGenerate(
+                    if (product === null) {
+                        throw new Exception(
+                            "No product found in generated PS resource: " + generatedConstraint.getPspecFileName()
+                        )
+                    }
+                    (new ProductGenerator(ProductGenerationMode.CHECK_TEST_CONFORMANCE)).doGenerate(pspecResource,
+                        constraintsFsa, ctx)
+                    val specName = product.specification.name
+
+                    val petriNetURI = constraintsFsa.getURI('''CPNServer/«specName»/«specName».py''')
+
+                    (new PetriNetToAbstractTspecGenerator(task.pythonExe, reporting)).doGenerate(
                         resource.resourceSet,
                         petriNetURI,
                         pspecURI,
                         constraintFsa,
                         ctx
                     )
-                val acceptancePyUri = constraintFsa.getURI(generatedConstraint.getAcceptancePythonFileName())
-                val acceptanceJsonUri = constraintFsa.getURI(generatedConstraint.getAcceptanceJsonFileName())
-                val rgJsonUri = constraintFsa.getURI("plantuml/rg.json")
-                val verdictUri = constraintFsa.getURI("conformance.verdict.json")
-                runAcceptanceEvaluation(acceptancePyUri, acceptanceJsonUri, rgJsonUri, verdictUri)
-                verdicts.add(generatedConstraint.getConstraintFolderName() -> verdictUri)
-             }
-            writeConformanceSummary(fsa, verdicts)
-            val summaryUri = fsa.getURI("conformance.summary.json")
-            val summaryJson = Files.readString(Path.of(summaryUri.toPath))
-            val concreteTspecText = NodeModelUtils.getNode(tspec).text
-            val constraintSourceText = NodeModelUtils.getNode(constraints.head).text
-            val dashboardHtml = new ConformanceDashboardRenderer().render(
-                summaryJson,
-                concreteTspecText,
-                constraintSourceText
-            )
-            fsa.generateFile("conformance.dashboard.html", dashboardHtml)
+                    val acceptancePyUri = constraintFsa.getURI(generatedConstraint.getAcceptancePythonFileName())
+                    val acceptanceJsonUri = constraintFsa.getURI(generatedConstraint.getAcceptanceJsonFileName())
+                    val rgJsonUri = constraintFsa.getURI("plantuml/rg.json")
+                    val verdictUri = constraintFsa.getURI("conformance.verdict.json")
+                    runAcceptanceEvaluation(acceptancePyUri, acceptanceJsonUri, rgJsonUri, verdictUri)
+                    verdicts.add(generatedConstraint.getConstraintFolderName() -> verdictUri)
+                }
+                writeConformanceSummary(constraintsFsa, verdicts)
+                val summaryUri = constraintsFsa.getURI("conformance.summary.json")
+                val summaryJson = Files.readString(Path.of(summaryUri.toPath))
+                val concreteTspecText = NodeModelUtils.getNode(tspec).text
+                val constraintSourceText = NodeModelUtils.getNode(constraints.head).text
+                val dashboardHtml = new ConformanceDashboardRenderer().render(
+                    summaryJson,
+                    concreteTspecText,
+                    constraintSourceText
+                )
+                constraintsFsa.generateFile("conformance.dashboard.html", dashboardHtml)
             }
         }
     }

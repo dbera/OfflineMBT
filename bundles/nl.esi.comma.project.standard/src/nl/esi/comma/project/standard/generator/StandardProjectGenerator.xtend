@@ -64,8 +64,7 @@ class StandardProjectGenerator extends AbstractGenerator {
     IStatusReporting reporting;
 
     override doGenerate(Resource res, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
-        for (project : res.contents.filter(Project)) 
-        {
+        for (project : res.contents.filter(Project)) {
             for (task : project.offlineBlocks) {
                 doGenerate(task, res.resourceSet, fsa.createFolderAccess(task.name), ctx)
             }
@@ -144,12 +143,11 @@ class StandardProjectGenerator extends AbstractGenerator {
                     MergeConcreteDataAssigments.transform(conTspecRes)
                     conTspecRes.trySave
                 }
-                // Validate the generated concrete tspec, and generate the action.constraints file to be used to write properties
-                if (conTspecRes.validate) {
-                    generateActionConstraints(conTspecRes, conTspecFsa, tspecName + '.header.constraints')
-                }
                 // Validate the generated concrete tspec, stop this transformation on error
                 if (conTspecRes.validate) {
+                    // Generate the action.constraints file to be used to write properties
+                    generateActionConstraints(conTspecRes, conTspecFsa, tspecName + '.constraints')
+
                     // TODO fetch these FAST configuration parameters from somewhere else (e.g., .prj task)
                     val renamingRules = task.renamingRules !== null ? createPropertiesMap(task.renamingRules) : new HashMap
                     val genParams = task.generatorParams !== null ? createPropertiesMap(task.generatorParams) : new HashMap
