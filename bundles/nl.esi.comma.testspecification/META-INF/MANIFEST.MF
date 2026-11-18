@@ -19,6 +19,8 @@ Require-Bundle: nl.esi.comma.assertthat;visibility:=reexport,
  org.eclipse.xtend.lib;bundle-version="2.36.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: nl.esi.comma.testspecification,
+ nl.esi.comma.testspecification.formatting2,
+ nl.esi.comma.testspecification.generator.json,
  nl.esi.comma.testspecification.generator.utils,
  nl.esi.comma.testspecification.parser.antlr,
  nl.esi.comma.testspecification.parser.antlr.internal,
@@ -28,6 +30,5 @@ Export-Package: nl.esi.comma.testspecification,
  nl.esi.comma.testspecification.testspecification,
  nl.esi.comma.testspecification.testspecification.impl,
  nl.esi.comma.testspecification.testspecification.util,
- nl.esi.comma.testspecification.validation,
- nl.esi.comma.testspecification.formatting2
+ nl.esi.comma.testspecification.validation
 Import-Package: org.apache.log4j
