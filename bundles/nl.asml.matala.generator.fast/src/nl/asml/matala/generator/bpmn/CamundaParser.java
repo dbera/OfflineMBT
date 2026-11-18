@@ -69,6 +69,7 @@ import nl.esi.comma.abstracttestspecification.abstractTestspecification.Binding;
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.ComposeStep;
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.RunStep;
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.TSMain;
+import nl.esi.comma.abstracttestspecification.generator.to.concrete.ConcreteExpressionHandler;
 import nl.esi.comma.abstracttestspecification.generator.utils.Utils;
 import nl.esi.comma.assertthat.assertThat.DataAssertionItem;
 import nl.esi.comma.assertthat.assertThat.JsonValue;
@@ -401,7 +402,7 @@ public class CamundaParser {
 	private static void addBpmnExtension(DataAssociation da, Binding bind) {
 		TypeDecl b_type = bind.getName().getType().getType();
 		JsonValue b_val = bind.getJsonvals();
-		String b_str = ConcreteExpressionHandler.createTypeDeclValue(b_type, b_val);
+		String b_str = ConcreteExpressionHandler.createTypeDeclValue(b_type, b_val, p -> false);
 		da.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_UPDATE, b_str);
 	}
 
@@ -421,7 +422,7 @@ public class CamundaParser {
 		String variableId = normalizeBpmnId(dsDescriptor.id);
 		TypeDecl bindingType = bind.getName().getType().getType();
 		JsonValue bindingValue = bind.getJsonvals();
-		String initialValue = ConcreteExpressionHandler.createTypeDeclValue(bindingType, bindingValue);
+		String initialValue = ConcreteExpressionHandler.createTypeDeclValue(bindingType, bindingValue, p -> false);
 		return variableId + " := " + initialValue;
 	}
 
