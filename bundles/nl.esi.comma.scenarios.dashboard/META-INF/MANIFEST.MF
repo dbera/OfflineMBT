@@ -1,9 +1,0 @@
-Manifest-Version: 1.0
-Bundle-ManifestVersion: 2
-Bundle-Name: Scenarios Language Dashboard
-Bundle-SymbolicName: nl.esi.comma.scenarios.dashboard;singleton:=true
-Bundle-Version: 4.2.0.qualifier
-Automatic-Module-Name: nl.esi.comma.scenarios.dashboard
-Bundle-Vendor: TNO-ESI
-Bundle-ActivationPolicy: lazy
-Export-Package: nl.esi.comma.scenarios.dashboard

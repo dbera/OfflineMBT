@@ -14,10 +14,13 @@ package nl.esi.comma.project.standard.util;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
@@ -25,6 +28,7 @@ import javax.xml.transform.stream.StreamResult;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
@@ -37,19 +41,25 @@ public class BpmnTypesUtil {
 
 	private static final String BPMN_EXTENSION = ".bpmn";
 	private static final String TYPES_EXTENSION = ".types";
-	private static final String BPMN4S_NAMESPACE = "http://bpmn4s";
+	private static final String BPMN4S_DATATYPES = "bpmn4s:dataTypes";
+	private static final String BPMN4S_RAW = "bpmn4s:raw";
+	private static final String BPMN2_EXTENSIONELEMENTS = "bpmn2:extensionElements";
+	private static final String BPMN2_PROCESS = "bpmn2:process";
+
+	/**
+	 * Checks if a BPMN document contains types content.
+	 * Looks for the bpmn4s:dataTypes element and checks if it has children.
+	 */
+	public static boolean hasTypes(Document bpmnDoc) {
+		return findAnyElement(bpmnDoc, BPMN4S_DATATYPES).map(Node::hasChildNodes).orElse(false);
+	}
 
 	/**
 	 * Extracts types content from a BPMN document.
 	 * Looks for the bpmn4s:raw element within bpmn4s:dataTypes.
 	 */
 	public static String extractTypesFromBpmn(Document bpmnDoc) {
-		NodeList rawElements = bpmnDoc.getElementsByTagNameNS(BPMN4S_NAMESPACE, "raw");
-		if (rawElements.getLength() > 0) {
-			Element rawElement = (Element) rawElements.item(0);
-			return rawElement.getTextContent();
-		}
-		return null;
+		return findAnyElement(bpmnDoc, BPMN4S_RAW).map(Node::getTextContent).orElse(null);
 	}
 
 	/**
@@ -57,13 +67,8 @@ public class BpmnTypesUtil {
 	 * Creates the necessary XML structure if it doesn't exist.
 	 */
 	public static Document injectTypesIntoBpmn(Document bpmnDoc, String typesContent) {
-		Element rawElement = findOrCreateRawElement(bpmnDoc);
-
-		// Clear existing content
-		while (rawElement.hasChildNodes()) {
-			rawElement.removeChild(rawElement.getFirstChild());
-		}
-
+		Element rawElement = findAnyElement(bpmnDoc, BPMN4S_RAW).orElseGet(() -> createRawElement(bpmnDoc));
+		removeAllChildren(rawElement);
 		// Add types content as text node
 		rawElement.appendChild(bpmnDoc.createTextNode(typesContent));
 
@@ -75,11 +80,8 @@ public class BpmnTypesUtil {
 	 * Removes the bpmn4s:raw element.
 	 */
 	public static Document removeTypesFromBpmn(Document bpmnDoc) {
-		NodeList rawElements = bpmnDoc.getElementsByTagNameNS(BPMN4S_NAMESPACE, "raw");
-		while (rawElements.getLength() > 0) {
-			Element rawElement = (Element) rawElements.item(0);
-			rawElement.getParentNode().removeChild(rawElement);
-		}
+		findAnyElement(bpmnDoc, BPMN4S_DATATYPES).ifPresent(BpmnTypesUtil::removeAllChildren);
+
 		return bpmnDoc;
 	}
 
@@ -99,8 +101,9 @@ public class BpmnTypesUtil {
 	public static byte[] xmlToBytes(Document doc) throws Exception {
 		TransformerFactory factory = TransformerFactory.newInstance();
 		Transformer transformer = factory.newTransformer();
-		transformer.setOutputProperty("indent", "yes");
-		transformer.setOutputProperty("encoding", "UTF-8");
+		transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+		transformer.setOutputProperty(OutputKeys.INDENT, "no");
+		transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
 
 		java.io.ByteArrayOutputStream output = new java.io.ByteArrayOutputStream();
 		transformer.transform(new DOMSource(doc), new StreamResult(output));
@@ -125,45 +128,43 @@ public class BpmnTypesUtil {
 	}
 
 	// ---- Internal Helpers ----
-
-	private static Element findOrCreateRawElement(Document bpmnDoc) {
-		// Find existing raw element
-		NodeList rawElements = bpmnDoc.getElementsByTagNameNS(BPMN4S_NAMESPACE, "raw");
-		if (rawElements.getLength() > 0) {
-			return (Element) rawElements.item(0);
-		}
-
-		// Create new raw element if it doesn't exist
-		NodeList dataTypesElements = bpmnDoc.getElementsByTagNameNS(BPMN4S_NAMESPACE, "dataTypes");
-		Element dataTypesElement;
-
-		if (dataTypesElements.getLength() == 0) {
-			// Need to create dataTypes within extensionElements
-			NodeList extensionElements = bpmnDoc.getElementsByTagName("bpmn2:extensionElements");
-			Element extElement;
-			if (extensionElements.getLength() == 0) {
-				// Create extensionElements in the process
-				NodeList processes = bpmnDoc.getElementsByTagName("bpmn2:process");
-				if (processes.getLength() == 0) {
-					throw new RuntimeException("No process element found in BPMN");
-				}
-				extElement = bpmnDoc.createElementNS("http://www.omg.org/spec/BPMN/20100524/MODEL", "bpmn2:extensionElements");
-				processes.item(0).insertBefore(extElement, processes.item(0).getFirstChild());
-			} else {
-				extElement = (Element) extensionElements.item(0);
-			}
-
-			dataTypesElement = bpmnDoc.createElementNS(BPMN4S_NAMESPACE, "bpmn4s:dataTypes");
-			extElement.appendChild(dataTypesElement);
-		} else {
-			dataTypesElement = (Element) dataTypesElements.item(0);
-		}
-
-		// Create and append raw element
-		Element rawElement = bpmnDoc.createElementNS(BPMN4S_NAMESPACE, "bpmn4s:raw");
+	
+	/** Create and append raw element */
+	private static Element createRawElement(Document bpmnDoc) {
+		Element rawElement = bpmnDoc.createElement(BPMN4S_RAW);
+		Element dataTypesElement = findAnyElement(bpmnDoc, BPMN4S_DATATYPES)
+				.orElseGet(() -> createDataTypesElement(bpmnDoc));
 		dataTypesElement.appendChild(rawElement);
-
 		return rawElement;
 	}
 
+	private static Element createDataTypesElement(Document bpmnDoc) {
+		// Need to create dataTypes within extensionElements
+		Element extensionElement = findAnyElement(bpmnDoc, BPMN2_EXTENSIONELEMENTS).orElseGet(() -> {
+			// Create and prepend new extension element
+			Element newElement = bpmnDoc.createElement(BPMN2_EXTENSIONELEMENTS);
+			Element processElement = findAnyElement(bpmnDoc, BPMN2_PROCESS)
+					.orElseThrow(() -> new NoSuchElementException("No process element found in BPMN"));
+			processElement.insertBefore(newElement, processElement.getFirstChild());
+			return newElement;
+		});
+
+		Element dataTypesElement = bpmnDoc.createElement(BPMN4S_DATATYPES);
+		extensionElement.appendChild(dataTypesElement);
+		return dataTypesElement;
+	}
+	
+	private static Optional<Element> findAnyElement(Document bpmnDoc, String tagName) {
+		NodeList elements = bpmnDoc.getElementsByTagName(tagName);
+		if (elements.getLength() > 0) {
+			return Optional.of((Element) elements.item(0));
+		}
+		return Optional.empty();
+	}
+	
+	private static void removeAllChildren(Node node) {
+		while (node.hasChildNodes()) {
+			node.removeChild(node.getFirstChild());
+		}
+	}
 }
