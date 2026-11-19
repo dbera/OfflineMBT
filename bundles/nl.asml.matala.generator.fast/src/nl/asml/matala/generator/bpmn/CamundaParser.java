@@ -317,13 +317,21 @@ public class CamundaParser {
 	}
 
 	/**
-	 * Builds the identity used to match task descriptors with producer and consumer
-	 * references.
+	 * Defines the shared task identity used by task descriptors, producer/consumer
+	 * references and producer-qualified datastore keys.
+	 *
+	 * Preserves the existing suffix extraction, but shortens "default_<idx>" to
+	 * "<idx>". Named suffixes remain unchanged.
 	 */
 	private static String getConsumerName(AbstractStep step) {
-		// Extract the trailing two underscore-separated name segments when the
-		// pattern matches, then normalize that suffix for use in generated ids.
+		// Preserve the existing extraction and normalization of the case suffix.
 		String caseName = normalizeBpmnId(step.getName().replaceAll(".*_(.*_.*)$", "$1"));
+
+		// Remove "default_" only when the complete suffix is default_<numeric index>.
+		// Apply this after suffix normalization so a numeric index is not prefixed
+		// with "id_"; the complete task identity is normalized separately when needed.
+		caseName = caseName.replaceAll("^default_(\\d+)$", "$1");
+
 		Function function = (Function) step.getCaseRef().eContainer();
 		String function_name = function.getElabels();
 
