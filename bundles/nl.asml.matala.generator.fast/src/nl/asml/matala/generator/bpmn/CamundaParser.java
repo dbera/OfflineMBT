@@ -62,12 +62,14 @@ import nl.asml.matala.bpmn4s.extensions.DataTypes;
 import nl.asml.matala.bpmn4s.extensions.Raw;
 import nl.asml.matala.product.product.Block;
 import nl.asml.matala.product.product.Function;
+import nl.asml.matala.product.product.RefConstraint;
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractStep;
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractTestDefinition;
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractTestSequence;
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AssertionStep;
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.Binding;
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.ComposeStep;
+import nl.esi.comma.abstracttestspecification.abstractTestspecification.ConstraintStep;
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.RunStep;
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.TSMain;
 import nl.esi.comma.abstracttestspecification.generator.to.concrete.ConcreteExpressionHandler;
@@ -75,6 +77,9 @@ import nl.esi.comma.abstracttestspecification.generator.utils.Utils;
 import nl.esi.comma.assertthat.assertThat.DataAssertionItem;
 import nl.esi.comma.assertthat.assertThat.JsonValue;
 import nl.esi.comma.testspecification.testspecification.TestDefinition;
+import nl.esi.xtext.actions.actions.ActionList;
+import nl.esi.xtext.actions.actions.AssignmentAction;
+import nl.esi.xtext.actions.actions.RecordFieldAssignmentAction;
 import nl.esi.xtext.common.lang.utilities.EcoreUtil3;
 import nl.esi.xtext.expressions.expression.ExpressionVariable;
 import nl.esi.xtext.types.types.TypeDecl;
@@ -84,13 +89,17 @@ import nl.esi.xtext.types.types.TypesModel;
  * Converts abstract test definitions into a BPMN4S process and its BPMN Diagram
  * Interchange (DI) representation.
  *
- * <p>Run, compose and assertion steps remain visible as tasks. Referenced output
+ * <p>
+ * Run, compose and assertion steps remain visible as tasks. Referenced output
  * bindings become persistent datastores connected to their producers and
  * consumers. Compose tasks can therefore receive data from multiple referenced
- * run steps through separate input associations.</p>
+ * run steps through separate input associations.
+ * </p>
  *
- * <p>The conversion records task metadata, binding assignments and assertion
- * expressions; it does not execute the represented test steps.</p>
+ * <p>
+ * The conversion records task metadata, binding assignments and assertion
+ * expressions; it does not execute the represented test steps.
+ * </p>
  */
 public class CamundaParser {
 
@@ -106,7 +115,8 @@ public class CamundaParser {
 	final static String XMLNS_BIOC = "http://bpmn.io/schema/bpmn/biocolor/1.0";
 
 	// Task subtype values and extension attribute names. AssertTask is retained
-	// for the pending assertion-subtype change; assertion tasks currently use RunTask.
+	// for the pending assertion-subtype change; assertion tasks currently use
+	// RunTask.
 	private static final String BPMN4S_RUN_TASK = "RunTask";
 	private static final String BPMN4S_ASSERT_TASK = "AssertTask";
 	private static final String BPMN4S_COMPOSE_TASK = "ComposeTask";
@@ -114,6 +124,7 @@ public class CamundaParser {
 	private static final String BPMN4S_STEP_TYPE = "stepType";
 	private static final String BPMN4S_DATATYPE_REF = "dataTypeRef";
 	private static final String BPMN4S_UPDATE = "update";
+	private static final String BPMN4S_UPDATE_REF = "referenceUpdate";
 	private static final String BPMN4S_ASSERTIONS = "assertions";
 
 	// Retained for the disabled datastore-initialization block below. Active
@@ -177,8 +188,10 @@ public class CamundaParser {
 	/**
 	 * Creates descriptors, builds the BPMN4S model and serializes it as XML.
 	 *
-	 * <p>The concrete test definition is accepted by this entry point but is not
-	 * currently used by the conversion.</p>
+	 * <p>
+	 * The concrete test definition is accepted by this entry point but is not
+	 * currently used by the conversion.
+	 * </p>
 	 */
 	public static String generateBPMNModel(AbstractTestDefinition atd, TestDefinition ctd) {
 		List<ElementDescriptor> descriptors = createDescriptors(atd);
@@ -189,13 +202,16 @@ public class CamundaParser {
 	/**
 	 * Builds an intermediate representation of tasks and referenced output data.
 	 *
-	 * <p>The first pass collects tasks and indexes non-suppressed output bindings.
-	 * The second pass resolves step/data references into shared datastore
-	 * descriptors. Only outputs referenced by another step receive a datastore
-	 * descriptor.</p>
+	 * <p>
+	 * The first pass collects tasks and indexes non-suppressed output bindings. The
+	 * second pass resolves step/data references into shared datastore descriptors.
+	 * Only outputs referenced by another step receive a datastore descriptor.
+	 * </p>
 	 *
-	 * <p>Run, compose and assertion steps retain their source traversal order.
-	 * Each datastore descriptor is placed immediately after its producer task.</p>
+	 * <p>
+	 * Run, compose and assertion steps retain their source traversal order. Each
+	 * datastore descriptor is placed immediately after its producer task.
+	 * </p>
 	 */
 	public static List<ElementDescriptor> createDescriptors(AbstractTestDefinition atd) {
 		List<ElementDescriptor> elements = new ArrayList<>();
@@ -302,8 +318,8 @@ public class CamundaParser {
 	}
 
 	/**
-	 * Builds the identity used to match task descriptors with producer and
-	 * consumer references.
+	 * Builds the identity used to match task descriptors with producer and consumer
+	 * references.
 	 */
 	private static String getConsumerName(AbstractStep step) {
 		// Extract the trailing two underscore-separated name segments when the
@@ -318,9 +334,11 @@ public class CamundaParser {
 	/**
 	 * Creates the semantic BPMN4S process and its visual representation.
 	 *
-	 * <p>Tasks and sequence flows are created first. Datastore positions are
+	 * <p>
+	 * Tasks and sequence flows are created first. Datastore positions are
 	 * calculated next, followed by datastore elements and their data associations.
-	 * This ensures task bounds are available when positioning and connecting data.</p>
+	 * This ensures task bounds are available when positioning and connecting data.
+	 * </p>
 	 */
 	public static BpmnModelInstance generateBPMNModel(AbstractTestDefinition atd, List<ElementDescriptor> elements) {
 		BpmnModelInstance modelInstance = Bpmn4sModel.createEmptyModel();
@@ -349,7 +367,8 @@ public class CamundaParser {
 		int nodeIdx = 0;
 
 		// Create one linear sequence across all task descriptors. The horizontal
-		// index advances globally, including when consecutive tasks use different lanes.
+		// index advances globally, including when consecutive tasks use different
+		// lanes.
 		for (ElementDescriptor e : elements) {
 			if (e instanceof TaskDescriptor td) {
 				String taskId = td.id;
@@ -490,11 +509,13 @@ public class CamundaParser {
 	/**
 	 * Adds assertion expressions and step-type metadata.
 	 *
-	 * <p>Assertion tasks currently use the RunTask subtype. The switch to
-	 * AssertTask remains pending, as indicated at the subtype assignment below.</p>
+	 * <p>
+	 * Assertion tasks currently use the RunTask subtype. The switch to AssertTask
+	 * remains pending, as indicated at the subtype assignment below.
+	 * </p>
 	 */
 	private static void addBpmnExtension(Task task, AssertionStep step) {
-		task.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_SUB_TYPE,  BPMN4S_ASSERT_TASK);
+		task.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_SUB_TYPE, BPMN4S_ASSERT_TASK);
 		task.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_STEP_TYPE, ((AssertionStep) step).getStepType());
 
 		// Flatten nested constraint items, rewrite their variable references and
@@ -530,6 +551,80 @@ public class CamundaParser {
 		if (updateAssignment != null) {
 			da.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_UPDATE, updateAssignment);
 		}
+
+		String refUpdate = getReferenceUpdates(dsDescriptor);
+		if (refUpdate != null) {
+			da.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_UPDATE_REF, "// TODO: Review\n\n" + refUpdate);
+		}
+	}
+
+	private static String getReferenceUpdates(DataInstanceDescriptor dsDescriptor) {
+		EObject eContainer = dsDescriptor.bind_producer.eContainer();
+		if (eContainer instanceof ComposeStep) {
+			ComposeStep cStep = (ComposeStep) eContainer;
+			HashMap<String, String> datastoreNamesIn = getProducerQualifiedDatastoreKeysInput(cStep);
+			HashMap<String, String> datastoreNamesOut = getProducerQualifiedDatastoreKeysOutput(cStep);
+			if (!cStep.getRefs().isEmpty()) {
+				ConstraintStep first = cStep.getRefs().getFirst();
+				if (!first.getCe().isEmpty()) {
+					RefConstraint firstCe = first.getCe().getFirst();
+					String x = first.getName(); //
+					String y = firstCe.getName();
+					ActionList z = firstCe.getAct();
+					String ce = EcoreUtil3.serialize(firstCe, object1 -> {
+						if (object1 instanceof AssignmentAction) {
+							AssignmentAction assAct = (AssignmentAction) object1;
+							String assignment = EcoreUtil3.serialize(assAct.getAssignment(), object2 -> {
+								if (object2 instanceof ExpressionVariable) {
+									ExpressionVariable expressionVariable = (ExpressionVariable) object2;
+									String variableName = Utils.getVarField(expressionVariable.getVariable());
+									String normalizedName = normalizeBpmnId(datastoreNamesOut.get(variableName));
+									return normalizedName;
+								}
+								return null;
+							}).stripIndent().trim();
+							String expr = EcoreUtil3.serialize(assAct.getExp(), object2 -> {
+								if (object2 instanceof ExpressionVariable) {
+									ExpressionVariable expressionVariable = (ExpressionVariable) object2;
+									String variableName = Utils.getVarField(expressionVariable.getVariable());
+									String normalizedName = normalizeBpmnId(datastoreNamesIn.get(variableName));
+									return normalizedName;
+								}
+								return null;
+							}).stripIndent().trim();
+							return String.format("%s := %s", assignment, expr);
+						}
+						if (object1 instanceof RecordFieldAssignmentAction) {
+							RecordFieldAssignmentAction rfaAct = (RecordFieldAssignmentAction) object1;
+							String assignment = EcoreUtil3.serialize(rfaAct.getFieldAccess(), object2 -> {
+								if (object2 instanceof ExpressionVariable) {
+									ExpressionVariable expressionVariable = (ExpressionVariable) object2;
+									String variableName = Utils.getVarField(expressionVariable.getVariable());
+									String normalizedName = normalizeBpmnId(datastoreNamesOut.get(variableName));
+									return normalizedName;
+								}
+								return null;
+							}).stripIndent().trim();
+							String expr = EcoreUtil3.serialize(rfaAct.getExp(), object2 -> {
+								if (object2 instanceof ExpressionVariable) {
+									ExpressionVariable expressionVariable = (ExpressionVariable) object2;
+									String variableName = Utils.getVarField(expressionVariable.getVariable());
+									String normalizedName = normalizeBpmnId(datastoreNamesIn.get(variableName));
+									return normalizedName;
+								}
+								return null;
+							}).stripIndent().trim();
+							return String.format("%s := %s", assignment, expr);
+						}
+						// Leave non-variable elements to the serializer's default handling.
+						return null;
+					}).stripIndent().trim();
+
+					return ce;
+				}
+			}
+		}
+		return null;
 	}
 
 	/**
@@ -610,11 +705,14 @@ public class CamundaParser {
 	 * <li>the {@link TSMain} containing {@code atd} imports the TSpec types
 	 * file;</li>
 	 * <li>that {@link TypesModel} imports the product-specific types file;</li>
-	 * <li>the filtered product-specific source is embedded in BPMN4S {@code Raw}.</li>
+	 * <li>the filtered product-specific source is embedded in BPMN4S
+	 * {@code Raw}.</li>
 	 * </ol>
 	 *
-	 * <p>Only the first import at each level is followed; this is not a recursive
-	 * traversal of all imported types resources.</p>
+	 * <p>
+	 * Only the first import at each level is followed; this is not a recursive
+	 * traversal of all imported types resources.
+	 * </p>
 	 */
 	private static String getTypesRaw(AbstractTestDefinition atd) {
 		if (atd == null) {
@@ -744,9 +842,11 @@ public class CamundaParser {
 	 * Converts an identifier to a restricted ASCII subset suitable for XML Schema
 	 * NCName values used by BPMN ids.
 	 *
-	 * <p>Characters other than ASCII letters, digits, underscores and dots are
-	 * replaced with underscores. A prefix is added when the first character is
-	 * not a letter or underscore. This normalization does not guarantee uniqueness.</p>
+	 * <p>
+	 * Characters other than ASCII letters, digits, underscores and dots are
+	 * replaced with underscores. A prefix is added when the first character is not
+	 * a letter or underscore. This normalization does not guarantee uniqueness.
+	 * </p>
 	 */
 	private static String normalizeBpmnId(String id) {
 		if (id == null || id.isEmpty()) {
@@ -799,8 +899,8 @@ public class CamundaParser {
 	}
 
 	/**
-	 * Creates a task and its placeholder property. Actual input properties and
-	 * data associations are added later when datastores are linked.
+	 * Creates a task and its placeholder property. Actual input properties and data
+	 * associations are added later when datastores are linked.
 	 */
 	private static Task createTaskWithIO(BpmnModelInstance modelInstance, Process process, TaskDescriptor td) {
 		Task task = modelInstance.newInstance(Task.class);
@@ -826,9 +926,27 @@ public class CamundaParser {
 	 * emitted by createUpdateAssignment().
 	 */
 	private static String printDai(AssertionStep step, DataAssertionItem item) {
+		HashMap<String, String> datastoreNames = getProducerQualifiedDatastoreKeysInput(step);
+
+		return EcoreUtil3.serialize(item, object -> {
+			if (object instanceof ExpressionVariable) {
+				ExpressionVariable expressionVariable = (ExpressionVariable) object;
+				String variableName = Utils.getVarField(expressionVariable.getVariable());
+				String normalizedName = normalizeBpmnId(datastoreNames.get(variableName));
+
+				// Preserve the existing field serialization, replacing only its input
+				// qualifier with the resolved producer-qualified datastore variable.
+				return normalizedName;
+			}
+
+			// Leave non-variable elements to the serializer's default handling.
+			return null;
+		}).stripIndent().trim();
+	}
+
+	private static HashMap<String, String> getProducerQualifiedDatastoreKeysInput(AbstractStep step) {
 		// Collect the names of all data inputs referenced by the assertion step.
-		Set<String> inputVariables = step.getInput().stream()
-				.map(binding -> binding.getName().getName())
+		Set<String> variables = step.getInput().stream().map(binding -> binding.getName().getName())
 				.collect(Collectors.toSet());
 
 		// Resolve the assertion input to its producer-qualified datastore key.
@@ -842,36 +960,30 @@ public class CamundaParser {
 
 			stepReference.getRefData().forEach(referencedData -> {
 				String consumedData = referencedData.getName();
-
-				// Match the assertion input rather than selecting an arbitrary referenced
-				// datastore when the step has multiple data dependencies.
-				if (inputVariables.contains(consumedData)) {
-					datastoreNames.put(consumedData,consumedData + "_" + producerName);
+				if (variables.contains(consumedData)) {
+					datastoreNames.put(consumedData, consumedData + "_" + producerName);
 				}
 			});
 		});
 
-		if (datastoreNames.isEmpty()) {
-			throw new IllegalArgumentException(
-					"No referenced datastore  found for assertion input in step '" + step.getName() + "'");
-		}
-
-		return EcoreUtil3.serialize(item, object -> {
-			if (object instanceof ExpressionVariable) {
-				ExpressionVariable expressionVariable = (ExpressionVariable) object;
-				String variableName = Utils.getVarField(expressionVariable.getVariable());
-				String normalizedName = normalizeBpmnId(datastoreNames.get(variableName));
-				
-				// Preserve the existing field serialization, replacing only its input
-				// qualifier with the resolved producer-qualified datastore variable.
-				return normalizedName;
-			}
-
-			// Leave non-variable elements to the serializer's default handling.
-			return null;
-		}).stripIndent().trim();
+		return datastoreNames;
 	}
-	
+
+	private static HashMap<String, String> getProducerQualifiedDatastoreKeysOutput(AbstractStep step) {
+		// Resolve the assertion input to its producer-qualified datastore key.
+		// Keep distinct keys so repeated references to the same datastore are harmless,
+		// while references to different producers remain distinguishable.
+		HashMap<String, String> datastoreNames = new LinkedHashMap<>();
+
+		step.getOutput().forEach(output -> {
+			String producerName = getConsumerName(step);
+			String producerData = output.getName().getName();
+			datastoreNames.put(producerData, producerData + "_" + producerName);
+		});
+
+		return datastoreNames;
+	}
+
 	/**
 	 * Creates the start event and registers it in the specified lane.
 	 */
@@ -899,8 +1011,8 @@ public class CamundaParser {
 	}
 
 	/**
-	 * Returns the type name declared by the datastore's producer binding.
-	 * A non-null producer binding is expected.
+	 * Returns the type name declared by the datastore's producer binding. A
+	 * non-null producer binding is expected.
 	 */
 	private static String getBindingType(DataInstanceDescriptor dsDescriptor) {
 		TypeDecl b_type = dsDescriptor.bind_producer.getName().getType().getType();
@@ -910,9 +1022,11 @@ public class CamundaParser {
 	/**
 	 * Creates a semantic sequence flow and its four-waypoint DI edge.
 	 *
-	 * <p>The edge leaves the source's right-center, changes vertical level at the
-	 * horizontal midpoint and enters the target's left-center. For elements on
-	 * the same vertical level, the intermediate points are collinear.</p>
+	 * <p>
+	 * The edge leaves the source's right-center, changes vertical level at the
+	 * horizontal midpoint and enters the target's left-center. For elements on the
+	 * same vertical level, the intermediate points are collinear.
+	 * </p>
 	 */
 	private static void createSequenceFlowWithEdge(BpmnModelInstance modelInstance, Process process, BpmnPlane plane,
 			FlowNode source, FlowNode target, String flowId, Bounds sourceBounds, Bounds targetBounds) {
@@ -960,9 +1074,11 @@ public class CamundaParser {
 	 * Creates a persistent datastore, its DI shape and associations to generated
 	 * producer and consumer tasks.
 	 *
-	 * <p>Run and compose producers use output associations carrying datastore
+	 * <p>
+	 * Run and compose producers use output associations carrying datastore
 	 * assignments. Each consumer receives an input association targeting a local
-	 * property. Multiple such inputs expose the referenced data to a compose task.</p>
+	 * property. Multiple such inputs expose the referenced data to a compose task.
+	 * </p>
 	 *
 	 * @return the datastore reference, or {@code null} when neither a producer nor
 	 *         a consumer can be resolved to a generated task
@@ -986,7 +1102,8 @@ public class CamundaParser {
 		dsRef.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_DATATYPE_REF, getBindingType(dsDescriptor));
 		// Legacy initialization path retained as documentation. Compose steps are
 		// now explicit tasks, so active generation writes their output assignments
-		// on DataOutputAssociation rather than setting dataStoreReference documentation.
+		// on DataOutputAssociation rather than setting dataStoreReference
+		// documentation.
 		String initializationAssignment = createUpdateAssignment(dsDescriptor);
 		if (initializationAssignment != null) {
 			Documentation doc = modelInstance.newInstance(Documentation.class);
@@ -1083,9 +1200,11 @@ public class CamundaParser {
 	/**
 	 * Creates a DI edge for a task-to-datastore output or datastore-to-task input.
 	 *
-	 * <p>Endpoint placement depends on source dimensions and connection indices.
+	 * <p>
+	 * Endpoint placement depends on source dimensions and connection indices.
 	 * Intermediate orthogonal waypoints are calculated but are currently excluded
-	 * from the emitted edge, which therefore contains only its two endpoints.</p>
+	 * from the emitted edge, which therefore contains only its two endpoints.
+	 * </p>
 	 */
 	private static void createDataAssociationEdge(BpmnModelInstance modelInstance, BpmnPlane plane,
 			BaseElement association, Bounds sourceBounds, Bounds targetBounds, int targetConnectionIndex,
@@ -1192,21 +1311,23 @@ public class CamundaParser {
 		// Emit a direct segment between the calculated endpoints. Keep the
 		// intermediate waypoints disabled to preserve the current rendering.
 		edge.getWaypoints().addAll(Arrays.asList(wp1,
-				//wp2, wp3,
+				// wp2, wp3,
 				wp4));
 
 		plane.addChildElement(edge);
 	}
 
 	// Return the number of currently attached output associations, clamped to at
-	// least one for connection-slot calculations. This is not a raw zero-aware count.
+	// least one for connection-slot calculations. This is not a raw zero-aware
+	// count.
 	private static int countTotalOutputs(Task task) {
 		int count = task.getChildElementsByType(DataOutputAssociation.class).size();
 		return Math.max(1, count);
 	}
 
 	// Return the number of currently attached input associations, clamped to at
-	// least one for connection-slot calculations. This is not a raw zero-aware count.
+	// least one for connection-slot calculations. This is not a raw zero-aware
+	// count.
 	private static int countTotalInputs(Task task) {
 		int count = task.getChildElementsByType(DataInputAssociation.class).size();
 		return Math.max(1, count);
@@ -1256,12 +1377,14 @@ public class CamundaParser {
 	/**
 	 * Calculates a connection offset within a fractional subsection of an edge.
 	 *
-	 * <p>A single connection is centered in the region. Multiple connections use
-	 * its middle 80%, leaving a 10% margin at each end of the region. Callers must
-	 * supply a positive total and a valid zero-based connection index.</p>
+	 * <p>
+	 * A single connection is centered in the region. Multiple connections use its
+	 * middle 80%, leaving a 10% margin at each end of the region. Callers must
+	 * supply a positive total and a valid zero-based connection index.
+	 * </p>
 	 *
 	 * @param regionStart fractional start of the selected region
-	 * @param regionEnd fractional end of the selected region
+	 * @param regionEnd   fractional end of the selected region
 	 */
 	private static double calculateHorizontalOffsetInRegion(int index, int total, double width, double regionStart,
 			double regionEnd) {
