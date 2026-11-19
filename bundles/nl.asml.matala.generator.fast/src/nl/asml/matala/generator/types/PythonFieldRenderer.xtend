@@ -183,12 +183,21 @@ final class PythonFieldRenderer {
     }
 
     def private void cycle(String name, Map<String, Declaration> types, Set<String> visiting) {
-        if (!visiting.add(name)) throw new IllegalArgumentException("Recursive default factories: " + name)
-        for (field : types.get(types).fields) {
+        if (!visiting.add(name))
+            throw new IllegalArgumentException("Recursive default factories: " + name)
+    
+        // Look up the declaration by its type name, not by the map itself.
+        val declaration = types.get(name)
+        if (declaration === null)
+            throw new IllegalArgumentException("Unknown type while checking default factories: " + name)
+    
+        for (field : declaration.fields) {
             if (types.containsKey(field.type) && record(types.get(field.type)) &&
-                !field.metadata.containsKey("default") && !Boolean.TRUE.equals(field.metadata.get("required")))
+                !field.metadata.containsKey("default") &&
+                !Boolean.TRUE.equals(field.metadata.get("required")))
                 cycle(field.type, types, visiting)
         }
+    
         visiting.remove(name)
     }
 }
