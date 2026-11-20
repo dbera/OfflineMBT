@@ -927,17 +927,30 @@ public class CamundaParser {
 	 */
 	private static Task createTaskWithIO(BpmnModelInstance modelInstance, Process process, TaskDescriptor td) {
 		Task task = modelInstance.newInstance(Task.class);
-		String task_id = normalizeTaskId(td);
-		task.setId(task_id);
-		task.setName(td.id.replace('_', ' '));
+		String task_name = getUniqueTaskName(modelInstance, td);
+		task.setId(td.step.getName());
+		task.setName(task_name.replace('_', ' '));
 		process.addChildElement(task);
-
+		
 		Property prop = modelInstance.newInstance(Property.class);
-		prop.setId(task_id + "_placeholder_id");
-		prop.setName(td.id + "_placeholder");
+		prop.setId(task_name + "_placeholder_id");
+		prop.setName(td.step.getName() + "_placeholder");
 		task.addChildElement(prop);
 
 		return task;
+	}
+
+	private static String getUniqueTaskName(BpmnModelInstance modelInstance, TaskDescriptor td) {
+		String base_task_name = normalizeBpmnId(td.id);
+		String task_name = base_task_name;
+		
+		int suffix = 1;
+		while (modelInstance.getModelElementById(task_name) != null
+				|| modelInstance.getModelElementById(task_name+ "_placeholder_id") != null) {
+			task_name = base_task_name+ "_" + suffix++;
+		}
+
+		return task_name;
 	}
 
 	/**
@@ -1123,16 +1136,6 @@ public class CamundaParser {
 		dsRef.setId(dsId + "_ref");
 		dsRef.setName(normalizeTaskId(dsDescriptor.id));
 		dsRef.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_DATATYPE_REF, getBindingType(dsDescriptor));
-		// Legacy initialization path retained as documentation. Compose steps are
-		// now explicit tasks, so active generation writes their output assignments
-		// on DataOutputAssociation rather than setting dataStoreReference
-		// documentation.
-		String initializationAssignment = createUpdateAssignment(dsDescriptor);
-		if (initializationAssignment != null) {
-			Documentation doc = modelInstance.newInstance(Documentation.class);
-			doc.setTextContent(initializationAssignment);
-			dsRef.addChildElement(doc);
-		}
 		process.addChildElement(dsRef);
 
 		// 2. Add the datastore shape at the previously calculated position.
@@ -1191,9 +1194,18 @@ public class CamundaParser {
 				dia.getSources().add(dsRef);
 				dia.setTarget(inputProp);
 
-				// BPMN4S reads are non-consuming: the stored value remains available
-				// to other consumers.
-				dia.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_PERSISTENT_READ, "true");
+				// BPMN4S reads are non-consuming only if consumer != producer: 
+				// the stored value remains available to other consumers.
+				if (!consumerId.equals(dsDescriptor.producer)) {
+					dia.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_PERSISTENT_READ, "true");
+				} else {
+					// the stored and assigned values are duplicates to enable simulation.
+					String updateAssignment = createUpdateAssignment(dsDescriptor);
+					if (updateAssignment != null) {
+						dsRef.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_INIT, updateAssignment);
+					}
+
+				}
 
 				// Apply an optional consumer-specific binding if supplied by the
 				// descriptor. createDescriptors() above does not populate this map.

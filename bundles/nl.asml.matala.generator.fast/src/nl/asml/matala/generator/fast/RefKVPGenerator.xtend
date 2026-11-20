@@ -279,7 +279,7 @@ class RefKVPGenerator {
 
     private def String extractAssertionParams(AssertThatValueEq value) {
         return '''
-            "reference":«JsonHelper.jsonElement(value.reference)»«IF value.margin instanceof MargingItem»,
+            "reference":«JsonHelper.jsonElementToAssertion(value.reference)»«IF value.margin instanceof MargingItem»,
                 «extractAssertionParams(value.margin)»
             «ENDIF»«IF value.asRegex»,
             "regex":True«ENDIF»
@@ -288,7 +288,7 @@ class RefKVPGenerator {
 
     private def String extractAssertionParams(AssertThatValueClose value) {
         return '''
-            "reference":«JsonHelper.jsonElement(value.reference)»«IF value.margin instanceof MargingItem»,
+            "reference":«JsonHelper.jsonElementToAssertion(value.reference)»«IF value.margin instanceof MargingItem»,
                 «extractAssertionParams(value.margin)»
             «ENDIF»
         '''
@@ -296,7 +296,7 @@ class RefKVPGenerator {
 
     private def String extractAssertionParams(AssertThatValueMatch value) {
         return '''
-            "reference":«JsonHelper.jsonElement(value.reference)»,
+            "reference":«JsonHelper.jsonElementToAssertion(value.reference)»,
             "regex":True
         '''
     }

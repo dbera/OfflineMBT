@@ -29,6 +29,7 @@ import nl.esi.xtext.expressions.expression.ExpressionMinus
 import nl.esi.xtext.expressions.expression.ExpressionPlus
 import nl.esi.xtext.expressions.expression.Expression
 import nl.esi.xtext.expressions.expression.ExpressionEnumLiteral
+import nl.esi.xtext.expressions.expression.ExpressionRecordAccess
 
 /**
  * Parser for json elements, objects, and arrays
@@ -91,7 +92,7 @@ class JsonHelper {
                 ExpressionConstantBool: expr.value.toString
                 ExpressionConstantReal: expr.value.toString
                 ExpressionConstantInt: expr.value.toString
-                ExpressionEnumLiteral:  "" // Added DB. 31.07.2026, attempted to add: expr.literal.value.toString but fails
+                ExpressionEnumLiteral:  AssertionsHelper.expression(expr) 
                 ExpressionMinus: {
                     val sub = expr.sub
                     switch (sub){
@@ -100,6 +101,32 @@ class JsonHelper {
                         default: throw new RuntimeException("Not supported")
                     }
                 }
+                default: throw new RuntimeException("Not supported: " + expr?.eClass?.name)
+            }
+        }
+        if (elem instanceof JsonArray)  return jsonElement(elem as JsonArray)
+        if (elem instanceof JsonObject) return jsonElement(elem as JsonObject) 
+        throw new RuntimeException("Not supported");
+    }
+
+    def static String jsonElementToAssertion(JsonValue elem) {
+        if (elem instanceof JsonExpression) {
+            val expr = elem.expr
+            return switch (expr) {
+                ExpressionConstantString: String.format("'%s'", expr.value)
+                ExpressionConstantBool: expr.value.toString
+                ExpressionConstantReal: expr.value.toString
+                ExpressionConstantInt: expr.value.toString
+                ExpressionEnumLiteral:  AssertionsHelper.expression(expr)
+                ExpressionMinus: {
+                    val sub = expr.sub
+                    switch (sub){
+                        ExpressionConstantReal: '-'+sub.value.toString
+                        ExpressionConstantInt: '-'+sub.value.toString
+                        default: throw new RuntimeException("Not supported")
+                    }
+                }
+                ExpressionRecordAccess: String.format('"%s"', AssertionsHelper.expression(expr))
                 default: throw new RuntimeException("Not supported: " + expr?.eClass?.name)
             }
         }
