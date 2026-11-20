@@ -92,7 +92,7 @@ class JsonHelper {
                 ExpressionConstantBool: expr.value.toString
                 ExpressionConstantReal: expr.value.toString
                 ExpressionConstantInt: expr.value.toString
-                ExpressionEnumLiteral:  AssertionsHelper.expression(expr) 
+                ExpressionEnumLiteral:  "" // Added DB. 31.07.2026, attempted to add: expr.literal.value.toString but fails 
                 ExpressionMinus: {
                     val sub = expr.sub
                     switch (sub){
