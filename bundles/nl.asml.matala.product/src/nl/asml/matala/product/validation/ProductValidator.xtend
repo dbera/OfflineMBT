@@ -382,8 +382,8 @@ class ProductValidator extends AbstractProductValidator {
         val assignments = (varRef.dataReferences !== null) ? varRef.dataReferences.constr.map[act].flatMap[actions].
                 filter(RecordFieldAssignmentAction).toList : newArrayList
 
-        val singleValueAssignments = newLinkedHashMap
-        assignments.forEach[findAndGroupSingleValueAssignments('', singleValueAssignments, true)]
+        val flattenedAssignments = newLinkedHashMap
+        assignments.forEach[findAndGroupAssignments('', flattenedAssignments)]
 
         val refType = refVariable.type?.typeObject
         if (refType instanceof RecordTypeDecl) {
@@ -391,12 +391,14 @@ class ProductValidator extends AbstractProductValidator {
                 .filter[assignment === refVariable].map[exp].filter(ExpressionVariable)
                 .exists[variable.name == refVariable.name]
             if (hasFullRecordAssignment) {
-                return // full record assignments (passing records) is allowed 
+                // full record assignments (passing records) is allowed
+                // for example:  myRecord :=  myRecord
+                return 
             }
 
-            val symFields = refType.symbolicFieldPaths.map[refVariable.name+"."+map[name].join(".")]
+            val symFields = refType.symbolicFieldPaths.map[refVariable.name+"."+map[name].join(".")].sort
 
-            symFields.filter[!singleValueAssignments.keySet.contains(it)].forEach [ path |
+            symFields.filter[!flattenedAssignments.keySet.contains(it)].forEach [ path |
                 val message = '''Symbolic record field '«path»' should be assigned in reference update'''
                 if (actionType === ActionType.COMPOSE) {
                     error(message, ProductPackage.Literals.VAR_REF__REF)
@@ -421,7 +423,7 @@ class ProductValidator extends AbstractProductValidator {
         val currentPath = path + #[field]
 
         if (field.kind == RecordFieldKind.SYMBOLIC) {
-            paths.add(currentPath.toList)
+            field.addLeafs(path,paths)
             return
         }
 
@@ -432,6 +434,20 @@ class ProductValidator extends AbstractProductValidator {
             ]
         }
     }
+    
+   def void addLeafs( RecordField field, List<RecordField> path, List<List<RecordField>> paths ) {
+        val currentPath = path + #[field]
+        val type = field.type?.typeObject
+        if (type instanceof RecordTypeDecl) {
+            type.allFields.forEach [
+                addLeafs(it, currentPath.toList, paths)
+            ]
+        }
+        else {
+            paths.add(currentPath.toList)
+        }
+    }
+
 
     @Check
     def checkDataReferences(DataReferences dataReferences) {
@@ -453,7 +469,7 @@ class ProductValidator extends AbstractProductValidator {
         assignments.forEach[preventIllegalVariableAccess(inputs, outputs)]
 
         val singleValueAssignments = newLinkedHashMap
-        assignments.forEach[findAndGroupSingleValueAssignments('', singleValueAssignments, false)]
+        assignments.forEach[findAndGroupSingleValueAssignments('', singleValueAssignments)]
 
         singleValueAssignments.values.filter[size > 1].flatten.forEach[ assignment |
             val reference = switch (assignment) {
@@ -508,41 +524,50 @@ class ProductValidator extends AbstractProductValidator {
         }
     }
 
-    private def void findAndGroupSingleValueAssignments(EObject source, String prefix, Map<String, List<EObject>> assignments, boolean allowCollectionAssignments) {
+    private def void findAndGroupAssignments(EObject source, String prefix, Map<String, List<EObject>> assignments) {
+            findAndGroupSingleValueAssignments(source, prefix, assignments)
+            findAndGroupCollectionAssignments(source, prefix, assignments)
+    }
+    
+    private def void findAndGroupSingleValueAssignments(EObject source, String prefix, Map<String, List<EObject>> assignments) {
         switch (it: source) {
-            //TODO Yuri question. Should vector and map assignment always be added?
-            // I had to switch this behavior on otherwise constructions like:
-            //x: a.b := <string[]>[c.d] where field a.b is a string[] 
-            //y: l.m := n.o where field l.m is a map<string, string[]>
-            // are not added as singleValue assignment
-            // I built in the switch because i'm afraid of the check in checkDataReferences(DataReferences dataReferences)
- 
             RecordFieldAssignmentAction case field.type.isVectorType,
             RecordFieldAssignmentAction case field.type.isMapType: {
-                if(allowCollectionAssignments) {
-                    assignments.computeIfAbsent(prefix + fieldAccess.serialize)[newArrayList] += it
-                }
-        	}
-        	RecordFieldAssignmentAction case field.type.isRecordType && exp instanceof ExpressionRecord: {
-        	    (exp as ExpressionRecord).fields.forEach[ actField |
+                // Skip, not a single value
+            }
+            RecordFieldAssignmentAction case field.type.isRecordType && exp instanceof ExpressionRecord: {
+                (exp as ExpressionRecord).fields.forEach[ actField |
                     val fieldPrefix = prefix + fieldAccess.serialize + '.'
-        	        findAndGroupSingleValueAssignments(actField, fieldPrefix, assignments, allowCollectionAssignments)
-        	    ]
-        	}
-        	RecordFieldAssignmentAction: {
-        	    assignments.computeIfAbsent(prefix + fieldAccess.serialize)[newArrayList] += it
-        	}
-        	Field case recordField.type.isVectorType,
+                    findAndGroupSingleValueAssignments(actField, fieldPrefix, assignments)
+                ]
+            }
+            RecordFieldAssignmentAction: {
+                assignments.computeIfAbsent(prefix + fieldAccess.serialize)[newArrayList] += it
+            }
+            Field case recordField.type.isVectorType,
             Field case recordField.type.isMapType: {
                 // Skip, not a single value
             }
             Field case recordField.type.isRecordType && exp instanceof ExpressionRecord: {
                 (exp as ExpressionRecord).fields.forEach[ actField |
                     val fieldPrefix = prefix + recordField.name + '.'
-                    findAndGroupSingleValueAssignments(actField, fieldPrefix, assignments, allowCollectionAssignments)
+                    findAndGroupSingleValueAssignments(actField, fieldPrefix, assignments)
                 ]
             }
             Field: {
+                assignments.computeIfAbsent(prefix + recordField.name)[newArrayList] += it
+            }
+        }
+    }
+
+    private def void findAndGroupCollectionAssignments(EObject source, String prefix, Map<String, List<EObject>> assignments) {
+        switch (it: source) {
+            RecordFieldAssignmentAction case field.type.isVectorType,
+            RecordFieldAssignmentAction case field.type.isMapType: {
+                assignments.computeIfAbsent(prefix + fieldAccess.serialize)[newArrayList] += it
+            }
+            Field case recordField.type.isVectorType,
+            Field case recordField.type.isMapType: {
                 assignments.computeIfAbsent(prefix + recordField.name)[newArrayList] += it
             }
         }
