@@ -413,37 +413,27 @@ class ProductValidator extends AbstractProductValidator {
         val paths = <List<RecordField>>newArrayList
 
         recordType.allFields.forEach [
-            collectSymbolicFieldPaths(it, #[], paths)
+            collectSymbolicFieldPaths(it, #[], paths, false)
         ]
 
         return paths
     }
 
-    def void collectSymbolicFieldPaths( RecordField field, List<RecordField> path, List<List<RecordField>> paths ) {
+    /**
+     * Recursively collects the leaf-field paths of symbolic record fields.
+     * Once a symbolic field is encountered (or inherited via {@code insideSymbolic}),
+     * all its leaf fields are collected regardless of their own kind.
+     */
+    def void collectSymbolicFieldPaths(RecordField field, List<RecordField> path, List<List<RecordField>> paths, boolean insideSymbolic) {
         val currentPath = path + #[field]
-
-        if (field.kind == RecordFieldKind.SYMBOLIC) {
-            field.addLeafs(path,paths)
-            return
-        }
+        val isSymbolic = insideSymbolic || field.kind == RecordFieldKind.SYMBOLIC
 
         val type = field.type?.typeObject
         if (type instanceof RecordTypeDecl) {
             type.allFields.forEach [
-                collectSymbolicFieldPaths(it, currentPath.toList, paths)
+                collectSymbolicFieldPaths(it, currentPath.toList, paths, isSymbolic)
             ]
-        }
-    }
-    
-   def void addLeafs( RecordField field, List<RecordField> path, List<List<RecordField>> paths ) {
-        val currentPath = path + #[field]
-        val type = field.type?.typeObject
-        if (type instanceof RecordTypeDecl) {
-            type.allFields.forEach [
-                addLeafs(it, currentPath.toList, paths)
-            ]
-        }
-        else {
+        } else if (isSymbolic) {
             paths.add(currentPath.toList)
         }
     }
