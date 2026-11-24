@@ -152,7 +152,13 @@ class StandardProjectGenerator extends AbstractGenerator {
                     val renamingRules = task.renamingRules !== null ? createPropertiesMap(task.renamingRules) : new HashMap
                     val genParams = task.generatorParams !== null ? createPropertiesMap(task.generatorParams) : new HashMap
                     // TODO fetch this from somewhere else
-                    genParams.putIfAbsent('prefixPath', './vfab2_scenario/FAST/testcases/' + specName + '_' + tspecName + '/')
+                    genParams.putIfAbsent('bpmnURI', task.eResource.resolveUri(task.bpmn)?.toString)
+                    genParams.putIfAbsent('productURI', productURI?.toString)
+                    genParams.putIfAbsent('petriNetURI', petriNetURI?.toString)
+                    genParams.putIfAbsent('atspecURI', absTspecRes.URI.toString)
+                    genParams.putIfAbsent('tspecURI', conTspecRes.URI.toString)
+                    genParams.putIfAbsent('pythonExe', task.pythonExe)
+                    
 
                     val extensionContext = new StandardProjectGeneratorContext(ctx?.cancelIndicator, renamingRules, genParams)
                     generatorExtensions.forEach[ doGenerate(conTspecRes, fsa, extensionContext)]

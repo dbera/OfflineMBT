@@ -37,6 +37,7 @@ import nl.esi.xtext.actions.actions.Action
 import nl.esi.xtext.actions.actions.AssignmentAction
 import nl.esi.xtext.actions.actions.RecordFieldAssignmentAction
 import nl.esi.xtext.expressions.expression.Expression
+import nl.esi.xtext.expressions.expression.ExpressionConstantString
 import nl.esi.xtext.expressions.expression.ExpressionNullLiteral
 import nl.esi.xtext.expressions.expression.ExpressionRecord
 import nl.esi.xtext.expressions.expression.ExpressionRecordAccess
@@ -51,12 +52,12 @@ import org.eclipse.xtext.generator.IGeneratorContext
 
 import static extension nl.esi.xtext.actions.utilities.ActionsUtilities.*
 import static extension nl.esi.xtext.common.lang.generator.FileSystemAccessUtil.*
+import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
 import static extension org.eclipse.emf.ecore.util.EcoreUtil.*
 
 class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGeneratorExtension {
     // @Inject TestspecificationJsonGenerator testSpecificationJsonGenerator
 //    val TestspecificationJsonGenerator testSpecificationJsonGenerator = new TestspecificationJsonGenerator
-    
     /* TODO this should come from project task? Investigate and Implement it. */
     var List<String> record_def_file_names = List.of("lot_definition", "job_definition")
     var List<String> setup_file_names = List.of("setup_file")
@@ -73,16 +74,24 @@ class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGe
 
 // Generate data.kvp and referenced JSON files
     def private generateContents(Resource res, IFileSystemAccess2 fsa, StandardProjectGeneratorContext ctx) {
+        // String values available in the map ctx.generatorParams.get(String key):
+        // - bpmnURI: URI of the BPMN model associated with the task.
+        // - productURI: URI of the product model.
+        // - petriNetURI: URI of the generated or referenced Petri net model.
+        // - atspecURI: URI of the abstract test specification.
+        // - tspecURI: URI of the concrete test specification.
+        // - pythonExe: Python executable configured for the task.
         // 0) setup FAST directory structure
+        val productURI = res.resolveUri(ctx.generatorParams.get("productURI"))
+        val tspecURI = res.resolveUri(ctx.generatorParams.get("tspecURI"))
+
+        val specName = productURI.trimFileExtension.lastSegment
+        val tspecName = tspecURI.trimFileExtension.lastSegment
+
         val baseFsa = fsa.createFolderAccess('generated_FAST/')
-        val testPath = ctx.generatorParams.getOrDefault('prefixPath', './')
+        val testPath = '''./«specName»_«tspecName»'''
         val testFsa = baseFsa.createFolderAccess(testPath)
         val datasetFsa = testFsa.createFolderAccess('dataset/')
-
-
-        // New independent JSON export
-//        val ctd = res.contents.filter(TSMain).map[model].filter(TestDefinition).head
-//        testSpecificationJsonGenerator.generate("_", ctd, res, testFsa)
 
         // 1) using the .tspec file
         val modelInst = res.contents.head as TSMain
@@ -143,13 +152,33 @@ class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGe
     }
 
     def boolean isCommentBasedOnString(Action act) {
-        if (act instanceof RecordFieldAssignmentAction){
+        if (act instanceof RecordFieldAssignmentAction) {
             var TypeDecl fieldType = (act.fieldAccess as ExpressionRecordAccess)?.field.type.type
             if (fieldType instanceof SimpleTypeDecl) {
-                return fieldType.name == 'Comment'  && fieldType.base?.name == 'string'
+                return fieldType.name == 'Comment' && fieldType.base?.name == 'string'
             }
         }
         return false
+    }
+
+    def String getSutNameFromStringField(Action act) {
+        if(!(act instanceof RecordFieldAssignmentAction)) return null
+
+        val actionExp = (act as RecordFieldAssignmentAction).exp
+        if(!(actionExp instanceof ExpressionRecord)) return null
+
+        val fields = (actionExp as ExpressionRecord).fields
+        if(fields === null) return null
+
+        val fieldImpls = fields.filter(Field)
+        val field = fieldImpls.findFirst[recordField?.name == "sut_name"]
+        if(field === null) return null
+
+        val expField = field.exp
+        if(!(expField instanceof ExpressionConstantString)) return null
+
+        val sutName = (expField as ExpressionConstantString).value
+        return sutName
     }
 
     def boolean isPrintableAssignment(Field field) {
@@ -181,15 +210,16 @@ class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGe
         var test_single_sequence = td.testSeq.head
         for (ss : test_single_sequence.stepSeqRef) {
             var tIdx = test_single_sequence.stepSeqRef.indexOf(ss)
-            for (step : ss.step){
+            for (step : ss.step) {
                 var sIdx = ss.step.indexOf(step)
-                var mat = pat.matcher(step.stepVar.name); mat.find
-                var prefix =  switch(step) {
+                var mat = pat.matcher(step.stepVar.name);
+                mat.find
+                var prefix = switch (step) {
                     RunStep: 's'
                     AssertionStep: 'a'
                     default: throw new UnsupportedOperationException("Unsupported type")
                 }
-                var stepNameOrig = mat.group.replaceFirst("_+default_[0-9]+$","")
+                var stepNameOrig = mat.group.replaceFirst("_+default_[0-9]+$", "")
                 step.stepVar.name = '''t«tIdx»_«prefix»«sIdx»«stepNameOrig»'''
             }
         }
@@ -300,7 +330,6 @@ class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGe
 //                    JSONDataFileContents.add(dataInst)
 //                }
 //            }
-
             // Merge Contents and Generate JSON File //
             // ASSUMPTION: Data Extensions on Record Fields of Steps API should not overlap 
             // with their initialization in *.params, i.e. should not init same record field. 
@@ -508,7 +537,6 @@ class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGe
 //            listOfExclusionKeys.add(kv.key)
 //        }
 //    }
-
     def private getExtensions(TestSpecificationInstance tsi, String varName) {
         var mapListOfKeyValue = new HashMap<String, List<KeyValue>>
         // System.out.println(" Getting Extension for Variable: " + varName)
@@ -674,7 +702,7 @@ class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGe
 //                        }
 //                    }
 //                } else {
-                    System.err.println("Error: Unhandled Model Type! ")
+            System.err.println("Error: Unhandled Model Type! ")
 //                }
 //            }
         }
@@ -690,7 +718,7 @@ class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGe
     }
 
     protected def void _process_Global_Param_Init(TestSpecificationInstance tsi, TSMain modelInst, String testPath) {
-        val Map<String,String> gparams = Map.of("testcase_data", '''"«testPath»dataset/"''')
+        val Map<String, String> gparams = Map.of("testcase_data", '''"«testPath»dataset/"''')
         for (key : gparams.keySet) {
             var value = gparams.get(key)
             tsi.dataVarToDataInstance.putIfAbsent(key, new ArrayList)
@@ -726,7 +754,8 @@ class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGe
         return false
     }
 
-    protected def void _process_Sut_Param_Init(TestSpecificationInstance tsi, TSMain modelInst, Map<String, String> renamingRules) {
+    protected def void _process_Sut_Param_Init(TestSpecificationInstance tsi, TSMain modelInst,
+        Map<String, String> renamingRules) {
         val model = modelInst.model as TestDefinition
         var sutInitInput = model.stepSeq.flatMap[step].flatMap[sut].filter[isInputDataSut(it)]
 
@@ -734,21 +763,25 @@ class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGe
         var uniqueDataSuts = new HashSet()
         // 3.3.1) Fetching content for in.data.suts
         for (act : indatasuts) {
+            var setup_suffix = getSutNameFromStringField(act)
             var mapLHStoRHS = tsi.generateInitAssignmentAction(act)
-            if(uniqueDataSuts.addAll(mapLHStoRHS.value)){
+            if (uniqueDataSuts.addAll(mapLHStoRHS.value)) {
                 tsi.sutVarToDataInstance.putIfAbsent(mapLHStoRHS.key, new ArrayList)
                 tsi.sutVarToDataInstance.get(mapLHStoRHS.key).add(mapLHStoRHS.value)
-    
+
                 var era = (act.fieldAccess as ExpressionRecordAccess)
                 var stepIdx = getTestStepIdx(era)
                 var varId = getVarId(era)
-    
+
+                if (setup_suffix.nullOrEmpty)
+                    setup_suffix = '''«varId»_«stepIdx»'''
+
                 // get sut-var name and type
                 var stepInst = new Step
                 stepInst.id = era.field.name
                 stepInst.variableName = era.field.name
                 stepInst.type = era.field.type.type.name
-    
+
                 // 4.6) Check if this action is a printable assignment (aka not-a-null assignment)
                 if (isPrintableAssignment(act)) {
                     for (field : (act.exp as ExpressionRecord).fields) {
@@ -757,7 +790,7 @@ class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGe
                             // get sut-var field name and assigned value
                             lhs.key = field.recordField.name
                             lhs.value = ExpressionsParser::generateExpression(field.exp, '''''').toString
-        
+
                             // should it become a file on its own?
                             var String match = findMatchingRecordName('.' + lhs.key, setup_file_names)
                             if (match instanceof String) {
@@ -769,7 +802,7 @@ class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGe
                                 new_rstep.type = field.recordField.type.type.name
                                 new_rstep.recordExp = lhs.value
                                 // path for json input_file in "filePath / datastore name + test & step Indexes"
-                                new_rstep.inputFile = '''«new_rstep.inputFile»«varId»_«stepIdx».json'''
+                                new_rstep.inputFile = '''«new_rstep.inputFile»setup_«setup_suffix».json'''
                                 // point lhs value to input_file
                                 var format = '''"#valueof(global.params['testcase_data'] + '%s')"'''
                                 lhs.value = String.format(format, new_rstep.inputFile)
@@ -798,7 +831,7 @@ class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGe
     }
 
     private def String getStepId(ExpressionRecordAccess expr) {
-        //var ioLabel = (expr.record as ExpressionRecordAccess).field.name
+        // var ioLabel = (expr.record as ExpressionRecordAccess).field.name
         var stepLabel = ((expr.record as ExpressionRecordAccess).record as ExpressionVariable).variable.name
         return stepLabel
     }
@@ -808,11 +841,9 @@ class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGe
         val targetStep = variable.eContainer
         val stepSequence = targetStep.eContainer as StepSequence
         val testDefinition = stepSequence.eContainer as TestDefinition
-        val testIndex = (0..<testDefinition.testSeq.size)
-            .findFirst [
-                testDefinition.testSeq.get(it).stepSeqRef
-                    .exists[step.contains(targetStep)]
-            ] ?: -1
+        val testIndex = (0 ..< testDefinition.testSeq.size).findFirst [
+            testDefinition.testSeq.get(it).stepSeqRef.exists[step.contains(targetStep)]
+        ] ?: -1
         val stepIndex = stepSequence.step.indexOf(targetStep)
         return '''t«testIndex»_s«stepIndex»'''
     }
@@ -846,10 +877,10 @@ class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGe
                 // 4.6.3) check if record field assignment should be in its own json file
                 var String match = findMatchingRecordName(lhs.value, record_def_file_names)
                 // Note DD: Retrieves step comments from fields with `type Comment based on string`. 
-                //        : Field is be suppressed 
+                // : Field is be suppressed 
                 var boolean isComment = isCommentBasedOnString(act)
-                if(isComment){
-                    stepInst.comment += mapLHStoRHS.value.replaceAll("(?m)^", "//")+'\n'
+                if (isComment) {
+                    stepInst.comment += mapLHStoRHS.value.replaceAll("(?m)^", "//") + '\n'
                 } else if (match instanceof String) {
                     // 4.6.3.1) record field is part of step input_file
                     if (stepInst.isStepRefPresent(lhs.value)) {
