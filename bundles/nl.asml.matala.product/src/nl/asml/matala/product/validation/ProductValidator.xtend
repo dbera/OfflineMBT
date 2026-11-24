@@ -79,7 +79,7 @@ class ProductValidator extends AbstractProductValidator {
                 ]
             }
         }
-    }
+    } 
 
     /**
      * Prevent Duplicate Updates in Actions
@@ -373,7 +373,8 @@ class ProductValidator extends AbstractProductValidator {
         }
 
         val actionType = update.actionType
-        if (actionType !== ActionType.COMPOSE && ActionType.ASSERT !== actionType) {
+        // INTERNAL is sent by the GUI
+        if (actionType !== ActionType.COMPOSE && ActionType.ASSERT !== actionType && ActionType.INTERNAL !== actionType) {
             return
         }
 
@@ -385,23 +386,25 @@ class ProductValidator extends AbstractProductValidator {
 
         val refType = refVariable.type?.typeObject
         if (refType instanceof RecordTypeDecl) {
-            val hasFullRecordAssignment = updateOutputVar.act.actions.filter(AssignmentAction)
-                .filter[assignment === refVariable].map[exp].filter(ExpressionVariable)
-                .exists[variable.name == refVariable.name]
-            if (hasFullRecordAssignment) {
-                // full record assignments (passing records) is allowed
-                // for example:  myRecord :=  myRecord
-                return 
+            if (updateOutputVar.act !== null){
+                val hasFullRecordAssignment = updateOutputVar.act.actions.filter(AssignmentAction)
+                    .filter[assignment === refVariable].map[exp].filter(ExpressionVariable)
+                    .exists[variable.name == refVariable.name]
+                if (hasFullRecordAssignment) {
+                    // full record assignments (passing records) is allowed
+                    // for example:  myRecord :=  myRecord
+                    return 
+                }
             }
 
             val symFields = refType.symbolicFieldPaths.map[refVariable.name+"."+map[name].join(".")].sort
 
             symFields.filter[!flattenedAssignments.keySet.contains(it)].forEach [ path |
                 val message = '''Symbolic record field '«path»' should be assigned in reference update'''
-                if (actionType === ActionType.COMPOSE) {
-                    error(message, ProductPackage.Literals.VAR_REF__REF)
-                } else {
+                if (actionType === ActionType.ASSERT) {
                     warning(message, ProductPackage.Literals.VAR_REF__REF)
+                } else {
+                    error(message, ProductPackage.Literals.VAR_REF__REF)
                 }
             ]
         }
