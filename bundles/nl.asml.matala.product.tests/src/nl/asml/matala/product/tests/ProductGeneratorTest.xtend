@@ -13,6 +13,7 @@
 package nl.asml.matala.product.tests
 
 import nl.asml.matala.product.ProductStandaloneSetup
+import nl.asml.matala.product.generator.ProductGenerationMode
 import nl.asml.matala.product.generator.ProductGenerator
 import nl.asml.matala.testutils.XtextGeneratorTest
 import org.eclipse.emf.ecore.resource.Resource
@@ -34,7 +35,7 @@ class ProductGeneratorTest {
     }
 
     private def void testGenerator(String testcase) {
-        XtextGeneratorTest.regressionTest(new ProductGenerator(), testcase + '.ps')
+        XtextGeneratorTest.regressionTest(new ProductGenerator(ProductGenerationMode.TEST_GENERATION), testcase + '.ps')
     }
 
     @Test

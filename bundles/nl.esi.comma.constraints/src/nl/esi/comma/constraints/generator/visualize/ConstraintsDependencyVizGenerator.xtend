@@ -13,7 +13,9 @@
 package nl.esi.comma.constraints.generator.visualize
 
 import java.io.BufferedReader
+import java.io.ByteArrayInputStream
 import java.io.IOException
+import java.io.InputStreamReader
 import java.util.ArrayList
 import java.util.HashSet
 import java.util.List
@@ -38,21 +40,16 @@ import nl.esi.comma.constraints.constraints.NotSuccession
 import nl.esi.comma.constraints.constraints.Past
 import nl.esi.comma.constraints.constraints.Precedence
 import nl.esi.comma.constraints.constraints.Ref
-import nl.esi.comma.constraints.constraints.RefActSequence
 import nl.esi.comma.constraints.constraints.RefAction
-import nl.esi.comma.constraints.constraints.RefStep
-import nl.esi.comma.constraints.constraints.RefStepSequence
+import nl.esi.comma.constraints.constraints.RefSequence
 import nl.esi.comma.constraints.constraints.RespondedExistence
 import nl.esi.comma.constraints.constraints.Response
-import nl.esi.comma.constraints.constraints.SimpleChoice
 import nl.esi.comma.constraints.constraints.Succession
-import nl.esi.comma.constraints.constraints.Templates
+import nl.esi.comma.constraints.constraints.Template
 import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.core.runtime.Path
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.generator.IFileSystemAccess2
-import java.io.InputStreamReader
-import java.io.ByteArrayInputStream
 
 class ConstraintsDependencyVizGenerator {
 	
@@ -64,7 +61,7 @@ class ConstraintsDependencyVizGenerator {
 		var file = ResourcesPlugin.getWorkspace().getRoot().getFile(new Path(uri.toPlatformString(true)));
 		var srcGenPath = file.getLocation().toOSString;
 		for(constraintsSource : constraints){
-			if(constraintsSource.composition.isNullOrEmpty){
+			if(constraintsSource.compositions.isNullOrEmpty){
 				computeGraph(constraintsSource.templates)
 				graph.computeMissingConstraints
 				var dot = generateDot(fsa)
@@ -76,9 +73,9 @@ class ConstraintsDependencyVizGenerator {
 				var html = graph.toHTML()
 				fsa.generateFile(path + name +"_viz.html", new ByteArrayInputStream(html))
 			} else {
-				for(elm : constraintsSource.composition){
-					var templateList = new HashSet<Templates>
-					for(t : elm.templates) {templateList.add(t)}
+				for(elm : constraintsSource.compositions){
+					var templateList = new HashSet<Template>
+					for(t : elm.templates) {templateList.add(t.template)}
 					computeGraph(templateList.toList)
 					graph.computeMissingConstraints
 					var dot = generateDot(fsa)
@@ -204,7 +201,7 @@ class ConstraintsDependencyVizGenerator {
 		return legend
 	}
 	
-	def computeGraph(List<Templates> templateList){
+	def computeGraph(List<Template> templateList){
 		graph = new AssistantGraph
 		for(templates : templateList) {
 			for(elm : templates.type){
@@ -482,17 +479,11 @@ class ConstraintsDependencyVizGenerator {
 	
 	def getRefName(Ref ref){
 		var refName = new String
-		if(ref instanceof RefStep){
-			refName = ref.step.name
-		}
 		if(ref instanceof RefAction) {
-			refName = ref.act.act.name
+			refName = ref.action.name
 		}
-		if(ref instanceof RefStepSequence){
-			refName = ref.seq.name
-		}
-		if(ref instanceof RefActSequence) {
-			refName = ref.seq.name
+		if(ref instanceof RefSequence) {
+			refName = ref.sequence.name
 		}
 		return refName
 	}

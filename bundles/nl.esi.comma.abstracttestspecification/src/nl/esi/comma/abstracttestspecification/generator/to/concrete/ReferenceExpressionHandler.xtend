@@ -16,6 +16,7 @@ import java.util.List
 import java.util.Map
 import java.util.Set
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractStep
+import nl.esi.comma.abstracttestspecification.abstractTestspecification.Binding
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.ChainedStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.ExecutableStep
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.RunStep
@@ -24,9 +25,11 @@ import nl.esi.xtext.actions.actions.RecordFieldAssignmentAction
 import nl.esi.xtext.common.lang.utilities.EcoreUtil3
 import nl.esi.xtext.expressions.evaluation.ExpressionEvaluator
 import nl.esi.xtext.expressions.expression.ExpressionVariable
+import nl.esi.xtext.types.types.RecordField
 import nl.esi.xtext.types.types.RecordTypeDecl
 import nl.esi.xtext.types.types.Type
 import nl.esi.xtext.types.types.TypeReference
+import org.eclipse.xtext.xbase.lib.Functions.Function1
 
 import static extension nl.esi.comma.abstracttestspecification.generator.utils.Utils.*
 import static extension nl.esi.comma.assertthat.utilities.AssertThatUtilities.*
@@ -39,6 +42,9 @@ import static extension org.eclipse.lsat.common.xtend.Queries.*
 
 class ReferenceExpressionHandler {
     static def Map<String, List<String>> collectReferenceDataAssignments(ExecutableStep estep) {
+        collectReferenceDataAssignments(estep, [ Binding f | f.suppressed ])
+    }
+    static def Map<String, List<String>> collectReferenceDataAssignments(ExecutableStep estep, Function1<? super Binding, Boolean> filter) {
         debug(" [INFO] Resolving references for Executable Step: " + estep.name)
         val Map<String, List<String>> mapLHStoRHS = newLinkedHashMap
         val Set<String> nestedFieldPrefixes = newHashSet
@@ -58,7 +64,7 @@ class ReferenceExpressionHandler {
         }
 
         for (stepRef : estep.stepRef.filter[refStep instanceof RunStep]) {
-            for (output : stepRef.output.reject[suppressed]) {
+            for (output : stepRef.output.reject(filter)) {
                 evaluateReferenceConstrains(
                     estep.inputVar + '.' + output.varField,
                     stepRef.refStep.outputVar + '.' + output.varField,
@@ -69,16 +75,16 @@ class ReferenceExpressionHandler {
         }
 
         debug(" [INFO] Expressions Before Rewrite: ")
-        mapLHStoRHS.forEach[k, l | l.forEach[v | debug('''    > K: «k» > V: «v»''')]]
+        mapLHStoRHS.forEach[k, l|l.forEach[v|debug('''    > K: «k» > V: «v»''')]]
 
         rewriteVariableReferences(mapLHStoRHS)
 
         debug(" [INFO] Expressions After Rewrite: ")
-        mapLHStoRHS.forEach[k, l | l.forEach[v | debug('''    > K: «k» > V: «v»''')]]
+        mapLHStoRHS.forEach[k, l|l.forEach[v|debug('''    > K: «k» > V: «v»''')]]
 
         // remove the fields of the nested compose steps as they are not an input of this run step,
         // and were only used for rewriting the RHS expressions
-        mapLHStoRHS.keySet.removeIf(field | nestedFieldPrefixes.exists[ prefix | field.startsWith(prefix)])
+        mapLHStoRHS.keySet.removeIf(field|nestedFieldPrefixes.exists[prefix|field.startsWith(prefix)])
 
         return mapLHStoRHS
     }
@@ -126,10 +132,14 @@ class ReferenceExpressionHandler {
     }
 
     private static def void evaluateReferenceConstrains(String inputName, String outputName, Type type, Map<String, List<String>> mapLHStoRHS) {
+            evaluateReferenceConstrains(inputName,outputName,type,mapLHStoRHS, [ RecordField f | f.suppressed ])
+        }
+    private static def void evaluateReferenceConstrains(String inputName, String outputName, Type type,
+        Map<String, List<String>> mapLHStoRHS, Function1<RecordField, Boolean> filter) {
         if (type instanceof TypeReference && type.type instanceof RecordTypeDecl) {
             // TODO: Should I reject the concrete field here?
-            for (field : (type.type as RecordTypeDecl).allFields.reject[suppressed].reject[kind == RecordFieldKind.CONCRETE]) {
-                evaluateReferenceConstrains(inputName + '.' + field.name, outputName + '.' + field.name, field.type, mapLHStoRHS)
+            for (field : (type.type as RecordTypeDecl).allFields.reject(filter).reject[kind == RecordFieldKind.CONCRETE]) {
+                evaluateReferenceConstrains(inputName + '.' + field.name, outputName + '.' + field.name, field.type, mapLHStoRHS, filter)
             }
         } else {
             mapLHStoRHS.computeIfAbsent(inputName)[newArrayList] += outputName

@@ -40,7 +40,6 @@ import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
 
 import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.getService
-import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.serialize
 
 /**
  * Generates code from your *.ps model files on save.
@@ -49,12 +48,19 @@ import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.serialize
 class ProductGenerator extends AbstractGenerator {
     val String scenarioPrefix;
 
+    val ProductGenerationMode generationMode
+
     new() {
-        this(null)
+        this(null, ProductGenerationMode.TEST_GENERATION)
     }
 
-    new(String scenarioPrefix) {
+    new (ProductGenerationMode generationMode) {
+        this(null, generationMode)
+    }
+
+    new (String scenarioPrefix, ProductGenerationMode generationMode) {
         this.scenarioPrefix = scenarioPrefix
+        this.generationMode = generationMode
     }
 	
 	override void doGenerate(Resource res, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
@@ -179,6 +185,7 @@ class ProductGenerator extends AbstractGenerator {
 			}
 			
 			fsa.generateFile('CPNServer//' + specName + '//' + specName + '.py', pnet.toSnakes(
+			    generationMode,
 			    specName, specName, listOfEnvBlocks, listOfAssertTransitions,
 			     mapOfTransitionQnames, mapOfSuppressTransitionVars, inout_places, 
 			    init_places, depth_limit, state_limit, num_tests, sutTransitionMap

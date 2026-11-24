@@ -15,13 +15,21 @@
  */
 package nl.esi.comma.constraints
 
+import org.eclipse.emf.ecore.resource.Resource
 
 /**
  * Initialization support for running Xtext languages without Equinox extension registry.
  */
 class ConstraintsStandaloneSetup extends ConstraintsStandaloneSetupGenerated {
 
-	def static void doSetup() {
-		new ConstraintsStandaloneSetup().createInjectorAndDoEMFRegistration()
+	/**
+	 * Idempotent: only creates and registers a new injector if the language is not registered yet.
+	 * This prevents multiple injectors (and thus multiple Grammar instances) for the same language
+	 * when this setup is invoked from the setups of inheriting languages.
+	 */
+	def static synchronized void doSetup() {
+		if (!Resource.Factory.Registry.INSTANCE.extensionToFactoryMap.containsKey("constraints")) {
+			new ConstraintsStandaloneSetup().createInjectorAndDoEMFRegistration()
+		}
 	}
 }

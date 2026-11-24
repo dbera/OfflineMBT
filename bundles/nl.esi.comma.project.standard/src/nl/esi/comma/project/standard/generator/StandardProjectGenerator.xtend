@@ -43,6 +43,13 @@ import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
 import static extension org.eclipse.emf.ecore.util.EcoreUtil.*
 import static extension org.eclipse.lsat.common.xtend.Queries.*
 import static extension org.eclipse.xtext.EcoreUtil2.*
+import nl.esi.comma.testspecification.testspecification.TSMain
+import java.util.LinkedHashSet
+import java.util.LinkedHashMap
+import nl.esi.xtext.types.types.RecordTypeDecl
+import nl.esi.comma.testspecification.testspecification.AssertionStep
+import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
+import nl.asml.matala.product.generator.ProductGenerationMode
 
 /**
  * Generates code from your model files on save.
@@ -62,8 +69,16 @@ class StandardProjectGenerator extends AbstractGenerator {
                 doGenerate(task, res.resourceSet, fsa.createFolderAccess(task.name), ctx)
             }
 
-            for (task : project.statemachineBlocks) {
-                (new StateMachineGenerator()).doGenerate(task, fsa.createFolderAccess(task.name), ctx)
+            for (task : project.testConformanceBlocks) {
+                (new TestConformanceNetGenerator(reporting)).doGenerate(task, fsa.createFolderAccess(task.name), ctx)
+            }
+
+            for (task : project.reachabilityAnalysisBlocks) {
+                (new ReachabilityAnalysisGenerator(reporting)).doGenerate(task, res.resourceSet, fsa.createFolderAccess(task.name), ctx)
+            }
+
+            for (task : project.testCaseDiffBlocks) {
+                (new TestCaseDiffAnalaysis).doGenerate(task, res.resourceSet, fsa.createFolderAccess(task.name), ctx)
             }
         }
     }
@@ -97,7 +112,8 @@ class StandardProjectGenerator extends AbstractGenerator {
         }
         // PspecToPetriNetGenerator
         // Generate CPNServer (a.k.a. abstract Tspec generator) and Petri-nets
-        (new ProductGenerator(task.prefixTests)).doGenerate(productRes, fsa, ctx)
+        val productGenerator = new ProductGenerator(task.prefixTests, ProductGenerationMode.TEST_GENERATION)
+        productGenerator.doGenerate(productRes, fsa, ctx)
 
         if (task.target == OfflineGenerationTarget.SIMULATOR) {
             return
@@ -129,6 +145,9 @@ class StandardProjectGenerator extends AbstractGenerator {
                 }
                 // Validate the generated concrete tspec, stop this transformation on error
                 if (conTspecRes.validate) {
+                    // Generate the action.constraints file to be used to write properties
+                    generateActionConstraints(conTspecRes, conTspecFsa, tspecName + '.constraints')
+
                     // TODO fetch these FAST configuration parameters from somewhere else (e.g., .prj task)
                     val renamingRules = task.renamingRules !== null ? createPropertiesMap(task.renamingRules) : new HashMap
                     val genParams = task.generatorParams !== null ? createPropertiesMap(task.generatorParams) : new HashMap
@@ -141,7 +160,46 @@ class StandardProjectGenerator extends AbstractGenerator {
             }
         }
     }
+    
+    private def void generateActionConstraints(Resource resource, IFileSystemAccess2 fsa, String fileName) {
+        val root = resource.contents.filter(TSMain).head
+        val imports = new LinkedHashSet<String>()
+        val actions = new LinkedHashMap<String, String>()
+        
+        for (step : root.model.stepSeq.flatMap[step]) {
+            val type = step.stepVar.type.type
+            val record = type as RecordTypeDecl
+            val input = record.allFields.findFirst[name == 'input']
+            val output = record.allFields.findFirst[name == 'output']
+            val kind = if (step instanceof AssertionStep) 'Observable' else 'Trigger'
 
+            val declaration = '''
+                «kind» «record.name»
+                    «IF input !== null»
+                    inputs «input.type.typeName» Input
+                    «ENDIF»
+                    «IF output !== null»
+                    outputs «output.type.typeName» Output
+                    «ENDIF»
+            '''.toString
+            actions.putIfAbsent(record.name, declaration)
+            imports.add(record.eResource.URI.deresolve(fsa.getURI(fileName)).toString)
+        }
+
+        fsa.generateFile(fileName,
+        '''
+        «FOR path : imports»
+        import "«path»"
+        «ENDFOR»
+
+        Actions
+
+        «FOR declaration : actions.values SEPARATOR '\n'»
+        «declaration»
+        «ENDFOR»
+        ''')
+    }
+    
     private def createPropertiesMap(TargetConfig tgtConfig) {
         var props = new HashMap<String, String>()
         for (elem : tgtConfig.item) {

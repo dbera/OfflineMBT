@@ -13,8 +13,7 @@ Require-Bundle: nl.esi.comma.project.standard;visibility:=reexport,
  nl.asml.matala.product.ide,
  nl.esi.comma.abstracttestspecification.ide,
  nl.esi.comma.testspecification.ide,
- nl.esi.comma.constraints.ide,
- nl.esi.comma.scenarios.ide
+ nl.esi.comma.constraints.ide
 Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: nl.esi.comma.project.standard.ide,
  nl.esi.comma.project.standard.ide.contentassist,

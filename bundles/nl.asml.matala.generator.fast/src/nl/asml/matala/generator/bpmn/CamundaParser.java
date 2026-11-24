@@ -12,6 +12,9 @@
  */
 package nl.asml.matala.generator.bpmn;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -20,7 +23,6 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -30,10 +32,10 @@ import org.camunda.bpm.model.bpmn.BpmnModelInstance;
 import org.camunda.bpm.model.bpmn.instance.BaseElement;
 import org.camunda.bpm.model.bpmn.instance.DataAssociation;
 import org.camunda.bpm.model.bpmn.instance.DataInputAssociation;
-import org.camunda.bpm.model.bpmn.instance.DataObject;
-import org.camunda.bpm.model.bpmn.instance.DataObjectReference;
 import org.camunda.bpm.model.bpmn.instance.DataOutputAssociation;
+import org.camunda.bpm.model.bpmn.instance.DataStoreReference;
 import org.camunda.bpm.model.bpmn.instance.Definitions;
+import org.camunda.bpm.model.bpmn.instance.Documentation;
 import org.camunda.bpm.model.bpmn.instance.EndEvent;
 import org.camunda.bpm.model.bpmn.instance.ExtensionElements;
 import org.camunda.bpm.model.bpmn.instance.FlowNode;
@@ -51,27 +53,57 @@ import org.camunda.bpm.model.bpmn.instance.bpmndi.BpmnShape;
 import org.camunda.bpm.model.bpmn.instance.dc.Bounds;
 import org.camunda.bpm.model.bpmn.instance.di.Waypoint;
 import org.camunda.bpm.model.xml.instance.ModelElementInstance;
+import org.eclipse.emf.common.util.URI;
+import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.resource.Resource;
 
 import nl.asml.matala.bpmn4s.extensions.Bpmn4sModel;
-import nl.asml.matala.bpmn4s.extensions.DataType;
 import nl.asml.matala.bpmn4s.extensions.DataTypes;
-import nl.asml.matala.bpmn4s.extensions.Field;
 import nl.asml.matala.bpmn4s.extensions.Raw;
 import nl.asml.matala.product.product.Block;
 import nl.asml.matala.product.product.Function;
+import nl.asml.matala.product.product.RefConstraint;
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractStep;
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractTestDefinition;
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AbstractTestSequence;
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.AssertionStep;
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.Binding;
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.ComposeStep;
+import nl.esi.comma.abstracttestspecification.abstractTestspecification.ConstraintStep;
 import nl.esi.comma.abstracttestspecification.abstractTestspecification.RunStep;
+import nl.esi.comma.abstracttestspecification.abstractTestspecification.TSMain;
 import nl.esi.comma.abstracttestspecification.generator.to.concrete.ConcreteExpressionHandler;
+import nl.esi.comma.abstracttestspecification.generator.utils.Utils;
+import nl.esi.comma.assertthat.assertThat.DataAssertionItem;
 import nl.esi.comma.assertthat.assertThat.JsonValue;
+import nl.esi.comma.testspecification.testspecification.TestDefinition;
+import nl.esi.xtext.actions.actions.AssignmentAction;
+import nl.esi.xtext.actions.actions.RecordFieldAssignmentAction;
+import nl.esi.xtext.common.lang.utilities.EcoreUtil3;
+import nl.esi.xtext.expressions.expression.ExpressionVariable;
 import nl.esi.xtext.types.types.TypeDecl;
+import nl.esi.xtext.types.types.TypesModel;
 
+/**
+ * Converts abstract test definitions into a BPMN4S process and its BPMN Diagram
+ * Interchange (DI) representation.
+ *
+ * <p>
+ * Run, compose and assertion steps remain visible as tasks. Referenced output
+ * bindings become persistent datastores connected to their producers and
+ * consumers. Compose tasks can therefore receive data from multiple referenced
+ * run steps through separate input associations.
+ * </p>
+ *
+ * <p>
+ * The conversion records task metadata, binding assignments and assertion
+ * expressions; it does not execute the represented test steps.
+ * </p>
+ */
 public class CamundaParser {
 
+	// Namespace URIs used by the semantic BPMN model, its diagram representation
+	// and the BPMN4S extension attributes.
 	final static String XMLNS_XSI = "http://www.w3.org/2001/XMLSchema-instance";
 	final static String XMLNS_DI = "http://www.omg.org/spec/DD/20100524/DI";
 	final static String XMLNS_DC = "http://www.omg.org/spec/DD/20100524/DC";
@@ -81,227 +113,327 @@ public class CamundaParser {
 	final static String XMLNS_BPMN2 = "http://www.omg.org/spec/BPMN/20100524/MODEL";
 	final static String XMLNS_BIOC = "http://bpmn.io/schema/bpmn/biocolor/1.0";
 
+	// Task subtype values and extension attribute names. AssertTask is retained
+	// for the pending assertion-subtype change; assertion tasks currently use
+	// RunTask.
 	private static final String BPMN4S_RUN_TASK = "RunTask";
 	private static final String BPMN4S_ASSERT_TASK = "AssertTask";
 	private static final String BPMN4S_COMPOSE_TASK = "ComposeTask";
 	private static final String BPMN4S_SUB_TYPE = "subType";
+	private static final String BPMN4S_STEP_TYPE = "stepType";
 	private static final String BPMN4S_DATATYPE_REF = "dataTypeRef";
 	private static final String BPMN4S_UPDATE = "update";
-	private static final String BPMN4S_QUEUE = "Queue";
+	private static final String BPMN4S_UPDATE_REF = "referenceUpdate";
+	private static final String BPMN4S_ASSERTIONS = "assertions";
 
-	final static double OFFSET_X = 150.0;
-	final static double OFFSET_Y = 50.0;
-	final static double baseY = 50.0;
+	// Retained for the disabled datastore-initialization block below. Active
+	// generation writes compose outputs through producer associations instead.
+	private static final String BPMN4S_INIT = "init";
+	private static final String BPMN4S_PERSISTENT_READ = "persistentRead";
 
-	public static String generateBPMNModel(AbstractTestDefinition atd) {
+	// BPMN DI layout constants. Keep them together so the generated diagram can
+	// be tuned without changing the semantic model construction.
+
+	// Base horizontal offset used for start-event placement, task positioning
+	// and lane-width calculation.
+	private static final double DIAGRAM_MARGIN_X = 50.0;
+
+	// Vertical offset between the diagram origin and the top of the first
+	// swimlane. Increasing this moves all lanes and their contents downward.
+	private static final double DIAGRAM_MARGIN_Y = 40.0;
+
+	// Height allocated to each swimlane. This controls lane spacing and also
+	// contributes to the task and datastore vertical offsets.
+	private static final double LANE_HEIGHT = 300.0;
+
+	// Width of each generated task shape. Increasing this provides more label
+	// space but reduces the horizontal gap between consecutive task shapes.
+	private static final double TASK_WIDTH = 100.0;
+
+	// Height of each generated task shape. Data-association routing currently
+	// distinguishes task sources from datastore sources using a height threshold
+	// of 50, so changing this value can also affect routing classification.
+	private static final double TASK_HEIGHT = 80.0;
+
+	// Horizontal distance between the starting positions of consecutive tasks,
+	// including tasks belonging to different swimlanes.
+	private static final double TASK_STEP_X = 250.0;
+
+	// Position tasks 50 points above their vertically centered position within
+	// the lane, leaving additional space below them for output datastores.
+	private static final double TASK_TOP_OFFSET = (LANE_HEIGHT - TASK_HEIGHT) / 2.0 - 50.0;
+
+	// Width and height of start and end event shapes. Events are vertically
+	// aligned with the center of their adjacent task.
+	private static final double EVENT_SIZE = 36.0;
+
+	// Width and height of datastore shapes. This value affects centering and
+	// data-association endpoint placement.
+	private static final double DATA_SIZE = 50.0;
+
+	// Default datastore top position relative to its descriptor's lane origin.
+	// This leaves a 50-point gap below a task positioned at TASK_TOP_OFFSET in
+	// the same lane.
+	private static final double DATA_TOP_OFFSET = TASK_TOP_OFFSET + TASK_HEIGHT + 50.0;
+
+	// Horizontal spacing between datastores associated with the same producer,
+	// also used when calculating fallback datastore positions.
+	private static final double DATA_STEP_X = 80.0;
+
+	// Exact source fragment removed from the embedded product types text.
+	// Removal is textual, so whitespace and line endings must match this value.
+	private static final CharSequence UNIT_RECORD_TYPE = "@context\nrecord UNIT {\n\t@suppress int\tunit\n}\n\n";
+
+	/**
+	 * Creates descriptors, builds the BPMN4S model and serializes it as XML.
+	 *
+	 * <p>
+	 * The concrete test definition is accepted by this entry point but is not
+	 * currently used by the conversion.
+	 * </p>
+	 */
+	public static String generateBPMNModel(AbstractTestDefinition atd, TestDefinition ctd) {
 		List<ElementDescriptor> descriptors = createDescriptors(atd);
-		BpmnModelInstance modelInstance = generateBPMNModel(descriptors);
+		BpmnModelInstance modelInstance = generateBPMNModel(atd, descriptors);
 		return Bpmn.convertToString(modelInstance);
 	}
 
+	/**
+	 * Builds an intermediate representation of tasks and referenced output data.
+	 *
+	 * <p>
+	 * The first pass collects tasks and indexes non-suppressed output bindings. The
+	 * second pass resolves step/data references into shared datastore descriptors.
+	 * Only outputs referenced by another step receive a datastore descriptor.
+	 * </p>
+	 *
+	 * <p>
+	 * Run, compose and assertion steps retain their source traversal order. Each
+	 * datastore descriptor is placed immediately after its producer task.
+	 * </p>
+	 */
 	public static List<ElementDescriptor> createDescriptors(AbstractTestDefinition atd) {
 		List<ElementDescriptor> elements = new ArrayList<>();
-		// 1) fetch step identifiers and split them into lane & task id
-		Map<String, String> actionLane = new HashMap<>();
-		Map<String, List<String>> dataSetConsumer = new HashMap<>();
 		List<TaskDescriptor> tasks = new ArrayList<>();
-		Map<String, List<Map.Entry<String, Binding>>> outputsMap = new HashMap<>();
-		Map<String, DataInstanceDescriptor> dataInstanceMap = new HashMap<>();
+		Map<String, List<Map.Entry<String, Binding>>> outputsMap = new LinkedHashMap<>();
+		Map<String, DataInstanceDescriptor> dataInstanceMap = new LinkedHashMap<>();
 
-		// For generating datastoresdataStore :: Add the consumer in the dataStores and
-		// then remove the dataStores that do not have consumer
-		for (AbstractTestSequence sys : atd.getTestSeq()) {
-			for (AbstractStep step : sys.getStep()) {
-				String consumerName = getConsumerName(step);
-				step.getStepRef().stream().forEach(a -> {
-					a.getRefData().forEach(s -> {
-						s.getName();
-						// check if we have it already in the map, if yes, add the consumer, if not add
-						// both
-						dataSetConsumer.computeIfAbsent(s.getName(), k -> new ArrayList<>()).add(consumerName);
-					});
-				});
-			}
-		}
+		// First pass: retain all steps as tasks and index their available outputs.
+		// Compose steps are not collapsed into datastore initialization.
+		for (AbstractTestSequence sequence : atd.getTestSeq()) {
+			for (AbstractStep step : sequence.getStep()) {
+				// Exclude suppressed output variables from the bindings that can be
+				// resolved into datastore descriptors.
+				Set<Binding> outputs = new HashSet<>(step.getOutput());
+				Set<String> suppressed = step.getSuppress() != null ? step.getSuppress().getVars().stream()
+						.map(variableReference -> variableReference.getVariable().getName()).collect(Collectors.toSet())
+						: Collections.emptySet();
+				outputs.removeIf(output -> suppressed.contains(output.getName().getName()));
 
-		for (AbstractTestSequence sys : atd.getTestSeq()) {
-			for (AbstractStep step : sys.getStep()) {
-				Set<Binding> outputs = new HashSet<>();
-				// make output
-				step.getOutput().forEach(a -> {
-					outputs.add(a);
-				});
+				String stepName = getConsumerName(step);
+				String laneName = getComponentName(step);
 
-				// Get suppressed
-				final Set<String> suppressed = (step.getSuppress() != null) ? step.getSuppress().getVars().stream()
-						.map(vr -> vr.getVariable().getName()).collect(Collectors.toSet()) : Collections.emptySet();
-
-				// Remove suppressed ones
-				outputs.removeIf(out -> suppressed.contains(out.getName().getName()));
-
-				// name of action/ task id
-				String taskName = getConsumerName(step);
-
-				// name of system block/lane
-				String lane_name = getComponentName(step);
-
-				// 2) create the taskDescriptor objects
-				actionLane.put(taskName, lane_name);
-				TaskDescriptor task = new TaskDescriptor(taskName, lane_name);
+				// Keep the original step so task-specific BPMN4S metadata can be added
+				// when the semantic task is created.
+				TaskDescriptor task = new TaskDescriptor(stepName, laneName);
 				task.step = step;
 				tasks.add(task);
 
-				// 3) derive DataInstance out of the output-data elements in each
-				// run/compose-step
+				// Index by data name while retaining the producer identity, since
+				// different steps may expose outputs with the same name.
 				outputs.forEach(output -> {
 					String dataStoreName = output.getName().getName();
-					// create the outputMap:: which includes dataStores, the producer and the
-					// context
-					Map.Entry<String, Binding> entry = Map.entry(taskName, output);
-					// Add to map under DataInstance name
-					outputsMap.computeIfAbsent(dataStoreName, k -> new ArrayList<>()).add(entry);
+					Map.Entry<String, Binding> entry = Map.entry(stepName, output);
+					outputsMap.computeIfAbsent(dataStoreName, key -> new ArrayList<>()).add(entry);
 				});
 			}
-
 		}
 
-		// create data instance and the consumers:
-		for (AbstractTestSequence sys : atd.getTestSeq()) {
-			for (AbstractStep step : sys.getStep()) {
-				String consumerName = getConsumerName(step);
-				String lane_name = getComponentName(step);
-				step.getStepRef().stream().forEach(a -> {
-					a.getRefData().forEach(s -> {
-						String dataProducer = getConsumerName(a.getRefStep());
-						String consumedData = s.getName();
-						java.util.Optional<Entry<String, Binding>> matchedEntryOpt;
-						if (outputsMap.containsKey(consumedData)) {
+		// Second pass: resolve each referenced datum against its named producer.
+		// The same mechanism connects run outputs to compose inputs, including
+		// compose steps that reference data from several run steps.
+		for (AbstractTestSequence sequence : atd.getTestSeq()) {
+			for (AbstractStep consumingStep : sequence.getStep()) {
+				String consumerName = getConsumerName(consumingStep);
+				String laneName = getComponentName(consumingStep);
 
-							matchedEntryOpt = outputsMap.getOrDefault(consumedData, Collections.emptyList()).stream()
-									.filter(entry -> entry.getKey().equals(dataProducer)).findFirst();
+				consumingStep.getStepRef().forEach(stepReference -> {
+					AbstractStep producerStep = stepReference.getRefStep();
+					String producerName = getConsumerName(producerStep);
 
-							if (matchedEntryOpt.isPresent()) {
-								String producerName = matchedEntryOpt.get().getKey();
-								String key = consumedData + "_" + producerName;
-								DataInstanceDescriptor existing = dataInstanceMap.get(key);
+					stepReference.getRefData().forEach(referencedData -> {
+						String consumedData = referencedData.getName();
+						outputsMap.getOrDefault(consumedData, Collections.emptyList()).stream()
+								.filter(entry -> entry.getKey().equals(producerName)).findFirst()
+								.ifPresent(matchedEntry -> {
+									// Share one datastore per data-name/producer pair rather than
+									// creating a separate datastore for every consumer.
+									String key = consumedData + "_" + producerName;
+									DataInstanceDescriptor existing = dataInstanceMap.get(key);
+									if (existing != null) {
+										if (!existing.consumers.contains(consumerName)) {
+											existing.consumers.add(consumerName);
+										}
+										return;
+									}
 
-								if (existing != null) {
-									existing.consumers.add(consumerName);
-								} else {
-									DataInstanceDescriptor dataInstance = new DataInstanceDescriptor(key, lane_name,
+									// The first consumer determines the descriptor's lane. Later
+									// consumers reuse this descriptor without changing that lane.
+									DataInstanceDescriptor dataInstance = new DataInstanceDescriptor(key, laneName,
 											producerName, new ArrayList<>(List.of(consumerName)));
-									dataInstance.bind_producer = matchedEntryOpt.get().getValue();
+									dataInstance.bind_producer = matchedEntry.getValue();
 									dataInstanceMap.put(key, dataInstance);
-								}
-							}
-						}
+								});
 					});
 				});
 			}
 		}
 
-		// 5) Add tasks and datastores to the list in correct order
+		// Preserve task traversal order and insert referenced output datastores
+		// directly after their run or compose producer.
 		for (TaskDescriptor task : tasks) {
-			elements.add(task); // Add the task first
-
-			// Check for datastores that have this task as their producer
-			for (DataInstanceDescriptor ds : dataInstanceMap.values()) {
-
-				if (task.id.equals(ds.producer)) {
-					elements.add(ds);
+			elements.add(task);
+			for (DataInstanceDescriptor dataInstance : dataInstanceMap.values()) {
+				if (task.id.equals(dataInstance.producer)) {
+					elements.add(dataInstance);
 				}
 			}
 		}
 		return elements;
 	}
 
+	/**
+	 * Derives the swimlane name from the block containing the referenced case's
+	 * function.
+	 */
 	private static String getComponentName(AbstractStep step) {
 		Function function = (Function) step.getCaseRef().eContainer();
 		Block block = (Block) function.eContainer();
+
+		// Prefer the second block label when available; otherwise use the first.
 		int component_idx = block.getElabels().size() > 1 ? 1 : 0;
 
 		return block.getElabels().get(component_idx);
 	}
 
+	/**
+	 * Defines the shared task identity used by task descriptors, producer/consumer
+	 * references and producer-qualified datastore keys.
+	 *
+	 * Preserves the existing suffix extraction, but shortens "default_<idx>" to
+	 * "<idx>". Named suffixes remain unchanged.
+	 */
 	private static String getConsumerName(AbstractStep step) {
-		String caseName = step.getName().replaceAll(".*_(.*_.*)$", "$1").replace('_', ' ');
+		// Preserve the existing extraction and normalization of the case suffix.
+		String caseName = normalizeBpmnId(step.getName().replaceAll(".*_(.*_.*)$", "$1"));
+
+		// Remove "default_" only when the complete suffix is default_<numeric index>.
+		// Apply this after suffix normalization so a numeric index is not prefixed
+		// with "id_"; the complete task identity is normalized separately when needed.
+		caseName = caseName.replaceAll("^default_(\\d+)$", "$1");
+
 		Function function = (Function) step.getCaseRef().eContainer();
 		String function_name = function.getElabels();
 
 		return function_name + " " + caseName;
 	}
 
-	public static BpmnModelInstance generateBPMNModel(List<ElementDescriptor> elements) {
+	/**
+	 * Creates the semantic BPMN4S process and its visual representation.
+	 *
+	 * <p>
+	 * Tasks and sequence flows are created first. Datastore positions are
+	 * calculated next, followed by datastore elements and their data associations.
+	 * This ensures task bounds are available when positioning and connecting data.
+	 * </p>
+	 */
+	public static BpmnModelInstance generateBPMNModel(AbstractTestDefinition atd, List<ElementDescriptor> elements) {
 		BpmnModelInstance modelInstance = Bpmn4sModel.createEmptyModel();
 		Definitions definitions = createDefinitions(modelInstance);
 		Process process = createProcess(modelInstance, definitions);
-		createDataTypes(modelInstance, process);
+		createDataTypes(atd, modelInstance, process);
 		LaneSet laneSet = createLaneSet(modelInstance, process);
 		BpmnPlane plane = createDiagram(modelInstance, definitions, process);
 
-		Map<String, Lane> laneMap = new HashMap<>();
-		Map<String, Double> laneYMap = new HashMap<>();
+		// Index semantic elements and their DI coordinates for later association
+		// creation and endpoint calculation.
+		Map<String, Lane> laneMap = new LinkedHashMap<>();
+		Map<String, Double> laneYMap = new LinkedHashMap<>();
 		Map<String, Task> taskMap = new HashMap<>();
 		Map<BaseElement, Bounds> elemBounds = new LinkedHashMap<>();
-		double baseY = OFFSET_Y;
-		double offsetX = OFFSET_X;
 
-		createLanes(modelInstance, elements, laneSet, plane, laneMap, laneYMap, baseY);
+		// Allocate horizontal space for the complete task sequence, retaining a
+		// minimum lane width for small models.
+		long taskCount = elements.stream().filter(TaskDescriptor.class::isInstance).count();
+		double laneWidth = Math.max(800.0,
+				DIAGRAM_MARGIN_X * 2 + EVENT_SIZE * 2 + TASK_STEP_X * Math.max(1, taskCount));
+
+		createLanes(modelInstance, elements, laneSet, plane, laneMap, laneYMap, DIAGRAM_MARGIN_Y, laneWidth);
 
 		FlowNode previousNode = null;
 		int nodeIdx = 0;
-		int lastTaskIdx = 0;
 
+		// Create one linear sequence across all task descriptors. The horizontal
+		// index advances globally, including when consecutive tasks use different
+		// lanes.
 		for (ElementDescriptor e : elements) {
 			if (e instanceof TaskDescriptor td) {
 				String taskId = td.id;
-				double x = offsetX + (nodeIdx + 1) * offsetX;
-				double y = laneYMap.get(td.lane) + 20.0;
+				double x = DIAGRAM_MARGIN_X + EVENT_SIZE + 55.0 + nodeIdx * TASK_STEP_X;
+				double y = laneYMap.get(td.lane) + TASK_TOP_OFFSET;
 
 				Task task = createTaskWithIO(modelInstance, process, td);
 				addBpmnExtension(task, td.step);
 				laneMap.get(td.lane).getFlowNodeRefs().add(task);
 				taskMap.put(taskId, task);
 
-				Bounds taskBounds = createBounds(modelInstance, x, y, 100.0, 80.0);
+				Bounds taskBounds = createBounds(modelInstance, x, y, TASK_WIDTH, TASK_HEIGHT);
 				elemBounds.put(task, taskBounds);
 				addShapeToPlane(modelInstance, plane, task, taskBounds);
 
+				// Place the start event in the first task's lane and align their centers.
 				if (nodeIdx == 0) {
 					StartEvent startEvent = createStartEvent(modelInstance, process, td.lane, laneMap);
-					Bounds startBounds = createBounds(modelInstance, offsetX, laneYMap.get(td.lane) + 40.0, 36.0, 36.0);
+					Bounds startBounds = createBounds(modelInstance, DIAGRAM_MARGIN_X,
+							laneYMap.get(td.lane) + TASK_TOP_OFFSET + (TASK_HEIGHT - EVENT_SIZE) / 2.0, EVENT_SIZE,
+							EVENT_SIZE);
 					addShapeToPlane(modelInstance, plane, startEvent, startBounds);
 					createSequenceFlowWithEdge(modelInstance, process, plane, startEvent, task, "flow_start",
 							startBounds, taskBounds);
 				}
 
+				// Connect consecutive tasks regardless of their step type or lane.
 				if (previousNode != null) {
 					Bounds prevBounds = elemBounds.get(previousNode);
 					if (prevBounds == null) {
-						prevBounds = createBounds(modelInstance, offsetX, laneYMap.get(td.lane) + 60, 100.0, 80.0);
+						prevBounds = createBounds(modelInstance, DIAGRAM_MARGIN_X,
+								laneYMap.get(td.lane) + TASK_TOP_OFFSET, TASK_WIDTH, TASK_HEIGHT);
 					}
 					createSequenceFlowWithEdge(modelInstance, process, plane, previousNode, task,
 							"flow_" + (nodeIdx - 1) + "_" + nodeIdx, prevBounds, taskBounds);
 				}
 
-				if (nodeIdx == elements.size() - 1) {
+				// Place the end event after the last task in that task's lane.
+				if (nodeIdx == taskCount - 1) {
 					EndEvent endEvent = createEndEvent(modelInstance, process, td.lane, laneMap);
-					Bounds endBounds = createBounds(modelInstance, taskBounds.getX() + offsetX,
-							taskBounds.getY() + 20.0, 36.0, 36.0);
+					Bounds endBounds = createBounds(modelInstance, taskBounds.getX() + TASK_WIDTH + 55.0,
+							taskBounds.getY() + (TASK_HEIGHT - EVENT_SIZE) / 2.0, EVENT_SIZE, EVENT_SIZE);
 					addShapeToPlane(modelInstance, plane, endEvent, endBounds);
 					createSequenceFlowWithEdge(modelInstance, process, plane, task, endEvent, "flow_end", taskBounds,
 							endBounds);
 				}
 
 				previousNode = task;
-				lastTaskIdx = nodeIdx;
+				nodeIdx++;
 			}
-			nodeIdx++;
 		}
 		nodeIdx = 0;
 
+		// Track horizontal fan-out separately for each producer.
 		Map<String, Integer> producerDataCount = new HashMap<>();
 
+		// Retain datastore positions until their semantic elements and edges are
+		// created in the following pass.
 		Map<DataInstanceDescriptor, Bounds> dataBoundsMap = new LinkedHashMap<>();
 
 		for (ElementDescriptor e : elements) {
@@ -313,21 +445,31 @@ public class CamundaParser {
 					Bounds taskBounds = elemBounds.get(producer);
 					int count = producerDataCount.getOrDefault(ds.producer, 0);
 
-					x = taskBounds.getX() + (taskBounds.getWidth() / 2) - 25;
-					y = taskBounds.getY() + taskBounds.getHeight() + 40 + (count * 60.0);
+					// Align horizontally with the producer and fan out additional outputs.
+					// Vertical placement uses the datastore descriptor's lane, which is
+					// assigned from its first consumer during descriptor construction.
+					x = taskBounds.getX() + (taskBounds.getWidth() - DATA_SIZE) / 2.0 + count * DATA_STEP_X;
+					y = laneYMap.get(ds.lane) + DATA_TOP_OFFSET;
 
 					producerDataCount.put(ds.producer, count + 1);
 				} else {
-					x = offsetX + nodeIdx * offsetX;
-					y = laneYMap.get(ds.lane) + 36.0;
+					// Fall back to a lane-relative position when no generated producer
+					// task can be found.
+					x = DIAGRAM_MARGIN_X + EVENT_SIZE + 55.0 + nodeIdx * DATA_STEP_X;
+					y = laneYMap.get(ds.lane) + DATA_TOP_OFFSET;
 				}
 
-				// Create shape without connection
-				Bounds objBounds = createBounds(modelInstance, x, y, 50.0, 50.0);
+				// Record bounds only; the actual datastore shape and associations are
+				// created after this positioning pass.
+				Bounds objBounds = createBounds(modelInstance, x, y, DATA_SIZE, DATA_SIZE);
 				dataBoundsMap.put(ds, objBounds);
 			}
+			// This index includes all descriptors and is used only for fallback
+			// datastore positioning in this pass.
 			nodeIdx++;
 		}
+
+		// Create each datastore and connect it using the previously calculated bounds.
 		for (var entry : dataBoundsMap.entrySet()) {
 			DataInstanceDescriptor ds = entry.getKey();
 			Bounds objBounds = entry.getValue();
@@ -338,24 +480,198 @@ public class CamundaParser {
 		return modelInstance;
 	}
 
+	/**
+	 * Dispatches task metadata generation to the overload for the concrete step
+	 * type. Unsupported step types fail explicitly rather than producing an
+	 * unclassified task.
+	 */
 	private static void addBpmnExtension(Task task, AbstractStep step) {
-		if (step instanceof ComposeStep) {
-			task.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_SUB_TYPE, BPMN4S_COMPOSE_TASK);
-		} else if (step instanceof RunStep) {
-			task.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_SUB_TYPE, BPMN4S_RUN_TASK);
-		} else if (step instanceof AssertionStep) {
-			task.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_SUB_TYPE, BPMN4S_ASSERT_TASK);
-		} else
-			throw new IllegalArgumentException("Unexpected value: " + step);
+		if (step instanceof RunStep)
+			addBpmnExtension(task, (RunStep) step);
+		else if (step instanceof ComposeStep)
+			addBpmnExtension(task, (ComposeStep) step);
+		else if (step instanceof AssertionStep)
+			addBpmnExtension(task, (AssertionStep) step);
+		else
+			throw new IllegalArgumentException("Unexpected executable step: " + step);
 	}
 
+	/**
+	 * Marks a visible compose task with the ComposeTask subtype. Its referenced
+	 * inputs and produced outputs are represented by the shared data-association
+	 * generation logic.
+	 */
+	private static void addBpmnExtension(Task task, ComposeStep step) {
+		task.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_SUB_TYPE, BPMN4S_COMPOSE_TASK);
+	}
+
+	/**
+	 * Adds the run-task subtype and the source model's domain-specific step type.
+	 */
+	private static void addBpmnExtension(Task task, RunStep step) {
+		task.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_SUB_TYPE, BPMN4S_RUN_TASK);
+		task.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_STEP_TYPE, ((RunStep) step).getStepType());
+	}
+
+	/**
+	 * Adds assertion expressions and step-type metadata.
+	 *
+	 * <p>
+	 * Assertion tasks currently use the RunTask subtype. The switch to AssertTask
+	 * remains pending, as indicated at the subtype assignment below.
+	 * </p>
+	 */
+	private static void addBpmnExtension(Task task, AssertionStep step) {
+		task.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_SUB_TYPE, BPMN4S_ASSERT_TASK);
+		task.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_STEP_TYPE, ((AssertionStep) step).getStepType());
+
+		// Flatten nested constraint items, rewrite their variable references and
+		// combine non-empty assertions into one newline-separated attribute value.
+		AssertionStep assertionStep = (AssertionStep) step;
+		String assertions = assertionStep.getAsserts().stream().flatMap(assertion -> assertion.getCe().stream())
+				.flatMap(constraintExpression -> constraintExpression.getConstr().stream())
+				.map(assertionItem -> printDai(assertionStep, assertionItem)).filter(assertion -> !assertion.isBlank())
+				.collect(Collectors.joining("\n"));
+
+		if (!assertions.isBlank()) {
+			task.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_ASSERTIONS, assertions);
+		}
+	}
+
+	/**
+	 * Serializes a binding value as an association-level BPMN4S update expression.
+	 * Unlike the descriptor overload, this does not prepend a datastore assignment.
+	 */
 	private static void addBpmnExtension(DataAssociation da, Binding bind) {
 		TypeDecl b_type = bind.getName().getType().getType();
 		JsonValue b_val = bind.getJsonvals();
-		String b_str = ConcreteExpressionHandler.createTypeDeclValue(b_type, b_val);
+		String b_str = ConcreteExpressionHandler.createTypeDeclValue(b_type, b_val, p -> false);
 		da.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_UPDATE, b_str);
 	}
 
+	/**
+	 * Adds the producer binding as a complete datastore assignment on an output
+	 * association, when a producer binding is available.
+	 */
+	/**
+	 * Adds the producer assignment and optional compose reference updates to an
+	 * output association.
+	 */
+	private static void addBpmnExtension(DataAssociation da, DataInstanceDescriptor dsDescriptor) {
+		String updateAssignment = createUpdateAssignment(dsDescriptor);
+		if (updateAssignment != null) {
+			da.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_UPDATE, updateAssignment);
+		}
+
+		String referenceUpdates = getReferenceUpdates(dsDescriptor);
+		if (referenceUpdates != null) {
+			da.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_UPDATE_REF,
+					"// Auto-generated by nl.asml.matala.generator.bpmn.FromConcreteToBpmn parser\n" + referenceUpdates
+							+ "\n");
+		}
+	}
+
+	/**
+	 * Serializes all reference constraints from all constraint steps of a compose
+	 * producer, preserving their source order.
+	 *
+	 * Assignment targets use output datastore names, while value expressions use
+	 * input datastore names. Other constraint elements retain default
+	 * serialization.
+	 *
+	 * @return newline-separated constraints, or null when no reference constraints
+	 *         are available
+	 */
+	private static String getReferenceUpdates(DataInstanceDescriptor dsDescriptor) {
+		EObject container = dsDescriptor.bind_producer.eContainer();
+		if (!(container instanceof ComposeStep))
+			return null;
+
+		ComposeStep composeStep = (ComposeStep) container;
+		if (composeStep.getRefs().isEmpty())
+			return null;
+
+		Map<String, String> inputDatastores = getProducerQualifiedDatastoreKeysInput(composeStep);
+		Map<String, String> outputDatastores = getProducerQualifiedDatastoreKeysOutput(composeStep);
+		List<String> referenceUpdates = new ArrayList<>();
+
+		// Visit every constraint step and every reference constraint within it.
+		// An empty constraint step does not prevent later steps from being processed.
+		for (ConstraintStep constraintStep : composeStep.getRefs()) {
+			for (RefConstraint constraint : constraintStep.getCe()) {
+				String serializedConstraint = EcoreUtil3.serialize(constraint, object -> {
+					EObject target;
+					EObject expression;
+
+					// Extract the target and value for either supported assignment form.
+					// Serialization below is shared by both forms.
+					if (object instanceof AssignmentAction) {
+						AssignmentAction action = (AssignmentAction) object;
+						target = action.getAssignment();
+						expression = action.getExp();
+					} else if (object instanceof RecordFieldAssignmentAction) {
+						RecordFieldAssignmentAction action = (RecordFieldAssignmentAction) object;
+						target = action.getFieldAccess();
+						expression = action.getExp();
+					} else {
+						// Leave all other constraint elements to the default serializer.
+						return null;
+					}
+
+					String assignment = serializeWithDatastoreNames(target, outputDatastores);
+					String value = serializeWithDatastoreNames(expression, inputDatastores);
+					return String.format("%s := %s", assignment, value);
+				}).stripIndent().trim();
+
+				referenceUpdates.add(serializedConstraint);
+			}
+		}
+
+		// Preserve the null result when there are no reference constraints at all.
+		return referenceUpdates.isEmpty() ? null : String.join("\n", referenceUpdates);
+	}
+
+	/**
+	 * Serializes a model fragment while replacing expression variables with their
+	 * normalized, producer-qualified datastore names.
+	 */
+	private static String serializeWithDatastoreNames(EObject element, Map<String, String> datastoreNames) {
+		return EcoreUtil3.serialize(element, object -> {
+			if (object instanceof ExpressionVariable) {
+				ExpressionVariable expressionVariable = (ExpressionVariable) object;
+				String variableName = Utils.getVarField(expressionVariable.getVariable());
+
+				// Preserve the existing datastore lookup and normalization behavior.
+				return normalizeBpmnId(datastoreNames.get(variableName));
+			}
+
+			// Preserve default handling of field accesses, operators and literals.
+			return null;
+		}).stripIndent().trim();
+	}
+
+	/**
+	 * Builds an assignment of the form {@code datastoreId := serializedValue}.
+	 *
+	 * @return the assignment, or {@code null} if no producer binding is present
+	 */
+	private static String createUpdateAssignment(DataInstanceDescriptor dsDescriptor) {
+		Binding bind = dsDescriptor.bind_producer;
+		if (bind == null) {
+			return null;
+		}
+
+		String variableId = normalizeBpmnId(dsDescriptor.id);
+		TypeDecl bindingType = bind.getName().getType().getType();
+		JsonValue bindingValue = bind.getJsonvals();
+		String initialValue = ConcreteExpressionHandler.createTypeDeclValue(bindingType, bindingValue, p -> false);
+		return variableId + " := " + initialValue;
+	}
+
+	/**
+	 * Creates the document root and registers namespaces used by BPMN elements,
+	 * diagram elements and extension attributes.
+	 */
 	private static Definitions createDefinitions(BpmnModelInstance modelInstance) {
 		Definitions definitions = modelInstance.newInstance(Definitions.class);
 		definitions.setTargetNamespace("http://bpmn.io/schema/bpmn");
@@ -371,42 +687,10 @@ public class CamundaParser {
 		return definitions;
 	}
 
-	private static void createDataTypes(BpmnModelInstance modelInstance, Process process) {
-		ExtensionElements extElem = modelInstance.newInstance(ExtensionElements.class);
-		DataTypes dtype_list = modelInstance.newInstance(DataTypes.class);
-
-		Raw dt_raw = modelInstance.newInstance(Raw.class);
-		extElem.addChildElement(dt_raw);
-
-		DataType dt_dataset = modelInstance.newInstance(DataType.class);
-		dt_dataset.setAttributeValue("id", "dataset_id");
-		dt_dataset.setAttributeValue("name", "Dataset");
-		dt_dataset.setAttributeValue("type", "String");
-
-		DataType dt_list = modelInstance.newInstance(DataType.class);
-		dt_list.setAttributeValue("id", "list_id");
-		dt_list.setAttributeValue("name", "ListOfDatasets");
-		dt_list.setAttributeValue("type", "List");
-		dt_list.setAttributeValue("valueTypeRef", "dataset_id");
-
-		DataType dt_record = modelInstance.newInstance(DataType.class);
-		dt_record.setAttributeValue("id", "record_id");
-		dt_record.setAttributeValue("name", "MyDataType");
-		dt_record.setAttributeValue("type", "Record");
-
-		Field field = modelInstance.newInstance(Field.class);
-		field.setAttributeValue("name", "my_list_of_datasets");
-		field.setAttributeValue("typeRef", "dataset_id");
-		dt_record.addChildElement(field);
-
-		dtype_list.addChildElement(dt_dataset);
-		dtype_list.addChildElement(dt_list);
-		dtype_list.addChildElement(dt_record);
-
-		extElem.addChildElement(dtype_list);
-		process.addChildElement(extElem);
-	}
-
+	/**
+	 * Creates the executable process containing the generated tasks, events,
+	 * sequence flows, lanes and datastores.
+	 */
 	private static Process createProcess(BpmnModelInstance modelInstance, Definitions definitions) {
 		Process process = modelInstance.newInstance(Process.class);
 		process.setExecutable(true);
@@ -416,6 +700,118 @@ public class CamundaParser {
 		return process;
 	}
 
+	/**
+	 * Embeds the product types source, after removal of the configured UNIT
+	 * fragment, inside the process's BPMN4S extension elements.
+	 */
+	private static void createDataTypes(AbstractTestDefinition atd, BpmnModelInstance modelInstance, Process process) {
+		ExtensionElements extElem = modelInstance.newInstance(ExtensionElements.class);
+		DataTypes dtype_list = modelInstance.newInstance(DataTypes.class);
+
+		Raw dt_raw = modelInstance.newInstance(Raw.class);
+		dt_raw.setTextContent(getTypesRaw(atd));
+		dtype_list.addChildElement(dt_raw);
+
+		process.addChildElement(extElem);
+		extElem.addChildElement(dtype_list);
+	}
+
+	/**
+	 * Resolves the product-specific types file imported indirectly by the test
+	 * specification, reads its UTF-8 source and removes the exact
+	 * {@code UNIT_RECORD_TYPE} fragment.
+	 *
+	 * <p>
+	 * The expected import chain is:
+	 * </p>
+	 * <ol>
+	 * <li>the {@link TSMain} containing {@code atd} imports the TSpec types
+	 * file;</li>
+	 * <li>that {@link TypesModel} imports the product-specific types file;</li>
+	 * <li>the filtered product-specific source is embedded in BPMN4S
+	 * {@code Raw}.</li>
+	 * </ol>
+	 *
+	 * <p>
+	 * Only the first import at each level is followed; this is not a recursive
+	 * traversal of all imported types resources.
+	 * </p>
+	 */
+	private static String getTypesRaw(AbstractTestDefinition atd) {
+		if (atd == null) {
+			throw new IllegalArgumentException("Abstract test definition must not be null");
+		}
+
+		// Locate TSMain through containment rather than assuming it is the direct
+		// parent of the abstract test definition.
+		EObject container = atd.eContainer();
+		while (container != null && !(container instanceof TSMain)) {
+			container = container.eContainer();
+		}
+		if (!(container instanceof TSMain)) {
+			throw new IllegalArgumentException(
+					"Expected the abstract test definition to be contained in a TSMain parsed by the TSpec language");
+		}
+
+		TSMain tsMain = (TSMain) container;
+		Resource tspecResource = tsMain.eResource();
+		if (tspecResource == null || tspecResource.getResourceSet() == null) {
+			throw new IllegalArgumentException("The TSpec model is not attached to an EMF resource set");
+		}
+		if (tsMain.getImports().isEmpty()) {
+			throw new IllegalArgumentException("The TSpec model does not import a TSpec types file");
+		}
+
+		// Load the first imported types resource through the existing ResourceSet,
+		// retaining its resource factories and URI mappings.
+		URI tSpecTypesUri = resolveImport(tspecResource.getURI(), tsMain.getImports().get(0).getImportURI());
+		Resource tSpecTypesResource = tspecResource.getResourceSet().getResource(tSpecTypesUri, true);
+		if (tSpecTypesResource.getContents().isEmpty()
+				|| !(tSpecTypesResource.getContents().get(0) instanceof TypesModel)) {
+			throw new IllegalArgumentException(
+					"Expected the imported TSpec types resource to contain a TypesModel parsed by the Types language: "
+							+ tSpecTypesUri);
+		}
+
+		TypesModel tSpecTypes = (TypesModel) tSpecTypesResource.getContents().get(0);
+		if (tSpecTypes.getImports().isEmpty()) {
+			throw new IllegalArgumentException(
+					"The TSpec types model does not import a product-specific types file: " + tSpecTypesUri);
+		}
+
+		// Resolve the product types relative to the intermediate types resource.
+		URI productTypesUri = resolveImport(tSpecTypesResource.getURI(), tSpecTypes.getImports().get(0).getImportURI());
+		// Remove only exact occurrences of the configured UNIT source fragment.
+		return readUtf8(tspecResource, productTypesUri).replace(UNIT_RECORD_TYPE, "");
+	}
+
+	/**
+	 * Resolves relative imports against the containing resource URI and leaves
+	 * absolute import URIs unchanged.
+	 */
+	private static URI resolveImport(URI baseResourceUri, String importUri) {
+		if (importUri == null || importUri.isBlank()) {
+			throw new IllegalArgumentException("Types import URI must not be empty");
+		}
+		URI uri = URI.createURI(importUri);
+		return uri.isRelative() ? uri.resolve(baseResourceUri) : uri;
+	}
+
+	/**
+	 * Reads UTF-8 source through the ResourceSet's URI converter so configured
+	 * resource mappings are respected. The input stream is closed automatically.
+	 */
+	private static String readUtf8(Resource contextResource, URI uri) {
+		try (InputStream input = contextResource.getResourceSet().getURIConverter().createInputStream(uri)) {
+			return new String(input.readAllBytes(), StandardCharsets.UTF_8);
+		} catch (IOException exception) {
+			throw new IllegalArgumentException("Could not read imported product types file: " + uri, exception);
+		}
+	}
+
+	/**
+	 * Creates the lane set used to group tasks by their derived component name.
+	 */
 	private static LaneSet createLaneSet(BpmnModelInstance modelInstance, Process process) {
 		LaneSet laneSet = modelInstance.newInstance(LaneSet.class);
 		laneSet.setId("LaneSet_id");
@@ -424,6 +820,10 @@ public class CamundaParser {
 		return laneSet;
 	}
 
+	/**
+	 * Creates a BPMN DI diagram and a plane referencing the semantic process.
+	 * Shapes and edges are subsequently attached to this plane.
+	 */
 	private static BpmnPlane createDiagram(BpmnModelInstance modelInstance, Definitions definitions, Process process) {
 		BpmnDiagram diagram = modelInstance.newInstance(BpmnDiagram.class);
 		diagram.setId("BPMNDiagram_id");
@@ -436,30 +836,69 @@ public class CamundaParser {
 		return plane;
 	}
 
+	/**
+	 * Creates one lane per distinct descriptor lane name, preserving the order in
+	 * which names first occur.
+	 */
 	private static void createLanes(BpmnModelInstance modelInstance, List<ElementDescriptor> elements, LaneSet laneSet,
-			BpmnPlane plane, Map<String, Lane> laneMap, Map<String, Double> laneYMap,
-			// double laneHeight, double laneWidth,
-			double baseY) {
-		double laneHeight = OFFSET_Y * elements.stream().map(e -> e.lane).distinct().count();
-		double laneWidth = OFFSET_X * (elements.size() + 2);
+			BpmnPlane plane, Map<String, Lane> laneMap, Map<String, Double> laneYMap, double baseY, double laneWidth) {
 
 		for (ElementDescriptor e : elements) {
 			if (!laneMap.containsKey(e.lane)) {
 				Lane lane = modelInstance.newInstance(Lane.class);
-				lane.setId("lane_" + e.lane.replaceAll("\\s+", "_"));
+				lane.setId(normalizeBpmnId("lane_" + e.lane));
 				lane.setName(e.lane);
 				laneSet.addChildElement(lane);
 				laneMap.put(e.lane, lane);
 
-				double y = baseY + laneMap.size() * laneHeight;
+				// Stack lanes vertically using their insertion index.
+				double y = baseY + (laneMap.size() - 1) * LANE_HEIGHT;
 				laneYMap.put(e.lane, y);
 
-				Bounds bounds = createBounds(modelInstance, 10.0, y, laneWidth, laneHeight);
+				Bounds bounds = createBounds(modelInstance, 10.0, y, laneWidth, LANE_HEIGHT);
 				addShapeToPlane(modelInstance, plane, lane, bounds);
 			}
 		}
 	}
 
+	/**
+	 * Converts an identifier to a restricted ASCII subset suitable for XML Schema
+	 * NCName values used by BPMN ids.
+	 *
+	 * <p>
+	 * Characters other than ASCII letters, digits, underscores and dots are
+	 * replaced with underscores. A prefix is added when the first character is not
+	 * a letter or underscore. This normalization does not guarantee uniqueness.
+	 * </p>
+	 */
+	private static String normalizeBpmnId(String id) {
+		if (id == null || id.isEmpty()) {
+			return "id";
+		}
+		String normalized = id.replaceAll("[^A-Za-z0-9_.]", "_");
+		if (!normalized.substring(0, 1).matches("[A-Za-z_]")) {
+			normalized = "id_" + normalized;
+		}
+		return normalized;
+	}
+
+	/**
+	 * Applies the shared BPMN identifier normalization to a task identity.
+	 */
+	private static String normalizeTaskId(String td_id) {
+		return normalizeBpmnId(td_id);
+	}
+
+	/**
+	 * Normalizes the identity stored in a task descriptor.
+	 */
+	private static String normalizeTaskId(TaskDescriptor td) {
+		return normalizeTaskId(td.id);
+	}
+
+	/**
+	 * Creates a DI bounds object with the supplied position and dimensions.
+	 */
 	private static Bounds createBounds(BpmnModelInstance modelInstance, double x, double y, double width,
 			double height) {
 		Bounds bounds = modelInstance.newInstance(Bounds.class);
@@ -470,6 +909,9 @@ public class CamundaParser {
 		return bounds;
 	}
 
+	/**
+	 * Adds a visual shape referencing an existing semantic BPMN element.
+	 */
 	private static void addShapeToPlane(BpmnModelInstance modelInstance, BpmnPlane plane, BaseElement element,
 			Bounds bounds) {
 		BpmnShape shape = modelInstance.newInstance(BpmnShape.class);
@@ -479,29 +921,108 @@ public class CamundaParser {
 		plane.addChildElement(shape);
 	}
 
+	/**
+	 * Creates a task and its placeholder property. Actual input properties and data
+	 * associations are added later when datastores are linked.
+	 */
 	private static Task createTaskWithIO(BpmnModelInstance modelInstance, Process process, TaskDescriptor td) {
 		Task task = modelInstance.newInstance(Task.class);
-		String task_id = normalizeTaskId(td);
-		task.setId(task_id);
-		task.setName(td.id);
+		String task_name = getUniqueTaskName(modelInstance, td);
+		task.setId(td.step.getName());
+		task.setName(task_name.replace('_', ' '));
 		process.addChildElement(task);
-
+		
 		Property prop = modelInstance.newInstance(Property.class);
-		prop.setId(task_id + "_placeholder_id");
-		prop.setName(td.id + "_placeholder");
+		prop.setId(task_name + "_placeholder_id");
+		prop.setName(td.step.getName() + "_placeholder");
 		task.addChildElement(prop);
 
 		return task;
 	}
 
-	private static String normalizeTaskId(TaskDescriptor td) {
-		return normalizeTaskId(td.id);
+	private static String getUniqueTaskName(BpmnModelInstance modelInstance, TaskDescriptor td) {
+		String base_task_name = normalizeBpmnId(td.id);
+		String task_name = base_task_name;
+		
+		int suffix = 1;
+		while (modelInstance.getModelElementById(task_name) != null
+				|| modelInstance.getModelElementById(task_name+ "_placeholder_id") != null) {
+			task_name = base_task_name+ "_" + suffix++;
+		}
+
+		return task_name;
 	}
 
-	private static String normalizeTaskId(String td_id) {
-		return td_id.replaceAll("\\s+", "_");
+	/**
+	 * Serializes an assertion item while qualifying expression variables with the
+	 * datastore containing the assertion step's referenced input.
+	 *
+	 * The datastore key follows the same naming convention as createDescriptors():
+	 * consumedData + "_" + producerName. Normalization matches the variable name
+	 * emitted by createUpdateAssignment().
+	 */
+	private static String printDai(AssertionStep step, DataAssertionItem item) {
+		HashMap<String, String> datastoreNames = getProducerQualifiedDatastoreKeysInput(step);
+
+		return EcoreUtil3.serialize(item, object -> {
+			if (object instanceof ExpressionVariable) {
+				ExpressionVariable expressionVariable = (ExpressionVariable) object;
+				String variableName = Utils.getVarField(expressionVariable.getVariable());
+				String normalizedName = normalizeBpmnId(datastoreNames.get(variableName));
+
+				// Preserve the existing field serialization, replacing only its input
+				// qualifier with the resolved producer-qualified datastore variable.
+				return normalizedName;
+			}
+
+			// Leave non-variable elements to the serializer's default handling.
+			return null;
+		}).stripIndent().trim();
 	}
 
+	private static HashMap<String, String> getProducerQualifiedDatastoreKeysInput(AbstractStep step) {
+		// Collect the names of all data inputs referenced by the assertion step.
+		Set<String> variables = step.getInput().stream().map(binding -> binding.getName().getName())
+				.collect(Collectors.toSet());
+
+		// Resolve the assertion input to its producer-qualified datastore key.
+		// Keep distinct keys so repeated references to the same datastore are harmless,
+		// while references to different producers remain distinguishable.
+		HashMap<String, String> datastoreNames = new LinkedHashMap<>();
+
+		step.getStepRef().forEach(stepReference -> {
+			AbstractStep producerStep = stepReference.getRefStep();
+			String producerName = getConsumerName(producerStep);
+
+			stepReference.getRefData().forEach(referencedData -> {
+				String consumedData = referencedData.getName();
+				if (variables.contains(consumedData)) {
+					datastoreNames.put(consumedData, consumedData + "_" + producerName);
+				}
+			});
+		});
+
+		return datastoreNames;
+	}
+
+	private static HashMap<String, String> getProducerQualifiedDatastoreKeysOutput(AbstractStep step) {
+		// Resolve the assertion input to its producer-qualified datastore key.
+		// Keep distinct keys so repeated references to the same datastore are harmless,
+		// while references to different producers remain distinguishable.
+		HashMap<String, String> datastoreNames = new LinkedHashMap<>();
+
+		step.getOutput().forEach(output -> {
+			String producerName = getConsumerName(step);
+			String producerData = output.getName().getName();
+			datastoreNames.put(producerData, producerData + "_" + producerName);
+		});
+
+		return datastoreNames;
+	}
+
+	/**
+	 * Creates the start event and registers it in the specified lane.
+	 */
 	private static StartEvent createStartEvent(BpmnModelInstance modelInstance, Process process, String laneName,
 			Map<String, Lane> laneMap) {
 		StartEvent startEvent = modelInstance.newInstance(StartEvent.class);
@@ -512,6 +1033,9 @@ public class CamundaParser {
 		return startEvent;
 	}
 
+	/**
+	 * Creates the end event and registers it in the specified lane.
+	 */
 	private static EndEvent createEndEvent(BpmnModelInstance modelInstance, Process process, String laneName,
 			Map<String, Lane> laneMap) {
 		EndEvent endEvent = modelInstance.newInstance(EndEvent.class);
@@ -522,6 +1046,24 @@ public class CamundaParser {
 		return endEvent;
 	}
 
+	/**
+	 * Returns the type name declared by the datastore's producer binding. A
+	 * non-null producer binding is expected.
+	 */
+	private static String getBindingType(DataInstanceDescriptor dsDescriptor) {
+		TypeDecl b_type = dsDescriptor.bind_producer.getName().getType().getType();
+		return b_type.getName();
+	}
+
+	/**
+	 * Creates a semantic sequence flow and its four-waypoint DI edge.
+	 *
+	 * <p>
+	 * The edge leaves the source's right-center, changes vertical level at the
+	 * horizontal midpoint and enters the target's left-center. For elements on the
+	 * same vertical level, the intermediate points are collinear.
+	 * </p>
+	 */
 	private static void createSequenceFlowWithEdge(BpmnModelInstance modelInstance, Process process, BpmnPlane plane,
 			FlowNode source, FlowNode target, String flowId, Bounds sourceBounds, Bounds targetBounds) {
 		SequenceFlow flow = modelInstance.newInstance(SequenceFlow.class);
@@ -536,22 +1078,26 @@ public class CamundaParser {
 		edge.setId("edge_" + flowId);
 		edge.setBpmnElement(flow);
 
+		// Source endpoint: center of the right boundary.
 		Waypoint wp1 = modelInstance.newInstance(Waypoint.class);
 		wp1.setX(sourceBounds.getX() + sourceBounds.getWidth());
 		wp1.setY(sourceBounds.getY() + sourceBounds.getHeight() / 2);
 		edge.getWaypoints().add(wp1);
 
+		// First bend: retain the source height at the shared horizontal midpoint.
 		double midpoint = (sourceBounds.getX() + sourceBounds.getWidth() + targetBounds.getX()) / 2;
 		Waypoint wp2 = modelInstance.newInstance(Waypoint.class);
 		wp2.setX(midpoint);
 		wp2.setY(sourceBounds.getY() + sourceBounds.getHeight() / 2);
 		edge.getWaypoints().add(wp2);
 
+		// Second bend: move vertically to the target center height.
 		Waypoint wp3 = modelInstance.newInstance(Waypoint.class);
 		wp3.setX(midpoint);
 		wp3.setY(targetBounds.getY() + targetBounds.getHeight() / 2);
 		edge.getWaypoints().add(wp3);
 
+		// Target endpoint: center of the left boundary.
 		Waypoint wp4 = modelInstance.newInstance(Waypoint.class);
 		wp4.setX(targetBounds.getX());
 		wp4.setY(targetBounds.getY() + targetBounds.getHeight() / 2);
@@ -560,37 +1106,48 @@ public class CamundaParser {
 		plane.addChildElement(edge);
 	}
 
-	private static DataObject linkDataInstanceToTasks(BpmnModelInstance modelInstance, Definitions definitions,
+	/**
+	 * Creates a persistent datastore, its DI shape and associations to generated
+	 * producer and consumer tasks.
+	 *
+	 * <p>
+	 * Run and compose producers use output associations carrying datastore
+	 * assignments. Each consumer receives an input association targeting a local
+	 * property. Multiple such inputs expose the referenced data to a compose task.
+	 * </p>
+	 *
+	 * @return the datastore reference, or {@code null} when neither a producer nor
+	 *         a consumer can be resolved to a generated task
+	 */
+	private static DataStoreReference linkDataInstanceToTasks(BpmnModelInstance modelInstance, Definitions definitions,
 			Process process, BpmnPlane plane, DataInstanceDescriptor dsDescriptor, Map<String, Task> taskMap,
 			Map<BaseElement, Bounds> elemBounds, double x, double y) {
+		boolean hasProducerTask = dsDescriptor.producer != null && taskMap.containsKey(dsDescriptor.producer);
+		boolean hasConsumerTask = dsDescriptor.consumers.stream().anyMatch(taskMap::containsKey);
 
-		String dsId = "dataobject_" + dsDescriptor.id.replaceAll("\\s+", "_");
+		// Skip descriptors that cannot be connected to any generated task.
+		if (!hasProducerTask && !hasConsumerTask)
+			return null;
 
-		// 1️ Create top-level DataStore in definitions
-		DataObject dataObject = modelInstance.newInstance(DataObject.class);
-		dataObject.setId(dsId);
-		dataObject.setName(dsDescriptor.id);
-		process.addChildElement(dataObject);
+		String dsId = normalizeBpmnId("dataobject_" + dsDescriptor.id);
 
-		// 2️ Create DataObjectReference in the process
-		DataObjectReference dsRef = modelInstance.newInstance(DataObjectReference.class);
+		// 1. Create the semantic datastore and attach its declared type reference.
+		DataStoreReference dsRef = modelInstance.newInstance(DataStoreReference.class);
 		dsRef.setId(dsId + "_ref");
 		dsRef.setName(normalizeTaskId(dsDescriptor.id));
-		dsRef.setDataObject(dataObject);
-		dsRef.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_SUB_TYPE, BPMN4S_QUEUE);
-		dsRef.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_DATATYPE_REF, "record_id");
-
+		dsRef.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_DATATYPE_REF, getBindingType(dsDescriptor));
 		process.addChildElement(dsRef);
 
-		// 3️ Add diagram shape for the DataStoreReference
+		// 2. Add the datastore shape at the previously calculated position.
 		BpmnShape dsShape = modelInstance.newInstance(BpmnShape.class);
 		dsShape.setId("shape_" + dsId);
 		dsShape.setBpmnElement(dsRef);
-		Bounds dsBounds = createBounds(modelInstance, x, y, 50.0, 50.0);
+		Bounds dsBounds = createBounds(modelInstance, x, y, DATA_SIZE, DATA_SIZE);
 		dsShape.setBounds(dsBounds);
+
 		plane.addChildElement(dsShape);
 
-		// 4️ Link producer task to DataStoreReference
+		// 3. Connect the run or compose producer to its output datastore.
 		if (dsDescriptor.producer != null) {
 			Task producer = taskMap.get(dsDescriptor.producer);
 			if (producer != null) {
@@ -598,12 +1155,14 @@ public class CamundaParser {
 				doa.setId("doa_" + dsId + "_" + producer.getId());
 				doa.setTarget(dsRef);
 
-				Binding bind = dsDescriptor.bind_producer;
-				addBpmnExtension(doa, bind);
+				// Attach the serialized producer assignment to the output association.
+				addBpmnExtension(doa, dsDescriptor);
 				producer.addChildElement(doa);
 
 				Bounds producerBounds = elemBounds.get(producer);
-				// Count total outputs from this producer
+
+				// These indices and counts reflect associations attached so far, not
+				// necessarily the final totals after every datastore has been linked.
 				int outputIndex = getOutputIndex(producer, doa);
 				int totalOutputs = countTotalOutputs(producer);
 				int totalInputs = countTotalInputs(producer);
@@ -612,26 +1171,44 @@ public class CamundaParser {
 			}
 		}
 
-		// 5️ Link DataObjectReference to each consumer task (input)
+		// 4. Connect the datastore to each generated consumer, including compose
+		// tasks that receive referenced data from multiple producers.
 		for (int consumerIdx = 0; consumerIdx < dsDescriptor.consumers.size(); consumerIdx++) {
 			String consumerId = dsDescriptor.consumers.get(consumerIdx);
 			Task consumer = taskMap.get(consumerId);
-			String dstaskLabel = dsId + "_" + consumer.getId();
-			String uid = "_" + UUID.randomUUID().toString();
 			if (consumer != null) {
+				String dstaskLabel = dsId + "_" + consumer.getId();
 
-				// Create a Property inside the consumer task
+				// Keep generated property and association ids distinct.
+				String uid = "_" + UUID.randomUUID().toString();
+
+				// Use a task-local property as the semantic input target.
 				Property inputProp = modelInstance.newInstance(Property.class);
 				inputProp.setId("prop_" + dstaskLabel + uid);
 				inputProp.setName("input_" + dsDescriptor.id);
 				consumer.addChildElement(inputProp);
 
-				// Create DataInputAssociation
+				// Link the datastore value to the consumer's local input property.
 				DataInputAssociation dia = modelInstance.newInstance(DataInputAssociation.class);
 				dia.setId("dia_" + dstaskLabel + uid);
 				dia.getSources().add(dsRef);
 				dia.setTarget(inputProp);
 
+				// BPMN4S reads are non-consuming only if consumer != producer: 
+				// the stored value remains available to other consumers.
+				if (!consumerId.equals(dsDescriptor.producer)) {
+					dia.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_PERSISTENT_READ, "true");
+				} else {
+					// the stored and assigned values are duplicates to enable simulation.
+					String updateAssignment = createUpdateAssignment(dsDescriptor);
+					if (updateAssignment != null) {
+						dsRef.setAttributeValueNs(XMLNS_BPMN4S, BPMN4S_INIT, updateAssignment);
+					}
+
+				}
+
+				// Apply an optional consumer-specific binding if supplied by the
+				// descriptor. createDescriptors() above does not populate this map.
 				Binding bind = dsDescriptor.bind_consumers.getOrDefault(consumer.getName(), null);
 				if (bind != null) {
 					addBpmnExtension(dia, bind);
@@ -639,7 +1216,8 @@ public class CamundaParser {
 
 				consumer.addChildElement(dia);
 
-				// Create diagram edge
+				// Calculate endpoints using the currently attached task associations
+				// and this consumer's position in the datastore consumer list.
 				Bounds consumerBounds = elemBounds.get(consumer);
 				int inputIndex = getInputIndex(consumer, dia);
 				int totalInputs = countTotalInputs(consumer);
@@ -651,9 +1229,18 @@ public class CamundaParser {
 			}
 		}
 
-		return dataObject;
+		return dsRef;
 	}
 
+	/**
+	 * Creates a DI edge for a task-to-datastore output or datastore-to-task input.
+	 *
+	 * <p>
+	 * Endpoint placement depends on source dimensions and connection indices.
+	 * Intermediate orthogonal waypoints are calculated but are currently excluded
+	 * from the emitted edge, which therefore contains only its two endpoints.
+	 * </p>
+	 */
 	private static void createDataAssociationEdge(BpmnModelInstance modelInstance, BpmnPlane plane,
 			BaseElement association, Bounds sourceBounds, Bounds targetBounds, int targetConnectionIndex,
 			int totalTargetConnections, int sourceConnectionIndex, int totalSourceConnections, int totalSourceOutputs,
@@ -675,105 +1262,114 @@ public class CamundaParser {
 		Waypoint wp3 = modelInstance.newInstance(Waypoint.class);
 		Waypoint wp4 = modelInstance.newInstance(Waypoint.class);
 
+		// Classify the source geometrically: current task shapes are taller than
+		// 50 points, whereas datastore shapes are exactly 50 points high.
 		boolean isTaskOutput = sourceBounds.getHeight() > 50;
 
 		if (isTaskOutput) {
 
-			// Decide if we need to split the edge: split if task has BOTH inputs and
-			// outputs
+			// Select a restricted output region when the supplied counts indicate
+			// both inputs and outputs. The counting helpers clamp zero counts to one,
+			// so these values do not distinguish an absent association kind.
 			int totalTaskInputs = totalTargetInputs;
 			boolean taskHasBothInputsAndOutputs = (totalSourceOutputs > 0 && totalTaskInputs > 0);
 
 			double offsetX;
 			if (taskHasBothInputsAndOutputs) {
-				// Split: outputs use LEFT half
+				// Use the leftmost 45% of the task's bottom edge.
 				offsetX = calculateHorizontalOffsetInRegion(sourceConnectionIndex, totalSourceConnections, sourceWidth,
 						0.0, 0.45);
 			} else {
-				// No split: use full width
+				// Use the standard distribution across the full edge's middle region.
 				offsetX = calculateHorizontalOffset(sourceConnectionIndex, totalSourceConnections, sourceWidth);
 			}
 			double outputX = sourceBounds.getX() + offsetX;
 
-			// Distribute arrival points on top edge of DataObject
+			// Determine the arrival position across the datastore's top edge.
 			double targetOffsetX = calculateHorizontalOffset(targetConnectionIndex, totalTargetConnections,
 					targetWidth);
 			double arrivalX = targetBounds.getX() + targetOffsetX;
 
+			// Output endpoint on the task's bottom boundary.
 			wp1.setX(outputX);
 			wp1.setY(sourceBottomY);
 
+			// Calculate staggered bends for the currently disabled orthogonal route.
 			wp2.setX(outputX);
 			wp2.setY(sourceBottomY + 20 + (sourceConnectionIndex * 10));
 
 			wp3.setX(arrivalX);
 			wp3.setY(wp2.getY());
 
+			// Arrival endpoint just above the datastore's top boundary.
 			wp4.setX(arrivalX);
 			wp4.setY(targetTopY - 1);
 		} else {
 
-			double sourceOffsetY = calculateVerticalOffset(sourceConnectionIndex, totalSourceConnections,
-					sourceBounds.getHeight());
-			double exitY = sourceBounds.getY() + sourceOffsetY;
+			// Datastore inputs leave the store's bottom edge and enter the task at
+			// its top edge. This also applies to compose tasks receiving run outputs.
+			double sourceOffsetX = calculateHorizontalOffset(sourceConnectionIndex, totalSourceConnections,
+					sourceWidth);
+			double exitX = sourceBounds.getX() + sourceOffsetX;
 
-			// Decide if we need to split the edge: split if task has BOTH inputs and
-			// outputs
+			// Select the right input region when the supplied counts indicate both
+			// input and output associations. Counts may be clamped to one by callers.
 			int totalTaskOutputs = totalSourceOutputs;
 			boolean taskHasBothInputsAndOutputs = (totalTargetInputs > 0 && totalTaskOutputs > 0);
 
 			double offsetX;
 			if (taskHasBothInputsAndOutputs) {
-				// Split: inputs use RIGHT half
 				offsetX = calculateHorizontalOffsetInRegion(targetConnectionIndex, totalTargetConnections, targetWidth,
 						0.55, 1.0);
 			} else {
-				// No split: use full width
 				offsetX = calculateHorizontalOffset(targetConnectionIndex, totalTargetConnections, targetWidth);
 			}
 			double inputX = targetBounds.getX() + offsetX;
 
-			double horizontalOffset = 20 + (sourceConnectionIndex * 15);
+			// Calculate a staggered bend level above both endpoint heights. This
+			// affects the edge only if intermediate waypoints are emitted below.
+			double routingY = Math.min(sourceBottomY, targetTopY) - 20.0 - (targetConnectionIndex * 10);
 
-			wp1.setX(sourceRightX);
-			wp1.setY(exitY);
+			wp1.setX(exitX);
+			wp1.setY(sourceBottomY);
 
-			wp2.setX(sourceRightX + horizontalOffset);
-			wp2.setY(exitY);
+			wp2.setX(exitX);
+			wp2.setY(routingY);
 
-			wp3.setX(sourceRightX + horizontalOffset);
-			wp3.setY(targetBottomY + 30 + (targetConnectionIndex * 10));
+			wp3.setX(inputX);
+			wp3.setY(routingY);
 
 			wp4.setX(inputX);
-			wp4.setY(targetBottomY + 30 + (targetConnectionIndex * 10));
-
-			Waypoint wp5 = modelInstance.newInstance(Waypoint.class);
-			wp5.setX(inputX);
-			wp5.setY(targetBottomY - 1);
-
-			edge.getWaypoints().addAll(Arrays.asList(wp1, wp2, wp3, wp4, wp5));
-			plane.addChildElement(edge);
-			return;
+			wp4.setY(targetTopY - 1.0);
 		}
 
-		edge.getWaypoints().addAll(Arrays.asList(wp1, wp2, wp3, wp4));
+		// Emit a direct segment between the calculated endpoints. Keep the
+		// intermediate waypoints disabled to preserve the current rendering.
+		edge.getWaypoints().addAll(Arrays.asList(wp1,
+				// wp2, wp3,
+				wp4));
 
 		plane.addChildElement(edge);
 	}
 
-	// Count total outputs from a task
+	// Return the number of currently attached output associations, clamped to at
+	// least one for connection-slot calculations. This is not a raw zero-aware
+	// count.
 	private static int countTotalOutputs(Task task) {
 		int count = task.getChildElementsByType(DataOutputAssociation.class).size();
 		return Math.max(1, count);
 	}
 
-	// Count total inputs to a task
+	// Return the number of currently attached input associations, clamped to at
+	// least one for connection-slot calculations. This is not a raw zero-aware
+	// count.
 	private static int countTotalInputs(Task task) {
 		int count = task.getChildElementsByType(DataInputAssociation.class).size();
 		return Math.max(1, count);
 	}
 
-	// Get the index of a specific output association
+	// Find an output association's zero-based position in the task's current
+	// association collection; use the first slot if it is not found.
 	private static int getOutputIndex(Task task, DataOutputAssociation targetAssociation) {
 		int index = 0;
 		for (ModelElementInstance element : task.getChildElementsByType(DataOutputAssociation.class)) {
@@ -785,7 +1381,8 @@ public class CamundaParser {
 		return 0;
 	}
 
-	// Get the index of a specific input association
+	// Find an input association's zero-based position in the task's current
+	// association collection; use the first slot if it is not found.
 	private static int getInputIndex(Task task, DataInputAssociation targetAssociation) {
 		int index = 0;
 		for (ModelElementInstance element : task.getChildElementsByType(DataInputAssociation.class)) {
@@ -797,7 +1394,9 @@ public class CamundaParser {
 		return 0;
 	}
 
-	// Distribute connections evenly along a horizontal edge
+	// Center a single connection or distribute multiple connections across the
+	// middle 60% of the edge, leaving a 20% margin on either side.
+	// Callers are expected to provide total >= 1 and a valid zero-based index.
 	private static double calculateHorizontalOffset(int index, int total, double width) {
 		if (total == 1) {
 			return width / 2.0;
@@ -810,6 +1409,18 @@ public class CamundaParser {
 		return margin + (index * spacing);
 	}
 
+	/**
+	 * Calculates a connection offset within a fractional subsection of an edge.
+	 *
+	 * <p>
+	 * A single connection is centered in the region. Multiple connections use its
+	 * middle 80%, leaving a 10% margin at each end of the region. Callers must
+	 * supply a positive total and a valid zero-based connection index.
+	 * </p>
+	 *
+	 * @param regionStart fractional start of the selected region
+	 * @param regionEnd   fractional end of the selected region
+	 */
 	private static double calculateHorizontalOffsetInRegion(int index, int total, double width, double regionStart,
 			double regionEnd) {
 		double regionWidth = width * (regionEnd - regionStart);
@@ -824,19 +1435,5 @@ public class CamundaParser {
 		double spacing = usableWidth / (total - 1);
 
 		return regionOffset + margin + (index * spacing);
-	}
-
-	// Distribute connections evenly along a vertical edge
-	private static double calculateVerticalOffset(int index, int total, double height) {
-		if (total == 1) {
-			return height / 2.0;
-		}
-
-		// Leave 20% margin on top and bottom, distribute in the middle 60%
-		double usableHeight = height * 0.6;
-		double margin = height * 0.2;
-		double spacing = usableHeight / (total - 1);
-
-		return margin + (index * spacing);
 	}
 }
