@@ -30,6 +30,7 @@ import nl.esi.comma.testspecification.generator.utils.Step
 import nl.esi.comma.testspecification.generator.utils.TestSpecificationInstance
 import nl.esi.comma.testspecification.testspecification.AssertionStep
 import nl.esi.comma.testspecification.testspecification.RunStep
+import nl.esi.comma.testspecification.testspecification.StepSequence
 import nl.esi.comma.testspecification.testspecification.TSMain
 import nl.esi.comma.testspecification.testspecification.TestDefinition
 import nl.esi.xtext.actions.actions.Action
@@ -179,14 +180,17 @@ class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGe
         var listStepSequence = new ArrayList<RunStep>
         var test_single_sequence = td.testSeq.head
         for (ss : test_single_sequence.stepSeqRef) {
+            var tIdx = test_single_sequence.stepSeqRef.indexOf(ss)
             for (step : ss.step){
+                var sIdx = ss.step.indexOf(step)
                 var mat = pat.matcher(step.stepVar.name); mat.find
                 var prefix =  switch(step) {
-                    RunStep: 'step'
-                    AssertionStep: 'assertion'
+                    RunStep: 's'
+                    AssertionStep: 'a'
                     default: throw new UnsupportedOperationException("Unsupported type")
                 }
-                step.stepVar.name = prefix + mat.group
+                var stepNameOrig = mat.group.replaceFirst("_+default_[0-9]+$","")
+                step.stepVar.name = '''t«tIdx»_«prefix»«sIdx»«stepNameOrig»'''
             }
         }
         return listStepSequence
@@ -736,7 +740,7 @@ class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGe
                 tsi.sutVarToDataInstance.get(mapLHStoRHS.key).add(mapLHStoRHS.value)
     
                 var era = (act.fieldAccess as ExpressionRecordAccess)
-                var stepId = getStepId(era)
+                var stepIdx = getTestStepIdx(era)
                 var varId = getVarId(era)
     
                 // get sut-var name and type
@@ -764,9 +768,8 @@ class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGe
                                 new_rstep.variableName = lhs.key
                                 new_rstep.type = field.recordField.type.type.name
                                 new_rstep.recordExp = lhs.value
-                                // path for json input_file in "filePath / field name + step ID"
-                                new_rstep.inputFile = new_rstep.inputFile + varId + '_' + new_rstep.id + '_' +  //TODO
-                                    stepId + '.json'
+                                // path for json input_file in "filePath / datastore name + test & step Indexes"
+                                new_rstep.inputFile = '''«new_rstep.inputFile»«varId»_«stepIdx».json'''
                                 // point lhs value to input_file
                                 var format = '''"#valueof(global.params['testcase_data'] + '%s')"'''
                                 lhs.value = String.format(format, new_rstep.inputFile)
@@ -798,6 +801,20 @@ class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGe
         //var ioLabel = (expr.record as ExpressionRecordAccess).field.name
         var stepLabel = ((expr.record as ExpressionRecordAccess).record as ExpressionVariable).variable.name
         return stepLabel
+    }
+
+    private def String getTestStepIdx(ExpressionRecordAccess expr) {
+        val variable = ((expr.record as ExpressionRecordAccess).record as ExpressionVariable).variable
+        val targetStep = variable.eContainer
+        val stepSequence = targetStep.eContainer as StepSequence
+        val testDefinition = stepSequence.eContainer as TestDefinition
+        val testIndex = (0..<testDefinition.testSeq.size)
+            .findFirst [
+                testDefinition.testSeq.get(it).stepSeqRef
+                    .exists[step.contains(targetStep)]
+            ] ?: -1
+        val stepIndex = stepSequence.step.indexOf(targetStep)
+        return '''t«testIndex»_s«stepIndex»'''
     }
 
     private def String getVarId(ExpressionRecordAccess expr) {
