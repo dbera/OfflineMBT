@@ -187,14 +187,17 @@ def generate_tests( model_path:str, num_tests:int=1, depth_limit:int=500, state_
           num-tests {2}
           depth-limit {3}
           state-limit {4}
+          cpnserver-path "{5}"
         }}
       }}
     }}
     """
+     # Normalize the server path and always write it using forward slashes.
+    server_path = os.path.normpath(SERVER_PATH).replace(os.sep, "/")
 
     prj_filename:str = os.path.join(model_dir,f'{model_name}.prj')
     with open(prj_filename, "w") as file1:
-        prj_content = prj_template.format(taskname,model_name,num_tests,depth_limit,state_limit)
+        prj_content = prj_template.format(taskname,model_name,num_tests,depth_limit,state_limit, server_path)
         file1.write(prj_content)
     result = subprocess.run([JAVA_PATH,"-jar",BPMN4S_GEN,"-l", prj_filename],shell=True, capture_output=True)
     if result.stdout:

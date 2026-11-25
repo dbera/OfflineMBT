@@ -85,18 +85,18 @@ class StandardProjectGenerator extends AbstractGenerator {
     }
 
     def doGenerate(OfflineGenerationBlock task, ResourceSet rst, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
-        val productURI = if (task.bpmn.nullOrEmpty) {
+        val bpmnURI = if (!task.bpmn.nullOrEmpty) task.eResource.resolveUri(task.bpmn)
+        val productURI = if (bpmnURI === null) {
                 task.eResource.resolveUri(task.product)
             } else {
-                val bpmnUri = task.eResource.resolveUri(task.bpmn)
                 val numTests = task.numTests <= 0 ? 1 : task.numTests
                 val depthLimit = task.depthLimit <= 0 ? 300 : task.depthLimit
                 val stateLimit = task.stateLimit <= 0 ? 1000 : task.stateLimit
                 val pspecFsa = fsa.createFolderAccess(FOLDER_PSPEC)
 
-                (new Bpmn4sToPspecGenerator(numTests, depthLimit, stateLimit)).doGenerate(rst, bpmnUri, pspecFsa, ctx)
+                (new Bpmn4sToPspecGenerator(numTests, depthLimit, stateLimit)).doGenerate(rst, bpmnURI, pspecFsa, ctx)
 
-                pspecFsa.getURI(bpmnUri.trimFileExtension.appendFileExtension('ps').lastSegment)
+                pspecFsa.getURI(bpmnURI.trimFileExtension.appendFileExtension('ps').lastSegment)
             }
 
         // Load and validate the (generated) product
@@ -150,15 +150,20 @@ class StandardProjectGenerator extends AbstractGenerator {
                     // Generate the action.constraints file to be used to write properties
                     generateActionConstraints(conTspecRes, conTspecFsa, tspecName + '.constraints')
 
-                    val extensionParams = new HashMap
-                    if (!task.bpmn.nullOrEmpty)
-                        extensionParams.putIfAbsent('bpmnURI', task.eResource.resolveUri(task.bpmn))
-                    extensionParams.putIfAbsent('productURI', productURI)
-                    extensionParams.putIfAbsent('petriNetURI', petriNetURI)
-                    extensionParams.putIfAbsent('atspecURI', absTspecRes.URI)
-                    extensionParams.putIfAbsent('tspecURI', conTspecRes.URI)
-                    extensionParams.putIfAbsent('pythonExe', task.pythonExe)
-                    extensionParams.putIfAbsent('cpnserverPath', task.cpnserverPath)
+                    val extensionParams = newHashMap
+                    if (bpmnURI !== null) {
+                        extensionParams.put('bpmnURI', bpmnURI)
+                    }
+                    extensionParams.put('productURI', productURI)
+                    extensionParams.put('petriNetURI', petriNetURI)
+                    extensionParams.put('atspecURI', absTspecRes.URI)
+                    extensionParams.put('tspecURI', conTspecRes.URI)
+                    if (!task.pythonExe.nullOrEmpty) {
+                        extensionParams.put('pythonExe', task.pythonExe)
+                    }
+                    if (!task.cpnserverPath.nullOrEmpty) {
+                        extensionParams.put('cpnserverPath', task.cpnserverPath)
+                    }
 
                     val extensionContext = new StandardProjectGeneratorContext(ctx?.cancelIndicator, extensionParams)
                     generatorExtensions.forEach[doGenerate(conTspecRes, fsa, extensionContext)]
