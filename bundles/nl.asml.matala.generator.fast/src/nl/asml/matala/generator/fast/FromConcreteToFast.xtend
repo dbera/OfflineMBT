@@ -12,6 +12,9 @@
  */
 package nl.asml.matala.generator.fast
 
+import com.google.gson.JsonParser
+import java.io.File
+import java.io.InputStreamReader
 import java.util.ArrayList
 import java.util.HashMap
 import java.util.HashSet
@@ -53,11 +56,7 @@ import org.eclipse.xtext.generator.IGeneratorContext
 
 import static extension nl.esi.xtext.actions.utilities.ActionsUtilities.*
 import static extension nl.esi.xtext.common.lang.generator.FileSystemAccessUtil.*
-import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
 import static extension org.eclipse.emf.ecore.util.EcoreUtil.*
-import java.io.InputStreamReader
-import com.google.gson.JsonParser
-import java.io.File
 
 class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGeneratorExtension {
     // @Inject TestspecificationJsonGenerator testSpecificationJsonGenerator
@@ -68,10 +67,7 @@ class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGe
 
     val String CONFIG_GENERATOR_PARAMETERS = "generatorParameters"
     val String CONFIG_RENAMING_RULES = "renamingRules"
-    val String CONTEXT_CPNSERVER = "cpnserverPath"
-    val String CONTEXT_PRODUCT_URI = "productURI"
-    val String CONTEXT_TSPEC_URI = "tspecURI"
-    
+
 // On save of TSPEC file, this function is called by Eclipse Framework
     override void doGenerate(Resource res, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
         val ctd = res.contents.filter(TSMain).map[model].filter(TestDefinition).head
@@ -93,8 +89,8 @@ class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGe
         // - pythonExe: Python executable configured for the task.
         // - cpnserverPath: Path to the CPN Server directory. Used to retrieve configuration files for code generation.
         // 0) setup FAST directory structure
-        val productURI = ctx.parameters.get(CONTEXT_PRODUCT_URI) as URI
-        val tspecURI = ctx.parameters.get(CONTEXT_TSPEC_URI) as URI
+        val productURI = ctx.parameters.get(StandardProjectGeneratorContext.CONTEXT_PRODUCT_URI) as URI
+        val tspecURI = ctx.parameters.get(StandardProjectGeneratorContext.CONTEXT_CONCRETE_TSPEC_URI) as URI
 
         val specName = productURI.trimFileExtension.lastSegment
         val tspecName = tspecURI.trimFileExtension.lastSegment
@@ -172,7 +168,7 @@ class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGe
         params.put(CONFIG_GENERATOR_PARAMETERS, generatorParams)
         params.put(CONFIG_RENAMING_RULES, rename)
 
-        val configPath = map.getOrDefault(CONTEXT_CPNSERVER, null) as String
+        val configPath = map.getOrDefault(StandardProjectGeneratorContext.CONTEXT_CPNSERVER_PATH, null) as String
         if (configPath === null || configPath.trim.empty) {
             return params
         }

@@ -19,7 +19,15 @@ import org.eclipse.xtext.generator.IGeneratorContext;
 import org.eclipse.xtext.util.CancelIndicator;
 
 public class StandardProjectGeneratorContext implements IGeneratorContext {
-	private final Map<String, Object> parameters;
+	public static final String CONTEXT_PYTHON_EXE = "pythonExe";
+	public static final String CONTEXT_CPNSERVER_PATH = "cpnserverPath";
+	public static final String CONTEXT_BPMN_URI = "bpmnURI";
+	public static final String CONTEXT_PRODUCT_URI = "productURI";
+	public static final String CONTEXT_PETRI_NET_URI = "petriNetURI";
+	public static final String CONTEXT_ABSTRACT_TSPEC_URI = "atspecURI";
+	public static final String CONTEXT_CONCRETE_TSPEC_URI = "tspecURI";
+
+    private final Map<String, Object> parameters;
 
 	private final CancelIndicator cancelIndicator;
 

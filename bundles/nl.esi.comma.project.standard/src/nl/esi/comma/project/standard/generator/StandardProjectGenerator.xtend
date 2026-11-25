@@ -16,7 +16,9 @@
 package nl.esi.comma.project.standard.generator
 
 import com.google.inject.Inject
-import java.util.HashMap
+import java.util.LinkedHashMap
+import java.util.LinkedHashSet
+import nl.asml.matala.product.generator.ProductGenerationMode
 import nl.asml.matala.product.generator.ProductGenerator
 import nl.asml.matala.product.product.Product
 import nl.esi.comma.abstracttestspecification.generator.to.concrete.FromAbstractToConcrete
@@ -25,11 +27,13 @@ import nl.esi.comma.project.standard.generator.^extension.StandardProjectGenerat
 import nl.esi.comma.project.standard.standardProject.OfflineGenerationBlock
 import nl.esi.comma.project.standard.standardProject.OfflineGenerationTarget
 import nl.esi.comma.project.standard.standardProject.Project
-import nl.esi.comma.project.standard.standardProject.TargetConfig
 import nl.esi.comma.testspecification.generator.utils.MergeConcreteDataAssigments
+import nl.esi.comma.testspecification.testspecification.AssertionStep
+import nl.esi.comma.testspecification.testspecification.TSMain
 import nl.esi.xtext.common.lang.reporting.IStatusReporting
 import nl.esi.xtext.common.lang.reporting.StatusReportHelper
 import nl.esi.xtext.common.lang.utilities.EcoreUtil3
+import nl.esi.xtext.types.types.RecordTypeDecl
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.emf.ecore.resource.ResourceSet
 import org.eclipse.xtext.generator.AbstractGenerator
@@ -40,16 +44,10 @@ import static nl.esi.comma.project.standard.generator.^extension.IStandardProjec
 
 import static extension nl.esi.xtext.common.lang.generator.FileSystemAccessUtil.*
 import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
+import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
 import static extension org.eclipse.emf.ecore.util.EcoreUtil.*
 import static extension org.eclipse.lsat.common.xtend.Queries.*
 import static extension org.eclipse.xtext.EcoreUtil2.*
-import nl.esi.comma.testspecification.testspecification.TSMain
-import java.util.LinkedHashSet
-import java.util.LinkedHashMap
-import nl.esi.xtext.types.types.RecordTypeDecl
-import nl.esi.comma.testspecification.testspecification.AssertionStep
-import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
-import nl.asml.matala.product.generator.ProductGenerationMode
 
 /**
  * Generates code from your model files on save.
@@ -152,17 +150,17 @@ class StandardProjectGenerator extends AbstractGenerator {
 
                     val extensionParams = newHashMap
                     if (bpmnURI !== null) {
-                        extensionParams.put('bpmnURI', bpmnURI)
+                        extensionParams.put(StandardProjectGeneratorContext.CONTEXT_BPMN_URI, bpmnURI)
                     }
-                    extensionParams.put('productURI', productURI)
-                    extensionParams.put('petriNetURI', petriNetURI)
-                    extensionParams.put('atspecURI', absTspecRes.URI)
-                    extensionParams.put('tspecURI', conTspecRes.URI)
+                    extensionParams.put(StandardProjectGeneratorContext.CONTEXT_PRODUCT_URI, productURI)
+                    extensionParams.put(StandardProjectGeneratorContext.CONTEXT_PETRI_NET_URI, petriNetURI)
+                    extensionParams.put(StandardProjectGeneratorContext.CONTEXT_ABSTRACT_TSPEC_URI, absTspecRes.URI)
+                    extensionParams.put(StandardProjectGeneratorContext.CONTEXT_CONCRETE_TSPEC_URI, conTspecRes.URI)
                     if (!task.pythonExe.nullOrEmpty) {
-                        extensionParams.put('pythonExe', task.pythonExe)
+                        extensionParams.put(StandardProjectGeneratorContext.CONTEXT_PYTHON_EXE, task.pythonExe)
                     }
                     if (!task.cpnserverPath.nullOrEmpty) {
-                        extensionParams.put('cpnserverPath', task.cpnserverPath)
+                        extensionParams.put(StandardProjectGeneratorContext.CONTEXT_CPNSERVER_PATH, task.cpnserverPath)
                     }
 
                     val extensionContext = new StandardProjectGeneratorContext(ctx?.cancelIndicator, extensionParams)
