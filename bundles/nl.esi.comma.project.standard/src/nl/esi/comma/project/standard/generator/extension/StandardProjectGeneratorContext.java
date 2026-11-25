@@ -19,31 +19,25 @@ import org.eclipse.xtext.generator.IGeneratorContext;
 import org.eclipse.xtext.util.CancelIndicator;
 
 public class StandardProjectGeneratorContext implements IGeneratorContext {
-	private final Map<String, String> renamingRules;
-	private final Map<String, String> generatorParams;
+	private final Map<String, Object> parameters;
 
 	private final CancelIndicator cancelIndicator;
 
 	public StandardProjectGeneratorContext() {
-		this(CancelIndicator.NullImpl, new LinkedHashMap<String, String>(), new LinkedHashMap<String, String>());
+		this(CancelIndicator.NullImpl, new LinkedHashMap<String, Object>());
 	}
 
-	public StandardProjectGeneratorContext(CancelIndicator cancelIndicator, Map<String, String> renamingRules,
-			Map<String, String> generatorParams) {
+	public StandardProjectGeneratorContext(CancelIndicator cancelIndicator, Map<String, Object> parameters) {
 		this.cancelIndicator = cancelIndicator;
-		this.renamingRules = renamingRules;
-		this.generatorParams = generatorParams;
+		this.parameters = parameters;
 	}
 
 	public CancelIndicator getCancelIndicator() {
 		return cancelIndicator;
 	}
 
-	public Map<String, String> getRenamingRules() {
-		return renamingRules;
+	public Map<String, Object> getParameters() {
+		return parameters;
 	}
 
-	public Map<String, String> getGeneratorParams() {
-		return generatorParams;
-	}
 }

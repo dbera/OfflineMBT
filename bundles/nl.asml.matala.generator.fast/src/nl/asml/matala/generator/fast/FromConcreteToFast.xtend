@@ -45,6 +45,7 @@ import nl.esi.xtext.expressions.expression.ExpressionVariable
 import nl.esi.xtext.expressions.expression.Field
 import nl.esi.xtext.types.types.SimpleTypeDecl
 import nl.esi.xtext.types.types.TypeDecl
+import org.eclipse.emf.common.util.URI
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
@@ -54,6 +55,9 @@ import static extension nl.esi.xtext.actions.utilities.ActionsUtilities.*
 import static extension nl.esi.xtext.common.lang.generator.FileSystemAccessUtil.*
 import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
 import static extension org.eclipse.emf.ecore.util.EcoreUtil.*
+import java.io.InputStreamReader
+import com.google.gson.JsonParser
+import java.io.File
 
 class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGeneratorExtension {
     // @Inject TestspecificationJsonGenerator testSpecificationJsonGenerator
@@ -62,6 +66,12 @@ class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGe
     var List<String> record_def_file_names = List.of("lot_definition", "job_definition")
     var List<String> setup_file_names = List.of("setup_file")
 
+    val String CONFIG_GENERATOR_PARAMETERS = "generatorParameters"
+    val String CONFIG_RENAMING_RULES = "renamingRules"
+    val String CONTEXT_CPNSERVER = "cpnserverPath"
+    val String CONTEXT_PRODUCT_URI = "productURI"
+    val String CONTEXT_TSPEC_URI = "tspecURI"
+    
 // On save of TSPEC file, this function is called by Eclipse Framework
     override void doGenerate(Resource res, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
         val ctd = res.contents.filter(TSMain).map[model].filter(TestDefinition).head
@@ -81,12 +91,17 @@ class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGe
         // - atspecURI: URI of the abstract test specification.
         // - tspecURI: URI of the concrete test specification.
         // - pythonExe: Python executable configured for the task.
+        // - cpnserverPath: Path to the CPN Server directory. Used to retrieve configuration files for code generation.
         // 0) setup FAST directory structure
-        val productURI = res.resolveUri(ctx.generatorParams.get("productURI"))
-        val tspecURI = res.resolveUri(ctx.generatorParams.get("tspecURI"))
+        val productURI = ctx.parameters.get(CONTEXT_PRODUCT_URI) as URI
+        val tspecURI = ctx.parameters.get(CONTEXT_TSPEC_URI) as URI
 
         val specName = productURI.trimFileExtension.lastSegment
         val tspecName = tspecURI.trimFileExtension.lastSegment
+
+        var mbtParams = loadParameters(res, ctx.parameters)
+        var HashMap<String, String> generatorParams = mbtParams.getOrDefault(CONFIG_GENERATOR_PARAMETERS, new HashMap)
+        var HashMap<String, String> renamingRules = mbtParams.getOrDefault(CONFIG_RENAMING_RULES, new HashMap)
 
         val baseFsa = fsa.createFolderAccess('generated_FAST/')
         val testPath = '''./«specName»_«tspecName»'''
@@ -102,7 +117,6 @@ class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGe
         var tsi = new TestSpecificationInstance
         // 2.1) Path to folder containing .json input_file(s) (default: ./dataset/)
         tsi.filePath = testPath
-        tsi._process_Import_Data_Implementation(modelInst)
 
         // 3) create mappings for:
         // 3.1) Step variable name to step-type (step-parameters field in .tspec file)
@@ -110,7 +124,7 @@ class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGe
         // 3.2) Global parameters key and value (LHS and RHS, resp.)
         tsi._process_Global_Param_Init(modelInst, testPath)
         // 3.3) SUT initialization key and value (LHS and RHS, resp.)
-        tsi._process_Sut_Param_Init(modelInst, ctx.renamingRules)
+        tsi._process_Sut_Param_Init(modelInst, renamingRules)
 
         // 4) Parse step-sequence (precondition: steps 2-3, where import and step-parameters are processed)
         val stepSequence = getRunStepSequence(model)
@@ -133,13 +147,72 @@ class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGe
         testFsa.generateFile('variants/single_variant/reference.kvp', refkvpgen.generateRefKVP(model))
 
         // 8) parse sut-param-init actions into a XML elements of a vfd XML file
-        var vfdgen = new VFDXMLGenerator(ctx.generatorParams, ctx.renamingRules)
+        var vfdgen = new VFDXMLGenerator(generatorParams, renamingRules)
         testFsa.generateFile('variants/single_variant/vfd.xml', vfdgen.generateXML(tsi))
 
         // 9) generate PlantUML files Generation for Review /* Added DB: 12.05.2025*/
         var docgen = new DocGen()
         testFsa.generateFile('variants/single_variant/viz.plantuml', docgen.generatePlantUMLFile(tsi.steps))
 
+    }
+
+    /**
+     * Loads the generator parameters and renaming rules from test.json located
+     * in the folder specified by "cpnserverPath".
+     * 
+     * "cpnserverPath" may use either Windows or POSIX path syntax.
+     * Returns an empty map when the path is not configured or test.json
+     * does not exist in the configured folder.
+     */
+    def HashMap<String, HashMap<String, String>> loadParameters(Resource res, Map<String, Object> map) {
+        val params = new HashMap<String, HashMap<String, String>>()
+
+        val generatorParams = new HashMap<String, String>()
+        val rename = new HashMap<String, String>()
+        params.put(CONFIG_GENERATOR_PARAMETERS, generatorParams)
+        params.put(CONFIG_RENAMING_RULES, rename)
+
+        val configPath = map.getOrDefault(CONTEXT_CPNSERVER, null) as String
+        if (configPath === null || configPath.trim.empty) {
+            return params
+        }
+
+        // cpnserverPath points to a folder. File handles Windows and POSIX
+        // separators and appends test.json using the current platform separator.
+        val configFile = new File(configPath,"FromConcreteToFast.json")
+
+        if (!configFile.isFile) {
+            return params
+        }
+
+        val configURI = URI.createFileURI(configFile.absolutePath)
+        val inputStream = res.resourceSet.URIConverter.createInputStream(configURI)
+
+        try {
+            val reader = new InputStreamReader(inputStream)
+            val root = JsonParser.parseReader(reader).asJsonObject
+
+            val generatorParameters = root.getAsJsonObject(CONFIG_GENERATOR_PARAMETERS)
+
+            if (generatorParameters !== null) {
+                generatorParameters.entrySet.forEach [
+                    generatorParams.put(key, value.asString)
+                ]
+            }
+
+            val renamingRules = root.getAsJsonObject(CONFIG_RENAMING_RULES)
+
+            if (renamingRules !== null) {
+                renamingRules.entrySet.forEach [
+                    rename.put(key, value.asString)
+                ]
+            }
+
+
+            return params
+        } finally {
+            inputStream.close()
+        }
     }
 
     def String findMatchingRecordName(String name, List<String> suffixes) {
@@ -683,28 +756,6 @@ class FromConcreteToFast extends AbstractGenerator implements IStandardProjectGe
 //          for(param : st.parameters) 
 //              param.display
         // System.out.println("  parameters: " + param.key + " -> " + param.value)
-        }
-    }
-
-    protected def void _process_Import_Data_Implementation(TestSpecificationInstance tsi, TSMain model) {
-        for (imp : model.imports) {
-//            val inputResource = imp.resource
-//            var input = inputResource.contents.head
-//            if (input instanceof Main) {
-//                if (input.model instanceof APIDefinition) {
-//                    val apidef = input.model as APIDefinition
-//                    for (api : apidef.apiImpl) {
-//                        for (elm : api.di) {
-//                            var filepath = elm.fname
-//                            var key = elm.^var.name
-//                            tsi.dataImplToFilename.putIfAbsent(key, new ArrayList)
-//                            tsi.dataImplToFilename.get(key).add(filepath)
-//                        }
-//                    }
-//                } else {
-            System.err.println("Error: Unhandled Model Type! ")
-//                }
-//            }
         }
     }
 

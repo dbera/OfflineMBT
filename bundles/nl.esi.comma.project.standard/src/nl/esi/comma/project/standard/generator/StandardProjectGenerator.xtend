@@ -74,7 +74,8 @@ class StandardProjectGenerator extends AbstractGenerator {
             }
 
             for (task : project.reachabilityAnalysisBlocks) {
-                (new ReachabilityAnalysisGenerator(reporting)).doGenerate(task, res.resourceSet, fsa.createFolderAccess(task.name), ctx)
+                (new ReachabilityAnalysisGenerator(reporting)).doGenerate(task, res.resourceSet,
+                    fsa.createFolderAccess(task.name), ctx)
             }
 
             for (task : project.testCaseDiffBlocks) {
@@ -123,7 +124,8 @@ class StandardProjectGenerator extends AbstractGenerator {
         val specName = product.specification.name
         val petriNetURI = fsa.getURI('''«FOLDER_CPN_SERVER»/«specName»/«specName».py''')
         val absTspecFsa = fsa.createFolderAccess(FOLDER_ABSTRACT_TSPEC)
-        (new PetriNetToAbstractTspecGenerator(task.pythonExe, reporting)).doGenerate(rst, petriNetURI, productURI, absTspecFsa, ctx)
+        (new PetriNetToAbstractTspecGenerator(task.pythonExe, reporting)).doGenerate(rst, petriNetURI, productURI,
+            absTspecFsa, ctx)
 
         for (absTspecFileName : absTspecFsa.list(ROOT_PATH).filter[endsWith('.atspec')]) {
             val tspecName = absTspecFileName.replaceAll('\\.atspec$', '')
@@ -148,85 +150,74 @@ class StandardProjectGenerator extends AbstractGenerator {
                     // Generate the action.constraints file to be used to write properties
                     generateActionConstraints(conTspecRes, conTspecFsa, tspecName + '.constraints')
 
-                    // TODO fetch these FAST configuration parameters from somewhere else (e.g., .prj task)
-                    val renamingRules = task.renamingRules !== null ? createPropertiesMap(task.renamingRules) : new HashMap
-                    val genParams = task.generatorParams !== null ? createPropertiesMap(task.generatorParams) : new HashMap
-                    // TODO fetch this from somewhere else
-                    genParams.putIfAbsent('bpmnURI', task.eResource.resolveUri(task.bpmn)?.toString)
-                    genParams.putIfAbsent('productURI', productURI?.toString)
-                    genParams.putIfAbsent('petriNetURI', petriNetURI?.toString)
-                    genParams.putIfAbsent('atspecURI', absTspecRes.URI.toString)
-                    genParams.putIfAbsent('tspecURI', conTspecRes.URI.toString)
-                    genParams.putIfAbsent('pythonExe', task.pythonExe)
-                    
+                    val extensionParams = new HashMap
+                    if (!task.bpmn.nullOrEmpty)
+                        extensionParams.putIfAbsent('bpmnURI', task.eResource.resolveUri(task.bpmn))
+                    extensionParams.putIfAbsent('productURI', productURI)
+                    extensionParams.putIfAbsent('petriNetURI', petriNetURI)
+                    extensionParams.putIfAbsent('atspecURI', absTspecRes.URI)
+                    extensionParams.putIfAbsent('tspecURI', conTspecRes.URI)
+                    extensionParams.putIfAbsent('pythonExe', task.pythonExe)
+                    extensionParams.putIfAbsent('cpnserverPath', task.cpnserverPath)
 
-                    val extensionContext = new StandardProjectGeneratorContext(ctx?.cancelIndicator, renamingRules, genParams)
-                    generatorExtensions.forEach[ doGenerate(conTspecRes, fsa, extensionContext)]
+                    val extensionContext = new StandardProjectGeneratorContext(ctx?.cancelIndicator, extensionParams)
+                    generatorExtensions.forEach[doGenerate(conTspecRes, fsa, extensionContext)]
                 }
             }
         }
     }
-    
+
     private def void generateActionConstraints(Resource resource, IFileSystemAccess2 fsa, String fileName) {
         val root = resource.contents.filter(TSMain).head
         val imports = new LinkedHashSet<String>()
         val actions = new LinkedHashMap<String, String>()
-        
+
         for (step : root.model.stepSeq.flatMap[step]) {
             val type = step.stepVar.type.type
             val record = type as RecordTypeDecl
             val input = record.allFields.findFirst[name == 'input']
             val output = record.allFields.findFirst[name == 'output']
-            val kind = if (step instanceof AssertionStep) 'Observable' else 'Trigger'
+            val kind = if(step instanceof AssertionStep) 'Observable' else 'Trigger'
 
             val declaration = '''
                 «kind» «record.name»
                     «IF input !== null»
-                    inputs «input.type.typeName» Input
+                        inputs «input.type.typeName» Input
                     «ENDIF»
                     «IF output !== null»
-                    outputs «output.type.typeName» Output
+                        outputs «output.type.typeName» Output
                     «ENDIF»
             '''.toString
             actions.putIfAbsent(record.name, declaration)
             imports.add(record.eResource.URI.deresolve(fsa.getURI(fileName)).toString)
         }
 
-        fsa.generateFile(fileName,
-        '''
-        «FOR path : imports»
-        import "«path»"
-        «ENDFOR»
-
-        Actions
-
-        «FOR declaration : actions.values SEPARATOR '\n'»
-        «declaration»
-        «ENDFOR»
+        fsa.generateFile(fileName, '''
+            «FOR path : imports»
+                import "«path»"
+            «ENDFOR»
+            
+            Actions
+            
+            «FOR declaration : actions.values SEPARATOR '\n'»
+                «declaration»
+            «ENDFOR»
         ''')
-    }
-    
-    private def createPropertiesMap(TargetConfig tgtConfig) {
-        var props = new HashMap<String, String>()
-        for (elem : tgtConfig.item) {
-            props.put(elem.key, elem.^val)
-        }
-        return props
     }
 
     private def trySave(Resource resource) {
         try {
-            //try to test serialize the file first as it sweeps the file on save 
+            // try to test serialize the file first as it sweeps the file on save 
             resource.contents.forEach[EcoreUtil3.serialize(it)]
             resource.save(null)
-        }
-        catch(Exception e) {
+        } catch (Exception e) {
             reporting.addReport(e)
         }
     }
+
     /**
      * validates the resource
-     *
+     * 
      * @returns <code>false</code> when error
      */
     private def boolean validate(Resource resource) {
@@ -235,4 +226,3 @@ class StandardProjectGenerator extends AbstractGenerator {
         return !result.error
     }
 }
-
