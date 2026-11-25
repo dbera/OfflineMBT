@@ -373,8 +373,8 @@ class ProductValidator extends AbstractProductValidator {
         }
 
         val actionType = update.actionType
-        // INTERNAL is sent by the GUI
-        if (actionType !== ActionType.COMPOSE && ActionType.ASSERT !== actionType && ActionType.INTERNAL !== actionType) {
+
+        if (actionType !== ActionType.COMPOSE && ActionType.ASSERT !== actionType) {
             return
         }
 
@@ -397,45 +397,48 @@ class ProductValidator extends AbstractProductValidator {
                 }
             }
 
-            val symFields = refType.symbolicFieldPaths.map[refVariable.name+"."+map[name].join(".")].sort
+            val symFields = refType.fieldPaths.filter[path, symbolic | symbolic].keySet
+                .map[refVariable.name+"."+map[name].join(".")].sort
 
             symFields.filter[!flattenedAssignments.keySet.contains(it)].forEach [ path |
                 val message = '''Symbolic record field '«path»' should be assigned in reference update'''
+                val feature = (varRef.dataReferences !== null) ? ProductPackage.Literals.VAR_REF__DATA_REFERENCES : ProductPackage.Literals.VAR_REF__REF
                 if (actionType === ActionType.ASSERT) {
-                    warning(message, ProductPackage.Literals.VAR_REF__REF)
+                    warning(message, varRef, feature)
                 } else {
-                    error(message, ProductPackage.Literals.VAR_REF__REF)
+                    error(message, varRef, feature)
                 }
             ]
         }
     }
 
-    def List<List<RecordField>> getSymbolicFieldPaths(RecordTypeDecl recordType) {
-        val paths = <List<RecordField>>newArrayList
+    def Map<List<RecordField>, Boolean> getFieldPaths(RecordTypeDecl recordType) {
+        val paths = <List<RecordField>, Boolean>newLinkedHashMap
 
         recordType.allFields.forEach [
-            collectSymbolicFieldPaths(it, #[], paths, false)
+            collectFieldPaths(it, #[], paths, false)
         ]
 
         return paths
     }
 
     /**
-     * Recursively collects the leaf-field paths of symbolic record fields.
+     * Recursively collects the leaf-field paths of a record type, indicating for each leaf-field path
+     * whether it is symbolic (either directly, or inherited via {@code insideSymbolic}).
      * Once a symbolic field is encountered (or inherited via {@code insideSymbolic}),
-     * all its leaf fields are collected regardless of their own kind.
+     * all its leaf fields are marked symbolic regardless of their own kind.
      */
-    def void collectSymbolicFieldPaths(RecordField field, List<RecordField> path, List<List<RecordField>> paths, boolean insideSymbolic) {
+    def void collectFieldPaths(RecordField field, List<RecordField> path, Map<List<RecordField>, Boolean> paths, boolean insideSymbolic) {
         val currentPath = path + #[field]
         val isSymbolic = insideSymbolic || field.kind == RecordFieldKind.SYMBOLIC
 
         val type = field.type?.typeObject
         if (type instanceof RecordTypeDecl) {
             type.allFields.forEach [
-                collectSymbolicFieldPaths(it, currentPath.toList, paths, isSymbolic)
+                collectFieldPaths(it, currentPath.toList, paths, isSymbolic)
             ]
-        } else if (isSymbolic) {
-            paths.add(currentPath.toList)
+        } else {
+            paths.put(currentPath.toList, isSymbolic)
         }
     }
 
@@ -530,6 +533,13 @@ class ProductValidator extends AbstractProductValidator {
                 (exp as ExpressionRecord).fields.forEach[ actField |
                     val fieldPrefix = prefix + fieldAccess.serialize + '.'
                     findAndGroupSingleValueAssignments(actField, fieldPrefix, assignments)
+                ]
+            }
+            RecordFieldAssignmentAction case field.type.isRecordType: {
+                val allPaths = getFieldPaths(field.type.typeObject as RecordTypeDecl)
+                allPaths.keySet.map[map[name].join(".")].forEach[ path |
+                    val fullPath = prefix + fieldAccess.serialize + "." + path
+                    assignments.computeIfAbsent(fullPath)[newArrayList] += it
                 ]
             }
             RecordFieldAssignmentAction: {
