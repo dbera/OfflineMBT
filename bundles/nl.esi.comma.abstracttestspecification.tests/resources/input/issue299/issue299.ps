@@ -21,7 +21,7 @@ specification issue299
         
         action			ComposeA
         element-label	"Compose A"
-        case			default step-type "null" action-type COMPOSE
+        case			default action-type COMPOSE
         with-inputs		jobA
         produces-outputs	Event_0ww9k8j
         produces-outputs	job_a_input symbolic-link
@@ -85,7 +85,7 @@ specification issue299
         
         action			FinishcomposingjobB
         element-label	"Finish composing job B"
-        case			default step-type "null" action-type COMPOSE
+        case			default action-type COMPOSE
         with-inputs		Gateway_0uysc4w, temp_job_b_input
         with-guard		Gateway_0uysc4w.iteration_index > Gateway_0uysc4w.job.count
         and
@@ -102,7 +102,7 @@ specification issue299
         
         action			AddjobAreport
         element-label	"Add job A report"
-        case			default step-type "null" action-type COMPOSE
+        case			default action-type COMPOSE
         with-inputs		Gateway_0uysc4w, job_a_report, temp_job_b_input
         with-guard		Gateway_0uysc4w.iteration_index <= Gateway_0uysc4w.job.count
         and
@@ -132,7 +132,7 @@ specification issue299
         
         action			JobBintake
         element-label	"Job B intake"
-        case			default step-type "null" action-type COMPOSE
+        case			default action-type COMPOSE
         with-inputs		jobB
         produces-outputs	Gateway_0uysc4w
         updates:

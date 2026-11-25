@@ -83,7 +83,8 @@ Function:
 Update:
 	'case' name = ID
 	('priority' priority = ExpressionPriority)?
-	('step-type' stepType = STRING 'action-type' actionType = ActionType)?
+	('step-type' stepType = STRING)?
+	('action-type' actionType = ActionType)?
 	('with-inputs' fnInp += VarRef (',' fnInp+=VarRef)*)?
 	('with-guard' guard=Expression)?
 	(dataAssertions = DataAssertions)?
