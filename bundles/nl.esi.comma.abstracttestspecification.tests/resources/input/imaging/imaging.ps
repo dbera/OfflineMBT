@@ -32,7 +32,7 @@ specification imaging
         
         action			Unprepare
         element-label	"Unprepare"
-        case			default step-type "null" action-type COMPOSE
+        case			default action-type COMPOSE
         with-inputs		ImagingRequest
         with-guard		ImagingRequest.cmd_type == ImageEnum::UNPREPARE
         produces-outputs	Flow_1kpcqqf
@@ -45,7 +45,7 @@ specification imaging
         
         action			Prepare
         element-label	"Prepare"
-        case			default step-type "null" action-type COMPOSE
+        case			default action-type COMPOSE
         with-inputs		ImagingRequest, EqStatus
         with-guard		ImagingRequest.cmd_type == ImageEnum::PREPARE AND EqStatus.temp_status == Status::ON
         produces-outputs	Flow_0kkvgdv
@@ -324,7 +324,7 @@ specification imaging
         
         action			StartPump
         element-label	"Start Pump"
-        case			default step-type "null" action-type COMPOSE
+        case			default action-type COMPOSE
         with-inputs		Gateway_1j81da5, VacuumRequest, EqStatus
         with-guard		EqStatus.acq_status == Status::PREPARING
         produces-outputs	Flow_0balrow
@@ -366,7 +366,7 @@ specification imaging
         
         action			TurnOffPump
         element-label	"Turn Off Pump"
-        case			default step-type "null" action-type COMPOSE
+        case			default action-type COMPOSE
         with-inputs		Flow_1wguswc, VacuumRequest, EqStatus
         with-guard		EqStatus.acq_status == Status::UNPREPARING
         produces-outputs	Flow_0cjhiik
@@ -740,7 +740,7 @@ specification imaging
         
         action			StopAcquisition
         element-label	"Stop Acquisition"
-        case			default step-type "null" action-type COMPOSE
+        case			default action-type COMPOSE
         with-inputs		ImagingRequest
         with-guard		ImagingRequest.cmd_type==ImageEnum::STOP
         produces-outputs	Flow_0678bm1
@@ -753,7 +753,7 @@ specification imaging
         
         action			StartAcquisition
         element-label	"Start Acquisition"
-        case			default step-type "null" action-type COMPOSE
+        case			default action-type COMPOSE
         with-inputs		ImagingRequest, EqStatus
         with-guard		ImagingRequest.cmd_type == ImageEnum::START AND EqStatus.temp_status == Status::ON AND EqStatus.pump_status == Status::ON
         produces-outputs	Flow_1bajtwc
@@ -818,7 +818,7 @@ specification imaging
         
         action			CreateResetTempMessage
         element-label	"Create Reset Temp Message"
-        case			default step-type "null" action-type COMPOSE
+        case			default action-type COMPOSE
         with-inputs		TempRequest, EqStatus
         with-guard		TempRequest.cmd_type == TempEnum::RESET AND EqStatus.acq_status == Status::UNPREPARING
         produces-outputs	Gateway_1qk9wqe
@@ -853,7 +853,7 @@ specification imaging
         
         action			CreateSetTempMessage
         element-label	"Create Set Temp Message"
-        case			default step-type "null" action-type COMPOSE
+        case			default action-type COMPOSE
         with-inputs		TempRequest
         with-guard		TempRequest.cmd_type == TempEnum::SET
         produces-outputs	Gateway_1qk9wqe

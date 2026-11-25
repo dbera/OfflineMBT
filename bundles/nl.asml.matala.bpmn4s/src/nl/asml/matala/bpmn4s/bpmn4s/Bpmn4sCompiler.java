@@ -558,12 +558,17 @@ public class Bpmn4sCompiler{
 						task += " priority " + priority;
 					}
 					// STEP TYPE
+					String stepType = node.getStepType();
+					if (stepType != null) {
+						task += String.format(" step-type \"%s\"", stepType);
+					}
+					// ACTION TYPE
 					if (model.isComposeTask(node.getId())) {
-						task += String.format(" step-type \"%s\" action-type COMPOSE", node.getStepType());
+						task += " action-type COMPOSE";
 					} else if(model.isAssertTask(node.getId())) {
-						task += String.format(" step-type \"%s\" action-type ASSERT", node.getStepType());
+						task += " action-type ASSERT";
 					} else if(model.isRunTask(node.getId())) {
-						task += String.format(" step-type \"%s\" action-type RUN", node.getStepType());
+						task += " action-type RUN";
 					}
 					task += "\n";
 
