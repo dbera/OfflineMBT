@@ -56,7 +56,7 @@ specification printer_prio
         
         action			ComposePrintJob
         element-label	"Compose Print Job"
-        case			default priority 10 step-type "null" action-type COMPOSE
+        case			default priority 10 action-type COMPOSE
         with-inputs		printJob, corrections
         with-guard		corrections.id == printJob.id and printJob.opType == OperationType::PRINT
         produces-outputs	Flow_1u2qmtt
@@ -66,7 +66,7 @@ specification printer_prio
         
         action			ComposePrepareJob
         element-label	"Compose Prepare Job"
-        case			default priority 10 step-type "null" action-type COMPOSE
+        case			default priority 10 action-type COMPOSE
         with-inputs		printJob
         with-guard		printJob.opType == OperationType::PREP
         produces-outputs	Flow_0iaelzn
@@ -168,7 +168,7 @@ specification printer_prio
         
         action			ComposeVisualInspectionJob
         element-label	"Compose Visual Inspection Job"
-        case			default priority 20 step-type "null" action-type COMPOSE
+        case			default priority 20 action-type COMPOSE
         with-inputs		inspectionJob, printReport
         with-guard		printReport.id == inspectionJob.id
         produces-outputs	Flow_07l0yyj
@@ -210,7 +210,7 @@ specification printer_prio
         
         action			ComposeOptimizationJob
         element-label	"Compose Optimization Job"
-        case			default priority 30 step-type "null" action-type COMPOSE
+        case			default priority 30 action-type COMPOSE
         with-inputs		optJob, inspectionReport
         with-guard		inspectionReport.id == optJob.id
         produces-outputs	Flow_0y8u5pd
