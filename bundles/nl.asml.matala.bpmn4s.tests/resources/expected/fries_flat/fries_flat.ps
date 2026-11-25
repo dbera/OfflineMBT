@@ -30,7 +30,7 @@ specification fries_flat
         
         action			ChooseKetchup
         element-label	"Choose Ketchup"
-        case			default step-type "null" action-type COMPOSE
+        case			default action-type COMPOSE
         with-inputs		choice
         with-guard		choice.client_id == "Tom"
         produces-outputs	Gateway_0k04hvx
@@ -45,7 +45,7 @@ specification fries_flat
         
         action			ChooseMayo
         element-label	"Choose Mayo"
-        case			default step-type "null" action-type COMPOSE
+        case			default action-type COMPOSE
         with-inputs		choice
         produces-outputs	Gateway_0k04hvx
         updates:

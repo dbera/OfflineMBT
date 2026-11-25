@@ -406,7 +406,7 @@ record AcqReq {
         </bpmn2:task>
         <bpmn2:sequenceFlow id="Flow_1bajtwc" sourceRef="Activity_0692l00" targetRef="Activity_1bch8n0"/>
         <bpmn2:sequenceFlow id="Flow_0tcbkk0" sourceRef="Activity_1bch8n0" targetRef="Gateway_0qg69ul"/>
-        <bpmn2:task bpmn4s:assertions="checkAcq: assert-that ( AcqUpdate.result ) { equal-to ResponseEnum::OK}" bpmn4s:guard="AcqUpdate.result == ResponseEnum::OK" bpmn4s:stepType="CheckAcquisition" id="Activity_1jl3u6z" name="Wait for Stop Acquisition">
+        <bpmn2:task bpmn4s:assertions="checkAcq: assert-that ( AcqUpdate.result ) { equal-to ResponseEnum::OK}" bpmn4s:guard="AcqUpdate.result == ResponseEnum::OK" id="Activity_1jl3u6z" name="Wait for Stop Acquisition">
           <bpmn2:incoming>Flow_0678bm1</bpmn2:incoming>
           <bpmn2:outgoing>Flow_15n2csx</bpmn2:outgoing>
           <bpmn2:property id="Property_1sqbvdk" name="__targetRef_placeholder"/>

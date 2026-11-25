@@ -90,7 +90,7 @@ record Topping {
         <bpmn2:targetRef>DataStoreReference_03v9xko</bpmn2:targetRef>
       </bpmn2:dataOutputAssociation>
     </bpmn2:task>
-    <bpmn2:task bpmn4s:stepType="fries_make" id="Activity_1fzja8h" name="Make Fries">
+    <bpmn2:task id="Activity_1fzja8h" name="Make Fries">
       <bpmn2:incoming>Flow_0z70hyg</bpmn2:incoming>
       <bpmn2:outgoing>Flow_1fk5b3r</bpmn2:outgoing>
     </bpmn2:task>
