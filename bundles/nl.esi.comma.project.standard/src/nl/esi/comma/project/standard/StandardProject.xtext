@@ -66,10 +66,7 @@ OfflineGenerationBlock:
             ('depth-limit' depthLimit = INT)?
             ('state-limit' stateLimit = INT)?
             ('path-to-python-exe' pythonExe = STRING)?
-            ('using-settings' '{'
-                ('generator-params' generatorParams = TargetConfig) ?
-                ('field-renaming-rules' renamingRules = TargetConfig) ?
-            '}')?
+            ('cpnserver-path' cpnserverPath = STRING)?
         '}'
     '}'
 ;

@@ -16,7 +16,9 @@
 package nl.esi.comma.project.standard.generator
 
 import com.google.inject.Inject
-import java.util.HashMap
+import java.util.LinkedHashMap
+import java.util.LinkedHashSet
+import nl.asml.matala.product.generator.ProductGenerationMode
 import nl.asml.matala.product.generator.ProductGenerator
 import nl.asml.matala.product.product.Product
 import nl.esi.comma.abstracttestspecification.generator.to.concrete.FromAbstractToConcrete
@@ -25,11 +27,13 @@ import nl.esi.comma.project.standard.generator.^extension.StandardProjectGenerat
 import nl.esi.comma.project.standard.standardProject.OfflineGenerationBlock
 import nl.esi.comma.project.standard.standardProject.OfflineGenerationTarget
 import nl.esi.comma.project.standard.standardProject.Project
-import nl.esi.comma.project.standard.standardProject.TargetConfig
 import nl.esi.comma.testspecification.generator.utils.MergeConcreteDataAssigments
+import nl.esi.comma.testspecification.testspecification.AssertionStep
+import nl.esi.comma.testspecification.testspecification.TSMain
 import nl.esi.xtext.common.lang.reporting.IStatusReporting
 import nl.esi.xtext.common.lang.reporting.StatusReportHelper
 import nl.esi.xtext.common.lang.utilities.EcoreUtil3
+import nl.esi.xtext.types.types.RecordTypeDecl
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.emf.ecore.resource.ResourceSet
 import org.eclipse.xtext.generator.AbstractGenerator
@@ -40,16 +44,10 @@ import static nl.esi.comma.project.standard.generator.^extension.IStandardProjec
 
 import static extension nl.esi.xtext.common.lang.generator.FileSystemAccessUtil.*
 import static extension nl.esi.xtext.common.lang.utilities.EcoreUtil3.*
+import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
 import static extension org.eclipse.emf.ecore.util.EcoreUtil.*
 import static extension org.eclipse.lsat.common.xtend.Queries.*
 import static extension org.eclipse.xtext.EcoreUtil2.*
-import nl.esi.comma.testspecification.testspecification.TSMain
-import java.util.LinkedHashSet
-import java.util.LinkedHashMap
-import nl.esi.xtext.types.types.RecordTypeDecl
-import nl.esi.comma.testspecification.testspecification.AssertionStep
-import static extension nl.esi.xtext.types.utilities.TypeUtilities.*
-import nl.asml.matala.product.generator.ProductGenerationMode
 
 /**
  * Generates code from your model files on save.
@@ -74,7 +72,8 @@ class StandardProjectGenerator extends AbstractGenerator {
             }
 
             for (task : project.reachabilityAnalysisBlocks) {
-                (new ReachabilityAnalysisGenerator(reporting)).doGenerate(task, res.resourceSet, fsa.createFolderAccess(task.name), ctx)
+                (new ReachabilityAnalysisGenerator(reporting)).doGenerate(task, res.resourceSet,
+                    fsa.createFolderAccess(task.name), ctx)
             }
 
             for (task : project.testCaseDiffBlocks) {
@@ -84,18 +83,18 @@ class StandardProjectGenerator extends AbstractGenerator {
     }
 
     def doGenerate(OfflineGenerationBlock task, ResourceSet rst, IFileSystemAccess2 fsa, IGeneratorContext ctx) {
-        val productURI = if (task.bpmn.nullOrEmpty) {
+        val bpmnURI = if (!task.bpmn.nullOrEmpty) task.eResource.resolveUri(task.bpmn)
+        val productURI = if (bpmnURI === null) {
                 task.eResource.resolveUri(task.product)
             } else {
-                val bpmnUri = task.eResource.resolveUri(task.bpmn)
                 val numTests = task.numTests <= 0 ? 1 : task.numTests
                 val depthLimit = task.depthLimit <= 0 ? 300 : task.depthLimit
                 val stateLimit = task.stateLimit <= 0 ? 1000 : task.stateLimit
                 val pspecFsa = fsa.createFolderAccess(FOLDER_PSPEC)
 
-                (new Bpmn4sToPspecGenerator(numTests, depthLimit, stateLimit)).doGenerate(rst, bpmnUri, pspecFsa, ctx)
+                (new Bpmn4sToPspecGenerator(numTests, depthLimit, stateLimit)).doGenerate(rst, bpmnURI, pspecFsa, ctx)
 
-                pspecFsa.getURI(bpmnUri.trimFileExtension.appendFileExtension('ps').lastSegment)
+                pspecFsa.getURI(bpmnURI.trimFileExtension.appendFileExtension('ps').lastSegment)
             }
 
         // Load and validate the (generated) product
@@ -123,7 +122,8 @@ class StandardProjectGenerator extends AbstractGenerator {
         val specName = product.specification.name
         val petriNetURI = fsa.getURI('''«FOLDER_CPN_SERVER»/«specName»/«specName».py''')
         val absTspecFsa = fsa.createFolderAccess(FOLDER_ABSTRACT_TSPEC)
-        (new PetriNetToAbstractTspecGenerator(task.pythonExe, reporting)).doGenerate(rst, petriNetURI, productURI, absTspecFsa, ctx)
+        (new PetriNetToAbstractTspecGenerator(task.pythonExe, reporting)).doGenerate(rst, petriNetURI, productURI,
+            absTspecFsa, ctx)
 
         for (absTspecFileName : absTspecFsa.list(ROOT_PATH).filter[endsWith('.atspec')]) {
             val tspecName = absTspecFileName.replaceAll('\\.atspec$', '')
@@ -148,79 +148,79 @@ class StandardProjectGenerator extends AbstractGenerator {
                     // Generate the action.constraints file to be used to write properties
                     generateActionConstraints(conTspecRes, conTspecFsa, tspecName + '.constraints')
 
-                    // TODO fetch these FAST configuration parameters from somewhere else (e.g., .prj task)
-                    val renamingRules = task.renamingRules !== null ? createPropertiesMap(task.renamingRules) : new HashMap
-                    val genParams = task.generatorParams !== null ? createPropertiesMap(task.generatorParams) : new HashMap
-                    // TODO fetch this from somewhere else
-                    genParams.putIfAbsent('prefixPath', './vfab2_scenario/FAST/testcases/' + specName + '_' + tspecName + '/')
+                    val extensionParams = newHashMap
+                    if (bpmnURI !== null) {
+                        extensionParams.put(StandardProjectGeneratorContext.CONTEXT_BPMN_URI, bpmnURI)
+                    }
+                    extensionParams.put(StandardProjectGeneratorContext.CONTEXT_PRODUCT_URI, productURI)
+                    extensionParams.put(StandardProjectGeneratorContext.CONTEXT_PETRI_NET_URI, petriNetURI)
+                    extensionParams.put(StandardProjectGeneratorContext.CONTEXT_ABSTRACT_TSPEC_URI, absTspecRes.URI)
+                    extensionParams.put(StandardProjectGeneratorContext.CONTEXT_CONCRETE_TSPEC_URI, conTspecRes.URI)
+                    if (!task.pythonExe.nullOrEmpty) {
+                        extensionParams.put(StandardProjectGeneratorContext.CONTEXT_PYTHON_EXE, task.pythonExe)
+                    }
+                    if (!task.cpnserverPath.nullOrEmpty) {
+                        extensionParams.put(StandardProjectGeneratorContext.CONTEXT_CPNSERVER_PATH, task.cpnserverPath)
+                    }
 
-                    val extensionContext = new StandardProjectGeneratorContext(ctx?.cancelIndicator, renamingRules, genParams)
-                    generatorExtensions.forEach[ doGenerate(conTspecRes, fsa, extensionContext)]
+                    val extensionContext = new StandardProjectGeneratorContext(ctx?.cancelIndicator, extensionParams)
+                    generatorExtensions.forEach[doGenerate(conTspecRes, fsa, extensionContext)]
                 }
             }
         }
     }
-    
+
     private def void generateActionConstraints(Resource resource, IFileSystemAccess2 fsa, String fileName) {
         val root = resource.contents.filter(TSMain).head
         val imports = new LinkedHashSet<String>()
         val actions = new LinkedHashMap<String, String>()
-        
+
         for (step : root.model.stepSeq.flatMap[step]) {
             val type = step.stepVar.type.type
             val record = type as RecordTypeDecl
             val input = record.allFields.findFirst[name == 'input']
             val output = record.allFields.findFirst[name == 'output']
-            val kind = if (step instanceof AssertionStep) 'Observable' else 'Trigger'
+            val kind = if(step instanceof AssertionStep) 'Observable' else 'Trigger'
 
             val declaration = '''
                 «kind» «record.name»
                     «IF input !== null»
-                    inputs «input.type.typeName» Input
+                        inputs «input.type.typeName» Input
                     «ENDIF»
                     «IF output !== null»
-                    outputs «output.type.typeName» Output
+                        outputs «output.type.typeName» Output
                     «ENDIF»
             '''.toString
             actions.putIfAbsent(record.name, declaration)
             imports.add(record.eResource.URI.deresolve(fsa.getURI(fileName)).toString)
         }
 
-        fsa.generateFile(fileName,
-        '''
-        «FOR path : imports»
-        import "«path»"
-        «ENDFOR»
-
-        Actions
-
-        «FOR declaration : actions.values SEPARATOR '\n'»
-        «declaration»
-        «ENDFOR»
+        fsa.generateFile(fileName, '''
+            «FOR path : imports»
+                import "«path»"
+            «ENDFOR»
+            
+            Actions
+            
+            «FOR declaration : actions.values SEPARATOR '\n'»
+                «declaration»
+            «ENDFOR»
         ''')
-    }
-    
-    private def createPropertiesMap(TargetConfig tgtConfig) {
-        var props = new HashMap<String, String>()
-        for (elem : tgtConfig.item) {
-            props.put(elem.key, elem.^val)
-        }
-        return props
     }
 
     private def trySave(Resource resource) {
         try {
-            //try to test serialize the file first as it sweeps the file on save 
+            // try to test serialize the file first as it sweeps the file on save 
             resource.contents.forEach[EcoreUtil3.serialize(it)]
             resource.save(null)
-        }
-        catch(Exception e) {
+        } catch (Exception e) {
             reporting.addReport(e)
         }
     }
+
     /**
      * validates the resource
-     *
+     * 
      * @returns <code>false</code> when error
      */
     private def boolean validate(Resource resource) {
@@ -229,4 +229,3 @@ class StandardProjectGenerator extends AbstractGenerator {
         return !result.error
     }
 }
-
